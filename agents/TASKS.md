@@ -6,9 +6,11 @@ A task file is one unit of work: intent, status, open questions, and the plan.
 A task that needs a file lives on its own branch and pull request.
 Branch name: `task/<slug>`.
 The live file on that branch is `tasks/live/<slug>.md`.
-On `done`, move it to `tasks/archive/<slug>.md` on the same branch, then merge.
+On `done`, move it to `tasks/archive/<slug>.md` on the same branch.
+Then merge.
 Do not rename the slug.
-To abandon the work, close the PR without merging and delete the branch; the branch deletion (or an abandon commit on the branch) records why.
+To abandon the work, close the PR without merging and delete the branch.
+The branch deletion (or an abandon commit on the branch) records why.
 
 The plan lives in the task file's Plan section.
 Do not write a separate plan file.
@@ -18,7 +20,7 @@ Do not track work in GitHub Issues.
 
 ## When a task file is required
 
-Create one when any of these hold:
+Create one when any of these hold.
 
 - The work spans more than one session.
 - The work needs a multi-commit plan.
@@ -35,55 +37,109 @@ The status lives on one fixed line, exactly `Status: <draft|ready|done>`.
 
 One task = one branch = one PR.
 Parallel tasks are parallel branches and PRs.
-Do not serialize work on `main` to keep commits contiguous; the PR holds the commit train.
+Do not serialize work on `main` to keep commits contiguous.
+The PR holds the commit train.
 
 ### Schedule (create)
 
-1. Create branch `task/<slug>` from the current integration branch (usually `main`).
+1. Sync, then branch from `origin/main`.
+   - Run `git fetch origin`.
+   - `git status --porcelain` must be empty.
+   - `git log origin/main..HEAD` must be empty.
+   - Push or stash unrelated work first.
+   - Then run `git checkout -b task/<slug> origin/main`.
+   - If `git log origin/main..HEAD` shows commits without `Task: <slug>`, stop.
+   - A hit means the branch is contaminated.
 2. Add `tasks/live/<slug>.md` with `Status: draft`.
 3. Push and open a **draft** PR titled after the task.
-   PR body includes one line: `Task: <slug>`.
+   - PR body includes one line: `Task: <slug>`.
 4. That draft PR is the scheduled unit of work.
-   Finding scheduled and in-flight work means listing open PRs for `task/*` branches, not grepping `main`.
+   - Finding scheduled and in-flight work means listing open PRs for `task/*` branches.
+   - Do not grep `main`.
 
 A `draft` file exists while intent and the plan are being shaped on the branch.
 
 ### Ready (plan approved)
 
-Plan approval flips the file to `Status: ready` and is not an instruction to implement.
+Plan approval flips the file to `Status: ready`.
+Approval is not an instruction to implement.
 Keep the PR draft until the human explicitly asks to implement.
-Do not change status for that ask; `ready` stays `ready` until `done`.
+Do not change status for that ask.
+`ready` stays `ready` until `done`.
 
-If the task depends on another open task, say so in Plan `Depends on:` and either:
-- stack this branch on that task's branch, or
-- wait to branch from `main` until the dependency has merged.
+If the task depends on another open task, say so in Plan `Depends on:`.
+Then either stack or wait.
+
+- Stack this branch on that task's branch.
+- Wait to branch from `origin/main` until the dependency has merged.
 
 Do not assume merge order from PR numbers alone.
 
 ### Implement
 
-When the human asks to implement:
+When the human asks to implement.
 
-1. Mark the PR ready for review.
+1. Keep the PR draft while implementing.
 2. Implement one Plan item per commit on `task/<slug>`.
 3. Every commit that belongs to the task carries one body line: `Task: <slug>`.
-   The slug is the identity; the folder is not.
+   - The slug is the identity.
+   - The folder is not the identity.
 4. Tick each Plan checkbox when that commit exists.
-5. Merge with history preserved (rebase merge or merge commit).
-   Do not squash — Plan items stay separate commits for reviewability.
+5. Keep history linear.
+   - Never create a merge commit.
+   - Never run `git merge`.
+   - Never run `git pull` without `--rebase`.
+   - Never run `gh pr merge --merge`.
+   - To sync, run `git fetch origin && git rebase origin/main`.
+   - To merge the PR, use rebase merge or fast-forward only.
+   - Run `gh pr merge --rebase`.
+   - Do not squash.
+   - Plan items stay separate commits for reviewability.
 
-### Done (merge)
+### Review (gate before archive)
 
-On completion, on the task branch:
+1. After the last Plan item, mark the PR ready for review.
+2. Do not archive yet.
+3. Review per `agents/REVIEW.md` plus the task's area guides.
+4. If changes are needed, add them as new commits on `task/<slug>`.
+   - Each commit carries a `Task: <slug>` trailer.
+   - Update Plan checkboxes if scope changed.
+   - Then re-request review.
+5. Do not create the archive commit until review passes.
+6. Nothing commits after archive except merge.
+
+### Done (merge, gated)
+
+Gate: the branch merges only if all three hold.
+
+- The oldest commit on `origin/main..HEAD` is the Add commit.
+- The newest commit on `origin/main..HEAD` is the Archive commit.
+- Every commit carries `Task: <slug>`.
+
+The Add commit adds `tasks/live/<slug>.md`.
+The Archive commit moves `tasks/live/<slug>.md` to `tasks/archive/<slug>.md`.
+The Archive commit has `Status: done` and Outcome filled.
+
+Verify with `git log origin/main..HEAD --oneline` before merging.
+If Add is not first or Archive is not last, stop.
+If review needs changes after Archive exists, reset the Archive commit first.
+Then add fix commits.
+Then re-archive.
+Never commit on top of Archive.
+
+On completion, work on the task branch.
 
 1. Fill Outcome.
 2. Flip Status to `done`.
 3. Move `tasks/live/<slug>.md` to `tasks/archive/<slug>.md`.
-4. Merge the PR.
-   After merge, the archive file is on the integration branch; the live path is gone.
+4. Merge the PR with rebase merge or fast-forward only.
+   - Do not create merge commits.
+   - After merge, the archive file is on the integration branch.
+   - The live path is gone.
 
 Commits on `main` may interleave across tasks.
-Recover one task's history from its merged PR or with `git log --grep='Task: <slug>'`.
+Recover one task's history from its merged PR.
+Or use `git log --grep='Task: <slug>'`.
 
 ## File
 
@@ -141,14 +197,27 @@ The checkbox is ticked when that commit exists.
 
 ## Session protocol
 
-1. Before starting work, list open `task/*` PRs (draft and ready for review).
-   For each that might overlap the intended work, check out or read `tasks/live/<slug>.md` on that branch (Intent and Scope).
-   If any overlap, surface it to the human; never resolve overlap silently.
-   Do not rely on grepping `tasks/live` on `main` — in-flight files are not there.
+1. Before starting work, list open `task/*` PRs.
+   - Include draft and ready for review.
+   - For each overlapping candidate, read `tasks/live/<slug>.md` on that branch.
+   - Check Intent and Scope.
+   - If any overlap, surface it to the human.
+   - Never resolve overlap silently.
+   - Do not grep `tasks/live` on `main`.
+   - In-flight files are not there.
 2. Record open questions as they appear.
-   Do not guess answers.
-3. Before ending a session, update Open questions and Plan on the task branch so the next session can start from the file.
-4. On completion, fill Outcome, flip Status to `done`, move the file to `tasks/archive/<slug>.md`, and merge with history preserved.
+   - Do not guess answers.
+3. Before ending a session, update Open questions and Plan on the task branch.
+   - The next session starts from the file.
+4. After review passes, archive as the last commit.
+   - Fill Outcome.
+   - Flip Status to `done`.
+   - Move `tasks/live/<slug>.md` to `tasks/archive/<slug>.md`.
+   - Merge with rebase merge or fast-forward only.
+   - Do not create merge commits.
+   - Never commit on top of Archive.
 5. To abandon, close the PR without merging and delete the branch.
 
-A new session starts from the task file on its branch (and the PR), not from memory or chat history.
+A new session starts from the task file on its branch.
+It also starts from the PR.
+It does not start from memory or chat history.
