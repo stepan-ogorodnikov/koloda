@@ -1,6 +1,6 @@
 # Lessons
 
-Covers lessons overview, today's progress on that screen, starting a lesson, amount selection, studying, grading, learn-ahead, session progress, result persistence, completion, and early termination.
+Covers lessons overview, today's progress on that screen, starting a lesson, amount selection, studying, grading, learn-ahead, session progress, result persistence, completion, early termination, and lesson hotkeys.
 Does not cover deck or template editing, FSRS algorithm internals, or hotkey binding configuration.
 Does not define daily limits, the learning-day window, or how today's review totals are counted.
 Those are LEARNING-SETTINGS.md.
@@ -75,6 +75,30 @@ What that effect is depends on the current phase.
 
 Only one lesson dialog can be active.
 If a lesson is already open, a second start request is ignored.
+
+## Hotkeys
+
+A lesson uses configurable hotkeys and fixed system keys.
+Binding configuration, conflict resolution, and validation are HOTKEYS.md.
+That system does not see system keys and does not warn about them.
+
+Configurable hotkeys:
+
+- The "Close popover" hotkey closes or interrupts the lesson, same as `Escape`.
+  What it does depends on the phase; see §Phases.
+- The "Submit" hotkey submits the init form and the current study card while a text field is focused.
+- The "Again", "Hard", "Good", and "Easy" hotkeys grade the submitted card.
+  They fire on key release while studying.
+
+System keys are not configurable and are not checked for conflicts:
+
+- `Escape` closes or interrupts the lesson, same as "Close popover".
+  What it does depends on the phase; see §Phases.
+- `Enter` or `Space` submit the current card, unless focus is in a text input or textarea.
+  `Enter` without modifiers in a type-answer field still submits; `Space` there inserts a space.
+
+Do not bind a configurable hotkey to `Escape`, `Enter`, or `Space` when lessons are used.
+When a configurable hotkey and a system key share a binding, both fire.
 
 ## Phases
 

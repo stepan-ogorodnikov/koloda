@@ -6,6 +6,12 @@ Does not cover specific hotkey actions.
 Desktop zoom (ctrl/cmd `+`/`-`/`0`, ctrl+wheel) intentionally lives outside this system:
 it is not configurable, not scope-gated, and fires while text inputs are focused.
 
+Lesson dialog keys (`Escape`, `Enter`, `Space`) also live outside this system:
+they are not configurable and are not checked for conflicts.
+They are gated to the open lesson dialog; see LESSONS.md (§Hotkeys).
+Avoid binding a configurable hotkey to `Escape`, `Enter`, or `Space` when lessons are used.
+When a configurable hotkey and a lesson system key share the same binding, both actions fire.
+
 ## What is a Hotkey
 
 A hotkey is a keyboard shortcut that triggers an action.
