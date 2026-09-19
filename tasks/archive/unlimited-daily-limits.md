@@ -1,6 +1,6 @@
 # Unlimited daily limits
 
-Status: ready
+Status: done
 
 ## Intent
 
