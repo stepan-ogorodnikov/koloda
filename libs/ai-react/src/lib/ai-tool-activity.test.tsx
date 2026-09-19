@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { AIToolActivity } from "./ai-tool-activity";
 import type { AIToolCallRecord } from "./ai-tool-activity";
@@ -443,6 +443,7 @@ describe("AIToolActivity", () => {
     const toolTrigger = screen.getByRole("button", { name: /ai\.chat\.tool-activity\.list-decks/ });
     expect(toolTrigger.closest("li")?.className).not.toContain("border-main");
     expect(reasoningTrigger.closest("li")?.className).not.toContain("border-main");
+    fireEvent.click(reasoningTrigger);
     expect(screen.getByText("Quiet plan.").className).not.toContain("border-main");
 
     fireEvent.click(toolTrigger);
@@ -458,32 +459,30 @@ describe("AIToolActivity", () => {
     expect(screen.getByText(/"q": 1/)).toBeTruthy();
   });
 
-  it("streams thinking inline and auto-collapses when done", async () => {
-    const { container, rerender } = render(
+  it("keeps thinking collapsed while running and after it finishes", () => {
+    const { rerender } = render(
       <AIToolActivity calls={[{ kind: "reasoning", id: "r1", text: "Quiet plan.", status: "running" }]} />,
     );
 
+    const thinkingTrigger = screen.getByRole("button", { name: /ai\.chat\.tool-activity\.thinking/ });
+    expect(thinkingTrigger.getAttribute("aria-expanded")).toBe("false");
     expect(screen.getByText("ai.chat.tool-activity.thinking")).toBeTruthy();
     expect(screen.getByLabelText("ai.chat.tool-activity.running")).toBeTruthy();
+    expect(screen.queryByText("Quiet plan.")).toBeNull();
+
+    fireEvent.click(thinkingTrigger);
+    expect(thinkingTrigger.getAttribute("aria-expanded")).toBe("true");
     expect(screen.getByText("Quiet plan.")).toBeTruthy();
-    expect(screen.getByText("ai.chat.tool-activity.thinking").className).not.toContain(
-      "animate-shimmer-text--fg-level-4/fg-level-1",
-    );
-    expect(screen.getByText("ai.chat.tool-activity.thinking").closest(".animate-shimmer")).not.toBeNull();
-    expect(container.querySelectorAll(".animate-shimmer")).toHaveLength(1);
 
     rerender(<AIToolActivity calls={[{ kind: "reasoning", id: "r1", text: "Quiet plan.", status: "done" }]} />);
 
-    await waitFor(() => {
-      expect(screen.getByText("ai.chat.tool-activity.thought")).toBeTruthy();
-    });
-    expect(screen.queryByText("Quiet plan.")).toBeNull();
-    expect(screen.getByText("ai.chat.tool-activity.thought").className).not.toContain(
-      "animate-shimmer-text--fg-level-4/fg-level-1",
-    );
-
-    fireEvent.click(screen.getByRole("button", { name: /ai\.chat\.tool-activity\.thought/ }));
+    const thoughtTrigger = screen.getByRole("button", { name: /ai\.chat\.tool-activity\.thought/ });
+    expect(thoughtTrigger.getAttribute("aria-expanded")).toBe("true");
     expect(screen.getByText("Quiet plan.")).toBeTruthy();
+
+    fireEvent.click(thoughtTrigger);
+    expect(thoughtTrigger.getAttribute("aria-expanded")).toBe("false");
+    expect(screen.queryByText("Quiet plan.")).toBeNull();
   });
 
   it("uses renderText for reasoning when provided", () => {
@@ -494,6 +493,8 @@ describe("AIToolActivity", () => {
       />,
     );
 
+    expect(screen.queryByTestId("custom-reasoning")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: /ai\.chat\.tool-activity\.thinking/ }));
     expect(screen.getByTestId("custom-reasoning").textContent).toBe("**plan**");
   });
 

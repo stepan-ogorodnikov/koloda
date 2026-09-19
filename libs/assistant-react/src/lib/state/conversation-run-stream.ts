@@ -47,8 +47,8 @@ export function updateAssistantText(draft: ConversationReducerState, payload: Up
   } else {
     msg.parts.push({ type: "text" as const, text: payload.text });
   }
-  // WHY: the answer starting is the same signal as a tool call — close the
-  // open thinking row so the activity widget can auto-collapse it.
+  // WHY: the answer starting is the same signal as a tool call — finish
+  // thinking so the row label switches to Thought.
   if (payload.text !== "") {
     const run = draft.runs[payload.runId];
     if (run) finishRunningReasoning(run);

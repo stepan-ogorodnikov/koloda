@@ -98,11 +98,10 @@ type ReasoningActivityRowProps = { item: AIReasoningRecord; renderText?: (text: 
 
 function ReasoningActivityRow({ item, renderText }: ReasoningActivityRowProps) {
   const { _ } = useLingui();
-  const [isUserOpen, setIsUserOpen] = useState<boolean | null>(null);
+  // WHY: thinking starts collapsed like tool payloads, including while tokens
+  // arrive. The user opens the fold to read the markdown.
+  const [isOpen, setIsOpen] = useState(false);
   const isRunning = item.status === "running";
-  // WHY: open while tokens are arriving; auto-collapse when the next tool or
-  // the answer starts (`status` flips to done) unless the user toggled.
-  const isOpen = isUserOpen ?? isRunning;
   const displayName = isRunning ? _(msg`ai.chat.tool-activity.thinking`) : _(msg`ai.chat.tool-activity.thought`);
 
   return (
@@ -110,7 +109,7 @@ function ReasoningActivityRow({ item, renderText }: ReasoningActivityRowProps) {
       <Button
         variants={{ style: "ghost", class: toolActivityTriggerClass }}
         aria-expanded={isOpen}
-        onPress={() => setIsUserOpen(!isOpen)}
+        onPress={() => setIsOpen(!isOpen)}
       >
         <span className={toolActivityHeadline()}>
           <HugeiconsIcon
@@ -142,8 +141,8 @@ type ToolActivityRowProps = { call: AIToolCallRecord };
 
 function ToolActivityRow({ call }: ToolActivityRowProps) {
   const { _ } = useLingui();
-  // WHY: tool payloads stay collapsed until the user opens them. Reasoning
-  // auto-opens while tokens arrive; a JSON dump must not.
+  // WHY: tool payloads stay collapsed until the user opens them, including
+  // while the call is running.
   const [isOpen, setIsOpen] = useState(false);
   const displayName = toolCallLabel(call.name, _);
   const summaries = toolCallSummaries(call, _);
@@ -161,7 +160,7 @@ function ToolActivityRow({ call }: ToolActivityRowProps) {
         aria-expanded={isOpen}
         onPress={() => setIsOpen(!isOpen)}
       >
-        <span className={toolActivityHeadline()}>
+        <span className={toolActivityHeadline({ isRunning: call.status === "running" })}>
           <ToolCallStatusIcon name={call.name} status={call.status} />
           <span className="flex flex-row items-center gap-1">
             <span className="font-medium">{displayName}</span>

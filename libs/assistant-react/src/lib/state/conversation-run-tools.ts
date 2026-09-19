@@ -34,8 +34,8 @@ export function addToolCall(draft: ConversationReducerState, payload: AddToolCal
   if (!run) return;
   const activity = ensureActivity(run);
   if (activity.some((call) => call.id === payload.call.id)) return;
-  // WHY: a tool call is the next timeline step — close thinking so the
-  // widget can collapse it before the new tool row appears.
+  // WHY: a tool call is the next timeline step — finish thinking so the
+  // row label switches to Thought before the new tool row appears.
   finishRunningReasoning(run);
   activity.push({
     ...payload.call,

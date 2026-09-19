@@ -90,7 +90,7 @@ Tool traffic is visible in the chat feed as compact rows on that assistant messa
 - A running call keeps the tool icon and shimmers the whole row.
 - A failed call is marked failed.
 - Expanding a row shows the protocol id, the input, and the output or error.
-- Tool rows start collapsed, including while a call is running.
+- Tool and reasoning rows start collapsed, including while a call or thinking is in progress.
 - The user can expand or collapse the row.
 - A chevron after the label points right when collapsed and rotates down when expanded.
 - An elapsed time follows the label, separated by a dot, once the call has taken at least one second. A running call ticks; a finished call shows the frozen duration. Sub-second calls omit it.

@@ -185,9 +185,9 @@ User messages are displayed as paragraphs.
 Reasoning is shown as an activity row on the same assistant message.
 It sits in the same activity list as tool calls, in the order they arrived.
 The reasoning text is displayed as rendered markdown, using the same sanitization as assistant text.
-While the model is thinking, the row is labeled Thinking and the reasoning text is visible.
-When thinking finishes, the row is labeled Thought and the text is collapsed.
-A user toggle is kept if they already opened or closed it.
+While the model is thinking, the row is labeled Thinking.
+When thinking finishes, the row is labeled Thought.
+The reasoning text is collapsed by default, including while thinking.
 The user can expand or collapse the row.
 A chevron after the label points right when collapsed and rotates down when expanded.
 An elapsed time follows the label, separated by a dot, the same way the message status shows it.
