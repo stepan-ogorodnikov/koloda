@@ -11,8 +11,46 @@ import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
+import { useRef } from "react";
 
 export type SettingsLearningProps = { data: ResolvedLearningSettings };
+
+export function DailyLimitCapField({
+  label,
+  unlimitedLabel,
+  value,
+  onChange,
+}: {
+  label: string;
+  unlimitedLabel: string;
+  value: number | null;
+  onChange: (value: number | null) => void;
+}) {
+  const lastNumber = useRef(value ?? 0);
+  if (typeof value === "number") lastNumber.current = value;
+  const isUnlimited = value == null;
+
+  return (
+    <div className="flex flex-row flex-wrap items-end gap-4">
+      <NumberField
+        minValue={0}
+        isDisabled={isUnlimited}
+        value={isUnlimited ? lastNumber.current : value}
+        onChange={(next) => {
+          lastNumber.current = next;
+          onChange(next);
+        }}
+      >
+        <Label>{label}</Label>
+        <NumberField.Group />
+      </NumberField>
+      <Switch isSelected={isUnlimited} onChange={(on) => onChange(on ? null : lastNumber.current)}>
+        <Switch.Indicator />
+        <Switch.Label>{unlimitedLabel}</Switch.Label>
+      </Switch>
+    </div>
+  );
+}
 
 export function SettingsLearning({ data }: SettingsLearningProps) {
   const queryClient = useQueryClient();
@@ -40,6 +78,8 @@ export function SettingsLearning({ data }: SettingsLearningProps) {
       );
     },
   });
+
+  const unlimitedLabel = _(msg`settings.learning.limits.unlimited`);
 
   return (
     <form
@@ -73,19 +113,23 @@ export function SettingsLearning({ data }: SettingsLearningProps) {
       <FormLayout.Section term={_(msg`settings.learning.limits`)}>
         <form.Field name="dailyLimits.total">
           {(field) => (
-            <NumberField minValue={0} value={field.state.value} onChange={field.handleChange}>
-              <Label>{_(msg`settings.learning.limits.total`)}</Label>
-              <NumberField.Group />
-            </NumberField>
+            <DailyLimitCapField
+              label={_(msg`settings.learning.limits.total`)}
+              unlimitedLabel={unlimitedLabel}
+              value={field.state.value}
+              onChange={field.handleChange}
+            />
           )}
         </form.Field>
         <div className="flex flex-row flex-wrap items-end gap-4">
           <form.Field name="dailyLimits.untouched.value">
             {(field) => (
-              <NumberField minValue={0} value={field.state.value} onChange={field.handleChange}>
-                <Label>{_(msg`settings.learning.limits.untouched`)}</Label>
-                <NumberField.Group />
-              </NumberField>
+              <DailyLimitCapField
+                label={_(msg`settings.learning.limits.untouched`)}
+                unlimitedLabel={unlimitedLabel}
+                value={field.state.value}
+                onChange={field.handleChange}
+              />
             )}
           </form.Field>
           <form.Field name="dailyLimits.untouched.counts">
@@ -100,10 +144,12 @@ export function SettingsLearning({ data }: SettingsLearningProps) {
         <div className="flex flex-row flex-wrap items-end gap-4">
           <form.Field name="dailyLimits.learn.value">
             {(field) => (
-              <NumberField minValue={0} value={field.state.value} onChange={field.handleChange}>
-                <Label>{_(msg`settings.learning.limits.learn`)}</Label>
-                <NumberField.Group />
-              </NumberField>
+              <DailyLimitCapField
+                label={_(msg`settings.learning.limits.learn`)}
+                unlimitedLabel={unlimitedLabel}
+                value={field.state.value}
+                onChange={field.handleChange}
+              />
             )}
           </form.Field>
           <form.Field name="dailyLimits.learn.counts">
@@ -118,10 +164,12 @@ export function SettingsLearning({ data }: SettingsLearningProps) {
         <div className="flex flex-row flex-wrap items-end gap-4">
           <form.Field name="dailyLimits.review.value">
             {(field) => (
-              <NumberField minValue={0} value={field.state.value} onChange={field.handleChange}>
-                <Label>{_(msg`settings.learning.limits.review`)}</Label>
-                <NumberField.Group />
-              </NumberField>
+              <DailyLimitCapField
+                label={_(msg`settings.learning.limits.review`)}
+                unlimitedLabel={unlimitedLabel}
+                value={field.state.value}
+                onChange={field.handleChange}
+              />
             )}
           </form.Field>
           <form.Field name="dailyLimits.review.counts">

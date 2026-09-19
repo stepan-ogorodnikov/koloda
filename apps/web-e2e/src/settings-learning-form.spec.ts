@@ -113,3 +113,55 @@ test("validates and resets the learning settings form", async ({ page }) => {
   await expect(hoursField).toHaveValue(initialHours);
   await expect(minutesField).toHaveValue(initialMinutes);
 });
+
+test("unlimited total allows a counted cap above any previous total", async ({ page }) => {
+  await setupWeb(page);
+
+  await createAlgorithm(page, "Test Algorithm");
+  await createTemplate(page, "Test Template");
+  await openLearningSettings(page);
+
+  const newField = page.getByRole("textbox", { name: "New" });
+  const saveButton = page.locator("form").getByRole("button", { name: "Save", exact: true });
+  const totalUnlimited = page.getByRole("switch", { name: "Unlimited" }).first();
+
+  await totalUnlimited.click();
+  await expect(totalUnlimited).toBeChecked();
+  await expect(page.getByRole("textbox", { name: "Total" })).toBeDisabled();
+
+  await newField.click();
+  await newField.fill("999");
+  await newField.blur();
+
+  await saveButton.scrollIntoViewIfNeeded();
+  await saveButton.click();
+  await expect(saveButton).toBeDisabled();
+  await expect(page.getByText("New can't be more than total")).not.toBeVisible();
+});
+
+test("hard-zero total rejects a counted cap above zero", async ({ page }) => {
+  await setupWeb(page);
+
+  await createAlgorithm(page, "Test Algorithm");
+  await createTemplate(page, "Test Template");
+  await openLearningSettings(page);
+
+  const totalField = page.getByRole("textbox", { name: "Total" });
+  const newField = page.getByRole("textbox", { name: "New" });
+  const reviewField = page.getByRole("textbox", { name: "Review" });
+  const saveButton = page.locator("form").getByRole("button", { name: "Save", exact: true });
+
+  await totalField.click();
+  await totalField.fill("0");
+  await totalField.blur();
+  await newField.click();
+  await newField.fill("1");
+  await newField.blur();
+  await reviewField.click();
+  await reviewField.fill("0");
+  await reviewField.blur();
+
+  await saveButton.scrollIntoViewIfNeeded();
+  await saveButton.click();
+  await expect(page.getByText("New can't be more than total")).toBeVisible();
+});

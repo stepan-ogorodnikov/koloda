@@ -83,7 +83,7 @@ Out:
   Commit: Treat null daily limits as unlimited and zero as a hard cap
   Depends on: 1
 
-- [ ] 3. Add Unlimited switches on the learning settings form
+- [x] 3. Add Unlimited switches on the learning settings form
   Goal: Each of Total, New, Learn, and Review has an Unlimited switch beside its number field.
   On: the stored value is `null` and the number field is disabled or hidden.
   Off: restore the last number or `0`.
@@ -102,4 +102,7 @@ Out:
 
 ## Outcome
 
-<what shipped>
+Daily limits are unlimited (`null`) or a hard cap (`0` or greater).
+Learning settings expose an Unlimited switch per cap.
+Today's progress and lesson init show infinity for unlimited caps.
+Existing stored Total `0` still reads as unlimited.
