@@ -1,5 +1,10 @@
 import { parseDayStartsAt } from "@koloda/app";
-import { LEARNING_DAILY_LIMIT_TYPES, learningSettingsValidation } from "@koloda/app";
+import {
+  LEARNING_DAILY_LIMIT_TYPES,
+  isBucketOverDailyLimit,
+  isFiniteDailyLimitOver,
+  resolvedLearningSettingsValidation,
+} from "@koloda/app";
 import type { AllowedSettings } from "@koloda/settings";
 import type { DateInput, ReviewLog as ReviewFSRS } from "ts-fsrs";
 import { z } from "zod";
@@ -106,7 +111,7 @@ export async function calculateTodaysReviewTotals(
   learningSettings: AllowedSettings<"learning">["content"],
   reviewTotals: ReviewTotals,
 ) {
-  const { dailyLimits } = learningSettingsValidation.parse(learningSettings);
+  const { dailyLimits } = resolvedLearningSettingsValidation.parse(learningSettings);
   const countedTotal = LEARNING_DAILY_LIMIT_TYPES.reduce(
     (total, type) => (dailyLimits[type].counts ? total + Number(reviewTotals[type] || 0) : total),
     0,
@@ -114,19 +119,28 @@ export async function calculateTodaysReviewTotals(
   const normalizedReviewTotals = { ...reviewTotals, total: countedTotal };
   const { untouched, learn, review, total } = normalizedReviewTotals;
   const meta = {
-    isUntouchedOverTheLimit:
-      untouched > 0 &&
-      (untouched > dailyLimits.untouched.value ||
-        (dailyLimits.total > 0 && dailyLimits.untouched.counts && total >= dailyLimits.total)),
-    isLearnOverTheLimit:
-      learn > 0 &&
-      (learn > dailyLimits.learn.value ||
-        (dailyLimits.total > 0 && dailyLimits.learn.counts && total >= dailyLimits.total)),
-    isReviewOverTheLimit:
-      review > 0 &&
-      (review > dailyLimits.review.value ||
-        (dailyLimits.total > 0 && dailyLimits.review.counts && total >= dailyLimits.total)),
-    isTotalOverTheLimit: dailyLimits.total > 0 && total > 0 && total >= dailyLimits.total,
+    isUntouchedOverTheLimit: isBucketOverDailyLimit(
+      dailyLimits.untouched.counts,
+      untouched,
+      dailyLimits.untouched.value,
+      total,
+      dailyLimits.total,
+    ),
+    isLearnOverTheLimit: isBucketOverDailyLimit(
+      dailyLimits.learn.counts,
+      learn,
+      dailyLimits.learn.value,
+      total,
+      dailyLimits.total,
+    ),
+    isReviewOverTheLimit: isBucketOverDailyLimit(
+      dailyLimits.review.counts,
+      review,
+      dailyLimits.review.value,
+      total,
+      dailyLimits.total,
+    ),
+    isTotalOverTheLimit: isFiniteDailyLimitOver(dailyLimits.total, total, "total"),
   };
   return { dailyLimits, reviewTotals: normalizedReviewTotals, meta };
 }

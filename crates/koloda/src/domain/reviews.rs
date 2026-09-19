@@ -6,7 +6,7 @@ use crate::app::error::{error_codes, AppError};
 use crate::domain::progress::{
     validate_difficulty, validate_learning_steps, validate_scheduled_days, validate_stability, validate_state,
 };
-use crate::domain::settings_learning::DailyLimits;
+use crate::domain::settings_learning::{is_bucket_over_daily_limit, is_finite_daily_limit_over, DailyLimits};
 use crate::domain::time::{deserialize_timestamp, serialize_timestamp};
 
 const RATING_MIN: i32 = 1;
@@ -135,30 +135,28 @@ pub fn calculate_todays_review_totals(
     );
 
     let meta = TodaysReviewTotalsMeta {
-        is_untouched_over_the_limit: is_bucket_over_the_limit(
+        is_untouched_over_the_limit: is_bucket_over_daily_limit(
             daily_limits.untouched.counts,
             review_totals.untouched,
             daily_limits.untouched.value,
             review_totals.total,
             daily_limits.total,
         ),
-        is_learn_over_the_limit: is_bucket_over_the_limit(
+        is_learn_over_the_limit: is_bucket_over_daily_limit(
             daily_limits.learn.counts,
             review_totals.learn,
             daily_limits.learn.value,
             review_totals.total,
             daily_limits.total,
         ),
-        is_review_over_the_limit: is_bucket_over_the_limit(
+        is_review_over_the_limit: is_bucket_over_daily_limit(
             daily_limits.review.counts,
             review_totals.review,
             daily_limits.review.value,
             review_totals.total,
             daily_limits.total,
         ),
-        is_total_over_the_limit: daily_limits.total > 0
-            && review_totals.total > 0
-            && review_totals.total >= i64::from(daily_limits.total),
+        is_total_over_the_limit: is_finite_daily_limit_over(daily_limits.total, review_totals.total, true),
     };
 
     TodaysReviewTotals {
@@ -166,14 +164,6 @@ pub fn calculate_todays_review_totals(
         review_totals,
         meta,
     }
-}
-
-// INVARIANT: a Total limit of 0 is "no cap", not a hard zero, while a bucket
-// limit of 0 is a hard zero — any counted review is strictly above it. A bucket
-// is over its own limit strictly above it, and over the shared Total only when
-// it counts toward Total and the (non-zero) Total is reached (`>=`, matching TS).
-fn is_bucket_over_the_limit(counted: bool, bucket: i64, bucket_limit: u32, total: i64, total_limit: u32) -> bool {
-    bucket > 0 && (bucket > i64::from(bucket_limit) || (total_limit > 0 && counted && total >= i64::from(total_limit)))
 }
 
 fn validate_rating(rating: i32) -> Result<(), AppError> {

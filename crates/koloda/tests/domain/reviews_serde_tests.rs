@@ -171,17 +171,17 @@ fn test_todays_review_totals_serializes_wire_shape() {
             total: 999,
         },
         DailyLimits {
-            total: 10,
+            total: Some(10),
             untouched: CountedDailyLimit {
-                value: 5,
+                value: Some(5),
                 counts: false,
             },
             learn: CountedDailyLimit {
-                value: 20,
+                value: Some(20),
                 counts: true,
             },
             review: CountedDailyLimit {
-                value: 20,
+                value: Some(20),
                 counts: true,
             },
         },

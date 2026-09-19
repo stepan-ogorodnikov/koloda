@@ -12,13 +12,11 @@ const lessonInitLearnedToday = tv({
 
 type LessonInitLearnedTodayProps = TWVProps<typeof lessonInitLearnedToday> & {
   learned: number;
-  limit: number;
-  /** Total daily limit only — a zero total means uncapped (LEARNING-SETTINGS §Daily Limits). */
-  isUncappedWhenZero?: boolean;
+  limit: number | null;
 };
 
-export function LessonInitLearnedToday({ variants, learned, limit, isUncappedWhenZero }: LessonInitLearnedTodayProps) {
-  const showInfinity = isUncappedWhenZero && limit === 0;
+export function LessonInitLearnedToday({ variants, learned, limit }: LessonInitLearnedTodayProps) {
+  const showInfinity = limit == null;
 
   return (
     <div className={lessonInitLearnedToday(variants)}>

@@ -66,8 +66,11 @@ export {
 export {
   DEFAULT_LEARNING_SETTINGS,
   LEARNING_DAILY_LIMIT_TYPES,
+  isBucketOverDailyLimit,
+  isFiniteDailyLimitOver,
   learningSettingsValidation,
   parseDayStartsAt,
+  remainingDailyLimitRoom,
   resolvedLearningSettingsValidation,
 } from "./lib/settings-learning";
 export type { LearningSettings, ResolvedLearningSettings } from "./lib/settings-learning";

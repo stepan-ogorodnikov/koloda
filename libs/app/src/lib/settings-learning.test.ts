@@ -151,14 +151,55 @@ describe("learningSettingsValidation", () => {
 });
 
 describe("daily limits refine rules", () => {
-  it("allows any sub-limit values when total is 0", () => {
+  it("allows any sub-limit values when total is null", () => {
     const result = learningSettingsValidation.safeParse({
+      defaults,
+      dailyLimits: {
+        total: null,
+        untouched: { value: 999, counts: true },
+        learn: { value: 999, counts: true },
+        review: { value: 999, counts: true },
+      },
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("coerces a stored total of 0 to null on the defaulting schema", () => {
+    const result = learningSettingsValidation.parse({
       defaults,
       dailyLimits: {
         total: 0,
         untouched: { value: 999, counts: true },
         learn: { value: 999, counts: true },
         review: { value: 999, counts: true },
+      },
+    });
+    expect(result.dailyLimits.total).toBeNull();
+  });
+
+  it("rejects counted values above a hard-zero total on the resolved schema", () => {
+    const result = resolvedLearningSettingsValidation.safeParse({
+      defaults,
+      dailyLimits: {
+        total: 0,
+        untouched: { value: 1, counts: true },
+        learn: { value: 0, counts: false },
+        review: { value: 0, counts: true },
+      },
+      dayStartsAt: "05:00",
+      learnAheadLimit: [0, 30],
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("allows unlimited per-type values when total is finite", () => {
+    const result = learningSettingsValidation.safeParse({
+      defaults,
+      dailyLimits: {
+        total: 10,
+        untouched: { value: null, counts: true },
+        learn: { value: 5, counts: true },
+        review: { value: 5, counts: true },
       },
     });
     expect(result.success).toBe(true);
@@ -343,6 +384,21 @@ describe("resolvedLearningSettingsValidation", () => {
       learnAheadLimit: [0, 30],
     });
     expect(result.success).toBe(true);
+  });
+
+  it("keeps a resolved total of 0 as a hard cap", () => {
+    const result = resolvedLearningSettingsValidation.parse({
+      defaults,
+      dailyLimits: {
+        total: 0,
+        untouched: { value: 0, counts: true },
+        learn: { value: 0, counts: false },
+        review: { value: 0, counts: true },
+      },
+      dayStartsAt: "05:00",
+      learnAheadLimit: [0, 30],
+    });
+    expect(result.dailyLimits.total).toBe(0);
   });
 });
 

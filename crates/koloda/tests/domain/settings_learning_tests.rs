@@ -119,12 +119,12 @@ fn test_empty_daily_limits_object_fills_defaults() {
     let json = build_learning_settings_json("{}", r#""04:00""#, "[4, 0]");
 
     let settings: LearningSettings = serde_json::from_str(&json).expect("Should deserialize with default daily limits");
-    assert_eq!(settings.daily_limits.total, 200);
-    assert_eq!(settings.daily_limits.untouched.value, 50);
+    assert_eq!(settings.daily_limits.total, Some(200));
+    assert_eq!(settings.daily_limits.untouched.value, Some(50));
     assert!(settings.daily_limits.untouched.counts);
-    assert_eq!(settings.daily_limits.learn.value, 0);
+    assert_eq!(settings.daily_limits.learn.value, Some(0));
     assert!(!settings.daily_limits.learn.counts);
-    assert_eq!(settings.daily_limits.review.value, 200);
+    assert_eq!(settings.daily_limits.review.value, Some(200));
     assert!(settings.daily_limits.review.counts);
     settings.validate().unwrap();
 }
@@ -134,12 +134,12 @@ fn test_partial_daily_limits_fill_per_type_defaults() {
     let json = build_learning_settings_json(r#"{"total": 200, "untouched": 20}"#, r#""04:00""#, "[4, 0]");
 
     let settings: LearningSettings = serde_json::from_str(&json).expect("Should deserialize with defaulted limits");
-    assert_eq!(settings.daily_limits.total, 200);
-    assert_eq!(settings.daily_limits.untouched.value, 20);
+    assert_eq!(settings.daily_limits.total, Some(200));
+    assert_eq!(settings.daily_limits.untouched.value, Some(20));
     assert!(settings.daily_limits.untouched.counts);
-    assert_eq!(settings.daily_limits.learn.value, 0);
+    assert_eq!(settings.daily_limits.learn.value, Some(0));
     assert!(!settings.daily_limits.learn.counts);
-    assert_eq!(settings.daily_limits.review.value, 200);
+    assert_eq!(settings.daily_limits.review.value, Some(200));
     assert!(settings.daily_limits.review.counts);
     settings.validate().unwrap();
 }
@@ -158,12 +158,12 @@ fn test_partial_counted_limit_objects_fill_per_type_defaults() {
 
     let settings: LearningSettings =
         serde_json::from_str(&json).expect("Should deserialize with defaulted limit fields");
-    assert_eq!(settings.daily_limits.total, 200);
-    assert_eq!(settings.daily_limits.untouched.value, 50);
+    assert_eq!(settings.daily_limits.total, Some(200));
+    assert_eq!(settings.daily_limits.untouched.value, Some(50));
     assert!(settings.daily_limits.untouched.counts);
-    assert_eq!(settings.daily_limits.learn.value, 5);
+    assert_eq!(settings.daily_limits.learn.value, Some(5));
     assert!(!settings.daily_limits.learn.counts);
-    assert_eq!(settings.daily_limits.review.value, 200);
+    assert_eq!(settings.daily_limits.review.value, Some(200));
     assert!(!settings.daily_limits.review.counts);
     settings.validate().unwrap();
 }
@@ -174,7 +174,7 @@ fn test_null_counted_limit_fills_default() {
     let json = build_learning_settings_json(r#"{"untouched": null}"#, r#""04:00""#, "[4, 0]");
 
     let settings: LearningSettings = serde_json::from_str(&json).expect("Should deserialize null limit with defaults");
-    assert_eq!(settings.daily_limits.untouched.value, 50);
+    assert_eq!(settings.daily_limits.untouched.value, Some(50));
     assert!(settings.daily_limits.untouched.counts);
     settings.validate().unwrap();
 }
@@ -256,7 +256,7 @@ fn test_defaults_hyphenless_uuid_fails() {
 }
 
 #[test]
-fn test_daily_limits_zero_total_allows_any_values() {
+fn test_daily_limits_zero_total_coerces_to_unlimited() {
     let json = build_learning_settings_json(
         r#"{
             "total": 0,
@@ -269,7 +269,79 @@ fn test_daily_limits_zero_total_allows_any_values() {
     );
 
     let settings: LearningSettings = serde_json::from_str(&json).expect("Should deserialize");
-    assert!(settings.validate().is_ok(), "Zero total should allow any values");
+    assert_eq!(settings.daily_limits.total, None);
+    assert!(settings.validate().is_ok(), "Legacy total 0 is unlimited");
+}
+
+#[test]
+fn test_daily_limits_null_total_allows_any_values() {
+    let json = build_learning_settings_json(
+        r#"{
+            "total": null,
+            "untouched": {"value": 999, "counts": true},
+            "learn": {"value": 999, "counts": true},
+            "review": {"value": 999, "counts": true}
+        }"#,
+        r#""04:00""#,
+        "[4, 0]",
+    );
+
+    let settings: LearningSettings = serde_json::from_str(&json).expect("Should deserialize");
+    assert_eq!(settings.daily_limits.total, None);
+    assert!(settings.validate().is_ok(), "Null total should allow any values");
+}
+
+#[test]
+fn test_daily_limits_hard_zero_total_rejects_counted_values() {
+    use koloda::domain::settings_learning::{CountedDailyLimit, DailyLimits, LearnAheadLimit, LearningDefaults};
+
+    let settings = LearningSettings {
+        defaults: LearningDefaults {
+            algorithm: "01900000-0000-7000-8000-000000000001".to_string(),
+            template: "01900000-0000-7000-8000-000000000002".to_string(),
+        },
+        daily_limits: DailyLimits {
+            total: Some(0),
+            untouched: CountedDailyLimit {
+                value: Some(1),
+                counts: true,
+            },
+            learn: CountedDailyLimit {
+                value: Some(0),
+                counts: false,
+            },
+            review: CountedDailyLimit {
+                value: Some(0),
+                counts: true,
+            },
+        },
+        day_starts_at: "04:00".to_string(),
+        learn_ahead_limit: LearnAheadLimit(4, 0),
+    };
+
+    let err = settings.validate().unwrap_err();
+    assert_eq!(
+        err.code,
+        "validation.settings-learning.daily-limits.untouched-exceeds-total"
+    );
+}
+
+#[test]
+fn test_daily_limits_unlimited_per_type_allowed_with_finite_total() {
+    let json = build_learning_settings_json(
+        r#"{
+            "total": 10,
+            "untouched": {"value": null, "counts": true},
+            "learn": {"value": 5, "counts": true},
+            "review": {"value": 5, "counts": true}
+        }"#,
+        r#""04:00""#,
+        "[4, 0]",
+    );
+
+    let settings: LearningSettings = serde_json::from_str(&json).expect("Should deserialize");
+    assert_eq!(settings.daily_limits.untouched.value, None);
+    settings.validate().unwrap();
 }
 
 #[test]

@@ -566,4 +566,36 @@ describe("calculateInitialLessonAmounts", () => {
       }),
     ).toEqual({ untouched: 0, learn: 0, review: 0, total: 0 });
   });
+
+  it("treats a null per-type limit as uncapped for defaults", () => {
+    expect(
+      calculateInitialLessonAmounts({
+        type: "untouched",
+        available: TOTAL_LESSONS.total,
+        dailyLimits: {
+          total: null,
+          untouched: { value: null, counts: true },
+          learn: { value: 10, counts: true },
+          review: { value: 10, counts: true },
+        },
+        reviewTotals: { untouched: 0, learn: 0, review: 0, total: 0 },
+      }),
+    ).toEqual({ untouched: 5, learn: 0, review: 0, total: 5 });
+  });
+
+  it("treats a hard-zero total as no remaining counted room", () => {
+    expect(
+      calculateInitialLessonAmounts({
+        type: "total",
+        available: TOTAL_LESSONS.total,
+        dailyLimits: {
+          total: 0,
+          untouched: { value: 10, counts: true },
+          learn: { value: 10, counts: false },
+          review: { value: 10, counts: true },
+        },
+        reviewTotals: { untouched: 0, learn: 0, review: 0, total: 0 },
+      }),
+    ).toEqual({ untouched: 0, learn: 4, review: 0, total: 4 });
+  });
 });

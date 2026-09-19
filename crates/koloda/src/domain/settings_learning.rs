@@ -5,6 +5,8 @@
 //! `untouched` {50, true}, `learn` {0, false}, `review` {200, true},
 //! `dayStartsAt` "05:00", `learnAheadLimit` [0, 30]. The `dailyLimits` key
 //! itself stays required, same as the TS twin (only its contents default).
+//! Daily-limit caps are `Option<u32>`: `None` is unlimited, `Some(0)` is a hard
+//! zero. Input Total `0` still deserializes as `None` (legacy unlimited).
 
 use serde::{Deserialize, Deserializer, Serialize};
 
@@ -97,8 +99,8 @@ fn day_starts_at_error(value: &str) -> AppError {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DailyLimits {
-    #[serde(default = "default_daily_limits_total")]
-    pub total: u32,
+    #[serde(default = "default_daily_limits_total", deserialize_with = "deserialize_total")]
+    pub total: Option<u32>,
     #[serde(
         default = "default_untouched_limit",
         deserialize_with = "deserialize_untouched_limit"
@@ -112,22 +114,19 @@ pub struct DailyLimits {
 
 impl DailyLimits {
     fn validate(&self) -> Result<(), AppError> {
-        if self.total == 0 {
-            return Ok(());
-        }
-        if self.untouched.counts && self.untouched.value > self.total {
+        if counted_exceeds_total(self.total, &self.untouched) {
             return Err(AppError::new(
                 error_codes::VALIDATION_SETTINGS_LEARNING_DAILY_LIMITS_UNTOUCHED_EXCEEDS_TOTAL,
                 None,
             ));
         }
-        if self.learn.counts && self.learn.value > self.total {
+        if counted_exceeds_total(self.total, &self.learn) {
             return Err(AppError::new(
                 error_codes::VALIDATION_SETTINGS_LEARNING_DAILY_LIMITS_LEARN_EXCEEDS_TOTAL,
                 None,
             ));
         }
-        if self.review.counts && self.review.value > self.total {
+        if counted_exceeds_total(self.total, &self.review) {
             return Err(AppError::new(
                 error_codes::VALIDATION_SETTINGS_LEARNING_DAILY_LIMITS_REVIEW_EXCEEDS_TOTAL,
                 None,
@@ -137,32 +136,78 @@ impl DailyLimits {
     }
 }
 
+fn counted_exceeds_total(total: Option<u32>, limit: &CountedDailyLimit) -> bool {
+    match (total, limit.counts, limit.value) {
+        (None, _, _) | (_, false, _) | (_, _, None) => false,
+        (Some(total), true, Some(value)) => value > total,
+    }
+}
+
+pub fn is_finite_daily_limit_over(limit: Option<u32>, used: i64, at_limit: bool) -> bool {
+    let Some(limit) = limit else {
+        return false;
+    };
+    if used <= 0 {
+        return false;
+    }
+    if at_limit {
+        used >= i64::from(limit)
+    } else {
+        used > i64::from(limit)
+    }
+}
+
+pub fn is_bucket_over_daily_limit(
+    counted: bool,
+    bucket: i64,
+    bucket_limit: Option<u32>,
+    total: i64,
+    total_limit: Option<u32>,
+) -> bool {
+    bucket > 0
+        && (is_finite_daily_limit_over(bucket_limit, bucket, false)
+            || (counted && is_finite_daily_limit_over(total_limit, total, true)))
+}
+
 // WHY: TS defaults mirrored from `learningSettingsValidation` / `dailyLimitsValidation`.
 // Serde `default` fills missing keys only (explicit `null` still fails),
 // matching Zod `.default()`; the per-limit `deserialize_with` wrappers below
 // additionally map present `null`/partial objects the way the TS
 // `z.preprocess` (`value ?? {}` + per-field defaults) does.
-fn default_daily_limits_total() -> u32 {
-    200
+fn default_daily_limits_total() -> Option<u32> {
+    Some(200)
+}
+
+// WHY: stored Total 0 meant unlimited. Map it to None on input. Missing keys use
+// serde default Some(200), not this function. Form-resolved Some(0) is a hard cap
+// and is constructed in tests without going through this deserializer.
+fn deserialize_total<'de, D>(deserializer: D) -> Result<Option<u32>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    match Option::<u32>::deserialize(deserializer)? {
+        None | Some(0) => Ok(None),
+        Some(n) => Ok(Some(n)),
+    }
 }
 
 fn default_untouched_limit() -> CountedDailyLimit {
     CountedDailyLimit {
-        value: 50,
+        value: Some(50),
         counts: true,
     }
 }
 
 fn default_learn_limit() -> CountedDailyLimit {
     CountedDailyLimit {
-        value: 0,
+        value: Some(0),
         counts: false,
     }
 }
 
 fn default_review_limit() -> CountedDailyLimit {
     CountedDailyLimit {
-        value: 200,
+        value: Some(200),
         counts: true,
     }
 }
@@ -178,8 +223,25 @@ fn default_learn_ahead_limit() -> LearnAheadLimit {
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CountedDailyLimit {
-    pub value: u32,
+    pub value: Option<u32>,
     pub counts: bool,
+}
+
+#[derive(Debug, Default)]
+enum OptionalLimitValue {
+    #[default]
+    Missing,
+    Unlimited,
+    Capped(u32),
+}
+
+impl<'de> Deserialize<'de> for OptionalLimitValue {
+    fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        Ok(match Option::<u32>::deserialize(deserializer)? {
+            None => OptionalLimitValue::Unlimited,
+            Some(n) => OptionalLimitValue::Capped(n),
+        })
+    }
 }
 
 #[derive(Debug, Deserialize)]
@@ -188,7 +250,7 @@ enum CountedDailyLimitPartial {
     Value(u32),
     Object {
         #[serde(default)]
-        value: Option<u32>,
+        value: OptionalLimitValue,
         #[serde(default)]
         counts: Option<bool>,
     },
@@ -205,14 +267,23 @@ where
     // WHY: `Option` outer maps explicit `null` to per-type defaults, mirroring
     // TS `value ?? {}`. Numeric shorthand always counts, same as the TS
     // preprocess (`{ value, counts: true }` regardless of the type default).
+    // Object `value: null` is unlimited (`None`); missing `value` uses the type default.
+    // Do not map per-type `0` to unlimited.
     match Option::<CountedDailyLimitPartial>::deserialize(deserializer)? {
         None => Ok(CountedDailyLimit {
-            value: default_value,
+            value: Some(default_value),
             counts: default_counts,
         }),
-        Some(CountedDailyLimitPartial::Value(value)) => Ok(CountedDailyLimit { value, counts: true }),
+        Some(CountedDailyLimitPartial::Value(value)) => Ok(CountedDailyLimit {
+            value: Some(value),
+            counts: true,
+        }),
         Some(CountedDailyLimitPartial::Object { value, counts }) => Ok(CountedDailyLimit {
-            value: value.unwrap_or(default_value),
+            value: match value {
+                OptionalLimitValue::Missing => Some(default_value),
+                OptionalLimitValue::Unlimited => None,
+                OptionalLimitValue::Capped(n) => Some(n),
+            },
             counts: counts.unwrap_or(default_counts),
         }),
     }

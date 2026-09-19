@@ -63,17 +63,17 @@ fn test_learning_content_uses_camel_case_keys() {
             template: "01900000-0000-7000-8000-000000000002".to_string(),
         },
         daily_limits: DailyLimits {
-            total: 10,
+            total: Some(10),
             untouched: CountedDailyLimit {
-                value: 5,
+                value: Some(5),
                 counts: false,
             },
             learn: CountedDailyLimit {
-                value: 20,
+                value: Some(20),
                 counts: true,
             },
             review: CountedDailyLimit {
-                value: 20,
+                value: Some(20),
                 counts: true,
             },
         },

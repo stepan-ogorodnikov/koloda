@@ -38,8 +38,10 @@ export const LEARNING_DAILY_LIMIT_TYPES = ["untouched", "learn", "review"] as co
 
 export type LearningDailyLimitType = (typeof LEARNING_DAILY_LIMIT_TYPES)[number];
 
+export const dailyLimitCapValidation = z.number().min(0).nullable();
+
 export const learningDailyLimitValidation = z.object({
-  value: z.number().min(0),
+  value: dailyLimitCapValidation,
   counts: z.boolean(),
 });
 
@@ -50,38 +52,67 @@ function createLearningDailyLimitValidation(defaultValue: number, defaultCounts:
       return value ?? {};
     },
     learningDailyLimitValidation.extend({
-      value: z.number().min(0).default(defaultValue),
+      value: dailyLimitCapValidation.default(defaultValue),
       counts: z.boolean().default(defaultCounts),
     }),
   );
 }
 
 type CountedDailyLimits = {
-  total: number;
-  untouched: { value: number; counts: boolean };
-  learn: { value: number; counts: boolean };
-  review: { value: number; counts: boolean };
+  total: number | null;
+  untouched: { value: number | null; counts: boolean };
+  learn: { value: number | null; counts: boolean };
+  review: { value: number | null; counts: boolean };
 };
+
+export function remainingDailyLimitRoom(limit: number | null, used: number): number {
+  if (limit == null) return Number.POSITIVE_INFINITY;
+  return Math.max(limit - used, 0);
+}
+
+export function isFiniteDailyLimitOver(limit: number | null, used: number, mode: "own" | "total"): boolean {
+  if (limit == null || used <= 0) return false;
+  return mode === "total" ? used >= limit : used > limit;
+}
+
+export function isBucketOverDailyLimit(
+  counted: boolean,
+  bucket: number,
+  bucketLimit: number | null,
+  total: number,
+  totalLimit: number | null,
+): boolean {
+  if (bucket <= 0) return false;
+  return (
+    isFiniteDailyLimitOver(bucketLimit, bucket, "own") ||
+    (counted && isFiniteDailyLimitOver(totalLimit, total, "total"))
+  );
+}
+
+function countedFitsTotal(total: number | null, limit: { value: number | null; counts: boolean }): boolean {
+  if (total == null || !limit.counts || limit.value == null) return true;
+  return limit.value <= total;
+}
 
 // WHY: the form validates the resolved schema, the save path re-validates the
 // defaulting one — one shared chain so form-time and save-time acceptance
 // cannot drift when a rule changes.
 function withCountedLimitRefines<S extends z.ZodType<CountedDailyLimits>>(schema: S) {
   return schema
-    .refine(({ total, untouched }) => total === 0 || !untouched.counts || untouched.value <= total, {
+    .refine(({ total, untouched }) => countedFitsTotal(total, untouched), {
       message: "validation.settings-learning.daily-limits.untouched-exceeds-total",
     })
-    .refine(({ total, learn }) => total === 0 || !learn.counts || learn.value <= total, {
+    .refine(({ total, learn }) => countedFitsTotal(total, learn), {
       message: "validation.settings-learning.daily-limits.learn-exceeds-total",
     })
-    .refine(({ total, review }) => total === 0 || !review.counts || review.value <= total, {
+    .refine(({ total, review }) => countedFitsTotal(total, review), {
       message: "validation.settings-learning.daily-limits.review-exceeds-total",
     });
 }
 
 export const resolvedDailyLimitsValidation = withCountedLimitRefines(
   z.object({
-    total: z.number().min(0),
+    total: dailyLimitCapValidation,
     untouched: learningDailyLimitValidation,
     learn: learningDailyLimitValidation,
     review: learningDailyLimitValidation,
@@ -90,7 +121,10 @@ export const resolvedDailyLimitsValidation = withCountedLimitRefines(
 
 const dailyLimitsValidation = withCountedLimitRefines(
   z.object({
-    total: z.number().min(0).default(200),
+    // WHY: stored Total 0 meant unlimited. The defaulting/input schema maps it to
+    // null so get_settings still reads those rows as unlimited. Do not copy this
+    // onto the resolved schema — form save of 0 is a hard cap.
+    total: z.preprocess((value) => (value === 0 ? null : value), dailyLimitCapValidation.default(200)),
     untouched: createLearningDailyLimitValidation(50, true),
     learn: createLearningDailyLimitValidation(0, false),
     review: createLearningDailyLimitValidation(200, true),

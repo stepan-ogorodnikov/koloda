@@ -57,7 +57,7 @@ Out:
   Commit: Document unlimited daily limits in learning settings spec
   Depends on: none
 
-- [ ] 2. Encode unlimited as null and apply it in remaining room
+- [x] 2. Encode unlimited as null and apply it in remaining room
   Goal: Make the stored and resolved daily-limit numbers `number | null` (Rust `Option<u32>`).
   `null` is unlimited.
   `0` is a hard cap, including Total.

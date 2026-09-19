@@ -59,7 +59,7 @@ export function LearnedToday() {
             <div className="flex flex-col">
               {(["untouched", "learn", "review", "total"] as LessonType[]).map((type) => {
                 const limit = type === "total" ? data.dailyLimits.total : data.dailyLimits[type].value;
-                const isInfinity = type === "total" && limit === 0;
+                const isInfinity = limit == null;
                 const percentage = isInfinity
                   ? 0
                   : limit === 0

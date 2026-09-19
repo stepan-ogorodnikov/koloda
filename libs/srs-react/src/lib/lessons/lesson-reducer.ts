@@ -1,4 +1,4 @@
-import { LEARNING_DAILY_LIMIT_TYPES } from "@koloda/app";
+import { LEARNING_DAILY_LIMIT_TYPES, remainingDailyLimitRoom } from "@koloda/app";
 import type { LearningSettings } from "@koloda/app";
 import type { ReducerAction } from "@koloda/core-react";
 import { dispatchReducerAction } from "@koloda/core-react";
@@ -198,10 +198,10 @@ export function calculateInitialLessonAmounts({
     0,
   );
   const diffs = {
-    untouched: Math.max(dailyLimits.untouched.value - reviewTotals.untouched, 0),
-    learn: Math.max(dailyLimits.learn.value - reviewTotals.learn, 0),
-    review: Math.max(dailyLimits.review.value - reviewTotals.review, 0),
-    total: Math.max((dailyLimits.total || Infinity) - countedReviewTotal, 0),
+    untouched: remainingDailyLimitRoom(dailyLimits.untouched.value, reviewTotals.untouched),
+    learn: remainingDailyLimitRoom(dailyLimits.learn.value, reviewTotals.learn),
+    review: remainingDailyLimitRoom(dailyLimits.review.value, reviewTotals.review),
+    total: remainingDailyLimitRoom(dailyLimits.total, countedReviewTotal),
   };
 
   if (type === "total") {

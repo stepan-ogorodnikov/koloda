@@ -108,14 +108,12 @@ describe("reviews", () => {
     });
   });
 
-  it("treats a zero total daily limit as no cap", async () => {
-    // A daily limit of zero means "no cap", not "hard zero" — mirrors the
-    // Rust zero_total_limit_is_no_cap rule.
+  it("treats a null total daily limit as no cap", async () => {
     const result = await calculateTodaysReviewTotals(
       {
         ...DEFAULT_LEARNING_SETTINGS,
         dailyLimits: {
-          total: 0,
+          total: null,
           untouched: { value: 10, counts: true },
           learn: { value: 10, counts: true },
           review: { value: 10, counts: true },
@@ -129,6 +127,28 @@ describe("reviews", () => {
       isLearnOverTheLimit: false,
       isReviewOverTheLimit: false,
       isTotalOverTheLimit: false,
+    });
+  });
+
+  it("treats a zero total daily limit as a hard cap", async () => {
+    const result = await calculateTodaysReviewTotals(
+      {
+        ...DEFAULT_LEARNING_SETTINGS,
+        dailyLimits: {
+          total: 0,
+          untouched: { value: 0, counts: true },
+          learn: { value: 0, counts: true },
+          review: { value: 0, counts: true },
+        },
+      },
+      { untouched: 5, learn: 5, review: 5, total: 0 },
+    );
+
+    expect(result.meta).toEqual({
+      isUntouchedOverTheLimit: true,
+      isLearnOverTheLimit: true,
+      isReviewOverTheLimit: true,
+      isTotalOverTheLimit: true,
     });
   });
 

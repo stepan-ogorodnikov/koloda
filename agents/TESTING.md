@@ -96,10 +96,10 @@ Good (tests a decision the product made):
 
 ```rust
 #[test]
-fn zero_total_limit_is_no_cap() {
-    let limits = daily_limits(0, counted_limit(10, true), counted_limit(10, true), counted_limit(10, true));
+fn null_total_limit_is_no_cap() {
+    let limits = daily_limits(None, counted_limit(Some(10), true), counted_limit(Some(10), true), counted_limit(Some(10), true));
     let result = calculate_todays_review_totals(totals(5, 5, 5), limits);
-    assert!(!result.meta.is_total_over_the_limit, "a daily limit of zero is no cap, not a hard zero");
+    assert!(!result.meta.is_total_over_the_limit, "a null daily limit is no cap, not a hard zero");
 }
 ```
 
