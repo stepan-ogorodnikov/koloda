@@ -1,6 +1,7 @@
 export { focusNext, focusPrev, goToNextTab, goToPrevTab } from "./lib/core/focus";
 export { motionSettingAtom, useMotionSetting } from "./lib/hooks/use-motion-settings";
 export { useRouteFocus } from "./lib/hooks/use-route-focus";
+export { BrainIcon } from "./lib/icons/brain-icon";
 export { CardsIcon } from "./lib/icons/cards-icon";
 export { CircularProgress } from "./lib/icons/circular-progress";
 export { useLayoutHeaderScrollShadow } from "./lib/layout/header-scroll";
