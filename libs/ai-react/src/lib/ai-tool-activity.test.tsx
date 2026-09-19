@@ -466,10 +466,11 @@ describe("AIToolActivity", () => {
     expect(screen.getByText("ai.chat.tool-activity.thinking")).toBeTruthy();
     expect(screen.getByLabelText("ai.chat.tool-activity.running")).toBeTruthy();
     expect(screen.getByText("Quiet plan.")).toBeTruthy();
-    expect(screen.getByText("ai.chat.tool-activity.thinking").className).toContain(
+    expect(screen.getByText("ai.chat.tool-activity.thinking").className).not.toContain(
       "animate-shimmer-text--fg-level-4/fg-level-1",
     );
-    expect(container.querySelector(".animate-shimmer")).toBeNull();
+    expect(screen.getByText("ai.chat.tool-activity.thinking").closest(".animate-shimmer")).not.toBeNull();
+    expect(container.querySelectorAll(".animate-shimmer")).toHaveLength(1);
 
     rerender(<AIToolActivity calls={[{ kind: "reasoning", id: "r1", text: "Quiet plan.", status: "done" }]} />);
 

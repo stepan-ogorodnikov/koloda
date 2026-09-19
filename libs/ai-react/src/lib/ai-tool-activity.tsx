@@ -1,13 +1,7 @@
-import {
-  AiBrain01Icon,
-  AlertCircleIcon,
-  ChevronRightIcon,
-  InvestigationIcon,
-  WrenchIcon,
-} from "@hugeicons/core-free-icons";
+import { AlertCircleIcon, ChevronRightIcon, InvestigationIcon, WrenchIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { IconSvgElement } from "@hugeicons/react";
-import { Button, CardsIcon, TextSwap } from "@koloda/ui";
+import { BrainIcon, Button, CardsIcon, TextSwap } from "@koloda/ui";
 import type { I18n } from "@lingui/core";
 import { msg, plural } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
@@ -105,11 +99,11 @@ type ReasoningActivityRowProps = { item: AIReasoningRecord; renderText?: (text: 
 function ReasoningActivityRow({ item, renderText }: ReasoningActivityRowProps) {
   const { _ } = useLingui();
   const [isUserOpen, setIsUserOpen] = useState<boolean | null>(null);
+  const isRunning = item.status === "running";
   // WHY: open while tokens are arriving; auto-collapse when the next tool or
   // the answer starts (`status` flips to done) unless the user toggled.
-  const isOpen = isUserOpen ?? item.status === "running";
-  const displayName =
-    item.status === "running" ? _(msg`ai.chat.tool-activity.thinking`) : _(msg`ai.chat.tool-activity.thought`);
+  const isOpen = isUserOpen ?? isRunning;
+  const displayName = isRunning ? _(msg`ai.chat.tool-activity.thinking`) : _(msg`ai.chat.tool-activity.thought`);
 
   return (
     <li className="fg-level-4">
@@ -122,17 +116,13 @@ function ReasoningActivityRow({ item, renderText }: ReasoningActivityRowProps) {
           <HugeiconsIcon
             className="size-6 min-w-6"
             strokeWidth={1.75}
-            icon={AiBrain01Icon}
-            aria-hidden={item.status === "running" ? undefined : true}
-            aria-label={item.status === "running" ? _(msg`ai.chat.tool-activity.running`) : undefined}
+            icon={BrainIcon}
+            aria-hidden={isRunning ? undefined : true}
+            aria-label={isRunning ? _(msg`ai.chat.tool-activity.running`) : undefined}
           />
           <span className="flex flex-row items-center gap-1">
-            <TextSwap value={displayName} className={thinkingLabel({ isRunning: item.status === "running" })} />
-            <ActivityElapsed
-              isRunning={item.status === "running"}
-              startedAt={item.startedAt}
-              elapsedSeconds={item.elapsedSeconds}
-            />
+            <TextSwap value={displayName} className={thinkingLabel({ isRunning })} />
+            <ActivityElapsed isRunning={isRunning} startedAt={item.startedAt} elapsedSeconds={item.elapsedSeconds} />
           </span>
           <FoldChevron />
         </span>
@@ -171,12 +161,7 @@ function ToolActivityRow({ call }: ToolActivityRowProps) {
         aria-expanded={isOpen}
         onPress={() => setIsOpen(!isOpen)}
       >
-        <span
-          className={toolActivityHeadline({
-            isError: call.status === "error",
-            isRunning: call.status === "running",
-          })}
-        >
+        <span className={toolActivityHeadline()}>
           <ToolCallStatusIcon name={call.name} status={call.status} />
           <span className="flex flex-row items-center gap-1">
             <span className="font-medium">{displayName}</span>

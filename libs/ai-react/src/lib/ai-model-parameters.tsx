@@ -1,5 +1,6 @@
+import { HugeiconsIcon } from "@hugeicons/react";
 import type { ModelParameter } from "@koloda/ai";
-import { Select } from "@koloda/ui";
+import { BrainIcon, Select } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 
@@ -19,6 +20,7 @@ export function AIModelParameters({ parameters, onChange }: AIModelParametersPro
             buttonVariants={{ style: "ghost" }}
             popoverVariants={{ class: "min-w-48" }}
             aria-label={_(msg`ai.model-parameters.reasoning-effort.label`)}
+            icon={<HugeiconsIcon className="size-5 min-w-5" strokeWidth={1.5} icon={BrainIcon} aria-hidden="true" />}
             items={param.levels}
             value={param.value}
             onChange={(key) => key && onChange(param.type, key.toString())}
