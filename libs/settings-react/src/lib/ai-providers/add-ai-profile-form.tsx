@@ -28,6 +28,7 @@ export function AddAIProfileForm({ provider, onSubmit, isPending, error }: AddAI
 
   return (
     <form
+      noValidate
       onSubmit={(e) => {
         e.preventDefault();
         e.stopPropagation();

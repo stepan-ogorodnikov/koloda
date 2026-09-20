@@ -32,6 +32,9 @@ test("validates required fields and adds profiles for all providers", async ({ p
 
     await submitAddAIDialog(page);
     await expect(page.getByRole("dialog", { name: "Add AI Profile" })).toBeVisible();
+    await expect(page.getByRole("alert")).toHaveText(
+      requiredField.name === "API key" ? "API key can't be empty" : "Invalid URL",
+    );
 
     // First iteration: also verify "No profiles" is still shown (no profile was added).
     if (index === 0) {

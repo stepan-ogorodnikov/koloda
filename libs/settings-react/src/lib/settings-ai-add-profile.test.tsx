@@ -65,6 +65,51 @@ describe("SettingsAIAddProfile", () => {
     addProfile.mockClear();
   });
 
+  it("shows the API key error when submitting an empty required key", async () => {
+    renderDialog();
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "settings.ai.add" }));
+    });
+
+    await act(async () => {
+      fireEvent.click(await screen.findByRole("button", { name: "settings.ai.add.submit" }));
+    });
+
+    expect((await screen.findByRole("alert")).textContent).toBe("validation.settings-ai.providers.api-key");
+    expect(addProfile).not.toHaveBeenCalled();
+  });
+
+  it("submits after a required API key is filled in", async () => {
+    renderDialog();
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "settings.ai.add" }));
+    });
+
+    await act(async () => {
+      fireEvent.click(await screen.findByRole("button", { name: "settings.ai.add.submit" }));
+    });
+
+    expect(await screen.findByRole("alert")).toBeTruthy();
+
+    fireEvent.change(screen.getByLabelText("settings.ai.profiles.api-key.label"), {
+      target: { value: "test-key" },
+    });
+
+    const submit = await screen.findByRole("button", { name: "settings.ai.add.submit" });
+    expect(submit).toHaveProperty("disabled", false);
+
+    await act(async () => {
+      fireEvent.click(submit);
+    });
+
+    expect(addProfile).toHaveBeenCalledWith({
+      title: undefined,
+      secrets: { provider: "openrouter", apiKey: "test-key" },
+    });
+  });
+
   it("shows the catalog message and keeps AppError details behind the details control", async () => {
     addProfile.mockRejectedValueOnce(new AppError("db.add", "SQLITE_BUSY"));
     renderDialog();
