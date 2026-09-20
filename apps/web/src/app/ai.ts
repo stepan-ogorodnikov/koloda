@@ -13,6 +13,8 @@ function profileHasSecrets(secrets?: AISecrets): boolean {
 
 function redactSecrets(secrets: AISecrets): AISecrets {
   switch (secrets.provider) {
+    case "openai":
+      return { provider: "openai", apiKey: null };
     case "openrouter":
       return { provider: "openrouter", apiKey: null };
     case "opencodeGo":

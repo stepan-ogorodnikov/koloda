@@ -98,12 +98,16 @@ async function runChatStream(
 }
 
 // WHY: ChatInput.reasoningEffort is a provider-agnostic string. Each wrapper maps it
-// into that SDK's providerOptions shape (OpenRouter reasoning.effort vs OpenCode
-// reasoningEffort vs Ollama think vs LM Studio reasoningEffort). A shared
+// into that SDK's providerOptions shape (OpenAI/OpenCode reasoningEffort vs
+// OpenRouter reasoning.effort vs Ollama think vs LM Studio reasoningEffort). A shared
 // `{ [name]: { reasoningEffort } }` blob would drop OpenRouter.
 
 export function openRouterProviderOptions(reasoningEffort: string | undefined): ProviderOptions | undefined {
   return reasoningEffort ? { openrouter: { reasoning: { effort: reasoningEffort } } } : undefined;
+}
+
+export function openAIProviderOptions(reasoningEffort: string | undefined): ProviderOptions | undefined {
+  return reasoningEffort ? { openai: { reasoningEffort } } : undefined;
 }
 
 export function opencodeGoProviderOptions(reasoningEffort: string | undefined): ProviderOptions | undefined {
@@ -146,6 +150,25 @@ export function streamChatWithOpenRouter(
       onChunk,
       abortSignal,
       openRouterProviderOptions(request.input.reasoningEffort),
+    );
+  });
+}
+
+export function streamChatWithOpenAI(
+  request: ChatStreamRequest,
+  onChunk: (chunk: ChatStreamChunk) => void,
+  abortSignal: AbortSignal,
+  { apiKey }: { apiKey: string },
+) {
+  return wrapAIError(async () => {
+    const { createOpenAI } = await import("@ai-sdk/openai");
+    const openai = createOpenAI({ apiKey });
+    return runChatStream(
+      (modelId) => openai(modelId),
+      request,
+      onChunk,
+      abortSignal,
+      openAIProviderOptions(request.input.reasoningEffort),
     );
   });
 }

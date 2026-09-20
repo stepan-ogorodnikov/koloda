@@ -33,6 +33,7 @@ export {
   aiSecretsValidation,
   isPresentApiKey,
   lmstudioSecretsValidation,
+  openaiSecretsValidation,
   ollamaCloudSecretsValidation,
   ollamaSecretsValidation,
   openRouterSecretsValidation,

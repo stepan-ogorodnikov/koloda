@@ -1,4 +1,6 @@
-import { optionalProfileTitleSchema } from "@koloda/app";
+// WHY: Root `@koloda/app` re-exports `error.ts` (Lingui macros). Electron main
+// loads this module via tsx without the Vite/SWC macro transform.
+import { optionalProfileTitleSchema } from "@koloda/app/titles";
 import { z } from "zod";
 import { aiSecretsValidation } from "./provider-secrets";
 import type { AISecrets } from "./provider-secrets";

@@ -22,6 +22,10 @@ export const openRouterSecretsValidation = z.object({
   apiKey: requiredApiKey,
 });
 
+export const openaiSecretsValidation = z.object({
+  apiKey: requiredApiKey,
+});
+
 export const ollamaSecretsValidation = z.object({
   baseUrl: z.url("validation.settings-ai.providers.base-url"),
   apiKey: optionalApiKey,
@@ -53,6 +57,7 @@ const storedApiKey = z
   .transform((value): string | null => (value === null || value.trim() === "" ? null : value));
 
 export const aiSecretsValidation = z.discriminatedUnion("provider", [
+  z.object({ provider: z.literal("openai"), apiKey: storedApiKey }),
   z.object({ provider: z.literal("openrouter"), apiKey: storedApiKey }),
   z.object({
     provider: z.literal("ollama"),
@@ -76,6 +81,7 @@ export type AISecrets = z.infer<typeof aiSecretsValidation>;
 // `AISecrets::validate_for_input` in crates/koloda/src/domain/ai.rs, which runs
 // on the caller's payload, not on the redacted stored row the wire schema parses.
 export const aiSecretsInputValidation = z.discriminatedUnion("provider", [
+  openaiSecretsValidation.extend({ provider: z.literal("openai") }),
   openRouterSecretsValidation.extend({ provider: z.literal("openrouter") }),
   ollamaSecretsValidation.extend({ provider: z.literal("ollama") }),
   lmstudioSecretsValidation.extend({ provider: z.literal("lmstudio") }),

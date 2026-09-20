@@ -8,7 +8,15 @@ import { AI_PROVIDER_REGISTRY } from "./provider-registry";
 // `ai_secrets_provider_tags_match_ts_registry` in
 // `crates/koloda/tests/domain/ai_tests.rs`. Adding a provider requires
 // touching both pins (agents/ADD-AI-PROVIDER.md).
-const RUST_AI_SECRETS_PROVIDER_TAGS = ["openrouter", "ollama", "lmstudio", "opencodeGo", "opencodeZen", "ollamaCloud"];
+const RUST_AI_SECRETS_PROVIDER_TAGS = [
+  "openai",
+  "openrouter",
+  "ollama",
+  "lmstudio",
+  "opencodeGo",
+  "opencodeZen",
+  "ollamaCloud",
+];
 
 describe("AI provider registry parity", () => {
   it("registry keys match the pinned Rust AISecrets provider tags", () => {

@@ -1,4 +1,5 @@
 export const AI_PROVIDER_LABELS = {
+  openai: "OpenAI",
   openrouter: "OpenRouter",
   ollama: "Ollama",
   lmstudio: "LM Studio",

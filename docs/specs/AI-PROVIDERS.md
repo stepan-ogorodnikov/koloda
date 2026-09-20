@@ -26,6 +26,7 @@ Available in the browser:
 
 Desktop only:
 
+- OpenAI
 - OpenCode Go
 - OpenCode Zen
 - Ollama Cloud
@@ -202,6 +203,7 @@ The app learns the supported levels and the default for a model by a fixed rule 
 - OpenCode providers join the models.dev catalog by model ID.
   When the catalog has no row for the provider or the ID, known model families fall back to fixed built-in levels.
   A model the catalog lists without effort levels gets no picker.
+- OpenAI joins the models.dev catalog by model ID. A matching effort list enables the picker; otherwise it stays hidden.
 
 The reasoning-effort picker in the conversation UI lists those levels.
 If no rule yields levels for the model, the picker is hidden.

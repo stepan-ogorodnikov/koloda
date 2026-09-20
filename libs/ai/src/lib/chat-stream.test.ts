@@ -6,7 +6,9 @@ import type { ChatStreamRequest } from "./generation";
 import {
   lmstudioProviderOptions,
   ollamaProviderOptions,
+  openAIProviderOptions,
   openRouterProviderOptions,
+  streamChatWithOpenAI,
   opencodeGoProviderOptions,
   opencodeZenProviderOptions,
   streamChatWithLMStudio,
@@ -40,6 +42,10 @@ vi.mock("ai", async (importOriginal) => {
 
 vi.mock("@openrouter/ai-sdk-provider", () => ({
   createOpenRouter: () => () => fakeModel(),
+}));
+
+vi.mock("@ai-sdk/openai", () => ({
+  createOpenAI: () => () => fakeModel(),
 }));
 
 vi.mock("ai-sdk-ollama", () => ({
@@ -88,6 +94,12 @@ const abort = new AbortController().signal;
 const onChunk = () => undefined;
 
 describe("stream wrappers pass reasoning effort into streamText", () => {
+  it("sends OpenAI reasoningEffort through the OpenAI provider options", async () => {
+    await streamChatWithOpenAI(chatRequest("high"), onChunk, abort, { apiKey: "k" });
+
+    expect(streamTextCalls).toEqual([{ providerOptions: { openai: { reasoningEffort: "high" } } }]);
+  });
+
   it("sends OpenRouter reasoning.effort and OpenCode reasoningEffort", async () => {
     await streamChatWithOpenRouter(chatRequest("high"), onChunk, abort, { apiKey: "k" });
     await streamChatWithOpencodeGo(chatRequest("high"), onChunk, abort, { apiKey: "k" });
@@ -118,6 +130,13 @@ describe("stream wrappers pass reasoning effort into streamText", () => {
 
     expect(streamTextCalls.map((call) => call.providerOptions)).toEqual([undefined, undefined]);
   });
+
+  it("omits OpenAI providerOptions when effort is empty so the provider default still applies", async () => {
+    await streamChatWithOpenAI(chatRequest(""), onChunk, abort, { apiKey: "k" });
+    await streamChatWithOpenAI(chatRequest(undefined), onChunk, abort, { apiKey: "k" });
+
+    expect(streamTextCalls.map((call) => call.providerOptions)).toEqual([undefined, undefined]);
+  });
 });
 
 describe("openRouterProviderOptions", () => {
@@ -130,6 +149,19 @@ describe("openRouterProviderOptions", () => {
   it("omits providerOptions when effort is missing or empty", () => {
     expect(openRouterProviderOptions(undefined)).toBeUndefined();
     expect(openRouterProviderOptions("")).toBeUndefined();
+  });
+});
+
+describe("openAIProviderOptions", () => {
+  it("maps a non-empty effort onto OpenAI reasoningEffort", () => {
+    expect(openAIProviderOptions("high")).toEqual({
+      openai: { reasoningEffort: "high" },
+    });
+  });
+
+  it("omits providerOptions when effort is missing or empty", () => {
+    expect(openAIProviderOptions(undefined)).toBeUndefined();
+    expect(openAIProviderOptions("")).toBeUndefined();
   });
 });
 

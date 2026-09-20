@@ -5,6 +5,7 @@ import { AI_PROVIDERS } from "./provider-catalog";
 import type { AiProvider } from "./provider-catalog";
 import type { AISecrets, SecretField } from "./provider-secrets";
 import { lmstudioProviderEntry } from "./providers/lmstudio";
+import { openaiProviderEntry } from "./providers/openai";
 import { ollamaProviderEntry } from "./providers/ollama";
 import { ollamaCloudProviderEntry } from "./providers/ollama-cloud";
 import { opencodeGoProviderEntry } from "./providers/opencode-go";
@@ -27,6 +28,7 @@ export type AIProviderEntry = {
 };
 
 export const AI_PROVIDER_REGISTRY: Record<AiProvider, AIProviderEntry> = {
+  openai: openaiProviderEntry,
   openrouter: openrouterProviderEntry,
   ollama: ollamaProviderEntry,
   lmstudio: lmstudioProviderEntry,

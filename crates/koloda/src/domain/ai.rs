@@ -41,6 +41,11 @@ where
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "provider", rename_all = "camelCase")]
 pub enum AISecrets {
+    #[serde(rename = "openai")]
+    OpenAi {
+        #[serde(rename = "apiKey", alias = "api_key", deserialize_with = "deserialize_api_key")]
+        api_key: Option<String>,
+    },
     #[serde(rename = "openrouter")]
     OpenRouter {
         #[serde(rename = "apiKey", alias = "api_key", deserialize_with = "deserialize_api_key")]
@@ -126,6 +131,7 @@ pub struct RemoveProfileData {
 impl AISecrets {
     pub fn provider(&self) -> &'static str {
         match self {
+            AISecrets::OpenAi { .. } => "openai",
             AISecrets::OpenRouter { .. } => "openrouter",
             AISecrets::Ollama { .. } => "ollama",
             AISecrets::LmStudio { .. } => "lmstudio",
@@ -137,7 +143,8 @@ impl AISecrets {
 
     pub fn api_key(&self) -> Option<&str> {
         match self {
-            AISecrets::OpenRouter { api_key }
+            AISecrets::OpenAi { api_key }
+            | AISecrets::OpenRouter { api_key }
             | AISecrets::OpencodeGo { api_key }
             | AISecrets::OpencodeZen { api_key }
             | AISecrets::OllamaCloud { api_key }
@@ -188,6 +195,7 @@ impl AISecrets {
 
     pub fn validate_for_input(&self) -> Result<(), AppError> {
         match self {
+            AISecrets::OpenAi { api_key } => Self::require_api_key_for_input(api_key, "openai"),
             AISecrets::OpenRouter { api_key } => Self::require_api_key_for_input(api_key, "openrouter"),
             AISecrets::Ollama { base_url, .. } => Self::require_base_url(base_url, "ollama"),
             AISecrets::LmStudio { base_url, .. } => Self::require_base_url(base_url, "lmstudio"),
@@ -202,6 +210,7 @@ impl AISecrets {
     // means plaintext is about to leak into the `settings` table — reject it.
     pub fn validate_for_storage(&self) -> Result<(), AppError> {
         match self {
+            AISecrets::OpenAi { api_key } => Self::reject_stored_api_key(api_key, "openai"),
             AISecrets::OpenRouter { api_key } => Self::reject_stored_api_key(api_key, "openrouter"),
             AISecrets::Ollama { base_url, api_key } => {
                 Self::require_base_url(base_url, "ollama")?;

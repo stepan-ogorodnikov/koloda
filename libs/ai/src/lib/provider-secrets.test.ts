@@ -4,6 +4,7 @@ import {
   aiSecretsValidation,
   isPresentApiKey,
   lmstudioSecretsValidation,
+  openaiSecretsValidation,
   ollamaCloudSecretsValidation,
   ollamaSecretsValidation,
   openRouterSecretsValidation,
@@ -75,6 +76,10 @@ describe("provider-secrets", () => {
     {
       label: "openRouterSecretsValidation",
       parse: () => openRouterSecretsValidation.safeParse({ apiKey: "   " }),
+    },
+    {
+      label: "openaiSecretsValidation",
+      parse: () => openaiSecretsValidation.safeParse({ apiKey: "   " }),
     },
     {
       label: "opencodeGoSecretsValidation",

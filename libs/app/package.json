@@ -11,6 +11,11 @@
       "import": "./src/index.ts",
       "default": "./src/index.ts"
     },
+    "./titles": {
+      "types": "./src/lib/titles.ts",
+      "import": "./src/lib/titles.ts",
+      "default": "./src/lib/titles.ts"
+    },
     "./package.json": "./package.json"
   },
   "dependencies": {}
