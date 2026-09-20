@@ -15,17 +15,14 @@ import { useRef } from "react";
 
 export type SettingsLearningProps = { data: ResolvedLearningSettings };
 
-export function DailyLimitCapField({
-  label,
-  unlimitedLabel,
-  value,
-  onChange,
-}: {
+export type DailyLimitCapFieldProps = {
   label: string;
   unlimitedLabel: string;
   value: number | null;
   onChange: (value: number | null) => void;
-}) {
+};
+
+export function DailyLimitCapField({ label, unlimitedLabel, value, onChange }: DailyLimitCapFieldProps) {
   const lastNumber = useRef(value ?? 0);
   if (typeof value === "number") lastNumber.current = value;
   const isUnlimited = value == null;
@@ -44,7 +41,7 @@ export function DailyLimitCapField({
         <Label>{label}</Label>
         <NumberField.Group />
       </NumberField>
-      <Switch isSelected={isUnlimited} onChange={(on) => onChange(on ? null : lastNumber.current)}>
+      <Switch isSelected={isUnlimited} onChange={(isSelected) => onChange(isSelected ? null : lastNumber.current)}>
         <Switch.Indicator />
         <Switch.Label>{unlimitedLabel}</Switch.Label>
       </Switch>

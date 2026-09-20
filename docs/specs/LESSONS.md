@@ -97,8 +97,7 @@ System keys are not configurable and are not checked for conflicts:
 - `Enter` or `Space` submit the current card, unless focus is in a text input or textarea.
   `Enter` without modifiers in a type-answer field still submits; `Space` there inserts a space.
 
-Do not bind a configurable hotkey to `Escape`, `Enter`, or `Space` when lessons are used.
-When a configurable hotkey and a system key share a binding, both fire.
+Overlapping a configurable hotkey with a system key is HOTKEYS.md.
 
 ## Phases
 
