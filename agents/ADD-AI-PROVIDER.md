@@ -161,8 +161,21 @@ If the new fetch/URL is part of the public `@koloda/ai` surface, also re-export 
 
 Set `supported_reasoning_levels` and `default_reasoning_level` only when this provider reports them.
 That report may come from the models list or from a real catalog join.
-Do not invent a picker from model-name prefixes unless that is an explicit fallback for a missing catalog row.
-A hidden picker is correct when the list does not report levels.
+Do not stop at the provider's `/models` response when it returns only IDs or basic metadata: inspect the provider's capability source and the SDK documentation as well.
+If the provider has documented effort levels but its list does not report them, join a maintained capability catalog by exact provider/model ID.
+The shared `models.dev` join is available through `loadModelsDevCatalog` and `overlayFromModelsDev` in `providers/models-dev.ts`.
+For example:
+
+```typescript
+const [models, catalog] = await Promise.all([
+  fetchOpenAICompatibleModelsDetailed(modelsUrl, apiKey),
+  loadModelsDevCatalog(),
+]);
+return overlayFromModelsDev(models, "myProviderCatalogKey", catalog);
+```
+
+Do not invent a picker from model-name prefixes unless that is an explicit, documented fallback for a missing catalog row.
+A hidden picker is correct only after both the provider list and any applicable capability catalog report no levels.
 Product behavior lives in `docs/specs/AI-PROVIDERS.md` (§Reasoning Effort).
 
 ### 5. Chat Streaming (`libs/ai/src/lib/chat-stream.ts`)
@@ -206,6 +219,7 @@ export function streamChatWithMyProvider(
 ```
 
 The `providerOptions` key (`"my-provider"` here) must match the SDK provider `name`.
+Verify the key and option name in the provider package's documentation or type declarations; for example, `@ai-sdk/openai` uses `{ openai: { reasoningEffort } }`.
 
 ### 6. UI Form Config (`libs/settings-react/src/lib/ai-providers/ai-provider-form-config.ts`)
 
@@ -268,8 +282,8 @@ Set `worksInBrowser: true` only if the provider’s HTTP API can be called from 
 ### 9. Add Tests
 
 - Twin tag pins (must change together, same idea as `agents/ADD-HOTKEY.md`): `ai_secrets_provider_tags_match_ts_registry` in `crates/koloda/tests/domain/ai_tests.rs` (new variant in the `variants` array **and** the expected tag literal list) and `RUST_AI_SECRETS_PROVIDER_TAGS` in `libs/ai/src/lib/provider-registry.test.ts`
-- `libs/ai/src/lib/chat-stream.test.ts` — `streamText` gets this wrapper's `providerOptions`, omitted when effort is empty
-- Provider `fetchModels` tests — levels only when the list or catalog join reports them
+- `libs/ai/src/lib/chat-stream.test.ts` — `streamText` gets this wrapper's `providerOptions` for a non-empty effort and omits it when effort is empty
+- Provider `fetchModels` tests — include a reasoning-capable model whose levels come from the provider list or catalog, a model with no reported levels, and the documented behavior when the catalog is unavailable
 - `crates/koloda/tests/domain/ai_tests.rs` - Rust unit tests
 - `crates/koloda/tests/integration/ai_integration_tests.rs` - Rust integration tests
 - `crates/koloda/tests/domain/settings_ai_tests.rs` - Settings validation tests
