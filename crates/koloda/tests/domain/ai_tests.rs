@@ -141,6 +141,7 @@ fn test_ai_secrets_ollama_deserialize_base_url_alias() {
 type KeyedProviderRow = (&'static str, &'static str, fn(Option<String>) -> AISecrets);
 const KEYED_PROVIDER_ROWS: &[KeyedProviderRow] = &[
     ("openai", "openai-secret", |api_key| AISecrets::OpenAi { api_key }),
+    ("deepseek", "deepseek-secret", |api_key| AISecrets::DeepSeek { api_key }),
     ("opencodeGo", "go-secret", |api_key| AISecrets::OpencodeGo { api_key }),
     ("opencodeZen", "zen-secret", |api_key| AISecrets::OpencodeZen {
         api_key,
@@ -561,6 +562,7 @@ fn ai_secrets_provider_tags_match_ts_registry() {
     // touching both pins (agents/ADD-AI-PROVIDER.md).
     let variants = [
         AISecrets::OpenAi { api_key: None },
+        AISecrets::DeepSeek { api_key: None },
         AISecrets::OpenRouter { api_key: None },
         AISecrets::Ollama {
             base_url: "http://localhost".into(),
@@ -591,6 +593,7 @@ fn ai_secrets_provider_tags_match_ts_registry() {
     assert_eq!(
         tags,
         vec![
+            "deepseek".to_string(),
             "lmstudio".to_string(),
             "ollama".to_string(),
             "ollamaCloud".to_string(),

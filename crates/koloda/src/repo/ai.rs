@@ -38,6 +38,7 @@ fn remove_api_key(profile_id: &str) -> Result<(), AppError> {
 fn redact_secrets(secrets: &AISecrets) -> AISecrets {
     match secrets {
         AISecrets::OpenAi { .. } => AISecrets::OpenAi { api_key: None },
+        AISecrets::DeepSeek { .. } => AISecrets::DeepSeek { api_key: None },
         AISecrets::OpenRouter { .. } => AISecrets::OpenRouter { api_key: None },
         AISecrets::Ollama { base_url, .. } => AISecrets::Ollama {
             base_url: base_url.clone(),
@@ -56,6 +57,7 @@ fn redact_secrets(secrets: &AISecrets) -> AISecrets {
 fn reconstruct_secrets(secrets: &AISecrets, api_key: String) -> AISecrets {
     match secrets {
         AISecrets::OpenAi { .. } => AISecrets::OpenAi { api_key: Some(api_key) },
+        AISecrets::DeepSeek { .. } => AISecrets::DeepSeek { api_key: Some(api_key) },
         AISecrets::OpenRouter { .. } => AISecrets::OpenRouter { api_key: Some(api_key) },
         AISecrets::Ollama { base_url, .. } => AISecrets::Ollama {
             base_url: base_url.clone(),

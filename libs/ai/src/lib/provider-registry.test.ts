@@ -10,6 +10,7 @@ import { AI_PROVIDER_REGISTRY } from "./provider-registry";
 // touching both pins (agents/ADD-AI-PROVIDER.md).
 const RUST_AI_SECRETS_PROVIDER_TAGS = [
   "openai",
+  "deepseek",
   "openrouter",
   "ollama",
   "lmstudio",

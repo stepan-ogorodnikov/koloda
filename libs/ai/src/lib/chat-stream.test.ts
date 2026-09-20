@@ -4,11 +4,13 @@ import { MockLanguageModelV3 } from "ai/test";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ChatStreamRequest } from "./generation";
 import {
+  deepseekProviderOptions,
   lmstudioProviderOptions,
   ollamaProviderOptions,
   openAIProviderOptions,
   openRouterProviderOptions,
   streamChatWithOpenAI,
+  streamChatWithDeepSeek,
   opencodeGoProviderOptions,
   opencodeZenProviderOptions,
   streamChatWithLMStudio,
@@ -46,6 +48,10 @@ vi.mock("@openrouter/ai-sdk-provider", () => ({
 
 vi.mock("@ai-sdk/openai", () => ({
   createOpenAI: () => () => fakeModel(),
+}));
+
+vi.mock("@ai-sdk/deepseek", () => ({
+  createDeepSeek: () => () => fakeModel(),
 }));
 
 vi.mock("ai-sdk-ollama", () => ({
@@ -98,6 +104,12 @@ describe("stream wrappers pass reasoning effort into streamText", () => {
     await streamChatWithOpenAI(chatRequest("high"), onChunk, abort, { apiKey: "k" });
 
     expect(streamTextCalls).toEqual([{ providerOptions: { openai: { reasoningEffort: "high" } } }]);
+  });
+
+  it("sends DeepSeek reasoningEffort through the DeepSeek provider options", async () => {
+    await streamChatWithDeepSeek(chatRequest("high"), onChunk, abort, { apiKey: "k" });
+
+    expect(streamTextCalls).toEqual([{ providerOptions: { deepseek: { reasoningEffort: "high" } } }]);
   });
 
   it("sends OpenRouter reasoning.effort and OpenCode reasoningEffort", async () => {
@@ -162,6 +174,25 @@ describe("openAIProviderOptions", () => {
   it("omits providerOptions when effort is missing or empty", () => {
     expect(openAIProviderOptions(undefined)).toBeUndefined();
     expect(openAIProviderOptions("")).toBeUndefined();
+  });
+});
+
+describe("deepseekProviderOptions", () => {
+  it("maps generic reasoning efforts onto canonical DeepSeek values", () => {
+    expect(deepseekProviderOptions("high")).toEqual({
+      deepseek: { reasoningEffort: "high" },
+    });
+    expect(deepseekProviderOptions("medium")).toEqual({
+      deepseek: { reasoningEffort: "high" },
+    });
+    expect(deepseekProviderOptions("xhigh")).toEqual({
+      deepseek: { reasoningEffort: "max" },
+    });
+  });
+
+  it("omits providerOptions when effort is missing or empty", () => {
+    expect(deepseekProviderOptions(undefined)).toBeUndefined();
+    expect(deepseekProviderOptions("")).toBeUndefined();
   });
 });
 

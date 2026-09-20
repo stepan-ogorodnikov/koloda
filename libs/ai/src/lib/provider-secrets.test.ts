@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   aiSecretsInputValidation,
   aiSecretsValidation,
+  deepseekSecretsValidation,
   isPresentApiKey,
   lmstudioSecretsValidation,
   openaiSecretsValidation,
@@ -41,6 +42,11 @@ describe("provider-secrets", () => {
   it("accepts ollamaCloud api-key-only secrets on the wire schema", () => {
     const parsed = aiSecretsValidation.parse({ provider: "ollamaCloud", apiKey: "cloud-key" });
     expect(parsed).toEqual({ provider: "ollamaCloud", apiKey: "cloud-key" });
+  });
+
+  it("accepts deepseek api-key-only secrets on the wire schema", () => {
+    const parsed = aiSecretsValidation.parse({ provider: "deepseek", apiKey: "deepseek-key" });
+    expect(parsed).toEqual({ provider: "deepseek", apiKey: "deepseek-key" });
   });
 
   it.each([
@@ -93,6 +99,10 @@ describe("provider-secrets", () => {
       label: "ollamaCloudSecretsValidation",
       parse: () => ollamaCloudSecretsValidation.safeParse({ apiKey: "   " }),
     },
+    {
+      label: "deepseekSecretsValidation",
+      parse: () => deepseekSecretsValidation.safeParse({ apiKey: "   " }),
+    },
   ])("rejects a whitespace-only apiKey on $label", ({ parse }) => {
     const result = parse();
     expect(result.success).toBe(false);
@@ -130,6 +140,7 @@ describe("provider-secrets", () => {
     { provider: "opencodeGo" as const, secrets: { apiKey: "   " } },
     { provider: "opencodeZen" as const, secrets: {} },
     { provider: "ollamaCloud" as const, secrets: { apiKey: null } },
+    { provider: "deepseek" as const, secrets: { apiKey: null } },
   ])("rejects a missing, blank, or null apiKey on the input schema for $provider", ({ provider, secrets }) => {
     const result = aiSecretsInputValidation.safeParse({ provider, ...secrets });
     expect(result.success).toBe(false);

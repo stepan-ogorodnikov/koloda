@@ -110,6 +110,23 @@ export function openAIProviderOptions(reasoningEffort: string | undefined): Prov
   return reasoningEffort ? { openai: { reasoningEffort } } : undefined;
 }
 
+export function deepseekProviderOptions(reasoningEffort: string | undefined): ProviderOptions | undefined {
+  if (!reasoningEffort) return undefined;
+
+  const mappedEffort =
+    {
+      minimal: "low",
+      low: "low",
+      medium: "high",
+      high: "high",
+      xhigh: "max",
+      max: "max",
+      ultra: "max",
+    }[reasoningEffort] ?? reasoningEffort;
+
+  return { deepseek: { reasoningEffort: mappedEffort } };
+}
+
 export function opencodeGoProviderOptions(reasoningEffort: string | undefined): ProviderOptions | undefined {
   return reasoningEffort ? { "opencode-go": { reasoningEffort } } : undefined;
 }
@@ -169,6 +186,25 @@ export function streamChatWithOpenAI(
       onChunk,
       abortSignal,
       openAIProviderOptions(request.input.reasoningEffort),
+    );
+  });
+}
+
+export function streamChatWithDeepSeek(
+  request: ChatStreamRequest,
+  onChunk: (chunk: ChatStreamChunk) => void,
+  abortSignal: AbortSignal,
+  { apiKey }: { apiKey: string },
+) {
+  return wrapAIError(async () => {
+    const { createDeepSeek } = await import("@ai-sdk/deepseek");
+    const deepseek = createDeepSeek({ apiKey });
+    return runChatStream(
+      (modelId) => deepseek(modelId),
+      request,
+      onChunk,
+      abortSignal,
+      deepseekProviderOptions(request.input.reasoningEffort),
     );
   });
 }

@@ -1,5 +1,6 @@
 import {
   aiProfileValidation,
+  deepseekSecretsValidation,
   lmstudioSecretsValidation,
   openaiSecretsValidation,
   ollamaCloudSecretsValidation,
@@ -40,7 +41,7 @@ const titleField: AIProfileProviderField = {
 };
 
 function apiKeyOnlyConfig(
-  provider: "openai" | "openrouter" | "opencodeGo" | "opencodeZen" | "ollamaCloud",
+  provider: "openai" | "deepseek" | "openrouter" | "opencodeGo" | "opencodeZen" | "ollamaCloud",
   secretsSchema: typeof openRouterSecretsValidation,
 ): AIProviderFormConfig {
   return {
@@ -88,6 +89,7 @@ function baseUrlConfig(
 
 export const AI_PROVIDER_FORM_CONFIG: Record<AiProvider, AIProviderFormConfig> = {
   openai: apiKeyOnlyConfig("openai", openaiSecretsValidation),
+  deepseek: apiKeyOnlyConfig("deepseek", deepseekSecretsValidation),
   openrouter: apiKeyOnlyConfig("openrouter", openRouterSecretsValidation),
   opencodeGo: apiKeyOnlyConfig("opencodeGo", opencodeGoSecretsValidation),
   opencodeZen: apiKeyOnlyConfig("opencodeZen", opencodeZenSecretsValidation),

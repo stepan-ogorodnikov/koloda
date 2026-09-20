@@ -239,6 +239,40 @@ fn ai_profile_api_key_is_stored_in_secret_store() {
 }
 
 #[test]
+fn ai_profile_deepseek_api_key_round_trips_via_secret_store() {
+    let _guard = test_store::setup();
+    let db = test_db();
+
+    let added = ai::add_ai_profile(
+        &db,
+        Some("DeepSeek".to_string()),
+        Some(AISecrets::DeepSeek {
+            api_key: Some("sk-deepseek-secret".to_string()),
+        }),
+        None,
+    )
+    .expect("profile should be added");
+
+    let profiles = ai::get_ai_profiles(&db).expect("should get profiles");
+    let public = profiles
+        .iter()
+        .find(|profile| profile.id == added.id)
+        .expect("profile should exist");
+    assert!(public.has_secrets);
+    match public.secrets.as_ref() {
+        Some(AISecrets::DeepSeek { api_key }) => assert!(api_key.is_none(), "public read must redact apiKey"),
+        other => panic!("expected DeepSeek secrets, got {:?}", other),
+    }
+
+    let secrets = ai::get_ai_profile_secrets(&db, &added.id)
+        .expect("should load secrets")
+        .expect("secrets should exist");
+    assert_eq!(secrets.api_key(), Some("sk-deepseek-secret"));
+
+    test_store::teardown(_guard);
+}
+
+#[test]
 fn ai_profile_openai_api_key_round_trips_via_secret_store() {
     let _guard = test_store::setup();
     let db = test_db();

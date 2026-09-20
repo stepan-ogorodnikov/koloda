@@ -4,6 +4,7 @@ import type { AIModel } from "./models";
 import { AI_PROVIDERS } from "./provider-catalog";
 import type { AiProvider } from "./provider-catalog";
 import type { AISecrets, SecretField } from "./provider-secrets";
+import { deepseekProviderEntry } from "./providers/deepseek";
 import { lmstudioProviderEntry } from "./providers/lmstudio";
 import { openaiProviderEntry } from "./providers/openai";
 import { ollamaProviderEntry } from "./providers/ollama";
@@ -29,6 +30,7 @@ export type AIProviderEntry = {
 
 export const AI_PROVIDER_REGISTRY: Record<AiProvider, AIProviderEntry> = {
   openai: openaiProviderEntry,
+  deepseek: deepseekProviderEntry,
   openrouter: openrouterProviderEntry,
   ollama: ollamaProviderEntry,
   lmstudio: lmstudioProviderEntry,

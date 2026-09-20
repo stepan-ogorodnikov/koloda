@@ -26,6 +26,7 @@ Available in the browser:
 
 Desktop only:
 
+- DeepSeek
 - OpenAI
 - OpenCode Go
 - OpenCode Zen
@@ -204,6 +205,8 @@ The app learns the supported levels and the default for a model by a fixed rule 
   When the catalog has no row for the provider or the ID, known model families fall back to fixed built-in levels.
   A model the catalog lists without effort levels gets no picker.
 - OpenAI joins the models.dev catalog by model ID. A matching effort list enables the picker; otherwise it stays hidden.
+- DeepSeek joins the models.dev catalog by model ID. A matching effort list enables the picker; an exact catalog row without effort levels leaves it hidden.
+  When the catalog is unavailable or the ID is missing, known DeepSeek model families fall back to fixed built-in levels.
 
 The reasoning-effort picker in the conversation UI lists those levels.
 If no rule yields levels for the model, the picker is hidden.

@@ -26,6 +26,10 @@ export const openaiSecretsValidation = z.object({
   apiKey: requiredApiKey,
 });
 
+export const deepseekSecretsValidation = z.object({
+  apiKey: requiredApiKey,
+});
+
 export const ollamaSecretsValidation = z.object({
   baseUrl: z.url("validation.settings-ai.providers.base-url"),
   apiKey: optionalApiKey,
@@ -58,6 +62,7 @@ const storedApiKey = z
 
 export const aiSecretsValidation = z.discriminatedUnion("provider", [
   z.object({ provider: z.literal("openai"), apiKey: storedApiKey }),
+  z.object({ provider: z.literal("deepseek"), apiKey: storedApiKey }),
   z.object({ provider: z.literal("openrouter"), apiKey: storedApiKey }),
   z.object({
     provider: z.literal("ollama"),
@@ -82,6 +87,7 @@ export type AISecrets = z.infer<typeof aiSecretsValidation>;
 // on the caller's payload, not on the redacted stored row the wire schema parses.
 export const aiSecretsInputValidation = z.discriminatedUnion("provider", [
   openaiSecretsValidation.extend({ provider: z.literal("openai") }),
+  deepseekSecretsValidation.extend({ provider: z.literal("deepseek") }),
   openRouterSecretsValidation.extend({ provider: z.literal("openrouter") }),
   ollamaSecretsValidation.extend({ provider: z.literal("ollama") }),
   lmstudioSecretsValidation.extend({ provider: z.literal("lmstudio") }),

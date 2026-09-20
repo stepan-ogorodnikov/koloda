@@ -15,6 +15,8 @@ function redactSecrets(secrets: AISecrets): AISecrets {
   switch (secrets.provider) {
     case "openai":
       return { provider: "openai", apiKey: null };
+    case "deepseek":
+      return { provider: "deepseek", apiKey: null };
     case "openrouter":
       return { provider: "openrouter", apiKey: null };
     case "opencodeGo":

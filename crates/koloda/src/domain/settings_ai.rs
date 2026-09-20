@@ -10,7 +10,7 @@ use crate::app::error::{error_codes, AppError};
 pub use crate::domain::ai::{AIProfile, AISecrets};
 
 /// Accepted `assistant.temperature` range. Covers the common bounds of the
-/// supported providers (openrouter, ollama, lmstudio, opencodeGo/Zen, ollamaCloud); adjust
+/// supported providers (openrouter, deepseek, ollama, lmstudio, opencodeGo/Zen, ollamaCloud); adjust
 /// here if a provider legitimately needs a wider range.
 const ASSISTANT_TEMPERATURE_RANGE: std::ops::RangeInclusive<f64> = 0.0..=2.0;
 
