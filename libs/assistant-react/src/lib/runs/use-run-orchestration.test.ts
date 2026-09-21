@@ -340,6 +340,8 @@ describe("useRunOrchestration — always-chat submit", () => {
       "list_decks",
       "list_templates",
       "list_algorithms",
+      "get_deck",
+      "get_template",
       "get_deck_cards",
       "propose_cards",
     ]);

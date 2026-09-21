@@ -156,6 +156,56 @@ describe("createAssistantToolExecutor", () => {
     expect(cardReads).toBe(0);
   });
 
+  it("get_template shapes full field metadata without reading decks or cards", async () => {
+    let deckReads = 0;
+    let cardReads = 0;
+    const executor = createAssistantToolExecutor(
+      makeDataSource({
+        getDecks: () => {
+          deckReads += 1;
+          return [{ id: DECK_ID, title: "Spanish", templateId: TEMPLATE_ID }];
+        },
+        getCards: () => {
+          cardReads += 1;
+          return [];
+        },
+      }),
+    );
+    const output = await executor("get_template", { templateId: TEMPLATE_ID });
+    expect(output).toEqual({
+      templateId: TEMPLATE_ID,
+      title: "Basic",
+      fields: [
+        { id: FRONT_ID, title: "Front", type: "text", isRequired: true },
+        { id: BACK_ID, title: "Back", type: "text", isRequired: true },
+      ],
+    });
+    expect(deckReads).toBe(0);
+    expect(cardReads).toBe(0);
+  });
+
+  it("get_template throws for a missing template without reading decks or cards", async () => {
+    let deckReads = 0;
+    let cardReads = 0;
+    const executor = createAssistantToolExecutor(
+      makeDataSource({
+        getDecks: () => {
+          deckReads += 1;
+          return [{ id: DECK_ID, title: "Spanish", templateId: TEMPLATE_ID }];
+        },
+        getCards: () => {
+          cardReads += 1;
+          return [];
+        },
+      }),
+    );
+    await expect(executor("get_template", { templateId: MISSING_TEMPLATE_ID })).rejects.toThrow(
+      `Template not found: ${MISSING_TEMPLATE_ID}`,
+    );
+    expect(deckReads).toBe(0);
+    expect(cardReads).toBe(0);
+  });
+
   it("get_deck_cards throws for a missing deck", async () => {
     let cardReads = 0;
     const executor = createAssistantToolExecutor(

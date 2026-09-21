@@ -2,6 +2,7 @@ import {
   ASSISTANT_TOOL_SPECS,
   shapeGetDeckCardsOutput,
   shapeGetDeckOutput,
+  shapeGetTemplateOutput,
   shapeListAlgorithmsOutput,
   shapeListDecksOutput,
   shapeListTemplatesOutput,
@@ -87,6 +88,13 @@ export function createAssistantToolExecutor(data: AssistantToolDataSource): Assi
         },
         templates,
       );
+    }
+    if (name === "get_template") {
+      const { templateId } = ASSISTANT_TOOL_SPECS.get_template.inputSchema.parse(input);
+      const templates = await data.getTemplates();
+      const template = templates.find((row) => row.id === templateId);
+      if (template == null) throw new Error(`Template not found: ${templateId}`);
+      return shapeGetTemplateOutput(template);
     }
     if (name === "get_deck_cards") {
       const { deckId } = ASSISTANT_TOOL_SPECS.get_deck_cards.inputSchema.parse(input);

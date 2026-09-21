@@ -13,24 +13,24 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
-#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:333
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:340
 msgid "{algorithmCount, plural, other {ai.chat.tool-activity.algorithms}}"
 msgstr "{algorithmCount, plural, one {# алгоритм} few {# алгоритма} many {# алгоритмов} other {# алгоритма}}"
 
-#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:342
-#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:348
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:353
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:359
 msgid "{cardCount, plural, other {ai.chat.tool-activity.cards}}"
 msgstr "{cardCount, plural, one {# карточка} few {# карточки} many {# карточек} other {# карточки}}"
 
-#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:322
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:329
 msgid "{deckCount, plural, other {ai.chat.tool-activity.decks}}"
 msgstr "{deckCount, plural, one {# колода} few {# колоды} many {# колод} other {# колоды}}"
 
-#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:352
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:363
 msgid "{rejectedCount, plural, other {ai.chat.tool-activity.skipped}}"
 msgstr "{rejectedCount, plural, one {# пропущена} few {# пропущены} many {# пропущено} other {# пропущены}}"
 
-#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:327
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:334
 msgid "{templateCount, plural, other {ai.chat.tool-activity.templates}}"
 msgstr "{templateCount, plural, one {# шаблон} few {# шаблона} many {# шаблонов} other {# шаблона}}"
 
@@ -129,17 +129,21 @@ msgstr "Отправить"
 
 #: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:202
 #: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:262
-#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:316
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:323
 msgid "ai.chat.tool-activity.failed"
 msgstr "ошибка"
 
-#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:307
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:313
 msgid "ai.chat.tool-activity.get-deck"
 msgstr "Колода"
 
-#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:308
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:315
 msgid "ai.chat.tool-activity.get-deck-cards"
 msgstr "Карточки колоды"
+
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:314
+msgid "ai.chat.tool-activity.get-template"
+msgstr "Шаблон"
 
 #: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:189
 msgid "ai.chat.tool-activity.input"
@@ -153,15 +157,15 @@ msgstr "Ввод (сокращён)"
 msgid "ai.chat.tool-activity.label"
 msgstr "Вызовы инструментов"
 
-#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:306
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:312
 msgid "ai.chat.tool-activity.list-algorithms"
 msgstr "Список алгоритмов"
 
-#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:304
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:310
 msgid "ai.chat.tool-activity.list-decks"
 msgstr "Список колод"
 
-#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:305
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:311
 msgid "ai.chat.tool-activity.list-templates"
 msgstr "Список шаблонов"
 
@@ -173,7 +177,7 @@ msgstr "Результат"
 msgid "ai.chat.tool-activity.output-truncated"
 msgstr "Вывод (сокращён)"
 
-#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:309
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:316
 msgid "ai.chat.tool-activity.propose-cards"
 msgstr "Предложить карточки"
 

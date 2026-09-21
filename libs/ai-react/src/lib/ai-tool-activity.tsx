@@ -276,7 +276,13 @@ function ToolCallStatusIcon({ name, status }: ToolCallStatusIconProps) {
 }
 
 function toolCallIcon(name: string): IconSvgElement {
-  if (name === "list_decks" || name === "list_templates" || name === "list_algorithms" || name === "get_deck") {
+  if (
+    name === "list_decks" ||
+    name === "list_templates" ||
+    name === "list_algorithms" ||
+    name === "get_deck" ||
+    name === "get_template"
+  ) {
     return InvestigationIcon;
   }
   if (name === "get_deck_cards" || name === "propose_cards") return CardsIcon;
@@ -305,6 +311,7 @@ function toolCallLabel(name: string, translate: I18n["_"]): string {
   if (name === "list_templates") return translate(msg`ai.chat.tool-activity.list-templates`);
   if (name === "list_algorithms") return translate(msg`ai.chat.tool-activity.list-algorithms`);
   if (name === "get_deck") return translate(msg`ai.chat.tool-activity.get-deck`);
+  if (name === "get_template") return translate(msg`ai.chat.tool-activity.get-template`);
   if (name === "get_deck_cards") return translate(msg`ai.chat.tool-activity.get-deck-cards`);
   if (name === "propose_cards") return translate(msg`ai.chat.tool-activity.propose-cards`);
   return name;
@@ -334,6 +341,10 @@ function toolCallSummaries(call: AIToolCallRecord, translate: I18n["_"]): string
     }
   }
   if (call.name === "get_deck") {
+    const title = namedString(call.output, "title");
+    if (title !== null) return [title];
+  }
+  if (call.name === "get_template") {
     const title = namedString(call.output, "title");
     if (title !== null) return [title];
   }

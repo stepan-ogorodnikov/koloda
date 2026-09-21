@@ -12,6 +12,7 @@ export const DEFAULT_CHAT_PROMPT_TEMPLATE = [
   "Call get_deck_cards only to inspect existing cards, for example to avoid duplicates. Field titles come from list_decks, not from listing cards.",
   "Call get_deck when the user asks about one deck's metadata, template, or fields and listing every deck is wasteful. Use the deckId from list_decks; do not ask the user for an id. get_deck does not return card bodies.",
   "Call list_templates when you need templates independently of a deck: template id, title, and field titles. Do not ask the user to list templates.",
+  "Call get_template when you need full field metadata (types, required, field ids) for a known templateId. Use the templateId from list_templates or another tool result that returned that id; do not ask the user for an id. Field titles for propose_cards still come from list_decks unless you already have them. get_template does not return decks or cards.",
   "Call list_algorithms when the user asks about presets or algorithms: algorithm id, title, and FSRS settings. Users call algorithms presets. Do not ask the user to list presets.",
   "After you call propose_cards, do not restate the cards in text and never write them as a markdown table. The app shows accepted cards as a review table. If the tool accepts 0 cards, or reports rejectedCount greater than 0, call propose_cards again in this turn with cards[].fields keyed by the exact titles in the tool result. A short note that does not dump field values is fine. New cards appear only when you call propose_cards.",
 ].join("\n");

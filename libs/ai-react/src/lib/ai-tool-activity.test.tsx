@@ -133,6 +133,35 @@ describe("AIToolActivity", () => {
     expect(screen.queryByLabelText("ai.chat.tool-activity.failed")).toBeNull();
   });
 
+  it("renders a get_template success row with the template title", () => {
+    render(
+      <AIToolActivity
+        calls={[
+          call({
+            id: "c1",
+            name: "get_template",
+            status: "success",
+            input: { templateId: "01900000-0000-7000-8000-000000000005" },
+            output: {
+              templateId: "01900000-0000-7000-8000-000000000005",
+              title: "Basic",
+              fields: [
+                { id: "a", title: "Front", type: "text", isRequired: true },
+                { id: "b", title: "Back", type: "text", isRequired: true },
+              ],
+            },
+          }),
+        ]}
+      />,
+    );
+
+    expect(screen.getByText("ai.chat.tool-activity.get-template")).toBeTruthy();
+    expect(screen.getByText("Basic")).toBeTruthy();
+    expect(activityDots(screen.getByRole("button", { name: /ai\.chat\.tool-activity\.get-template/ }))).toHaveLength(1);
+    expect(screen.queryByLabelText("ai.chat.tool-activity.running")).toBeNull();
+    expect(screen.queryByLabelText("ai.chat.tool-activity.failed")).toBeNull();
+  });
+
   it.each([
     {
       scenario: "full output",

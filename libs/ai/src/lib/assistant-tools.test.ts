@@ -16,6 +16,7 @@ import {
   proposeCardsRejectedMessage,
   shapeGetDeckCardsOutput,
   shapeGetDeckOutput,
+  shapeGetTemplateOutput,
   shapeListAlgorithmsOutput,
   shapeListDecksOutput,
   shapeListTemplatesOutput,
@@ -153,6 +154,11 @@ describe("assistant-tools binder", () => {
     expect(ASSISTANT_TOOL_SPECS.get_deck.description).toMatch(/use the deckId from list_decks/i);
     expect(ASSISTANT_TOOL_SPECS.get_deck.description).toMatch(/do not ask the user for an id/i);
     expect(ASSISTANT_TOOL_SPECS.get_deck.description).toMatch(/does not return card bodies/i);
+    expect(ASSISTANT_TOOL_SPECS.get_template.description).toMatch(
+      /use the templateId from list_templates \(or another tool result that returned that id\)/i,
+    );
+    expect(ASSISTANT_TOOL_SPECS.get_template.description).toMatch(/do not ask the user for an id/i);
+    expect(ASSISTANT_TOOL_SPECS.get_template.description).toMatch(/does not return decks, cards, or create cards/i);
     expect(ASSISTANT_TOOL_SPECS.get_deck_cards.description).toMatch(/cannot pick a single random card/i);
   });
 
@@ -187,6 +193,21 @@ describe("get_deck input schema", () => {
   it("rejects a missing or non-uuid deckId", () => {
     expect(() => schema.parse({})).toThrow();
     expect(() => schema.parse({ deckId: "not-a-uuid" })).toThrow();
+  });
+});
+
+describe("get_template input schema", () => {
+  const schema = ASSISTANT_TOOL_SPECS.get_template.inputSchema;
+  const templateId = "01900000-0000-7000-8000-000000000005";
+
+  it("accepts a uuid templateId", () => {
+    expect(schema.parse({ templateId })).toEqual({ templateId });
+  });
+
+  it("rejects a missing or non-uuid templateId", () => {
+    expect(() => schema.parse({})).toThrow();
+    expect(() => schema.parse({ templateId: "not-a-uuid" })).toThrow();
+    expect(() => schema.parse({ deckId: templateId })).toThrow();
   });
 });
 
@@ -419,6 +440,30 @@ describe("tool output shaping", () => {
       cardCount: 0,
       templateTitle: null,
       fieldTitles: [],
+    });
+  });
+
+  it("maps one template to get_template output preserving field order, types, and required", () => {
+    expect(
+      shapeGetTemplateOutput({
+        id: "01900000-0000-7000-8000-000000000003",
+        title: "Notes",
+        content: {
+          fields: [
+            { id: "01900000-0000-7000-8000-00000000000c", title: "Prompt", type: "text", isRequired: true },
+            { id: "01900000-0000-7000-8000-00000000000d", title: "Notes", type: "markdown", isRequired: false },
+            { id: "01900000-0000-7000-8000-00000000000e", title: "Hint", type: "text", isRequired: false },
+          ],
+        },
+      }),
+    ).toEqual({
+      templateId: "01900000-0000-7000-8000-000000000003",
+      title: "Notes",
+      fields: [
+        { id: "01900000-0000-7000-8000-00000000000c", title: "Prompt", type: "text", isRequired: true },
+        { id: "01900000-0000-7000-8000-00000000000d", title: "Notes", type: "markdown", isRequired: false },
+        { id: "01900000-0000-7000-8000-00000000000e", title: "Hint", type: "text", isRequired: false },
+      ],
     });
   });
 

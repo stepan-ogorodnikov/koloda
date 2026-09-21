@@ -55,6 +55,13 @@ export type GetDeckCardsOutput = {
 /** Host field type — mirrors SRS `"text" | "markdown"` without importing `@koloda/srs`. */
 export type AssistantToolFieldType = "text" | "markdown";
 
+/** Full template structure returned by `get_template`. */
+export type GetTemplateOutput = {
+  templateId: string;
+  title: string;
+  fields: Array<{ id: string; title: string; type: AssistantToolFieldType; isRequired: boolean }>;
+};
+
 /** Accepted `propose_cards` payload; `fields` is title-keyed like `get_deck_cards`. */
 export type ProposeCardsOutput = {
   deckId: string;
@@ -204,6 +211,14 @@ export const ASSISTANT_TOOL_SPECS = {
       deckId: z.uuid(),
     }),
   },
+  get_template: {
+    name: "get_template",
+    description:
+      "Get one card template's full structure by template id: template id, title, and fields (id, title, type, required). Use the templateId from list_templates (or another tool result that returned that id); do not ask the user for an id; this does not return decks, cards, or create cards.",
+    inputSchema: z.object({
+      templateId: z.uuid(),
+    }),
+  },
   get_deck_cards: {
     name: "get_deck_cards",
     description:
@@ -324,6 +339,18 @@ export function shapeGetDeckOutput(
 }
 
 /**
+ * Shape `get_template` output from one template row. Field order, types, and
+ * required flags are preserved so the model can map titles to ids.
+ */
+export function shapeGetTemplateOutput(template: AssistantToolTemplate): GetTemplateOutput {
+  return {
+    templateId: template.id,
+    title: template.title,
+    fields: shapeTemplateFields(template.content.fields),
+  };
+}
+
+/**
  * Shape `get_deck_cards` output, applying the per-deck cap and the serialized-char
  * budget; `totalCards`/`isCapped` always report the deck's real size.
  */
@@ -393,16 +420,22 @@ export function shapeProposeCardsOutput(
     deckId: deck.id,
     deckTitle: deck.title,
     templateId: deck.template.id,
-    templateFields: templateFields.map((field) => ({
-      id: field.id,
-      title: field.title,
-      type: field.type,
-      isRequired: field.isRequired,
-    })),
+    templateFields: shapeTemplateFields(templateFields),
     cards: accepted,
     rejectedCount,
     ...(message != null ? { message } : {}),
   };
+}
+
+function shapeTemplateFields(
+  fields: AssistantToolTemplate["content"]["fields"],
+): Array<{ id: string; title: string; type: AssistantToolFieldType; isRequired: boolean }> {
+  return fields.map((field) => ({
+    id: field.id,
+    title: field.title,
+    type: field.type,
+    isRequired: field.isRequired,
+  }));
 }
 
 function lookupProposedFieldText(inputFields: Record<string, string>, field: { id: string; title: string }): string {
