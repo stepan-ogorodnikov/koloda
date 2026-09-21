@@ -16,6 +16,7 @@ import {
   proposeCardsRejectedMessage,
   shapeGetDeckCardsOutput,
   shapeListDecksOutput,
+  shapeListTemplatesOutput,
   shapeProposeCardsOutput,
 } from "./assistant-tools";
 import { streamChatWithOllama } from "./chat-stream";
@@ -139,6 +140,8 @@ describe("assistant-tools binder", () => {
     expect(ASSISTANT_TOOL_SPECS.propose_cards.description).toMatch(/markdown table/i);
     expect(ASSISTANT_TOOL_SPECS.list_decks.description).toMatch(/field titles/i);
     expect(ASSISTANT_TOOL_SPECS.list_decks.description).toMatch(/do not ask the user for field titles/i);
+    expect(ASSISTANT_TOOL_SPECS.list_templates.description).toMatch(/field titles/i);
+    expect(ASSISTANT_TOOL_SPECS.list_templates.description).toMatch(/do not ask the user to list templates/i);
     expect(ASSISTANT_TOOL_SPECS.list_decks.description).not.toMatch(
       /call this first when the user asks about their decks or cards/i,
     );
@@ -265,6 +268,23 @@ describe("tool output shaping", () => {
       content: Object.fromEntries(Object.entries(texts).map(([id, text]) => [id, { text }])),
     };
   }
+
+  it("maps template rows to list_templates output with field titles", () => {
+    expect(shapeListTemplatesOutput(templates)).toEqual({
+      templates: [
+        {
+          templateId: "01900000-0000-7000-8000-000000000001",
+          title: "Basic",
+          fieldTitles: ["Front", "Back"],
+        },
+        {
+          templateId: "01900000-0000-7000-8000-000000000002",
+          title: "Cloze",
+          fieldTitles: ["Text"],
+        },
+      ],
+    });
+  });
 
   it("maps deck rows to list_decks output with template titles and field titles", () => {
     const output = shapeListDecksOutput(

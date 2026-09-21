@@ -13,18 +13,22 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
-#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:337
-#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:343
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:328
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:334
 msgid "{cardCount, plural, other {ai.chat.tool-activity.cards}}"
 msgstr "{cardCount, plural, one {# card} other {# cards}}"
 
-#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:333
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:318
 msgid "{deckCount, plural, other {ai.chat.tool-activity.decks}}"
 msgstr "{deckCount, plural, one {# deck} other {# decks}}"
 
-#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:347
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:338
 msgid "{rejectedCount, plural, other {ai.chat.tool-activity.skipped}}"
 msgstr "{rejectedCount, plural, one {# skipped} other {# skipped}}"
+
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:323
+msgid "{templateCount, plural, other {ai.chat.tool-activity.templates}}"
+msgstr "{templateCount, plural, one {# template} other {# templates}}"
 
 #: ../../libs/ai-react/src/lib/ai-chat-submit.tsx:17
 #: ../../libs/ai-react/src/lib/ai-chat-submit.tsx:20
@@ -119,62 +123,66 @@ msgstr "Settings"
 msgid "ai.chat.submit.label"
 msgstr "Send"
 
-#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:218
-#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:278
-#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:327
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:202
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:262
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:312
 msgid "ai.chat.tool-activity.failed"
 msgstr "failed"
 
-#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:319
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:304
 msgid "ai.chat.tool-activity.get-deck-cards"
 msgstr "Get deck cards"
 
-#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:205
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:189
 msgid "ai.chat.tool-activity.input"
 msgstr "Input"
 
-#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:205
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:189
 msgid "ai.chat.tool-activity.input-truncated"
 msgstr "Input (truncated)"
 
-#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:91
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:85
 msgid "ai.chat.tool-activity.label"
 msgstr "Tool activity"
 
-#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:318
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:302
 msgid "ai.chat.tool-activity.list-decks"
 msgstr "List decks"
 
-#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:213
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:303
+msgid "ai.chat.tool-activity.list-templates"
+msgstr "List templates"
+
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:197
 msgid "ai.chat.tool-activity.output"
 msgstr "Output"
 
-#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:213
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:197
 msgid "ai.chat.tool-activity.output-truncated"
 msgstr "Output (truncated)"
 
-#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:320
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:305
 msgid "ai.chat.tool-activity.propose-cards"
 msgstr "Propose cards"
 
-#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:127
-#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:289
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:120
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:273
 msgid "ai.chat.tool-activity.running"
 msgstr "Running"
 
-#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:112
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:105
 msgid "ai.chat.tool-activity.thinking"
 msgstr "Thinking"
 
-#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:112
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:105
 msgid "ai.chat.tool-activity.thought"
 msgstr "Thought"
 
-#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:201
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:185
 msgid "ai.chat.tool-activity.tool"
 msgstr "Tool"
 
-#: ../../libs/ai-react/src/lib/ai-model-parameters.tsx:21
+#: ../../libs/ai-react/src/lib/ai-model-parameters.tsx:22
 msgid "ai.model-parameters.reasoning-effort.label"
 msgstr "Reasoning effort"
 

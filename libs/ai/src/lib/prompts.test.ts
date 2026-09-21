@@ -7,6 +7,8 @@ describe("DEFAULT_CHAT_PROMPT_TEMPLATE", () => {
     expect(DEFAULT_CHAT_PROMPT_TEMPLATE).toMatch(/random card/i);
     expect(DEFAULT_CHAT_PROMPT_TEMPLATE).toMatch(/invent/i);
     expect(DEFAULT_CHAT_PROMPT_TEMPLATE).toContain("list_decks");
+    expect(DEFAULT_CHAT_PROMPT_TEMPLATE).toContain("list_templates");
+    expect(DEFAULT_CHAT_PROMPT_TEMPLATE).toMatch(/do not ask the user to list templates/i);
     expect(DEFAULT_CHAT_PROMPT_TEMPLATE).toMatch(/do not ask the user for field titles/i);
     expect(DEFAULT_CHAT_PROMPT_TEMPLATE).toMatch(/do not restate the cards/i);
     expect(DEFAULT_CHAT_PROMPT_TEMPLATE).toMatch(/markdown table/i);

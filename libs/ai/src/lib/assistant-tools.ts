@@ -22,6 +22,15 @@ export type ListDecksOutput = {
   }>;
 };
 
+/** Template summary row returned by `list_templates`. */
+export type ListTemplatesOutput = {
+  templates: Array<{
+    templateId: string;
+    title: string;
+    fieldTitles: string[];
+  }>;
+};
+
 /** Card payload returned by `get_deck_cards`; `fields` maps template field titles to card text. */
 export type GetDeckCardsOutput = {
   deckTitle: string;
@@ -145,6 +154,12 @@ export const ASSISTANT_TOOL_SPECS = {
       "List the user's flashcard decks: deck id, deck title, card count, and the template's title and field titles. Call this when you need a deck id or field titles, including before propose_cards. Do not ask the user for field titles. This tool does not create cards.",
     inputSchema: z.object({}),
   },
+  list_templates: {
+    name: "list_templates",
+    description:
+      "List the user's card templates: template id, title, and field titles. Call this when you need templates independently of a deck, including unused templates. Do not ask the user to list templates. Deck ids and card counts come from list_decks, not from this tool. This tool does not create cards or templates.",
+    inputSchema: z.object({}),
+  },
   get_deck_cards: {
     name: "get_deck_cards",
     description:
@@ -202,6 +217,20 @@ export function bindAssistantTools({ names, execute }: BindAssistantToolsOptions
     });
   }
   return bound;
+}
+
+/**
+ * Shape `list_templates` output from template rows. Unused templates stay in the
+ * list — this tool is not filtered by deck membership.
+ */
+export function shapeListTemplatesOutput(templates: AssistantToolTemplate[]): ListTemplatesOutput {
+  return {
+    templates: templates.map((template) => ({
+      templateId: template.id,
+      title: template.title,
+      fieldTitles: template.content.fields.map((field) => field.title),
+    })),
+  };
 }
 
 /**

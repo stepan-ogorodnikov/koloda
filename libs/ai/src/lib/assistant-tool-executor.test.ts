@@ -53,6 +53,20 @@ describe("createAssistantToolExecutor", () => {
     expect(output.decks[0]?.cardCount).toBe(0);
   });
 
+  it("list_templates shapes template rows from the data source", async () => {
+    const executor = createAssistantToolExecutor(makeDataSource());
+    const output = (await executor("list_templates", {})) as {
+      templates: Array<{ templateId: string; title: string; fieldTitles: string[] }>;
+    };
+    expect(output.templates).toEqual([{ templateId: TEMPLATE_ID, title: "Basic", fieldTitles: ["Front", "Back"] }]);
+  });
+
+  it("list_templates returns an empty list when there are no templates", async () => {
+    const executor = createAssistantToolExecutor(makeDataSource({ getTemplates: () => [] }));
+    const output = (await executor("list_templates", {})) as { templates: unknown[] };
+    expect(output.templates).toEqual([]);
+  });
+
   it("get_deck_cards throws for a missing deck", async () => {
     let cardReads = 0;
     const executor = createAssistantToolExecutor(

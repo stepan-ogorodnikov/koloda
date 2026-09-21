@@ -2,6 +2,7 @@ import {
   ASSISTANT_TOOL_SPECS,
   shapeGetDeckCardsOutput,
   shapeListDecksOutput,
+  shapeListTemplatesOutput,
   shapeProposeCardsOutput,
 } from "./assistant-tools";
 import type { AssistantToolCard, AssistantToolExecutor, AssistantToolTemplate } from "./assistant-tools";
@@ -51,6 +52,10 @@ export function createAssistantToolExecutor(data: AssistantToolDataSource): Assi
         })),
         templates,
       );
+    }
+    if (name === "list_templates") {
+      const templates = await data.getTemplates();
+      return shapeListTemplatesOutput(templates);
     }
     if (name === "get_deck_cards") {
       const { deckId } = ASSISTANT_TOOL_SPECS.get_deck_cards.inputSchema.parse(input);

@@ -26,7 +26,7 @@ Duplicate prevention is the model's choice to inspect existing cards through a t
 
 - **Reach** — the app reads user data locally, when a tool runs
 - **Egress** — the tool result leaves the machine toward the provider, in the same run
-- **Tools** — `list_decks`, `get_deck_cards`, and `propose_cards`
+- **Tools** — `list_decks`, `list_templates`, `get_deck_cards`, and `propose_cards`
 - **Tool activity** — the visible record of tool calls, kept on the run
   Reasoning rows share that list; see ASSISTANT-MESSAGES.md (§Message Content).
 - **Budgets** — caps on tool output: 200 cards per deck list, 8,000 serialized characters, 200 accepted cards per proposal
@@ -40,14 +40,14 @@ Relationships:
 
 ## Resources
 
-The assistant reads decks.
+The assistant reads decks and templates.
 
 - It can list every deck: its id, name, card count, template title, and field titles.
+- It can list every template: its id, title, and field titles.
 - It can then fetch one deck's existing cards, as field-title-to-text pairs, within a budget.
 - It can propose new cards for a deck.
   That proposal is not a write.
 - Cards are read as part of their deck, never individually.
-- A template is read through its deck, never on its own.
 
 Scheduling statistics and lesson history are not read.
 
@@ -56,9 +56,10 @@ The AI never creates cards directly; card creation always goes through the card 
 
 ## Tools
 
-The model sees the conversation and three tools, and it calls them if it needs data or wants to propose cards.
+The model sees the conversation and four tools, and it calls them if it needs data or wants to propose cards.
 
 - `list_decks` — every deck's id, name, card count, template title, and field titles.
+- `list_templates` — every template's id, title, and field titles.
 - `get_deck_cards` — the existing cards of one deck, identified by the id from the list.
 - `propose_cards` — new flashcards for a deck.
   Generating, creating, making, or inventing cards — including a random card — uses this tool.
@@ -69,7 +70,7 @@ The model sees the conversation and three tools, and it calls them if it needs d
 Reach happens when a tool runs, not at submit.
 Egress is the tool result sent back to the model in that same run.
 
-A user with no decks still gets the tools.
+A user with no decks or templates still gets the tools.
 Listing them returns an empty set.
 A request for a deck that does not exist fails that tool call.
 The run continues and the failure is visible.
@@ -81,9 +82,10 @@ If it keeps calling instead of answering, the run stops.
 
 Tool traffic is visible in the chat feed as compact rows on that assistant message.
 
-- `list_decks`, `get_deck_cards`, and `propose_cards` show a translated label.
+- `list_decks`, `list_templates`, `get_deck_cards`, and `propose_cards` show a translated label.
 - Any other tool shows the protocol id.
 - A successful `list_decks` also shows how many decks came back, after a dot.
+- A successful `list_templates` also shows how many templates came back, after a dot.
 - A successful `get_deck_cards` also shows how many cards came back, after a dot.
 - A successful `propose_cards` also shows how many cards were accepted, after a dot.
 - If any proposed cards were dropped, it also shows how many were skipped, after another dot.
