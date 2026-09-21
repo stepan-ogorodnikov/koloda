@@ -124,9 +124,9 @@ function ConversationItem({
       <span className={conversationTitle({ isDraft: !conversation.hasTurns })} data-has-turns={conversation.hasTurns}>
         {name}
       </span>
-      <div className="flex shrink-0 items-center gap-1">
+      <div className="grid min-w-8 shrink-0 items-center justify-items-end">
         <div
-          className="flex w-0 items-center overflow-hidden group-hover:w-8 group-focus-within:w-8"
+          className="col-start-1 row-start-1 flex w-8 items-center justify-end pointer-events-none opacity-0 group-hover:pointer-events-auto group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:opacity-100 animate-opacity"
           onPointerDownCapture={() => {
             ignoreLinkClickRef.current = true;
           }}
@@ -142,7 +142,7 @@ function ConversationItem({
           />
         </div>
         <ConversationListTimestamp
-          className="fg-level-4 text-sm font-medium text-end select-none"
+          className="col-start-1 row-start-1 fg-level-4 text-sm font-medium text-end select-none pointer-events-none group-hover:opacity-0 group-focus-within:opacity-0 animate-opacity"
           timestamp={conversation.updatedAt ?? conversation.createdAt}
         />
       </div>
