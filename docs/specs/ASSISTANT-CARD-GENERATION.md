@@ -30,6 +30,8 @@ It goes through the same lifecycle: streaming, success, failure, cancellation, o
 Relationships:
 
 - Card generation happens inside a chat run; there is no separate mode.
+- Card content never persists without review; only cards the user adds from the review table reach the deck.
+- Any other assistant-driven write is allowed only when product specs name it and define undo and validation; see ASSISTANT-DATA-ACCESS.md (§Resources).
 - Add sends the selected cards to the write target and settles each card's status independently.
 - History serialization is in ASSISTANT-CONVERSATIONS.md (§Conversation History); the markdown format is below.
 

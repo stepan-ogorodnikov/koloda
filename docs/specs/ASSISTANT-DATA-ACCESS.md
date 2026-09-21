@@ -36,7 +36,7 @@ Relationships:
 - Data access is always on; every provider behaves the same.
 - Discovery happens by tool calls during the run — never by system-prompt injection or submit-time snapshots.
 - Tool activity lives on the run, not in the history; see ASSISTANT-CONVERSATIONS.md (§Conversation History).
-- Writes are not part of data access; see ASSISTANT-CARD-GENERATION.md.
+- Persistence is not part of data access; card content and any other assistant-driven writes follow ASSISTANT-CARD-GENERATION.md and the write rules in Resources.
 
 ## Resources
 
@@ -53,13 +53,14 @@ Deck tools may still surface template title and field titles; that is not a subs
 - It can list every algorithm (preset): its id, title, and FSRS settings.
 - It can then fetch one deck's existing cards, as field-title-to-text pairs, within a budget.
 - It can propose new cards for a deck.
-  That proposal is not a write.
+  That proposal does not persist card content.
 - Cards are read as part of their deck, never individually.
 
 Scheduling statistics and lesson history are not read.
 
 Writes are not part of data access.
-The AI never creates cards directly; card creation always goes through the card review flow.
+Card content never persists without review.
+Any other assistant-driven write is allowed only when product specs name it and define undo and validation.
 
 ## Tools
 

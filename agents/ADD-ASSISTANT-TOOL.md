@@ -61,7 +61,7 @@ Keep these invariants:
 - Data access is always on for every provider.
 - Discovery is tool calls during the run, not submit-time snapshots.
 - Card bodies are field-title → text pairs by default; do not ship card ids unless the user explicitly requires them.
-- Writes are not data access; creation goes through the review flow (`docs/specs/ASSISTANT-CARD-GENERATION.md`).
+- Card content never persists without review; other assistant-driven writes need a named product spec with undo and validation (`docs/specs/ASSISTANT-DATA-ACCESS.md`, `docs/specs/ASSISTANT-CARD-GENERATION.md`).
 - Tool activity lives on the run, not in follow-up history.
 
 Also update the data-access / tools row in `agents/ASSISTANT-MAP.md` if primary files or the critical invariant change.
