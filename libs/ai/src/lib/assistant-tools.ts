@@ -10,16 +10,19 @@ import type { GeneratedCard } from "./generation";
  * Adding a tool is one entry here plus one branch in the shared executor.
  */
 
-/** Deck summary row returned by `list_decks`. */
+/** One deck's structural summary — the `list_decks` row, also the `get_deck` payload. */
+export type DeckSummaryOutput = {
+  deckId: string;
+  title: string;
+  cardCount: number;
+  /** Null mirrors the v1 data-access manifest: the deck's template was not among the resolved set. */
+  templateTitle: string | null;
+  fieldTitles: string[];
+};
+
+/** Deck summary rows returned by `list_decks`. */
 export type ListDecksOutput = {
-  decks: Array<{
-    deckId: string;
-    title: string;
-    cardCount: number;
-    /** Null mirrors the v1 data-access manifest: the deck's template was not among the resolved set. */
-    templateTitle: string | null;
-    fieldTitles: string[];
-  }>;
+  decks: DeckSummaryOutput[];
 };
 
 /** Template summary row returned by `list_templates`. */
@@ -193,6 +196,14 @@ export const ASSISTANT_TOOL_SPECS = {
       "List the user's spaced-repetition presets (algorithms): algorithm id, title, and FSRS settings (retention, weights, fuzz, learning steps, relearning steps, maximum interval). Users call these presets. Call this when the user asks about presets or algorithms, including unused ones. Do not ask the user to list presets. Deck ids come from list_decks, not from this tool. This tool does not create presets or change scheduling.",
     inputSchema: z.object({}),
   },
+  get_deck: {
+    name: "get_deck",
+    description:
+      "Get one deck's structural summary by deck id: deck id, title, card count, template title, and field titles. Use the deckId from list_decks; do not ask the user for an id; this does not return card bodies or create cards.",
+    inputSchema: z.object({
+      deckId: z.uuid(),
+    }),
+  },
   get_deck_cards: {
     name: "get_deck_cards",
     description:
@@ -290,16 +301,25 @@ export function shapeListDecksOutput(
   templates: AssistantToolTemplate[],
 ): ListDecksOutput {
   return {
-    decks: decks.map((deck) => {
-      const template = templates.find((row) => row.id === deck.templateId) ?? null;
-      return {
-        deckId: deck.id,
-        title: deck.title,
-        cardCount: deck.cardCount,
-        templateTitle: template?.title ?? null,
-        fieldTitles: template ? template.content.fields.map((field) => field.title) : [],
-      };
-    }),
+    decks: decks.map((deck) => shapeGetDeckOutput(deck, templates)),
+  };
+}
+
+/**
+ * Shape `get_deck` output from one deck row and the resolved template set.
+ * A missing template keeps a null `templateTitle` and no field titles — never a silent drop.
+ */
+export function shapeGetDeckOutput(
+  deck: AssistantDeckSummarySource,
+  templates: AssistantToolTemplate[],
+): DeckSummaryOutput {
+  const template = templates.find((row) => row.id === deck.templateId) ?? null;
+  return {
+    deckId: deck.id,
+    title: deck.title,
+    cardCount: deck.cardCount,
+    templateTitle: template?.title ?? null,
+    fieldTitles: template ? template.content.fields.map((field) => field.title) : [],
   };
 }
 

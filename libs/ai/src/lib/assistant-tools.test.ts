@@ -15,6 +15,7 @@ import {
   PROPOSE_CARDS_RETRY_MESSAGE,
   proposeCardsRejectedMessage,
   shapeGetDeckCardsOutput,
+  shapeGetDeckOutput,
   shapeListAlgorithmsOutput,
   shapeListDecksOutput,
   shapeListTemplatesOutput,
@@ -149,6 +150,9 @@ describe("assistant-tools binder", () => {
     expect(ASSISTANT_TOOL_SPECS.list_decks.description).not.toMatch(
       /call this first when the user asks about their decks or cards/i,
     );
+    expect(ASSISTANT_TOOL_SPECS.get_deck.description).toMatch(/use the deckId from list_decks/i);
+    expect(ASSISTANT_TOOL_SPECS.get_deck.description).toMatch(/do not ask the user for an id/i);
+    expect(ASSISTANT_TOOL_SPECS.get_deck.description).toMatch(/does not return card bodies/i);
     expect(ASSISTANT_TOOL_SPECS.get_deck_cards.description).toMatch(/cannot pick a single random card/i);
   });
 
@@ -169,6 +173,20 @@ describe("assistant-tools binder", () => {
 
   it("rejects unknown tool names at bind time", () => {
     expect(() => bindAssistantTools({ names: ["nope"], execute: vi.fn() })).toThrow(/Unknown assistant tool/);
+  });
+});
+
+describe("get_deck input schema", () => {
+  const schema = ASSISTANT_TOOL_SPECS.get_deck.inputSchema;
+  const deckId = "01900000-0000-7000-8000-000000000005";
+
+  it("accepts a uuid deckId", () => {
+    expect(schema.parse({ deckId })).toEqual({ deckId });
+  });
+
+  it("rejects a missing or non-uuid deckId", () => {
+    expect(() => schema.parse({})).toThrow();
+    expect(() => schema.parse({ deckId: "not-a-uuid" })).toThrow();
   });
 });
 
@@ -362,6 +380,46 @@ describe("tool output shaping", () => {
 
   it("returns an empty deck list for empty inputs", () => {
     expect(shapeListDecksOutput([], templates)).toEqual({ decks: [] });
+  });
+
+  it("maps one deck row to get_deck output with template titles and field titles", () => {
+    expect(
+      shapeGetDeckOutput(
+        {
+          id: "01900000-0000-7000-8000-000000000005",
+          title: "Spanish verbs",
+          templateId: "01900000-0000-7000-8000-000000000001",
+          cardCount: 12,
+        },
+        templates,
+      ),
+    ).toEqual({
+      deckId: "01900000-0000-7000-8000-000000000005",
+      title: "Spanish verbs",
+      cardCount: 12,
+      templateTitle: "Basic",
+      fieldTitles: ["Front", "Back"],
+    });
+  });
+
+  it("maps a missing template to a null title and empty fieldTitles", () => {
+    expect(
+      shapeGetDeckOutput(
+        {
+          id: "01900000-0000-7000-8000-000000000006",
+          title: "Orphan",
+          templateId: "01900000-0000-7000-8000-000000000063",
+          cardCount: 0,
+        },
+        templates,
+      ),
+    ).toEqual({
+      deckId: "01900000-0000-7000-8000-000000000006",
+      title: "Orphan",
+      cardCount: 0,
+      templateTitle: null,
+      fieldTitles: [],
+    });
   });
 
   it("lists every card of a small deck and maps field ids to titles", () => {

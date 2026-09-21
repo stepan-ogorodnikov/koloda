@@ -18,6 +18,9 @@ describe("DEFAULT_CHAT_PROMPT_TEMPLATE", () => {
     expect(DEFAULT_CHAT_PROMPT_TEMPLATE).toMatch(/0 cards/i);
     expect(DEFAULT_CHAT_PROMPT_TEMPLATE).toMatch(/rejectedCount/i);
     expect(DEFAULT_CHAT_PROMPT_TEMPLATE).toMatch(/short note/i);
+    expect(DEFAULT_CHAT_PROMPT_TEMPLATE).toContain("get_deck");
+    expect(DEFAULT_CHAT_PROMPT_TEMPLATE).toMatch(/one deck's metadata/i);
+    expect(DEFAULT_CHAT_PROMPT_TEMPLATE).toMatch(/do not ask the user for an id/i);
     expect(DEFAULT_CHAT_PROMPT_TEMPLATE).not.toMatch(/call list_decks and get_deck_cards first/i);
     expect(DEFAULT_CHAT_PROMPT_TEMPLATE).not.toMatch(/currently selected deck/i);
   });

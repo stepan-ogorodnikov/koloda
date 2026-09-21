@@ -276,7 +276,9 @@ function ToolCallStatusIcon({ name, status }: ToolCallStatusIconProps) {
 }
 
 function toolCallIcon(name: string): IconSvgElement {
-  if (name === "list_decks" || name === "list_templates" || name === "list_algorithms") return InvestigationIcon;
+  if (name === "list_decks" || name === "list_templates" || name === "list_algorithms" || name === "get_deck") {
+    return InvestigationIcon;
+  }
   if (name === "get_deck_cards" || name === "propose_cards") return CardsIcon;
   // WHY: unknown protocol ids still render; they keep the generic search glyph.
   return WrenchIcon;
@@ -302,6 +304,7 @@ function toolCallLabel(name: string, translate: I18n["_"]): string {
   if (name === "list_decks") return translate(msg`ai.chat.tool-activity.list-decks`);
   if (name === "list_templates") return translate(msg`ai.chat.tool-activity.list-templates`);
   if (name === "list_algorithms") return translate(msg`ai.chat.tool-activity.list-algorithms`);
+  if (name === "get_deck") return translate(msg`ai.chat.tool-activity.get-deck`);
   if (name === "get_deck_cards") return translate(msg`ai.chat.tool-activity.get-deck-cards`);
   if (name === "propose_cards") return translate(msg`ai.chat.tool-activity.propose-cards`);
   return name;
@@ -330,6 +333,10 @@ function toolCallSummaries(call: AIToolCallRecord, translate: I18n["_"]): string
       return [translate(msg`${plural(algorithmCount, { other: "ai.chat.tool-activity.algorithms" })}`)];
     }
   }
+  if (call.name === "get_deck") {
+    const title = namedString(call.output, "title");
+    if (title !== null) return [title];
+  }
   if (call.name === "get_deck_cards") {
     const cardCount = namedArrayLength(call.output, "cards") ?? namedInteger(call.output, "acceptedCount");
     if (cardCount !== null) return [translate(msg`${plural(cardCount, { other: "ai.chat.tool-activity.cards" })}`)];
@@ -347,6 +354,12 @@ function toolCallSummaries(call: AIToolCallRecord, translate: I18n["_"]): string
     return summaries;
   }
   return [];
+}
+
+function namedString(value: unknown, key: string): string | null {
+  if (!value || typeof value !== "object") return null;
+  const field = (value as Record<string, unknown>)[key];
+  return typeof field === "string" && field.length > 0 ? field : null;
 }
 
 function namedArrayLength(value: unknown, key: string): number | null {

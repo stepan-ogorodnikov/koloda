@@ -107,35 +107,35 @@ msgstr "New template"
 msgid "algorithm-picker.label"
 msgstr "Preset"
 
-#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:139
+#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:138
 msgid "algorithm.actions.label"
 msgstr "Actions"
 
-#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:102
+#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:101
 msgid "algorithm.inputs.is-fuzz-enabled.label"
 msgstr "Apply fuzz factor"
 
-#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:120
+#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:119
 msgid "algorithm.inputs.learning-steps.label"
 msgstr "Learning steps"
 
-#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:134
+#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:133
 msgid "algorithm.inputs.maximum-interval.label"
 msgstr "Maximum interval"
 
-#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:123
+#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:122
 msgid "algorithm.inputs.relearning-steps.label"
 msgstr "Relearning steps"
 
-#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:86
+#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:85
 msgid "algorithm.inputs.retention.label"
 msgstr "Retention"
 
-#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:71
+#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:70
 msgid "algorithm.inputs.title.label"
 msgstr "Title"
 
-#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:111
+#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:110
 msgid "algorithm.inputs.weights.label"
 msgstr "Weights"
 
@@ -177,36 +177,36 @@ msgstr "Delete relearning step number {0}"
 msgid "algorithm.relearning-steps.unit.{0}"
 msgstr "Time period for relearning step number {0}"
 
-#: ../../libs/srs-react/src/lib/cards/card-details.tsx:153
+#: ../../libs/srs-react/src/lib/cards/card-details.tsx:152
 msgid "card.action.reset-progress"
 msgstr "Reset progress"
 
-#: ../../libs/srs-react/src/lib/cards/card-details.tsx:147
+#: ../../libs/srs-react/src/lib/cards/card-details.tsx:146
 msgid "card.labels.actions"
 msgstr "Actions"
 
-#: ../../libs/srs-react/src/lib/cards/card-details.tsx:127
+#: ../../libs/srs-react/src/lib/cards/card-details.tsx:126
 msgid "card.labels.difficulty"
 msgstr "Difficulty"
 
-#: ../../libs/srs-react/src/lib/cards/card-details.tsx:113
+#: ../../libs/srs-react/src/lib/cards/card-details.tsx:112
 #: ../../libs/srs-react/src/lib/cards/cards-table-filters.tsx:87
 msgid "card.labels.due-at"
 msgstr "Due"
 
-#: ../../libs/srs-react/src/lib/cards/card-details.tsx:134
+#: ../../libs/srs-react/src/lib/cards/card-details.tsx:133
 msgid "card.labels.lapses"
 msgstr "Lapses"
 
-#: ../../libs/srs-react/src/lib/cards/card-details.tsx:141
+#: ../../libs/srs-react/src/lib/cards/card-details.tsx:140
 msgid "card.labels.reviews"
 msgstr "Reviews"
 
-#: ../../libs/srs-react/src/lib/cards/card-details.tsx:120
+#: ../../libs/srs-react/src/lib/cards/card-details.tsx:119
 msgid "card.labels.stability"
 msgstr "Stability"
 
-#: ../../libs/srs-react/src/lib/cards/card-details.tsx:107
+#: ../../libs/srs-react/src/lib/cards/card-details.tsx:106
 #: ../../libs/srs-react/src/lib/cards/cards-table-filters.tsx:69
 msgid "card.labels.state"
 msgstr "Status"
@@ -357,11 +357,11 @@ msgstr "Done"
 msgid "clone-template.trigger"
 msgstr "Clone template"
 
-#: ../../libs/srs-react/src/lib/decks/deck-details.tsx:89
+#: ../../libs/srs-react/src/lib/decks/deck-details.tsx:88
 msgid "deck.actions.label"
 msgstr "Actions"
 
-#: ../../libs/srs-react/src/lib/decks/deck-details.tsx:74
+#: ../../libs/srs-react/src/lib/decks/deck-details.tsx:73
 msgid "deck.inputs.title.label"
 msgstr "Title"
 
@@ -469,7 +469,7 @@ msgstr "Learned today"
 msgid "lesson.completion.close"
 msgstr "Close"
 
-#: ../../libs/srs-react/src/lib/lessons/lesson-completion.tsx:12
+#: ../../libs/srs-react/src/lib/lessons/lesson-completion.tsx:21
 msgid "lesson.completion.message"
 msgstr "Done"
 
@@ -544,7 +544,7 @@ msgstr "Preview Card"
 msgid "template-picker.label"
 msgstr "Template"
 
-#: ../../libs/srs-react/src/lib/templates/template.tsx:104
+#: ../../libs/srs-react/src/lib/templates/template.tsx:103
 msgid "template.actions.label"
 msgstr "Actions"
 
@@ -573,11 +573,11 @@ msgstr "Untitled"
 msgid "template.fields.inputs.type.label"
 msgstr "Type"
 
-#: ../../libs/srs-react/src/lib/templates/template.tsx:93
+#: ../../libs/srs-react/src/lib/templates/template.tsx:92
 msgid "template.fields.label"
 msgstr "Fields"
 
-#: ../../libs/srs-react/src/lib/templates/template.tsx:74
+#: ../../libs/srs-react/src/lib/templates/template.tsx:73
 msgid "template.inputs.title.label"
 msgstr "Title"
 
@@ -589,18 +589,18 @@ msgstr "Field"
 msgid "template.layout.inputs.operation.label"
 msgstr "Operation"
 
-#: ../../libs/srs-react/src/lib/templates/template.tsx:99
+#: ../../libs/srs-react/src/lib/templates/template.tsx:98
 msgid "template.layout.label"
 msgstr "Layout"
 
-#: ../../libs/srs-react/src/lib/templates/template.tsx:88
+#: ../../libs/srs-react/src/lib/templates/template.tsx:87
 msgid "template.status.locked"
 msgstr "Locked"
 
-#: ../../libs/srs-react/src/lib/templates/template.tsx:80
+#: ../../libs/srs-react/src/lib/templates/template.tsx:79
 msgid "template.status.title"
 msgstr "Status"
 
-#: ../../libs/srs-react/src/lib/templates/template.tsx:88
+#: ../../libs/srs-react/src/lib/templates/template.tsx:87
 msgid "template.status.unlocked"
 msgstr "Not locked"

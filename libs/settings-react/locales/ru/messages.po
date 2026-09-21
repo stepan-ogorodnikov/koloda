@@ -53,11 +53,11 @@ msgstr "Системная"
 msgid "settings.ai.add"
 msgstr "Добавить профиль"
 
-#: ../../libs/settings-react/src/lib/ai-providers/add-ai-profile-form.tsx:46
+#: ../../libs/settings-react/src/lib/ai-providers/add-ai-profile-form.tsx:48
 msgid "settings.ai.add.submit"
 msgstr "Добавить"
 
-#: ../../libs/settings-react/src/lib/settings-ai-add-profile.tsx:75
+#: ../../libs/settings-react/src/lib/settings-ai-add-profile.tsx:79
 msgid "settings.ai.add.title"
 msgstr "Добавить ИИ профиль"
 
@@ -81,7 +81,7 @@ msgstr "Удалить"
 msgid "settings.ai.delete.message"
 msgstr "Вы уверены, что хотите удалить этот профиль?"
 
-#: ../../libs/settings-react/src/lib/ai-providers/edit-ai-profile-form.tsx:63
+#: ../../libs/settings-react/src/lib/ai-providers/edit-ai-profile-form.tsx:65
 #: ../../libs/settings-react/src/lib/settings-ai-profile-models.tsx:154
 msgid "settings.ai.edit.submit"
 msgstr "Сохранить"
@@ -155,7 +155,7 @@ msgstr "Удалить профиль"
 msgid "settings.ai.profiles.empty"
 msgstr "Нет профилей"
 
-#: ../../libs/settings-react/src/lib/settings-ai-add-profile.tsx:81
+#: ../../libs/settings-react/src/lib/settings-ai-add-profile.tsx:85
 msgid "settings.ai.profiles.provider.label"
 msgstr "Провайдер"
 
@@ -196,64 +196,64 @@ msgstr "Анимации"
 msgid "settings.interface.scheme"
 msgstr "Цветовая схема"
 
-#: ../../libs/settings-react/src/lib/settings-learning.tsx:223
+#: ../../libs/settings-react/src/lib/settings-learning.tsx:220
 msgid "settings.learning.day-starts-at"
 msgstr "Начало дня"
 
-#: ../../libs/settings-react/src/lib/settings-learning.tsx:97
+#: ../../libs/settings-react/src/lib/settings-learning.tsx:94
 msgid "settings.learning.defaults.algorithm"
 msgstr "Алгоритм по умолчанию"
 
-#: ../../libs/settings-react/src/lib/settings-learning.tsx:107
+#: ../../libs/settings-react/src/lib/settings-learning.tsx:104
 msgid "settings.learning.defaults.template"
 msgstr "Шаблон по умолчанию"
 
-#: ../../libs/settings-react/src/lib/settings-learning.tsx:185
+#: ../../libs/settings-react/src/lib/settings-learning.tsx:182
 msgid "settings.learning.learn-ahead-limit"
 msgstr "Лимит изучения наперёд"
 
-#: ../../libs/settings-react/src/lib/settings-learning.tsx:191
+#: ../../libs/settings-react/src/lib/settings-learning.tsx:188
 msgid "settings.learning.learn-ahead-limit.hours.label"
 msgstr "Часы"
 
-#: ../../libs/settings-react/src/lib/settings-learning.tsx:198
+#: ../../libs/settings-react/src/lib/settings-learning.tsx:195
 msgid "settings.learning.learn-ahead-limit.hours.suffix"
 msgstr "ч"
 
-#: ../../libs/settings-react/src/lib/settings-learning.tsx:206
+#: ../../libs/settings-react/src/lib/settings-learning.tsx:203
 msgid "settings.learning.learn-ahead-limit.minutes.label"
 msgstr "Минуты"
 
-#: ../../libs/settings-react/src/lib/settings-learning.tsx:213
+#: ../../libs/settings-react/src/lib/settings-learning.tsx:210
 msgid "settings.learning.learn-ahead-limit.minutes.suffix"
 msgstr "м"
 
-#: ../../libs/settings-react/src/lib/settings-learning.tsx:113
+#: ../../libs/settings-react/src/lib/settings-learning.tsx:110
 msgid "settings.learning.limits"
 msgstr "Дневные лимиты"
 
-#: ../../libs/settings-react/src/lib/settings-learning.tsx:139
-#: ../../libs/settings-react/src/lib/settings-learning.tsx:159
-#: ../../libs/settings-react/src/lib/settings-learning.tsx:179
+#: ../../libs/settings-react/src/lib/settings-learning.tsx:136
+#: ../../libs/settings-react/src/lib/settings-learning.tsx:156
+#: ../../libs/settings-react/src/lib/settings-learning.tsx:176
 msgid "settings.learning.limits.counts-towards-total"
 msgstr "Идёт в счёт всего"
 
-#: ../../libs/settings-react/src/lib/settings-learning.tsx:148
+#: ../../libs/settings-react/src/lib/settings-learning.tsx:145
 msgid "settings.learning.limits.learn"
 msgstr "Заучивание"
 
-#: ../../libs/settings-react/src/lib/settings-learning.tsx:168
+#: ../../libs/settings-react/src/lib/settings-learning.tsx:165
 msgid "settings.learning.limits.review"
 msgstr "Повтор"
 
-#: ../../libs/settings-react/src/lib/settings-learning.tsx:117
+#: ../../libs/settings-react/src/lib/settings-learning.tsx:114
 msgid "settings.learning.limits.total"
 msgstr "Всего"
 
-#: ../../libs/settings-react/src/lib/settings-learning.tsx:82
+#: ../../libs/settings-react/src/lib/settings-learning.tsx:79
 msgid "settings.learning.limits.unlimited"
 msgstr "Неограниченно"
 
-#: ../../libs/settings-react/src/lib/settings-learning.tsx:128
+#: ../../libs/settings-react/src/lib/settings-learning.tsx:125
 msgid "settings.learning.limits.untouched"
 msgstr "Новые"

@@ -26,7 +26,7 @@ Duplicate prevention is the model's choice to inspect existing cards through a t
 
 - **Reach** — the app reads user data locally, when a tool runs
 - **Egress** — the tool result leaves the machine toward the provider, in the same run
-- **Tools** — `list_decks`, `list_templates`, `list_algorithms`, `get_deck_cards`, and `propose_cards`
+- **Tools** — `list_decks`, `list_templates`, `list_algorithms`, `get_deck`, `get_deck_cards`, and `propose_cards`
 - **Tool activity** — the visible record of tool calls, kept on the run
   Reasoning rows share that list; see ASSISTANT-MESSAGES.md (§Message Content).
 - **Budgets** — caps on tool output: 200 cards per deck list, 8,000 serialized characters, 200 accepted cards per proposal
@@ -43,6 +43,7 @@ Relationships:
 The assistant reads decks, templates, and algorithms (presets).
 
 - It can list every deck: its id, name, card count, template title, and field titles.
+- It can fetch one deck's structural summary: its id, name, card count, template title, and field titles.
 - It can list every template: its id, title, and field titles.
 - It can list every algorithm (preset): its id, title, and FSRS settings.
 - It can then fetch one deck's existing cards, as field-title-to-text pairs, within a budget.
@@ -57,12 +58,14 @@ The AI never creates cards directly; card creation always goes through the card 
 
 ## Tools
 
-The model sees the conversation and five tools, and it calls them if it needs data or wants to propose cards.
+The model sees the conversation and six tools, and it calls them if it needs data or wants to propose cards.
 
 - `list_decks` — every deck's id, name, card count, template title, and field titles.
 - `list_templates` — every template's id, title, and field titles.
 - `list_algorithms` — every preset's id, title, and FSRS settings.
   Users call algorithms presets.
+- `get_deck` — one deck's id, name, card count, template title, and field titles, identified by the id from `list_decks`.
+  It does not return card bodies.
 - `get_deck_cards` — the existing cards of one deck, identified by the id from the list.
 - `propose_cards` — new flashcards for a deck.
   Generating, creating, making, or inventing cards — including a random card — uses this tool.
@@ -85,11 +88,12 @@ If it keeps calling instead of answering, the run stops.
 
 Tool traffic is visible in the chat feed as compact rows on that assistant message.
 
-- `list_decks`, `list_templates`, `list_algorithms`, `get_deck_cards`, and `propose_cards` show a translated label.
+- `list_decks`, `list_templates`, `list_algorithms`, `get_deck`, `get_deck_cards`, and `propose_cards` show a translated label.
 - Any other tool shows the protocol id.
 - A successful `list_decks` also shows how many decks came back, after a dot.
 - A successful `list_templates` also shows how many templates came back, after a dot.
 - A successful `list_algorithms` also shows how many algorithms came back, after a dot.
+- A successful `get_deck` also shows the deck title, after a dot.
 - A successful `get_deck_cards` also shows how many cards came back, after a dot.
 - A successful `propose_cards` also shows how many cards were accepted, after a dot.
 - If any proposed cards were dropped, it also shows how many were skipped, after another dot.

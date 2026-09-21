@@ -98,6 +98,64 @@ describe("createAssistantToolExecutor", () => {
     expect(output.algorithms).toEqual([]);
   });
 
+  it("get_deck shapes one deck row without reading cards", async () => {
+    let cardReads = 0;
+    const executor = createAssistantToolExecutor(
+      makeDataSource({
+        getCards: () => {
+          cardReads += 1;
+          return [];
+        },
+      }),
+    );
+    const output = await executor("get_deck", { deckId: DECK_ID });
+    expect(output).toEqual({
+      deckId: DECK_ID,
+      title: "Spanish",
+      cardCount: 3,
+      templateTitle: "Basic",
+      fieldTitles: ["Front", "Back"],
+    });
+    expect(cardReads).toBe(0);
+  });
+
+  it("get_deck throws for a missing deck without reading cards", async () => {
+    let cardReads = 0;
+    const executor = createAssistantToolExecutor(
+      makeDataSource({
+        getCards: () => {
+          cardReads += 1;
+          return [];
+        },
+      }),
+    );
+    await expect(executor("get_deck", { deckId: MISSING_DECK_ID })).rejects.toThrow(
+      `Deck not found: ${MISSING_DECK_ID}`,
+    );
+    expect(cardReads).toBe(0);
+  });
+
+  it("get_deck keeps a null template title when the deck's template is missing", async () => {
+    let cardReads = 0;
+    const executor = createAssistantToolExecutor(
+      makeDataSource({
+        getDecks: () => [{ id: DECK_ID, title: "Spanish", templateId: MISSING_TEMPLATE_ID }],
+        getCards: () => {
+          cardReads += 1;
+          return [];
+        },
+      }),
+    );
+    await expect(executor("get_deck", { deckId: DECK_ID })).resolves.toEqual({
+      deckId: DECK_ID,
+      title: "Spanish",
+      cardCount: 3,
+      templateTitle: null,
+      fieldTitles: [],
+    });
+    expect(cardReads).toBe(0);
+  });
+
   it("get_deck_cards throws for a missing deck", async () => {
     let cardReads = 0;
     const executor = createAssistantToolExecutor(

@@ -1,6 +1,7 @@
 import {
   ASSISTANT_TOOL_SPECS,
   shapeGetDeckCardsOutput,
+  shapeGetDeckOutput,
   shapeListAlgorithmsOutput,
   shapeListDecksOutput,
   shapeListTemplatesOutput,
@@ -67,6 +68,25 @@ export function createAssistantToolExecutor(data: AssistantToolDataSource): Assi
     if (name === "list_algorithms") {
       const algorithms = await data.getAlgorithms();
       return shapeListAlgorithmsOutput(algorithms);
+    }
+    if (name === "get_deck") {
+      const { deckId } = ASSISTANT_TOOL_SPECS.get_deck.inputSchema.parse(input);
+      const [decks, templates, counts] = await Promise.all([
+        data.getDecks(),
+        data.getTemplates(),
+        data.getCardCounts(),
+      ]);
+      const deck = decks.find((row) => row.id === deckId);
+      if (deck == null) throw new Error(`Deck not found: ${deckId}`);
+      return shapeGetDeckOutput(
+        {
+          id: deck.id,
+          title: deck.title,
+          templateId: deck.templateId,
+          cardCount: counts[deck.id] ?? 0,
+        },
+        templates,
+      );
     }
     if (name === "get_deck_cards") {
       const { deckId } = ASSISTANT_TOOL_SPECS.get_deck_cards.inputSchema.parse(input);

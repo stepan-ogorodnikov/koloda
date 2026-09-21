@@ -105,6 +105,34 @@ describe("AIToolActivity", () => {
     expect(document.querySelector("svg")).not.toBeNull();
   });
 
+  it("renders a get_deck success row with the deck title", () => {
+    render(
+      <AIToolActivity
+        calls={[
+          call({
+            id: "c1",
+            name: "get_deck",
+            status: "success",
+            input: { deckId: "01900000-0000-7000-8000-000000000001" },
+            output: {
+              deckId: "01900000-0000-7000-8000-000000000001",
+              title: "Spanish",
+              cardCount: 3,
+              templateTitle: "Basic",
+              fieldTitles: ["Front", "Back"],
+            },
+          }),
+        ]}
+      />,
+    );
+
+    expect(screen.getByText("ai.chat.tool-activity.get-deck")).toBeTruthy();
+    expect(screen.getByText("Spanish")).toBeTruthy();
+    expect(activityDots(screen.getByRole("button", { name: /ai\.chat\.tool-activity\.get-deck/ }))).toHaveLength(1);
+    expect(screen.queryByLabelText("ai.chat.tool-activity.running")).toBeNull();
+    expect(screen.queryByLabelText("ai.chat.tool-activity.failed")).toBeNull();
+  });
+
   it.each([
     {
       scenario: "full output",
