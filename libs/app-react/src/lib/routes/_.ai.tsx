@@ -101,7 +101,11 @@ function AIRoute() {
             </Layout.H1>
             {conversationId && (
               <div className="flex flex-row shrink-0 items-center gap-1 px-2">
-                <ConversationHeaderMenu conversationId={conversationId} onClone={handleConversationIdChange} />
+                <ConversationHeaderMenu
+                  conversationId={conversationId}
+                  onClone={handleConversationIdChange}
+                  onActiveDeleted={handleStartNewConversation}
+                />
               </div>
             )}
           </div>

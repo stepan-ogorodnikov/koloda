@@ -56,6 +56,10 @@ msgstr "Загрузка"
 msgid "ai.conversation.clone.action"
 msgstr "Клонировать"
 
+#: ../../libs/assistant-react/src/lib/ui/delete-conversation-menu-action.tsx:38
+msgid "ai.conversation.delete.action"
+msgstr "Удалить"
+
 #: ../../libs/assistant-react/src/lib/ui/assistant-conversation-recovery.tsx:199
 #: ../../libs/assistant-react/src/lib/ui/delete-conversation-button.tsx:112
 msgid "ai.conversation.delete.cancel"
