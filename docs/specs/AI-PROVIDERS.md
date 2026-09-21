@@ -225,7 +225,8 @@ See the conversation and card-generation specs for run lifecycle, prompts, strea
 Provider-facing details that matter here:
 
 - The request carries the chosen model and any applicable model parameters.
-- If the model supports reasoning effort and the user set a level, the run uses that level.
+- If the model supports reasoning effort and the user set a level, the run sends that stored level except where a provider's API uses a different vocabulary (see DeepSeek below).
 - If the user did not set a level, the provider's default still applies.
+- DeepSeek accepts only low, high, and max on the wire. The UI and catalog still use the generic levels low, medium, high, and xhigh (fallback families default to medium). When sending a run, the app maps minimal and low to low; medium and high to high; xhigh, max, and ultra to max. Any other stored value is passed through unchanged.
 - All providers stream responses.
 - An unreachable self-hosted base URL surfaces as a network error on first use.

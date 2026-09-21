@@ -45,6 +45,7 @@ export function EditAIProfileForm({
 
   return (
     <form
+      // WHY: Native constraint validation runs before our submit handler and blocks TanStack Form onSubmit validators.
       noValidate
       onSubmit={(e) => {
         e.preventDefault();

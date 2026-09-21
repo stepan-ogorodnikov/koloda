@@ -113,6 +113,7 @@ export function openAIProviderOptions(reasoningEffort: string | undefined): Prov
 export function deepseekProviderOptions(reasoningEffort: string | undefined): ProviderOptions | undefined {
   if (!reasoningEffort) return undefined;
 
+  // WHY: Picker and models.dev fallback levels use low|medium|high|xhigh; DeepSeek accepts low|high|max only.
   const mappedEffort =
     {
       minimal: "low",

@@ -28,6 +28,7 @@ export function AddAIProfileForm({ provider, onSubmit, isPending, error }: AddAI
 
   return (
     <form
+      // WHY: Native constraint validation runs before our submit handler and blocks TanStack Form onSubmit validators.
       noValidate
       onSubmit={(e) => {
         e.preventDefault();
