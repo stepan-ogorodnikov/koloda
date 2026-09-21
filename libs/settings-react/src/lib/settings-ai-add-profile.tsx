@@ -33,6 +33,10 @@ export function SettingsAIAddProfile({
   const label = _(msg`settings.ai.add`);
   const isControlled = isOpenProp !== undefined;
   const isOpen = isControlled ? isOpenProp : isUncontrolledOpen;
+  const providers = [
+    ...AI_PROVIDERS.filter((id) => providerIds.includes(id)),
+    ...AI_PROVIDERS.filter((id) => !providerIds.includes(id)),
+  ];
 
   const setIsOpen = (next: boolean) => {
     if (!isControlled) setIsUncontrolledOpen(next);
@@ -84,7 +88,7 @@ export function SettingsAIAddProfile({
                 if (key) setProvider(key.toString() as AiProvider);
               }}
             >
-              {AI_PROVIDERS.map((id) => (
+              {providers.map((id) => (
                 <Select.ListBoxItem
                   id={id}
                   textValue={AI_PROVIDER_LABELS[id]}

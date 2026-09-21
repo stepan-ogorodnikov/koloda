@@ -1,9 +1,9 @@
-import type { AddAIProfileData } from "@koloda/ai";
+import type { AddAIProfileData, AiProvider } from "@koloda/ai";
 import { AppError } from "@koloda/app";
 import { aiProvidersAtom, queriesAtom } from "@koloda/core-react";
 import type { Queries } from "@koloda/core-react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { createStore, Provider as JotaiProvider } from "jotai";
 import type { PropsWithChildren } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -41,10 +41,10 @@ function buildQueries(): Queries {
   } as unknown as Queries;
 }
 
-function renderDialog() {
+function renderDialog(providerIds: AiProvider[] = ["openrouter"]) {
   const store = createStore();
   store.set(queriesAtom as unknown as Parameters<typeof store.set>[0], buildQueries());
-  store.set(aiProvidersAtom, ["openrouter"]);
+  store.set(aiProvidersAtom, providerIds);
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
   });
@@ -78,6 +78,27 @@ describe("SettingsAIAddProfile", () => {
 
     expect((await screen.findByRole("alert")).textContent).toBe("validation.settings-ai.providers.api-key");
     expect(addProfile).not.toHaveBeenCalled();
+  });
+
+  it("puts unavailable providers after available providers", async () => {
+    renderDialog(["ollama", "openrouter"]);
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "settings.ai.add" }));
+    });
+    fireEvent.click(screen.getByRole("button", { name: /settings.ai.profiles.provider.label/ }));
+
+    const options = within(screen.getByRole("listbox")).getAllByRole("option");
+    expect(options.map((option) => option.textContent)).toEqual([
+      "OpenRouter",
+      "Ollama",
+      "OpenAI",
+      "DeepSeek",
+      "LM Studio",
+      "OpenCode Go",
+      "OpenCode Zen",
+      "Ollama Cloud",
+    ]);
   });
 
   it("submits after a required API key is filled in", async () => {
