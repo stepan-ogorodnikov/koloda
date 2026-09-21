@@ -276,7 +276,7 @@ function ToolCallStatusIcon({ name, status }: ToolCallStatusIconProps) {
 }
 
 function toolCallIcon(name: string): IconSvgElement {
-  if (name === "list_decks" || name === "list_templates") return InvestigationIcon;
+  if (name === "list_decks" || name === "list_templates" || name === "list_algorithms") return InvestigationIcon;
   if (name === "get_deck_cards" || name === "propose_cards") return CardsIcon;
   // WHY: unknown protocol ids still render; they keep the generic search glyph.
   return WrenchIcon;
@@ -301,6 +301,7 @@ function toolCallLabel(name: string, translate: I18n["_"]): string {
   // so a new tool still renders instead of a missing catalog string.
   if (name === "list_decks") return translate(msg`ai.chat.tool-activity.list-decks`);
   if (name === "list_templates") return translate(msg`ai.chat.tool-activity.list-templates`);
+  if (name === "list_algorithms") return translate(msg`ai.chat.tool-activity.list-algorithms`);
   if (name === "get_deck_cards") return translate(msg`ai.chat.tool-activity.get-deck-cards`);
   if (name === "propose_cards") return translate(msg`ai.chat.tool-activity.propose-cards`);
   return name;
@@ -321,6 +322,12 @@ function toolCallSummaries(call: AIToolCallRecord, translate: I18n["_"]): string
     const templateCount = namedArrayLength(call.output, "templates");
     if (templateCount !== null) {
       return [translate(msg`${plural(templateCount, { other: "ai.chat.tool-activity.templates" })}`)];
+    }
+  }
+  if (call.name === "list_algorithms") {
+    const algorithmCount = namedArrayLength(call.output, "algorithms");
+    if (algorithmCount !== null) {
+      return [translate(msg`${plural(algorithmCount, { other: "ai.chat.tool-activity.algorithms" })}`)];
     }
   }
   if (call.name === "get_deck_cards") {

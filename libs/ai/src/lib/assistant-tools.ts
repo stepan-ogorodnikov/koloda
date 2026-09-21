@@ -31,6 +31,15 @@ export type ListTemplatesOutput = {
   }>;
 };
 
+/** Algorithm summary row returned by `list_algorithms`. */
+export type ListAlgorithmsOutput = {
+  algorithms: Array<{
+    algorithmId: string;
+    title: string;
+    content: AssistantToolAlgorithmContent;
+  }>;
+};
+
 /** Card payload returned by `get_deck_cards`; `fields` maps template field titles to card text. */
 export type GetDeckCardsOutput = {
   deckTitle: string;
@@ -75,6 +84,24 @@ export type AssistantToolTemplate = {
   id: string;
   title: string;
   content: { fields: Array<{ id: string; title: string; type: AssistantToolFieldType; isRequired: boolean }> };
+};
+
+/** FSRS content subset — mirrors SRS `AlgorithmFSRS` without importing `@koloda/srs`. */
+export type AssistantToolAlgorithmContent = {
+  type: "fsrs";
+  retention: number;
+  weights: string;
+  isFuzzEnabled: boolean;
+  learningSteps: Array<[number, string]>;
+  relearningSteps: Array<[number, string]>;
+  maximumInterval: number;
+};
+
+/** Structural algorithm subset for `list_algorithms`. */
+export type AssistantToolAlgorithm = {
+  id: string;
+  title: string;
+  content: AssistantToolAlgorithmContent;
 };
 
 /** Structural deck + template subset for `get_deck_cards` and `propose_cards`. */
@@ -160,6 +187,12 @@ export const ASSISTANT_TOOL_SPECS = {
       "List the user's card templates: template id, title, and field titles. Call this when you need templates independently of a deck, including unused templates. Do not ask the user to list templates. Deck ids and card counts come from list_decks, not from this tool. This tool does not create cards or templates.",
     inputSchema: z.object({}),
   },
+  list_algorithms: {
+    name: "list_algorithms",
+    description:
+      "List the user's spaced-repetition presets (algorithms): algorithm id, title, and FSRS settings (retention, weights, fuzz, learning steps, relearning steps, maximum interval). Users call these presets. Call this when the user asks about presets or algorithms, including unused ones. Do not ask the user to list presets. Deck ids come from list_decks, not from this tool. This tool does not create presets or change scheduling.",
+    inputSchema: z.object({}),
+  },
   get_deck_cards: {
     name: "get_deck_cards",
     description:
@@ -229,6 +262,20 @@ export function shapeListTemplatesOutput(templates: AssistantToolTemplate[]): Li
       templateId: template.id,
       title: template.title,
       fieldTitles: template.content.fields.map((field) => field.title),
+    })),
+  };
+}
+
+/**
+ * Shape `list_algorithms` output from algorithm rows. Unused algorithms stay in
+ * the list — this tool is not filtered by deck membership.
+ */
+export function shapeListAlgorithmsOutput(algorithms: AssistantToolAlgorithm[]): ListAlgorithmsOutput {
+  return {
+    algorithms: algorithms.map((algorithm) => ({
+      algorithmId: algorithm.id,
+      title: algorithm.title,
+      content: algorithm.content,
     })),
   };
 }

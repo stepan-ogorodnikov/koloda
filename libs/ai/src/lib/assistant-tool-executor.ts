@@ -1,11 +1,17 @@
 import {
   ASSISTANT_TOOL_SPECS,
   shapeGetDeckCardsOutput,
+  shapeListAlgorithmsOutput,
   shapeListDecksOutput,
   shapeListTemplatesOutput,
   shapeProposeCardsOutput,
 } from "./assistant-tools";
-import type { AssistantToolCard, AssistantToolExecutor, AssistantToolTemplate } from "./assistant-tools";
+import type {
+  AssistantToolAlgorithm,
+  AssistantToolCard,
+  AssistantToolExecutor,
+  AssistantToolTemplate,
+} from "./assistant-tools";
 
 /**
  * Data access the assistant tools need. Injected by the host so this module
@@ -17,6 +23,7 @@ export type AssistantToolDataSource = {
     | Promise<Array<{ id: string; title: string; templateId: string }>>
     | Array<{ id: string; title: string; templateId: string }>;
   getTemplates: () => Promise<AssistantToolTemplate[]> | AssistantToolTemplate[];
+  getAlgorithms: () => Promise<AssistantToolAlgorithm[]> | AssistantToolAlgorithm[];
   getCards: (params: { deckId: string }) => Promise<AssistantToolCard[]> | AssistantToolCard[];
   getCardCounts: () => Promise<Record<string, number>> | Record<string, number>;
 };
@@ -56,6 +63,10 @@ export function createAssistantToolExecutor(data: AssistantToolDataSource): Assi
     if (name === "list_templates") {
       const templates = await data.getTemplates();
       return shapeListTemplatesOutput(templates);
+    }
+    if (name === "list_algorithms") {
+      const algorithms = await data.getAlgorithms();
+      return shapeListAlgorithmsOutput(algorithms);
     }
     if (name === "get_deck_cards") {
       const { deckId } = ASSISTANT_TOOL_SPECS.get_deck_cards.inputSchema.parse(input);

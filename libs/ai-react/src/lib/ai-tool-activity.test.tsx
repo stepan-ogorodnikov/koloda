@@ -81,6 +81,30 @@ describe("AIToolActivity", () => {
     expect(document.querySelector("svg")).not.toBeNull();
   });
 
+  it("renders a list_algorithms success row from the algorithms array length", () => {
+    render(
+      <AIToolActivity
+        calls={[
+          call({
+            id: "c1",
+            name: "list_algorithms",
+            status: "success",
+            output: { algorithms: [{ algorithmId: 1 }, { algorithmId: 2 }] },
+          }),
+        ]}
+      />,
+    );
+
+    expect(screen.getByText("ai.chat.tool-activity.list-algorithms")).toBeTruthy();
+    expect(screen.getByText("ai.chat.tool-activity.algorithms")).toBeTruthy();
+    expect(activityDots(screen.getByRole("button", { name: /ai\.chat\.tool-activity\.list-algorithms/ }))).toHaveLength(
+      1,
+    );
+    expect(screen.queryByLabelText("ai.chat.tool-activity.running")).toBeNull();
+    expect(screen.queryByLabelText("ai.chat.tool-activity.failed")).toBeNull();
+    expect(document.querySelector("svg")).not.toBeNull();
+  });
+
   it.each([
     {
       scenario: "full output",

@@ -1,6 +1,7 @@
 export { createAssistantToolExecutor } from "./lib/assistant-tool-executor";
 export { ASSISTANT_TOOL_SPECS, generatedCardsFromProposeOutput, isProposeCardsOutput } from "./lib/assistant-tools";
 export type {
+  AssistantToolAlgorithm,
   AssistantToolCard,
   AssistantToolEvent,
   AssistantToolName,

@@ -1,5 +1,6 @@
 import type {
   AISecrets,
+  AssistantToolAlgorithm,
   AssistantToolCard,
   AssistantToolEvent,
   ChatStreamChunk,
@@ -25,6 +26,7 @@ type KolodaDb = {
   getAiProfileSecrets: (profileId: string) => unknown;
   getDecks: () => Array<{ id: string; title: string; templateId: string }>;
   getTemplates: () => AssistantToolTemplate[];
+  getAlgorithms: () => AssistantToolAlgorithm[];
   getCards: (params: { deckId: string }) => AssistantToolCard[];
   getCardCounts: () => Array<{ deckId: string; count: number }>;
 };
@@ -110,6 +112,7 @@ function createChatToolExecutor(db: KolodaDb) {
   return createAssistantToolExecutor({
     getDecks: () => db.getDecks(),
     getTemplates: () => db.getTemplates(),
+    getAlgorithms: () => db.getAlgorithms(),
     getCards: ({ deckId }) => db.getCards({ deckId }),
     getCardCounts: () => Object.fromEntries(db.getCardCounts().map((row) => [row.deckId, row.count])),
   });

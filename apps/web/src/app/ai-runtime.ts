@@ -2,7 +2,7 @@ import type { AIRuntime, AISecrets } from "@koloda/ai";
 import { createAIGenerationClient, createAssistantToolExecutor, fetchModels } from "@koloda/ai";
 import { AppError } from "@koloda/app";
 import type { DB } from "@koloda/db-sqlite";
-import { getCardCounts, getCards, getDecks, getTemplates } from "@koloda/db-sqlite";
+import { getAlgorithms, getCardCounts, getCards, getDecks, getTemplates } from "@koloda/db-sqlite";
 import { loadAIProfileSecrets } from "./ai";
 
 // INVARIANT: Web host executor — closes over the SQLite db via the same in-process
@@ -11,6 +11,7 @@ function createWebToolExecutor(db: DB) {
   return createAssistantToolExecutor({
     getDecks: () => getDecks(db),
     getTemplates: () => getTemplates(db),
+    getAlgorithms: () => getAlgorithms(db),
     getCards: ({ deckId }) => getCards(db, { deckId }),
     getCardCounts: () => getCardCounts(db),
   });

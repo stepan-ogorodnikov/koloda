@@ -23,10 +23,27 @@ const template = {
   isLocked: false,
 };
 
+const ALGORITHM_ID = "01900000-0000-7000-8000-000000000031";
+
+const algorithm = {
+  id: ALGORITHM_ID,
+  title: "Default",
+  content: {
+    type: "fsrs" as const,
+    retention: 90,
+    weights: "0.212, 1.2931",
+    isFuzzEnabled: true,
+    learningSteps: [[1, "m"] as [number, string], [10, "m"] as [number, string]],
+    relearningSteps: [[10, "m"] as [number, string]],
+    maximumInterval: 36500,
+  },
+};
+
 function makeDataSource(overrides: Partial<Parameters<typeof createAssistantToolExecutor>[0]> = {}) {
   const data = {
     getDecks: () => [{ id: DECK_ID, title: "Spanish", templateId: TEMPLATE_ID }],
     getTemplates: () => [template],
+    getAlgorithms: () => [algorithm],
     getCards: () => [
       {
         id: "01900000-0000-7000-8000-000000000009",
@@ -65,6 +82,20 @@ describe("createAssistantToolExecutor", () => {
     const executor = createAssistantToolExecutor(makeDataSource({ getTemplates: () => [] }));
     const output = (await executor("list_templates", {})) as { templates: unknown[] };
     expect(output.templates).toEqual([]);
+  });
+
+  it("list_algorithms shapes algorithm rows from the data source", async () => {
+    const executor = createAssistantToolExecutor(makeDataSource());
+    const output = (await executor("list_algorithms", {})) as {
+      algorithms: Array<{ algorithmId: string; title: string; content: { retention: number } }>;
+    };
+    expect(output.algorithms).toEqual([{ algorithmId: ALGORITHM_ID, title: "Default", content: algorithm.content }]);
+  });
+
+  it("list_algorithms returns an empty list when there are no algorithms", async () => {
+    const executor = createAssistantToolExecutor(makeDataSource({ getAlgorithms: () => [] }));
+    const output = (await executor("list_algorithms", {})) as { algorithms: unknown[] };
+    expect(output.algorithms).toEqual([]);
   });
 
   it("get_deck_cards throws for a missing deck", async () => {

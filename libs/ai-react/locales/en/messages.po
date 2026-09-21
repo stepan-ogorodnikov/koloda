@@ -13,20 +13,24 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
-#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:328
-#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:334
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:330
+msgid "{algorithmCount, plural, other {ai.chat.tool-activity.algorithms}}"
+msgstr "{algorithmCount, plural, one {# preset} other {# presets}}"
+
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:335
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:341
 msgid "{cardCount, plural, other {ai.chat.tool-activity.cards}}"
 msgstr "{cardCount, plural, one {# card} other {# cards}}"
 
-#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:318
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:319
 msgid "{deckCount, plural, other {ai.chat.tool-activity.decks}}"
 msgstr "{deckCount, plural, one {# deck} other {# decks}}"
 
-#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:338
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:345
 msgid "{rejectedCount, plural, other {ai.chat.tool-activity.skipped}}"
 msgstr "{rejectedCount, plural, one {# skipped} other {# skipped}}"
 
-#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:323
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:324
 msgid "{templateCount, plural, other {ai.chat.tool-activity.templates}}"
 msgstr "{templateCount, plural, one {# template} other {# templates}}"
 
@@ -125,11 +129,11 @@ msgstr "Send"
 
 #: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:202
 #: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:262
-#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:312
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:313
 msgid "ai.chat.tool-activity.failed"
 msgstr "failed"
 
-#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:304
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:305
 msgid "ai.chat.tool-activity.get-deck-cards"
 msgstr "Get deck cards"
 
@@ -144,6 +148,10 @@ msgstr "Input (truncated)"
 #: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:85
 msgid "ai.chat.tool-activity.label"
 msgstr "Tool activity"
+
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:304
+msgid "ai.chat.tool-activity.list-algorithms"
+msgstr "List presets"
 
 #: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:302
 msgid "ai.chat.tool-activity.list-decks"
@@ -161,7 +169,7 @@ msgstr "Output"
 msgid "ai.chat.tool-activity.output-truncated"
 msgstr "Output (truncated)"
 
-#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:305
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:306
 msgid "ai.chat.tool-activity.propose-cards"
 msgstr "Propose cards"
 

@@ -15,6 +15,7 @@ import {
   PROPOSE_CARDS_RETRY_MESSAGE,
   proposeCardsRejectedMessage,
   shapeGetDeckCardsOutput,
+  shapeListAlgorithmsOutput,
   shapeListDecksOutput,
   shapeListTemplatesOutput,
   shapeProposeCardsOutput,
@@ -142,6 +143,9 @@ describe("assistant-tools binder", () => {
     expect(ASSISTANT_TOOL_SPECS.list_decks.description).toMatch(/do not ask the user for field titles/i);
     expect(ASSISTANT_TOOL_SPECS.list_templates.description).toMatch(/field titles/i);
     expect(ASSISTANT_TOOL_SPECS.list_templates.description).toMatch(/do not ask the user to list templates/i);
+    expect(ASSISTANT_TOOL_SPECS.list_algorithms.description).toMatch(/presets/i);
+    expect(ASSISTANT_TOOL_SPECS.list_algorithms.description).toMatch(/FSRS settings/i);
+    expect(ASSISTANT_TOOL_SPECS.list_algorithms.description).toMatch(/do not ask the user to list presets/i);
     expect(ASSISTANT_TOOL_SPECS.list_decks.description).not.toMatch(
       /call this first when the user asks about their decks or cards/i,
     );
@@ -281,6 +285,37 @@ describe("tool output shaping", () => {
           templateId: "01900000-0000-7000-8000-000000000002",
           title: "Cloze",
           fieldTitles: ["Text"],
+        },
+      ],
+    });
+  });
+
+  it("maps algorithm rows to list_algorithms output with FSRS settings", () => {
+    const content = {
+      type: "fsrs" as const,
+      retention: 90,
+      weights: "0.212, 1.2931",
+      isFuzzEnabled: true,
+      learningSteps: [[1, "m"] as [number, string], [10, "m"] as [number, string]],
+      relearningSteps: [[10, "m"] as [number, string]],
+      maximumInterval: 36500,
+    };
+    expect(
+      shapeListAlgorithmsOutput([
+        { id: "01900000-0000-7000-8000-000000000021", title: "Default", content },
+        { id: "01900000-0000-7000-8000-000000000022", title: "Strict", content: { ...content, retention: 95 } },
+      ]),
+    ).toEqual({
+      algorithms: [
+        {
+          algorithmId: "01900000-0000-7000-8000-000000000021",
+          title: "Default",
+          content,
+        },
+        {
+          algorithmId: "01900000-0000-7000-8000-000000000022",
+          title: "Strict",
+          content: { ...content, retention: 95 },
         },
       ],
     });
