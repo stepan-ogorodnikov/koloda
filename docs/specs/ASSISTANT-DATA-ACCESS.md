@@ -26,7 +26,7 @@ Duplicate prevention is the model's choice to inspect existing cards through a t
 
 - **Reach** — the app reads user data locally, when a tool runs
 - **Egress** — the tool result leaves the machine toward the provider, in the same run
-- **Tools** — `list_decks`, `list_templates`, `list_algorithms`, `get_deck`, `get_template`, `get_deck_cards`, and `propose_cards`
+- **Tools** — `list_decks`, `list_templates`, `list_algorithms`, `get_deck`, `get_template`, `get_deck_cards`, `add_deck`, and `propose_cards`
 - **Tool activity** — the visible record of tool calls, kept on the run
   Reasoning rows share that list; see ASSISTANT-MESSAGES.md (§Message Content).
 - **Budgets** — caps on tool output: 200 cards per deck list, 8,000 serialized characters, 200 accepted cards per proposal
@@ -36,7 +36,7 @@ Relationships:
 - Data access is always on; every provider behaves the same.
 - Discovery happens by tool calls during the run — never by system-prompt injection or submit-time snapshots.
 - Tool activity lives on the run, not in the history; see ASSISTANT-CONVERSATIONS.md (§Conversation History).
-- Persistence is not part of data access; card content and any other assistant-driven writes follow ASSISTANT-CARD-GENERATION.md and the write rules in Resources.
+- Persistence is not part of data access. Card content follows ASSISTANT-CARD-GENERATION.md. Empty-deck create is the named mutation in Resources.
 
 ## Resources
 
@@ -60,11 +60,18 @@ Scheduling statistics and lesson history are not read.
 
 Writes are not part of data access.
 Card content never persists without review.
-Any other assistant-driven write is allowed only when product specs name it and define undo and validation.
+`add_deck` is an allowed assistant mutation, not a data-access read.
+It creates an empty deck shell directly after the title, template, and algorithm validate.
+The user can delete that deck the same way as a deck they created by hand.
+It does not create cards and does not set a propose write target.
+`propose_cards` remains the only path that stages card content for review.
+This does not extend to template field edits, algorithm parameter edits, or deletes.
+Those still need a named product spec with undo and validation.
 
 ## Tools
 
-The model sees the conversation and seven tools, and it calls them if it needs data or wants to propose cards.
+The model sees the conversation and eight tools.
+It calls them if it needs data, wants to create an empty deck, or wants to propose cards.
 
 - `list_decks` — every deck's id, name, card count, template title, and field titles.
 - `list_templates` — every template's id, title, and field titles.
@@ -75,6 +82,14 @@ The model sees the conversation and seven tools, and it calls them if it needs d
 - `get_template` — one template's full field metadata, identified by the id from `list_templates` (or another tool result that returned that id).
   It does not return decks or card bodies.
 - `get_deck_cards` — the existing cards of one deck, identified by the id from the list.
+- `add_deck` — an empty deck for one template.
+  Call `list_templates` first for the template id.
+  Pass an algorithm id only when the user asked for a specific algorithm, using the id from `list_algorithms`.
+  Otherwise omit it and the app stores the same default algorithm as manual deck create.
+  This writes the deck immediately.
+  A missing template or algorithm fails the call and leaves no deck.
+  It does not create cards, edit templates, or edit algorithms.
+  Inventing cards still requires `propose_cards`.
 - `propose_cards` — new flashcards for a deck.
   Generating, creating, making, or inventing cards — including a random card — uses this tool.
   It is not a way to pick an existing card.
@@ -96,7 +111,7 @@ If it keeps calling instead of answering, the run stops.
 
 Tool traffic is visible in the chat feed as compact rows on that assistant message.
 
-- `list_decks`, `list_templates`, `list_algorithms`, `get_deck`, `get_template`, `get_deck_cards`, and `propose_cards` show a translated label.
+- `list_decks`, `list_templates`, `list_algorithms`, `get_deck`, `get_template`, `get_deck_cards`, `add_deck`, and `propose_cards` show a translated label.
 - Any other tool shows the protocol id.
 - A successful `list_decks` also shows how many decks came back, after a dot.
 - A successful `list_templates` also shows how many templates came back, after a dot.
@@ -104,6 +119,7 @@ Tool traffic is visible in the chat feed as compact rows on that assistant messa
 - A successful `get_deck` also shows the deck title, after a dot.
 - A successful `get_template` also shows the template title, after a dot.
 - A successful `get_deck_cards` also shows how many cards came back, after a dot.
+- A successful `add_deck` also shows the deck title, after a dot.
 - A successful `propose_cards` also shows how many cards were accepted, after a dot.
 - If any proposed cards were dropped, it also shows how many were skipped, after another dot.
 - A running call keeps the tool icon and shimmers the whole row.

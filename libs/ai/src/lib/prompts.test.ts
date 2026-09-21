@@ -12,6 +12,10 @@ describe("DEFAULT_CHAT_PROMPT_TEMPLATE", () => {
     expect(DEFAULT_CHAT_PROMPT_TEMPLATE).toContain("get_template");
     expect(DEFAULT_CHAT_PROMPT_TEMPLATE).toMatch(/full field metadata/i);
     expect(DEFAULT_CHAT_PROMPT_TEMPLATE).toMatch(/known templateId/i);
+    expect(DEFAULT_CHAT_PROMPT_TEMPLATE).toContain("add_deck");
+    expect(DEFAULT_CHAT_PROMPT_TEMPLATE).toMatch(/list_templates, then add_deck, then propose_cards/i);
+    expect(DEFAULT_CHAT_PROMPT_TEMPLATE).toMatch(/do not ask the user for ids/i);
+    expect(DEFAULT_CHAT_PROMPT_TEMPLATE).toMatch(/omit algorithmId unless the user asked/i);
     expect(DEFAULT_CHAT_PROMPT_TEMPLATE).toContain("list_algorithms");
     expect(DEFAULT_CHAT_PROMPT_TEMPLATE).toMatch(/users call algorithms presets/i);
     expect(DEFAULT_CHAT_PROMPT_TEMPLATE).toMatch(/do not ask the user to list presets/i);

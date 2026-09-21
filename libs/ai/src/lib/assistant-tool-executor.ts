@@ -1,5 +1,6 @@
 import {
   ASSISTANT_TOOL_SPECS,
+  shapeAddDeckOutput,
   shapeGetDeckCardsOutput,
   shapeGetDeckOutput,
   shapeGetTemplateOutput,
@@ -28,12 +29,25 @@ export type AssistantToolDataSource = {
   getAlgorithms: () => Promise<AssistantToolAlgorithm[]> | AssistantToolAlgorithm[];
   getCards: (params: { deckId: string }) => Promise<AssistantToolCard[]> | AssistantToolCard[];
   getCardCounts: () => Promise<Record<string, number>> | Record<string, number>;
+  /** App default algorithm — the same id manual deck create stores when the user does not pick one. */
+  getDefaultAlgorithmId: () => Promise<string> | string;
+  /**
+   * Persist an empty deck. Called only after template and algorithm resolution succeed.
+   * `algorithmId` is always explicit here; the host does not invent cards.
+   */
+  createDeck: (input: {
+    title: string;
+    templateId: string;
+    algorithmId: string;
+  }) =>
+    | Promise<{ id: string; title: string; templateId: string; algorithmId: string }>
+    | { id: string; title: string; templateId: string; algorithmId: string };
 };
 
 /**
- * Shared assistant tool executor. One find-deck → find-template → shape
- * pipeline for every host; adding a tool changes one place instead of
- * duplicating per-host lookup logic.
+ * Shared assistant tool executor. Reads resolve through the host data source
+ * and shape here. `add_deck` validates the template and algorithm, then calls
+ * `createDeck`. It does not create cards or set a propose write target.
  */
 export function createAssistantToolExecutor(data: AssistantToolDataSource): AssistantToolExecutor {
   const resolveDeckTemplate = async (deckId: string) => {
@@ -101,6 +115,23 @@ export function createAssistantToolExecutor(data: AssistantToolDataSource): Assi
       const { deck, template } = await resolveDeckTemplate(deckId);
       const cards = await data.getCards({ deckId });
       return shapeGetDeckCardsOutput({ id: deck.id, title: deck.title, template }, cards);
+    }
+    if (name === "add_deck") {
+      const {
+        title,
+        templateId,
+        algorithmId: requestedAlgorithmId,
+      } = ASSISTANT_TOOL_SPECS.add_deck.inputSchema.parse(input);
+      const templates = await data.getTemplates();
+      const template = templates.find((row) => row.id === templateId);
+      if (template == null) throw new Error(`Template not found: ${templateId}`);
+      const algorithmId = requestedAlgorithmId ?? (await data.getDefaultAlgorithmId());
+      const algorithms = await data.getAlgorithms();
+      if (!algorithms.some((row) => row.id === algorithmId)) {
+        throw new Error(`Algorithm not found: ${algorithmId}`);
+      }
+      const created = await data.createDeck({ title, templateId, algorithmId });
+      return shapeAddDeckOutput(created, template);
     }
     if (name === "propose_cards") {
       const { deckId, cards } = ASSISTANT_TOOL_SPECS.propose_cards.inputSchema.parse(input);

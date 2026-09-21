@@ -105,6 +105,54 @@ describe("AIToolActivity", () => {
     expect(document.querySelector("svg")).not.toBeNull();
   });
 
+  it("renders an add_deck success row with the deck title", () => {
+    render(
+      <AIToolActivity
+        calls={[
+          call({
+            id: "c1",
+            name: "add_deck",
+            status: "success",
+            input: { title: "Spanish", templateId: "01900000-0000-7000-8000-000000000005" },
+            output: {
+              deckId: "01900000-0000-7000-8000-000000000099",
+              title: "Spanish",
+              templateId: "01900000-0000-7000-8000-000000000005",
+              templateTitle: "Basic",
+              fieldTitles: ["Front", "Back"],
+              algorithmId: "01900000-0000-7000-8000-000000000031",
+            },
+          }),
+        ]}
+      />,
+    );
+
+    expect(screen.getByText("ai.chat.tool-activity.add-deck")).toBeTruthy();
+    expect(screen.getByText("Spanish")).toBeTruthy();
+    expect(activityDots(screen.getByRole("button", { name: /ai\.chat\.tool-activity\.add-deck/ }))).toHaveLength(1);
+    expect(screen.queryByLabelText("ai.chat.tool-activity.failed")).toBeNull();
+  });
+
+  it("marks a failed add_deck row", () => {
+    render(
+      <AIToolActivity
+        calls={[
+          call({
+            id: "c1",
+            name: "add_deck",
+            status: "error",
+            input: { title: "Spanish", templateId: "01900000-0000-7000-8000-000000000194" },
+            error: "Template not found: 01900000-0000-7000-8000-000000000194",
+          }),
+        ]}
+      />,
+    );
+
+    expect(screen.getByText("ai.chat.tool-activity.add-deck")).toBeTruthy();
+    expect(screen.getByLabelText("ai.chat.tool-activity.failed")).toBeTruthy();
+    expect(screen.getByText("ai.chat.tool-activity.failed")).toBeTruthy();
+  });
+
   it("renders a get_deck success row with the deck title", () => {
     render(
       <AIToolActivity

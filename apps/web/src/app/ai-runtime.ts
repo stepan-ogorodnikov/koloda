@@ -2,11 +2,26 @@ import type { AIRuntime, AISecrets } from "@koloda/ai";
 import { createAIGenerationClient, createAssistantToolExecutor, fetchModels } from "@koloda/ai";
 import { AppError } from "@koloda/app";
 import type { DB } from "@koloda/db-sqlite";
-import { getAlgorithms, getCardCounts, getCards, getDecks, getTemplates } from "@koloda/db-sqlite";
+import {
+  addDeck,
+  getAlgorithms,
+  getCardCounts,
+  getCards,
+  getDecks,
+  getSettings,
+  getTemplates,
+} from "@koloda/db-sqlite";
 import { loadAIProfileSecrets } from "./ai";
 
 // INVARIANT: Web host executor — closes over the SQLite db via the same in-process
 // query implementations queries.ts uses; shaping and budgets live in @koloda/ai.
+async function readDefaultAlgorithmId(db: DB): Promise<string> {
+  const learning = await getSettings(db, "learning");
+  const algorithmId = learning?.content.defaults.algorithm;
+  if (!algorithmId) throw new Error("Algorithm not found: default");
+  return algorithmId;
+}
+
 function createWebToolExecutor(db: DB) {
   return createAssistantToolExecutor({
     getDecks: () => getDecks(db),
@@ -14,6 +29,16 @@ function createWebToolExecutor(db: DB) {
     getAlgorithms: () => getAlgorithms(db),
     getCards: ({ deckId }) => getCards(db, { deckId }),
     getCardCounts: () => getCardCounts(db),
+    getDefaultAlgorithmId: () => readDefaultAlgorithmId(db),
+    createDeck: async ({ title, templateId, algorithmId }) => {
+      const deck = await addDeck(db, { title, templateId, algorithmId });
+      return {
+        id: deck.id,
+        title: deck.title,
+        templateId: deck.templateId,
+        algorithmId: deck.algorithmId,
+      };
+    },
   });
 }
 

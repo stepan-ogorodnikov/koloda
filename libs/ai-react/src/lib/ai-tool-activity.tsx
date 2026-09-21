@@ -1,4 +1,10 @@
-import { AlertCircleIcon, ChevronRightIcon, InvestigationIcon, WrenchIcon } from "@hugeicons/core-free-icons";
+import {
+  AlertCircleIcon,
+  ChevronRightIcon,
+  FolderLibraryIcon,
+  InvestigationIcon,
+  WrenchIcon,
+} from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { IconSvgElement } from "@hugeicons/react";
 import { BrainIcon, Button, CardsIcon, TextSwap } from "@koloda/ui";
@@ -285,6 +291,7 @@ function toolCallIcon(name: string): IconSvgElement {
   ) {
     return InvestigationIcon;
   }
+  if (name === "add_deck") return FolderLibraryIcon;
   if (name === "get_deck_cards" || name === "propose_cards") return CardsIcon;
   // WHY: unknown protocol ids still render; they keep the generic search glyph.
   return WrenchIcon;
@@ -313,6 +320,7 @@ function toolCallLabel(name: string, translate: I18n["_"]): string {
   if (name === "get_deck") return translate(msg`ai.chat.tool-activity.get-deck`);
   if (name === "get_template") return translate(msg`ai.chat.tool-activity.get-template`);
   if (name === "get_deck_cards") return translate(msg`ai.chat.tool-activity.get-deck-cards`);
+  if (name === "add_deck") return translate(msg`ai.chat.tool-activity.add-deck`);
   if (name === "propose_cards") return translate(msg`ai.chat.tool-activity.propose-cards`);
   return name;
 }
@@ -345,6 +353,10 @@ function toolCallSummaries(call: AIToolCallRecord, translate: I18n["_"]): string
     if (title !== null) return [title];
   }
   if (call.name === "get_template") {
+    const title = namedString(call.output, "title");
+    if (title !== null) return [title];
+  }
+  if (call.name === "add_deck") {
     const title = namedString(call.output, "title");
     if (title !== null) return [title];
   }

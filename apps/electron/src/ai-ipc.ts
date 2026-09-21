@@ -29,6 +29,13 @@ type KolodaDb = {
   getAlgorithms: () => AssistantToolAlgorithm[];
   getCards: (params: { deckId: string }) => AssistantToolCard[];
   getCardCounts: () => Array<{ deckId: string; count: number }>;
+  getSettings: (params: { name: "learning" }) => { content: { defaults: { algorithm: string } } } | null;
+  addDeck: (data: { title: string; templateId: string; algorithmId: string }) => {
+    id: string;
+    title: string;
+    templateId: string;
+    algorithmId: string;
+  };
 };
 
 // INVARIANT: Correlate concurrent streams by requestId; abort must cancel only that run.
@@ -108,6 +115,13 @@ function toToolErrorMessage(error: unknown): string {
 
 // INVARIANT: main-side executor over the NAPI KolodaDb surface; NAPI reads are
 // synchronous. Shaping and budgets live in @koloda/ai.
+function readDefaultAlgorithmId(db: KolodaDb): string {
+  const learning = db.getSettings({ name: "learning" });
+  const algorithmId = learning?.content.defaults.algorithm;
+  if (!algorithmId) throw new Error("Algorithm not found: default");
+  return algorithmId;
+}
+
 function createChatToolExecutor(db: KolodaDb) {
   return createAssistantToolExecutor({
     getDecks: () => db.getDecks(),
@@ -115,6 +129,16 @@ function createChatToolExecutor(db: KolodaDb) {
     getAlgorithms: () => db.getAlgorithms(),
     getCards: ({ deckId }) => db.getCards({ deckId }),
     getCardCounts: () => Object.fromEntries(db.getCardCounts().map((row) => [row.deckId, row.count])),
+    getDefaultAlgorithmId: () => readDefaultAlgorithmId(db),
+    createDeck: ({ title, templateId, algorithmId }) => {
+      const deck = db.addDeck({ title, templateId, algorithmId });
+      return {
+        id: deck.id,
+        title: deck.title,
+        templateId: deck.templateId,
+        algorithmId: deck.algorithmId,
+      };
+    },
   });
 }
 

@@ -343,6 +343,7 @@ describe("useRunOrchestration — always-chat submit", () => {
       "get_deck",
       "get_template",
       "get_deck_cards",
+      "add_deck",
       "propose_cards",
     ]);
     expect(command.input.request).not.toHaveProperty("dataContext");

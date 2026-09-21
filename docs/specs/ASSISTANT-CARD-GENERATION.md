@@ -31,7 +31,8 @@ Relationships:
 
 - Card generation happens inside a chat run; there is no separate mode.
 - Card content never persists without review; only cards the user adds from the review table reach the deck.
-- Any other assistant-driven write is allowed only when product specs name it and define undo and validation; see ASSISTANT-DATA-ACCESS.md (§Resources).
+- Creating an empty deck (`add_deck`) is a separate direct write. It does not invent cards and does not set a write target. The first successful `propose_cards` still owns write targets.
+- Template field edits, algorithm parameter edits, and deletes are not assistant writes. Any other assistant-driven write is allowed only when product specs name it and define undo and validation; see ASSISTANT-DATA-ACCESS.md (§Resources).
 - Add sends the selected cards to the write target and settles each card's status independently.
 - History serialization is in ASSISTANT-CONVERSATIONS.md (§Conversation History); the markdown format is below.
 
@@ -44,6 +45,8 @@ A card with at least one field value is kept.
 ## How Cards Are Proposed
 
 The model must call `propose_cards` to create new cards.
+When the user asks to create a deck and fill it, the model lists templates, creates the empty deck with `add_deck`, then calls `propose_cards` with the returned deck id and field titles in the same turn.
+It does not ask the user for ids.
 Listing decks or listing existing cards does not create cards.
 Writing cards as a markdown table does not create cards.
 

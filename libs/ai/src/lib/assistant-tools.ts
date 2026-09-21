@@ -62,6 +62,16 @@ export type GetTemplateOutput = {
   fields: Array<{ id: string; title: string; type: AssistantToolFieldType; isRequired: boolean }>;
 };
 
+/** Empty deck created by `add_deck`. `algorithmId` is the id actually stored. */
+export type AddDeckOutput = {
+  deckId: string;
+  title: string;
+  templateId: string;
+  templateTitle: string;
+  fieldTitles: string[];
+  algorithmId: string;
+};
+
 /** Accepted `propose_cards` payload; `fields` is title-keyed like `get_deck_cards`. */
 export type ProposeCardsOutput = {
   deckId: string;
@@ -227,6 +237,16 @@ export const ASSISTANT_TOOL_SPECS = {
       deckId: z.uuid(),
     }),
   },
+  add_deck: {
+    name: "add_deck",
+    description:
+      "Create an empty flashcard deck. Call list_templates first for templateId; do not ask the user for ids. algorithmId only when the user asked for a specific algorithm (via list_algorithms); otherwise omit and use the app default. This creates an empty deck only; inventing cards still requires propose_cards. Does not edit templates or algorithms.",
+    inputSchema: z.object({
+      title: z.preprocess((value) => (typeof value === "string" ? value.trim() : value), z.string().min(1).max(255)),
+      templateId: z.uuid(),
+      algorithmId: z.uuid().optional(),
+    }),
+  },
   propose_cards: {
     name: "propose_cards",
     description:
@@ -347,6 +367,25 @@ export function shapeGetTemplateOutput(template: AssistantToolTemplate): GetTemp
     templateId: template.id,
     title: template.title,
     fields: shapeTemplateFields(template.content.fields),
+  };
+}
+
+/**
+ * Shape `add_deck` output from the persisted deck and the template that was
+ * validated before the write. Field titles let the same run call `propose_cards`
+ * without another list.
+ */
+export function shapeAddDeckOutput(
+  deck: { id: string; title: string; templateId: string; algorithmId: string },
+  template: AssistantToolTemplate,
+): AddDeckOutput {
+  return {
+    deckId: deck.id,
+    title: deck.title,
+    templateId: deck.templateId,
+    templateTitle: template.title,
+    fieldTitles: template.content.fields.map((field) => field.title),
+    algorithmId: deck.algorithmId,
   };
 }
 

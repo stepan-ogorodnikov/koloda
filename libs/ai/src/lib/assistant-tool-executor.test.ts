@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { createAssistantToolExecutor } from "./assistant-tool-executor";
 
 const DECK_ID = "01900000-0000-7000-8000-000000000001";
@@ -53,6 +53,10 @@ function makeDataSource(overrides: Partial<Parameters<typeof createAssistantTool
       },
     ],
     getCardCounts: () => ({ [DECK_ID]: 3 }),
+    getDefaultAlgorithmId: () => ALGORITHM_ID,
+    createDeck: () => {
+      throw new Error("createDeck should not be called");
+    },
   };
   return { ...data, ...overrides };
 }
@@ -237,6 +241,117 @@ describe("createAssistantToolExecutor", () => {
       `Template not found for deck: ${DECK_ID}`,
     );
     expect(cardReads).toBe(0);
+  });
+
+  it("add_deck returns the stored deck with field titles and does not read cards", async () => {
+    const createdId = "01900000-0000-7000-8000-000000000099";
+    let cardReads = 0;
+    const createDeck = vi.fn((input: { title: string; templateId: string; algorithmId: string }) => ({
+      id: createdId,
+      ...input,
+    }));
+    const getDefaultAlgorithmId = vi.fn(() => ALGORITHM_ID);
+    const executor = createAssistantToolExecutor(
+      makeDataSource({
+        createDeck,
+        getDefaultAlgorithmId,
+        getCards: () => {
+          cardReads += 1;
+          return [];
+        },
+      }),
+    );
+
+    const output = await executor("add_deck", {
+      title: "  Spanish verbs  ",
+      templateId: TEMPLATE_ID,
+      algorithmId: ALGORITHM_ID,
+    });
+
+    expect(output).toEqual({
+      deckId: createdId,
+      title: "Spanish verbs",
+      templateId: TEMPLATE_ID,
+      templateTitle: "Basic",
+      fieldTitles: ["Front", "Back"],
+      algorithmId: ALGORITHM_ID,
+    });
+    expect(createDeck).toHaveBeenCalledTimes(1);
+    expect(createDeck).toHaveBeenCalledWith({
+      title: "Spanish verbs",
+      templateId: TEMPLATE_ID,
+      algorithmId: ALGORITHM_ID,
+    });
+    expect(getDefaultAlgorithmId).not.toHaveBeenCalled();
+    expect(cardReads).toBe(0);
+  });
+
+  it("add_deck does not create a deck when the template is missing", async () => {
+    const createDeck = vi.fn();
+    const getDefaultAlgorithmId = vi.fn(() => ALGORITHM_ID);
+    const executor = createAssistantToolExecutor(makeDataSource({ createDeck, getDefaultAlgorithmId }));
+
+    await expect(executor("add_deck", { title: "Spanish", templateId: MISSING_TEMPLATE_ID })).rejects.toThrow(
+      `Template not found: ${MISSING_TEMPLATE_ID}`,
+    );
+    expect(createDeck).not.toHaveBeenCalled();
+    expect(getDefaultAlgorithmId).not.toHaveBeenCalled();
+  });
+
+  it("add_deck does not create a deck when the requested algorithm is missing", async () => {
+    const missingAlgorithmId = "01900000-0000-7000-8000-000000000032";
+    const createDeck = vi.fn();
+    const getDefaultAlgorithmId = vi.fn(() => ALGORITHM_ID);
+    const executor = createAssistantToolExecutor(makeDataSource({ createDeck, getDefaultAlgorithmId }));
+
+    await expect(
+      executor("add_deck", { title: "Spanish", templateId: TEMPLATE_ID, algorithmId: missingAlgorithmId }),
+    ).rejects.toThrow(`Algorithm not found: ${missingAlgorithmId}`);
+    expect(createDeck).not.toHaveBeenCalled();
+    expect(getDefaultAlgorithmId).not.toHaveBeenCalled();
+  });
+
+  it("add_deck stores the default algorithm id when algorithmId is omitted", async () => {
+    const createdId = "01900000-0000-7000-8000-000000000099";
+    const createDeck = vi.fn((input: { title: string; templateId: string; algorithmId: string }) => ({
+      id: createdId,
+      ...input,
+    }));
+    const executor = createAssistantToolExecutor(makeDataSource({ createDeck }));
+
+    const output = (await executor("add_deck", { title: "Spanish", templateId: TEMPLATE_ID })) as {
+      algorithmId: string;
+      deckId: string;
+    };
+
+    expect(createDeck).toHaveBeenCalledWith({
+      title: "Spanish",
+      templateId: TEMPLATE_ID,
+      algorithmId: ALGORITHM_ID,
+    });
+    expect(output.deckId).toBe(createdId);
+    expect(output.algorithmId).toBe(ALGORITHM_ID);
+  });
+
+  it("add_deck does not create a deck when the default algorithm is missing", async () => {
+    const missingAlgorithmId = "01900000-0000-7000-8000-000000000032";
+    const createDeck = vi.fn();
+    const executor = createAssistantToolExecutor(
+      makeDataSource({ createDeck, getDefaultAlgorithmId: () => missingAlgorithmId }),
+    );
+
+    await expect(executor("add_deck", { title: "Spanish", templateId: TEMPLATE_ID })).rejects.toThrow(
+      `Algorithm not found: ${missingAlgorithmId}`,
+    );
+    expect(createDeck).not.toHaveBeenCalled();
+  });
+
+  it("add_deck does not create a deck when the title is blank", async () => {
+    const createDeck = vi.fn();
+    const executor = createAssistantToolExecutor(makeDataSource({ createDeck }));
+
+    await expect(executor("add_deck", { title: "   ", templateId: TEMPLATE_ID })).rejects.toThrow();
+    expect(createDeck).not.toHaveBeenCalled();
   });
 
   it("propose_cards shapes accepted cards through the write target", async () => {

@@ -160,6 +160,13 @@ describe("assistant-tools binder", () => {
     expect(ASSISTANT_TOOL_SPECS.get_template.description).toMatch(/do not ask the user for an id/i);
     expect(ASSISTANT_TOOL_SPECS.get_template.description).toMatch(/does not return decks, cards, or create cards/i);
     expect(ASSISTANT_TOOL_SPECS.get_deck_cards.description).toMatch(/cannot pick a single random card/i);
+    expect(ASSISTANT_TOOL_SPECS.add_deck.description).toMatch(/call list_templates first for templateId/i);
+    expect(ASSISTANT_TOOL_SPECS.add_deck.description).toMatch(/do not ask the user for ids/i);
+    expect(ASSISTANT_TOOL_SPECS.add_deck.description).toMatch(/via list_algorithms/i);
+    expect(ASSISTANT_TOOL_SPECS.add_deck.description).toMatch(/otherwise omit and use the app default/i);
+    expect(ASSISTANT_TOOL_SPECS.add_deck.description).toMatch(/empty deck only/i);
+    expect(ASSISTANT_TOOL_SPECS.add_deck.description).toMatch(/propose_cards/i);
+    expect(ASSISTANT_TOOL_SPECS.add_deck.description).toMatch(/does not edit templates or algorithms/i);
   });
 
   it("binds only the requested specs with model-facing descriptions", () => {
@@ -208,6 +215,31 @@ describe("get_template input schema", () => {
     expect(() => schema.parse({})).toThrow();
     expect(() => schema.parse({ templateId: "not-a-uuid" })).toThrow();
     expect(() => schema.parse({ deckId: templateId })).toThrow();
+  });
+});
+
+describe("add_deck input schema", () => {
+  const schema = ASSISTANT_TOOL_SPECS.add_deck.inputSchema;
+  const templateId = "01900000-0000-7000-8000-000000000005";
+  const algorithmId = "01900000-0000-7000-8000-000000000031";
+
+  it("requires a title and templateId and trims the title", () => {
+    expect(schema.parse({ title: "  Spanish  ", templateId })).toEqual({ title: "Spanish", templateId });
+  });
+
+  it("accepts an optional algorithm id", () => {
+    expect(schema.parse({ title: "Spanish", templateId, algorithmId })).toEqual({
+      title: "Spanish",
+      templateId,
+      algorithmId,
+    });
+  });
+
+  it("rejects a blank title, a missing templateId, and a bad uuid", () => {
+    expect(() => schema.parse({ title: "   ", templateId })).toThrow();
+    expect(() => schema.parse({ title: "Spanish" })).toThrow();
+    expect(() => schema.parse({ title: "Spanish", templateId: "not-a-uuid" })).toThrow();
+    expect(() => schema.parse({ title: "Spanish", templateId, algorithmId: "not-a-uuid" })).toThrow();
   });
 });
 

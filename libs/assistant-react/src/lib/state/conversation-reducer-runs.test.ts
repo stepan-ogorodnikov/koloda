@@ -551,6 +551,38 @@ describe("conversationReducer", () => {
       expect(state.runs["r1"].writeTargetTemplateId).toBe(testId(1));
     });
 
+    it("records add_deck without cards or write targets", () => {
+      let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
+      state = conversationReducer(state, [
+        "addToolCall",
+        {
+          runId: "r1",
+          call: { id: "call-deck", name: "add_deck", input: { title: "Spanish", templateId: testId(1) } },
+        },
+      ]);
+      state = conversationReducer(state, [
+        "setToolCallResult",
+        {
+          runId: "r1",
+          callId: "call-deck",
+          output: {
+            deckId: testId(5),
+            title: "Spanish",
+            templateId: testId(1),
+            templateTitle: "Basic",
+            fieldTitles: ["Front", "Back"],
+            algorithmId: testId(8),
+          },
+        },
+      ]);
+
+      expect(state.runs["r1"].cards).toEqual([]);
+      expect(state.runs["r1"].writeTargetDeckId).toBeUndefined();
+      expect(state.runs["r1"].writeTargetTemplateId).toBeUndefined();
+      expect(state.runs["r1"].templateFields).toBeNull();
+      expect(state.runs["r1"].toolCalls?.[0]).toMatchObject({ name: "add_deck", status: "success" });
+    });
+
     it("records an empty accepted list without setting cards, writeTargetDeckId, writeTargetTemplateId, or templateFields", () => {
       let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
       const emptyOutput = { ...proposeOutput, cards: [], rejectedCount: 2 };

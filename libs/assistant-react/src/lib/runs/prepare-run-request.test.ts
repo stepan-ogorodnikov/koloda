@@ -166,6 +166,7 @@ describe("prepareRunRequest — data access", () => {
       "get_deck",
       "get_template",
       "get_deck_cards",
+      "add_deck",
       "propose_cards",
     ]);
     expect(prepared!.request).not.toHaveProperty("dataContext");
