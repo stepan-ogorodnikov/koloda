@@ -152,3 +152,63 @@ test("answers from real deck rows through read-only tools", async ({ page }) => 
     await mock.dispose();
   }
 });
+
+test("creates a deck through add_deck and shows it on the cached decks list", async ({ page }) => {
+  test.setTimeout(60_000);
+
+  const deckTitle = "E2E Created Deck";
+  // WHY: web seed's learning-default template. The id is read from its URL so
+  // add_deck calls the real executor instead of a fabricated template.
+  const templateTitle = "Type answer";
+
+  const mock = await mockOpenAICompatibleProvider(page);
+
+  try {
+    await setupWeb(page);
+    await addLmStudioProfile(page, { baseUrl: E2E_LM_STUDIO_BASE_URL });
+
+    // WHY: visiting Decks fills the React Query cache. staleTime would keep
+    // serving that snapshot after add_deck unless the app shell invalidates it.
+    await openSection(page, "Decks");
+    await expect(page.getByRole("link", { name: deckTitle, exact: true })).toHaveCount(0);
+
+    await openSection(page, "Templates");
+    await page.getByRole("link", { name: templateTitle, exact: true }).click();
+    await expect(page).toHaveURL(
+      /\/templates\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/,
+    );
+    const templateId = page
+      .url()
+      .match(/\/templates\/([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})/)?.[1];
+    if (!templateId) throw new Error(`Could not parse template id from ${page.url()}`);
+
+    await openAssistantWithDeck(page);
+    await waitForAssistantReady(page);
+
+    const log = conversationLog(page);
+    mock.enqueueCompletion({ toolCall: { name: "list_templates", arguments: {} } });
+    mock.enqueueCompletion({
+      toolCall: { name: "add_deck", arguments: { title: deckTitle, templateId } },
+    });
+    mock.enqueueCompletion({ text: "Created the deck.", chunkBy: "all" });
+
+    await sendAssistantMessage(page, "Create an empty deck");
+
+    const listTemplatesRow = log.getByRole("button", { name: /^List templates \d+ templates?$/ });
+    await expect(listTemplatesRow).toBeVisible({ timeout: 20_000 });
+    await listTemplatesRow.click();
+    // WHY: the model sent an empty {} call. The seeded template in the output
+    // means list_templates read the database.
+    const listTemplatesOutput = log.locator("pre").filter({ hasText: `"${templateTitle}"` });
+    await expect(listTemplatesOutput).toContainText(templateId);
+
+    await expect(log.getByRole("button", { name: `Create deck ${deckTitle}` })).toBeVisible({ timeout: 20_000 });
+    await expect(log.getByText("Created the deck.")).toBeVisible({ timeout: 20_000 });
+    expect(mock.completionRequests).toBe(3);
+
+    await openSection(page, "Decks");
+    await expect(page.getByRole("link", { name: deckTitle, exact: true })).toBeVisible();
+  } finally {
+    await mock.dispose();
+  }
+});
