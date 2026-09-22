@@ -40,10 +40,10 @@ Conversation documents and reducer policy still live in `@koloda/assistant-react
 
 ### Does NOT own (prevent scope creep)
 
-- Conversation reducer, Jotai store, dirty tracking — `@koloda/assistant-react` (`assistant/state/`)
+- Conversation reducer, Jotai store, dirty tracking — `@koloda/assistant-react` (`src/lib/state/`)
 - Repository writes / TanStack Query cache updates — `@koloda/assistant-react` (`useConversationSaveHost` write adapter)
-- `RunController` UI facade / submit orchestration — `@koloda/assistant-react` (`assistant/runs/`; validation + request prep in `prepare-run-request.ts`; command acceptance then `submitTurn` in `use-run-orchestration.ts`)
-- Chat UI, cards table, settings screens — `@koloda/assistant-react` (`assistant/ui/`)
+- `RunController` UI facade / submit orchestration — `@koloda/assistant-react` (`src/lib/runs/`; validation + request prep in `prepare-run-request.ts`; command acceptance then `submitTurn` in `use-run-orchestration.ts`)
+- Chat UI, cards table, settings screens — `@koloda/assistant-react` (`src/lib/ui/`)
 - Provider HTTP / `AIRuntime` host adapters — `@koloda/ai` + Electron/web hosts
 - Generic presentational chat chrome — `@koloda/ai-react`
 
