@@ -74,6 +74,19 @@ test("edits deck title, algorithm, and template via the Details tab and verifies
   // Wait for the mutation to complete (Save button disappears via form reset)
   await expect(saveButton).not.toBeVisible();
 
+  // The form must stay on the saved values so Discard restores the last save
+  await expect(detailsPanel.getByRole("textbox", { name: "Title", exact: true })).toHaveValue(updatedTitle);
+  await expect(detailsPanel.getByRole("button", { name: /Preset$/ })).toContainText(algorithmTitle);
+  await expect(detailsPanel.getByRole("button", { name: /Template$/ })).toContainText(templateTitle);
+
+  // Discard restores the last saved values, not the pre-edit ones
+  const draftTitle = "E2E Draft Title";
+  await titleField.fill(draftTitle);
+  await titleField.blur();
+  const discardButton = page.locator("form").getByRole("button", { name: "Discard", exact: true });
+  await discardButton.click();
+  await expect(detailsPanel.getByRole("textbox", { name: "Title", exact: true })).toHaveValue(updatedTitle);
+
   // Navigate away and back to verify persistence
   await openSection(page, "Dashboard");
   await openSection(page, "Decks");
