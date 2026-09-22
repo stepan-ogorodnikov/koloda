@@ -1,9 +1,9 @@
 import type { ConversationPersistenceHost } from "@koloda/assistant";
 import { createConversationPersistenceHost } from "@koloda/assistant";
 import { conversationsAtom, pendingSaveByConversationAtom } from "../state/conversation-store";
+import { resetAddDeckQueryInvalidatorForTests } from "./add-deck-query-invalidation";
 import type { AssistantJotaiStore } from "./assistant-engine-instance";
-import { ensureAssistantEngine } from "./assistant-engine-instance";
-import { resetEngineInstanceForTests } from "./assistant-engine-instance";
+import { ensureAssistantEngine, resetEngineInstanceForTests } from "./assistant-engine-instance";
 
 export type AssistantPersistenceWriteAdapter = {
   writeConversation: (conversationId: string) => Promise<boolean>;
@@ -72,4 +72,5 @@ export function resetAssistantPersistenceHostForTests(): void {
 export function resetAssistantEngineForTests(): void {
   resetEngineInstanceForTests();
   resetAssistantPersistenceHostForTests();
+  resetAddDeckQueryInvalidatorForTests();
 }

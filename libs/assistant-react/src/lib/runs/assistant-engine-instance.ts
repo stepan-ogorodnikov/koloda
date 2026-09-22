@@ -7,6 +7,7 @@ import {
   markReadIfCurrentOnStore,
   touchConversationOnStore,
 } from "../state/conversation-store";
+import { notifyAddDeckWritten } from "./add-deck-query-invalidation";
 import { createAssistantExecutionPort } from "./assistant-execution-port";
 import { assistantEventToReducerAction } from "./assistant-event-to-action";
 
@@ -24,6 +25,7 @@ function createEngineFromStore(store: AssistantJotaiStore): AssistantEngine {
     // WHY: Engine emits typed events; this adapter alone knows reducer tuples.
     emit: (event) => {
       dispatchToConversationOnStore(store, event.conversationId, assistantEventToReducerAction(event));
+      notifyAddDeckWritten(store, event);
     },
     markReadIfCurrent: (id, runId) => {
       markReadIfCurrentOnStore(store, id, runId);

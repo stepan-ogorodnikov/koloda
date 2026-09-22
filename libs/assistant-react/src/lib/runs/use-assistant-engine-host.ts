@@ -1,3 +1,4 @@
+import { invalidateDeckQueriesAfterAddDeck, registerAddDeckQueryInvalidator } from "./add-deck-query-invalidation";
 import { ensureAssistantEngine } from "./assistant-engine-instance";
 import type { AssistantJotaiStore } from "./assistant-engine-instance";
 import { SHUTDOWN_FLUSH_TIMEOUT_MS } from "@koloda/assistant";
@@ -6,7 +7,8 @@ import {
   dispatchToConversationOnStore,
   touchConversationOnStore,
 } from "../state/conversation-store";
-import { useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useEffect, useLayoutEffect, useRef } from "react";
 import { useStore } from "jotai";
 
 function interruptAllStreamingRuns(store: AssistantJotaiStore): void {
@@ -46,8 +48,23 @@ export function shutdownAssistantGracefully(
  */
 export function useAssistantEngineHost(): void {
   const store = useStore();
+  const queryClient = useQueryClient();
 
   ensureAssistantEngine(store);
+
+  // WHY: add_deck writes SQLite from the host binder, outside React Query.
+  // This shell outlives the AI route, so a deck created in the background
+  // still refreshes a mounted decks list and the template/preset delete guards.
+  // The callback stays stable; the ref picks up a replaced QueryClient.
+  const queryClientRef = useRef(queryClient);
+  useLayoutEffect(() => {
+    queryClientRef.current = queryClient;
+  });
+  useLayoutEffect(() => {
+    return registerAddDeckQueryInvalidator(() => {
+      invalidateDeckQueriesAfterAddDeck(queryClientRef.current);
+    });
+  }, []);
 
   useEffect(() => {
     // WORKAROUND: Browser `pagehide`/`beforeunload` are best-effort — the
