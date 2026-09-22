@@ -31,8 +31,8 @@ Relationships:
 
 - Card generation happens inside a chat run; there is no separate mode.
 - Card content never persists without review; only cards the user adds from the review table reach the deck.
-- Creating an empty deck (`add_deck`) is a separate direct write. It does not invent cards and does not set a write target. The first successful `propose_cards` still owns write targets.
-- Template field edits, algorithm parameter edits, and deletes are not assistant writes. Any other assistant-driven write is allowed only when product specs name it and define undo and validation; see ASSISTANT-DATA-ACCESS.md (§Resources).
+- Empty-deck create, and which other assistant writes are allowed: ASSISTANT-DATA-ACCESS.md (§Resources).
+- The first successful `propose_cards` owns write targets.
 - Add sends the selected cards to the write target and settles each card's status independently.
 - History serialization is in ASSISTANT-CONVERSATIONS.md (§Conversation History); the markdown format is below.
 

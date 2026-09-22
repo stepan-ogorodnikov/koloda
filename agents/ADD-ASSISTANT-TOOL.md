@@ -1,7 +1,7 @@
 # Adding a New Assistant Tool
 
 **Input REQUIRED from user**: tool name (snake_case wire id), purpose, input fields, output shape,
-tool kind (ordinary read | `propose_*` | needs new UI), whether new host data is required
+tool kind (ordinary read | `propose_*` | direct write | needs new UI), whether new host data is required
 
 **Critical**: Chat tools are always on.
 There is no consent prompt, access mode, or setting that gates them.
@@ -25,8 +25,15 @@ Pick one before editing code.
    - Needs everything an ordinary tool needs, plus run-state mapping and card UI wiring.
    - First successful write target wins for the run.
 
-3. **Tool that needs new UI**:
-   - Same as above, plus new activity rendering and/or a new message surface.
+3. **Direct write** (like `add_deck`):
+   - Named host mutation (`createDeck`, and `getDefaultAlgorithmId` when the caller omits the algorithm).
+   - Writes immediately after title, template, and algorithm validate. A failed validation leaves no row.
+   - Does not invent cards and does not set a propose write target.
+   - Undo is the existing product action (the user deletes the deck the same way as one they created by hand).
+   - Needs a product rule in `docs/specs/ASSISTANT-DATA-ACCESS.md` (§Resources), host methods on `AssistantToolDataSource`, an executor branch, and an activity label.
+
+4. **Tool that needs new UI**:
+   - Same as the matching kind above, plus new activity rendering and/or a new message surface.
    - Unknown tool names already render as the protocol id.
    - Do not stop there if the product needs a label, icon, or summary.
 
@@ -150,6 +157,15 @@ Follow `propose_cards`:
 - First write target wins; a later propose for another deck still records the tool row but must not retarget the run.
 - Card review UI and add flow stay on write targets; see `docs/specs/ASSISTANT-CARD-GENERATION.md`.
 
+**Direct writes**
+
+Follow `add_deck`:
+
+- Validate template and algorithm before calling the host write. A missing template, a missing requested algorithm, or a missing default algorithm fails the call and does not create a deck.
+- When the caller omits the algorithm, store `getDefaultAlgorithmId()`, the same default as manual deck create.
+- Do not map the result onto run cards or write targets.
+- Activity row shows the translated label and, on success, the created title.
+
 **Tools that need new UI**
 
 - Extend activity rendering and/or add a message renderer under `libs/assistant-react/src/lib/ui/`.
@@ -182,7 +198,8 @@ Minimum coverage:
 - [ ] Executor branch (+ `AssistantToolDataSource` fields if needed)
 - [ ] Web and Electron host binders updated together
 - [ ] Wire names still derived from `ASSISTANT_TOOL_SPECS` (or intentional subset documented)
-- [ ] Activity label / i18n (and propose_*/new-UI paths if applicable)
+- [ ] Activity label / i18n (and propose_*, direct-write, or new-UI paths if applicable)
+- [ ] Direct writes name the host methods, validate before the write, and leave undo to the existing product action
 - [ ] Prompts updated when the model must prefer the tool
 - [ ] Budgets and “no card ids by default” respected
 - [ ] Unit tests; e2e when host wiring changed

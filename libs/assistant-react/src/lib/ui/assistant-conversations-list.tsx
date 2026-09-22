@@ -58,6 +58,21 @@ const conversationLink = [
   "hover:bg-main-sidebar-link-active data-current:bg-main-sidebar-link-active data-current:fg-level-1",
 ].join(" ");
 
+const conversationMenuReveal = [
+  "col-start-1 row-start-1 flex w-8 items-center justify-end",
+  "pointer-events-none opacity-0",
+  "group-hover:pointer-events-auto group-hover:opacity-100",
+  "group-focus-within:pointer-events-auto group-focus-within:opacity-100",
+  "animate-opacity",
+].join(" ");
+
+const conversationTimestamp = [
+  "col-start-1 row-start-1 fg-level-4 text-sm font-medium text-end",
+  "select-none pointer-events-none",
+  "group-hover:opacity-0 group-focus-within:opacity-0",
+  "animate-opacity",
+].join(" ");
+
 const conversationTitle = tv({
   base: "flex-1 min-w-0 truncate",
   variants: {
@@ -126,7 +141,7 @@ function ConversationItem({
       </span>
       <div className="grid min-w-8 shrink-0 items-center justify-items-end">
         <div
-          className="col-start-1 row-start-1 flex w-8 items-center justify-end pointer-events-none opacity-0 group-hover:pointer-events-auto group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:opacity-100 animate-opacity"
+          className={conversationMenuReveal}
           onPointerDownCapture={() => {
             ignoreLinkClickRef.current = true;
           }}
@@ -142,7 +157,7 @@ function ConversationItem({
           />
         </div>
         <ConversationListTimestamp
-          className="col-start-1 row-start-1 fg-level-4 text-sm font-medium text-end select-none pointer-events-none group-hover:opacity-0 group-focus-within:opacity-0 animate-opacity"
+          className={conversationTimestamp}
           timestamp={conversation.updatedAt ?? conversation.createdAt}
         />
       </div>
