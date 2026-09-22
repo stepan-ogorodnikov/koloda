@@ -30,6 +30,7 @@ Pick one before editing code.
    - Writes immediately after title, template, and algorithm validate. A failed validation leaves no row.
    - Does not invent cards and does not set a propose write target.
    - Undo is the existing product action (the user deletes the deck the same way as one they created by hand).
+   - The write is invisible to a mounted list until the same React Query keys as the hand-created mutation are invalidated. `add_deck` does that from the app shell (`add-deck-query-invalidation.ts`), not from `libs/ai` or the host binders.
    - Needs a product rule in `docs/specs/ASSISTANT-DATA-ACCESS.md` (§Resources), host methods on `AssistantToolDataSource`, an executor branch, and an activity label.
 
 4. **Tool that needs new UI**:
@@ -50,6 +51,7 @@ Adding a tool usually touches these layers:
 | Wire names | `libs/assistant-react/src/lib/runs/build-stream-request.ts` | `tools: Object.keys(ASSISTANT_TOOL_SPECS)` |
 | Stream binding | `libs/ai/src/lib/chat-stream.ts` | `bindAssistantTools`, step budget |
 | Host binders | `apps/web/src/app/ai-runtime.ts`, `apps/electron/src/ai-ipc.ts` | `AssistantToolDataSource` → executor |
+| Query cache | `libs/assistant-react/src/lib/runs/add-deck-query-invalidation.ts` | Direct-write invalidation after recorded success |
 | Run mapping | `libs/assistant-react/src/lib/state/conversation-run-tools.ts` | Special cases (`propose_cards`) |
 | Activity UI | `libs/ai-react/src/lib/ai-tool-activity.tsx` | Label, icon, compact summaries |
 | Prompts | `libs/ai/src/lib/prompts.ts` | When the model must call the tool |
@@ -164,6 +166,7 @@ Follow `add_deck`:
 - Validate template and algorithm before calling the host write. A missing template, a missing requested algorithm, or a missing default algorithm fails the call and does not create a deck.
 - When the caller omits the algorithm, store `getDefaultAlgorithmId()`, the same default as manual deck create.
 - Do not map the result onto run cards or write targets.
+- On recorded success, invalidate the same query keys as the hand-created mutation. `add_deck` does that in `invalidateDeckQueriesAfterAddDeck` (`add-deck-query-invalidation.ts`), called from `useAssistantEngineHost` after the reducer records the tool result. Host binders and `libs/ai` have no `QueryClient` — Electron runs the write in the main process.
 - Activity row shows the translated label and, on success, the created title.
 
 **Tools that need new UI**
@@ -200,6 +203,7 @@ Minimum coverage:
 - [ ] Wire names still derived from `ASSISTANT_TOOL_SPECS` (or intentional subset documented)
 - [ ] Activity label / i18n (and propose_*, direct-write, or new-UI paths if applicable)
 - [ ] Direct writes name the host methods, validate before the write, and leave undo to the existing product action
+- [ ] Direct writes invalidate the same React Query keys as the hand-created mutation, from the app shell on recorded success (`add-deck-query-invalidation.ts`)
 - [ ] Prompts updated when the model must prefer the tool
 - [ ] Budgets and “no card ids by default” respected
 - [ ] Unit tests; e2e when host wiring changed
@@ -216,6 +220,7 @@ Minimum coverage:
 | Request prep | `libs/assistant-react/src/lib/runs/build-stream-request.ts` | Tool names on the wire |
 | Web host | `apps/web/src/app/ai-runtime.ts` | SQLite `AssistantToolDataSource` |
 | Electron host | `apps/electron/src/ai-ipc.ts` | NAPI binder + tool IPC events |
+| Query cache | `libs/assistant-react/src/lib/runs/add-deck-query-invalidation.ts` | `add_deck` success → deck query invalidation |
 | Run mapping | `libs/assistant-react/src/lib/state/conversation-run-tools.ts` | `propose_cards` → cards / write targets |
 | Activity UI | `libs/ai-react/src/lib/ai-tool-activity.tsx` | Labels, icons, summaries |
 | Prompts | `libs/ai/src/lib/prompts.ts` | Default tool-calling instructions |
@@ -225,6 +230,7 @@ Minimum coverage:
 - Do not inject deck or card snapshots into the system prompt.
 - Do not add a consent toggle or per-provider data-access mode.
 - Do not put DB I/O inside `libs/ai` tool modules.
+- Do not put `QueryClient` invalidation in `libs/ai` or the host binders. Direct writes refresh caches from the app shell when the tool result is recorded.
 - Do not return card ids in tool payloads unless product explicitly requires them.
 - Do not fail an entire `propose_*` call because one item is malformed when the existing pattern is drop-and-count.
 - Do not update only one host binder when `AssistantToolDataSource` changes.
