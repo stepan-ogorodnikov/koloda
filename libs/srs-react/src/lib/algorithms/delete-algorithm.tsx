@@ -35,6 +35,11 @@ export function DeleteAlgorithm({ id }: DeleteAlgorithmProps) {
         onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: queryKeys.algorithms.all() });
           queryClient.removeQueries({ queryKey: queryKeys.algorithms.detail(id) });
+          // WHY: a successor delete rewrites decks.algorithm_id in the database.
+          // The deck list and preset deck-counts stay stale for staleTime unless
+          // these queries are invalidated here.
+          queryClient.invalidateQueries({ queryKey: queryKeys.decks.all() });
+          queryClient.invalidateQueries({ queryKey: queryKeys.algorithms.decksAll() });
           navigate({ to: "/algorithms" });
         },
       },
