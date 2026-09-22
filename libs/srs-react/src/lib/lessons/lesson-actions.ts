@@ -21,6 +21,10 @@ export const failLessonDataLoadAtom = atom(null, (_get, set, error: unknown) => 
   set(lessonStateAtom, ["lessonDataFailed", error]);
 });
 
+export const failLessonPrepareAtom = atom(null, (_get, set, error: unknown) => {
+  set(lessonStateAtom, ["prepareFailed", error]);
+});
+
 export const updateLessonAmountAtom = atom(
   null,
   (_get, set, payload: { type: "untouched" | "learn" | "review"; value: number }) => {

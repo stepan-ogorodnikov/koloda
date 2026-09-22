@@ -2,7 +2,12 @@ import { queriesAtom, useHotkeysStatus } from "@koloda/core-react";
 import { useQuery } from "@tanstack/react-query";
 import { useAtomValue, useSetAtom } from "jotai";
 import { useEffect } from "react";
-import { initializeLessonAtom, receiveLessonDataAtom, failLessonDataLoadAtom } from "./lesson-actions";
+import {
+  failLessonDataLoadAtom,
+  failLessonPrepareAtom,
+  initializeLessonAtom,
+  receiveLessonDataAtom,
+} from "./lesson-actions";
 import { filtersFromRequest } from "./lesson-reducer";
 import { lessonIsOpenAtom, lessonPhaseAtom, lessonRequestAtom, lessonSetupAtom } from "./lesson-selectors";
 import { useLessonUploader } from "./lesson-uploader";
@@ -23,17 +28,34 @@ export function useLessonSession(): UseLessonSessionResult {
   const initialize = useSetAtom(initializeLessonAtom);
   const receiveLessonData = useSetAtom(receiveLessonDataAtom);
   const failLessonDataLoad = useSetAtom(failLessonDataLoadAtom);
+  const failLessonPrepare = useSetAtom(failLessonPrepareAtom);
   const { closeLesson } = useLessonClose();
   const { getSettingsQuery, getTodayReviewTotalsQuery, getLessonsQuery, getLessonDataQuery } =
     useAtomValue(queriesAtom);
 
   const filters = request ? filtersFromRequest(request) : undefined;
-  const { data: learningSettings, isFetched: hasFetchedLearningSettings } = useQuery(getSettingsQuery("learning"));
-  const { data: todayReviewTotals } = useQuery({
+  const {
+    data: learningSettings,
+    error: learningSettingsError,
+    isFetched: hasFetchedLearningSettings,
+    isError: hasLearningSettingsError,
+    isFetching: isFetchingLearningSettings,
+  } = useQuery(getSettingsQuery("learning"));
+  const {
+    data: todayReviewTotals,
+    error: todayReviewTotalsError,
+    isError: hasTodayReviewTotalsError,
+    isFetching: isFetchingTodayReviewTotals,
+  } = useQuery({
     ...getTodayReviewTotalsQuery(),
     enabled: isOpen,
   });
-  const { data: lessons } = useQuery({
+  const {
+    data: lessons,
+    error: lessonsError,
+    isError: hasLessonsError,
+    isFetching: isFetchingLessons,
+  } = useQuery({
     ...getLessonsQuery(filters),
     enabled: isOpen && !!filters,
   });
@@ -52,6 +74,32 @@ export function useLessonSession(): UseLessonSessionResult {
     }),
     enabled: isLoadingCards,
   });
+
+  useEffect(() => {
+    if (phase !== "preparing") return;
+    // WHY: a rejected prepare query never produces data, so initialize waits
+    // forever and the dialog stays blank. Wait out retries (isFetching), then
+    // terminalize the same way a failed card load does.
+    const prepareError = firstSettledQueryError([
+      { isFetching: isFetchingLearningSettings, isError: hasLearningSettingsError, error: learningSettingsError },
+      { isFetching: isFetchingLessons, isError: hasLessonsError, error: lessonsError },
+      { isFetching: isFetchingTodayReviewTotals, isError: hasTodayReviewTotalsError, error: todayReviewTotalsError },
+    ]);
+    if (!prepareError) return;
+    failLessonPrepare(prepareError);
+  }, [
+    phase,
+    isFetchingLearningSettings,
+    hasLearningSettingsError,
+    learningSettingsError,
+    isFetchingLessons,
+    hasLessonsError,
+    lessonsError,
+    isFetchingTodayReviewTotals,
+    hasTodayReviewTotalsError,
+    todayReviewTotalsError,
+    failLessonPrepare,
+  ]);
 
   useEffect(() => {
     if (phase !== "preparing" || !request) return;
@@ -93,4 +141,17 @@ export function useLessonSession(): UseLessonSessionResult {
   useLessonUploader();
 
   return { closeLesson };
+}
+
+type SettledQuery = {
+  isFetching: boolean;
+  isError: boolean;
+  error: unknown;
+};
+
+function firstSettledQueryError(queries: SettledQuery[]): unknown | null {
+  for (const query of queries) {
+    if (!query.isFetching && query.isError && query.error) return query.error;
+  }
+  return null;
 }

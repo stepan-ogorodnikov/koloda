@@ -126,6 +126,7 @@ const actions = {
   setupSubmitted,
   lessonDataReceived,
   lessonDataFailed,
+  prepareFailed,
   cardSubmitted,
   cardFormUpdated,
   gradeSelected,
@@ -271,12 +272,21 @@ function lessonDataReceived(draft: LessonReducerState, payload: LessonData) {
   if (draft.phase === "loading-cards") draft.phase = "studying";
 }
 
-function lessonDataFailed(draft: LessonReducerState, error: unknown) {
-  if (draft.phase !== "loading-cards") return;
-
+function terminalizeLoadError(draft: LessonReducerState, error: unknown) {
   draft.loadError = error;
   draft.isTerminationRequested = false;
   draft.phase = "finished";
+}
+
+function lessonDataFailed(draft: LessonReducerState, error: unknown) {
+  if (draft.phase !== "loading-cards") return;
+  terminalizeLoadError(draft, error);
+}
+
+function prepareFailed(draft: LessonReducerState, error: unknown) {
+  // INVARIANT: only a blank preparing session. Configuring already has setup the user can dismiss.
+  if (draft.phase !== "preparing") return;
+  terminalizeLoadError(draft, error);
 }
 
 function moveToNextCard(draft: LessonReducerState) {

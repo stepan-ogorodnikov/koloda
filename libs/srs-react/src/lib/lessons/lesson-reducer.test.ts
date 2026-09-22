@@ -265,6 +265,22 @@ describe("lessonReducer", () => {
     expect(submitted.phase).toBe("loading-cards");
   });
 
+  it("moves to finished and stores the error when a prepare query fails", () => {
+    const preparing = lessonReducer(structuredClone(lessonReducerDefault), [
+      "open",
+      { type: "total", deckId: testId(7) },
+    ]);
+    const err = new Error("prepare failed");
+    const failed = lessonReducer(preparing, ["prepareFailed", err]);
+
+    expect(failed.phase).toBe("finished");
+    expect(failed.loadError).toBe(err);
+    expect(failed.setup).toBeNull();
+
+    const configuring = startLesson();
+    expect(lessonReducer(configuring, ["prepareFailed", err])).toBe(configuring);
+  });
+
   it("moves to finished and stores the error when lesson data fails during loading-cards", () => {
     const loading = lessonReducer(startLesson(), ["setupSubmitted"]);
     const err = new Error("db failure");

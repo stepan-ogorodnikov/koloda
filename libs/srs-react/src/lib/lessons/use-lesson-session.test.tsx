@@ -139,6 +139,81 @@ describe("useLessonSession", () => {
     });
   });
 
+  it("finishes with a stored error when a prepare query rejects", async () => {
+    const prepareError = new AppError("db.get", "lessons unavailable");
+    const { store, Wrapper } = createWrapper({
+      queries: buildQueries({
+        getLessonsQuery: (filters) => ({
+          queryKey: queryKeys.lessons.all(filters),
+          queryFn: async () => {
+            throw prepareError;
+          },
+        }),
+      }),
+    });
+    renderHook(() => useLessonSession(), { wrapper: Wrapper });
+
+    act(() => {
+      store.set(openLessonAtom, REQUEST);
+    });
+
+    await waitFor(() => {
+      expect(store.get(lessonPhaseAtom)).toBe("finished");
+    });
+    expect(store.get(lessonLoadErrorAtom)).toBe(prepareError);
+    expect(store.get(lessonSetupAtom)).toBeNull();
+  });
+
+  it("finishes with a stored error when learning settings reject during prepare", async () => {
+    const prepareError = new AppError("db.get", "learning settings unavailable");
+    const { store, Wrapper } = createWrapper({
+      queries: buildQueries({
+        getSettingsQuery: (name) => ({
+          queryKey: queryKeys.settings.detail(name),
+          queryFn: async () => {
+            throw prepareError;
+          },
+        }),
+      }),
+    });
+    renderHook(() => useLessonSession(), { wrapper: Wrapper });
+
+    act(() => {
+      store.set(openLessonAtom, REQUEST);
+    });
+
+    await waitFor(() => {
+      expect(store.get(lessonPhaseAtom)).toBe("finished");
+    });
+    expect(store.get(lessonLoadErrorAtom)).toBe(prepareError);
+    expect(store.get(lessonSetupAtom)).toBeNull();
+  });
+
+  it("finishes with a stored error when today review totals reject during prepare", async () => {
+    const prepareError = new AppError("db.get", "review totals unavailable");
+    const { store, Wrapper } = createWrapper({
+      queries: buildQueries({
+        getTodayReviewTotalsQuery: () => ({
+          queryKey: queryKeys.lessons.todayReviewTotals(),
+          queryFn: async () => {
+            throw prepareError;
+          },
+        }),
+      }),
+    });
+    renderHook(() => useLessonSession(), { wrapper: Wrapper });
+
+    act(() => {
+      store.set(openLessonAtom, REQUEST);
+    });
+
+    await waitFor(() => {
+      expect(store.get(lessonPhaseAtom)).toBe("finished");
+    });
+    expect(store.get(lessonLoadErrorAtom)).toBe(prepareError);
+    expect(store.get(lessonSetupAtom)).toBeNull();
+  });
+
   it("finishes when card data loads as null", async () => {
     const { store, Wrapper } = createWrapper({
       queries: buildQueries({
