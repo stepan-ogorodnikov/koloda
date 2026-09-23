@@ -9,6 +9,8 @@ describe("interfaceSettingsValidation", () => {
       lightTheme: "github-light",
       darkTheme: "github-dark",
       motion: "system",
+      dateFormat: "locale",
+      timeFormat: "locale",
     });
   });
 
@@ -19,6 +21,8 @@ describe("interfaceSettingsValidation", () => {
       lightTheme: "atom-one-light",
       darkTheme: "atom-one-dark",
       motion: "off",
+      dateFormat: "dd.MM.yyyy",
+      timeFormat: "HH:mm",
     });
     expect(result).toEqual({
       language: "ru",
@@ -26,17 +30,30 @@ describe("interfaceSettingsValidation", () => {
       lightTheme: "atom-one-light",
       darkTheme: "atom-one-dark",
       motion: "off",
+      dateFormat: "dd.MM.yyyy",
+      timeFormat: "HH:mm",
     });
   });
 
-  // WHY: every field is a strict z.enum over its registry keys; one invalid spelling per field
-  // pins the schema against loosening to z.string() and mirrors Rust error codes.
+  // WHY: enum fields pin against loosening to z.string(); the pattern fields pin the four
+  // structural rejects (empty, unescaped letter, over-cap, literal-only) that the Rust
+  // mirror enforces with the same codes, so every rejection row has a twin in
+  // `crates/koloda/tests/domain/settings_interface_tests.rs`.
+  const OVER_LONG_PATTERN = "y".repeat(65);
   it.each([
     ["language", "fr", "validation.settings-interface.language"],
     ["scheme", "blue", "validation.settings-interface.scheme"],
     ["lightTheme", "solarized", "validation.settings-interface.light-theme"],
     ["darkTheme", "solarized", "validation.settings-interface.dark-theme"],
     ["motion", "slow", "validation.settings-interface.motion"],
+    ["dateFormat", "", "validation.settings-interface.date-format"],
+    ["dateFormat", "hello", "validation.settings-interface.date-format"],
+    ["dateFormat", OVER_LONG_PATTERN, "validation.settings-interface.date-format"],
+    ["dateFormat", "'noon'", "validation.settings-interface.date-format"],
+    ["timeFormat", "", "validation.settings-interface.time-format"],
+    ["timeFormat", "hello", "validation.settings-interface.time-format"],
+    ["timeFormat", OVER_LONG_PATTERN, "validation.settings-interface.time-format"],
+    ["timeFormat", "'noon'", "validation.settings-interface.time-format"],
   ] as const)("rejects invalid %s with %s", (field, value, code) => {
     const result = interfaceSettingsValidation.safeParse({ [field]: value });
     expect(result.success, `${field} must reject ${value}`).toBe(false);

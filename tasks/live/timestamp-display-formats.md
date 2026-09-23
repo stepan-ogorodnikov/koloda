@@ -45,7 +45,7 @@ Out:
 
 ## Plan
 
-- [ ] 1. Add date and time format settings to interface settings
+- [x] 1. Add date and time format settings to interface settings
   Goal: Add `dateFormat` and `timeFormat` to the interface settings slice on both sides of ADR 0001.
   In `libs/app/src/lib/settings-interface.ts` add two fields: each accepts the literal `"locale"` or a
   custom pattern validated by a date-fns probe (non-empty, length cap, at least one real token; a pattern
