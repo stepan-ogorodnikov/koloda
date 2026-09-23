@@ -1,6 +1,6 @@
 # Customizable timestamp display formats
 
-Status: draft
+Status: ready
 
 ## Intent
 
@@ -8,8 +8,8 @@ The user can choose how timestamps render across the app.
 Two new interface settings — a date format and a time format — each accept a preset
 or a custom pattern, and every timestamp on screen follows them.
 Done when: picking a preset or typing a valid custom pattern immediately changes how dates and times
-render in the cards table, card details, review history, form created/updated labels, and (pending an
-open question) chat message times; the defaults reproduce today's locale-driven rendering exactly;
+render in the cards table, card details, review history, form created/updated labels, and chat message
+times; the defaults reproduce today's locale-driven rendering exactly;
 an invalid pattern is rejected on write and leaves the previous setting unchanged.
 
 ## Scope
@@ -38,8 +38,10 @@ Out:
 - [x] `long` date preset — removed at the human's request; date presets are locale, ISO, dots, slashes
 - [x] Defaults and Rust validator shape — both fields default to `locale`; Rust validates structurally
   (length + token whitelist), not with a full pattern engine — accepted with the design
-- [ ] Include chat message times (`message-timestamp.tsx`) in the migrated call sites? — open
-- [ ] Separator between custom date and time patterns in `datetime` rendering (single space vs `, ` vs locale default)? — open
+- [x] Include chat message times (`message-timestamp.tsx`) in the migrated call sites? — migrate;
+  it joins item 3 (answered at approval)
+- [x] Separator between custom date and time patterns in `datetime` rendering? — a single space
+  (answered at approval)
 
 ## Plan
 
@@ -62,8 +64,7 @@ Out:
   The TS and Rust halves must stay in this one commit: `libs/app/src/lib/error-parity.test.ts` parses
   `error_codes` against `ERROR_MESSAGES` and fails if either side is missing.
   Done when: `bun run test:libs` passes, `bun run test:rust` passes, and `bunx nx run-many -t lint,typecheck` passes.
-  Commit: a) Add date and time format settings; b) Add pattern-validated date and time format settings;
-  c) Validate date and time format patterns in TS and Rust
+  Commit: Add date and time format settings
   Depends on: none
 
 - [ ] 2. Add shared settings-aware timestamp formatter
@@ -74,7 +75,7 @@ Out:
   (date-only sites keep numeric date, datetime sites keep long date + time, time sites keep clock time —
   match the current output of the call sites listed in item 3). Custom patterns render through date-fns
   `format` with the ru/enUS date-fns locale mapped from the lingui locale so `MMMM` localizes; `datetime`
-  joins the rendered date part and time part per the separator open question once answered. An invalid or
+  joins the rendered date part and time part with a single space. An invalid or
   throwing stored pattern falls back to the sentinel at render with a `// WHY:` comment (validation rejects
   these on write; the guard exists for hand-edited rows and must not silently swallow anything else).
   Add `dateFormatAtom` and `timeFormatAtom` to `libs/core-react/src/lib/atoms.ts`, hydrate both from the
@@ -87,8 +88,7 @@ Out:
   `import type`) and `agents/CODE-DOCUMENTATION.md` (only tagged comments on the non-obvious traps).
   Done when: `bunx vitest run --config libs/app/vitest.config.mjs --configLoader runner timestamp-format`
   passes, `bun run test:libs` passes, and `bunx nx run-many -t lint,typecheck` passes.
-  Commit: a) Add shared timestamp formatter; b) Add settings atoms and timestamp formatter;
-  c) Add settings-aware timestamp formatting
+  Commit: Add shared timestamp formatter
   Depends on: 1
 
 - [ ] 3. Render timestamp call sites through the shared formatter
@@ -97,15 +97,14 @@ Out:
   `libs/srs-react/src/lib/cards/cards-table-cell.tsx` (date), `libs/srs-react/src/lib/cards/card-details.tsx`
   (datetime), `libs/srs-react/src/lib/cards/card-reviews.tsx` (datetime),
   `libs/ui/src/lib/primitives/form/form.tsx` `CreatedAt`/`UpdatedAt` (match today's bare `i18n.date` output),
-  and — if the open question lands it in scope — `libs/assistant-react/src/lib/ui/message-timestamp.tsx`
+  and `libs/assistant-react/src/lib/ui/message-timestamp.tsx`
   (time/datetime; its "today" label logic stays, only the formatting moves). The conversation list's
   relative "ago" labels are Out and must not change.
   Constraints: no className, markup, or column changes; sorting is unaffected (the table sorts `Date`
   values, not strings); under default settings every site renders as it does today.
   Done when: `bun run test:libs` passes, `bunx nx run-many -t lint,typecheck` passes, and a manual pass
   shows identical rendering with defaults and changed rendering everywhere after switching the settings.
-  Commit: a) Render timestamps through the shared formatter; b) Apply timestamp format settings to all call sites;
-  c) Drop per-site timestamp format constants
+  Commit: Apply timestamp format settings to all call sites
   Depends on: 2
 
 - [ ] 4. Add date and time format controls to interface settings
@@ -126,8 +125,7 @@ Out:
   Done when: `bun run test:libs` passes, both apps' lingui extract + compile succeed, and manual checks pass:
   preset click applies app-wide immediately, an invalid custom pattern never persists, and the preview
   matches what the app then renders.
-  Commit: a) Add date and time format controls to interface settings;
-  b) Add timestamp format pickers with live preview
+  Commit: Add date and time format controls to interface settings
   Depends on: 1, 2
 
 ## Outcome
