@@ -14,7 +14,7 @@ msgstr ""
 "Plural-Forms: \n"
 
 #. placeholder {0}: decks.length
-#: ../../libs/srs-react/src/lib/algorithms/delete-algorithm.tsx:70
+#: ../../libs/srs-react/src/lib/algorithms/delete-algorithm.tsx:75
 msgid "{0, plural, other {delete-algorithm.used-by-#-decks}}"
 msgstr "{0, plural, one {# колода использует} few {# колоды используют} many {# колод используют} other {# колоды используют} } этот алгоритм"
 
@@ -177,36 +177,36 @@ msgstr "Удалить интервал переучивания номер {0}"
 msgid "algorithm.relearning-steps.unit.{0}"
 msgstr "Тип временного отрезка для интервала переучивания номер {0}"
 
-#: ../../libs/srs-react/src/lib/cards/card-details.tsx:152
+#: ../../libs/srs-react/src/lib/cards/card-details.tsx:145
 msgid "card.action.reset-progress"
 msgstr "Сбросить прогресс"
 
-#: ../../libs/srs-react/src/lib/cards/card-details.tsx:146
+#: ../../libs/srs-react/src/lib/cards/card-details.tsx:139
 msgid "card.labels.actions"
 msgstr "Действия"
 
-#: ../../libs/srs-react/src/lib/cards/card-details.tsx:126
+#: ../../libs/srs-react/src/lib/cards/card-details.tsx:119
 msgid "card.labels.difficulty"
 msgstr "Сложность"
 
-#: ../../libs/srs-react/src/lib/cards/card-details.tsx:112
+#: ../../libs/srs-react/src/lib/cards/card-details.tsx:105
 #: ../../libs/srs-react/src/lib/cards/cards-table-filters.tsx:87
 msgid "card.labels.due-at"
 msgstr "Срок"
 
-#: ../../libs/srs-react/src/lib/cards/card-details.tsx:133
+#: ../../libs/srs-react/src/lib/cards/card-details.tsx:126
 msgid "card.labels.lapses"
 msgstr "Ошибки"
 
-#: ../../libs/srs-react/src/lib/cards/card-details.tsx:140
+#: ../../libs/srs-react/src/lib/cards/card-details.tsx:133
 msgid "card.labels.reviews"
 msgstr "История"
 
-#: ../../libs/srs-react/src/lib/cards/card-details.tsx:119
+#: ../../libs/srs-react/src/lib/cards/card-details.tsx:112
 msgid "card.labels.stability"
 msgstr "Стабильность"
 
-#: ../../libs/srs-react/src/lib/cards/card-details.tsx:106
+#: ../../libs/srs-react/src/lib/cards/card-details.tsx:99
 #: ../../libs/srs-react/src/lib/cards/cards-table-filters.tsx:69
 msgid "card.labels.state"
 msgstr "Статус"
@@ -365,31 +365,31 @@ msgstr "Действия"
 msgid "deck.inputs.title.label"
 msgstr "Название"
 
-#: ../../libs/srs-react/src/lib/algorithms/delete-algorithm.tsx:97
+#: ../../libs/srs-react/src/lib/algorithms/delete-algorithm.tsx:102
 msgid "delete-algorithm.cancel"
 msgstr "Отменить"
 
-#: ../../libs/srs-react/src/lib/algorithms/delete-algorithm.tsx:54
+#: ../../libs/srs-react/src/lib/algorithms/delete-algorithm.tsx:59
 msgid "delete-algorithm.cant-delete"
 msgstr "Нельзя удалить алгоритм по умолчанию"
 
-#: ../../libs/srs-react/src/lib/algorithms/delete-algorithm.tsx:99
+#: ../../libs/srs-react/src/lib/algorithms/delete-algorithm.tsx:104
 msgid "delete-algorithm.confirm"
 msgstr "Удалить"
 
-#: ../../libs/srs-react/src/lib/algorithms/delete-algorithm.tsx:91
+#: ../../libs/srs-react/src/lib/algorithms/delete-algorithm.tsx:96
 msgid "delete-algorithm.message"
 msgstr "Подтвердите удаление алгоритма"
 
-#: ../../libs/srs-react/src/lib/algorithms/delete-algorithm.tsx:71
+#: ../../libs/srs-react/src/lib/algorithms/delete-algorithm.tsx:76
 msgid "delete-algorithm.successor-message"
 msgstr "Чтобы удалить этот алгоритм нужно выбрать алгоритм наследник"
 
-#: ../../libs/srs-react/src/lib/algorithms/delete-algorithm.tsx:75
+#: ../../libs/srs-react/src/lib/algorithms/delete-algorithm.tsx:80
 msgid "delete-algorithm.successor.label"
 msgstr "Алгоритм наследник"
 
-#: ../../libs/srs-react/src/lib/algorithms/delete-algorithm.tsx:52
+#: ../../libs/srs-react/src/lib/algorithms/delete-algorithm.tsx:57
 msgid "delete-algorithm.trigger"
 msgstr "Удалить алгоритм"
 

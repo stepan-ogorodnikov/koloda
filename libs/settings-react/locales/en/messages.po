@@ -37,15 +37,15 @@ msgstr "Language"
 msgid "light-theme-picker.label"
 msgstr "Light theme"
 
-#: ../../libs/settings-react/src/lib/settings-interface.tsx:41
+#: ../../libs/settings-react/src/lib/settings-interface.tsx:49
 msgid "scheme.dark"
 msgstr "Dark"
 
-#: ../../libs/settings-react/src/lib/settings-interface.tsx:40
+#: ../../libs/settings-react/src/lib/settings-interface.tsx:48
 msgid "scheme.light"
 msgstr "Light"
 
-#: ../../libs/settings-react/src/lib/settings-interface.tsx:42
+#: ../../libs/settings-react/src/lib/settings-interface.tsx:50
 msgid "scheme.system"
 msgstr "System"
 
@@ -180,7 +180,23 @@ msgstr "Untitled"
 msgid "settings.interface.dark-theme"
 msgstr "Dark theme"
 
-#: ../../libs/settings-react/src/lib/settings-interface.tsx:30
+#: ../../libs/settings-react/src/lib/settings-interface.tsx:73
+msgid "settings.interface.date-format"
+msgstr "Date format"
+
+#: ../../libs/settings-react/src/lib/settings-interface.tsx:75
+msgid "settings.interface.date-format.custom"
+msgstr "Custom pattern"
+
+#: ../../libs/settings-react/src/lib/settings-interface.tsx:74
+msgid "settings.interface.date-format.locale"
+msgstr "Default"
+
+#: ../../libs/settings-react/src/lib/settings-interface.tsx:76
+msgid "settings.interface.date-format.preview {value}"
+msgstr "Preview: {value}"
+
+#: ../../libs/settings-react/src/lib/settings-interface.tsx:38
 msgid "settings.interface.language"
 msgstr "Language"
 
@@ -188,13 +204,33 @@ msgstr "Language"
 msgid "settings.interface.light-theme"
 msgstr "Light theme"
 
-#: ../../libs/settings-react/src/lib/settings-interface.tsx:47
+#: ../../libs/settings-react/src/lib/settings-interface.tsx:55
 msgid "settings.interface.motion"
 msgstr "Animations"
 
-#: ../../libs/settings-react/src/lib/settings-interface.tsx:31
+#: ../../libs/settings-react/src/lib/settings-interface.tsx:39
 msgid "settings.interface.scheme"
 msgstr "Color scheme"
+
+#: ../../libs/settings-react/src/lib/settings-interface.tsx:81
+msgid "settings.interface.time-format"
+msgstr "Time format"
+
+#: ../../libs/settings-react/src/lib/settings-interface.tsx:17
+msgid "settings.interface.time-format.12-hour"
+msgstr "12-hour"
+
+#: ../../libs/settings-react/src/lib/settings-interface.tsx:18
+msgid "settings.interface.time-format.24-hour"
+msgstr "24-hour"
+
+#: ../../libs/settings-react/src/lib/settings-interface.tsx:82
+msgid "settings.interface.time-format.locale"
+msgstr "Default"
+
+#: ../../libs/settings-react/src/lib/settings-interface.tsx:83
+msgid "settings.interface.time-format.preview {value}"
+msgstr "Preview: {value}"
 
 #: ../../libs/settings-react/src/lib/settings-learning.tsx:220
 msgid "settings.learning.day-starts-at"

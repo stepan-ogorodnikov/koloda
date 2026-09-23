@@ -1,6 +1,6 @@
 # Interface Settings
 
-Covers interface settings: language, color scheme, color themes, and motion.
+Covers interface settings: language, color scheme, color themes, motion, and date and time formats.
 Does not cover hotkeys, assistant settings, learning settings, or adding new themes.
 Those are covered by the hotkeys, assistant settings, and learning settings specs.
 Adding a theme is covered by the color theme guide.
@@ -21,6 +21,8 @@ Language and color scheme are also chosen during first setup, before any data ex
 - **Light theme** — the palette used while the app is light
 - **Dark theme** — the palette used while the app is dark
 - **Motion** — whether interface animations play, or follow the device
+- **Date format** — how dates are rendered across the app
+- **Time format** — how times of day are rendered across the app
 
 Relationships:
 
@@ -91,6 +93,41 @@ The motion setting is one of:
 
 The default is System.
 When the device asks to reduce motion, animations are suppressed; otherwise they play.
+
+## Date and Time Format
+
+Each format is picked from a select; only the date select also offers a custom pattern.
+The default for both formats is Default, which renders each timestamp the way the active language would.
+
+Date presets:
+
+- Default — the default rendering for the active language
+- `yyyy-MM-dd`
+- `dd.MM.yyyy`
+- `MM/dd/yyyy`
+
+Time presets:
+
+- Default — the default rendering for the active language
+- 12-hour — `h:mm a`
+- 24-hour — `HH:mm`
+
+The default date format is Default.
+The default time format is Default.
+
+A custom pattern is built from the tokens y, M, d, H, h, m, s, a and from text wrapped in single quotes.
+A custom pattern must not be empty, must contain at least one token, and must not exceed 64 characters.
+A pattern the app cannot render is invalid.
+Choosing Custom in the date select adds a custom pattern field to a wrapping row beside the select.
+Choosing any other date option hides it again.
+The time select has no Custom option, so time offers no pattern field.
+
+Picking a preset or saving a custom pattern changes every timestamp immediately: the cards table, card details,
+review history, created and updated labels on forms, and chat message times.
+A preview under each select always shows the current date and time in the chosen format.
+An invalid custom pattern is rejected on save: nothing is written, the previous format stays in effect, and the
+field shows an error.
+Relative labels, such as the conversation list's "3 days ago", do not follow these settings.
 
 ## First Setup
 

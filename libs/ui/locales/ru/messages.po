@@ -25,7 +25,7 @@ msgstr "Контроллер перетаскивания"
 msgid "error.details"
 msgstr "Подробности"
 
-#. placeholder {0}: i18n.date(timestamp)
+#. placeholder {0}: formatTimestamp(timestamp, "date")
 #: ../../libs/ui/src/lib/primitives/form/form.tsx:34
 msgid "form.created-at {0}"
 msgstr "Создано {0}"
@@ -38,7 +38,7 @@ msgstr "Сбросить"
 msgid "form.save"
 msgstr "Сохранить"
 
-#. placeholder {0}: i18n.date(timestamp)
+#. placeholder {0}: formatTimestamp(timestamp, "date")
 #: ../../libs/ui/src/lib/primitives/form/form.tsx:46
 msgid "form.updated-at {0}"
 msgstr "Обновлено {0}"
