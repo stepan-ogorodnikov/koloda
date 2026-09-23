@@ -1,7 +1,7 @@
+import { useTimestampFormatter } from "@koloda/core-react";
 import type { Card } from "@koloda/srs";
 import { Table } from "@koloda/ui";
 import type { CardsTableFeatures } from "@koloda/ui";
-import { useLingui } from "@lingui/react";
 import type { CellContext } from "@tanstack/react-table";
 import { isDate } from "date-fns";
 import { CardState } from "./card-state";
@@ -10,16 +10,10 @@ import { CardsTableCellEditCard } from "./cards-table-cell-edit-card";
 import { CardsTableCellPreviewCard } from "./cards-table-cell-preview-card";
 import { CardsTableCellSelect } from "./cards-table-cell-select";
 
-const TIMESTAMP_OPTIONS = {
-  year: "numeric",
-  month: "numeric",
-  day: "numeric",
-} as Intl.DateTimeFormatOptions;
-
 type CardsTableCellProps = { cell: CellContext<CardsTableFeatures, Card, any> };
 
 export function CardsTableCell({ cell }: CardsTableCellProps) {
-  const { i18n } = useLingui();
+  const formatTimestamp = useTimestampFormatter();
   const {
     row: { original: card },
     column: { id },
@@ -27,7 +21,7 @@ export function CardsTableCell({ cell }: CardsTableCellProps) {
   const value = cell.getValue();
   const isDateValue = isDate(value);
   const isTimestampColumn = ["dueAt", "createdAt", "updatedAt"].includes(id);
-  const formatted = isTimestampColumn && value ? i18n.date(value, TIMESTAMP_OPTIONS) : value;
+  const formatted = isTimestampColumn && value ? formatTimestamp(value, "date") : value;
 
   if (id === "select") return <CardsTableCellSelect row={cell.row} />;
   if (id === "preview") return <CardsTableCellPreviewCard card={card} />;
