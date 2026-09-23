@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { TitlebarNavigation } from "./titlebar-navigation";
 
 const { history, router } = vi.hoisted(() => ({
@@ -35,6 +35,15 @@ describe("TitlebarNavigation", () => {
     history.forward.mockClear();
     router.href = "/decks";
     router.canGoBack = true;
+    Reflect.deleteProperty(window, "electronAPI");
+    Object.defineProperty(navigator, "userAgent", {
+      configurable: true,
+      value: "Mozilla/5.0 (X11; Linux x86_64)",
+    });
+  });
+
+  afterEach(() => {
+    Reflect.deleteProperty(window, "electronAPI");
   });
 
   it("goes back and forward through the shared history helper", () => {
@@ -62,5 +71,18 @@ describe("TitlebarNavigation", () => {
     render(<TitlebarNavigation />);
 
     expect(screen.getByRole("button", { name: "titlebar.navigation.back" }).hasAttribute("disabled")).toBe(true);
+  });
+
+  it("uses the same history as the Electron back and forward hotkeys", () => {
+    Object.defineProperty(window, "electronAPI", { configurable: true, value: {} });
+    render(<TitlebarNavigation />);
+
+    fireEvent.click(screen.getByRole("button", { name: "titlebar.navigation.back" }));
+    window.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "ArrowRight", altKey: true, bubbles: true, cancelable: true }),
+    );
+
+    expect(history.forward).toHaveBeenCalledOnce();
+    expect(screen.getByRole("button", { name: "titlebar.navigation.forward" }).hasAttribute("disabled")).toBe(true);
   });
 });

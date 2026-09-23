@@ -41,7 +41,7 @@ Out:
   Commit: Extract router history navigation for reuse
   Depends on: none
 
-- [ ] 2. Add back and forward navigation hotkeys for electron app
+- [x] 2. Add back and forward navigation hotkeys for electron app
   Goal: Register hardcoded Electron-only hotkeys for back/forward using the shared helper. Gate so web builds never register them. Ignore text-field focus. Chords: Mod+[ / Mod+] and Alt+ArrowLeft / Alt+ArrowRight.
   Constraints: Do not add keys to hotkeys settings schema or ADD-HOTKEY flow. Do not change web. Find the existing pattern for host-gated or Electron-only UI (titlebar is Electron-only already) and mirror it.
   Done when: Pressing those chords on Electron navigates history like the titlebar buttons; they do nothing / are not registered on web; typing in inputs is unaffected.

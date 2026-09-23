@@ -1,7 +1,14 @@
 import { useCanGoBack, useRouter } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-export function useRouterHistoryNavigation() {
+export type RouterHistoryNavigation = {
+  canGoBack: boolean;
+  canGoForward: boolean;
+  goBack: () => void;
+  goForward: () => void;
+};
+
+export function useRouterHistoryNavigation(): RouterHistoryNavigation {
   const router = useRouter();
   const canGoBack = useCanGoBack();
   const [canGoForward, setCanGoForward] = useState(false);

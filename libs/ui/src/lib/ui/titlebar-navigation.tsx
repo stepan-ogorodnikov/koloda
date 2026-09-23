@@ -3,11 +3,14 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { Button } from "../primitives/form/button";
+import { useNavigationHistoryHotkeys } from "./navigation-history-hotkeys";
 import { useRouterHistoryNavigation } from "./use-router-history-navigation";
 
 export function TitlebarNavigation() {
   const { _ } = useLingui();
-  const { canGoBack, canGoForward, goBack, goForward } = useRouterHistoryNavigation();
+  const navigation = useRouterHistoryNavigation();
+  useNavigationHistoryHotkeys(navigation);
+  const { canGoBack, canGoForward, goBack, goForward } = navigation;
 
   return (
     <div className="relative z-100 flex flex-row gap-2 [-webkit-app-region:no-drag]">
