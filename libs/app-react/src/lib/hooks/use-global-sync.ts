@@ -1,10 +1,12 @@
 import {
   darkThemeAtom,
+  dateFormatAtom,
   defaultAlgorithmAtom,
   defaultTemplateAtom,
   langAtom,
   lightThemeAtom,
   schemeAtom,
+  timeFormatAtom,
 } from "@koloda/core-react";
 import { queriesAtom } from "@koloda/core-react";
 import { motionSettingAtom } from "@koloda/ui";
@@ -21,6 +23,8 @@ export function useGlobalSync() {
   const setScheme = useSetAtom(schemeAtom);
   const setLightTheme = useSetAtom(lightThemeAtom);
   const setDarkTheme = useSetAtom(darkThemeAtom);
+  const setDateFormat = useSetAtom(dateFormatAtom);
+  const setTimeFormat = useSetAtom(timeFormatAtom);
   const setMotion = useSetAtom(motionSettingAtom);
   const setLang = useSetAtom(langAtom);
   const language = useAtomValue(langAtom);
@@ -38,11 +42,13 @@ export function useGlobalSync() {
       if (data?.content?.lightTheme) setLightTheme(data.content.lightTheme);
       if (data?.content?.darkTheme) setDarkTheme(data.content.darkTheme);
       if (data?.content?.motion) setMotion(data.content.motion);
+      if (data?.content?.dateFormat) setDateFormat(data.content.dateFormat);
+      if (data?.content?.timeFormat) setTimeFormat(data.content.timeFormat);
       // WHY: interface.language is the authoritative persisted locale — the store
       // boot value is only a pre-setup guess (localStorage / navigator).
       if (data?.content?.language) setLang(data.content.language);
     }
-  }, [data, setScheme, setLightTheme, setDarkTheme, setMotion, setLang]);
+  }, [data, setScheme, setLightTheme, setDarkTheme, setMotion, setDateFormat, setTimeFormat, setLang]);
 
   useEffect(() => {
     document.documentElement.lang = language;

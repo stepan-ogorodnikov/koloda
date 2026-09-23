@@ -67,7 +67,7 @@ Out:
   Commit: Add date and time format settings
   Depends on: none
 
-- [ ] 2. Add shared settings-aware timestamp formatter
+- [x] 2. Add shared settings-aware timestamp formatter
   Goal: One formatter replaces the per-site `Intl.DateTimeFormatOptions` scattered today.
   Add `libs/app/src/lib/timestamp-format.ts` exporting `formatTimestamp(date, kind, formats, locale)` where
   `kind` is `"date" | "datetime" | "time"` and `formats` is `{ dateFormat, timeFormat }` from the settings;

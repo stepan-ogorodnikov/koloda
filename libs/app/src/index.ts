@@ -84,3 +84,5 @@ export {
   objectEntries,
 } from "./lib/utility";
 export type { DeepPartial, Modify, ObjectPropertiesMapping, UpdateData } from "./lib/utility";
+export { formatTimestamp } from "./lib/timestamp-format";
+export type { TimestampFormatter, TimestampFormats, TimestampKind } from "./lib/timestamp-format";
