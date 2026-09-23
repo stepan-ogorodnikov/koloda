@@ -5,6 +5,8 @@ import type { JSX } from "react";
 export const schemeAtom = atom("");
 export const lightThemeAtom = atom("");
 export const darkThemeAtom = atom("");
+export const dateFormatAtom = atom("locale");
+export const timeFormatAtom = atom("locale");
 export const langAtom = atom("");
 export const defaultAlgorithmAtom = atom("");
 export const defaultTemplateAtom = atom("");
