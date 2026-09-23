@@ -81,6 +81,8 @@ describe("settings and review totals integration", () => {
       lightTheme: "github-light",
       darkTheme: "github-dark",
       motion: "system",
+      dateFormat: "locale",
+      timeFormat: "locale",
     });
   });
 

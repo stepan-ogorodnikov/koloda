@@ -8,7 +8,9 @@ fn test_valid_interface_settings_full() {
         "scheme": "system",
         "lightTheme": "atom-one-light",
         "darkTheme": "atom-one-dark",
-        "motion": "system"
+        "motion": "system",
+        "dateFormat": "dd.MM.yyyy",
+        "timeFormat": "HH:mm"
     }"#;
 
     let settings: InterfaceSettings = serde_json::from_str(json).expect("Should deserialize valid JSON");
@@ -41,6 +43,8 @@ fn test_missing_fields_default_to_ts_twin() {
     assert_eq!(settings.light_theme, "github-light");
     assert_eq!(settings.dark_theme, "github-dark");
     assert_eq!(settings.motion, "system");
+    assert_eq!(settings.date_format, "locale");
+    assert_eq!(settings.time_format, "locale");
     settings.validate().unwrap();
 }
 
@@ -151,6 +155,53 @@ fn test_invalid_motion_fails() {
             result.expect_err("Should fail with invalid motion").code,
             "validation.settings-interface.motion",
             "motion {motion:?} must be rejected"
+        );
+    }
+}
+
+#[test]
+fn test_invalid_date_format_fails() {
+    // WHY: the structural scan mirrors the TS date-fns probe row for row — empty, an
+    // unescaped letter, over the length cap, and a literal-only pattern funnel through
+    // the same rejection path and error code as `settings-interface.test.ts`.
+    let over_long = "y".repeat(65);
+    for date_format in ["", "hello", over_long.as_str(), "'noon'"] {
+        let content = serde_json::json!({
+            "language": "en",
+            "scheme": "system",
+            "motion": "system",
+            "dateFormat": date_format
+        });
+
+        let settings: InterfaceSettings = serde_json::from_value(content).expect("Should deserialize");
+        let result = settings.validate();
+        assert_eq!(
+            result.expect_err("Should fail with invalid date format").code,
+            "validation.settings-interface.date-format",
+            "dateFormat {date_format:?} must be rejected"
+        );
+    }
+}
+
+#[test]
+fn test_invalid_time_format_fails() {
+    // WHY: timeFormat runs through the identical structural scan, so it carries the same
+    // four reject rows under its own error code.
+    let over_long = "y".repeat(65);
+    for time_format in ["", "hello", over_long.as_str(), "'noon'"] {
+        let content = serde_json::json!({
+            "language": "en",
+            "scheme": "system",
+            "motion": "system",
+            "timeFormat": time_format
+        });
+
+        let settings: InterfaceSettings = serde_json::from_value(content).expect("Should deserialize");
+        let result = settings.validate();
+        assert_eq!(
+            result.expect_err("Should fail with invalid time format").code,
+            "validation.settings-interface.time-format",
+            "timeFormat {time_format:?} must be rejected"
         );
     }
 }

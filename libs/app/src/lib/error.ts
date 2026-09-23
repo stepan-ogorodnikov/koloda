@@ -67,6 +67,8 @@ export const ERROR_MESSAGES = {
   "validation.settings-interface.light-theme": msg`Invalid light theme`,
   "validation.settings-interface.dark-theme": msg`Invalid dark theme`,
   "validation.settings-interface.motion": msg`Invalid motion setting`,
+  "validation.settings-interface.date-format": msg`Invalid date format`,
+  "validation.settings-interface.time-format": msg`Invalid time format`,
   "validation.algorithm.fsrs.retention": msg`Retention must be between 70% and 99%`,
   "validation.algorithm.fsrs.learning-steps.amount": msg`Learning step amount must be greater than zero`,
   "validation.algorithm.fsrs.learning-steps.unit": msg`Invalid learning step unit`,

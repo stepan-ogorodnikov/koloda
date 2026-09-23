@@ -53,6 +53,8 @@ pub mod error_codes {
     pub const VALIDATION_SETTINGS_INTERFACE_LIGHT_THEME: &str = "validation.settings-interface.light-theme";
     pub const VALIDATION_SETTINGS_INTERFACE_DARK_THEME: &str = "validation.settings-interface.dark-theme";
     pub const VALIDATION_SETTINGS_INTERFACE_MOTION: &str = "validation.settings-interface.motion";
+    pub const VALIDATION_SETTINGS_INTERFACE_DATE_FORMAT: &str = "validation.settings-interface.date-format";
+    pub const VALIDATION_SETTINGS_INTERFACE_TIME_FORMAT: &str = "validation.settings-interface.time-format";
 
     pub const VALIDATION_ALGORITHM_FSRS_RETENTION: &str = "validation.algorithm.fsrs.retention";
     pub const VALIDATION_ALGORITHM_FSRS_LEARNING_STEPS_AMOUNT: &str = "validation.algorithm.fsrs.learning-steps.amount";
