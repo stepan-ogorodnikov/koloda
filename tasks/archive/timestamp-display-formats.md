@@ -1,6 +1,6 @@
 # Customizable timestamp display formats
 
-Status: ready
+Status: done
 
 ## Intent
 
@@ -134,3 +134,16 @@ Out:
   Depends on: 1, 2
 
 ## Outcome
+
+Two interface settings shipped: `dateFormat` (Default / ISO / dots / slashes / Custom) and
+`timeFormat` (Default / 12-hour / 24-hour), each a select with an always-on preview that renders
+the live current date/time through the shared formatter; the date-only Custom option reveals a
+label-less pattern field (accessible name kept) in a wrapping row beside the select, which saves
+on blur or Enter and shows the error without persisting invalid input. Validation lives in
+`libs/app` (date-fns probe) with the structural mirror in `crates/koloda` (ADR 0001) and two
+shared error codes; an invalid stored pattern falls back to the sentinel at render. One
+`formatTimestamp()` plus `useTimestampFormatter()` and two atoms replaced the per-site
+`Intl.DateTimeFormatOptions` in all five call sites (cards table, card details, review history,
+form created/updated labels, chat message times), with defaults rendering as before. Spec
+`docs/specs/INTERFACE-SETTINGS.md` updated and en/ru catalogs compiled for both apps. Token help
+was dropped from the UI at review and may return later.
