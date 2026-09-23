@@ -12,6 +12,20 @@ They are gated to the open lesson dialog; see LESSONS.md (§Hotkeys).
 Avoid binding a configurable hotkey to `Escape`, `Enter`, or `Space` when lessons are used.
 When a configurable hotkey and a lesson system key share the same binding, both actions fire.
 
+Electron history back and forward also live outside this system.
+They are not configurable and they are not listed in Settings → Hotkeys.
+They are not part of the navigation category.
+Back is `Mod+[` and `Alt+ArrowLeft`.
+Forward is `Mod+]` and `Alt+ArrowRight`.
+`Mod` is Cmd on macOS and Ctrl on Windows and Linux.
+Only the Electron desktop app registers them.
+The web app keeps the browser's own history shortcuts.
+They do not fire while a text input or textarea is focused.
+They follow the same in-app history as the titlebar back and forward buttons.
+They do not drive a separate desktop-window history.
+If that direction has no history, the shortcut does nothing.
+Backspace is not a history shortcut.
+
 ## What is a Hotkey
 
 A hotkey is a keyboard shortcut that triggers an action.

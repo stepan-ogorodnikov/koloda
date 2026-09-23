@@ -48,7 +48,7 @@ Out:
   Commit: Add back and forward navigation hotkeys for electron app
   Depends on: 1
 
-- [ ] 3. Document back and forward navigation hotkeys
+- [x] 3. Document back and forward navigation hotkeys
   Goal: Update docs/specs/HOTKEYS.md (and INDEX/pointers only if required) to document these as non-configurable Electron-only history shortcuts mirroring browser defaults; web uses the browser. Call out chords and that they are outside Settings → Hotkeys.
   Constraints: Spec-level clarity; match tone of the existing zoom / lesson dialog exceptions in HOTKEYS.md.
   Done when: Spec states Electron chords, non-configurable, web unchanged, and relationship to titlebar navigation.
