@@ -3,6 +3,7 @@ import type { AssistantEvent } from "@koloda/assistant";
 import { queryKeys } from "@koloda/core-react";
 import type { QueryClient } from "@tanstack/react-query";
 import { conversationsAtom } from "../state/conversation-store";
+import type { RunToolCall } from "../state/conversation-types";
 import { isReasoningActivity } from "../state/conversation-types";
 import type { AssistantJotaiStore } from "./assistant-engine-instance";
 
@@ -43,7 +44,9 @@ export function notifyAddDeckWritten(store: AssistantJotaiStore, event: Assistan
   const { chunk, conversationId, runId } = event;
   if (chunk.kind !== "toolResult" || chunk.error !== undefined) return;
   const run = store.get(conversationsAtom)[conversationId]?.runs[runId];
-  const call = run?.toolCalls?.find((entry) => !isReasoningActivity(entry) && entry.id === chunk.callId);
+  const call = run?.toolCalls?.find(
+    (entry): entry is RunToolCall => !isReasoningActivity(entry) && entry.id === chunk.callId,
+  );
   if (call?.name !== ASSISTANT_TOOL_SPECS.add_deck.name || call.status !== "success") return;
   invalidateAddDeckQueries?.();
 }
