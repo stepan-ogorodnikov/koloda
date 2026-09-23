@@ -34,7 +34,7 @@ Out:
 
 ## Plan
 
-- [ ] 1. Extract router history navigation for reuse
+- [x] 1. Extract router history navigation for reuse
   Goal: Extract the back/forward + forward-stack logic from TitlebarNavigation into a reusable helper/hook so titlebar buttons and the new hotkeys share one behavior.
   Constraints: Keep UI of TitlebarNavigation looking the same; no behavior change for buttons; prefer colocating near the titlebar/navigation code that already owns this.
   Done when: TitlebarNavigation uses the shared helper; focused tests cover back/forward stack behavior if practical; existing titlebar still works.
