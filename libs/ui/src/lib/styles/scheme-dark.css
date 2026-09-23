@@ -8,7 +8,7 @@
   --fg-level-3: var(--color-mono-3);
   --fg-level-4: color-mix(in oklab, var(--bg-level-1) 35%, var(--fg-level-3));
   --fg-inactive: var(--fg-level-2);
-  --fg-disabled: var(--fg-level-3);
+  --fg-disabled: var(--fg-level-4);
   --fg-link: var(--color-blue);
   --fg-link-hover: color-mix(in oklab, white 18%, var(--color-blue));
   --fg-error: var(--color-red);
