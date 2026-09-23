@@ -14,7 +14,7 @@ import { TimestampFormatSection } from "./interface-controls/timestamp-format";
 
 const DATE_FORMAT_PRESETS = [{ value: "yyyy-MM-dd" }, { value: "dd.MM.yyyy" }, { value: "MM/dd/yyyy" }];
 const TIME_FORMAT_PRESETS = [
-  { value: "h:mm a", label: msg`settings.interface.time-format.12-hour` },
+  { value: "hh:mm a", label: msg`settings.interface.time-format.12-hour` },
   { value: "HH:mm", label: msg`settings.interface.time-format.24-hour` },
 ];
 

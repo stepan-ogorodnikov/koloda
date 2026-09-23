@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatTimestamp } from "./timestamp-format";
+import { formatTimestamp, timeFieldFormatOptions } from "./timestamp-format";
 
 const SAMPLE = new Date(2026, 8, 23, 14, 5, 45);
 const LOCALE_FORMATS = { dateFormat: "locale", timeFormat: "locale" };
@@ -58,7 +58,7 @@ describe("formatTimestamp presets and custom patterns", () => {
   });
 
   it.each([
-    ["h:mm a", "2:05 PM"],
+    ["hh:mm a", "02:05 PM"],
     ["HH:mm", "14:05"],
   ])("renders the time preset %s as %s", (timeFormat, expected) => {
     expect(formatTimestamp(SAMPLE, "time", { dateFormat: "locale", timeFormat }, EN)).toBe(expected);
@@ -98,6 +98,29 @@ describe("formatTimestamp datetime joining", () => {
     expect(formatTimestamp(SAMPLE, "datetime", { dateFormat: "dd.MM.yyyy", timeFormat: "locale" }, EN)).toBe(
       `23.09.2026 ${datetimeClock}`,
     );
+  });
+});
+
+describe("timeFieldFormatOptions", () => {
+  it("leaves the cycle to the locale and keeps hours unpadded for the sentinel", () => {
+    expect(timeFieldFormatOptions("locale")).toEqual({ shouldForceLeadingZeros: false });
+  });
+
+  it.each([
+    ["h:mm a", { hourCycle: 12, shouldForceLeadingZeros: false }],
+    ["hh:mm a", { hourCycle: 12, shouldForceLeadingZeros: true }],
+    ["H:mm", { hourCycle: 24, shouldForceLeadingZeros: false }],
+    ["HH:mm", { hourCycle: 24, shouldForceLeadingZeros: true }],
+  ])("maps %s onto the time field", (pattern, expected) => {
+    expect(timeFieldFormatOptions(pattern)).toEqual(expected);
+  });
+
+  it("ignores hour letters inside quotes", () => {
+    expect(timeFieldFormatOptions("'h' HH:mm")).toEqual({ hourCycle: 24, shouldForceLeadingZeros: true });
+  });
+
+  it("leaves the cycle to the locale when the pattern has no hour token", () => {
+    expect(timeFieldFormatOptions("mm")).toEqual({ shouldForceLeadingZeros: false });
   });
 });
 

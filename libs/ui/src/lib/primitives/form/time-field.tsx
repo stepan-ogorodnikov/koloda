@@ -25,7 +25,7 @@ type TimeFieldProps = ReactAriaTimeFieldProps<TimeValue> &
 
 export function TimeField({ variants, label, children, ...props }: TimeFieldProps) {
   return (
-    <ReactAriaTimeField className={timeField(variants)} shouldForceLeadingZeros {...props}>
+    <ReactAriaTimeField className={timeField(variants)} {...props}>
       {label && <Label variants={variants?.layout === "form" ? { layout: "form" } : {}}>{label}</Label>}
       {children}
     </ReactAriaTimeField>
@@ -60,7 +60,9 @@ function TimeFieldInput(props: TimeFieldInputProps) {
         >
           {({ type, text }) => {
             if (!["hour", "minute", "second"].includes(type)) return text;
-            return <AnimatedNumber value={parseInt(text)} format={{ minimumIntegerDigits: 2 }} />;
+            const value = Number.parseInt(text, 10);
+            if (Number.isNaN(value)) return text;
+            return <AnimatedNumber value={value} format={{ minimumIntegerDigits: text.length }} />;
           }}
         </DateSegment>
       )}

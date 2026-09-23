@@ -1,8 +1,8 @@
 import { parseTime } from "@internationalized/date";
-import { toFormErrors } from "@koloda/app";
+import { timeFieldFormatOptions, toFormErrors } from "@koloda/app";
 import { learningSettingsValidation, resolvedLearningSettingsValidation } from "@koloda/app";
 import type { ResolvedLearningSettings } from "@koloda/app";
-import { queriesAtom, queryKeys } from "@koloda/core-react";
+import { queriesAtom, queryKeys, timeFormatAtom } from "@koloda/core-react";
 import { AlgorithmPicker } from "@koloda/srs-react";
 import { TemplatePicker } from "@koloda/srs-react";
 import { formLayout, Label, NumberField, Switch, TimeField, useAppForm } from "@koloda/ui";
@@ -53,6 +53,8 @@ export function SettingsLearning({ data }: SettingsLearningProps) {
   const queryClient = useQueryClient();
   const { _ } = useLingui();
   const { setSettingsMutation } = useAtomValue(queriesAtom);
+  const timeFormat = useAtomValue(timeFormatAtom);
+  const timeFieldOptions = timeFieldFormatOptions(timeFormat);
   const { mutate } = useMutation(setSettingsMutation<"learning">());
   const initialValues = learningSettingsValidation.parse(data);
 
@@ -218,6 +220,8 @@ export function SettingsLearning({ data }: SettingsLearningProps) {
           <TimeField
             variants={{ layout: "form" }}
             label={_(msg`settings.learning.day-starts-at`)}
+            hourCycle={timeFieldOptions.hourCycle}
+            shouldForceLeadingZeros={timeFieldOptions.shouldForceLeadingZeros}
             value={field.state.value ? parseTime(field.state.value + ":00") : null}
             onChange={(value) => field.handleChange(value?.toString().slice(0, 5) ?? field.state.value)}
           >

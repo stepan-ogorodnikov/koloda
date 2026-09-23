@@ -38,6 +38,43 @@ function renderPart(date: Date, pattern: string, locale: string, sentinel: Intl.
   }
 }
 
+export type TimeFieldFormatOptions = {
+  hourCycle?: 12 | 24;
+  shouldForceLeadingZeros: boolean;
+};
+
+// WHY: a time field can only express a 12/24 cycle and hour padding, not an arbitrary
+// date-fns pattern. The first unquoted h/H run is the part it can honor. "locale" and
+// patterns with no hour token leave the cycle to the locale and keep hours unpadded,
+// matching the clock used for time renders (hour: "numeric"). Quoted letters are
+// literals, same as isValidTimestampPattern.
+export function timeFieldFormatOptions(pattern: string): TimeFieldFormatOptions {
+  const characters = [...pattern];
+  let inQuote = false;
+
+  for (let index = 0; index < characters.length; index += 1) {
+    const character = characters[index];
+    if (character === "'") {
+      if (characters[index + 1] === "'") {
+        index += 1;
+        continue;
+      }
+      inQuote = !inQuote;
+      continue;
+    }
+    if (inQuote || (character !== "h" && character !== "H")) continue;
+
+    let length = 1;
+    while (characters[index + length] === character) length += 1;
+    return {
+      hourCycle: character === "h" ? 12 : 24,
+      shouldForceLeadingZeros: length > 1,
+    };
+  }
+
+  return { shouldForceLeadingZeros: false };
+}
+
 export function formatTimestamp(date: Date, kind: TimestampKind, formats: TimestampFormats, locale: string): string {
   if (kind === "date") return renderPart(date, formats.dateFormat, locale, NUMERIC_DATE_OPTIONS);
   if (kind === "time") return renderPart(date, formats.timeFormat, locale, CLOCK_TIME_OPTIONS);
