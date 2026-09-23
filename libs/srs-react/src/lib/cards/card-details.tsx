@@ -2,7 +2,7 @@ import { Undo02Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { ZodIssue } from "@koloda/app";
 import { toFormErrors } from "@koloda/app";
-import { queriesAtom, queryKeys } from "@koloda/core-react";
+import { queriesAtom, queryKeys, useTimestampFormatter } from "@koloda/core-react";
 import type { Card, UpdateCardValues } from "@koloda/srs";
 import { getUpdateCardSchema, updateCardSchema as schema } from "@koloda/srs";
 import { QueryState } from "@koloda/ui";
@@ -16,19 +16,12 @@ import { CardReviews } from "./card-reviews";
 import { CardState } from "./card-state";
 import { DeleteCard } from "./delete-card";
 
-const TIMESTAMP_OPTIONS = {
-  year: "numeric",
-  month: "long",
-  day: "numeric",
-  hour: "2-digit",
-  minute: "2-digit",
-} as Intl.DateTimeFormatOptions;
-
 type CardDetailsProps = { card: Card };
 
 export function CardDetails({ card }: CardDetailsProps) {
   const queryClient = useQueryClient();
-  const { i18n, _ } = useLingui();
+  const { _ } = useLingui();
+  const formatTimestamp = useTimestampFormatter();
   const { getTemplateQuery, updateCardMutation, resetCardProgressMutation } = useAtomValue(queriesAtom);
   const query = useQuery(getTemplateQuery(card.templateId));
   const template = query.data;
@@ -111,7 +104,7 @@ export function CardDetails({ card }: CardDetailsProps) {
           {!!card.state && !!card.dueAt && (
             <FormLayout.Section term={_(msg`card.labels.due-at`)}>
               <FormLayout.Section.Content variants={{ class: "fg-level-3" }}>
-                {i18n.date(card.dueAt, TIMESTAMP_OPTIONS)}
+                {formatTimestamp(card.dueAt, "datetime")}
               </FormLayout.Section.Content>
             </FormLayout.Section>
           )}

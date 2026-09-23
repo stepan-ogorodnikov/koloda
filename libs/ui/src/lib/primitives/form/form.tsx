@@ -1,6 +1,6 @@
 import { ERROR_MESSAGES } from "@koloda/app";
 import type { ErrorCode, FormError } from "@koloda/app";
-import { useAppHotkey, useHotkeysSettings, useHotkeysStatus } from "@koloda/core-react";
+import { useAppHotkey, useHotkeysSettings, useHotkeysStatus, useTimestampFormatter } from "@koloda/core-react";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { Trans } from "@lingui/react/macro";
@@ -25,25 +25,25 @@ function Timestamp({ children }: PropsWithChildren) {
 }
 
 function CreatedAt({ timestamp }: FormTimestampProps) {
-  const { i18n } = useLingui();
+  const formatTimestamp = useTimestampFormatter();
 
   if (!timestamp) return null;
 
   return (
     <Timestamp>
-      <Trans>form.created-at {i18n.date(timestamp)}</Trans>
+      <Trans>form.created-at {formatTimestamp(timestamp, "date")}</Trans>
     </Timestamp>
   );
 }
 
 function UpdatedAt({ timestamp }: FormTimestampProps) {
-  const { i18n } = useLingui();
+  const formatTimestamp = useTimestampFormatter();
 
   if (!timestamp) return null;
 
   return (
     <Timestamp>
-      <Trans>form.updated-at {i18n.date(timestamp)}</Trans>
+      <Trans>form.updated-at {formatTimestamp(timestamp, "date")}</Trans>
     </Timestamp>
   );
 }

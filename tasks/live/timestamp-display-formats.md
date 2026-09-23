@@ -91,7 +91,7 @@ Out:
   Commit: Add shared timestamp formatter
   Depends on: 1
 
-- [ ] 3. Render timestamp call sites through the shared formatter
+- [x] 3. Render timestamp call sites through the shared formatter
   Goal: Delete every local `TIMESTAMP_OPTIONS` / `TIME_OPTIONS` / `DATE_TIME_OPTIONS` block and render
   through `useTimestampFormatter()` instead, preserving each site's current granularity:
   `libs/srs-react/src/lib/cards/cards-table-cell.tsx` (date), `libs/srs-react/src/lib/cards/card-details.tsx`
