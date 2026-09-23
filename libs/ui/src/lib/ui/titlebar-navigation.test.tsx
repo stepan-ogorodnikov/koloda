@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { TitlebarNavigation } from "./titlebar-navigation";
 
@@ -78,9 +78,11 @@ describe("TitlebarNavigation", () => {
     render(<TitlebarNavigation />);
 
     fireEvent.click(screen.getByRole("button", { name: "titlebar.navigation.back" }));
-    window.dispatchEvent(
-      new KeyboardEvent("keydown", { key: "ArrowRight", altKey: true, bubbles: true, cancelable: true }),
-    );
+    act(() => {
+      window.dispatchEvent(
+        new KeyboardEvent("keydown", { key: "ArrowRight", altKey: true, bubbles: true, cancelable: true }),
+      );
+    });
 
     expect(history.forward).toHaveBeenCalledOnce();
     expect(screen.getByRole("button", { name: "titlebar.navigation.forward" }).hasAttribute("disabled")).toBe(true);

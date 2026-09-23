@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useRouterHistoryNavigation } from "./use-router-history-navigation";
 
@@ -38,7 +38,9 @@ function Harness() {
 }
 
 function popstate() {
-  window.dispatchEvent(new PopStateEvent("popstate"));
+  act(() => {
+    window.dispatchEvent(new PopStateEvent("popstate"));
+  });
 }
 
 describe("useRouterHistoryNavigation", () => {

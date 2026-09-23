@@ -33,7 +33,7 @@ function navigationDirection(event: KeyboardEvent) {
   return null;
 }
 
-export function useNavigationHistoryHotkeys({ canGoBack, canGoForward, goBack, goForward }: RouterHistoryNavigation) {
+export function useNavigationHistoryHotkeys({ canGoBack, goBack, goForward }: RouterHistoryNavigation) {
   useEffect(() => {
     // WHY: These chords are fixed desktop shortcuts, outside Settings → Hotkeys.
     // Web must keep the browser's history keys, so the listener never attaches there.
@@ -49,11 +49,12 @@ export function useNavigationHistoryHotkeys({ canGoBack, canGoForward, goBack, g
         goBack();
         return;
       }
-      if (!canGoForward) return;
+      // WHY: goForward reads the forward stack, which updates before React re-renders.
+      // Gating on canGoForward here would ignore a forward press in the same turn as back.
       goForward();
     };
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [canGoBack, canGoForward, goBack, goForward]);
+  }, [canGoBack, goBack, goForward]);
 }

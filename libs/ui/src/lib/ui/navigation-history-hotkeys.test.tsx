@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useNavigationHistoryHotkeys } from "./navigation-history-hotkeys";
 import { useRouterHistoryNavigation } from "./use-router-history-navigation";
@@ -49,16 +49,22 @@ function setElectronHost(isElectron: boolean) {
   Reflect.deleteProperty(window, "electronAPI");
 }
 
-function setPlatform(platform: "linux" | "macos") {
-  const userAgent =
-    platform === "macos" ? "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)" : "Mozilla/5.0 (X11; Linux x86_64)";
+function setPlatform(platform: "linux" | "macos" | "windows") {
+  const userAgent = {
+    linux: "Mozilla/5.0 (X11; Linux x86_64)",
+    macos: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)",
+    windows: "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+  }[platform];
   Object.defineProperty(navigator, "userAgent", { configurable: true, value: userAgent });
   Object.defineProperty(navigator, "userAgentData", { configurable: true, value: undefined });
 }
 
 function press(init: KeyboardEventInit, target: EventTarget = window) {
-  const event = new KeyboardEvent("keydown", { bubbles: true, cancelable: true, ...init });
-  target.dispatchEvent(event);
+  let event!: KeyboardEvent;
+  act(() => {
+    event = new KeyboardEvent("keydown", { bubbles: true, cancelable: true, ...init });
+    target.dispatchEvent(event);
+  });
   return event;
 }
 
@@ -88,7 +94,8 @@ describe("useNavigationHistoryHotkeys", () => {
     expect(history.forward).not.toHaveBeenCalled();
   });
 
-  it("navigates back and forward on the Linux/Windows chords", () => {
+  it.each(["linux", "windows"] as const)("navigates back and forward with Ctrl as Mod on %s", (platform) => {
+    setPlatform(platform);
     setElectronHost(true);
     render(<Harness />);
 

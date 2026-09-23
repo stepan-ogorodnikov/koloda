@@ -38,6 +38,7 @@ export function useRouterHistoryNavigation(): RouterHistoryNavigation {
   }, [router]);
 
   const goForward = useCallback(() => {
+    if (forwardStackRef.current.length === 0) return;
     forwardStackRef.current.pop();
     setCanGoForward(forwardStackRef.current.length > 0);
     isProgrammaticRef.current = true;
