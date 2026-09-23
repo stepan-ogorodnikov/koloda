@@ -17,6 +17,7 @@ export function SettingsInterface() {
   const scheme = useAtomValue(schemeAtom);
   const setScheme = useSetAtom(schemeAtom);
   const motion = useAtomValue(motionSettingAtom);
+  const setMotion = useSetAtom(motionSettingAtom);
   const { patchSettingsMutation } = useAtomValue(queriesAtom);
   const { mutate } = useMutation({
     onSuccess: (settings: AllowedSettings<"interface"> | undefined) => {
@@ -48,7 +49,9 @@ export function SettingsInterface() {
         <ToggleGroup
           selectedKeys={[motion]}
           onSelectionChange={([value]) => {
-            mutate({ name: "interface", content: { motion: value.toString() } });
+            const next = value.toString();
+            setMotion(next);
+            mutate({ name: "interface", content: { motion: next } });
           }}
         >
           {Object.entries(MOTION_SETTINGS).map(([id, t]) => (
