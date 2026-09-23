@@ -31,7 +31,7 @@ msgstr "Сообщения сброшены"
 msgid "ai.chat.message.revert.tooltip"
 msgstr "Сбросить до этого сообщения"
 
-#: ../../libs/assistant-react/src/lib/ui/message-timestamp.tsx:24
+#: ../../libs/assistant-react/src/lib/ui/message-timestamp.tsx:14
 msgid "ai.chat.message.timestamp.today {time}"
 msgstr "Сегодня в {time}"
 

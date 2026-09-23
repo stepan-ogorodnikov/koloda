@@ -10,6 +10,13 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAtomValue, useSetAtom } from "jotai";
 import { DarkThemePicker, LightThemePicker } from "./interface-controls/color-theme-picker";
 import { LanguagePicker } from "./interface-controls/language-picker";
+import { TimestampFormatSection } from "./interface-controls/timestamp-format";
+
+const DATE_FORMAT_PRESETS = [{ value: "yyyy-MM-dd" }, { value: "dd.MM.yyyy" }, { value: "MM/dd/yyyy" }];
+const TIME_FORMAT_PRESETS = [
+  { value: "h:mm a", label: msg`settings.interface.time-format.12-hour` },
+  { value: "HH:mm", label: msg`settings.interface.time-format.24-hour` },
+];
 
 export function SettingsInterface() {
   const { _ } = useLingui();
@@ -61,6 +68,21 @@ export function SettingsInterface() {
           ))}
         </ToggleGroup>
       </FormLayout.Section>
+      <TimestampFormatSection
+        kind="date"
+        label={msg`settings.interface.date-format`}
+        localeLabel={msg`settings.interface.date-format.locale`}
+        customLabel={msg`settings.interface.date-format.custom`}
+        preview={(value) => _(msg`settings.interface.date-format.preview ${value}`)}
+        presets={DATE_FORMAT_PRESETS}
+      />
+      <TimestampFormatSection
+        kind="time"
+        label={msg`settings.interface.time-format`}
+        localeLabel={msg`settings.interface.time-format.locale`}
+        preview={(value) => _(msg`settings.interface.time-format.preview ${value}`)}
+        presets={TIME_FORMAT_PRESETS}
+      />
     </FormLayout>
   );
 }

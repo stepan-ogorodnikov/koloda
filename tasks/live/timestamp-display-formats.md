@@ -20,7 +20,7 @@ In:
 - Zod validation in `libs/app` plus the Rust mirror in `crates/koloda` (ADR 0001, one commit)
 - One shared formatter + `useTimestampFormatter()` hook; two settings atoms and their hydration
 - Migrating every hardcoded timestamp call site off its local `Intl.DateTimeFormatOptions`
-- Interface settings screen controls: preset chips, custom pattern field with live preview, token cheat-sheet
+- Interface settings screen controls: preset selects with an always-on preview; a date-only custom pattern field
 - `docs/specs/INTERFACE-SETTINGS.md` update and en/ru message catalogs
 
 Out:
@@ -34,7 +34,11 @@ Out:
 
 ## Open questions
 
-- [x] Input style for the format fields — presets plus a custom field — presets + custom field (Recommended) picked
+- [x] Input style for the format fields — presets plus a custom field — presets + custom field (Recommended) picked;
+  revised at review to a select with an always-on preview, the custom field (date only) shown only for the
+  Custom option, and no custom option for time; at review the field moved into a wrapping row beside the
+  select, the token cheat-sheet was dropped from the UI (the human may add it back later), and the preview
+  shows the live current date/time instead of a fixed sample
 - [x] `long` date preset — removed at the human's request; date presets are locale, ISO, dots, slashes
 - [x] Defaults and Rust validator shape — both fields default to `locale`; Rust validates structurally
   (length + token whitelist), not with a full pattern engine — accepted with the design
@@ -107,15 +111,16 @@ Out:
   Commit: Apply timestamp format settings to all call sites
   Depends on: 2
 
-- [ ] 4. Add date and time format controls to interface settings
+- [x] 4. Add date and time format controls to interface settings
   Goal: Surface both settings on the interface settings screen per `docs/specs/INTERFACE-SETTINGS.md`.
-  In `libs/settings-react`, add two sections to `settings-interface.tsx` following the existing control
-  patterns (motion `ToggleGroup` for the preset chips, theme-picker style `Select` or chips for presets,
-  plus a custom pattern text field): date presets locale / ISO / dots / slashes and time presets
-  locale / 12-hour / 24-hour (no `long`), a custom pattern field that saves on blur or Enter only —
-  invalid input shows the error and persists nothing — a live preview rendering a fixed sample through
-  `formatTimestamp`, and a token cheat-sheet (`y M d H h m s`, `[literal]` brackets). Each control saves
-  only its own field via `patchSettingsMutation`; no save button. Add msgids in dot-kebab style
+  In `libs/settings-react`, add two sections to `settings-interface.tsx`, each a theme-picker style
+  `Select`: date offers Default / ISO / dots / slashes / Custom, time offers Default / 12-hour / 24-hour
+  (no `long`). Picking Default or a preset saves that field immediately. The date select's Custom option adds a
+  label-less pattern field (accessible name kept) to a wrapping row beside the select; it saves on blur or
+  Enter only — invalid input shows the error and persists nothing. The field shows only for Custom, and time
+  has no Custom option, so time shows neither. A live preview under each select is always visible and renders
+  the current date and time through `formatTimestamp`. Each control saves only its own field via
+  `patchSettingsMutation`; no save button. Add msgids in dot-kebab style
   (`settings.interface.date-format` etc.), run extract → translate (ru) → compile for web and electron-react
   per `agents/I18N.md`, and update `docs/specs/INTERFACE-SETTINGS.md`: two Core Model bullets plus a
   "Date and Time Format" section covering defaults, presets, custom pattern validity, rejection on write,
@@ -123,7 +128,7 @@ Out:
   `agents/MARKDOWN.md`).
   Constraints: touch only the interface settings screen and its controls; leave other settings sections alone.
   Done when: `bun run test:libs` passes, both apps' lingui extract + compile succeed, and manual checks pass:
-  preset click applies app-wide immediately, an invalid custom pattern never persists, and the preview
+  picking a preset applies app-wide immediately, an invalid custom pattern never persists, and the preview
   matches what the app then renders.
   Commit: Add date and time format controls to interface settings
   Depends on: 1, 2

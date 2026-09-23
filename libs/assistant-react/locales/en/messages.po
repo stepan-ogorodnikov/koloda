@@ -31,7 +31,7 @@ msgstr "Messages reverted"
 msgid "ai.chat.message.revert.tooltip"
 msgstr "Revert message"
 
-#: ../../libs/assistant-react/src/lib/ui/message-timestamp.tsx:24
+#: ../../libs/assistant-react/src/lib/ui/message-timestamp.tsx:14
 msgid "ai.chat.message.timestamp.today {time}"
 msgstr "Today at {time}"
 

@@ -37,15 +37,15 @@ msgstr "Язык интерфейса"
 msgid "light-theme-picker.label"
 msgstr "Светлая тема"
 
-#: ../../libs/settings-react/src/lib/settings-interface.tsx:41
+#: ../../libs/settings-react/src/lib/settings-interface.tsx:49
 msgid "scheme.dark"
 msgstr "Тёмная"
 
-#: ../../libs/settings-react/src/lib/settings-interface.tsx:40
+#: ../../libs/settings-react/src/lib/settings-interface.tsx:48
 msgid "scheme.light"
 msgstr "Светлая"
 
-#: ../../libs/settings-react/src/lib/settings-interface.tsx:42
+#: ../../libs/settings-react/src/lib/settings-interface.tsx:50
 msgid "scheme.system"
 msgstr "Системная"
 
@@ -180,7 +180,23 @@ msgstr "Без названия"
 msgid "settings.interface.dark-theme"
 msgstr "Тёмная тема"
 
-#: ../../libs/settings-react/src/lib/settings-interface.tsx:30
+#: ../../libs/settings-react/src/lib/settings-interface.tsx:73
+msgid "settings.interface.date-format"
+msgstr "Формат даты"
+
+#: ../../libs/settings-react/src/lib/settings-interface.tsx:75
+msgid "settings.interface.date-format.custom"
+msgstr "Свой формат"
+
+#: ../../libs/settings-react/src/lib/settings-interface.tsx:74
+msgid "settings.interface.date-format.locale"
+msgstr "По умолчанию"
+
+#: ../../libs/settings-react/src/lib/settings-interface.tsx:76
+msgid "settings.interface.date-format.preview {value}"
+msgstr "Пример: {value}"
+
+#: ../../libs/settings-react/src/lib/settings-interface.tsx:38
 msgid "settings.interface.language"
 msgstr "Язык интерфейса"
 
@@ -188,13 +204,33 @@ msgstr "Язык интерфейса"
 msgid "settings.interface.light-theme"
 msgstr "Светлая тема"
 
-#: ../../libs/settings-react/src/lib/settings-interface.tsx:47
+#: ../../libs/settings-react/src/lib/settings-interface.tsx:55
 msgid "settings.interface.motion"
 msgstr "Анимации"
 
-#: ../../libs/settings-react/src/lib/settings-interface.tsx:31
+#: ../../libs/settings-react/src/lib/settings-interface.tsx:39
 msgid "settings.interface.scheme"
 msgstr "Цветовая схема"
+
+#: ../../libs/settings-react/src/lib/settings-interface.tsx:81
+msgid "settings.interface.time-format"
+msgstr "Формат времени"
+
+#: ../../libs/settings-react/src/lib/settings-interface.tsx:17
+msgid "settings.interface.time-format.12-hour"
+msgstr "12-часовой"
+
+#: ../../libs/settings-react/src/lib/settings-interface.tsx:18
+msgid "settings.interface.time-format.24-hour"
+msgstr "24-часовой"
+
+#: ../../libs/settings-react/src/lib/settings-interface.tsx:82
+msgid "settings.interface.time-format.locale"
+msgstr "По умолчанию"
+
+#: ../../libs/settings-react/src/lib/settings-interface.tsx:83
+msgid "settings.interface.time-format.preview {value}"
+msgstr "Пример: {value}"
 
 #: ../../libs/settings-react/src/lib/settings-learning.tsx:220
 msgid "settings.learning.day-starts-at"

@@ -25,7 +25,7 @@ msgstr "Drag handle"
 msgid "error.details"
 msgstr "Details"
 
-#. placeholder {0}: i18n.date(timestamp)
+#. placeholder {0}: formatTimestamp(timestamp, "date")
 #: ../../libs/ui/src/lib/primitives/form/form.tsx:34
 msgid "form.created-at {0}"
 msgstr "Created {0}"
@@ -38,7 +38,7 @@ msgstr "Discard"
 msgid "form.save"
 msgstr "Save"
 
-#. placeholder {0}: i18n.date(timestamp)
+#. placeholder {0}: formatTimestamp(timestamp, "date")
 #: ../../libs/ui/src/lib/primitives/form/form.tsx:46
 msgid "form.updated-at {0}"
 msgstr "Updated {0}"
