@@ -1,4 +1,7 @@
-//! Settings table envelope — mirrors `@koloda/app` `allowedSettings` / `SettingsName`.
+//! Settings table envelope — mirrors `@koloda/settings` `allowedSettings` / `SettingsName`.
+//!
+//! Slice schemas stay with their owners.
+//! Interface, learning, and hotkeys live in `@koloda/app`; AI lives in `@koloda/ai`.
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
