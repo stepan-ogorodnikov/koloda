@@ -225,11 +225,8 @@ export function AssistantChat({
             {revertState && <RevertBanner onRestore={handleRestore} />}
             <AIChatPromptPanel onSubmit={handleSubmit}>
               <AIChatPromptInput value={inputValue} onChange={setInputValue} onSubmit={submit} />
-              <div className="flex flex-row items-center min-w-0 px-1 pb-2">
-                <div className="grow min-w-3" />
-                <div className="flex flex-row items-center gap-2 shrink-0 px-1">
-                  <AIChatSubmit canSubmit={canSubmit} canCancel={canCancel} onCancel={controller.cancel} />
-                </div>
+              <div className="self-end p-1">
+                <AIChatSubmit canSubmit={canSubmit} canCancel={canCancel} onCancel={controller.cancel} />
               </div>
             </AIChatPromptPanel>
           </Fade>

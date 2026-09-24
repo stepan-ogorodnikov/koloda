@@ -35,17 +35,17 @@ export function AIChatPromptInput({ value, onChange, onSubmit }: AIChatPromptInp
 
   return (
     <TextField
-      variants={{ class: "rounded-2xl" }}
+      variants={{ class: "w-full m-0.5 rounded-2xl outline-offset-1" }}
       aria-label={_(msg`ai.chat.input.label`)}
       value={value}
       onChange={onChange}
       autoFocus
     >
       <TextField.TextArea
-        variants={{ style: "inline", class: "rounded-2xl resize-none" }}
+        variants={{ style: "inline", class: "rounded-xl resize-none" }}
         placeholder={_(msg`ai.chat.input.placeholder`)}
         canAutoResize
-        rows={2}
+        rows={1}
         maxRows={6}
         ref={inputRef}
         onKeyDownCapture={handleKeyDown}
