@@ -20,12 +20,10 @@ export type DeckSummaryOutput = {
   fieldTitles: string[];
 };
 
-/** Deck summary rows returned by `list_decks`. */
 export type ListDecksOutput = {
   decks: DeckSummaryOutput[];
 };
 
-/** Template summary row returned by `list_templates`. */
 export type ListTemplatesOutput = {
   templates: Array<{
     templateId: string;
@@ -34,7 +32,6 @@ export type ListTemplatesOutput = {
   }>;
 };
 
-/** Algorithm summary row returned by `list_algorithms`. */
 export type ListAlgorithmsOutput = {
   algorithms: Array<{
     algorithmId: string;
@@ -43,7 +40,7 @@ export type ListAlgorithmsOutput = {
   }>;
 };
 
-/** Card payload returned by `get_deck_cards`; `fields` maps template field titles to card text. */
+/** `fields` maps template field titles to card text, not field ids. */
 export type GetDeckCardsOutput = {
   deckTitle: string;
   totalCards: number;
@@ -55,14 +52,13 @@ export type GetDeckCardsOutput = {
 /** Host field type — mirrors SRS `"text" | "markdown"` without importing `@koloda/srs`. */
 export type AssistantToolFieldType = "text" | "markdown";
 
-/** Full template structure returned by `get_template`. */
 export type GetTemplateOutput = {
   templateId: string;
   title: string;
   fields: Array<{ id: string; title: string; type: AssistantToolFieldType; isRequired: boolean }>;
 };
 
-/** Empty deck created by `add_deck`. `algorithmId` is the id actually stored. */
+/** `algorithmId` is the id actually stored, including when the caller omitted one. */
 export type AddDeckOutput = {
   deckId: string;
   title: string;
@@ -72,7 +68,7 @@ export type AddDeckOutput = {
   algorithmId: string;
 };
 
-/** Accepted `propose_cards` payload; `fields` is title-keyed like `get_deck_cards`. */
+/** `fields` is title-keyed, same as `get_deck_cards`. */
 export type ProposeCardsOutput = {
   deckId: string;
   deckTitle: string;
@@ -91,7 +87,7 @@ export const ASSISTANT_TOOL_MAX_CARDS_PER_DECK = 200;
 // result never crowds out the conversation in smaller context windows.
 export const ASSISTANT_TOOL_CARD_LIST_CHAR_BUDGET = 8_000;
 
-/** Structural deck row subset for `list_decks`; the host resolves `cardCount` (per-deck card reads). */
+/** The host resolves `cardCount`. This module does not read cards. */
 export type AssistantDeckSummarySource = {
   id: string;
   title: string;
@@ -117,14 +113,13 @@ export type AssistantToolAlgorithmContent = {
   maximumInterval: number;
 };
 
-/** Structural algorithm subset for `list_algorithms`. */
 export type AssistantToolAlgorithm = {
   id: string;
   title: string;
   content: AssistantToolAlgorithmContent;
 };
 
-/** Structural deck + template subset for `get_deck_cards` and `propose_cards`. */
+/** Shared source for `get_deck_cards` and `propose_cards`. Do not fork per tool. */
 export type AssistantDeckCardsSource = {
   id: string;
   title: string;
@@ -270,11 +265,10 @@ export type AssistantToolEvent =
 
 export type OnToolEvent = (event: AssistantToolEvent) => void;
 
-/** Host-supplied dispatcher: resolves a bound tool by name and returns its output. */
+/** Host-supplied. This module does not perform the call. */
 export type AssistantToolExecutor = (name: string, input: unknown) => Promise<unknown>;
 
 export type BindAssistantToolsOptions = {
-  /** Tool names to expose to the model; selects from `ASSISTANT_TOOL_SPECS`. */
   names: string[];
   execute: AssistantToolExecutor;
 };
