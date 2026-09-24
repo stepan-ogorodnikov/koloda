@@ -47,6 +47,7 @@ The listed files are relative to the repo root.
 | Change inside `crates/koloda` (Rust domain, repos, settings slices, FSRS, reviews) | `agents/RUST.md`, `docs/adr/0001-TS-RUST-DOMAIN-MIRRORING.md` |
 | Add a color theme | `agents/ADD-COLOR-THEME.md`, `docs/specs/INTERFACE-SETTINGS.md` |
 | Interface settings change (language, scheme, themes, motion) | `docs/specs/INTERFACE-SETTINGS.md`, `agents/I18N.md` |
+| App shell layout (narrow/wide, drawer, nav) | `agents/LAYOUT.md`, `agents/CSS.md`; add `docs/specs/INTERFACE-SETTINGS.md` when the change is an interface setting |
 | Add a hotkey | `agents/ADD-HOTKEY.md`, `docs/specs/HOTKEYS.md`, `agents/I18N.md` |
 | Write or update a functional spec | `agents/FUNCTIONAL-SPECIFICATIONS.md`, `agents/MARKDOWN.md` |
 | Write or update an ADR (new area decision) | `docs/adr/README.md`, `agents/MARKDOWN.md` |
@@ -75,6 +76,7 @@ Then add the same guides the author used for that change type, so the reviewer a
 | `crates/koloda` / `koloda` crate diff | `agents/RUST.md`, `docs/adr/0001` |
 | Theme diff | `agents/ADD-COLOR-THEME.md`, `docs/specs/INTERFACE-SETTINGS.md` |
 | Interface settings diff | `docs/specs/INTERFACE-SETTINGS.md` |
+| App shell layout diff | `agents/LAYOUT.md`, `agents/CSS.md`; add `docs/specs/INTERFACE-SETTINGS.md` when the diff changes an interface setting |
 | Hotkey diff | `agents/ADD-HOTKEY.md`, `docs/specs/HOTKEYS.md`, `agents/I18N.md` |
 | Functional spec diff | `agents/FUNCTIONAL-SPECIFICATIONS.md`, `agents/MARKDOWN.md` |
 
@@ -88,6 +90,7 @@ Also add:
 
 - `agents/FUNCTIONAL-SPECIFICATIONS.md` when a spec is in scope
 - `agents/CSS.md` when UI is in scope
+- `agents/LAYOUT.md` when the target includes app-shell layout, the drawer, or the wide breakpoint
 - `agents/I18N.md` when user-visible strings are in scope
 - `docs/adr/0001-TS-RUST-DOMAIN-MIRRORING.md` when the target crosses TypeScript and Rust
 - `docs/adr/0002-DUAL-PLATFORM-PERSISTENCE.md` when the target includes persistence
