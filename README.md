@@ -73,6 +73,8 @@ libs/
   assistant-react/        # Assistant chat React UI
   core-react/             # Shared React infrastructure (queries, hooks, atoms)
   db-sqlite/              # SQLite persistence (web)
+  e2e/                    # Shared Playwright helpers (web and desktop)
+  native-ipc/             # Desktop IPC contract (renderer and main)
   settings/               # Settings row registry (Zod)
   settings-react/         # Global settings screens
   srs/                    # SRS domain logic
@@ -81,3 +83,7 @@ libs/
 crates/
   koloda/                 # Desktop Rust backend (domain, repos, SQLite/Refinery, keyring)
 ```
+
+Agent routing starts at `agents/INDEX.md`.
+Architecture decisions are in `docs/adr/`.
+Functional specs are in `docs/specs/`.
