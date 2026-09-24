@@ -18,9 +18,9 @@ export function RouteError({ error, reset }: ErrorComponentProps) {
     : { message: _(msg`route-error.message`), details: error.message };
 
   return (
-    <div className="grow flex flex-col items-center justify-center gap-6 bg-level-1 px-4">
-      <HugeiconsIcon className="size-8 min-w-8 fg-level-2" strokeWidth={1.5} icon={BadgeAlertIcon} aria-hidden="true" />
-      <ErrorMessage message={message} details={details} />
+    <div className="grow flex flex-col items-center justify-center gap-6 bg-level-1 px-4 fg-level-2">
+      <HugeiconsIcon className="size-8 min-w-8" strokeWidth={1.5} icon={BadgeAlertIcon} aria-hidden="true" />
+      <ErrorMessage color="inherit" message={message} details={details} />
       <div className="flex flex-row items-center gap-4">
         <Button variants={{ style: "primary" }} onPress={reset}>
           {_(msg`route-error.retry`)}

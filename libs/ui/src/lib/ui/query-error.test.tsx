@@ -16,7 +16,9 @@ describe("QueryError", () => {
 
     render(<QueryError error={error} />);
 
-    expect(screen.getByText("unknown")).toBeTruthy();
+    const message = screen.getByText("unknown");
+    expect(message.className).not.toContain("fg-error");
+    expect(message.parentElement?.parentElement?.className).toContain("fg-level-2");
   });
 
   it("shows the catalog message and keeps AppError details behind the details control", () => {

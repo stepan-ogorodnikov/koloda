@@ -16,23 +16,28 @@ const errorMessage = tv({
 });
 
 const errorMessageText = tv({
-  base: "fg-level-2",
+  base: "",
   variants: {
     layout: {
       stack: "text-center",
       inline: "min-w-0",
     },
+    color: {
+      error: "fg-error",
+      inherit: "",
+    },
   },
-  defaultVariants: { layout: "stack" },
+  defaultVariants: { layout: "stack", color: "error" },
 });
 
 export type ErrorMessageProps = {
   message: string;
   details?: string;
   layout?: "stack" | "inline";
+  color?: "error" | "inherit";
 };
 
-export function ErrorMessage({ message, details, layout = "stack" }: ErrorMessageProps) {
+export function ErrorMessage({ message, details, layout = "stack", color = "error" }: ErrorMessageProps) {
   const { _ } = useLingui();
   const trimmedDetails = details?.trim();
   const hasDetails = Boolean(trimmedDetails);
@@ -40,7 +45,7 @@ export function ErrorMessage({ message, details, layout = "stack" }: ErrorMessag
 
   return (
     <div className={errorMessage({ layout })}>
-      <p className={errorMessageText({ layout })}>{message}</p>
+      <p className={errorMessageText({ layout, color })}>{message}</p>
       {hasDetails && (
         <Dialog.Root>
           <Button variants={{ style: "inline", size: "inline", class: "font-medium" }}>{detailsLabel}</Button>

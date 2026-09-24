@@ -29,7 +29,9 @@ describe("RouteError", () => {
   it("shows a generic message and the raw error as details for plain errors", async () => {
     renderRouteError(new Error("boom"));
 
-    expect(screen.getByText("route-error.message")).toBeTruthy();
+    const message = screen.getByText("route-error.message");
+    expect(message.className).not.toContain("fg-error");
+    expect(message.parentElement?.parentElement?.className).toContain("fg-level-2");
 
     fireEvent.click(screen.getByRole("button", { name: "error.details" }));
 

@@ -29,6 +29,16 @@ describe("ErrorMessage", () => {
     expect(screen.getByRole("button", { name: "error.details" })).toBeTruthy();
   });
 
+  it("uses the error color by default and can inherit instead", () => {
+    const { rerender } = render(<ErrorMessage message="Failed to load data" />);
+
+    expect(screen.getByText("Failed to load data").className).toContain("fg-error");
+
+    rerender(<ErrorMessage message="Failed to load data" color="inherit" />);
+
+    expect(screen.getByText("Failed to load data").className).not.toContain("fg-error");
+  });
+
   it("reveals technical details in a popover after the details control is pressed", async () => {
     render(<ErrorMessage message="Failed to load data" details="SQLITE_BUSY" />);
 

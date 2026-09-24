@@ -54,14 +54,9 @@ export function QueryError({ error, onRetry }: QueryErrorProps) {
 
   return (
     <div className="grow flex items-center justify-center my-12">
-      <div className="flex flex-col items-center gap-4">
-        <HugeiconsIcon
-          className="size-8 min-w-8 fg-level-2"
-          strokeWidth={1.5}
-          icon={BadgeAlertIcon}
-          aria-hidden="true"
-        />
-        <ErrorMessage message={message} details={details} />
+      <div className="flex flex-col items-center gap-4 fg-level-2">
+        <HugeiconsIcon className="size-8 min-w-8" strokeWidth={1.5} icon={BadgeAlertIcon} aria-hidden="true" />
+        <ErrorMessage color="inherit" message={message} details={details} />
         {onRetry && (
           <Button variants={{ style: "ghost", class: queryErrorRetryButton({ isPending }) }} onClick={handleRetry}>
             <HugeiconsIcon className={queryErrorRetryIcon({ isPending })} strokeWidth={1.75} icon={Refresh04Icon} />
