@@ -19,10 +19,6 @@ export function invalidateDeckQueriesAfterAddDeck(queryClient: QueryClient): voi
   queryClient.invalidateQueries({ queryKey: queryKeys.templates.decksAll() });
 }
 
-/**
- * Register the app-shell cache refresh for a successful `add_deck`.
- * Returns an unregister that clears the slot only if this registration is current.
- */
 export function registerAddDeckQueryInvalidator(invalidate: () => void): () => void {
   invalidateAddDeckQueries = invalidate;
   return () => {
@@ -30,7 +26,6 @@ export function registerAddDeckQueryInvalidator(invalidate: () => void): () => v
   };
 }
 
-/** Tests only: drop a leaked invalidator registration. */
 export function resetAddDeckQueryInvalidatorForTests(): void {
   invalidateAddDeckQueries = null;
 }

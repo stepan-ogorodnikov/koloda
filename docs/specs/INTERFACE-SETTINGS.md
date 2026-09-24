@@ -109,7 +109,7 @@ Date presets:
 Time presets:
 
 - Default — the default rendering for the active language
-- 12-hour — `h:mm a`
+- 12-hour — `hh:mm a`
 - 24-hour — `HH:mm`
 
 The default date format is Default.
@@ -118,7 +118,7 @@ The default time format is Default.
 A custom pattern is built from the tokens y, M, d, H, h, m, s, a and from text wrapped in single quotes.
 A custom pattern must not be empty, must contain at least one token, and must not exceed 64 characters.
 A pattern the app cannot render is invalid.
-Choosing Custom in the date select adds a custom pattern field to a wrapping row beside the select.
+Choosing Custom in the date select shows a custom pattern field.
 Choosing any other date option hides it again.
 The time select has no Custom option, so time offers no pattern field.
 

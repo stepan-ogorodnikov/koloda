@@ -62,6 +62,9 @@ function TimeFieldInput(props: TimeFieldInputProps) {
             if (!["hour", "minute", "second"].includes(type)) return text;
             const value = Number.parseInt(text, 10);
             if (Number.isNaN(value)) return text;
+            // WHY: parseInt drops the leading zero react-aria already chose. NumberFlow
+            // would then render "5" for "05", and a fixed 2 would pad an unpadded hour.
+            // text.length keeps the segment's own width.
             return <AnimatedNumber value={value} format={{ minimumIntegerDigits: text.length }} />;
           }}
         </DateSegment>

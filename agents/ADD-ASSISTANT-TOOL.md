@@ -30,7 +30,8 @@ Pick one before editing code.
    - Writes immediately after title, template, and algorithm validate. A failed validation leaves no row.
    - Does not invent cards and does not set a propose write target.
    - Undo is the existing product action (the user deletes the deck the same way as one they created by hand).
-   - The write is invisible to a mounted list until the same React Query keys as the hand-created mutation are invalidated. `add_deck` does that from the app shell (`add-deck-query-invalidation.ts`), not from `libs/ai` or the host binders.
+   - The write is invisible to a mounted list until the same React Query keys as the hand-created mutation are invalidated.
+   - `add_deck` does that from the app shell (`add-deck-query-invalidation.ts`), not from `libs/ai` or the host binders.
    - Needs a product rule in `docs/specs/ASSISTANT-DATA-ACCESS.md` (§Resources), host methods on `AssistantToolDataSource`, an executor branch, and an activity label.
 
 4. **Tool that needs new UI**:
@@ -166,7 +167,9 @@ Follow `add_deck`:
 - Validate template and algorithm before calling the host write. A missing template, a missing requested algorithm, or a missing default algorithm fails the call and does not create a deck.
 - When the caller omits the algorithm, store `getDefaultAlgorithmId()`, the same default as manual deck create.
 - Do not map the result onto run cards or write targets.
-- On recorded success, invalidate the same query keys as the hand-created mutation. `add_deck` does that in `invalidateDeckQueriesAfterAddDeck` (`add-deck-query-invalidation.ts`), called from `useAssistantEngineHost` after the reducer records the tool result. Host binders and `libs/ai` have no `QueryClient` — Electron runs the write in the main process.
+- On recorded success, invalidate the same query keys as the hand-created mutation.
+- `add_deck` does that in `invalidateDeckQueriesAfterAddDeck` (`add-deck-query-invalidation.ts`), called from `useAssistantEngineHost` after the reducer records the tool result.
+- Host binders and `libs/ai` have no `QueryClient` — Electron runs the write in the main process.
 - Activity row shows the translated label and, on success, the created title.
 
 **Tools that need new UI**
@@ -230,7 +233,8 @@ Minimum coverage:
 - Do not inject deck or card snapshots into the system prompt.
 - Do not add a consent toggle or per-provider data-access mode.
 - Do not put DB I/O inside `libs/ai` tool modules.
-- Do not put `QueryClient` invalidation in `libs/ai` or the host binders. Direct writes refresh caches from the app shell when the tool result is recorded.
+- Do not put `QueryClient` invalidation in `libs/ai` or the host binders.
+- Direct writes refresh caches from the app shell when the tool result is recorded.
 - Do not return card ids in tool payloads unless product explicitly requires them.
 - Do not fail an entire `propose_*` call because one item is malformed when the existing pattern is drop-and-count.
 - Do not update only one host binder when `AssistantToolDataSource` changes.

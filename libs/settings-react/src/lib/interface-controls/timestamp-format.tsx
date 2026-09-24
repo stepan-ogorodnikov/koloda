@@ -23,7 +23,7 @@ function toOption(presets: readonly TimestampFormatPreset[], allowsCustom: boole
   if (value === LOCALE_OPTION || presets.some((preset) => preset.value === value)) {
     return value;
   }
-  // A stored custom date pattern maps to Custom; without a custom option (time) it stays its own row.
+  // WHY: A stored custom date pattern maps to Custom; without a custom option (time) it stays its own row.
   return allowsCustom ? CUSTOM_OPTION : value;
 }
 
@@ -105,7 +105,7 @@ export function TimestampFormatSection({
   };
 
   const commit = () => {
-    // Empty means "nothing chosen yet": stay on Custom without writing or erroring.
+    // WHY: Empty means "nothing chosen yet": stay on Custom without writing or erroring.
     if (pattern === "" || pattern === saved) {
       setError(undefined);
       return;
