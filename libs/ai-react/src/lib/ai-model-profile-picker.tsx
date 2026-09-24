@@ -8,6 +8,7 @@ import { useLingui } from "@lingui/react";
 import { AnimatePresence } from "motion/react";
 import type { RefObject } from "react";
 import { useMemo, useState } from "react";
+import { tv } from "tailwind-variants";
 import { decodeAIModelProfileKey, encodeAIModelProfileKey } from "./ai-model-profile-key";
 import { filterProfileModelsForPicker } from "./filter-profile-models";
 import { useAIProfilesModels } from "./use-ai-profiles-models";
@@ -37,6 +38,14 @@ type ProfileSection = {
   models: ProfileSectionModel[];
   refetch: () => void;
 };
+
+const modelPickerStatusIcon = tv({
+  base: "size-4 min-w-4",
+  variants: {
+    isLoading: { true: "animate-spin" },
+  },
+  defaultVariants: { isLoading: false },
+});
 
 export function AIModelProfilePicker({
   profiles,
@@ -170,7 +179,7 @@ export function AIModelProfilePicker({
                       onPress={() => section.refetch()}
                     >
                       <HugeiconsIcon
-                        className={`size-4 min-w-4 ${section.status === "loading" ? "animate-spin" : ""}`}
+                        className={modelPickerStatusIcon({ isLoading: section.status === "loading" })}
                         strokeWidth={1.75}
                         icon={Refresh04Icon}
                         aria-hidden="true"
