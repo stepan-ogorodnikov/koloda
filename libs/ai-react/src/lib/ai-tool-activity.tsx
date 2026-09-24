@@ -37,6 +37,16 @@ const thinkingLabel = tv({
   defaultVariants: { isRunning: false },
 });
 
+const reasoningIcon = tv({
+  base: "col-start-1 row-start-1 size-6 min-w-6",
+  variants: {
+    isRunning: { true: "fg-level-4" },
+  },
+  defaultVariants: { isRunning: false },
+});
+
+const reasoningIconHighlightClass = "col-start-1 row-start-1 size-6 min-w-6 fg-level-1 animate-shimmer-icon";
+
 const toolActivityTriggerClass = [
   "group/tool justify-start px-1 -mx-1 whitespace-normal font-normal animate-colors",
   "hover:bg-transparent data-pressed:bg-transparent data-pressed:shadow-none",
@@ -106,6 +116,29 @@ export function AIToolActivity({ calls, renderText }: AIToolActivityProps) {
 
 type ReasoningActivityRowProps = { item: AIReasoningRecord; renderText?: (text: string) => ReactNode };
 
+type ReasoningStatusIconProps = { isRunning: boolean; runningLabel: string };
+
+// WHY: the label sweep is background-clip text, which never paints the SVG.
+// `animate-shimmer` on the headline (or on this 24px box) is a no-repeat mask,
+// so it clips TextSwap's blur cross-fade and also slides fully off the glyph.
+// The highlight is a second icon; the base stroke stays put under the band.
+function ReasoningStatusIcon({ isRunning, runningLabel }: ReasoningStatusIconProps) {
+  return (
+    <span className="inline-grid size-6 min-w-6">
+      <HugeiconsIcon
+        className={reasoningIcon({ isRunning })}
+        strokeWidth={1.75}
+        icon={BrainIcon}
+        aria-hidden={isRunning ? undefined : true}
+        aria-label={isRunning ? runningLabel : undefined}
+      />
+      {isRunning ? (
+        <HugeiconsIcon className={reasoningIconHighlightClass} strokeWidth={1.75} icon={BrainIcon} aria-hidden="true" />
+      ) : null}
+    </span>
+  );
+}
+
 function ReasoningActivityRow({ item, renderText }: ReasoningActivityRowProps) {
   const { _ } = useLingui();
   // WHY: thinking starts collapsed like tool payloads, including while tokens
@@ -122,13 +155,7 @@ function ReasoningActivityRow({ item, renderText }: ReasoningActivityRowProps) {
         onPress={() => setIsOpen(!isOpen)}
       >
         <span className={toolActivityHeadline()}>
-          <HugeiconsIcon
-            className="size-6 min-w-6"
-            strokeWidth={1.75}
-            icon={BrainIcon}
-            aria-hidden={isRunning ? undefined : true}
-            aria-label={isRunning ? _(msg`ai.chat.tool-activity.running`) : undefined}
-          />
+          <ReasoningStatusIcon isRunning={isRunning} runningLabel={_(msg`ai.chat.tool-activity.running`)} />
           <span className="flex flex-row items-center gap-1">
             <TextSwap value={displayName} className={thinkingLabel({ isRunning })} />
             <ActivityElapsed isRunning={isRunning} startedAt={item.startedAt} elapsedSeconds={item.elapsedSeconds} />

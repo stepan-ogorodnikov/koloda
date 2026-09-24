@@ -158,3 +158,16 @@
   mask-repeat: no-repeat;
   animation: shimmer-text 2.5s linear infinite;
 }
+
+/* WHY: `animate-shimmer` is no-repeat, so on a 24px icon the mask slides fully
+   off and the glyph vanishes. This band repeats and belongs on a second copy
+   stacked over a solid icon — not on an ancestor of TextSwap. */
+@utility animate-shimmer-icon {
+  -webkit-mask-image: linear-gradient(110deg, rgb(0 0 0 / 0) 30%, rgb(0 0 0 / 1) 50%, rgb(0 0 0 / 0) 70%);
+  mask-image: linear-gradient(110deg, rgb(0 0 0 / 0) 30%, rgb(0 0 0 / 1) 50%, rgb(0 0 0 / 0) 70%);
+  -webkit-mask-size: 200% 100%;
+  mask-size: 200% 100%;
+  -webkit-mask-repeat: repeat;
+  mask-repeat: repeat;
+  animation: shimmer-text 2.5s linear infinite;
+}

@@ -319,6 +319,29 @@ describe("AIToolActivity", () => {
     expect(screen.getByText("ai.chat.tool-activity.skipped")).toBeTruthy();
   });
 
+  it("shimmers the brain icon while thinking without masking the label", () => {
+    const { container, rerender } = render(
+      <AIToolActivity calls={[{ kind: "reasoning", id: "r1", text: "Quiet plan.", status: "running" }]} />,
+    );
+
+    const runningIcon = screen.getByLabelText("ai.chat.tool-activity.running");
+    expect(runningIcon.classList.contains("animate-shimmer-icon")).toBe(false);
+    expect(runningIcon.classList.contains("fg-level-4")).toBe(true);
+    const highlight = container.querySelector(".animate-shimmer-icon");
+    expect(highlight).not.toBeNull();
+    expect(highlight?.getAttribute("aria-hidden")).toBe("true");
+    expect(screen.getByText("ai.chat.tool-activity.thinking").closest(".animate-shimmer")).toBeNull();
+    expect(screen.getByText("ai.chat.tool-activity.thinking").closest(".animate-shimmer-icon")).toBeNull();
+    expect(screen.getByText("ai.chat.tool-activity.thinking").className).toContain(
+      "animate-shimmer-text--fg-level-4/fg-level-1",
+    );
+
+    rerender(<AIToolActivity calls={[{ kind: "reasoning", id: "r1", text: "Quiet plan.", status: "done" }]} />);
+
+    expect(container.querySelector(".animate-shimmer-icon")).toBeNull();
+    expect(screen.getByText("ai.chat.tool-activity.thought")).toBeTruthy();
+  });
+
   it("shimmers the tool row while a call is running", () => {
     const { container } = render(
       <AIToolActivity calls={[call({ id: "c1", name: "list_decks", status: "running", input: {} })]} />,
