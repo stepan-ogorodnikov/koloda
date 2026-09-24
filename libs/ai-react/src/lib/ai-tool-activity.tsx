@@ -16,6 +16,10 @@ import type { ReactNode } from "react";
 import { tv } from "tailwind-variants";
 import { AIChatElapsedTimeDisplay, useElapsedSeconds } from "./ai-chat-elapsed-time";
 
+/**
+ * No conversation store and no tool execution. `@koloda/assistant-react` owns those.
+ */
+
 const toolActivityHeadline = tv({
   base: "flex flex-row items-center gap-2",
   variants: {

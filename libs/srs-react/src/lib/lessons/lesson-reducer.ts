@@ -24,6 +24,11 @@ import type {
 import { addHours, addMinutes } from "date-fns";
 import { produce } from "immer";
 
+/**
+ * Card and review records come from `@koloda/srs`. This reducer only sequences the session.
+ * Phase changes go through the handlers in `actions`. Do not set `phase` from a component.
+ */
+
 export type LessonAtomValue = {
   type: LessonType;
   deckId?: Deck["id"] | null;
