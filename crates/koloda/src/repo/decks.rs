@@ -1,3 +1,7 @@
+//! Deck SQL — mirrors `@koloda/db-sqlite` `lib/decks.ts`.
+//!
+//! SQL only. Validation lives in `domain/decks`.
+
 use rusqlite::{params, OptionalExtension};
 
 use crate::app::db::Database;

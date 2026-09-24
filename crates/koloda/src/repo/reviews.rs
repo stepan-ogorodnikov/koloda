@@ -1,3 +1,7 @@
+//! Review SQL — mirrors `@koloda/db-sqlite` `lib/reviews.ts`.
+//!
+//! SQL only. Validation lives in `domain/reviews`.
+
 use rusqlite::{params, Connection, Row};
 
 use crate::app::db::Database;

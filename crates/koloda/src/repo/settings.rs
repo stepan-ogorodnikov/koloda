@@ -1,3 +1,7 @@
+//! Settings row SQL — mirrors `@koloda/db-sqlite` `lib/settings.ts`.
+//!
+//! SQL only. Validation lives in `domain/settings`.
+
 use std::str::FromStr;
 
 use rusqlite::types::{FromSql, FromSqlResult, ValueRef};

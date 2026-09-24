@@ -1,3 +1,7 @@
+//! Algorithm SQL — mirrors `@koloda/db-sqlite` `lib/algorithms.ts`.
+//!
+//! SQL only. Validation lives in `domain/algorithms`.
+
 use rusqlite::{params, Connection, OptionalExtension};
 
 use crate::app::db::{parse_json_column, Database};

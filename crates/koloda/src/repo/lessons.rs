@@ -1,3 +1,7 @@
+//! Lesson SQL — mirrors `@koloda/db-sqlite` `lib/lessons.ts`.
+//!
+//! SQL only. Validation lives in `domain/lessons`.
+
 use rusqlite::Row;
 
 use crate::app::db::{parse_json_column, Database};

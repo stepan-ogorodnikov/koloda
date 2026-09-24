@@ -1,3 +1,7 @@
+//! Template SQL — mirrors `@koloda/db-sqlite` `lib/templates.ts`.
+//!
+//! SQL only. Validation lives in `domain/templates`.
+
 use rusqlite::{params, Connection, OptionalExtension};
 
 use crate::app::db::{parse_json_column, Database};

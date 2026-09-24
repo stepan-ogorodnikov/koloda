@@ -1,3 +1,7 @@
+//! Card SQL — mirrors `@koloda/db-sqlite` `lib/cards.ts`.
+//!
+//! SQL only. Validation lives in `domain/cards`.
+
 use crate::domain::cards::{AddCardsItemError, AddCardsItemResult, AddCardsResponse};
 use rusqlite::{params, OptionalExtension};
 
