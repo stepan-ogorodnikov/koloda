@@ -38,4 +38,5 @@ Talks to provider HTTP endpoints via the Vercel AI SDK (`ai` package) and per-pr
 - `docs/adr/0001-TS-RUST-DOMAIN-MIRRORING.md` — Rust owns provider identity; this lib mirrors it
 - `agents/ASSISTANT-MAP.md` — task routing and layer boundaries
 - `agents/ADD-AI-PROVIDER.md` — step-by-step across all 5 layers (TS types, Rust domain, Rust repo, registry, streaming)
+- `agents/ADD-ASSISTANT-TOOL.md` — adding a chat tool (spec, executor, both host binders, activity label)
 - `docs/specs/ASSISTANT-CONVERSATIONS.md` — the domain behavior this lib serves

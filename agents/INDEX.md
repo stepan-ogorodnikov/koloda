@@ -35,6 +35,7 @@ The listed files are relative to the repo root.
 | Split multi-commit work into a plan (feature, audit report) | `agents/IMPLEMENTATION-PLAN.md`, `agents/TASKS.md`, plus the area guides the work needs |
 | Start or continue a task file | the task file, `agents/TASKS.md` |
 | Add an AI provider | `agents/ADD-AI-PROVIDER.md`, `docs/specs/AI-PROVIDERS.md`, `agents/CODE-STYLE.md`, `agents/CODE-DOCUMENTATION.md`, `agents/I18N.md`, `docs/adr/0001-TS-RUST-DOMAIN-MIRRORING.md` |
+| Add an assistant tool | `agents/ADD-ASSISTANT-TOOL.md`, `docs/specs/ASSISTANT-DATA-ACCESS.md`, `agents/CODE-STYLE.md`, `agents/CODE-DOCUMENTATION.md`, `agents/I18N.md` |
 | Assistant chat (anything) | `agents/ASSISTANT-MAP.md` (it routes to one spec and the files) |
 | Cards (content, state, add/edit/delete, views) | `docs/specs/CARDS.md` |
 | Decks (create, edit algorithm/template, delete) | `docs/specs/DECKS.md` |
@@ -62,6 +63,7 @@ Then add the same guides the author used for that change type, so the reviewer a
 | Diff adds or changes tests | add `agents/TESTING.md` |
 | Diff touches `className` | add `agents/CSS.md` |
 | Add AI provider diff | `agents/ADD-AI-PROVIDER.md`, `docs/specs/AI-PROVIDERS.md`, `agents/I18N.md`, `docs/adr/0001-TS-RUST-DOMAIN-MIRRORING.md` |
+| Add assistant tool diff | `agents/ADD-ASSISTANT-TOOL.md`, `docs/specs/ASSISTANT-DATA-ACCESS.md`, `agents/I18N.md` |
 | Assistant chat diff | `agents/ASSISTANT-MAP.md` (+ the one spec it names) |
 | Cards diff | `docs/specs/CARDS.md` |
 | Decks diff | `docs/specs/DECKS.md` |

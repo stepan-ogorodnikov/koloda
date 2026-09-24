@@ -34,7 +34,7 @@ Also load, when the target needs them:
 - `docs/adr/0002-DUAL-PLATFORM-PERSISTENCE.md` — the target includes persistence
 - `apps/electron/IPC.md` — desktop IPC
 - the playbook for a half-finished recipe:
-  `agents/ADD-AI-PROVIDER.md`, `agents/ADD-HOTKEY.md`, `agents/ADD-COLOR-THEME.md`, `agents/DB.md`
+  `agents/ADD-AI-PROVIDER.md`, `agents/ADD-ASSISTANT-TOOL.md`, `agents/ADD-HOTKEY.md`, `agents/ADD-COLOR-THEME.md`, `agents/DB.md`
 
 The prompt lists the owning spec and area guides.
 If those are missing, ask for them before starting.

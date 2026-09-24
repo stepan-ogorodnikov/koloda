@@ -28,6 +28,7 @@ Provider HTTP stays in `@koloda/ai`; run execution lifetime and stream transport
 ## Read next
 
 - `agents/ASSISTANT-MAP.md` — task routing and layer boundaries
+- `agents/ADD-ASSISTANT-TOOL.md` — adding a chat tool (wire names, run mapping, query invalidation)
 - `docs/specs/ASSISTANT-CONVERSATIONS.md`
 - `docs/specs/ASSISTANT-MESSAGES.md`
 - `docs/specs/ASSISTANT-CARD-GENERATION.md`
