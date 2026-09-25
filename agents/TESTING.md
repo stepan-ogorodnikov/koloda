@@ -3,6 +3,7 @@
 This guide defines which tests to write when implementing a change.
 It covers unit and integration tests across `libs/`, `apps/`, and `crates/koloda`.
 The Playwright e2e suites are out of scope; they follow their own specs in `apps/web-e2e` and `apps/electron-e2e`.
+Agents do not run them to prove a change; see `agents/VERIFY.md`.
 
 ## The survival question
 

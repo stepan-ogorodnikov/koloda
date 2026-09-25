@@ -49,6 +49,7 @@ The listed files are relative to the repo root.
 | Add a color theme | `agents/ADD-COLOR-THEME.md`, `docs/specs/INTERFACE-SETTINGS.md` |
 | Interface settings change (language, scheme, themes, motion) | `docs/specs/INTERFACE-SETTINGS.md`, `agents/I18N.md` |
 | App shell layout (narrow/wide, drawer, nav) | `agents/LAYOUT.md`, `agents/CSS.md`; add `docs/specs/INTERFACE-SETTINGS.md` when the change is an interface setting |
+| User-visible behavior (UI copy, flows, settings the user touches) | area primary spec (or `agents/ASSISTANT-MAP.md` for assistant), `agents/VERIFY.md`, plus the usual CODE-STYLE / CODE-DOCUMENTATION as for any TS/React edit |
 | Add a hotkey | `agents/ADD-HOTKEY.md`, `docs/specs/HOTKEYS.md`, `agents/I18N.md` |
 | Write or update a functional spec | `agents/FUNCTIONAL-SPECIFICATIONS.md`, `agents/MARKDOWN.md` |
 | Write or update a decision | `agents/DECISIONS.md`, `agents/MARKDOWN.md` |
@@ -79,6 +80,7 @@ Then add the same guides the author used for that change type, so the reviewer a
 | Theme diff | `agents/ADD-COLOR-THEME.md`, `docs/specs/INTERFACE-SETTINGS.md` |
 | Interface settings diff | `docs/specs/INTERFACE-SETTINGS.md` |
 | App shell layout diff | `agents/LAYOUT.md`, `agents/CSS.md`; add `docs/specs/INTERFACE-SETTINGS.md` when the diff changes an interface setting |
+| User-visible behavior diff (UI copy, flows, settings the user touches) | area primary spec (or `agents/ASSISTANT-MAP.md` for assistant), `agents/VERIFY.md`, plus the usual CODE-STYLE / CODE-DOCUMENTATION as for any TS/React edit |
 | Hotkey diff | `agents/ADD-HOTKEY.md`, `docs/specs/HOTKEYS.md`, `agents/I18N.md` |
 | Functional spec diff | `agents/FUNCTIONAL-SPECIFICATIONS.md`, `agents/MARKDOWN.md` |
 
