@@ -1,7 +1,7 @@
 use koloda::domain::cards::UpdateCardProgress;
 use serde_json::{json, Value};
 
-/// Canonical valid card-progress payload used as the mutation base for JSON-shape contract cases.
+/// Canonical valid card-progress payload used as the mutation base for JSON-shape and bound cases.
 fn valid_payload() -> Value {
     json!({
         "id": "01900000-0000-7000-8000-000000000001",
@@ -14,6 +14,38 @@ fn valid_payload() -> Value {
         "reps": 0,
         "lapses": 0
     })
+}
+
+fn assert_rejected(field: &str, offending: Value, expected_code: &str) {
+    let mut payload = valid_payload();
+    payload
+        .as_object_mut()
+        .expect("progress payload should be an object")
+        .insert(field.to_string(), offending.clone());
+
+    let data = serde_json::from_value::<UpdateCardProgress>(payload).expect("patched payload should still deserialize");
+    let error = data
+        .validate()
+        .expect_err("patched card progress should fail validation");
+    assert_eq!(
+        error.code, expected_code,
+        "{field} = {offending} must surface {expected_code}"
+    );
+}
+
+fn assert_accepted(field: &str, value: Value) {
+    let mut payload = valid_payload();
+    payload
+        .as_object_mut()
+        .expect("progress payload should be an object")
+        .insert(field.to_string(), value.clone());
+
+    let data = serde_json::from_value::<UpdateCardProgress>(payload).expect("patched payload should still deserialize");
+    let observed = data.validate().err().map(|error| error.code);
+    assert!(
+        observed.is_none(),
+        "{field} = {value} must pass validation, got {observed:?}"
+    );
 }
 
 #[test]
@@ -83,316 +115,57 @@ fn test_wrong_typed_fields_fail() {
 }
 
 #[test]
-fn test_update_card_progress_state_all_valid() {
+fn test_update_card_progress_valid_payload_passes() {
+    serde_json::from_value::<UpdateCardProgress>(valid_payload())
+        .expect("canonical payload should deserialize")
+        .validate()
+        .unwrap();
+
+    // WHY: FSRS card states span New..=Relearning (0..=3). The baseline already
+    // carries state 0; the rest of the band is patched here so a dropped state
+    // guard fails this test.
     for state in 0..=3 {
-        let data = json!({
-            "id": "01900000-0000-7000-8000-000000000001",
-            "state": state,
-            "dueAt": 1000000000,
-            "stability": 5.0,
-            "difficulty": 5.0,
-            "scheduledDays": 1,
-            "learningSteps": 0,
-            "reps": 0,
-            "lapses": 0
-        });
-        let result = serde_json::from_value::<UpdateCardProgress>(data);
-        assert!(result.unwrap().validate().is_ok(), "State {} should be valid", state);
+        assert_accepted("state", json!(state));
     }
 }
 
 #[test]
-fn test_update_card_progress_state_above_max_fails() {
-    let data = json!({
-        "id": "01900000-0000-7000-8000-000000000001",
-        "state": 4,
-        "dueAt": 1000000000,
-        "stability": 5.0,
-        "difficulty": 5.0,
-        "scheduledDays": 1,
-        "learningSteps": 0,
-        "reps": 0,
-        "lapses": 0
-    });
-    let result = serde_json::from_value::<UpdateCardProgress>(data);
-    let validation_result = result.unwrap().validate();
-    assert_eq!(validation_result.unwrap_err().code, "validation.cards-progress.state");
+fn test_update_card_progress_out_of_bounds_values_fail_with_field_codes() {
+    // WHY: FSRS card states span New..=Relearning (0..=3); -1 and 4 probe both edges
+    // of that band (4 is one past the max, not a farther miss). Every remaining field
+    // only enforces non-negativity or its declared range, so one offender per row pins
+    // the cards-progress code.
+    let cases: &[(&str, Value, &str)] = &[
+        ("state", json!(-1), "validation.cards-progress.state"),
+        ("state", json!(4), "validation.cards-progress.state"),
+        ("stability", json!(-1.0), "validation.cards-progress.stability"),
+        ("difficulty", json!(-0.1), "validation.cards-progress.difficulty"),
+        ("difficulty", json!(10.1), "validation.cards-progress.difficulty"),
+        ("scheduledDays", json!(-1), "validation.cards-progress.scheduled-days"),
+        ("learningSteps", json!(-1), "validation.cards-progress.learning-steps"),
+        ("reps", json!(-1), "validation.cards-progress.reps"),
+        ("lapses", json!(-1), "validation.cards-progress.lapses"),
+    ];
+
+    for (field, offending, code) in cases {
+        assert_rejected(field, offending.clone(), code);
+    }
 }
 
 #[test]
-fn test_update_card_progress_state_negative_fails() {
-    let data = json!({
-        "id": "01900000-0000-7000-8000-000000000001",
-        "state": -1,
-        "dueAt": 1000000000,
-        "stability": 5.0,
-        "difficulty": 5.0,
-        "scheduledDays": 1,
-        "learningSteps": 0,
-        "reps": 0,
-        "lapses": 0
-    });
-    let result = serde_json::from_value::<UpdateCardProgress>(data);
-    let validation_result = result.unwrap().validate();
-    assert_eq!(validation_result.unwrap_err().code, "validation.cards-progress.state");
-}
+fn test_update_card_progress_boundary_values_pass() {
+    // Difficulty is inclusive on both ends ([0, 10]); the counters accept their floor.
+    let cases: &[(&str, Value)] = &[
+        ("stability", json!(0.0)),
+        ("difficulty", json!(0.0)),
+        ("difficulty", json!(10.0)),
+        ("scheduledDays", json!(0)),
+        ("learningSteps", json!(0)),
+        ("reps", json!(0)),
+        ("lapses", json!(0)),
+    ];
 
-#[test]
-fn test_update_card_progress_stability_zero_ok() {
-    let data = json!({
-        "id": "01900000-0000-7000-8000-000000000001",
-        "state": 0,
-        "dueAt": 1000000000,
-        "stability": 0.0,
-        "difficulty": 5.0,
-        "scheduledDays": 1,
-        "learningSteps": 0,
-        "reps": 0,
-        "lapses": 0
-    });
-    let result = serde_json::from_value::<UpdateCardProgress>(data);
-    result.unwrap().validate().unwrap();
-}
-
-#[test]
-fn test_update_card_progress_stability_negative_fails() {
-    let data = json!({
-        "id": "01900000-0000-7000-8000-000000000001",
-        "state": 0,
-        "dueAt": 1000000000,
-        "stability": -1.0,
-        "difficulty": 5.0,
-        "scheduledDays": 1,
-        "learningSteps": 0,
-        "reps": 0,
-        "lapses": 0
-    });
-    let result = serde_json::from_value::<UpdateCardProgress>(data);
-    let validation_result = result.unwrap().validate();
-    assert_eq!(
-        validation_result.unwrap_err().code,
-        "validation.cards-progress.stability"
-    );
-}
-
-#[test]
-fn test_update_card_progress_difficulty_min_ok() {
-    let data = json!({
-        "id": "01900000-0000-7000-8000-000000000001",
-        "state": 0,
-        "dueAt": 1000000000,
-        "stability": 5.0,
-        "difficulty": 0.0,
-        "scheduledDays": 1,
-        "learningSteps": 0,
-        "reps": 0,
-        "lapses": 0
-    });
-    let result = serde_json::from_value::<UpdateCardProgress>(data);
-    result.unwrap().validate().unwrap();
-}
-
-#[test]
-fn test_update_card_progress_difficulty_max_ok() {
-    let data = json!({
-        "id": "01900000-0000-7000-8000-000000000001",
-        "state": 0,
-        "dueAt": 1000000000,
-        "stability": 5.0,
-        "difficulty": 10.0,
-        "scheduledDays": 1,
-        "learningSteps": 0,
-        "reps": 0,
-        "lapses": 0
-    });
-    let result = serde_json::from_value::<UpdateCardProgress>(data);
-    result.unwrap().validate().unwrap();
-}
-
-#[test]
-fn test_update_card_progress_difficulty_below_min_fails() {
-    let data = json!({
-        "id": "01900000-0000-7000-8000-000000000001",
-        "state": 0,
-        "dueAt": 1000000000,
-        "stability": 5.0,
-        "difficulty": -0.1,
-        "scheduledDays": 1,
-        "learningSteps": 0,
-        "reps": 0,
-        "lapses": 0
-    });
-    let result = serde_json::from_value::<UpdateCardProgress>(data);
-    let validation_result = result.unwrap().validate();
-    assert_eq!(
-        validation_result.unwrap_err().code,
-        "validation.cards-progress.difficulty"
-    );
-}
-
-#[test]
-fn test_update_card_progress_difficulty_above_max_fails() {
-    let data = json!({
-        "id": "01900000-0000-7000-8000-000000000001",
-        "state": 0,
-        "dueAt": 1000000000,
-        "stability": 5.0,
-        "difficulty": 10.1,
-        "scheduledDays": 1,
-        "learningSteps": 0,
-        "reps": 0,
-        "lapses": 0
-    });
-    let result = serde_json::from_value::<UpdateCardProgress>(data);
-    let validation_result = result.unwrap().validate();
-    assert_eq!(
-        validation_result.unwrap_err().code,
-        "validation.cards-progress.difficulty"
-    );
-}
-
-#[test]
-fn test_update_card_progress_scheduled_days_zero_ok() {
-    let data = json!({
-        "id": "01900000-0000-7000-8000-000000000001",
-        "state": 0,
-        "dueAt": 1000000000,
-        "stability": 5.0,
-        "difficulty": 5.0,
-        "scheduledDays": 0,
-        "learningSteps": 0,
-        "reps": 0,
-        "lapses": 0
-    });
-    let result = serde_json::from_value::<UpdateCardProgress>(data);
-    result.unwrap().validate().unwrap();
-}
-
-#[test]
-fn test_update_card_progress_scheduled_days_negative_fails() {
-    let data = json!({
-        "id": "01900000-0000-7000-8000-000000000001",
-        "state": 0,
-        "dueAt": 1000000000,
-        "stability": 5.0,
-        "difficulty": 5.0,
-        "scheduledDays": -1,
-        "learningSteps": 0,
-        "reps": 0,
-        "lapses": 0
-    });
-    let result = serde_json::from_value::<UpdateCardProgress>(data);
-    let validation_result = result.unwrap().validate();
-    assert_eq!(
-        validation_result.unwrap_err().code,
-        "validation.cards-progress.scheduled-days"
-    );
-}
-
-#[test]
-fn test_update_card_progress_learning_steps_zero_ok() {
-    let data = json!({
-        "id": "01900000-0000-7000-8000-000000000001",
-        "state": 0,
-        "dueAt": 1000000000,
-        "stability": 5.0,
-        "difficulty": 5.0,
-        "scheduledDays": 1,
-        "learningSteps": 0,
-        "reps": 0,
-        "lapses": 0
-    });
-    let result = serde_json::from_value::<UpdateCardProgress>(data);
-    result.unwrap().validate().unwrap();
-}
-
-#[test]
-fn test_update_card_progress_learning_steps_negative_fails() {
-    let data = json!({
-        "id": "01900000-0000-7000-8000-000000000001",
-        "state": 0,
-        "dueAt": 1000000000,
-        "stability": 5.0,
-        "difficulty": 5.0,
-        "scheduledDays": 1,
-        "learningSteps": -1,
-        "reps": 0,
-        "lapses": 0
-    });
-    let result = serde_json::from_value::<UpdateCardProgress>(data);
-    let validation_result = result.unwrap().validate();
-    assert_eq!(
-        validation_result.unwrap_err().code,
-        "validation.cards-progress.learning-steps"
-    );
-}
-
-#[test]
-fn test_update_card_progress_reps_zero_ok() {
-    let data = json!({
-        "id": "01900000-0000-7000-8000-000000000001",
-        "state": 0,
-        "dueAt": 1000000000,
-        "stability": 5.0,
-        "difficulty": 5.0,
-        "scheduledDays": 1,
-        "learningSteps": 0,
-        "reps": 0,
-        "lapses": 0
-    });
-    let result = serde_json::from_value::<UpdateCardProgress>(data);
-    result.unwrap().validate().unwrap();
-}
-
-#[test]
-fn test_update_card_progress_reps_negative_fails() {
-    let data = json!({
-        "id": "01900000-0000-7000-8000-000000000001",
-        "state": 0,
-        "dueAt": 1000000000,
-        "stability": 5.0,
-        "difficulty": 5.0,
-        "scheduledDays": 1,
-        "learningSteps": 0,
-        "reps": -1,
-        "lapses": 0
-    });
-    let result = serde_json::from_value::<UpdateCardProgress>(data);
-    let validation_result = result.unwrap().validate();
-    assert_eq!(validation_result.unwrap_err().code, "validation.cards-progress.reps");
-}
-
-#[test]
-fn test_update_card_progress_lapses_zero_ok() {
-    let data = json!({
-        "id": "01900000-0000-7000-8000-000000000001",
-        "state": 0,
-        "dueAt": 1000000000,
-        "stability": 5.0,
-        "difficulty": 5.0,
-        "scheduledDays": 1,
-        "learningSteps": 0,
-        "reps": 0,
-        "lapses": 0
-    });
-    let result = serde_json::from_value::<UpdateCardProgress>(data);
-    result.unwrap().validate().unwrap();
-}
-
-#[test]
-fn test_update_card_progress_lapses_negative_fails() {
-    let data = json!({
-        "id": "01900000-0000-7000-8000-000000000001",
-        "state": 0,
-        "dueAt": 1000000000,
-        "stability": 5.0,
-        "difficulty": 5.0,
-        "scheduledDays": 1,
-        "learningSteps": 0,
-        "reps": 0,
-        "lapses": -1
-    });
-    let result = serde_json::from_value::<UpdateCardProgress>(data);
-    let validation_result = result.unwrap().validate();
-    assert_eq!(validation_result.unwrap_err().code, "validation.cards-progress.lapses");
+    for (field, value) in cases {
+        assert_accepted(field, value.clone());
+    }
 }
