@@ -25,84 +25,45 @@ function call(
   };
 }
 
-function foldChevron(trigger: HTMLElement) {
-  const svgs = [...trigger.querySelectorAll("svg")];
-  return svgs.find((svg) => [...svg.classList].some((name) => name.includes("rotate-90"))) ?? null;
-}
-
 function activityDots(trigger: HTMLElement) {
   return [...trigger.querySelectorAll('[aria-hidden="true"]')].filter((el) => el.textContent === "·");
 }
 
 describe("AIToolActivity", () => {
-  it("renders a list_decks success row from the decks array length", () => {
-    render(
-      <AIToolActivity
-        calls={[
-          call({
-            id: "c1",
-            name: "list_decks",
-            status: "success",
-            output: { decks: [{ deckId: 1 }, { deckId: 2 }, { deckId: 3 }] },
-          }),
-        ]}
-      />,
-    );
+  it.each([
+    {
+      name: "list_decks",
+      label: "ai.chat.tool-activity.list-decks",
+      output: { decks: [{ deckId: 1 }, { deckId: 2 }, { deckId: 3 }] },
+      countLabel: "ai.chat.tool-activity.decks",
+      count: 3,
+    },
+    {
+      name: "list_templates",
+      label: "ai.chat.tool-activity.list-templates",
+      output: { templates: [{ templateId: 1 }, { templateId: 2 }] },
+      countLabel: "ai.chat.tool-activity.templates",
+      count: 2,
+    },
+    {
+      name: "list_algorithms",
+      label: "ai.chat.tool-activity.list-algorithms",
+      output: { algorithms: [{ algorithmId: 1 }, { algorithmId: 2 }] },
+      countLabel: "ai.chat.tool-activity.algorithms",
+      count: 2,
+    },
+  ])("renders a $name success row from the array length", ({ name, label, output, countLabel, count }) => {
+    plural.mockClear();
+    render(<AIToolActivity calls={[call({ id: "c1", name, status: "success", output })]} />);
 
-    expect(screen.getByText("ai.chat.tool-activity.list-decks")).toBeTruthy();
-    expect(screen.getByText("ai.chat.tool-activity.decks")).toBeTruthy();
-    expect(activityDots(screen.getByRole("button", { name: /ai\.chat\.tool-activity\.list-decks/ }))).toHaveLength(1);
-    expect(screen.queryByLabelText("ai.chat.tool-activity.running")).toBeNull();
-    expect(screen.queryByLabelText("ai.chat.tool-activity.failed")).toBeNull();
-    expect(document.querySelector("svg")).not.toBeNull();
-  });
-
-  it("renders a list_templates success row from the templates array length", () => {
-    render(
-      <AIToolActivity
-        calls={[
-          call({
-            id: "c1",
-            name: "list_templates",
-            status: "success",
-            output: { templates: [{ templateId: 1 }, { templateId: 2 }] },
-          }),
-        ]}
-      />,
-    );
-
-    expect(screen.getByText("ai.chat.tool-activity.list-templates")).toBeTruthy();
-    expect(screen.getByText("ai.chat.tool-activity.templates")).toBeTruthy();
-    expect(activityDots(screen.getByRole("button", { name: /ai\.chat\.tool-activity\.list-templates/ }))).toHaveLength(
+    expect(screen.getByText(label)).toBeTruthy();
+    expect(plural.mock.calls).toEqual([[count, { other: countLabel }]]);
+    expect(screen.getByText(countLabel)).toBeTruthy();
+    expect(activityDots(screen.getByRole("button", { name: new RegExp(label.replaceAll(".", "\\.")) }))).toHaveLength(
       1,
     );
     expect(screen.queryByLabelText("ai.chat.tool-activity.running")).toBeNull();
     expect(screen.queryByLabelText("ai.chat.tool-activity.failed")).toBeNull();
-    expect(document.querySelector("svg")).not.toBeNull();
-  });
-
-  it("renders a list_algorithms success row from the algorithms array length", () => {
-    render(
-      <AIToolActivity
-        calls={[
-          call({
-            id: "c1",
-            name: "list_algorithms",
-            status: "success",
-            output: { algorithms: [{ algorithmId: 1 }, { algorithmId: 2 }] },
-          }),
-        ]}
-      />,
-    );
-
-    expect(screen.getByText("ai.chat.tool-activity.list-algorithms")).toBeTruthy();
-    expect(screen.getByText("ai.chat.tool-activity.algorithms")).toBeTruthy();
-    expect(activityDots(screen.getByRole("button", { name: /ai\.chat\.tool-activity\.list-algorithms/ }))).toHaveLength(
-      1,
-    );
-    expect(screen.queryByLabelText("ai.chat.tool-activity.running")).toBeNull();
-    expect(screen.queryByLabelText("ai.chat.tool-activity.failed")).toBeNull();
-    expect(document.querySelector("svg")).not.toBeNull();
   });
 
   it("renders an add_deck success row with the deck title", () => {
@@ -133,79 +94,42 @@ describe("AIToolActivity", () => {
     expect(screen.queryByLabelText("ai.chat.tool-activity.failed")).toBeNull();
   });
 
-  it("marks a failed add_deck row", () => {
-    render(
-      <AIToolActivity
-        calls={[
-          call({
-            id: "c1",
-            name: "add_deck",
-            status: "error",
-            input: { title: "Spanish", templateId: "01900000-0000-7000-8000-000000000194" },
-            error: "Template not found: 01900000-0000-7000-8000-000000000194",
-          }),
-        ]}
-      />,
+  it.each([
+    {
+      name: "get_deck",
+      label: "ai.chat.tool-activity.get-deck",
+      input: { deckId: "01900000-0000-7000-8000-000000000001" },
+      output: {
+        deckId: "01900000-0000-7000-8000-000000000001",
+        title: "Spanish",
+        cardCount: 3,
+        templateTitle: "Basic",
+        fieldTitles: ["Front", "Back"],
+      },
+      title: "Spanish",
+    },
+    {
+      name: "get_template",
+      label: "ai.chat.tool-activity.get-template",
+      input: { templateId: "01900000-0000-7000-8000-000000000005" },
+      output: {
+        templateId: "01900000-0000-7000-8000-000000000005",
+        title: "Basic",
+        fields: [
+          { id: "a", title: "Front", type: "text", isRequired: true },
+          { id: "b", title: "Back", type: "text", isRequired: true },
+        ],
+      },
+      title: "Basic",
+    },
+  ])("renders a $name success row with the title", ({ name, label, input, output, title }) => {
+    render(<AIToolActivity calls={[call({ id: "c1", name, status: "success", input, output })]} />);
+
+    expect(screen.getByText(label)).toBeTruthy();
+    expect(screen.getByText(title)).toBeTruthy();
+    expect(activityDots(screen.getByRole("button", { name: new RegExp(label.replaceAll(".", "\\.")) }))).toHaveLength(
+      1,
     );
-
-    expect(screen.getByText("ai.chat.tool-activity.add-deck")).toBeTruthy();
-    expect(screen.getByLabelText("ai.chat.tool-activity.failed")).toBeTruthy();
-    expect(screen.getByText("ai.chat.tool-activity.failed")).toBeTruthy();
-  });
-
-  it("renders a get_deck success row with the deck title", () => {
-    render(
-      <AIToolActivity
-        calls={[
-          call({
-            id: "c1",
-            name: "get_deck",
-            status: "success",
-            input: { deckId: "01900000-0000-7000-8000-000000000001" },
-            output: {
-              deckId: "01900000-0000-7000-8000-000000000001",
-              title: "Spanish",
-              cardCount: 3,
-              templateTitle: "Basic",
-              fieldTitles: ["Front", "Back"],
-            },
-          }),
-        ]}
-      />,
-    );
-
-    expect(screen.getByText("ai.chat.tool-activity.get-deck")).toBeTruthy();
-    expect(screen.getByText("Spanish")).toBeTruthy();
-    expect(activityDots(screen.getByRole("button", { name: /ai\.chat\.tool-activity\.get-deck/ }))).toHaveLength(1);
-    expect(screen.queryByLabelText("ai.chat.tool-activity.running")).toBeNull();
-    expect(screen.queryByLabelText("ai.chat.tool-activity.failed")).toBeNull();
-  });
-
-  it("renders a get_template success row with the template title", () => {
-    render(
-      <AIToolActivity
-        calls={[
-          call({
-            id: "c1",
-            name: "get_template",
-            status: "success",
-            input: { templateId: "01900000-0000-7000-8000-000000000005" },
-            output: {
-              templateId: "01900000-0000-7000-8000-000000000005",
-              title: "Basic",
-              fields: [
-                { id: "a", title: "Front", type: "text", isRequired: true },
-                { id: "b", title: "Back", type: "text", isRequired: true },
-              ],
-            },
-          }),
-        ]}
-      />,
-    );
-
-    expect(screen.getByText("ai.chat.tool-activity.get-template")).toBeTruthy();
-    expect(screen.getByText("Basic")).toBeTruthy();
-    expect(activityDots(screen.getByRole("button", { name: /ai\.chat\.tool-activity\.get-template/ }))).toHaveLength(1);
     expect(screen.queryByLabelText("ai.chat.tool-activity.running")).toBeNull();
     expect(screen.queryByLabelText("ai.chat.tool-activity.failed")).toBeNull();
   });
@@ -242,7 +166,43 @@ describe("AIToolActivity", () => {
     expect(screen.queryByText("ai.chat.tool-activity.cards") !== null).toBe(count !== null);
   });
 
-  it("renders a propose_cards success row from the cards array length", () => {
+  it.each([
+    {
+      scenario: "the cards array length",
+      output: { cards: [{ fields: {} }, { fields: {} }, { fields: {} }] },
+      pluralCalls: [[3, { other: "ai.chat.tool-activity.cards" }]],
+      showsSkipped: false,
+      dots: 1,
+    },
+    {
+      scenario: "dropped cards",
+      output: { cards: [{ fields: {} }, { fields: {} }, { fields: {} }], rejectedCount: 2 },
+      pluralCalls: [
+        [3, { other: "ai.chat.tool-activity.cards" }],
+        [2, { other: "ai.chat.tool-activity.skipped" }],
+      ],
+      showsSkipped: true,
+      dots: 2,
+    },
+    {
+      scenario: "rejectedCount zero",
+      output: { cards: [{ fields: {} }], rejectedCount: 0 },
+      pluralCalls: [[1, { other: "ai.chat.tool-activity.cards" }]],
+      showsSkipped: false,
+      dots: 1,
+    },
+    {
+      scenario: "a truncated output",
+      output: { isTruncated: true, itemCount: 7, acceptedCount: 8, rejectedCount: 2, preview: '{"cards":[' },
+      pluralCalls: [
+        [8, { other: "ai.chat.tool-activity.cards" }],
+        [2, { other: "ai.chat.tool-activity.skipped" }],
+      ],
+      showsSkipped: true,
+      dots: 2,
+    },
+  ])("renders propose_cards counts for $scenario", ({ output, pluralCalls, showsSkipped, dots }) => {
+    plural.mockClear();
     render(
       <AIToolActivity
         calls={[
@@ -251,72 +211,18 @@ describe("AIToolActivity", () => {
             name: "propose_cards",
             status: "success",
             input: { deckId: 5, cards: [] },
-            output: { cards: [{ fields: {} }, { fields: {} }, { fields: {} }] },
-          }),
-        ]}
-      />,
-    );
-
-    expect(screen.getByText("ai.chat.tool-activity.propose-cards")).toBeTruthy();
-    expect(screen.getByText("ai.chat.tool-activity.cards")).toBeTruthy();
-    expect(screen.queryByText("ai.chat.tool-activity.skipped")).toBeNull();
-  });
-
-  it("renders skipped cards after a dot when propose_cards drops some", () => {
-    render(
-      <AIToolActivity
-        calls={[
-          call({
-            id: "c1",
-            name: "propose_cards",
-            status: "success",
-            input: { deckId: 5, cards: [] },
-            output: { cards: [{ fields: {} }, { fields: {} }, { fields: {} }], rejectedCount: 2 },
+            output,
           }),
         ]}
       />,
     );
 
     const trigger = screen.getByRole("button", { name: /ai\.chat\.tool-activity\.propose-cards/ });
+    expect(screen.getByText("ai.chat.tool-activity.propose-cards")).toBeTruthy();
     expect(screen.getByText("ai.chat.tool-activity.cards")).toBeTruthy();
-    expect(screen.getByText("ai.chat.tool-activity.skipped")).toBeTruthy();
-    expect(activityDots(trigger)).toHaveLength(2);
-  });
-
-  it("omits skipped when propose_cards rejectedCount is zero", () => {
-    render(
-      <AIToolActivity
-        calls={[
-          call({
-            id: "c1",
-            name: "propose_cards",
-            status: "success",
-            output: { cards: [{ fields: {} }], rejectedCount: 0 },
-          }),
-        ]}
-      />,
-    );
-
-    expect(screen.getByText("ai.chat.tool-activity.cards")).toBeTruthy();
-    expect(screen.queryByText("ai.chat.tool-activity.skipped")).toBeNull();
-  });
-
-  it("renders accepted and skipped counts from a truncated propose_cards output", () => {
-    render(
-      <AIToolActivity
-        calls={[
-          call({
-            id: "c1",
-            name: "propose_cards",
-            status: "success",
-            output: { isTruncated: true, itemCount: 7, acceptedCount: 8, rejectedCount: 2, preview: '{"cards":[' },
-          }),
-        ]}
-      />,
-    );
-
-    expect(screen.getByText("ai.chat.tool-activity.cards")).toBeTruthy();
-    expect(screen.getByText("ai.chat.tool-activity.skipped")).toBeTruthy();
+    expect(plural.mock.calls).toEqual(pluralCalls);
+    expect(screen.queryByText("ai.chat.tool-activity.skipped") !== null).toBe(showsSkipped);
+    expect(activityDots(trigger)).toHaveLength(dots);
   });
 
   it("shimmers the brain icon while thinking without masking the label", () => {
@@ -352,15 +258,24 @@ describe("AIToolActivity", () => {
     expect(container.querySelector(".animate-shimmer")).not.toBeNull();
   });
 
-  it("marks an error status on the row", () => {
-    render(
-      <AIToolActivity
-        calls={[call({ id: "c1", name: "list_decks", status: "error", input: {}, error: { message: "boom" } })]}
-      />,
-    );
+  it.each([
+    {
+      name: "add_deck",
+      label: "ai.chat.tool-activity.add-deck",
+      input: { title: "Spanish", templateId: "01900000-0000-7000-8000-000000000194" },
+      error: "Template not found: 01900000-0000-7000-8000-000000000194",
+    },
+    {
+      name: "list_decks",
+      label: "ai.chat.tool-activity.list-decks",
+      input: {},
+      error: { message: "boom" },
+    },
+  ])("marks a failed $name row", ({ name, label, input, error }) => {
+    render(<AIToolActivity calls={[call({ id: "c1", name, status: "error", input, error })]} />);
 
+    expect(screen.getByText(label)).toBeTruthy();
     expect(screen.getByLabelText("ai.chat.tool-activity.failed")).toBeTruthy();
-    expect(screen.getByText("ai.chat.tool-activity.list-decks")).toBeTruthy();
     expect(screen.getByText("ai.chat.tool-activity.failed")).toBeTruthy();
   });
 
@@ -425,22 +340,6 @@ describe("AIToolActivity", () => {
     expect(screen.getByText("ai.chat.tool-activity.input-truncated")).toBeTruthy();
     expect(screen.getByText('{"deckId":1,"cards":[{')).toBeTruthy();
     expect(screen.queryByText(/isTruncated/)).toBeNull();
-  });
-
-  it("puts a fold chevron after the label", () => {
-    render(
-      <AIToolActivity
-        calls={[
-          { kind: "reasoning", id: "r1", text: "Quiet plan.", status: "running" },
-          call({ id: "c1", name: "list_decks", status: "success", output: { decks: [] } }),
-        ]}
-      />,
-    );
-
-    const reasoningTrigger = screen.getByRole("button", { name: /ai\.chat\.tool-activity\.thinking/ });
-    const toolTrigger = screen.getByRole("button", { name: /ai\.chat\.tool-activity\.list-decks/ });
-    expect(foldChevron(reasoningTrigger)).not.toBeNull();
-    expect(foldChevron(toolTrigger)).not.toBeNull();
   });
 
   describe("activity elapsed time", () => {

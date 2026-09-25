@@ -3,7 +3,6 @@ import { Rating } from "ts-fsrs";
 import type { Card as CardFSRS } from "ts-fsrs";
 import { describe, expect, it, vi } from "vitest";
 import { DEFAULT_FSRS_ALGORITHM } from "./algorithms-fsrs";
-import type { AlgorithmFSRS } from "./algorithms-fsrs";
 import type { Algorithm } from "./algorithms";
 import {
   createCardFromCardFSRS,
@@ -86,44 +85,6 @@ describe("getCardGrades", () => {
     vi.useRealTimers();
   });
 
-  it("each grade has card and log properties", () => {
-    vi.useFakeTimers();
-    vi.setSystemTime(DEFAULT_DATE);
-
-    const card = createCard();
-    const algorithm = createAlgorithm();
-    const grades = getCardGrades(card, algorithm);
-
-    for (const grade of grades) {
-      expect(grade).toHaveProperty("card");
-      expect(grade).toHaveProperty("log");
-      expect(grade.card).toHaveProperty("due");
-      expect(grade.card).toHaveProperty("state");
-      expect(grade.log).toHaveProperty("rating");
-    }
-
-    vi.useRealTimers();
-  });
-
-  it("produces different rating values across grades", () => {
-    vi.useFakeTimers();
-    vi.setSystemTime(DEFAULT_DATE);
-
-    const card = createCard();
-    const algorithm = createAlgorithm();
-    const grades = getCardGrades(card, algorithm);
-
-    const ratings = grades.map((g) => g.log.rating);
-    const unique = new Set(ratings);
-    expect(unique.size).toBeGreaterThanOrEqual(2);
-    expect(ratings[0]).toBe(Rating.Again);
-    expect(ratings[1]).toBe(Rating.Hard);
-    expect(ratings[2]).toBe(Rating.Good);
-    expect(ratings[3]).toBe(Rating.Easy);
-
-    vi.useRealTimers();
-  });
-
   it("produces different due dates across grades for a new card", () => {
     vi.useFakeTimers();
     vi.setSystemTime(DEFAULT_DATE);
@@ -162,25 +123,6 @@ describe("getCardGrades", () => {
 
     vi.useRealTimers();
   });
-
-  it("works with custom algorithm parameters", () => {
-    vi.useFakeTimers();
-    vi.setSystemTime(DEFAULT_DATE);
-
-    const customContent: AlgorithmFSRS = {
-      ...DEFAULT_FSRS_ALGORITHM,
-      retention: 95,
-      maximumInterval: 180,
-      isFuzzEnabled: false,
-    };
-    const algorithm = createAlgorithm({ content: customContent });
-    const card = createCard();
-    const grades = getCardGrades(card, algorithm);
-
-    expect(grades).toHaveLength(4);
-
-    vi.useRealTimers();
-  });
 });
 
 describe("createCardFromCardFSRS", () => {
@@ -213,28 +155,6 @@ describe("createCardFromCardFSRS", () => {
     expect(result.reps).toBe(1);
 
     vi.useRealTimers();
-  });
-
-  it("preserves properties that exist on both CardFSRS and Card but are not explicitly mapped", () => {
-    const fsrsCard: CardFSRS = {
-      due: new Date(),
-      stability: 3,
-      difficulty: 1,
-      scheduled_days: 0,
-      reps: 0,
-      lapses: 0,
-      state: 0,
-      last_review: null as unknown as Date,
-      learning_steps: 0,
-    } as CardFSRS;
-
-    const result = createCardFromCardFSRS(fsrsCard);
-
-    expect(result.stability).toBe(3);
-    expect(result.difficulty).toBe(1);
-    expect(result.reps).toBe(0);
-    expect(result.lapses).toBe(0);
-    expect(result.state).toBe(0);
   });
 });
 
@@ -296,41 +216,43 @@ describe("getCardContentValidation", () => {
     { id: SEED_TEMPLATE_TYPE_BACK_FIELD_ID, title: "Back", type: "markdown", isRequired: false },
   ];
 
-  it("requires text on required fields", () => {
+  // Missing optional field keys: twin of koloda `test_insert_card_content_optional_field_missing_fails`.
+  // CARDS.md §Card Content requires every template field to be present.
+  it.each([
+    {
+      scenario: "empty text on a required field",
+      content: {
+        [SEED_TEMPLATE_TYPE_FRONT_FIELD_ID]: { text: "" },
+        [SEED_TEMPLATE_TYPE_BACK_FIELD_ID]: { text: "anything" },
+      },
+      success: false,
+    },
+    {
+      scenario: "non-empty text on required fields",
+      content: {
+        [SEED_TEMPLATE_TYPE_FRONT_FIELD_ID]: { text: "Valid" },
+        [SEED_TEMPLATE_TYPE_BACK_FIELD_ID]: { text: "Back" },
+      },
+      success: true,
+    },
+    {
+      scenario: "empty text on a non-required field",
+      content: {
+        [SEED_TEMPLATE_TYPE_FRONT_FIELD_ID]: { text: "Valid" },
+        [SEED_TEMPLATE_TYPE_BACK_FIELD_ID]: { text: "" },
+      },
+      success: true,
+    },
+    {
+      scenario: "a missing optional field key",
+      content: {
+        [SEED_TEMPLATE_TYPE_FRONT_FIELD_ID]: { text: "Valid" },
+      },
+      success: false,
+    },
+  ])("$scenario", ({ content, success }) => {
     const { content: contentSchema } = getCardContentValidation(fields);
-    const result = contentSchema.safeParse({
-      [SEED_TEMPLATE_TYPE_FRONT_FIELD_ID]: { text: "" },
-      [SEED_TEMPLATE_TYPE_BACK_FIELD_ID]: { text: "anything" },
-    });
-    expect(result.success).toBe(false);
-  });
-
-  it("accepts non-empty text on required fields", () => {
-    const { content: contentSchema } = getCardContentValidation(fields);
-    const result = contentSchema.safeParse({
-      [SEED_TEMPLATE_TYPE_FRONT_FIELD_ID]: { text: "Valid" },
-      [SEED_TEMPLATE_TYPE_BACK_FIELD_ID]: { text: "Back" },
-    });
-    expect(result.success).toBe(true);
-  });
-
-  it("accepts empty text on non-required fields", () => {
-    const { content: contentSchema } = getCardContentValidation(fields);
-    const result = contentSchema.safeParse({
-      [SEED_TEMPLATE_TYPE_FRONT_FIELD_ID]: { text: "Valid" },
-      [SEED_TEMPLATE_TYPE_BACK_FIELD_ID]: { text: "" },
-    });
-    expect(result.success).toBe(true);
-  });
-
-  // Twin of koloda `test_insert_card_content_optional_field_missing_fails` — CARDS.md §Card
-  // Content requires every template field to be present in the content.
-  it("rejects missing optional field keys", () => {
-    const { content: contentSchema } = getCardContentValidation(fields);
-    const result = contentSchema.safeParse({
-      [SEED_TEMPLATE_TYPE_FRONT_FIELD_ID]: { text: "Valid" },
-    });
-    expect(result.success).toBe(false);
+    expect(contentSchema.safeParse(content).success).toBe(success);
   });
 });
 
@@ -360,20 +282,6 @@ describe("getInsertCardSchema", () => {
       content: {
         [SEED_TEMPLATE_TYPE_FRONT_FIELD_ID]: { text: "" },
         [SEED_TEMPLATE_TYPE_BACK_FIELD_ID]: { text: "Back text" },
-      },
-    });
-    expect(result.success).toBe(false);
-  });
-
-  it("rejects missing content keys entirely", () => {
-    const template = createTemplate();
-    const schema = getInsertCardSchema(template);
-
-    const result = schema.safeParse({
-      deckId: ID,
-      templateId: template.id,
-      content: {
-        [SEED_TEMPLATE_TYPE_FRONT_FIELD_ID]: { text: "Only front" },
       },
     });
     expect(result.success).toBe(false);

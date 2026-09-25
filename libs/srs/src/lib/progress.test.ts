@@ -151,14 +151,6 @@ describe("review validation", () => {
     }
   });
 
-  it("accepts difficulty boundaries and zero stability", () => {
-    expect(insertReviewSchema.safeParse(validInsertReview({ difficulty: 0.0 })).success).toBe(true);
-    expect(insertReviewSchema.safeParse(validInsertReview({ difficulty: 10.0 })).success).toBe(true);
-    expect(insertReviewSchema.safeParse(validInsertReview({ stability: 0.0 })).success).toBe(true);
-    expect(insertReviewSchema.safeParse(validInsertReview({ stability: 365.0 })).success).toBe(true);
-    expect(insertReviewSchema.safeParse(validInsertReview({ time: 5000 })).success).toBe(true);
-  });
-
   it("rejects out-of-bounds review values with field-specific codes", () => {
     const cases: Array<[string, unknown, string]> = [
       ["rating", 0, "validation.reviews.rating"],
@@ -180,20 +172,17 @@ describe("review validation", () => {
     }
   });
 
-  it("accepts boundary review progress values", () => {
-    const cases: Array<[string, unknown]> = [
-      ["stability", 0.0],
-      ["difficulty", 0.0],
-      ["difficulty", 10.0],
-      ["scheduledDays", 0],
-      ["learningSteps", 0],
-      ["time", 0],
-    ];
-
-    for (const [field, value] of cases) {
-      const result = insertReviewSchema.safeParse(validInsertReview({ [field]: value }));
-      expect(result.success, `${field} = ${value}`).toBe(true);
-    }
+  it.each([
+    ["stability", 0.0],
+    ["difficulty", 0.0],
+    ["difficulty", 10.0],
+    ["stability", 365.0],
+    ["scheduledDays", 0],
+    ["learningSteps", 0],
+    ["time", 0],
+    ["time", 5000],
+  ] as const)("accepts boundary review value %s = %s", (field, value) => {
+    expect(insertReviewSchema.safeParse(validInsertReview({ [field]: value })).success).toBe(true);
   });
 
   it("rejects null dueAt", () => {

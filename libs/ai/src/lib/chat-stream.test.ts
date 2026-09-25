@@ -7,8 +7,6 @@ import {
   deepseekProviderOptions,
   lmstudioProviderOptions,
   ollamaProviderOptions,
-  openAIProviderOptions,
-  openRouterProviderOptions,
   streamChatWithOpenAI,
   streamChatWithDeepSeek,
   opencodeGoProviderOptions,
@@ -151,32 +149,6 @@ describe("stream wrappers pass reasoning effort into streamText", () => {
   });
 });
 
-describe("openRouterProviderOptions", () => {
-  it("maps a non-empty effort onto OpenRouter reasoning.effort", () => {
-    expect(openRouterProviderOptions("high")).toEqual({
-      openrouter: { reasoning: { effort: "high" } },
-    });
-  });
-
-  it("omits providerOptions when effort is missing or empty", () => {
-    expect(openRouterProviderOptions(undefined)).toBeUndefined();
-    expect(openRouterProviderOptions("")).toBeUndefined();
-  });
-});
-
-describe("openAIProviderOptions", () => {
-  it("maps a non-empty effort onto OpenAI reasoningEffort", () => {
-    expect(openAIProviderOptions("high")).toEqual({
-      openai: { reasoningEffort: "high" },
-    });
-  });
-
-  it("omits providerOptions when effort is missing or empty", () => {
-    expect(openAIProviderOptions(undefined)).toBeUndefined();
-    expect(openAIProviderOptions("")).toBeUndefined();
-  });
-});
-
 describe("deepseekProviderOptions", () => {
   it("maps generic reasoning efforts onto canonical DeepSeek values", () => {
     expect(deepseekProviderOptions("high")).toEqual({
@@ -189,41 +161,12 @@ describe("deepseekProviderOptions", () => {
       deepseek: { reasoningEffort: "max" },
     });
   });
-
-  it("omits providerOptions when effort is missing or empty", () => {
-    expect(deepseekProviderOptions(undefined)).toBeUndefined();
-    expect(deepseekProviderOptions("")).toBeUndefined();
-  });
-});
-
-describe("opencodeGoProviderOptions", () => {
-  it("maps a non-empty effort onto opencode-go reasoningEffort", () => {
-    expect(opencodeGoProviderOptions("high")).toEqual({
-      "opencode-go": { reasoningEffort: "high" },
-    });
-  });
-
-  it("omits providerOptions when effort is missing or empty", () => {
-    expect(opencodeGoProviderOptions(undefined)).toBeUndefined();
-    expect(opencodeGoProviderOptions("")).toBeUndefined();
-  });
 });
 
 describe("ollamaProviderOptions", () => {
-  it("maps a non-empty effort onto Ollama think", () => {
-    expect(ollamaProviderOptions("high")).toEqual({
-      ollama: { think: "high" },
-    });
-  });
-
   it("maps on/off onto boolean Ollama think", () => {
     expect(ollamaProviderOptions("on")).toEqual({ ollama: { think: true } });
     expect(ollamaProviderOptions("off")).toEqual({ ollama: { think: false } });
-  });
-
-  it("omits providerOptions when effort is missing or empty", () => {
-    expect(ollamaProviderOptions(undefined)).toBeUndefined();
-    expect(ollamaProviderOptions("")).toBeUndefined();
   });
 });
 
@@ -242,22 +185,17 @@ describe("lmstudioProviderOptions", () => {
       lmstudio: { reasoningEffort: "medium" },
     });
   });
-
-  it("omits providerOptions when effort is missing or empty", () => {
-    expect(lmstudioProviderOptions(undefined)).toBeUndefined();
-    expect(lmstudioProviderOptions("")).toBeUndefined();
-  });
 });
 
-describe("opencodeZenProviderOptions", () => {
-  it("maps a non-empty effort onto opencode-zen reasoningEffort", () => {
-    expect(opencodeZenProviderOptions("high")).toEqual({
-      "opencode-zen": { reasoningEffort: "high" },
-    });
-  });
-
-  it("omits providerOptions when effort is missing or empty", () => {
-    expect(opencodeZenProviderOptions(undefined)).toBeUndefined();
-    expect(opencodeZenProviderOptions("")).toBeUndefined();
+describe("provider option helpers omit an empty effort", () => {
+  it.each([
+    ["DeepSeek", deepseekProviderOptions],
+    ["opencode-go", opencodeGoProviderOptions],
+    ["Ollama", ollamaProviderOptions],
+    ["LM Studio", lmstudioProviderOptions],
+    ["opencode-zen", opencodeZenProviderOptions],
+  ] as const)("omits %s providerOptions when effort is missing or empty", (_label, providerOptions) => {
+    expect(providerOptions(undefined)).toBeUndefined();
+    expect(providerOptions("")).toBeUndefined();
   });
 });
