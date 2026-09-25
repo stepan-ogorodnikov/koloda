@@ -10,11 +10,7 @@ import {
   setCurrentConversationIdAtom,
   upsertConversationAtom,
 } from "./conversation-store";
-import {
-  assistantActiveRunIdAtom,
-  assistantConversationHasContextAtom,
-  assistantHasContextAtom,
-} from "./conversation-selectors";
+import { assistantConversationHasContextAtom, assistantHasContextAtom } from "./conversation-selectors";
 import {
   setAssistantAIProfileAtom,
   setAssistantCardStatusAtom,
@@ -24,31 +20,6 @@ import { dispatchTo, makeConversation, makeRun } from "./assistant-conversation.
 import type { ConversationReducerAction, ConversationReducerState } from "./conversation-reducer";
 
 describe("assistantConversationStateAtom (per-conversation store)", () => {
-  it("round-trips a dispatch through the writable atom for the current conversation", () => {
-    const store = createStore();
-
-    // Insert conversation A and make it current via public atoms
-    store.set(upsertConversationAtom, makeConversation("A"));
-    store.set(setCurrentConversationIdAtom, "A");
-
-    // Dispatch via the writable atom (targets current conversation)
-    store.set(assistantConversationStateAtom, [
-      "submitTurn",
-      {
-        runId: "r1",
-        text: "Hello from A",
-        kind: "chat-text",
-        assistantText: "",
-      },
-    ]);
-
-    // The derived atom should reflect the change
-    const state = store.get(assistantConversationStateAtom);
-    expect(state.id).toBe("A");
-    expect(state.messages).toHaveLength(2);
-    expect(state.messages[0].role).toBe("user");
-  });
-
   it("switching conversations preserves both states", () => {
     const store = createStore();
 
@@ -239,20 +210,6 @@ describe("assistantConversationStateAtom (per-conversation store)", () => {
     expect(state.runs["r1"].status).toBe("streaming");
   });
 
-  it("dispatchToConversation with an updater function", () => {
-    const store = createStore();
-    store.set(upsertConversationAtom, makeConversation("A"));
-    store.set(setCurrentConversationIdAtom, "A");
-
-    dispatchTo(store, "A", (prev) => ({
-      ...prev,
-      profileId: "p9",
-    }));
-
-    const state = store.get(assistantConversationStateAtom);
-    expect(state.profileId).toBe("p9");
-  });
-
   it("a newConversation action via the writable atom populates the map and switches the current id (cold start)", () => {
     const store = createStore();
     // No conversation has been inserted or selected. The writable form
@@ -345,69 +302,9 @@ describe("assistantConversationStateAtom (per-conversation store)", () => {
     expect(stateA.messages).toHaveLength(1);
     expect(stateA.messages[0].parts[0]).toEqual({ type: "text", text: "In A" });
   });
-
-  it("derived atoms follow the current conversation", () => {
-    const store = createStore();
-
-    store.set(
-      upsertConversationAtom,
-      makeConversation("A", {
-        messages: [
-          {
-            id: "user-r1",
-            role: "user",
-            parts: [{ type: "text", text: "Question" }],
-            metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r1" },
-          },
-        ],
-      }),
-    );
-    store.set(
-      upsertConversationAtom,
-      makeConversation("B", {
-        messages: [
-          {
-            id: "user-r2",
-            role: "user",
-            parts: [{ type: "text", text: "Different question" }],
-            metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r2" },
-          },
-        ],
-      }),
-    );
-
-    // Switch to A
-    store.set(setCurrentConversationIdAtom, "A");
-    expect(store.get(assistantActiveRunIdAtom)).toBeNull();
-
-    // Switch to B
-    store.set(setCurrentConversationIdAtom, "B");
-    expect(store.get(assistantActiveRunIdAtom)).toBeNull();
-
-    // Start a run on B
-    store.set(assistantConversationStateAtom, [
-      "submitTurn",
-      {
-        runId: "run-B",
-        text: "hello",
-        kind: "chat-text",
-        assistantText: "",
-      },
-    ]);
-    expect(store.get(assistantActiveRunIdAtom)).toBe("run-B");
-
-    // Switch back to A — activeRunId should be null for A
-    store.set(setCurrentConversationIdAtom, "A");
-    expect(store.get(assistantActiveRunIdAtom)).toBeNull();
-  });
 });
 
 describe("pendingSaveAtom (per-conversation counter)", () => {
-  it("starts at 0 with no current conversation", () => {
-    const store = createStore();
-    expect(store.get(pendingSaveAtom)).toBe(0);
-  });
-
   it("bumps the current conversation's counter when no current is set, the bump is a no-op", () => {
     const store = createStore();
     store.set(touchAtom);

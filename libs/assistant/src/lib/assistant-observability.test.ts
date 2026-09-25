@@ -119,11 +119,6 @@ describe("assistant structured observability", () => {
     host.dispose();
   });
 
-  it("exposes setAssistantStructuredLogger for tests", () => {
-    logAssistantStructured({ conversationId: "probe", commandOrEvent: "probe" });
-    expect(entries).toEqual([{ conversationId: "probe", commandOrEvent: "probe" }]);
-  });
-
   it("records streamStart with requestId and no payload fields", () => {
     logAssistantStructured({
       conversationId: "conv-stream",

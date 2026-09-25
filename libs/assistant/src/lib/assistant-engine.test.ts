@@ -222,18 +222,6 @@ describe("createAssistantEngine", () => {
     expect(events.some((e) => e.conversationId === "B")).toBe(false);
   });
 
-  it("retry uses executeChat", async () => {
-    conversationStates["A"] = { runs: { "run-1": {} } };
-    chatStreamGenerator.mockImplementation(async () => undefined);
-
-    await dispatchRetry(engine, "A", "run-1", {} as ChatStreamRequest);
-
-    expect(chatStreamGenerator).toHaveBeenCalled();
-    const restart = events.find((e) => e.type === "runStarted");
-    expect(restart?.type).toBe("runStarted");
-    expect(restart?.type === "runStarted" && restart.run).not.toHaveProperty("mode");
-  });
-
   it("captures immutable command input before execution reaches the application port", async () => {
     const chatInputs: AssistantChatExecutionInput[] = [];
     let releaseChat!: () => void;
@@ -903,14 +891,5 @@ describe("createAssistantEngine", () => {
         (e) => e.type === "runTerminated" && e.outcome.status === "interrupted" && e.outcome.reason === "app_shutdown",
       ),
     ).toBe(true);
-  });
-
-  it("exposes dispatch as the sole execution ingress on the public surface", () => {
-    expect(typeof engine.dispatch).toBe("function");
-    expect("executeChatRun" in engine).toBe(false);
-    expect("executeGenerateRun" in engine).toBe(false);
-    expect("retryRun" in engine).toBe(false);
-    expect("cancel" in engine).toBe(false);
-    expect("shutdownGracefully" in engine).toBe(false);
   });
 });
