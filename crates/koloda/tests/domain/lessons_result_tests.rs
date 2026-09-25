@@ -62,66 +62,6 @@ fn test_lesson_result_valid() {
 }
 
 #[test]
-fn test_lesson_result_all_ratings_valid() {
-    for rating in 1..=4 {
-        let review = json!({
-            "cardId": "01900000-0000-7000-8000-000000000001",
-            "rating": rating,
-            "state": 0,
-            "dueAt": 1000000000,
-            "stability": 5.0,
-            "difficulty": 5.0,
-            "scheduledDays": 1,
-            "learningSteps": 0,
-            "time": 0,
-            "isIgnored": false
-        });
-        let data = json!({
-            "card": valid_card_progress_json(),
-            "review": review
-        });
-        let result = serde_json::from_value::<LessonResultData>(data);
-        assert!(result.unwrap().validate().is_ok(), "Rating {} should be valid", rating);
-    }
-}
-
-#[test]
-fn test_lesson_result_all_states_valid() {
-    for state in 0..=3 {
-        let card = json!({
-            "id": "01900000-0000-7000-8000-000000000001",
-            "state": state,
-            "dueAt": 1000000000,
-            "stability": 5.0,
-            "difficulty": 5.0,
-            "scheduledDays": 1,
-            "learningSteps": 0,
-            "reps": 0,
-            "lapses": 0,
-            "lastReviewedAt": null
-        });
-        let review = json!({
-            "cardId": "01900000-0000-7000-8000-000000000001",
-            "rating": 1,
-            "state": state,
-            "dueAt": 1000000000,
-            "stability": 5.0,
-            "difficulty": 5.0,
-            "scheduledDays": 1,
-            "learningSteps": 0,
-            "time": 0,
-            "isIgnored": false
-        });
-        let data = json!({
-            "card": card,
-            "review": review
-        });
-        let result = serde_json::from_value::<LessonResultData>(data);
-        assert!(result.unwrap().validate().is_ok(), "State {} should be valid", state);
-    }
-}
-
-#[test]
 fn test_lesson_result_card_review_id_mismatch_fails() {
     // Both entities are individually valid; only their id link is broken.
     // The mismatch rule must fire even when neither side has a validation

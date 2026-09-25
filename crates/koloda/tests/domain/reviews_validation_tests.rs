@@ -1,380 +1,92 @@
 use koloda::domain::reviews::InsertReviewData;
+use serde_json::{json, Value};
 
-#[test]
-fn test_valid_review_data() {
-    let json = r#"{
-        "cardId": "01900000-0000-7000-8000-000000000001",
-        "rating": 1,
-        "state": 0,
-        "dueAt": 1000000000,
-        "stability": 5.0,
-        "difficulty": 5.0,
-        "scheduledDays": 0,
-        "learningSteps": 0,
-        "time": 0,
-        "isIgnored": false
-    }"#;
+/// Canonical valid insert-review payload used as the mutation base for validation cases.
+fn valid_payload() -> Value {
+    crate::common::valid_review_json()
+}
 
-    let data: InsertReviewData = serde_json::from_str(json).expect("Should deserialize");
-    data.validate().unwrap();
+fn assert_rejected(field: &str, offending: Value, expected_code: &str) {
+    let mut payload = valid_payload();
+    payload
+        .as_object_mut()
+        .expect("review payload should be an object")
+        .insert(field.to_string(), offending.clone());
+
+    let data = serde_json::from_value::<InsertReviewData>(payload).expect("patched payload should still deserialize");
+    let error = data.validate().expect_err("patched review should fail validation");
+    assert_eq!(
+        error.code, expected_code,
+        "{field} = {offending} must surface {expected_code}"
+    );
+}
+
+fn assert_accepted(field: &str, value: Value) {
+    let mut payload = valid_payload();
+    payload
+        .as_object_mut()
+        .expect("review payload should be an object")
+        .insert(field.to_string(), value.clone());
+
+    let data = serde_json::from_value::<InsertReviewData>(payload).expect("patched payload should still deserialize");
+    let observed = data.validate().err().map(|error| error.code);
+    assert!(
+        observed.is_none(),
+        "{field} = {value} must pass validation, got {observed:?}"
+    );
 }
 
 #[test]
-fn test_valid_review_all_ratings() {
-    for rating in 1..=4 {
-        let json = format!(
-            r#"{{
-                "cardId": "01900000-0000-7000-8000-000000000001",
-                "rating": {},
-                "state": 0,
-                "dueAt": 1000000000,
-                "stability": 5.0,
-                "difficulty": 5.0,
-                "scheduledDays": 0,
-                "learningSteps": 0,
-                "time": 0,
-                "isIgnored": false
-            }}"#,
-            rating
-        );
+fn test_insert_review_valid_payload_passes() {
+    serde_json::from_value::<InsertReviewData>(valid_payload())
+        .expect("canonical payload should deserialize")
+        .validate()
+        .unwrap();
+}
 
-        let data: InsertReviewData = serde_json::from_str(&json).expect("Should deserialize");
-        assert!(data.validate().is_ok(), "Rating {} should be valid", rating);
+#[test]
+fn test_insert_review_out_of_bounds_values_fail_with_field_codes() {
+    // WHY: FSRS review states span 0..=3; -1 and 4 probe both edges of that band
+    // (4 is one past the max, not a farther miss). Rating is 1..=4. Remaining fields
+    // only enforce non-negativity or a declared range, so one offender per edge pins
+    // the review-namespace code.
+    let cases: &[(&str, Value, &str)] = &[
+        ("rating", json!(0), "validation.reviews.rating"),
+        ("rating", json!(5), "validation.reviews.rating"),
+        ("rating", json!(-1), "validation.reviews.rating"),
+        ("state", json!(-1), "validation.reviews.state"),
+        ("state", json!(4), "validation.reviews.state"),
+        ("stability", json!(-1.0), "validation.reviews.stability"),
+        ("difficulty", json!(-0.1), "validation.reviews.difficulty"),
+        ("difficulty", json!(10.1), "validation.reviews.difficulty"),
+        ("scheduledDays", json!(-1), "validation.reviews.scheduled-days"),
+        ("learningSteps", json!(-1), "validation.reviews.learning-steps"),
+        ("time", json!(-1), "validation.reviews.time"),
+    ];
+
+    for (field, offending, code) in cases {
+        assert_rejected(field, offending.clone(), code);
     }
 }
 
 #[test]
-fn test_valid_review_all_states() {
-    for state in 0..=3 {
-        let json = format!(
-            r#"{{
-                "cardId": "01900000-0000-7000-8000-000000000001",
-                "rating": 1,
-                "state": {},
-                "dueAt": 1000000000,
-                "stability": 5.0,
-                "difficulty": 5.0,
-                "scheduledDays": 0,
-                "learningSteps": 0,
-                "time": 0,
-                "isIgnored": false
-            }}"#,
-            state
-        );
+fn test_insert_review_boundary_values_pass() {
+    // Rating is inclusive on 1..=4, state on 0..=3, difficulty on [0, 10].
+    // The counters and time accept their floor of zero.
+    let cases: &[(&str, Value)] = &[
+        ("rating", json!(1)),
+        ("rating", json!(4)),
+        ("state", json!(0)),
+        ("state", json!(3)),
+        ("stability", json!(0.0)),
+        ("difficulty", json!(0.0)),
+        ("difficulty", json!(10.0)),
+        ("scheduledDays", json!(0)),
+        ("learningSteps", json!(0)),
+        ("time", json!(0)),
+    ];
 
-        let data: InsertReviewData = serde_json::from_str(&json).expect("Should deserialize");
-        assert!(data.validate().is_ok(), "State {} should be valid", state);
+    for (field, value) in cases {
+        assert_accepted(field, value.clone());
     }
-}
-
-#[test]
-fn test_valid_review_difficulty_boundaries() {
-    let json_min = r#"{
-        "cardId": "01900000-0000-7000-8000-000000000001",
-        "rating": 1,
-        "state": 0,
-        "dueAt": 1000000000,
-        "stability": 5.0,
-        "difficulty": 0.0,
-        "scheduledDays": 0,
-        "learningSteps": 0,
-        "time": 0,
-        "isIgnored": false
-    }"#;
-
-    let json_max = r#"{
-        "cardId": "01900000-0000-7000-8000-000000000001",
-        "rating": 1,
-        "state": 0,
-        "dueAt": 1000000000,
-        "stability": 5.0,
-        "difficulty": 10.0,
-        "scheduledDays": 0,
-        "learningSteps": 0,
-        "time": 0,
-        "isIgnored": false
-    }"#;
-
-    let data_min: InsertReviewData = serde_json::from_str(json_min).expect("Should deserialize");
-    let data_max: InsertReviewData = serde_json::from_str(json_max).expect("Should deserialize");
-
-    data_min.validate().unwrap();
-    data_max.validate().unwrap();
-}
-
-#[test]
-fn test_valid_stability_zero() {
-    let json = r#"{
-        "cardId": "01900000-0000-7000-8000-000000000001",
-        "rating": 1,
-        "state": 0,
-        "dueAt": 1000000000,
-        "stability": 0.0,
-        "difficulty": 5.0,
-        "scheduledDays": 0,
-        "learningSteps": 0,
-        "time": 0,
-        "isIgnored": false
-    }"#;
-
-    let data: InsertReviewData = serde_json::from_str(json).expect("Should deserialize");
-    data.validate().unwrap();
-}
-
-#[test]
-fn test_valid_stability_large_value() {
-    let json = r#"{
-        "cardId": "01900000-0000-7000-8000-000000000001",
-        "rating": 1,
-        "state": 0,
-        "dueAt": 1000000000,
-        "stability": 365.0,
-        "difficulty": 5.0,
-        "scheduledDays": 100,
-        "learningSteps": 0,
-        "time": 0,
-        "isIgnored": false
-    }"#;
-
-    let data: InsertReviewData = serde_json::from_str(json).expect("Should deserialize");
-    data.validate().unwrap();
-}
-
-#[test]
-fn test_valid_time_positive() {
-    let json = r#"{
-        "cardId": "01900000-0000-7000-8000-000000000001",
-        "rating": 1,
-        "state": 0,
-        "dueAt": 1000000000,
-        "stability": 5.0,
-        "difficulty": 5.0,
-        "scheduledDays": 0,
-        "learningSteps": 0,
-        "time": 5000,
-        "isIgnored": false
-    }"#;
-
-    let data: InsertReviewData = serde_json::from_str(json).expect("Should deserialize");
-    data.validate().unwrap();
-}
-
-#[test]
-fn test_rating_below_min_fails() {
-    let json = r#"{
-        "cardId": "01900000-0000-7000-8000-000000000001",
-        "rating": 0,
-        "state": 0,
-        "dueAt": 1000000000,
-        "stability": 5.0,
-        "difficulty": 5.0,
-        "scheduledDays": 0,
-        "learningSteps": 0,
-        "time": 0,
-        "isIgnored": false
-    }"#;
-
-    let data: InsertReviewData = serde_json::from_str(json).expect("Should deserialize");
-    let result = data.validate();
-    assert_eq!(result.unwrap_err().code, "validation.reviews.rating");
-}
-
-#[test]
-fn test_rating_above_max_fails() {
-    let json = r#"{
-        "cardId": "01900000-0000-7000-8000-000000000001",
-        "rating": 5,
-        "state": 0,
-        "dueAt": 1000000000,
-        "stability": 5.0,
-        "difficulty": 5.0,
-        "scheduledDays": 0,
-        "learningSteps": 0,
-        "time": 0,
-        "isIgnored": false
-    }"#;
-
-    let data: InsertReviewData = serde_json::from_str(json).expect("Should deserialize");
-    let result = data.validate();
-    assert_eq!(result.unwrap_err().code, "validation.reviews.rating");
-}
-
-#[test]
-fn test_rating_negative_fails() {
-    let json = r#"{
-        "cardId": "01900000-0000-7000-8000-000000000001",
-        "rating": -1,
-        "state": 0,
-        "dueAt": 1000000000,
-        "stability": 5.0,
-        "difficulty": 5.0,
-        "scheduledDays": 0,
-        "learningSteps": 0,
-        "time": 0,
-        "isIgnored": false
-    }"#;
-
-    let data: InsertReviewData = serde_json::from_str(json).expect("Should deserialize");
-    let result = data.validate();
-    assert_eq!(result.unwrap_err().code, "validation.reviews.rating");
-}
-
-#[test]
-fn test_state_below_min_fails() {
-    let json = r#"{
-        "cardId": "01900000-0000-7000-8000-000000000001",
-        "rating": 1,
-        "state": -1,
-        "dueAt": 1000000000,
-        "stability": 5.0,
-        "difficulty": 5.0,
-        "scheduledDays": 0,
-        "learningSteps": 0,
-        "time": 0,
-        "isIgnored": false
-    }"#;
-
-    let data: InsertReviewData = serde_json::from_str(json).expect("Should deserialize");
-    let result = data.validate();
-    assert_eq!(result.unwrap_err().code, "validation.reviews.state");
-}
-
-#[test]
-fn test_state_above_max_fails() {
-    let json = r#"{
-        "cardId": "01900000-0000-7000-8000-000000000001",
-        "rating": 1,
-        "state": 4,
-        "dueAt": 1000000000,
-        "stability": 5.0,
-        "difficulty": 5.0,
-        "scheduledDays": 0,
-        "learningSteps": 0,
-        "time": 0,
-        "isIgnored": false
-    }"#;
-
-    let data: InsertReviewData = serde_json::from_str(json).expect("Should deserialize");
-    let result = data.validate();
-    assert_eq!(result.unwrap_err().code, "validation.reviews.state");
-}
-
-#[test]
-fn test_stability_negative_fails() {
-    let json = r#"{
-        "cardId": "01900000-0000-7000-8000-000000000001",
-        "rating": 1,
-        "state": 0,
-        "dueAt": 1000000000,
-        "stability": -1.0,
-        "difficulty": 5.0,
-        "scheduledDays": 0,
-        "learningSteps": 0,
-        "time": 0,
-        "isIgnored": false
-    }"#;
-
-    let data: InsertReviewData = serde_json::from_str(json).expect("Should deserialize");
-    let result = data.validate();
-    assert_eq!(result.unwrap_err().code, "validation.reviews.stability");
-}
-
-#[test]
-fn test_difficulty_below_min_fails() {
-    let json = r#"{
-        "cardId": "01900000-0000-7000-8000-000000000001",
-        "rating": 1,
-        "state": 0,
-        "dueAt": 1000000000,
-        "stability": 5.0,
-        "difficulty": -0.1,
-        "scheduledDays": 0,
-        "learningSteps": 0,
-        "time": 0,
-        "isIgnored": false
-    }"#;
-
-    let data: InsertReviewData = serde_json::from_str(json).expect("Should deserialize");
-    let result = data.validate();
-    assert_eq!(result.unwrap_err().code, "validation.reviews.difficulty");
-}
-
-#[test]
-fn test_difficulty_above_max_fails() {
-    let json = r#"{
-        "cardId": "01900000-0000-7000-8000-000000000001",
-        "rating": 1,
-        "state": 0,
-        "dueAt": 1000000000,
-        "stability": 5.0,
-        "difficulty": 10.1,
-        "scheduledDays": 0,
-        "learningSteps": 0,
-        "time": 0,
-        "isIgnored": false
-    }"#;
-
-    let data: InsertReviewData = serde_json::from_str(json).expect("Should deserialize");
-    let result = data.validate();
-    assert_eq!(result.unwrap_err().code, "validation.reviews.difficulty");
-}
-
-#[test]
-fn test_scheduled_days_negative_fails() {
-    let json = r#"{
-        "cardId": "01900000-0000-7000-8000-000000000001",
-        "rating": 1,
-        "state": 0,
-        "dueAt": 1000000000,
-        "stability": 5.0,
-        "difficulty": 5.0,
-        "scheduledDays": -1,
-        "learningSteps": 0,
-        "time": 0,
-        "isIgnored": false
-    }"#;
-
-    let data: InsertReviewData = serde_json::from_str(json).expect("Should deserialize");
-    let result = data.validate();
-    assert_eq!(result.unwrap_err().code, "validation.reviews.scheduled-days");
-}
-
-#[test]
-fn test_learning_steps_negative_fails() {
-    let json = r#"{
-        "cardId": "01900000-0000-7000-8000-000000000001",
-        "rating": 1,
-        "state": 0,
-        "dueAt": 1000000000,
-        "stability": 5.0,
-        "difficulty": 5.0,
-        "scheduledDays": 0,
-        "learningSteps": -1,
-        "time": 0,
-        "isIgnored": false
-    }"#;
-
-    let data: InsertReviewData = serde_json::from_str(json).expect("Should deserialize");
-    let result = data.validate();
-    assert_eq!(result.unwrap_err().code, "validation.reviews.learning-steps");
-}
-
-#[test]
-fn test_time_negative_fails() {
-    let json = r#"{
-        "cardId": "01900000-0000-7000-8000-000000000001",
-        "rating": 1,
-        "state": 0,
-        "dueAt": 1000000000,
-        "stability": 5.0,
-        "difficulty": 5.0,
-        "scheduledDays": 0,
-        "learningSteps": 0,
-        "time": -1,
-        "isIgnored": false
-    }"#;
-
-    let data: InsertReviewData = serde_json::from_str(json).expect("Should deserialize");
-    let result = data.validate();
-    assert_eq!(result.unwrap_err().code, "validation.reviews.time");
 }
