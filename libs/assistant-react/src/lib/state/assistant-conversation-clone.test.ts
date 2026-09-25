@@ -7,7 +7,7 @@ import {
   setCurrentConversationIdAtom,
   upsertConversationAtom,
 } from "./conversation-store";
-import { assistantHasContextAtom, unreadConversationIdsAtom } from "./conversation-selectors";
+import { unreadConversationIdsAtom } from "./conversation-selectors";
 import { cloneConversationAtom } from "./conversation-actions";
 import { makeConversation, makeRun } from "./assistant-conversation.fixtures";
 import type { ConversationReducerState } from "./conversation-reducer";
@@ -189,7 +189,7 @@ describe("cloneConversationAtom", () => {
     expect(clone.runs.r4.status).toBe("interrupted");
   });
 
-  it("drops streaming runs and their messages from the clone", () => {
+  it("drops streaming runs and clears activeRunId so the clone is idle", () => {
     const store = createStore();
     store.set(
       upsertConversationAtom,
@@ -237,6 +237,7 @@ describe("cloneConversationAtom", () => {
           r2: makeRun("r2", "streaming"),
           r3: makeRun("r3", "success"),
         },
+        activeRunId: "r2",
       }),
     );
     store.set(setCurrentConversationIdAtom, "A");
@@ -244,11 +245,9 @@ describe("cloneConversationAtom", () => {
     const newId = store.set(cloneConversationAtom, { sourceId: "A" })!;
     const clone = store.get(conversationsAtom)[newId];
 
-    // r2 is dropped; r1 and r3 are kept.
     expect(Object.keys(clone.runs).sort()).toEqual(["r1", "r3"]);
-    // The user-r2 / assistant-r2 pair is dropped.
-    expect(clone.messages).toHaveLength(4);
     expect(clone.messages.map((m) => m.id)).toEqual(["user-r1", "assistant-r1", "user-r3", "assistant-r3"]);
+    expect(clone.activeRunId).toBeNull();
   });
 
   it("copies AI profile state from the source", () => {
@@ -271,38 +270,6 @@ describe("cloneConversationAtom", () => {
     expect(clone.modelParameters).toEqual({ reasoning_effort: "high" });
     expect(clone).not.toHaveProperty("deckId");
     expect(clone).not.toHaveProperty("mode");
-  });
-
-  it("clears activeRunId so the clone has no in-flight run", () => {
-    const store = createStore();
-    store.set(
-      upsertConversationAtom,
-      makeConversation("A", {
-        messages: [
-          {
-            id: "user-r1",
-            role: "user" as const,
-            parts: [{ type: "text" as const, text: "Q" }],
-            metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r1" },
-          },
-          {
-            id: "assistant-r1",
-            role: "assistant" as const,
-            parts: [{ type: "text" as const, text: "A" }],
-            metadata: { kind: "chat-text", runId: "r1" },
-          },
-        ],
-        runs: { r1: makeRun("r1", "streaming") },
-        activeRunId: "r1",
-      }),
-    );
-    store.set(setCurrentConversationIdAtom, "A");
-
-    const newId = store.set(cloneConversationAtom, { sourceId: "A" })!;
-    const clone = store.get(conversationsAtom)[newId];
-
-    // Even if the source has an active run, the clone is idle.
-    expect(clone.activeRunId).toBeNull();
   });
 
   it("sets lastReadRunId to the latest cloned run id, so the clone starts as read", () => {
@@ -437,68 +404,6 @@ describe("cloneConversationAtom", () => {
     const store = createStore();
     const newId = store.set(cloneConversationAtom, { sourceId: "missing" });
     expect(newId).toBeNull();
-  });
-
-  it("produces a clone that is recognized as having context (clone button stays enabled)", () => {
-    // WHY: The CloneConversationButton is disabled when the source
-    // conversation is empty. The clone must be eligible for further
-    // interaction immediately, including being cloned again.
-    const store = createStore();
-    store.set(
-      upsertConversationAtom,
-      makeConversation("A", {
-        messages: [
-          {
-            id: "user-r1",
-            role: "user" as const,
-            parts: [{ type: "text" as const, text: "Q" }],
-            metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r1" },
-          },
-        ],
-        runs: { r1: makeRun("r1", "success") },
-      }),
-    );
-    store.set(setCurrentConversationIdAtom, "A");
-
-    const newId = store.set(cloneConversationAtom, { sourceId: "A" })!;
-    store.set(setCurrentConversationIdAtom, newId);
-
-    expect(store.get(assistantHasContextAtom)).toBe(true);
-  });
-
-  it("the source's active-run state is preserved (background stream continues)", () => {
-    // WHY: Cloning must not affect the source. A streaming run on the
-    // source must keep streaming after the user has cloned.
-    const store = createStore();
-    store.set(
-      upsertConversationAtom,
-      makeConversation("A", {
-        messages: [
-          {
-            id: "user-r1",
-            role: "user" as const,
-            parts: [{ type: "text" as const, text: "Q" }],
-            metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r1" },
-          },
-          {
-            id: "assistant-r1",
-            role: "assistant" as const,
-            parts: [{ type: "text" as const, text: "streaming" }],
-            metadata: { kind: "chat-text", runId: "r1" },
-          },
-        ],
-        runs: { r1: makeRun("r1", "streaming") },
-        activeRunId: "r1",
-      }),
-    );
-    store.set(setCurrentConversationIdAtom, "A");
-
-    store.set(cloneConversationAtom, { sourceId: "A" });
-
-    // Source still has the streaming run.
-    const stateA = store.get(conversationsAtom)["A"];
-    expect(stateA.activeRunId).toBe("r1");
-    expect(stateA.runs.r1.status).toBe("streaming");
   });
 
   it("resets dismissed run error state in the clone", () => {

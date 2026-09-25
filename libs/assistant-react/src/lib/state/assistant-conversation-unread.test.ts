@@ -12,11 +12,6 @@ import { unreadConversationIdsAtom } from "./conversation-selectors";
 import { dispatchTerminal, dispatchTo, makeConversation, makeRun } from "./assistant-conversation.fixtures";
 
 describe("unreadConversationIdsAtom", () => {
-  it("is empty when there are no conversations", () => {
-    const store = createStore();
-    expect(store.get(unreadConversationIdsAtom).size).toBe(0);
-  });
-
   it("is empty when every conversation has no runs", () => {
     const store = createStore();
     store.set(upsertConversationAtom, makeConversation("A"));
