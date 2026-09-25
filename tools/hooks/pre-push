@@ -1,12 +1,24 @@
 #!/bin/sh
 # Wired via core.hooksPath (set by the "prepare" script in package.json).
 #
-# Push boundary: whole-program checks on the state being published.
-# Intermediate commits of a bigger change are never checked here — only the
-# pushed tip is (the working tree at push time stands in for it).
-# Escape hatch: git push --no-verify for an intentionally dirty push.
+# Full suite only when publishing main. Any other remote ref (feature/PR
+# branches, tags, deletes) skips these checks. PR and cloud intermediate
+# pushes are intentionally unchecked here.
+# Escape hatch: git push --no-verify for an intentionally dirty main push.
 
 command -v bun >/dev/null 2>&1 || exit 0
+
+pushing_main=0
+while read -r _local_ref _local_sha remote_ref _remote_sha; do
+  if [ "$remote_ref" = "refs/heads/main" ]; then
+    pushing_main=1
+  fi
+done
+
+if [ "$pushing_main" -eq 0 ]; then
+  echo "pre-push: skipping suite (non-main ref)" >&2
+  exit 0
+fi
 
 # TypeScript lint + typecheck, plus cached Rust clippy and `koloda` tests.
 bun run check:push || exit 1
