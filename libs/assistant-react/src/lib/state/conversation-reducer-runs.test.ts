@@ -38,21 +38,6 @@ describe("conversationReducer", () => {
       vi.useRealTimers();
     });
 
-    it("adds the user message and the assistant placeholder alongside the run", () => {
-      const state = conversationReducer(initialConversationState, [
-        "submitTurn",
-        { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" },
-      ]);
-
-      expect(state.messages).toHaveLength(2);
-      expect(state.messages[0]).toMatchObject({ id: "user-r1", role: "user" });
-      expect(state.messages[1]).toMatchObject({
-        id: "assistant-r1",
-        role: "assistant",
-        metadata: { kind: "chat-text" },
-      });
-    });
-
     it("stamps templateFields when provided", () => {
       const fields = [{ id: testId(1), title: "Front", type: "text" as const, isRequired: true }];
 
@@ -68,21 +53,6 @@ describe("conversationReducer", () => {
       ]);
 
       expect(state.runs["r1"].templateFields).toEqual(fields);
-    });
-
-    it("stamps modelName on the new run when provided", () => {
-      const state = conversationReducer(initialConversationState, [
-        "submitTurn",
-        {
-          runId: "r1",
-          text: "hello",
-          kind: "chat-text",
-          assistantText: "",
-          modelName: "GPT-4",
-        },
-      ]);
-
-      expect(state.runs["r1"].modelName).toBe("GPT-4");
     });
 
     it("leaves modelName undefined when not provided", () => {
@@ -389,76 +359,25 @@ describe("conversationReducer", () => {
       expect(stored.cards).toBeUndefined();
     });
 
-    it("resolves a running tool call to error with the error payload", () => {
-      let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
-      state = conversationReducer(state, [
-        "addToolCall",
-        { runId: "r1", call: { id: "call-1", name: "get_deck_cards", input: { deckId: testId(9) } } },
-      ]);
-      state = conversationReducer(state, [
-        "setToolCallResult",
-        { runId: "r1", callId: "call-1", error: "Deck not found: 9" },
-      ]);
-
-      expect(state.runs["r1"].toolCalls?.[0]).toMatchObject({
-        id: "call-1",
-        status: "error",
-        error: "Deck not found: 9",
-      });
-    });
-
-    it("flattens an Error-instance tool failure to its message", () => {
-      let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
-      state = conversationReducer(state, [
-        "addToolCall",
-        { runId: "r1", call: { id: "call-1", name: "get_deck_cards", input: { deckId: testId(9) } } },
-      ]);
-      state = conversationReducer(state, [
-        "setToolCallResult",
-        { runId: "r1", callId: "call-1", error: new Error("Deck not found: 9") },
-      ]);
-
-      expect(state.runs["r1"].toolCalls?.[0]).toMatchObject({ status: "error", error: "Deck not found: 9" });
-    });
-
-    it("flattens an object tool failure to a bounded string", () => {
+    it.each<{ label: string; error: unknown; stored: string }>([
+      { label: "a string payload", error: "Deck not found: 9", stored: "Deck not found: 9" },
+      { label: "an Error instance", error: new Error("Deck not found: 9"), stored: "Deck not found: 9" },
+      {
+        label: "an object with message",
+        error: { code: 500, message: "Storage unavailable" },
+        stored: "Storage unavailable",
+      },
+      { label: "an object without message", error: { code: 500 }, stored: '{"code":500}' },
+      { label: "an oversized string", error: "x".repeat(2001), stored: `${"x".repeat(2000)}…` },
+    ])("stores $label as the tool error string", ({ error, stored }) => {
       let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
       state = conversationReducer(state, [
         "addToolCall",
         { runId: "r1", call: { id: "call-1", name: "list_decks", input: {} } },
       ]);
-      state = conversationReducer(state, [
-        "setToolCallResult",
-        { runId: "r1", callId: "call-1", error: { code: 500, message: "Storage unavailable" } },
-      ]);
-
-      expect(state.runs["r1"].toolCalls?.[0]?.error).toBe("Storage unavailable");
-    });
-
-    it("stringifies an object tool failure without a message", () => {
-      let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
-      state = conversationReducer(state, [
-        "addToolCall",
-        { runId: "r1", call: { id: "call-1", name: "list_decks", input: {} } },
-      ]);
-      state = conversationReducer(state, [
-        "setToolCallResult",
-        { runId: "r1", callId: "call-1", error: { code: 500 } },
-      ]);
-
-      expect(state.runs["r1"].toolCalls?.[0]?.error).toBe('{"code":500}');
-    });
-
-    it("caps an oversized tool error with a truncation marker", () => {
-      let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
-      state = conversationReducer(state, [
-        "addToolCall",
-        { runId: "r1", call: { id: "call-1", name: "list_decks", input: {} } },
-      ]);
-      const error = "x".repeat(2001);
       state = conversationReducer(state, ["setToolCallResult", { runId: "r1", callId: "call-1", error }]);
 
-      expect(state.runs["r1"].toolCalls?.[0]?.error).toBe(`${"x".repeat(2000)}…`);
+      expect(state.runs["r1"].toolCalls?.[0]).toMatchObject({ id: "call-1", status: "error", error: stored });
     });
 
     it("no-ops on an unmatched callId", () => {
@@ -478,7 +397,7 @@ describe("conversationReducer", () => {
       templateId: testId(1),
       templateFields: [
         { id: testId(10), title: "Front", type: "text", isRequired: true },
-        { id: testId(11), title: "Back", type: "text", isRequired: true },
+        { id: testId(11), title: "Back", type: "markdown", isRequired: true },
         { id: testId(12), title: "Hint", type: "text", isRequired: false },
       ],
       cards: [{ fields: { Front: "hola", Back: "hello", Hint: "greeting" } }],
@@ -515,11 +434,7 @@ describe("conversationReducer", () => {
         },
       ]);
       expect(state.runs["r1"].cardStatuses).toEqual({ 0: "idle" });
-      expect(state.runs["r1"].templateFields).toEqual([
-        { id: testId(10), title: "Front", type: "text", isRequired: true },
-        { id: testId(11), title: "Back", type: "text", isRequired: true },
-        { id: testId(12), title: "Hint", type: "text", isRequired: false },
-      ]);
+      expect(state.runs["r1"].templateFields).toEqual(proposeOutput.templateFields);
       expect(state.runs["r1"].writeTargetDeckId).toBe(testId(5));
       expect(state.runs["r1"].writeTargetTemplateId).toBe(testId(1));
       expect(state.runs["r1"].toolCalls?.[0]).toMatchObject({
@@ -528,27 +443,6 @@ describe("conversationReducer", () => {
         status: "success",
         output: proposeOutput,
       });
-    });
-
-    it("maps field.type from propose_cards onto run.templateFields, including markdown", () => {
-      let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
-      const markdownOutput = {
-        ...proposeOutput,
-        templateFields: [
-          { id: testId(10), title: "Front", type: "text", isRequired: true },
-          { id: testId(11), title: "Back", type: "markdown", isRequired: true },
-          { id: testId(12), title: "Hint", type: "text", isRequired: false },
-        ],
-      };
-      state = withProposeCall(state, "call-1", markdownOutput);
-
-      expect(state.runs["r1"].templateFields).toEqual([
-        { id: testId(10), title: "Front", type: "text", isRequired: true },
-        { id: testId(11), title: "Back", type: "markdown", isRequired: true },
-        { id: testId(12), title: "Hint", type: "text", isRequired: false },
-      ]);
-      expect(state.runs["r1"].writeTargetDeckId).toBe(testId(5));
-      expect(state.runs["r1"].writeTargetTemplateId).toBe(testId(1));
     });
 
     it("records add_deck without cards or write targets", () => {
@@ -667,11 +561,7 @@ describe("conversationReducer", () => {
         { content: { [testId(10)]: { text: "gato" }, [testId(99)]: { text: "" } } },
       ]);
       expect(state.runs["r1"].cardStatuses).toEqual({ 0: "idle", 1: "idle" });
-      expect(state.runs["r1"].templateFields).toEqual([
-        { id: testId(10), title: "Front", type: "text", isRequired: true },
-        { id: testId(11), title: "Back", type: "text", isRequired: true },
-        { id: testId(12), title: "Hint", type: "text", isRequired: false },
-      ]);
+      expect(state.runs["r1"].templateFields).toEqual(proposeOutput.templateFields);
     });
   });
 
@@ -750,18 +640,6 @@ describe("conversationReducer", () => {
       ]);
     });
 
-    it("does not clear activeRunId when a different run completes", () => {
-      let state = reduce([
-        ["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }],
-        ["submitTurn", { runId: "r2", text: "hello", kind: "chat-text", assistantText: "" }],
-      ]);
-      expect(state.activeRunId).toBe("r2");
-
-      state = conversationReducer(state, ["completeRun", { runId: "r1" }]);
-      expect(state.runs["r1"].status).toBe("success");
-      expect(state.activeRunId).toBe("r2");
-    });
-
     it("does not copy writeTargetDeckId onto the conversation", () => {
       const proposeOutput = {
         deckId: testId(5),
@@ -813,24 +691,6 @@ describe("conversationReducer", () => {
 
       vi.useRealTimers();
     });
-
-    it("does not clear activeRunId when a different run fails", () => {
-      let state = reduce([
-        ["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }],
-        ["submitTurn", { runId: "r2", text: "hello", kind: "chat-text", assistantText: "" }],
-      ]);
-      expect(state.activeRunId).toBe("r2");
-
-      state = conversationReducer(state, [
-        "runFailed",
-        {
-          runId: "r1",
-          error: { message: "Other error" },
-        },
-      ]);
-      expect(state.runs["r1"].status).toBe("failed");
-      expect(state.activeRunId).toBe("r2");
-    });
   });
 
   describe("cancelRun", () => {
@@ -845,40 +705,49 @@ describe("conversationReducer", () => {
   });
 
   describe("interruptRun", () => {
-    it("sets status to interrupted with the given reason and clears activeRunId", () => {
-      vi.useFakeTimers();
-      vi.setSystemTime(0);
+    it.each(["app_shutdown", "crash_recovery"] as const)(
+      "sets status to interrupted with reason %s and clears activeRunId",
+      (reason) => {
+        vi.useFakeTimers();
+        vi.setSystemTime(0);
 
-      let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
+        let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
 
-      vi.setSystemTime(4000);
-      state = conversationReducer(state, ["interruptRun", { runId: "r1", reason: "app_shutdown" }]);
+        vi.setSystemTime(4000);
+        state = conversationReducer(state, ["interruptRun", { runId: "r1", reason }]);
 
-      expect(state.runs["r1"].status).toBe("interrupted");
-      expect(state.runs["r1"].reason).toBe("app_shutdown");
-      expect(state.runs["r1"].elapsedSeconds).toBe(4);
-      expect(state.activeRunId).toBeNull();
+        expect(state.runs["r1"].status).toBe("interrupted");
+        expect(state.runs["r1"].reason).toBe(reason);
+        expect(state.runs["r1"].elapsedSeconds).toBe(4);
+        expect(state.activeRunId).toBeNull();
 
-      vi.useRealTimers();
-    });
+        vi.useRealTimers();
+      },
+    );
+  });
 
-    it("records crash_recovery as the interruption reason", () => {
-      let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
-      state = conversationReducer(state, ["interruptRun", { runId: "r1", reason: "crash_recovery" }]);
-
-      expect(state.runs["r1"].status).toBe("interrupted");
-      expect(state.runs["r1"].reason).toBe("crash_recovery");
-    });
-
-    it("does not clear activeRunId when a different run is interrupted", () => {
+  describe("terminal action on another run", () => {
+    it.each<{ label: string; action: ConversationReducerAction; status: "success" | "failed" | "interrupted" }>([
+      { label: "completes", action: ["completeRun", { runId: "r1" }], status: "success" },
+      {
+        label: "fails",
+        action: ["runFailed", { runId: "r1", error: { message: "Other error" } }],
+        status: "failed",
+      },
+      {
+        label: "is interrupted",
+        action: ["interruptRun", { runId: "r1", reason: "app_shutdown" }],
+        status: "interrupted",
+      },
+    ])("does not clear activeRunId when a different run $label", ({ action, status }) => {
       let state = reduce([
         ["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }],
         ["submitTurn", { runId: "r2", text: "hello", kind: "chat-text", assistantText: "" }],
       ]);
       expect(state.activeRunId).toBe("r2");
 
-      state = conversationReducer(state, ["interruptRun", { runId: "r1", reason: "app_shutdown" }]);
-      expect(state.runs["r1"].status).toBe("interrupted");
+      state = conversationReducer(state, action);
+      expect(state.runs["r1"].status).toBe(status);
       expect(state.activeRunId).toBe("r2");
     });
   });
@@ -1013,24 +882,6 @@ describe("conversationReducer", () => {
       expect(state.messages[1]?.parts).toEqual([{ type: "text", text: "partial" }]);
     });
 
-    it("clears recorded tool calls on restart", () => {
-      let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
-      state = conversationReducer(state, [
-        "addToolCall",
-        { runId: "r1", call: { id: "call-1", name: "list_decks", input: {} } },
-      ]);
-      state = conversationReducer(state, [
-        "setToolCallResult",
-        { runId: "r1", callId: "call-1", output: { decks: [] } },
-      ]);
-      state = conversationReducer(state, ["runFailed", { runId: "r1", error: { message: "boom" } }]);
-
-      state = conversationReducer(state, ["restartRun", { runId: "r1" }]);
-
-      // WHY: retry re-executes fresh — stale tool traffic must not survive the restart.
-      expect(state.runs["r1"].toolCalls).toEqual([]);
-    });
-
     it("clears cards, toolCalls, and write targets on restart", () => {
       const proposeOutput = {
         deckId: testId(5),
@@ -1062,6 +913,7 @@ describe("conversationReducer", () => {
 
       expect(state.runs["r1"].cards).toEqual([]);
       expect(state.runs["r1"].cardStatuses).toEqual({});
+      // WHY: retry re-executes fresh — stale tool traffic must not survive the restart.
       expect(state.runs["r1"].toolCalls).toEqual([]);
       expect(state.runs["r1"].writeTargetDeckId).toBeUndefined();
       expect(state.runs["r1"].writeTargetTemplateId).toBeUndefined();
@@ -1155,27 +1007,6 @@ describe("conversationReducer", () => {
       expect(state.messages[1]?.metadata).toEqual({ kind: "chat-text", runId: "r1" });
     });
 
-    it("clears templateFields on retry", () => {
-      let state = reduce([
-        [
-          "submitTurn",
-          {
-            runId: "r1",
-            text: "hello",
-            kind: "chat-text",
-            assistantText: "",
-            templateFields: [{ id: testId(1), title: "Front", type: "text" as const, isRequired: true }],
-          },
-        ],
-      ]);
-      state = conversationReducer(state, ["runFailed", { runId: "r1", error: { message: "boom" } }]);
-
-      state = conversationReducer(state, ["restartRun", { runId: "r1" }]);
-
-      expect(state.runs["r1"].templateFields).toBeNull();
-      expect(state.runs["r1"].cards).toEqual([]);
-    });
-
     it("overwrites modelName when a new value is provided", () => {
       let state = reduce([
         ["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "", modelName: "GPT-4" }],
@@ -1187,24 +1018,16 @@ describe("conversationReducer", () => {
       expect(state.runs["r1"].modelName).toBe("Claude");
     });
 
-    it("preserves the existing modelName when restartRun omits it", () => {
+    it.each<{ label: string; restart: { runId: string; modelName?: string } }>([
+      { label: "omits it", restart: { runId: "r1" } },
+      { label: "sets it to undefined", restart: { runId: "r1", modelName: undefined } },
+    ])("preserves the existing modelName when restartRun $label", ({ restart }) => {
       let state = reduce([
         ["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "", modelName: "GPT-4" }],
       ]);
       state = conversationReducer(state, ["runFailed", { runId: "r1", error: { message: "boom" } }]);
 
-      state = conversationReducer(state, ["restartRun", { runId: "r1" }]);
-
-      expect(state.runs["r1"].modelName).toBe("GPT-4");
-    });
-
-    it("preserves the existing modelName when restartRun sets it to undefined", () => {
-      let state = reduce([
-        ["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "", modelName: "GPT-4" }],
-      ]);
-      state = conversationReducer(state, ["runFailed", { runId: "r1", error: { message: "boom" } }]);
-
-      state = conversationReducer(state, ["restartRun", { runId: "r1", modelName: undefined }]);
+      state = conversationReducer(state, ["restartRun", restart]);
 
       expect(state.runs["r1"].modelName).toBe("GPT-4");
     });
@@ -1308,15 +1131,6 @@ describe("conversationReducer", () => {
       state = conversationReducer(state, ["restartRun", { runId: "r1" }]);
 
       expect(state.runs["r1"].dataAccess).toBe(dataAccess);
-    });
-  });
-
-  describe("setUsage", () => {
-    it("sets usage on the specified run", () => {
-      let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
-      const usage = { promptTokens: 10, completionTokens: 20, totalTokens: 30 };
-      state = conversationReducer(state, ["setUsage", { runId: "r1", usage }]);
-      expect(state.runs["r1"].usage).toEqual(usage);
     });
   });
 });

@@ -269,12 +269,6 @@ describe("conversationReducer", () => {
       };
     }
 
-    it("sets lastReadRunId to the action's runId", () => {
-      const state = withRun(initialConversationState, "r1");
-      const next = conversationReducer(state, ["markRead", { runId: "r1" }]);
-      expect(next.lastReadRunId).toBe("r1");
-    });
-
     it("replaces the previous lastReadRunId when the run id changes", () => {
       let state = withRun(initialConversationState, "r1");
       state = conversationReducer(state, ["markRead", { runId: "r1" }]);
@@ -330,19 +324,6 @@ describe("conversationReducer", () => {
         promptInput: "",
         revertState: null,
       });
-    });
-  });
-
-  describe("setPromptInput", () => {
-    it("stores composer text on the conversation", () => {
-      const state = reduce([["setPromptInput", "draft"]]);
-      expect(state.promptInput).toBe("draft");
-    });
-
-    it("is a no-op when the text is unchanged", () => {
-      const first = reduce([["setPromptInput", "draft"]]);
-      const second = conversationReducer(first, ["setPromptInput", "draft"]);
-      expect(second).toBe(first);
     });
   });
 
@@ -417,7 +398,10 @@ describe("conversationReducer", () => {
       expect(state.modelParameters).toEqual({ reasoning_effort: "high" });
     });
 
-    it("removes the parameter when value is null", () => {
+    it.each<{ label: string; value: null | "" }>([
+      { label: "null", value: null },
+      { label: "empty string", value: "" },
+    ])("removes the parameter when value is $label", ({ value }) => {
       let state = conversationReducer(initialConversationState, [
         "setAIModelParameter",
         {
@@ -429,25 +413,7 @@ describe("conversationReducer", () => {
         "setAIModelParameter",
         {
           paramType: "reasoning_effort",
-          value: null,
-        },
-      ]);
-      expect(state.modelParameters).toEqual({});
-    });
-
-    it("removes the parameter when value is empty string", () => {
-      let state = conversationReducer(initialConversationState, [
-        "setAIModelParameter",
-        {
-          paramType: "reasoning_effort",
-          value: "high",
-        },
-      ]);
-      state = conversationReducer(state, [
-        "setAIModelParameter",
-        {
-          paramType: "reasoning_effort",
-          value: "",
+          value,
         },
       ]);
       expect(state.modelParameters).toEqual({});

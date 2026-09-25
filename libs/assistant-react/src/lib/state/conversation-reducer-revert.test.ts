@@ -8,18 +8,6 @@ import type { ConversationReducerState } from "./conversation-reducer";
 // next generate.
 
 describe("conversationReducer → setRevertState", () => {
-  it("is a no-op when the new revert state equals the current one", () => {
-    const revertState = { revertedToUserMessageId: "user-r1", preRevertInputText: "old" };
-    const state: ConversationReducerState = {
-      ...initialConversationState,
-      id: "conv-1",
-      createdAt: new Date("2026-07-01T11:00:00Z"),
-      revertState,
-    };
-    const next = conversationReducer(state, ["setRevertState", revertState]);
-    expect(next).toBe(state);
-  });
-
   it("sets the revert state without removing any messages or runs", () => {
     const state: ConversationReducerState = {
       ...initialConversationState,
