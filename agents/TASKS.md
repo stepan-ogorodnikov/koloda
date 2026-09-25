@@ -7,7 +7,9 @@ A task that needs a file lives on its own branch and pull request.
 Branch name: `task/<slug>`.
 The live file on that branch is `tasks/live/<slug>.md`.
 On `done`, move it to `tasks/archive/<slug>.md` on the same branch.
+Do that only when the tip is green.
 Then merge.
+Never commit on top of Archive.
 Do not rename the slug.
 To abandon the work, close the PR without merging and delete the branch.
 The branch deletion (or an abandon commit on the branch) records why.
@@ -106,7 +108,15 @@ When the human asks to implement.
    - Update Plan checkboxes if scope changed.
    - Then re-request review.
 5. Do not create the archive commit until review passes.
-6. Nothing commits after archive except merge.
+6. Before that commit, required checks on the current tip are green.
+   - Until PR CI exists, the local stand-in is `bun run check:push` and `bun run test:libs`.
+   - When PR status checks exist, those are required checks too.
+   - Do not archive on a red tip.
+   - On a flake, re-run the checks.
+   - Do not archive to get past red.
+7. Nothing commits after archive except merge.
+   - Never commit on top of Archive.
+   - If Archive is already the tip, recovery is reset, then re-archive (Done).
 
 ### Done (merge, gated)
 
@@ -116,24 +126,42 @@ Gate: the branch merges only if all three hold.
 - The newest commit on `origin/main..HEAD` is the Archive commit.
 - Every commit carries `Task: <slug>`.
 
+The tip must be green at merge time.
+Same checks as before Archive.
+
 The Add commit adds `tasks/live/<slug>.md`.
 The Archive commit moves `tasks/live/<slug>.md` to `tasks/archive/<slug>.md`.
 The Archive commit has `Status: done` and Outcome filled.
 
 Verify with `git log origin/main..HEAD --oneline` before merging.
 If Add is not first or Archive is not last, stop.
-If review needs changes after Archive exists, reset the Archive commit first.
-Then add fix commits.
-Then re-archive.
+If the tip is red, stop.
+
+If Archive is already the tip and review needs changes, or checks are red, reset that Archive commit off the tip.
+Soft reset if reusing the task-file edit.
+Otherwise recreate Archive later.
+Add fix commits.
+Each carries `Task: <slug>`.
+Update Plan if scope changed.
+Get the tip green.
+Re-pass review if the fix needs it.
+Create a new Archive commit.
+Status `done`, Outcome filled, move `live/` to `archive/`.
+Force-push with lease if the branch was already pushed.
+Merge only when Add is oldest, Archive is newest, every commit has `Task: <slug>`, and the tip is green.
 Never commit on top of Archive.
+Reset and re-archive is the only path.
 
 On completion, work on the task branch.
+Review has passed.
+Required checks on the tip are green.
 
 1. Fill Outcome.
 2. Flip Status to `done`.
 3. Move `tasks/live/<slug>.md` to `tasks/archive/<slug>.md`.
 4. Merge the PR with rebase merge or fast-forward only.
    - Do not create merge commits.
+   - The tip is green.
    - After merge, the archive file is on the integration branch.
    - The live path is gone.
 
@@ -209,13 +237,20 @@ The checkbox is ticked when that commit exists.
    - Do not guess answers.
 3. Before ending a session, update Open questions and Plan on the task branch.
    - The next session starts from the file.
-4. After review passes, archive as the last commit.
+4. After review passes and the tip is green, archive as the last commit.
+   - Until PR CI exists, the local stand-in is `bun run check:push` and `bun run test:libs`.
+   - When PR status checks exist, those are required checks too.
+   - Do not archive on a red tip.
+   - On a flake, re-run the checks.
+   - Do not archive to get past red.
    - Fill Outcome.
    - Flip Status to `done`.
    - Move `tasks/live/<slug>.md` to `tasks/archive/<slug>.md`.
    - Merge with rebase merge or fast-forward only.
    - Do not create merge commits.
+   - Merge only when Add is oldest, Archive is newest, every commit has `Task: <slug>`, and the tip is green.
    - Never commit on top of Archive.
+   - If Archive is already the tip and review or checks fail, reset it, fix, then re-archive.
 5. To abandon, close the PR without merging and delete the branch.
 
 A new session starts from the task file on its branch.
