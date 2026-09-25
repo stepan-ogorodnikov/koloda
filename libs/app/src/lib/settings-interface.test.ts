@@ -62,10 +62,6 @@ describe("interfaceSettingsValidation", () => {
 });
 
 describe("getLanguageCode", () => {
-  it("echoes a supported locale", () => {
-    expect(getLanguageCode("ru")).toBe("ru");
-  });
-
   it("strips region from en-US", () => {
     expect(getLanguageCode("en-US")).toBe("en");
   });

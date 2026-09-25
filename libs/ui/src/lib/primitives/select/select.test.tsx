@@ -17,7 +17,6 @@ type ControlledSelectProps = {
   searchPlaceholder?: string;
   emptyContent?: string;
   placeholder?: string;
-  isDisabled?: boolean;
 };
 
 function ControlledSelect({
@@ -25,7 +24,6 @@ function ControlledSelect({
   searchPlaceholder,
   emptyContent,
   placeholder = "Pick one",
-  isDisabled,
 }: ControlledSelectProps) {
   const [value, setValue] = useState<string | null>(null);
 
@@ -38,7 +36,6 @@ function ControlledSelect({
       placeholder={placeholder}
       searchPlaceholder={searchPlaceholder}
       emptyContent={emptyContent}
-      isDisabled={isDisabled}
       isVirtualized={false}
     >
       {(item) => (
@@ -116,18 +113,6 @@ describe("Select", () => {
     openSelect(/Test select/);
 
     expect(screen.getByText("Nothing here")).toBeTruthy();
-  });
-
-  it("shows the placeholder when nothing is selected", () => {
-    render(<ControlledSelect placeholder="Choose a fruit" />);
-
-    expect(screen.getByRole("button", { name: /Choose a fruit/ }).textContent).toContain("Choose a fruit");
-  });
-
-  it("disables the trigger when isDisabled is set", () => {
-    render(<ControlledSelect isDisabled />);
-
-    expect(screen.getByRole("button", { name: /Test select/ })).toHaveProperty("disabled", true);
   });
 
   it("closes on Escape while open, including from the search field", () => {

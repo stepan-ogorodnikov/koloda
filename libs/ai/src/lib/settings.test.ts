@@ -10,18 +10,22 @@ import {
 import type { AISettings } from "./settings";
 
 describe("findDuplicateProfileId", () => {
-  it("returns null when all profile ids are unique", () => {
-    const settings: AISettings = {
-      profiles: [
-        { id: "a", title: undefined, createdAt: "2026-01-01T00:00:00Z" },
-        { id: "b", title: undefined, createdAt: "2026-01-01T00:00:00Z" },
-      ],
-    };
+  it.each([
+    {
+      name: "unique ids",
+      settings: {
+        profiles: [
+          { id: "a", title: undefined, createdAt: "2026-01-01T00:00:00Z" },
+          { id: "b", title: undefined, createdAt: "2026-01-01T00:00:00Z" },
+        ],
+      } satisfies AISettings,
+    },
+    {
+      name: "empty profiles",
+      settings: { profiles: [] } satisfies AISettings,
+    },
+  ])("returns null when there is no duplicate ($name)", ({ settings }) => {
     expect(findDuplicateProfileId(settings)).toBeNull();
-  });
-
-  it("returns null for an empty profiles array", () => {
-    expect(findDuplicateProfileId({ profiles: [] })).toBeNull();
   });
 
   it("returns the id of the first duplicate when ids collide", () => {

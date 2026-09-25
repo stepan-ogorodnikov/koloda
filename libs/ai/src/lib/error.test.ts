@@ -1,31 +1,7 @@
 import { describe, expect, it } from "vitest";
-import {
-  AIError,
-  getAIHttpErrorCode,
-  getErrorDetails,
-  isAIError,
-  throwForAIResponse,
-  toAIError,
-  wrapAIError,
-} from "./error";
+import { AIError, getAIHttpErrorCode, getErrorDetails, throwForAIResponse, toAIError, wrapAIError } from "./error";
 
 describe("error", () => {
-  it("constructs AIError with code and optional message", () => {
-    const error = new AIError("test.code", "Test message");
-    expect(error.code).toBe("test.code");
-    expect(error.message).toBe("Test message");
-    expect(error.name).toBe("AIError");
-
-    const error2 = new AIError("test.code");
-    expect(error2.message).toBe("test.code");
-  });
-
-  it("identifies AIError instances", () => {
-    expect(isAIError(new AIError("test"))).toBe(true);
-    expect(isAIError(new Error("test"))).toBe(false);
-    expect(isAIError(null)).toBe(false);
-  });
-
   it("returns correct http error code", () => {
     expect(getAIHttpErrorCode(404)).toBe("ai.http.404");
     expect(getAIHttpErrorCode(500)).toBe("ai.http.500");

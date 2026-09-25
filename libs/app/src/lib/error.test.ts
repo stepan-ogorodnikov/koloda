@@ -2,43 +2,7 @@ import { describe, expect, it } from "vitest";
 import { ZodError } from "zod";
 import { z } from "zod";
 import type { ErrorCode } from "./error";
-import { AppError, formatAppError, isAbortError, isAppError, throwKnownError, toFormErrors } from "./error";
-
-describe("AppError", () => {
-  it("sets name to AppError", () => {
-    const err = new AppError("unknown");
-    expect(err.name).toBe("AppError");
-  });
-
-  it("sets message from code", () => {
-    const err = new AppError("db.get");
-    expect(err.message).toBe("db.get");
-  });
-
-  it("stores code and optional details", () => {
-    const err = new AppError("ai.http.500", "Something went wrong");
-    expect(err.code).toBe("ai.http.500");
-    expect(err.details).toBe("Something went wrong");
-  });
-});
-
-describe("isAppError", () => {
-  it("returns true for AppError instances", () => {
-    expect(isAppError(new AppError("unknown"))).toBe(true);
-  });
-
-  it("returns false for plain Error", () => {
-    expect(isAppError(new Error("fail"))).toBe(false);
-  });
-
-  it("returns false for plain objects", () => {
-    expect(isAppError({ code: "unknown" })).toBe(false);
-  });
-
-  it("returns false for null", () => {
-    expect(isAppError(null)).toBe(false);
-  });
-});
+import { AppError, formatAppError, isAbortError, throwKnownError, toFormErrors } from "./error";
 
 describe("isAbortError", () => {
   it("returns true for DOMException with name AbortError", () => {

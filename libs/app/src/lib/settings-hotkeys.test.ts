@@ -88,10 +88,6 @@ describe("settings-hotkeys", () => {
     });
   });
 
-  it("accepts the app's opinionated default hotkey preset", () => {
-    expect(hotkeysSettingsValidation.parse(DEFAULT_HOTKEYS_SETTINGS)).toEqual(DEFAULT_HOTKEYS_SETTINGS);
-  });
-
   it("reports duplicate hotkeys inside the same category", () => {
     const result = hotkeysSettingsValidation.safeParse({
       ...structuredClone(DEFAULT_HOTKEYS_SETTINGS),

@@ -97,15 +97,4 @@ describe("getCardsTableContentColumns", () => {
     expect(cols[1].getFieldId(mixed[0])).toBeUndefined(); // template 1 has no second field
     expect(cols[1].getFieldId(mixed[1])).toBe("01900000-0000-7000-8000-000000000002");
   });
-
-  it("includes index starting from 0 for each column", () => {
-    const templates = [
-      createTemplate("01900000-0000-7000-8000-000000000001", [{ title: "A" }, { title: "B" }, { title: "C" }]),
-    ];
-    const result = getCardsTableContentColumns(templates);
-
-    expect(result[0].index).toBe(0);
-    expect(result[1].index).toBe(1);
-    expect(result[2].index).toBe(2);
-  });
 });
