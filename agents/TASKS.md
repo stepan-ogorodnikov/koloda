@@ -109,8 +109,8 @@ When the human asks to implement.
    - Then re-request review.
 5. Do not create the archive commit until review passes.
 6. Before that commit, required checks on the current tip are green.
-   - Until PR CI exists, the local stand-in is `bun run check:push` and `bun run test:libs`.
-   - When PR status checks exist, those are required checks too.
+   - On a pull request, that is the PR Checks workflow job `checks` (`bun run check:push`, then `bun run test:libs`).
+   - On a `main` push without a PR, the local stand-in is those same scripts (pre-push).
    - Do not archive on a red tip.
    - On a flake, re-run the checks.
    - Do not archive to get past red.
@@ -127,7 +127,7 @@ Gate: the branch merges only if all three hold.
 - Every commit carries `Task: <slug>`.
 
 The tip must be green at merge time.
-Same checks as before Archive.
+Same checks as before Archive: PR Checks job `checks`, or the local scripts on a `main` push without a PR.
 
 The Add commit adds `tasks/live/<slug>.md`.
 The Archive commit moves `tasks/live/<slug>.md` to `tasks/archive/<slug>.md`.
@@ -238,8 +238,8 @@ The checkbox is ticked when that commit exists.
 3. Before ending a session, update Open questions and Plan on the task branch.
    - The next session starts from the file.
 4. After review passes and the tip is green, archive as the last commit.
-   - Until PR CI exists, the local stand-in is `bun run check:push` and `bun run test:libs`.
-   - When PR status checks exist, those are required checks too.
+   - On a pull request, that is the PR Checks workflow job `checks` (`bun run check:push`, then `bun run test:libs`).
+   - On a `main` push without a PR, the local stand-in is those same scripts (pre-push).
    - Do not archive on a red tip.
    - On a flake, re-run the checks.
    - Do not archive to get past red.
