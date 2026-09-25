@@ -6,7 +6,9 @@ No routing, feature screens, or data fetching — form/overlay chrome and query-
 ## Where it sits
 
 Consumed by `@koloda/app-react`, `@koloda/srs-react`, `@koloda/assistant-react`, `@koloda/settings-react`, and app entry components.
-Depends on `@koloda/app` (`ERROR_MESSAGES`, form error types) and `@koloda/core-react` (settings-backed hotkeys for Dialog, Form controls, Select, titlebar). That edge is intentional; do not “fix” it by splitting widgets or injecting binders unless a new ADR says so.
+Depends on `@koloda/app` (`ERROR_MESSAGES`, form error types) and `@koloda/core-react` (settings-backed hotkeys for Dialog, Form controls, Select, titlebar).
+That edge is intentional.
+Do not "fix" it by splitting widgets or injecting binders unless a new decision says so (`agents/DECISIONS.md`).
 
 ## Architectural Map
 

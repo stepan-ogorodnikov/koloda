@@ -30,8 +30,8 @@ Also load, when the target needs them:
 - `agents/I18N.md` — user-visible strings
 - `agents/FUNCTIONAL-SPECIFICATIONS.md` — any spec is in the audited surface
 - `agents/ASSISTANT-MAP.md` — assistant
-- `docs/adr/0001-TS-RUST-DOMAIN-MIRRORING.md` — the target crosses TypeScript and Rust
-- `docs/adr/0002-DUAL-PLATFORM-PERSISTENCE.md` — the target includes persistence
+- `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md` — the target crosses TypeScript and Rust
+- `docs/decisions/DUAL-PLATFORM-PERSISTENCE.md` — the target includes persistence
 - `apps/electron/IPC.md` — desktop IPC
 - the playbook for a half-finished recipe:
   `agents/ADD-AI-PROVIDER.md`, `agents/ADD-ASSISTANT-TOOL.md`, `agents/ADD-HOTKEY.md`, `agents/ADD-COLOR-THEME.md`, `agents/DB.md`
@@ -48,7 +48,7 @@ The tests are part of the audited surface.
 
 ## Method
 
-1. Restate the scope before analyzing: the packages, specs, ADRs, and test commands included, and what is out.
+1. Restate the scope before analyzing: the packages, specs, decisions, and test commands included, and what is out.
 2. Read specs, then code, then tests.
 3. Check conformance in both directions: code against spec, and spec against code.
 4. Hunt for desync across mirrors, not for a way to collapse them.
@@ -82,8 +82,9 @@ Generic quality, when you can cite lines:
 Project residue from agentic coding.
 This list is the point of the audit:
 
-- Mirror desync — Zod / TS domain vs Rust domain disagree (`docs/adr/0001`).
-- Host desync — web SQLite vs desktop SQLite / Refinery columns or behavior disagree (`docs/adr/0002`, `agents/DB.md`).
+- Mirror desync — Zod / TS domain vs Rust domain disagree (`docs/decisions/TS-RUST-DOMAIN-MIRRORING.md`).
+- Host desync — web SQLite vs desktop SQLite / Refinery columns or behavior disagree.
+  See `docs/decisions/DUAL-PLATFORM-PERSISTENCE.md` and `agents/DB.md`.
 - IPC drift — `apps/electron/IPC.md` vs main or renderer.
 - Layer leaks — a package does work that its README `Does NOT own`, or that `agents/ASSISTANT-MAP.md` forbids.
 - Missing trap comments — non-obvious code without `// WHY` / `// INVARIANT` / `// WORKAROUND`.
@@ -104,7 +105,7 @@ Do not recommend collapsing TypeScript and Rust, or the two persistence owners.
 Every finding cites `file:line`.
 Dead-code findings also cite the search.
 Architecture findings cite the boundary they break.
-Cite a README `Does NOT own` line, an `ASSISTANT-MAP.md` row, or an ADR section.
+Cite a README `Does NOT own` line, an `ASSISTANT-MAP.md` row, or a decision Ruling.
 Spec-violation findings cite the spec section.
 
 Every finding carries one classification:
@@ -142,10 +143,10 @@ The review noise list is not copied unchanged; the dropped item is the diff-scop
 - Do not suggest adding deprecation shims, adapter layers, or compatibility wrappers.
   Existing leftovers of those are residue — flag them.
 - Do not propose collapsing the TS ↔ Rust duplication or unifying the two persistence owners.
-  See `docs/adr/0001`, `docs/adr/0002`.
+  See `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md`, `docs/decisions/DUAL-PLATFORM-PERSISTENCE.md`.
   Desync between the two sides is a finding; unification is not the fix.
 - Do not flag FSRS staying TypeScript-side as a bug, or suggest moving it into Rust.
-  The source of truth is TS. See `docs/adr/0001`.
+  The source of truth is TS. See `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md`.
 - Do not flag provider HTTP calls living in `libs/ai` instead of the store.
   See `agents/ASSISTANT-MAP.md`.
 - Do not flag `Select.Root = SelectRoot` style assignment as a reexport.
@@ -177,7 +178,7 @@ The audit session does not create that file and does not implement.
 Structure, in this order:
 
 1. Title and the audited commit hash.
-2. Scope reviewed — the specs, packages, ADRs, and rough size actually read, plus test commands run.
+2. Scope reviewed — the specs, packages, decisions, and rough size actually read, plus test commands run.
 3. Verdict — the TL;DR: overall health plus the few Must-fix and Should-fix findings that matter most.
 4. Strengths — what is good and should be kept as-is.
 5. Findings grouped by classification, ordered by severity inside each group.
@@ -201,7 +202,7 @@ The human triages each finding: fix, skip, or needs-decision.
 - [ ] Standing guides loaded; specs read before code.
 - [ ] Every finding cites `file:line`, a classification, and a severity.
 - [ ] Spec-violation findings cite the spec section.
-- [ ] Architecture findings cite a README, map row, or ADR.
+- [ ] Architecture findings cite a README, map row, or decision.
 - [ ] Dead-code claims cite the search used.
 - [ ] Desync flagged; unification not recommended.
 - [ ] Fix directions are local; no module rewrite.

@@ -42,7 +42,8 @@ const templateContentFields = z.object({
     .min(1, "validation.templates.layout.too-few"),
 });
 
-// WHY: mirrors the Rust twin `validate_template_content` layout membership check (docs/adr/0001);
+// WHY: mirrors the Rust twin `validate_template_content` layout membership check
+// (`docs/decisions/TS-RUST-DOMAIN-MIRRORING.md`);
 // TS must reject what Rust rejects, so keep this refine while the Rust check exists.
 const templateContent = templateContentFields.superRefine((content, ctx) => {
   const fieldIds = new Set(content.fields.map((field) => field.id));

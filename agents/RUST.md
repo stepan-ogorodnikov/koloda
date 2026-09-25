@@ -74,5 +74,5 @@ so card-progress and review namespaces stay distinct.
 - `domain/` must not import `repo/`.
 - Domain importing `crate::app::error` is intentional.
   Shared `AppError` codes stay aligned with `@koloda/app`.
-- Each domain file mirrors one TS module, entity per file (`docs/adr/0001-TS-RUST-DOMAIN-MIRRORING.md`).
+- Each domain file mirrors one TS module, entity per file (`docs/decisions/TS-RUST-DOMAIN-MIRRORING.md`).
   Change both sides together.

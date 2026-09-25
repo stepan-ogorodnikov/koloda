@@ -34,7 +34,7 @@ The listed files are relative to the repo root.
 | Edit touches `className` | add `agents/CSS.md` |
 | Split multi-commit work into a plan (feature, audit report) | `agents/IMPLEMENTATION-PLAN.md`, `agents/TASKS.md`, plus the area guides the work needs |
 | Start or continue a task file | the task file, `agents/TASKS.md` |
-| Add an AI provider | `agents/ADD-AI-PROVIDER.md`, `docs/specs/AI-PROVIDERS.md`, `agents/CODE-STYLE.md`, `agents/CODE-DOCUMENTATION.md`, `agents/I18N.md`, `docs/adr/0001-TS-RUST-DOMAIN-MIRRORING.md` |
+| Add an AI provider | `agents/ADD-AI-PROVIDER.md`, `docs/specs/AI-PROVIDERS.md`, `agents/CODE-STYLE.md`, `agents/CODE-DOCUMENTATION.md`, `agents/I18N.md`, `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md` |
 | Add an assistant tool | `agents/ADD-ASSISTANT-TOOL.md`, `docs/specs/ASSISTANT-DATA-ACCESS.md`, `agents/CODE-STYLE.md`, `agents/CODE-DOCUMENTATION.md`, `agents/I18N.md` |
 | Assistant chat (anything) | `agents/ASSISTANT-MAP.md` (it routes to one spec and the files) |
 | Cards (content, state, add/edit/delete, views) | `docs/specs/CARDS.md` |
@@ -43,14 +43,14 @@ The listed files are relative to the repo root.
 | Templates (fields, layout, locking) | `docs/specs/TEMPLATES.md` |
 | Algorithms / presets | `docs/specs/ALGORITHMS.md` |
 | Learning settings (defaults, daily limits, day boundary, learn-ahead limit) | `docs/specs/LEARNING-SETTINGS.md` |
-| Database schema change | `agents/DB.md`, `docs/adr/0001-TS-RUST-DOMAIN-MIRRORING.md`, `docs/adr/0002-DUAL-PLATFORM-PERSISTENCE.md` |
-| Change inside `crates/koloda` (Rust domain, repos, settings slices, FSRS, reviews) | `agents/RUST.md`, `docs/adr/0001-TS-RUST-DOMAIN-MIRRORING.md` |
+| Database schema change | `agents/DB.md`, `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md`, `docs/decisions/DUAL-PLATFORM-PERSISTENCE.md` |
+| Change inside `crates/koloda` (Rust domain, repos, settings slices, FSRS, reviews) | `agents/RUST.md`, `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md` |
 | Add a color theme | `agents/ADD-COLOR-THEME.md`, `docs/specs/INTERFACE-SETTINGS.md` |
 | Interface settings change (language, scheme, themes, motion) | `docs/specs/INTERFACE-SETTINGS.md`, `agents/I18N.md` |
 | App shell layout (narrow/wide, drawer, nav) | `agents/LAYOUT.md`, `agents/CSS.md`; add `docs/specs/INTERFACE-SETTINGS.md` when the change is an interface setting |
 | Add a hotkey | `agents/ADD-HOTKEY.md`, `docs/specs/HOTKEYS.md`, `agents/I18N.md` |
 | Write or update a functional spec | `agents/FUNCTIONAL-SPECIFICATIONS.md`, `agents/MARKDOWN.md` |
-| Write or update an ADR (new area decision) | `docs/adr/README.md`, `agents/MARKDOWN.md` |
+| Write or update a decision | `agents/DECISIONS.md`, `agents/MARKDOWN.md` |
 | Write or update any markdown | `agents/MARKDOWN.md` |
 
 ## Reviewing
@@ -63,7 +63,7 @@ Then add the same guides the author used for that change type, so the reviewer a
 | Any diff | `agents/CODE-STYLE.md`, `agents/CODE-DOCUMENTATION.md` |
 | Diff adds or changes tests | add `agents/TESTING.md` |
 | Diff touches `className` | add `agents/CSS.md` |
-| Add AI provider diff | `agents/ADD-AI-PROVIDER.md`, `docs/specs/AI-PROVIDERS.md`, `agents/I18N.md`, `docs/adr/0001-TS-RUST-DOMAIN-MIRRORING.md` |
+| Add AI provider diff | `agents/ADD-AI-PROVIDER.md`, `docs/specs/AI-PROVIDERS.md`, `agents/I18N.md`, `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md` |
 | Add assistant tool diff | `agents/ADD-ASSISTANT-TOOL.md`, `docs/specs/ASSISTANT-DATA-ACCESS.md`, `agents/I18N.md` |
 | Assistant chat diff | `agents/ASSISTANT-MAP.md` (+ the one spec it names) |
 | Cards diff | `docs/specs/CARDS.md` |
@@ -72,8 +72,8 @@ Then add the same guides the author used for that change type, so the reviewer a
 | Templates diff | `docs/specs/TEMPLATES.md` |
 | Algorithms diff | `docs/specs/ALGORITHMS.md` |
 | Learning settings diff | `docs/specs/LEARNING-SETTINGS.md` |
-| Schema change diff | `agents/DB.md`, `docs/adr/0001`, `docs/adr/0002` |
-| `crates/koloda` / `koloda` crate diff | `agents/RUST.md`, `docs/adr/0001` |
+| Schema change diff | `agents/DB.md`, `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md`, `docs/decisions/DUAL-PLATFORM-PERSISTENCE.md` |
+| `crates/koloda` / `koloda` crate diff | `agents/RUST.md`, `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md` |
 | Theme diff | `agents/ADD-COLOR-THEME.md`, `docs/specs/INTERFACE-SETTINGS.md` |
 | Interface settings diff | `docs/specs/INTERFACE-SETTINGS.md` |
 | App shell layout diff | `agents/LAYOUT.md`, `agents/CSS.md`; add `docs/specs/INTERFACE-SETTINGS.md` when the diff changes an interface setting |
@@ -92,8 +92,8 @@ Also add:
 - `agents/CSS.md` when UI is in scope
 - `agents/LAYOUT.md` when the target includes app-shell layout, the drawer, or the wide breakpoint
 - `agents/I18N.md` when user-visible strings are in scope
-- `docs/adr/0001-TS-RUST-DOMAIN-MIRRORING.md` when the target crosses TypeScript and Rust
-- `docs/adr/0002-DUAL-PLATFORM-PERSISTENCE.md` when the target includes persistence
+- `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md` when the target crosses TypeScript and Rust
+- `docs/decisions/DUAL-PLATFORM-PERSISTENCE.md` when the target includes persistence
 - `agents/ASSISTANT-MAP.md` for assistant
 - the package README for each package in scope
 - `apps/electron/IPC.md` when the target includes desktop IPC
@@ -109,8 +109,8 @@ Do not paste these unless the task touches them.
 Consult them yourself when a change crosses a boundary.
 
 - `agents/BACKWARDS-COMPATIBILITY.md` — deletion policy, no shims.
-- `docs/adr/0001-TS-RUST-DOMAIN-MIRRORING.md` — why TS and Rust both exist.
-- `docs/adr/0002-DUAL-PLATFORM-PERSISTENCE.md` — why two persistence owners exist.
+- `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md` — why TS and Rust both exist.
+- `docs/decisions/DUAL-PLATFORM-PERSISTENCE.md` — why two persistence owners exist.
 - `libs/*/README.md`, `apps/*/README.md` — per-package "Where it sits" and "Does NOT own" boundaries.
 - `apps/electron/IPC.md` — the desktop renderer ↔ main IPC channel contract.
 

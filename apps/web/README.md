@@ -7,7 +7,8 @@ Data, settings, and AI profiles all live in the browser profile through IndexedD
 
 Assembles the `@koloda/app-react` screens on a SQLite-backed data layer.
 It is the deployable web build; `apps/web-e2e` drives it with Playwright.
-Persistence uses the same product SQL as the desktop SQLite core through `@koloda/db-sqlite` (ADR 0002).
+Persistence uses the same product SQL as the desktop SQLite core through `@koloda/db-sqlite`.
+See `docs/decisions/DUAL-PLATFORM-PERSISTENCE.md`.
 
 ## How to run
 
@@ -40,6 +41,6 @@ Persistence uses the same product SQL as the desktop SQLite core through `@kolod
 
 ## Read next
 
-- `docs/adr/0002-DUAL-PLATFORM-PERSISTENCE.md` — why two persistence owners exist
+- `docs/decisions/DUAL-PLATFORM-PERSISTENCE.md` — why two persistence owners exist
 - `docs/specs/` — behavior specs
 - `agents/I18N.md` — locale workflow

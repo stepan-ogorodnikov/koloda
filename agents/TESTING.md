@@ -58,7 +58,7 @@ An intermittent failure is a bug — fix it before merging rather than retrying.
 
 ## The TS ↔ Rust twin rule
 
-Mirrored domain logic (`docs/adr/0001-TS-RUST-DOMAIN-MIRRORING.md`) must carry the same boundary tests on both sides.
+Mirrored domain logic (`docs/decisions/TS-RUST-DOMAIN-MIRRORING.md`) must carry the same boundary tests on both sides.
 A rule tested in only one implementation will regress in the other.
 When you add a boundary case in `libs/srs` or `libs/app`, add its twin in `crates/koloda`, and vice versa.
 

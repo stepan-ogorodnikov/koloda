@@ -51,7 +51,8 @@ fn default_time_format() -> String {
 // length cap. "locale" is the sentinel, not a pattern, so it bypasses the scan; date-fns
 // escapes literals with single quotes (`'at'`, `''` for a real quote), so letters inside
 // quotes never count as tokens. The TS side additionally probes with date-fns itself;
-// this side stays structural so the crate never needs a pattern engine (ADR 0001).
+// this side stays structural so the crate never needs a pattern engine
+// (`docs/decisions/TS-RUST-DOMAIN-MIRRORING.md`).
 fn is_valid_timestamp_pattern(value: &str) -> bool {
     if value == "locale" {
         return true;

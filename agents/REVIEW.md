@@ -11,8 +11,8 @@ If you have not loaded them, you cannot raise Blocking findings that cite them.
 When the diff includes a file under `docs/specs/`, also read `agents/FUNCTIONAL-SPECIFICATIONS.md` and `agents/MARKDOWN.md`.
 Spec quality findings cite those guides.
 
-The prompt additionally lists the task-specific specs, ADRs, and playbooks that apply to that diff.
-Read those too. Do not load specs, ADRs, or playbooks the prompt did not list; those are task-scoped and loading unlisted ones causes whole-repo auditing noise.
+The prompt additionally lists the task-specific specs, decisions, and playbooks that apply to that diff.
+Read those too. Do not load specs, decisions, or playbooks the prompt did not list; those are task-scoped and loading unlisted ones causes whole-repo auditing noise.
 
 ## Scope
 
@@ -32,7 +32,7 @@ Acceptable anchors:
 
 - A guide file and section: `agents/CODE-STYLE.md` (Props Types), `agents/CSS.md` (Conditional styling).
 - The spec standard: `agents/FUNCTIONAL-SPECIFICATIONS.md` (One home per rule).
-- An ADR: `docs/adr/0001-TS-RUST-DOMAIN-MIRRORING.md`.
+- A decision: `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md`.
 - A spec: `docs/specs/LESSONS.md` (Grading).
 - A playbook row: `agents/ASSISTANT-MAP.md` (Fix streaming).
 - A package README boundary: `libs/assistant-react/README.md` (Does NOT own).
@@ -56,7 +56,8 @@ Raise Blocking for:
 
 - Correctness errors, broken invariants, or behavior that contradicts a spec.
 - Layer boundary violations: cite a row from `agents/ASSISTANT-MAP.md` or a README "Does NOT own" line.
-- TS ↔ Rust out of sync: provider enum, theme ids, schema, or any field that `docs/adr/0001` says both sides must agree on.
+- TS ↔ Rust out of sync: provider enum, theme ids, schema, or any field both sides must agree on.
+  See `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md`.
 - Missing `// WHY` / `// INVARIANT` / `// WORKAROUND` on non-obvious inline code (see `agents/CODE-DOCUMENTATION.md`).
   Module/type orientation docs that state ownership, mappings, or do-not-interpret rules are allowed; do not demand tags on those.
 - Rules named in `agents/CODE-STYLE.md` or `agents/CSS.md` that are not lint-enforced. For example:
@@ -65,7 +66,7 @@ Raise Blocking for:
   - A `tv()` recipe missing `defaultVariants` for a non-empty default.
   - A bare-adjective boolean variant instead of a verb-prefixed one.
   - A barrel that only forwards other modules (the compound component assignment is an exception, see below).
-- A change that needs an ADR but does not include one (see `agents/CODE-DOCUMENTATION.md`, Comments vs ADRs).
+- A change that needs a decision but does not include one (see `agents/DECISIONS.md`).
 - A user-visible behavior change that does not update the spec that owns it (see `agents/FUNCTIONAL-SPECIFICATIONS.md`, Living document).
 - A spec hunk that violates `agents/FUNCTIONAL-SPECIFICATIONS.md`: restated invariants, an "Edge Cases" section, code or persistence field names, UI chrome, or a Core Model that recaps later sections.
 
@@ -91,8 +92,10 @@ Raising them wastes the human reviewer's time and signals the reviewer did not r
   Module/type orientation docs (ownership, mappings, do-not-interpret) are allowed per `agents/CODE-DOCUMENTATION.md`.
   Do not flag them as noise.
 - Do not suggest deprecation shims, adapter layers, or compatibility wrappers. See `agents/BACKWARDS-COMPATIBILITY.md`.
-- Do not propose collapsing the TS ↔ Rust duplication or unifying the two persistence owners. See `docs/adr/0001`, `docs/adr/0002`.
-- Do not flag FSRS staying TypeScript-side as a bug, or suggest moving it into Rust. The source of truth is TS. See `docs/adr/0001`.
+- Do not propose collapsing the TS ↔ Rust duplication or unifying the two persistence owners.
+  See `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md` and `docs/decisions/DUAL-PLATFORM-PERSISTENCE.md`.
+- Do not flag FSRS staying TypeScript-side as a bug, or suggest moving it into Rust.
+  The source of truth is TS. See `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md`.
 - Do not flag provider HTTP calls living in `libs/ai` instead of the store. Layer boundaries own this. See `agents/ASSISTANT-MAP.md`.
 - Do not flag `Select.Root = SelectRoot` style assignment as a reexport. It is the allowed compound component exception. See `agents/CODE-STYLE.md`.
 - Do not request i18n for theme labels. Labels are plain strings in the theme registries. See `agents/ADD-COLOR-THEME.md`.

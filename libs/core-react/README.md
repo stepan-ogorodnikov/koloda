@@ -26,7 +26,7 @@ Web implements `Queries` with `@koloda/db-sqlite`; desktop implements it via Ele
 
 ## Read next
 
-- `docs/adr/0002-DUAL-PLATFORM-PERSISTENCE.md` — why each app injects a different `Queries` backend
+- `docs/decisions/DUAL-PLATFORM-PERSISTENCE.md` — why each app injects a different `Queries` backend
 - `agents/ADD-HOTKEY.md` — `useAppHotkey` patterns
 - `docs/specs/HOTKEYS.md` — hotkey behavior
 - `agents/LAYOUT.md` — interface settings synced through atoms

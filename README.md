@@ -85,5 +85,5 @@ crates/
 ```
 
 Agent routing starts at `agents/INDEX.md`.
-Architecture decisions are in `docs/adr/`.
+Architecture decisions are in `docs/decisions/`. Rules: `agents/DECISIONS.md`.
 Functional specs are in `docs/specs/`.

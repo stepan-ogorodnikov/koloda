@@ -113,7 +113,7 @@ That way an agent that opened the file without the README still lands correctly.
 
 Allowed:
 
-- Thin module maps that point at README / ADR ownership (do not rehash the README).
+- Thin module maps that point at README or decision ownership (do not rehash the README).
 - Type docs that encode mappings agents would otherwise "fix" (e.g. FSRS state ints ↔ SQL lesson/review buckets).
 - Prefer `// INVARIANT:` / `// WHY:` on the field or call site when the rule is localized.
 - Use type/module docs when the rule is the type's reason to exist.
@@ -121,7 +121,7 @@ Allowed:
 Forbidden under this exception:
 
 - API narration ("returns X", "loops over Y", documenting every public fn).
-- Layer essays that belong in an ADR.
+- Layer essays that belong in `docs/decisions/`.
 - Duplicating README paragraphs at the top of every file.
 
 Example (module):
@@ -130,7 +130,7 @@ Example (module):
 //! Domain DTOs, validation, and serde — mirrors `@koloda/srs` / `@koloda/app`.
 //!
 //! Must not import `rusqlite`. Shared errors via `crate::app::error::AppError` are intentional.
-//! Layer map: crate `README.md`. Mirroring: `docs/adr/0001-TS-RUST-DOMAIN-MIRRORING.md`.
+//! Layer map: crate `README.md`. Mirroring: `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md`.
 ```
 
 Example (type):
@@ -152,18 +152,14 @@ of statements. Fixture and mock docs may describe their config surface.
 Non-obvious behavior still gets `// WHY:` / `// INVARIANT:` / `// WORKAROUND:`
 tags. Separator banner lines (`// ====`) add no information and stay out.
 
-## Comments vs. Architecture Decision Records (ADRs)
+## Comments vs. decisions
 
-How do you know if a decision needs a code comment or a full ADR file in `docs/adr/`?
-
-- Use a Code Comment when the decision is localized to a single function or file.
-- Use module/type orientation docs when an agent opening that module needs ownership or mapping context immediately.
-- Use an ADR when the decision affects multiple files or layers (e.g., TS and Rust duplication, dual-platform persistence).
-  A comment in `provider-catalog.ts` won't be seen by an agent editing `domain/ai.rs`.
-  ADRs bridge that gap.
-
-Index: `docs/adr/README.md`.
-Start with `docs/adr/0001-TS-RUST-DOMAIN-MIRRORING.md` when a change touches both TS domain and `koloda`.
+A tagged comment is the home for a local trap.
+A file under `docs/decisions/` is current law when the ruling spans two or more layers.
+Use one only when no single comment or README can be the home.
+A comment in `provider-catalog.ts` will not be seen by an agent editing `domain/ai.rs`.
+Rules for creating, updating, and deleting those files: `agents/DECISIONS.md`.
+Load `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md` when a change touches both the TS domain and `koloda`.
 
 Summary Checklist for Agents
 
@@ -171,4 +167,4 @@ Summary Checklist for Agents
 - Did I use `// WHY`:, `// INVARIANT:`, or `// WORKAROUND`: for any non-obvious inline code?
 - If I added module/type docs, do they state ownership, mappings, or do-not-interpret rules — not API narration?
 - Did I avoid adding redundant JSDoc or noise?
-- If my change spans multiple layers, did I check if it needs an ADR?
+- If my change spans multiple layers, did I check `agents/DECISIONS.md` before adding a decision file?

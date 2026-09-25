@@ -7,7 +7,8 @@ No UI — the renderer is `apps/electron-react`; no domain logic — that lives 
 
 Owns the window, app lifecycle, and every main-process IPC channel (`IPC.md`).
 Data access and AI provider calls happen here; AI secrets never reach the renderer.
-The addon (`src-rust/`) is a thin `koloda` façade — the TS/Rust mirroring rationale is ADR 0001.
+The addon (`src-rust/`) is a thin `koloda` façade.
+The TS/Rust mirroring rationale is `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md`.
 
 ## How to run
 
@@ -52,5 +53,5 @@ The addon (`src-rust/`) is a thin `koloda` façade — the TS/Rust mirroring rat
 
 - `IPC.md` — the full renderer ↔ main channel contract
 - `apps/electron-react/README.md` — the renderer
-- `docs/adr/0001-TS-RUST-DOMAIN-MIRRORING.md` — why TS and Rust both exist
+- `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md` — why TS and Rust both exist
 - `agents/RUST.md` — the domain crate below the addon

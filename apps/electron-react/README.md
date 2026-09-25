@@ -33,13 +33,14 @@ Normally booted by `nx run @koloda/electron:serve`; runs standalone in a browser
 ### Does NOT own (prevent scope creep)
 
 - Electron main process, preload, and bundling — `apps/electron`
-- Domain logic and SQLite persistence — `crates/koloda`, mirroring `@koloda/srs` (ADR 0001)
+- Domain logic and SQLite persistence — `crates/koloda`, mirroring `@koloda/srs`.
+  See `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md`.
 - Screens, routes — `@koloda/app-react`; settings screens and setup pickers — `@koloda/settings-react`
 - E2E harness — `apps/electron-e2e`
 
 ## Read next
 
 - `apps/electron/IPC.md` — the channel contract this renderer speaks
-- `docs/adr/0001-TS-RUST-DOMAIN-MIRRORING.md` — why TS and Rust both exist
-- `docs/adr/0002-DUAL-PLATFORM-PERSISTENCE.md` — why two persistence owners exist
+- `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md` — why TS and Rust both exist
+- `docs/decisions/DUAL-PLATFORM-PERSISTENCE.md` — why two persistence owners exist
 - `docs/specs/` — behavior specs

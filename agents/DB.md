@@ -1,8 +1,8 @@
 ### Database Migrations
 
-Why two ownership boundaries exist: `docs/adr/0002-DUAL-PLATFORM-PERSISTENCE.md`.
+Why two ownership boundaries exist: `docs/decisions/DUAL-PLATFORM-PERSISTENCE.md`.
 
-- **SQLite on both hosts** (ADR 0002).
+- **SQLite on both hosts**.
   Web uses `@koloda/db-sqlite` (`wa-sqlite` + `IDBBatchAtomicVFS`).
   Desktop uses SQLite via `koloda` Refinery.
 - **One SQL series**: `crates/koloda/src/migrations/`.
