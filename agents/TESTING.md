@@ -169,7 +169,7 @@ Match these files when the shape fits:
 - `libs/assistant-react/src/lib/persistence/conversation-restore.test.ts` — wire-compat restore scenarios.
 - `apps/electron/src/window-close-coordinator.test.ts` — state-machine race coverage.
 - `libs/ai/src/lib/prompts.test.ts` — prose-prompt guards.
-- `crates/koloda/tests/domain/lessons_validation_tests.rs` — shared-baseline reject/boundary tables asserting per-field error codes.
+- `crates/koloda/tests/domain/reviews_validation_tests.rs` — shared-baseline reject/boundary tables asserting per-field error codes.
 - `libs/assistant-react/src/lib/state/assistant-conversation-store.test.ts` — typed it.each negative-case table with per-row setup hooks.
 - `crates/koloda/tests/domain/cards_serde_tests.rs` — NAPI wire pins: exact JSON shape, null-vs-omitted keys, serde round-trip.
 - `libs/app/src/lib/error-parity.test.ts` — parses Rust `error_codes` from source vs `ERROR_MESSAGES` keys (`ai.*` TS-only allow-list).

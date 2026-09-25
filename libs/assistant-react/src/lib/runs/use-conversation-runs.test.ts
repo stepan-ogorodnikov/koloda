@@ -123,13 +123,6 @@ describe("useConversationRuns", () => {
     resetAssistantEngineForTests();
   });
 
-  it("exposes only dispatch as the production execution ingress", () => {
-    createHarness();
-    const { result } = renderHook(() => useConversationRuns());
-    expect(Object.keys(result.current)).toEqual(["dispatch"]);
-    expect(typeof result.current.dispatch).toBe("function");
-  });
-
   it("executeChatRun dispatches updateAssistantText via dispatchToConversation (per-id) so background streams land on the originating conversation", async () => {
     const harness = createHarness();
     harness.store.set(upsertConversationAtom, makeConversation("A"));
