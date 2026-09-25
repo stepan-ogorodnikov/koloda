@@ -6,44 +6,6 @@ use koloda::domain::cards::UpdateCardValues;
 use serde_json::json;
 
 #[test]
-fn test_update_card_values_missing_content() {
-    let data = json!({});
-    let result = serde_json::from_value::<UpdateCardValues>(data);
-    result.unwrap_err();
-}
-
-#[test]
-fn test_update_card_values_extra_fields_ok() {
-    let data = json!({
-        "content": valid_card_content(),
-        "unknownField": "ignored"
-    });
-    let result = serde_json::from_value::<UpdateCardValues>(data);
-    result.unwrap();
-}
-
-#[test]
-fn test_update_card_values_content_invalid_type() {
-    let data = json!({
-        "content": "not-an-object"
-    });
-    let result = serde_json::from_value::<UpdateCardValues>(data);
-    result.unwrap_err();
-}
-
-#[test]
-fn test_update_card_values_content_field_text_invalid_type() {
-    let data = json!({
-        "content": {
-            "1": { "text": 123 },
-            "2": { "text": "Back text" }
-        }
-    });
-    let result = serde_json::from_value::<UpdateCardValues>(data);
-    result.unwrap_err();
-}
-
-#[test]
 fn test_update_card_content_valid_ok() {
     let data = json!({
         "content": valid_card_content()

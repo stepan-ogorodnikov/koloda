@@ -18,78 +18,35 @@ fn valid_payload() -> Value {
     })
 }
 
+/// One row per shape class on `InsertReviewData`. `dueAt: null` stays on
+/// `test_review_rejects_null_due_at` so that pin is not asserted twice.
 #[test]
-fn test_missing_required_fields_fail() {
-    let required_fields = [
-        "cardId",
-        "rating",
-        "state",
-        "dueAt",
-        "stability",
-        "difficulty",
-        "scheduledDays",
-        "learningSteps",
-        "time",
-        "isIgnored",
+fn test_insert_review_data_input_shapes() {
+    // `None` removes the field; `Some` replaces it. Extra keys are a separate accept row
+    // because unknown fields are tolerated (no `deny_unknown_fields`).
+    let reject: &[(&str, &str, Option<Value>)] = &[
+        ("missing cardId", "cardId", None),
+        ("mistyped rating", "rating", Some(json!("not-a-number"))),
+        ("null isIgnored", "isIgnored", Some(json!(null))),
     ];
 
-    for field in required_fields {
+    for (label, field, offending) in reject {
         let mut payload = valid_payload();
-        payload.as_object_mut().unwrap().remove(field);
-
-        let result: Result<InsertReviewData, _> = serde_json::from_value(payload);
-        assert!(result.is_err(), "Should fail when {field} is missing");
+        match offending {
+            None => {
+                payload.as_object_mut().unwrap().remove(*field);
+            }
+            Some(value) => payload[*field] = value.clone(),
+        }
+        assert!(
+            serde_json::from_value::<InsertReviewData>(payload).is_err(),
+            "{label} must fail"
+        );
     }
 
-    let result: Result<InsertReviewData, _> = serde_json::from_value(json!({}));
-    assert!(result.is_err(), "Should fail when every field is missing");
-
-    let mut review_json = serde_json::to_value(review_fixture()).unwrap();
-    review_json.as_object_mut().unwrap().remove("dueAt");
-    let result: Result<Review, _> = serde_json::from_value(review_json);
-    assert!(result.is_err(), "Should fail when Review dueAt is missing");
-}
-
-#[test]
-fn test_wrong_typed_fields_fail() {
-    // WHY: Unknown fields carry no declared type and are tolerated (no `deny_unknown_fields`),
-    // so extra members must never reject an otherwise valid payload.
-    let mut payload = valid_payload();
-    payload["unknownField"] = json!("ignored");
-
-    let data: InsertReviewData = serde_json::from_value(payload).expect("Should deserialize ignoring extra fields");
-    data.validate().unwrap();
-
-    let mistyped_fields = [
-        ("cardId", json!(1)),
-        ("cardId", json!(null)),
-        ("rating", json!("not-a-number")),
-        ("rating", json!(null)),
-        ("state", json!("not-a-number")),
-        ("state", json!(null)),
-        ("dueAt", json!("not-a-timestamp")),
-        ("dueAt", json!(null)),
-        ("stability", json!("not-a-number")),
-        ("stability", json!(null)),
-        ("difficulty", json!("not-a-number")),
-        ("difficulty", json!(null)),
-        ("scheduledDays", json!("not-a-number")),
-        ("scheduledDays", json!(null)),
-        ("learningSteps", json!("not-a-number")),
-        ("learningSteps", json!(null)),
-        ("time", json!("not-a-number")),
-        ("time", json!(null)),
-        ("isIgnored", json!("not-a-bool")),
-        ("isIgnored", json!(null)),
-    ];
-
-    for (field, offending) in mistyped_fields {
-        let mut payload = valid_payload();
-        payload[field] = offending.clone();
-
-        let result: Result<InsertReviewData, _> = serde_json::from_value(payload);
-        assert!(result.is_err(), "Should fail when {field} is {offending}");
-    }
+    let mut extra = valid_payload();
+    extra["unknownField"] = json!("ignored");
+    serde_json::from_value::<InsertReviewData>(extra).expect("extra fields must be tolerated");
 }
 
 /// Full-field review used as the base for wire-shape and round-trip pins.

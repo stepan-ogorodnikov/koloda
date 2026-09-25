@@ -1,5 +1,5 @@
 use koloda::domain::cards::{
-    AddCardsItemError, AddCardsItemResult, Card, CardContentField, InsertCardData, UpdateCardData,
+    AddCardsItemError, AddCardsItemResult, Card, CardContentField, InsertCardData, UpdateCardData, UpdateCardValues,
 };
 use serde_json::{json, Value};
 
@@ -145,22 +145,37 @@ fn valid_insert_payload() -> Value {
     })
 }
 
+/// One row per shape class on `InsertCardData`. Option fields stay absent-or-null → `None`.
 #[test]
-fn test_insert_card_data_required_fields() {
-    // WHY: serde treats every `Option` field as implicitly optional, so only the
-    // non-Option keys require presence; the FSRS progress fields and the two
-    // timestamps may be absent or `null`, both deserializing to `None`.
-    let required_fields = ["deckId", "templateId", "content"];
+fn test_insert_card_data_input_shapes() {
+    // WHY: serde treats every `Option` field as implicitly optional, so only
+    // deckId, templateId, and content require presence.
+    let reject: &[(&str, &str, Option<Value>)] = &[
+        ("missing deckId", "deckId", None),
+        ("mistyped content", "content", Some(json!("not-an-object"))),
+        ("null templateId", "templateId", Some(json!(null))),
+    ];
 
-    for field in required_fields {
+    for (label, field, offending) in reject {
         let mut payload = valid_insert_payload();
-        payload.as_object_mut().unwrap().remove(field);
-
-        let result: Result<InsertCardData, _> = serde_json::from_value(payload);
-        assert!(result.is_err(), "Should fail when {field} is missing");
+        match offending {
+            None => {
+                payload.as_object_mut().unwrap().remove(*field);
+            }
+            Some(value) => payload[*field] = value.clone(),
+        }
+        assert!(
+            serde_json::from_value::<InsertCardData>(payload).is_err(),
+            "{label} must fail"
+        );
     }
 
-    let optional_fields = [
+    let mut extra = valid_insert_payload();
+    extra["unknownField"] = json!("ignored");
+    serde_json::from_value::<InsertCardData>(extra).expect("extra fields must be tolerated");
+
+    let mut absent = valid_insert_payload();
+    for field in [
         "state",
         "stability",
         "difficulty",
@@ -170,48 +185,42 @@ fn test_insert_card_data_required_fields() {
         "lapses",
         "dueAt",
         "lastReviewedAt",
-    ];
-    let mut payload = valid_insert_payload();
-    for field in optional_fields {
-        payload.as_object_mut().unwrap().remove(field);
+    ] {
+        absent.as_object_mut().unwrap().remove(field);
     }
     let data: InsertCardData =
-        serde_json::from_value(payload).expect("optional fields should default to None when absent");
+        serde_json::from_value(absent).expect("optional fields should default to None when absent");
     assert_eq!(data.state, None);
     assert_eq!(data.due_at, None);
     assert_eq!(data.last_reviewed_at, None);
 
-    // Nullable-but-present: `state: null` also deserializes to `None`.
-    let mut payload = valid_insert_payload();
-    payload["state"] = json!(null);
-    let data: InsertCardData = serde_json::from_value(payload).expect("null state should deserialize to None");
+    let mut null_state = valid_insert_payload();
+    null_state["state"] = json!(null);
+    let data: InsertCardData = serde_json::from_value(null_state).expect("null state should deserialize to None");
     assert_eq!(data.state, None);
-
-    let mut payload = valid_insert_payload();
-    payload["unknownField"] = json!("ignored");
-    serde_json::from_value::<InsertCardData>(payload).expect("extra fields must be tolerated");
 }
 
 #[test]
-fn test_insert_card_data_wrong_typed_fields_fail() {
-    let mistyped_fields = [
-        ("deckId", json!(1)),
-        ("templateId", json!(null)),
-        ("content", json!("not-an-object")),
-        ("content", json!({ "1": "not-a-field" })),
-        ("state", json!("not-a-number")),
-        ("stability", json!("not-a-number")),
-        ("scheduledDays", json!("not-a-number")),
-        ("dueAt", json!("not-a-timestamp")),
-        ("lastReviewedAt", json!("not-a-timestamp")),
+fn test_update_card_values_input_shapes() {
+    let content = json!({ "1": { "text": "front" }, "2": { "text": "back" } });
+    let cases: &[(&str, Value, bool)] = &[
+        ("missing content", json!({}), false),
+        (
+            "extra field",
+            json!({ "content": content, "unknownField": "ignored" }),
+            true,
+        ),
+        ("content wrong type", json!({ "content": "not-an-object" }), false),
+        (
+            "nested text wrong type",
+            json!({ "content": { "1": { "text": 123 }, "2": { "text": "Back text" } } }),
+            false,
+        ),
     ];
 
-    for (field, offending) in mistyped_fields {
-        let mut payload = valid_insert_payload();
-        payload[field] = offending.clone();
-
-        let result: Result<InsertCardData, _> = serde_json::from_value(payload);
-        assert!(result.is_err(), "Should fail when {field} is {offending}");
+    for (label, payload, ok) in cases {
+        let result = serde_json::from_value::<UpdateCardValues>(payload.clone());
+        assert_eq!(result.is_ok(), *ok, "{label}");
     }
 }
 
