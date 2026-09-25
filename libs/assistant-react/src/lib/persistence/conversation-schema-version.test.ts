@@ -16,13 +16,11 @@ describe("migratePersistedConversation", () => {
     expect(migrated).toEqual({ id: "conv-1", schemaVersion: CONVERSATION_SCHEMA_VERSION });
   });
 
-  it("treats a missing schemaVersion as v0 and migrates forward", () => {
-    const migrated = expectMigrated({ id: "conv-1" });
-    expect(migrated.schemaVersion).toBe(CONVERSATION_SCHEMA_VERSION);
-  });
-
-  it("treats an explicit schemaVersion 0 as v0 and migrates forward", () => {
-    const migrated = expectMigrated({ id: "conv-1", schemaVersion: 0 });
+  it.each<{ label: string; row: Record<string, unknown> }>([
+    { label: "a missing schemaVersion", row: { id: "conv-1" } },
+    { label: "an explicit schemaVersion 0", row: { id: "conv-1", schemaVersion: 0 } },
+  ])("treats $label as v0 and migrates forward", ({ row }) => {
+    const migrated = expectMigrated(row);
     expect(migrated.schemaVersion).toBe(CONVERSATION_SCHEMA_VERSION);
   });
 
