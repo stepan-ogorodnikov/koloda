@@ -12,6 +12,10 @@ A test that only detects change is noise.
 Write each test so a plausible semantic bug — an inverted comparison, a dropped guard, a rejected cancel — makes it fail.
 Before writing the assertion, mentally apply such a mutation to the implementation and check the planned test would fail.
 If it would still pass, redesign the test before writing it.
+Every new or kept unit test must answer yes to the survival question.
+When that answer is non-obvious, record it in the change description or task notes.
+A test that only locks today's call shape, export list, or wiring is noise.
+Delete it, or do not add it.
 
 ## When tests are required
 
@@ -38,6 +42,18 @@ If it would still pass, redesign the test before writing it.
 - Do not add a unit test that shadows a Playwright spec; the flow belongs to e2e.
 - Rust file pairs follow `agents/RUST.md` (Entity CRUD notes).
   New files go under `tests/domain/` or `tests/integration/` and must be listed in `tests/domain/main.rs` or `tests/integration/main.rs`.
+
+## One home per behavior
+
+Each behavior has one home: the lowest unit layer that can see the failure.
+That layer is a domain function, reducer, engine, or the equivalent.
+Do not re-test the same rule through a higher door.
+A reducer case re-checked via the store, or an engine race re-checked via React, is a second door.
+Add the higher door only when it owns an isolation or routing rule the lower test cannot observe.
+If you add a second door, put one line of why above the test.
+Use `// WHY: …` or a sentence in the `describe`.
+The TS ↔ Rust twin rule is mirror coverage across languages.
+It is not a license for three TypeScript homes.
 
 ## Write tests for
 
@@ -76,14 +92,14 @@ Do not write:
   Exception: a persisted default is a wire contract. Pin it against a literal written in the test when stored rows or payloads depend on it staying stable — do not "pin" it by importing and comparing the same constant.
 - Full prompt-string equality.
   Use phrase presence plus negative guards; see `libs/ai/src/lib/prompts.test.ts`.
-- API-surface assertions such as `Object.keys` of an export.
+- Export and public-surface inventories.
+  That includes `in` checks for method names, `Object.keys` of modules, and `typeof x === "function"` as the assertion.
+- Counter tests, "starts at 0" checks, and getter round-trips.
+  Exception: the atom or function owns non-obvious routing or isolation.
 - Render-a-component-and-assert-it-rendered, or `toHaveProperty` presence loops.
 - Self-fulfilling tests where the guard or orchestration logic lives inside the test itself.
 - Mock-dominated tests: if the assertion re-observes what the mock fabricated, test the real unit or delete the test.
 - Re-runs of a sibling test through another door: a reducer re-tested through the store, a validator re-tested through the repo.
-
-When you find a banned pattern in a file you are touching anyway, leave it and report it — in the change description or task notes.
-Do not expand a change into suite cleanup unless cleanup is the task: unreported violations rot silently, unrequested deletions surprise reviewers.
 
 Bad (tests the language runtime):
 
@@ -103,6 +119,18 @@ fn null_total_limit_is_no_cap() {
     assert!(!result.meta.is_total_over_the_limit, "a null daily limit is no cap, not a hard zero");
 }
 ```
+
+## Delete when
+
+When a change already edits a test file, delete tests in that file that fail the survival question.
+Also delete tests in that file that match Banned patterns.
+Do the same when the code under test forces test updates.
+Prefer deletion over skipping or weakening assertions.
+Do not expand the change into a whole-package or monorepo cleanup unless cleanup is the task.
+Leaving a banned or survival-failing test you touched, unreported, is not allowed.
+Delete it in the same change.
+If deletion is out of scope for that commit, report it in the task or PR notes.
+Prefer delete when the test is local to the change.
 
 ## Coverage
 
@@ -131,6 +159,9 @@ Coverage must never dip between two commits.
 
 ## Exemplars
 
+Good suites demonstrate gated interleavings and tables.
+Do not treat file length as a model to copy.
+
 Match these files when the shape fits:
 
 - `crates/koloda/tests/domain/reviews_totals_tests.rs` — boundary semantics for limit policy.
@@ -144,6 +175,9 @@ Match these files when the shape fits:
 - `libs/app/src/lib/error-parity.test.ts` — parses Rust `error_codes` from source vs `ERROR_MESSAGES` keys (`ai.*` TS-only allow-list).
 
 ## Running
+
+Agents run scoped commands for touched packages only.
+A full `bun run test:libs` is not required to justify a unit change.
 
 - All TS lib tests: `bun run test:libs`.
 - One TS lib: `bunx vitest run --config libs/<name>/vitest.config.mjs --configLoader runner [filter]`.
