@@ -1,10 +1,12 @@
 # Assistant Settings
 
+## Scope
+
 Covers assistant settings: the system prompt, temperature, and how saved values apply to later runs.
 Does not cover AI profiles, secrets, model picking, conversation lifecycle, card proposal handling, or the streaming transport layer.
 Those are covered by the AI providers, conversations, messages, and card-generation specs.
 
-## What are Assistant Settings
+## What it is
 
 Assistant settings are the user's global preferences for how the assistant talks to the model.
 They are edited in a modal over the assistant chat and apply across conversations.
@@ -15,7 +17,7 @@ The conversation stays visible behind the modal, including its title and header 
 Closing the modal (close control, Escape, or the backdrop) discards unsaved edits.
 Whether settings are open is not remembered across reloads.
 
-## Core Model
+## Core model
 
 - **System prompt** — the instructions sent with every run
 - **Prompt source** — Default uses the live built-in prompt; Custom uses the user's saved text

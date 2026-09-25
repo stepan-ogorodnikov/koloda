@@ -75,17 +75,18 @@ Heading text is the stable id.
 
 ## Structure
 
-A functional specification typically covers:
+Every spec opens with these three sections, in this order, under these exact headings:
 
 1. **Scope** — what this spec covers, and what it leaves to named sibling specs
 2. **What it is** — one or two paragraphs explaining the concept
 3. **Core model** — a glossary of terms, then relationships
 
+Do not rename these three headings.
+Do not skip one.
+Do not insert another section between them.
+
 Then organize the rest **by concept** (e.g., "Runs", "Persistence", "Retry").
 Within each concept, state the behavior and the edge cases together.
-
-Not every section is needed for every spec.
-Use what fits.
 
 ### Scope
 
@@ -95,7 +96,7 @@ That is how `agents/INDEX.md` loads one primary spec instead of a cluster.
 
 A reader who only has this file should know when they must open a sibling.
 
-### Core Model
+### Core model
 
 A glossary, not a preview of later sections.
 Each bullet is a term and a short definition.
@@ -144,8 +145,9 @@ Do not write a spec that only makes sense as part of a bundle.
 
 ## Checklist
 
+- [ ] Opens with Scope, What it is, and Core model, in that order, under those exact names
 - [ ] Scope states what's in and which sibling owns what's out
-- [ ] Core Model is a glossary plus this spec's relationships, not a recap of later sections
+- [ ] Core model is a glossary plus this spec's relationships, not a recap of later sections
 - [ ] Each invariant has one home; copies are pointers (`FILE.md (§Section)`)
 - [ ] Edge cases sit in the concept they qualify; there is no "Edge Cases" section
 - [ ] No code references (file paths, type names, function names, imports)

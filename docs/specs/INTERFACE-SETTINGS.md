@@ -1,11 +1,13 @@
 # Interface Settings
 
+## Scope
+
 Covers interface settings: language, color scheme, color themes, motion, and date and time formats.
 Does not cover hotkeys, assistant settings, learning settings, or adding new themes.
 Those are covered by the hotkeys, assistant settings, and learning settings specs.
 Adding a theme is covered by the color theme guide.
 
-## What are Interface Settings
+## What it is
 
 Interface settings are the user's global preferences for language and appearance.
 They apply to the whole app, not to a single screen.
@@ -14,7 +16,7 @@ They take effect the moment they are changed.
 They are edited on the interface settings screen.
 Language and color scheme are also chosen during first setup, before any data exists.
 
-## Core Model
+## Core model
 
 - **Language** — the locale used for all interface text
 - **Color scheme** — whether the app is light, dark, or follows the device

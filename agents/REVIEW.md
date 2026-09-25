@@ -68,7 +68,7 @@ Raise Blocking for:
   - A barrel that only forwards other modules (the compound component assignment is an exception, see below).
 - A change that needs a decision but does not include one (see `agents/DECISIONS.md`).
 - A user-visible behavior change that does not update the spec that owns it (see `agents/FUNCTIONAL-SPECIFICATIONS.md`, Living document).
-- A spec hunk that violates `agents/FUNCTIONAL-SPECIFICATIONS.md`: restated invariants, an "Edge Cases" section, code or persistence field names, UI chrome, or a Core Model that recaps later sections.
+- A spec hunk that violates `agents/FUNCTIONAL-SPECIFICATIONS.md`: restated invariants, an "Edge Cases" section, code or persistence field names, UI chrome, or a Core model that recaps later sections.
 
 ### Nit (optional, never required)
 

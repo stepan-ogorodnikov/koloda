@@ -1,16 +1,18 @@
 # Decks
 
+## Scope
+
 Covers decks: creating with defaults, editing title/algorithm/template, cascade delete, and how decks relate to cards, lessons, and the assistant.
 Does not cover card browsing, reset progress, preview, lesson session flow, algorithm or template editing.
 Those are covered by the cards, lessons, algorithms, templates, and assistant specs.
 
-## What is a Deck
+## What it is
 
 A deck is a titled collection of cards that shares one algorithm and one current template.
 The algorithm schedules grades for cards in the deck.
 The current template is used when the user adds cards manually or generates cards into this deck.
 
-## Core Model
+## Core model
 
 - **Deck** — a titled collection with an algorithm and a current template
 - **Current template** — the template offered for new cards added to this deck
@@ -56,7 +58,7 @@ Saving persists title, algorithm, and template together.
 Discard restores the last saved values.
 
 Changing the algorithm affects future grading for cards in this deck.
-See ALGORITHMS.md (§What is an Algorithm) for when existing scheduling numbers change.
+See ALGORITHMS.md (§What it is) for when existing scheduling numbers change.
 
 Changing the template changes which template is used for newly added cards.
 See CARDS.md (§Relationships) for existing cards.

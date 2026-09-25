@@ -1,11 +1,13 @@
 # Assistant Data Access
 
+## Scope
+
 Covers what user data the assistant reads, when that data is fetched and sent, what is recorded, and how retry treats it.
 Does not cover the run lifecycle, retry availability, revert, or clone behavior — those are covered by the conversations spec.
 Card proposal display, selection, and add are covered by the card-generation spec.
 Prompt template editing is covered by the assistant settings spec.
 
-## What is Data Access
+## What it is
 
 Data access is the assistant reading user data beyond the conversation itself.
 Reading is one event with two halves:
@@ -22,7 +24,7 @@ Nothing about the user's decks is baked into the system prompt.
 There is no submit-time snapshot of decks or cards.
 Duplicate prevention is the model's choice to inspect existing cards through a tool before it proposes new ones.
 
-## Core Model
+## Core model
 
 - **Reach** — the app reads user data locally, when a tool runs
 - **Egress** — the tool result leaves the machine toward the provider, in the same run

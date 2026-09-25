@@ -1,9 +1,11 @@
 # AI Providers
 
+## Scope
+
 Covers AI providers, profiles, secrets, and model listings.
 Does not cover conversation lifecycle, run orchestration, message rendering, card generation UX, or the transport layer.
 
-## What is an AI Provider
+## What it is
 
 An AI provider is an external service or self-hosted server that hosts language models the app can talk to.
 The app ships with a fixed set of built-in providers.
@@ -12,6 +14,23 @@ Users create a profile for a provider, supply credentials, pick a model, and the
 
 Providers differ in how they authenticate and which models they expose.
 The app presents one consistent interface regardless of provider.
+
+## Core model
+
+- **Provider** — a built-in identifier for an external AI service
+- **Profile** — a user-named configuration that pairs a provider with secrets
+- **Secrets** — the credentials stored inside a profile
+- **Model** — a model available from a provider, identified by a model ID and a display name
+- **Model allowlist** — the per-profile restriction on which models are available
+
+Relationships:
+
+- A profile belongs to one provider.
+- Secrets belong to one profile and are not shared across profiles.
+- A run uses one profile at a time.
+- The model allowlist narrows which models the picker offers for that profile.
+- The model and model parameters for a run are chosen per conversation.
+  The request itself goes through the profile's secrets.
 
 ## Platform availability
 
@@ -35,23 +54,6 @@ Desktop only:
 In the browser, desktop-only providers are disabled in the add-profile picker.
 Profiles for a desktop-only provider remain visible but cannot be used.
 AI settings shows a platform-limitations note and a per-profile warning for those profiles.
-
-## Core Model
-
-- **Provider** — a built-in identifier for an external AI service
-- **Profile** — a user-named configuration that pairs a provider with secrets
-- **Secrets** — the credentials stored inside a profile
-- **Model** — a model available from a provider, identified by a model ID and a display name
-- **Model allowlist** — the per-profile restriction on which models are available
-
-Relationships:
-
-- A profile belongs to one provider.
-- Secrets belong to one profile and are not shared across profiles.
-- A run uses one profile at a time.
-- The model allowlist narrows which models the picker offers for that profile.
-- The model and model parameters for a run are chosen per conversation.
-  The request itself goes through the profile's secrets.
 
 ## Profiles
 

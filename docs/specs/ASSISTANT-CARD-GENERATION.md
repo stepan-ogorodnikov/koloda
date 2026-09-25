@@ -1,11 +1,13 @@
 # Assistant Card Generation
 
+## Scope
+
 Covers how the AI proposes flashcard content during chat, how proposed cards are displayed, selected, and added to a deck, and how invalid proposals are handled.
 Does not cover conversation lifecycle, assistant settings editing, or the streaming transport layer.
 Prompt templates and temperature are covered by the assistant settings spec.
 How the model reads decks and cards is covered by the data-access spec.
 
-## What is Card Generation
+## What it is
 
 Card generation is the process where the AI invents structured flashcard data from a user prompt.
 The user asks in chat to generate, create, make, add, or invent cards — including a random card.
@@ -19,7 +21,7 @@ A request to pick or retrieve an existing card is not card generation.
 Card generation happens inside a chat run.
 It goes through the same lifecycle: streaming, success, failure, cancellation, or interruption.
 
-## Core Model
+## Core model
 
 - **Proposal** — invented cards for a deck, keyed by field title
 - **Write target** — the deck and template of the run's accepted proposal

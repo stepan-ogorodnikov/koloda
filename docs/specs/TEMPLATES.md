@@ -1,16 +1,18 @@
 # Templates
 
+## Scope
+
 Covers template structure, fields, layout, locking, adding, cloning, editing, and deleting.
 Does not cover how cards store content, how lessons render fields during study, or learning settings defaults UI.
 
-## What is a Template
+## What it is
 
 A template defines the shape of card content and how that content appears during study.
 It has a title, a list of fields, and a layout that maps those fields to study operations.
 Decks and cards reference templates.
 See CARDS.md (§Relationships) for how a card keeps its template.
 
-## Core Model
+## Core model
 
 - **Template** — named content shape used by cards
 - **Field** — one content slot: title, type, and whether it is required

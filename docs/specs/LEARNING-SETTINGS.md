@@ -1,12 +1,14 @@
 # Learning Settings
 
+## Scope
+
 Covers learning settings: defaults, daily limits, the learning-day boundary, and learn-ahead.
 Does not cover lesson session flow, grading, or amount selection beyond how settings shape them.
 Does not cover where today's totals are shown on the lessons screen.
 Those behaviors are LESSONS.md.
 Does not cover algorithm or template editing, or interface settings.
 
-## What are Learning Settings
+## What it is
 
 Learning settings are the user's global study preferences.
 They decide which algorithm and template are suggested as defaults.
@@ -16,7 +18,7 @@ They set how far ahead a lesson may requeue a card after grading.
 
 They are edited on the learning settings screen and take effect for later study.
 
-## Core Model
+## Core model
 
 - **Defaults** — the algorithm and template offered when creating a deck
 - **Daily limits** — caps for New, Learn, Review, and Total for the current learning day.

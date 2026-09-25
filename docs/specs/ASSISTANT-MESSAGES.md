@@ -1,16 +1,18 @@
 # Assistant Messages
 
+## Scope
+
 Covers message types, message metadata, how messages are displayed, message states and status indicators, and user interactions with messages.
 Does not cover conversation lifecycle, runs, persistence, or the streaming transport layer.
 Card selection and add are covered by the card-generation spec.
 
-## What are Messages
+## What it is
 
 A message is one half of a user-AI exchange.
 Every user message is paired with an assistant message.
 Together they form a single turn in the conversation, tied to one AI run.
 
-## Core Model
+## Core model
 
 - **User message** — the submitted prompt text
 - **Assistant message** — the AI's response; created empty at run start and filled by the stream

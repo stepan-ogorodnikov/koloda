@@ -1,11 +1,13 @@
 # Lessons
 
+## Scope
+
 Covers lessons overview, today's progress on that screen, starting a lesson, amount selection, studying, grading, learn-ahead, session progress, result persistence, completion, early termination, and lesson hotkeys.
 Does not cover deck or template editing, FSRS algorithm internals, or hotkey binding configuration.
 Does not define daily limits, the learning-day window, or how today's review totals are counted.
 Those are LEARNING-SETTINGS.md.
 
-## What is a Lesson
+## What it is
 
 A lesson is a study session.
 The user picks how many cards of each type to study, then works through them one by one.
@@ -16,7 +18,7 @@ A lesson can target one deck or all decks at once.
 It runs in a dialog.
 Closing the dialog clears the session.
 
-## Core Model
+## Core model
 
 - **Card type** — how a card is counted for study:
   - **New** — cards that have never been reviewed

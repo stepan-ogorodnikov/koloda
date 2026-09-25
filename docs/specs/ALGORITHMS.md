@@ -1,10 +1,12 @@
 # Algorithms
 
+## Scope
+
 Covers algorithm presets: parameters, adding, cloning, editing, and deleting with a successor.
 Does not cover FSRS scheduling math, how grades update card state, or learning settings UI.
 How decks pick an algorithm is covered lightly; deck management itself is not.
 
-## What is an Algorithm
+## What it is
 
 An algorithm is a named FSRS parameter set used by decks when scheduling cards.
 The product lists these under Presets.
@@ -12,7 +14,7 @@ Each deck points at one algorithm.
 Editing an algorithm, or pointing a deck at a different algorithm, changes the parameters used for later grades.
 It does not rewrite existing card scheduling numbers until those cards are graded again.
 
-## Core Model
+## Core model
 
 - **Algorithm** — a titled FSRS preset
 - **Parameters** — retention, weights, fuzz, learning steps, relearning steps, and maximum interval

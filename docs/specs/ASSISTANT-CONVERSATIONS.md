@@ -1,12 +1,14 @@
 # Assistant Conversations
 
+## Scope
+
 Covers the conversation lifecycle, messages, runs, AI profile state, persistence, restore, error handling, retry, and revert.
 Does not cover deck management, AI provider configuration, assistant settings (prompt templates and temperature), or the streaming transport layer.
 Those prompt and temperature preferences are covered by the assistant settings spec.
 Card proposal display, selection, and add are covered by the card-generation spec.
 How the model reads decks is covered by the data-access spec.
 
-## What is a Conversation
+## What it is
 
 A conversation is a single threaded interaction between the user and the AI.
 Each conversation has a name, a timestamp, a history of messages and AI runs, and its own unsent prompt.
@@ -25,7 +27,7 @@ The prompt input belongs to that conversation and is independent of every other 
 Every new run is chat.
 The model may propose cards during that run.
 
-## Core Model
+## Core model
 
 - **Conversation** — one thread with a name, a timestamp, its messages, runs, AI profile state, and unsent prompt
 - **Message** — one half of an exchange; every user message is paired with an assistant message

@@ -1,16 +1,18 @@
 # Cards
 
+## Scope
+
 Covers card content, scheduling state, adding, editing, deleting, resetting progress, preview, and card views.
 Does not cover deck or template management, lesson flow, the FSRS algorithm itself, or AI card generation.
 Accepting generated cards into a deck is covered; how those cards are generated is not.
 
-## What is a Card
+## What it is
 
 A card is a unit of study inside a deck.
 It carries user-visible content shaped by a template, plus scheduling state that determines when it comes up for review.
 A card belongs to exactly one deck and uses exactly one template.
 
-## Core Model
+## Core model
 
 - **Card** — the unit of study; has content, a deck, a template, and scheduling state
 - **Card state** — where the card sits in the spaced-repetition flow (see [Card State](#card-state))

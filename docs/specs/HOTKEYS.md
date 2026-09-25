@@ -1,5 +1,7 @@
 # Hotkeys
 
+## Scope
+
 Covers the keyboard shortcut system: categories, scopes, bindings, conflict resolution, configuration, and validation.
 Does not cover specific hotkey actions.
 
@@ -12,11 +14,26 @@ They are gated to the open lesson dialog; see LESSONS.md (§Hotkeys).
 Avoid binding a configurable hotkey to `Escape`, `Enter`, or `Space` when lessons are used.
 When a configurable hotkey and a lesson system key share the same binding, both actions fire.
 
-## What is a Hotkey
+## What it is
 
 A hotkey is a keyboard shortcut that triggers an action.
 Each hotkey belongs to a category and has one or more key bindings and an action.
 Hotkeys that need activation gating also carry a runtime scope.
+
+## Core model
+
+- **Hotkey** — a keyboard shortcut that triggers an action
+- **Category** — a grouping used for settings, validation, and persistence
+- **Key binding** — a key assigned to a hotkey, with or without modifiers
+- **Runtime scope** — when a hotkey is active, distinct from its category
+- **Action** — what the hotkey triggers
+
+Relationships:
+
+- Each hotkey belongs to a category and has an action.
+- A hotkey has zero or more key bindings.
+- A category never gates whether a hotkey fires.
+- Hotkeys that need activation gating also carry a runtime scope.
 
 ## Categories
 
