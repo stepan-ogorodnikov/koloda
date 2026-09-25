@@ -1,11 +1,10 @@
-# Assistant - LLM Context Guide
+# Assistant map
 
-Before modifying the assistant chat feature, read this map to load the correct spec and target the correct files.
-The behavioral rules live in the specs; do not infer them from the code.
-
-**This map is the ownership source of truth.**
-Package READMEs (`libs/ai`, `libs/ai-react`, `libs/assistant`, `libs/assistant-react`) describe their own surface.
-If they disagree with the layer boundaries below, trust this map.
+Task routing for assistant chat.
+Behavioral rules live in the specs.
+Package boundaries and implementation seams live in the package READMEs.
+Read one spec first.
+Add a sibling only when the task crosses that spec.
 
 ## Folder layout (`libs/assistant-react/src/lib/`)
 
@@ -18,75 +17,45 @@ If they disagree with the layer boundaries below, trust this map.
 | *(root)* | Profile cascade hooks (`use-assistant-profile-selection`, `use-global-ai-profile-state`), runtime config, client, prompt templates |
 
 Stream execution, AbortControllers, serial queues, and save scheduling live in `@koloda/assistant`, not in `runs/`.
-`use-conversation-runs.ts` is only a React adapter that returns `engine.dispatch`.
+`use-conversation-runs.ts` only returns `engine.dispatch`.
 Do not put chunk dispatch or run lifecycle there.
+See `libs/assistant-react/README.md` (§Dispatch).
 
-## Task Routing Table
+## Task routing
 
-If your task matches one of these, read the specified doc first, then target the specified files.
-Read First is one spec.
-Add a sibling only when the task crosses that spec.
+| Task | Read first | Primary files |
+|------|------------|---------------|
+| Add a new AI provider | `agents/ADD-AI-PROVIDER.md` | `libs/ai/src/lib/provider-catalog.ts`, `provider-secrets.ts`, `libs/ai/src/lib/providers/<provider>.ts`, `provider-registry.ts`, `crates/koloda/src/domain/ai.rs` |
+| Add a new assistant tool | `agents/ADD-ASSISTANT-TOOL.md` | `libs/ai` `assistant-tools.ts`, `assistant-tool-executor.ts`; host binders `apps/web/src/app/ai-runtime.ts`, `apps/electron/src/ai-ipc.ts`; activity `libs/ai-react/src/lib/ai-tool-activity.tsx` |
+| Change the conversation list, create, name, or unread | `docs/specs/ASSISTANT-CONVERSATION-LIST.md` | `ui/assistant-conversations-list.tsx`, `ui/assistant-new-conversation-button.tsx`, `ui/conversation-list-timestamp.tsx`; `state/conversation-actions.ts` (`newConversationAtom`, `startParamlessConversationAtom`); `state/conversation-selectors.ts` (`unreadConversationIdsAtom`); `state/conversation-session.ts`; `libs/ai` `conversations.ts` (`computeConversationTitle`) |
+| Change clone or delete | `docs/specs/ASSISTANT-CONVERSATION-LIST.md` (§Clone, §Delete) | `ui/clone-conversation-button.tsx`, `ui/conversation-header-menu.tsx`, `state/conversation-actions.ts` (`cloneConversationAtom`); `ui/use-delete-conversation.ts`, `ui/delete-conversation-button.tsx`, `ui/delete-conversation-confirm-dialog.tsx`, `ui/delete-conversation-menu-action.tsx`; `@koloda/assistant` delete transaction |
+| Fix streaming / chunk handling | `docs/specs/ASSISTANT-CONVERSATIONS.md` (§Runs, §During Streaming) | `@koloda/assistant` (`run-stream.ts`, `conversation-runtime.ts`, `assistant-execution-port.ts`); host execution port in `runs/assistant-execution-port.ts`; request prep in `runs/prepare-run-request.ts` |
+| Change AIRuntime / key proxy | `libs/ai/README.md` (§AIRuntime) | `libs/ai` `runtime.ts`; core-react `aiRuntimeAtom`; Electron `ai-ipc` + renderer `ai-runtime`; web `ai-runtime` |
+| Change run lifecycle (start/cancel/fail) | `docs/specs/ASSISTANT-CONVERSATIONS.md` (§Runs) | `state/conversation-reducer.ts` (`transitionRun`, `submitTurn`, `rollbackSubmitTurn`); `runs/use-run-orchestration.ts`; `runs/prepare-run-request.ts`; `@koloda/assistant` (`assistant-engine.ts` `dispatch`, `conversation-runtime.ts`, `run-controller-registry.ts`) |
+| Change conversation history rules | `docs/specs/ASSISTANT-CONVERSATIONS.md` (§Conversation History) | `state/conversation-reducer.ts` (`getVisibleMessages`), `state/assistant-messages.ts`, `runs/use-run-orchestration.ts`, `runs/prepare-run-request.ts`, `runs/build-stream-request.ts` |
+| Change assistant data access (chat tools, historical snapshots) | `docs/specs/ASSISTANT-DATA-ACCESS.md` | `libs/ai` `assistant-tools.ts`, `assistant-tool-executor.ts`, `chat-stream.ts`; host binders `apps/web/src/app/ai-runtime.ts`, `apps/electron/src/ai-ipc.ts`; `@koloda/assistant` execution port; `runs/build-stream-request.ts`, `runs/assistant-event-to-action.ts`, `runs/data-access.ts`; `state/conversation-reducer.ts` tool actions; `libs/ai-react` `ai-tool-activity.tsx` |
+| Change mixed chat / card-proposal rendering | `docs/specs/ASSISTANT-MESSAGES.md` (§Message Display, §Message Content) | `ui/use-assistant-message-renderer.tsx`, `ui/assistant-markdown.tsx`, `ui/assistant-cards-message.tsx`, `state/assistant-messages.ts`; `libs/ai-react` `ai-chat-message.tsx` (`renderText`), `ai-tool-activity.tsx` (`renderText`) |
+| Fix AI profile state (profile/model/params) | `docs/specs/ASSISTANT-CONVERSATIONS.md` (§AI Profile State) | `libs/ai-react/src/lib/ai-model-profile-picker.tsx`, `ai-model-parameters.tsx`; `use-assistant-profile-selection.ts`, `use-global-ai-profile-state.ts`, `state/ai-profile-sync.ts`, `use-assistant-runtime-config.ts`, `state/assistant-conversation-config.ts` |
+| Empty chat / model picker when user has no AI profiles | `docs/specs/ASSISTANT-CONVERSATIONS.md` (§AI Profile State) | `ui/assistant-no-profiles.tsx`, `ui/assistant-chat.tsx`; `libs/ai-react/src/lib/ai-model-profile-picker.tsx`; `libs/app-react/src/lib/routes/_.ai.tsx`; `libs/settings-react/src/lib/settings-ai-add-profile.tsx` |
+| Change assistant settings (prompt template / temperature) | `docs/specs/ASSISTANT-SETTINGS.md` | `ui/assistant-settings.tsx`, `ui/assistant-settings-prompt-editor.tsx`, `use-assistant-runtime-config.ts` |
+| Modify card proposal parsing | `docs/specs/ASSISTANT-CARD-GENERATION.md` | `libs/ai` `assistant-tools.ts` (`propose_cards` coerce/shape) + `assistant-tool-executor.ts`; host data sources; reducer `applyProposeCardsToRun` |
+| Change persistence / restore | `docs/specs/ASSISTANT-CONVERSATIONS.md` (§Persistence, §Restore) | `@koloda/assistant` save queue, scheduler, persistence host; `persistence/` restore, schema, `conversation-write-adapter.ts`; `runs/assistant-engine-instance.ts`, `runs/assistant-persistence-host.ts`, `runs/use-assistant-engine-host.ts`; shell mount `@koloda/app-react` `components/app.tsx`; Electron close `apps/electron/src/window-close-coordinator.ts` + `electron-close-coordination.ts`; `@koloda/db-sqlite`, `crates/koloda/src/repo` |
+| Choose conversation dispatch flavor | `libs/assistant-react/README.md` (§Dispatch) | `runs/use-assistant-session.ts`, `state/conversation-store.ts` (`dispatchToConversation` / `dispatchToConversationOnStore`), `runs/use-run-orchestration.ts` |
+| Change retry behavior | `docs/specs/ASSISTANT-CONVERSATIONS.md` (§Retry) | `runs/use-run-orchestration.ts` (`handleRetry`), `runs/prepare-run-request.ts`, `runs/build-stream-request.ts` |
+| Change revert behavior | `docs/specs/ASSISTANT-MESSAGES.md` (§Reverting the Conversation) | `runs/use-run-orchestration.ts` (`handleRevert` / `handleRestore` / commit on generate), `state/conversation-reducer.ts`, `ui/assistant-chat.tsx` (input wiring only) |
 
-| Task | Read First (Spec/Playbook) | Primary Files to Edit | Critical Invariant to Preserve |
-|------|---------------------------|----------------------|-------------------------------|
-| Add a new AI provider | agents/ADD-AI-PROVIDER.md | libs/ai/src/lib/provider-catalog.ts, provider-secrets.ts, libs/ai/src/lib/providers/<provider>.ts, provider-registry.ts, crates/koloda/src/domain/ai.rs | TS and Rust provider enums must stay in sync. One provider = one module under `providers/`; wire it in `provider-registry.ts`. |
-| Add a new assistant tool | agents/ADD-ASSISTANT-TOOL.md | libs/ai `assistant-tools.ts`, `assistant-tool-executor.ts`; host binders `apps/web/src/app/ai-runtime.ts`, `apps/electron/src/ai-ipc.ts`; activity `libs/ai-react/src/lib/ai-tool-activity.tsx` | Follow the playbook for the tool kind. Chat tools are always on. Do not bake discovery into the system prompt. A new tool needs a spec entry, a host binding when it reads or writes, and an activity label. |
-| Fix streaming / chunk handling | docs/specs/ASSISTANT-CONVERSATIONS.md (§Runs, §During Streaming) | `@koloda/assistant` (`run-stream.ts`, `conversation-runtime.ts`, `assistant-execution-port.ts`); host execution port in `runs/assistant-execution-port.ts`; request prep in `runs/prepare-run-request.ts` | Partial content preserved on failure/cancel. Provider HTTP runs in the host via the application-scoped execution port. Commands carry immutable `AssistantExecutionIdentity`. There is no mutable transport slot and no `getChatStreamGenerator` / `getStreamGenerator`. |
-| Change AIRuntime / key proxy | this map (§AIRuntime seam); libs/ai/README.md | libs/ai `runtime.ts`; core-react `aiRuntimeAtom`; Electron `ai-ipc` + renderer `ai-runtime`; web `ai-runtime` | Renderer never gets usable `apiKey`. Streams correlate by `requestId` and support abort. The execution port resolves credentials from `identity.profileId` at call time. |
-| Change run lifecycle (start/cancel/fail) | docs/specs/ASSISTANT-CONVERSATIONS.md (§Runs) | `state/conversation-reducer.ts` (`transitionRun`, `submitTurn`, `rollbackSubmitTurn`); `runs/use-run-orchestration.ts`; `runs/prepare-run-request.ts`; `@koloda/assistant` (`assistant-engine.ts` `dispatch`, `conversation-runtime.ts`, `run-controller-registry.ts`) | A run has exactly one user msg and one assistant msg. Orchestration accepts the engine command first, then applies one `submitTurn`; `rollbackSubmitTurn` is the safety net if the command later rejects. Status transitions go through `transitionRun`. AbortControllers live in `@koloda/assistant`. Duplicate execute/retry is rejected (`AssistantDuplicateRunError`) before occupancy is claimed. Graceful shutdown interrupts with `app_shutdown` then aborts. |
-| Change conversation history rules | docs/specs/ASSISTANT-CONVERSATIONS.md (§Conversation History) | `state/conversation-reducer.ts` (getVisibleMessages), `state/assistant-messages.ts`, `runs/use-run-orchestration.ts`, `runs/prepare-run-request.ts`, `runs/build-stream-request.ts` | "What the user sees is what the model gets": include leftover assistant text (incl. partial fails) and successful cards serialized as markdown (table first, leftover text second). Exclude tool traffic and failed/canceled card outputs. Tool rows live on the run record; follow-up requests do not resend them. Chat proposals serialize against `run.templateFields`, not the conversation's current template. |
-| Change assistant data access (chat tools, historical snapshots) | docs/specs/ASSISTANT-DATA-ACCESS.md | libs/ai `assistant-tools.ts`, `assistant-tool-executor.ts`, `chat-stream.ts`; host binders `apps/web/src/app/ai-runtime.ts`, `apps/electron/src/ai-ipc.ts`; `@koloda/assistant` execution port; `runs/build-stream-request.ts`, `runs/assistant-event-to-action.ts`, `runs/data-access.ts`; `state/conversation-reducer.ts` tool actions; `libs/ai-react` `ai-tool-activity.tsx` | Always on — no consent, modes, settings, or submit-time injection. Do not reintroduce `resolveDataAccess`. Hosts bind data sources into `assistant-tool-executor.ts`; `libs/ai` stays I/O-free. `prepareRunRequest` / `buildStreamRequest` stay framework-free. `add_deck` writes an empty deck and does not set a propose write target; card content still requires propose→review. Old `dataAccess` snapshots stay inert; there is no injected fallback. Optional `toolCalls` / `dataAccess` do not bump `schemaVersion`; malformed values fail as corrupt. Crash-restore marks in-flight `running` tool calls `error`. |
-| Change mixed chat / card-proposal rendering | docs/specs/ASSISTANT-MESSAGES.md (§Message Display, §Message Content) | `ui/use-assistant-message-renderer.tsx`, `ui/assistant-markdown.tsx`, `ui/assistant-cards-message.tsx`, `state/assistant-messages.ts`; libs/ai-react `ai-chat-message.tsx` (`renderText`), `ai-tool-activity.tsx` (`renderText`) | Runs are `chat-text`. One turn may be activity rows (thinking/thought + tools) + review table + leftover text (table first). Reasoning is a Thinking/Thought activity row on the run, not dimmed message text. Assistant text and reasoning are sanitized markdown; user text stays paragraphs. The table is `run.cards` on that turn. Add uses write targets only. There is no chat/cards toggle. |
-| Fix AI profile state (profile/model/params) | docs/specs/ASSISTANT-CONVERSATIONS.md (§AI Profile State) | libs/ai-react/src/lib/ai-model-profile-picker.tsx, ai-model-parameters.tsx; `use-assistant-profile-selection.ts`, `use-global-ai-profile-state.ts`, `state/ai-profile-sync.ts`, `use-assistant-runtime-config.ts`, `state/assistant-conversation-config.ts` | Changing profile resets model + params. Changing model resets params. Dual-write / last-used payloads live in `state/ai-profile-sync.ts`. Chat tree: sole `useAIProfiles` in profile selection; pass `profiles` into the picker as props. Picker dual-writes via selection; submit/retry via `useRememberLastUsedAIProfile`. |
-| Empty chat / model picker when user has no AI profiles | docs/specs/ASSISTANT-CONVERSATIONS.md (§AI Profile State) | `ui/assistant-no-profiles.tsx`, `ui/assistant-chat.tsx`; libs/ai-react/src/lib/ai-model-profile-picker.tsx; libs/app-react/src/lib/routes/_.ai.tsx; libs/settings-react/src/lib/settings-ai-add-profile.tsx | Messages empty state only when messages are empty and profiles list is loaded empty. Model picker empty popover whenever profiles are loaded empty. CTAs are local; add-profile dialog is injected from settings-react via the app-react route; assistant-react/ai-react must not import app-react or settings-react. |
-| Change assistant settings (prompt template / temperature) | docs/specs/ASSISTANT-SETTINGS.md | `ui/assistant-settings.tsx`, `ui/assistant-settings-prompt-editor.tsx`, `use-assistant-runtime-config.ts` | Settings are global and apply to runs that start after save. The prompt has no placeholders. Saved values pass `assistantSettingsValidation`; temperature defaults to 0.2. |
-| Modify card proposal parsing | docs/specs/ASSISTANT-CARD-GENERATION.md | libs/ai `assistant-tools.ts` (`propose_cards` coerce/shape) + `assistant-tool-executor.ts` (shared executor); host data sources; reducer `applyProposeCardsToRun` | Cards leave the model as `propose_cards` arguments, not markdown scraping and not a second generation stream. Empty or invalid proposals do not create a table. First write target wins. |
-| Change persistence / restore | docs/specs/ASSISTANT-CONVERSATIONS.md (§Persistence, §Restore) | `@koloda/assistant` save queue, scheduler, persistence host; `persistence/` restore, schema, `conversation-write-adapter.ts`; `runs/assistant-engine-instance.ts`, `runs/assistant-persistence-host.ts`, `runs/use-assistant-engine-host.ts`; shell mount `@koloda/app-react` `components/app.tsx`; Electron close `apps/electron/src/window-close-coordinator.ts` + `electron-close-coordination.ts`; `@koloda/db-sqlite`, `crates/koloda/src/repo` | Coerce returns `ok` / `missing` / `unsupportedVersion` / `corrupt`. Unsupported or corrupt rows are blocked from autosave, not loaded as empty. Illegal status/reason pairs fail validation. Restore turns streaming checkpoints into `interrupted`/`crash_recovery` and keeps partial output. Queues and shutdown flush are engine-owned at application-shell scope. Delete success is `beginDelete` → DB delete → `commit` → `disposeConversation` (run keys remain) → drop store/query; failure is `rollback` only (keep dirty, resume autosave, do not dispose). Browser unload is best-effort. Logs stay `saveStart`/`saveAck`/`saveFailed` and `deleteBegin`/`deleteCommit`/`deleteRollback`. Shutdown interrupts with `app_shutdown`, aborts, then flushes (`SHUTDOWN_FLUSH_TIMEOUT_MS` = 2s, `SHUTDOWN_SAVE_MAX_ATTEMPTS` = 3, single-flight). Electron waits for the renderer ack (`WINDOW_CLOSE_SHUTDOWN_TIMEOUT_MS` = 2.5s). A bfcache `pagehide` (`persisted === true`) skips terminal shutdown. |
-| Choose conversation dispatch flavor | docs/specs/ASSISTANT-CONVERSATIONS.md (§Persistence, §During Streaming, §Revert) | `runs/use-assistant-session.ts` (store helpers), `state/conversation-store.ts` (`dispatchToConversation` / `dispatchToConversationOnStore`), `runs/use-run-orchestration.ts` | Keep three named **store** helpers — do not collapse into one options bag. `dispatch`: current convo + `touch()` (submit/cancel/commit). `dispatchToConversation(id)`: by-id, no auto-touch (engine events and stream chunks land here via the Jotai adapter). `dispatchLocal`: current convo, no save (in-memory revertState). Engine execution ingress is separate: `engine.dispatch(AssistantCommand)` via `useConversationRuns`. |
-| Change retry behavior | docs/specs/ASSISTANT-CONVERSATIONS.md (§Retry) | `runs/use-run-orchestration.ts` (handleRetry), `runs/prepare-run-request.ts`, `runs/build-stream-request.ts` | Retry reuses the run ID. Every retry is chat+tools. AI profile/model/params come from the **current** selection, not the original request. Stored `dataAccess` is inert. Retry is available for failed, canceled, and interrupted runs only — completed (success) runs are not retryable unless a separate regenerate feature is introduced. |
-| Change revert behavior | docs/specs/ASSISTANT-MESSAGES.md (§Reverting the Conversation) | `runs/use-run-orchestration.ts` (handleRevert/handleRestore/commit on generate), `state/conversation-reducer.ts`, `ui/assistant-chat.tsx` (input wiring only) | Revert is visual until the next submit commits it; earlier messages are untouched. Run write targets on remaining runs are unchanged. Re-triggered prompt starts a fresh chat run with a new run ID. |
+Paths under `libs/assistant-react` are relative to `src/lib/` unless noted.
 
-## Layer Boundaries (Enforce these)
+## Do not reintroduce
 
-- libs/ai: Provider calls, streaming, zod schemas, tool specs/binder/output shaping, the shared tool executor pipeline (`assistant-tool-executor.ts`, awaits host-injected `AssistantToolDataSource`), `AIRuntime` contract. NO React, NO DB, NO run state; tool data access stays host-injected.
-- libs/ai-react: Shared presentational AI UI primitives (incl. tool-activity widget). NO conversation store, NO DB schemas, NO stream transport.
-- `@koloda/assistant`: Run execution lifetime, serial command queues, AbortControllers, save scheduling, graceful shutdown. NO React, NO Jotai, NO repository I/O. Conversation documents stay in `@koloda/assistant-react`.
-- `@koloda/assistant-react`: Conversation store/reducer, run orchestration, chat UI. NO provider HTTP, NO DB schemas.
-- crates/koloda: Source of truth for provider enum, secrets redaction, DB repo.
-- Host apps: Own `AIRuntime` adapters, secret loading, and tool data sources (bind `AssistantToolDataSource` into the shared libs/ai executor). Shared React calls by `profileId` only; chat requests carry tool names only.
-
-### AIRuntime seam
-
-Shared React never builds provider clients or holds usable API keys.
-Hosts inject `aiRuntimeAtom` (`libs/core-react`); assistant uses `useAssistantClient` → `AIRuntime`.
-The application-shell engine host builds one `AssistantExecutionPort` that calls `AIRuntime` with the command's `profileId`.
-Do not reintroduce a module-level generator slot or optional `execution` / stream-generator getters.
-
-| Host | Adapter | Secrets |
-|------|---------|---------|
-| Electron | `apps/electron-react/.../ai-runtime.ts` over IPC; main `apps/electron/src/ai-ipc.ts`; window-close handshake `window-close-coordinator.ts` ↔ `electron-close-coordination.ts` | Keyring via NAPI in main only |
-| Web | `apps/web/src/app/ai-runtime.ts` | Host-local SQLite read at call time |
-
-Public profile reads are redacted (`apiKey: null` + `hasSecrets`).
-Settings add/replace still writes keys; edit UI uses `hasSecrets` for Replace.
-
-### Composition
-
-`AssistantChat` (`ui/`) wires `useAssistantProfileSelection` → `useConversationPersistence` → `useAssistantSession` directly.
-Autosave + engine hosts mount on the application shell via `useConversationSaveHost` / `useAssistantEngineHost` (`App` in `@koloda/app-react`; test harness mirrors that).
-Session returns a `RunController` (`runs/run-controller.ts`); UI and the test harness call through `controller.*`.
-`useRunOrchestration` is private composition: session owns its deps object; do not treat the options bag as a public API.
-Submit path: `prepareRunRequest` → `engine.dispatch(submit)` (must accept) → one `submitTurn`; `rollbackSubmitTurn` if the pending command later rejects.
-Do not reintroduce a god `useAssistantChat` hook; integration tests use `ui/assistant-chat-test-harness.ts` only.
-
-### Public surface (`@koloda/assistant-react`)
-
-App shells may import only:
-
-- UI: `AssistantChat`, `AssistantConversationsList`, `AssistantNewConversationButton`, `ConversationHeaderMenu`, `CONVERSATION_TITLE_FALLBACK`
-- State: `startParamlessConversationAtom` (`newConversationAtom` stays internal to the recovery screen)
-- Persistence host: `useConversationSaveHost` (mount on the application shell, not the AI route)
-- Engine host: `useAssistantEngineHost`, `shutdownAssistantGracefully` (mount on the application shell; run lifetime + best-effort unload shutdown)
-
-Conversation state internals live in `state/conversation-store.ts` / `state/conversation-selectors.ts` / `state/conversation-actions.ts` — import those directly inside the package lib folder.
-Do not re-export them (or hooks/reducer/orchestration) from the package entry.
+- No `getChatStreamGenerator`, `getStreamGenerator`, or mutable transport slot.
+  See `libs/ai/README.md` (§AIRuntime) and `libs/assistant/README.md`.
+- Accept `engine.dispatch` before `submitTurn`.
+  See `libs/assistant/README.md` (§Command ingress and duplicate runs).
+- No `resolveDataAccess` and no submit-time data-access injection.
+  See `libs/ai/README.md`.
+- Keep the three store dispatch helpers.
+  See `libs/assistant-react/README.md` (§Dispatch).
+- No god `useAssistantChat`.
+  See `libs/assistant-react/README.md` (§Composition).
+- `@koloda/assistant-react` and `@koloda/ai-react` do not import `@koloda/app-react` or `@koloda/settings-react`.

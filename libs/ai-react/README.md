@@ -6,7 +6,8 @@ Shared presentational AI UI for assistant chat — chat chrome, message shells, 
 
 Consumed by `@koloda/assistant-react` and `@koloda/settings-react` (and apps that compose those surfaces). Depends on `@koloda/ai`, `@koloda/core-react`, and `@koloda/ui`. Conversation state, orchestration, and persistence live in `libs/assistant-react/src/lib/`.
 
-**Ownership source of truth:** `agents/ASSISTANT-MAP.md` — prefer that map over this README when routing edits.
+**Task routing:** `agents/ASSISTANT-MAP.md`.
+This README owns the package boundary.
 
 ## Architectural Map
 
@@ -29,5 +30,5 @@ Consumed by `@koloda/assistant-react` and `@koloda/settings-react` (and apps tha
 
 ## Read next
 
-- `agents/ASSISTANT-MAP.md` — task routing and layer boundaries
-- `docs/specs/ASSISTANT-CONVERSATIONS.md` — behavioral rules the chat feature implements
+- `agents/ASSISTANT-MAP.md` — task routing
+- `docs/specs/ASSISTANT-CONVERSATIONS.md` — AI profile state the pickers implement

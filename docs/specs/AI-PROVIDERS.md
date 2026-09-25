@@ -3,7 +3,9 @@
 ## Scope
 
 Covers AI providers, profiles, secrets, and model listings.
-Does not cover conversation lifecycle, run orchestration, message rendering, card generation UX, or the transport layer.
+Does not cover the conversation list, run orchestration, message rendering, card generation UX, or the transport layer.
+The conversation list is covered by ASSISTANT-CONVERSATION-LIST.md.
+Runs are covered by ASSISTANT-CONVERSATIONS.md.
 
 ## What it is
 

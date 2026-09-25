@@ -36,7 +36,8 @@ The listed files are relative to the repo root.
 | Start or continue a task file | the task file, `agents/TASKS.md` |
 | Add an AI provider | `agents/ADD-AI-PROVIDER.md`, `docs/specs/AI-PROVIDERS.md`, `agents/CODE-STYLE.md`, `agents/CODE-DOCUMENTATION.md`, `agents/I18N.md`, `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md` |
 | Add an assistant tool | `agents/ADD-ASSISTANT-TOOL.md`, `docs/specs/ASSISTANT-DATA-ACCESS.md`, `agents/CODE-STYLE.md`, `agents/CODE-DOCUMENTATION.md`, `agents/I18N.md` |
-| Assistant chat (anything) | `agents/ASSISTANT-MAP.md` (it routes to one spec and the files) |
+| Assistant conversation list (create, name, unread, clone, delete) | `docs/specs/ASSISTANT-CONVERSATION-LIST.md`, `agents/ASSISTANT-MAP.md` |
+| Assistant chat (anything else) | `agents/ASSISTANT-MAP.md` (it routes to one spec and the files) |
 | Cards (content, state, add/edit/delete, views) | `docs/specs/CARDS.md` |
 | Decks (create, edit algorithm/template, delete) | `docs/specs/DECKS.md` |
 | Lessons (overview, today's progress, session, amounts, grading, learn-ahead) | `docs/specs/LESSONS.md` |
@@ -65,6 +66,7 @@ Then add the same guides the author used for that change type, so the reviewer a
 | Diff touches `className` | add `agents/CSS.md` |
 | Add AI provider diff | `agents/ADD-AI-PROVIDER.md`, `docs/specs/AI-PROVIDERS.md`, `agents/I18N.md`, `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md` |
 | Add assistant tool diff | `agents/ADD-ASSISTANT-TOOL.md`, `docs/specs/ASSISTANT-DATA-ACCESS.md`, `agents/I18N.md` |
+| Assistant conversation list diff | `docs/specs/ASSISTANT-CONVERSATION-LIST.md`, `agents/ASSISTANT-MAP.md` |
 | Assistant chat diff | `agents/ASSISTANT-MAP.md` (+ the one spec it names) |
 | Cards diff | `docs/specs/CARDS.md` |
 | Decks diff | `docs/specs/DECKS.md` |

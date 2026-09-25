@@ -74,7 +74,7 @@ Keep these invariants:
 - Card content never persists without review; other assistant-driven writes need a named product spec with undo and validation (`docs/specs/ASSISTANT-DATA-ACCESS.md`, `docs/specs/ASSISTANT-CARD-GENERATION.md`).
 - Tool activity lives on the run, not in follow-up history.
 
-Also update the data-access / tools row in `agents/ASSISTANT-MAP.md` if primary files or the critical invariant change.
+Also update the data-access / tools row in `agents/ASSISTANT-MAP.md` if the primary files change.
 
 ### 2. Add the tool contract (`libs/ai/src/lib/assistant-tools.ts`)
 
@@ -216,7 +216,7 @@ Minimum coverage:
 | Layer | File | Purpose |
 | --- | --- | --- |
 | Spec | `docs/specs/ASSISTANT-DATA-ACCESS.md` | Product rules for tools |
-| Map | `agents/ASSISTANT-MAP.md` | Ownership + task routing |
+| Map | `agents/ASSISTANT-MAP.md` | Task routing |
 | Specs / shaping | `libs/ai/src/lib/assistant-tools.ts` | Registry, binder, budgets |
 | Executor | `libs/ai/src/lib/assistant-tool-executor.ts` | Shared host-agnostic execution |
 | Stream | `libs/ai/src/lib/chat-stream.ts` | Bind tools into `streamText` |

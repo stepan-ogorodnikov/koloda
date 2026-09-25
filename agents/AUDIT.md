@@ -86,7 +86,7 @@ This list is the point of the audit:
 - Host desync — web SQLite vs desktop SQLite / Refinery columns or behavior disagree.
   See `docs/decisions/DUAL-PLATFORM-PERSISTENCE.md` and `agents/DB.md`.
 - IPC drift — `apps/electron/IPC.md` vs main or renderer.
-- Layer leaks — a package does work that its README `Does NOT own`, or that `agents/ASSISTANT-MAP.md` forbids.
+- Layer leaks — a package does work that its README `Does NOT own`, or that `agents/ASSISTANT-MAP.md` (§Do not reintroduce) forbids.
 - Missing trap comments — non-obvious code without `// WHY` / `// INVARIANT` / `// WORKAROUND`.
 - Leftover shims — deprecated wrappers, adapters, unused exports (`agents/BACKWARDS-COMPATIBILITY.md`).
 - One-call-site helpers and future-proof optional params (`agents/CODE-STYLE.md`, Change Discipline).
@@ -105,7 +105,7 @@ Do not recommend collapsing TypeScript and Rust, or the two persistence owners.
 Every finding cites `file:line`.
 Dead-code findings also cite the search.
 Architecture findings cite the boundary they break.
-Cite a README `Does NOT own` line, an `ASSISTANT-MAP.md` row, or a decision Ruling.
+Cite a README `Does NOT own` line, an `ASSISTANT-MAP.md` "Do not reintroduce" line, or a decision Ruling.
 Spec-violation findings cite the spec section.
 
 Every finding carries one classification:
@@ -148,7 +148,7 @@ The review noise list is not copied unchanged; the dropped item is the diff-scop
 - Do not flag FSRS staying TypeScript-side as a bug, or suggest moving it into Rust.
   The source of truth is TS. See `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md`.
 - Do not flag provider HTTP calls living in `libs/ai` instead of the store.
-  See `agents/ASSISTANT-MAP.md`.
+  See `libs/ai/README.md`.
 - Do not flag `Select.Root = SelectRoot` style assignment as a reexport.
   See `agents/CODE-STYLE.md`.
 - Do not request i18n for theme labels.

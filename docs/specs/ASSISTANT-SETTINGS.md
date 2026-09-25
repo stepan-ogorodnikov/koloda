@@ -3,8 +3,13 @@
 ## Scope
 
 Covers assistant settings: the system prompt, temperature, and how saved values apply to later runs.
-Does not cover AI profiles, secrets, model picking, conversation lifecycle, card proposal handling, or the streaming transport layer.
-Those are covered by the AI providers, conversations, messages, and card-generation specs.
+Does not cover AI profiles, secrets, model picking, or the conversation list.
+Does not cover runs, card proposal handling, or the streaming transport layer.
+The conversation list is covered by ASSISTANT-CONVERSATION-LIST.md.
+AI profiles are covered by the AI providers spec.
+Runs are covered by ASSISTANT-CONVERSATIONS.md.
+Message display is covered by the messages spec.
+Card proposals are covered by the card-generation spec.
 
 ## What it is
 

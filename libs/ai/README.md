@@ -5,11 +5,13 @@ Provider-agnostic AI abstraction: streams chat completions from any registered p
 ## Where it sits
 
 Consumed by host `AIRuntime` adapters (Electron main / web) for provider HTTP, and by `libs/ai-react` / `libs/assistant-react/src/lib` for types, pure helpers, and the `AIRuntime` contract.
-Shared React must not call `createAIGenerationClient` with secrets — see `agents/ASSISTANT-MAP.md` (AIRuntime seam).
+Shared React must not call `createAIGenerationClient` with secrets.
+See §AIRuntime below.
 Mirrors the provider enum and secrets schema in `crates/koloda` (`domain/ai.rs` + `repo/ai.rs` for redaction/reconstruction); the two must stay in sync — see `agents/ADD-AI-PROVIDER.md`.
 Talks to provider HTTP endpoints via the Vercel AI SDK (`ai` package) and per-provider SDK packages, dynamically imported.
 
-**Ownership source of truth:** `agents/ASSISTANT-MAP.md` — prefer that map over package READMEs when routing edits.
+**Task routing:** `agents/ASSISTANT-MAP.md`.
+This README owns the package boundary.
 
 ## Architectural Map
 
@@ -33,10 +35,29 @@ Talks to provider HTTP endpoints via the Vercel AI SDK (`ai` package) and per-pr
 - Presentational AI UI (message shells, pickers, tool-activity chrome) — `libs/ai-react`
 - The canonical provider enum — Rust (`crates/koloda/src/domain/ai.rs`) is source of truth; this lib mirrors it
 
+## AIRuntime
+
+Shared React never builds provider clients or holds usable API keys.
+Hosts inject `aiRuntimeAtom` (`libs/core-react`).
+Assistant chat uses that runtime through `useAssistantClient`.
+The application-shell engine host builds one `AssistantExecutionPort`.
+That port calls `AIRuntime` with the command's `profileId`.
+Do not reintroduce a module-level generator slot or optional `execution` / stream-generator getters.
+
+| Host | Adapter | Secrets |
+|------|---------|---------|
+| Electron | `apps/electron-react` `ai-runtime.ts` over IPC; main `apps/electron/src/ai-ipc.ts`; window-close handshake `window-close-coordinator.ts` ↔ `electron-close-coordination.ts` | Keyring via NAPI in main only |
+| Web | `apps/web/src/app/ai-runtime.ts` | Host-local SQLite read at call time |
+
+Public profile reads are redacted (`apiKey: null` + `hasSecrets`).
+Settings add/replace still writes keys.
+Edit UI uses `hasSecrets` for Replace.
+
 ## Read next
 
 - `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md` — Rust owns provider identity; this lib mirrors it
-- `agents/ASSISTANT-MAP.md` — task routing and layer boundaries
+- `agents/ASSISTANT-MAP.md` — task routing
 - `agents/ADD-AI-PROVIDER.md` — step-by-step across all 5 layers (TS types, Rust domain, Rust repo, registry, streaming)
 - `agents/ADD-ASSISTANT-TOOL.md` — adding a chat tool (spec, executor, both host binders, activity label)
-- `docs/specs/ASSISTANT-CONVERSATIONS.md` — the domain behavior this lib serves
+- `docs/specs/ASSISTANT-CONVERSATIONS.md` — run lifecycle and history
+- `docs/specs/ASSISTANT-CONVERSATION-LIST.md` — conversation title rules (`computeConversationTitle`)

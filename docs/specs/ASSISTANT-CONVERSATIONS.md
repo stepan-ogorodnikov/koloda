@@ -2,34 +2,28 @@
 
 ## Scope
 
-Covers the conversation lifecycle, messages, runs, AI profile state, persistence, restore, error handling, retry, and revert.
-Does not cover deck management, AI provider configuration, assistant settings (prompt templates and temperature), or the streaming transport layer.
+Covers runs, conversation history, AI profile state, persistence, restore, error handling, retry, and revert.
+Does not cover creating a conversation, the list, naming, working and unread indicators, clone, or delete.
+Those are covered by ASSISTANT-CONVERSATION-LIST.md.
+Does not cover deck management, AI provider configuration, or assistant settings (prompt templates and temperature).
+Does not cover the streaming transport layer.
 Those prompt and temperature preferences are covered by the assistant settings spec.
 Card proposal display, selection, and add are covered by the card-generation spec.
 How the model reads decks is covered by the data-access spec.
+Message display is covered by the messages spec.
 
 ## What it is
 
 A conversation is a single threaded interaction between the user and the AI.
-Each conversation has a name, a timestamp, a history of messages and AI runs, and its own unsent prompt.
+Each conversation has a history of messages and AI runs, and its own unsent prompt.
+Creating, naming, listing, cloning, and deleting a conversation is covered by ASSISTANT-CONVERSATION-LIST.md.
 
-A new conversation starts as the AI route with no conversation id.
-The composer is empty.
-No list row exists yet.
-The first change to the prompt that is not only whitespace assigns an identity and creates the conversation.
-Whitespace-only edits do not assign an identity.
-The composer may hold whitespace until that first non-empty change.
-Creating a conversation sets its timestamp to that moment.
-Later prompt edits do not change the timestamp.
-The next timestamp bump is when a run is submitted.
-
-The prompt input belongs to that conversation and is independent of every other conversation.
 Every new run is chat.
 The model may propose cards during that run.
 
 ## Core model
 
-- **Conversation** — one thread with a name, a timestamp, its messages, runs, AI profile state, and unsent prompt
+- **Conversation** — one thread with its messages, runs, AI profile state, and unsent prompt
 - **Message** — one half of an exchange; every user message is paired with an assistant message
 - **Run** — one AI request with a lifecycle: streaming, then success, failed, canceled, or interrupted
 - **AI profile state** — the profile, model, and model parameters; stored per conversation and once globally
@@ -42,43 +36,11 @@ Relationships:
 - A user message, its assistant message, and their run form one turn.
 - Only one run can be active per conversation at a time.
 - A conversation is saved once it has an identity, including when it has no messages and no active run.
-- Revert filters what the UI and the next request see; deletion happens only on the next submit.
+  When an identity is assigned is covered by ASSISTANT-CONVERSATION-LIST.md (§Creating a Conversation).
+- Revert filters what the UI and the next request see; deletion of hidden turns happens only on the next submit.
   See ASSISTANT-MESSAGES.md (§Reverting the Conversation).
 - Write targets belong to runs, not conversations; see ASSISTANT-CARD-GENERATION.md (§How Cards Are Proposed).
 - What the model sees of decks is through tools; see ASSISTANT-DATA-ACCESS.md.
-
-## Conversation List
-
-Conversations are listed in the sidebar, sorted by most recently updated.
-The timestamp is bumped only when a new run starts — that is, when the user sends a message or retries the most recent run.
-Picking a different AI profile, model, or model parameter does not change the conversation's order in the sidebar.
-Typing in the prompt input does not change the conversation's order in the sidebar.
-If the sidebar has no conversations, nothing is shown.
-The "New Conversation" button and hotkey are disabled only when the open surface has no conversation id.
-It is enabled when viewing any existing conversation, including one that has no messages and no active run.
-Starting a new conversation goes to the AI route with no conversation id and forgets the last open conversation so a reload of that route does not bounce back.
-Session reset uses the same route.
-Reloading or a cold visit to the AI route with no conversation id restores the last open conversation, when one is remembered.
-Each row shows a relative age next to the conversation's name, taken from the conversation timestamp.
-A conversation that has never had a submitted run is a draft.
-A draft's name in the list is dimmer than the name of a conversation that already has a turn.
-A working or unread indicator may appear next to the conversation's name.
-
-### Working Status
-
-A conversation is **working** when it has an active run that is still streaming.
-The working status indicator takes priority over the unread status indicator.
-The indicator is shown when the latest run is streaming.
-The working indicator is cleared when the run completes, fails, is canceled, or is interrupted.
-
-### Unread Status
-
-A conversation is **unread** when its most recent run has finished and the user has not yet opened it since the run finished.
-A finished run is one whose status is success, failed, canceled, or interrupted — never streaming.
-The indicator is shown when the latest run finished streaming and has not been read by the user.
-The unread indicator is cleared when the user opens the conversation.
-
-A run that finishes in the currently-open conversation is automatically marked as read — the user has just watched it stream, so it cannot be unread.
 
 ## Messages
 
@@ -104,14 +66,7 @@ Tool activity is not included in the history.
 See ASSISTANT-DATA-ACCESS.md (§Visibility).
 If the model needs current data again, it calls tools again.
 Messages that don't belong to any run are also excluded.
-
-### Conversation Name
-
-The conversation is named after the first user message, truncated to 255 characters.
-If the message is longer, it's trimmed with an ellipsis.
-If there are no user messages yet, the name follows the unsent prompt, using the same trimming.
-If that prompt is empty or only whitespace, the name is Untitled.
-After the first user message exists, later prompt edits do not change the name.
+Naming is covered by ASSISTANT-CONVERSATION-LIST.md (§Conversation Name).
 
 ## Runs
 
@@ -244,10 +199,7 @@ A conversation that has not yet been given an identity is not saved.
 Clearing the composer does not remove a conversation that already has an identity.
 Typing in the prompt schedules a save and does not bump the conversation timestamp.
 The current composer text is stored with the conversation.
-
-### Active Conversation
-
-The currently open conversation is remembered so the app can reopen it on reload.
+Which conversation reopens on reload is covered by ASSISTANT-CONVERSATION-LIST.md (§Conversation List).
 
 ## Restore
 
@@ -269,7 +221,7 @@ The stored row is left untouched and is not loaded as an editable conversation, 
 The chat shows a recovery screen instead of an empty conversation.
 Reset and delete are explicit user actions on that screen.
 Reset replaces the stored row with a fresh empty conversation under the same identity.
-Delete removes the conversation.
+Delete follows ASSISTANT-CONVERSATION-LIST.md (§Delete).
 
 ## Error Handling
 
@@ -323,60 +275,6 @@ This lets the user fix a failed run by switching profile, model, or parameters a
 
 If the user has not changed anything, retry behaves the same as the original request.
 
-## Clone
-
-The user can clone an existing conversation to create an independent copy.
-
-### What Gets Cloned
-
-The following are copied into the new conversation:
-
-- All messages (user and assistant)
-- All completed runs (success, failed, canceled, or interrupted) — streaming runs are not cloned
-- AI profile state (profile, model, model parameters)
-- Conversation name
-
-### What Does Not Get Cloned
-
-- The conversation ID — the clone gets a new ID
-- Unread status — the clone starts as read
-- Active streaming state — any in-progress run is not copied
-- Prompt input — the clone starts with an empty composer
-- Dismissed stream errors — the clone shows the error panel if a copied run is still failed
-
-### Clone Trigger
-
-Cloning is triggered from the conversation menu.
-The clone appears immediately in the sidebar, sorted by its new timestamp.
-The user is navigated to the cloned conversation.
-
-## Delete
-
-The user can delete a conversation from the sidebar.
-Delete cannot be undone.
-A draft that has never had a submitted run is deleted immediately, without confirmation.
-Delete still asks for confirmation after a run has been submitted.
-
-### What Deletion Does
-
-Deletion permanently removes the conversation, its messages, and its runs.
-The row disappears from the sidebar.
-
-A run that is still streaming in the deleted conversation is canceled as part of deletion.
-A late save cannot bring the conversation back; see Concurrent Behavior.
-
-### Deleting the Open Conversation
-
-If the deleted conversation is the one currently open, the app goes to the AI route with no conversation id.
-It does not assign a replacement identity.
-The composer is empty, and the global AI profile state applies, as for any new conversation.
-
-### Failed Deletion
-
-If deleting fails, the confirmation popover shows the error in place of its message.
-The confirm button stays disabled until the popover is reopened, which resets the error.
-The conversation itself is unchanged.
-
 ## Revert
 
 Full behavior is specified in ASSISTANT-MESSAGES.md (§Reverting the Conversation).
@@ -392,6 +290,7 @@ Reloading the app clears the revert state.
 - The conversation history sent to the next run is filtered by the revert state — hidden messages are not included.
 - Run write targets and deck contents are not affected by revert.
 - A conversation that looks empty because of revert is still saved, since the messages are still in the conversation state.
+- Cloning while reverted is covered by ASSISTANT-CONVERSATION-LIST.md (§Cloning a Reverted Conversation).
 
 ### Deletion on New Prompt
 
@@ -399,15 +298,9 @@ See ASSISTANT-MESSAGES.md (§Re-trigger) for how submit deletes the hidden turns
 If that deletion leaves no messages, the conversation is still saved.
 Runs that remain keep their write targets.
 
-### Cloning a Reverted Conversation
-
-Cloning a conversation in a reverted state produces a clone without the revert state.
-The clone is created from the underlying conversation data with all messages visible.
-
 ## Concurrent Behavior
 
 Only one run can be active at a time per conversation.
 If the user switches away, the run continues in the background.
 Updates still apply to the conversation that started the run, not the one now on screen.
-Deleting a conversation cancels its in-flight work.
-A late save cannot bring it back.
+What happens to an in-flight run on delete is covered by ASSISTANT-CONVERSATION-LIST.md (§Delete).

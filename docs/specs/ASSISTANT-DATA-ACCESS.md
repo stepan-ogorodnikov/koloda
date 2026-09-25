@@ -3,7 +3,9 @@
 ## Scope
 
 Covers what user data the assistant reads, when that data is fetched and sent, what is recorded, and how retry treats it.
-Does not cover the run lifecycle, retry availability, revert, or clone behavior — those are covered by the conversations spec.
+Does not cover the run lifecycle, retry availability, or revert.
+Those are covered by ASSISTANT-CONVERSATIONS.md.
+Clone is covered by ASSISTANT-CONVERSATION-LIST.md (§Clone).
 Card proposal display, selection, and add are covered by the card-generation spec.
 Prompt template editing is covered by the assistant settings spec.
 
