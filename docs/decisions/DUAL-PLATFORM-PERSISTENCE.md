@@ -12,6 +12,10 @@ Product SQL is SQLite on both hosts.
 
 Do not run desktop DB I/O from TypeScript, or web DB I/O through Rust.
 Product tables and columns stay structurally equivalent.
+First-run content deliberately diverges: web seeds demo algorithms, templates, and decks per locale
+(`apps/web/src/app/setup.ts`); desktop seeds one algorithm, one template, and the settings rows, no decks
+(`crates/koloda/src/app/init.rs`).
+Seed ids stay aligned through the shared `SEED_*` constants (`@koloda/app` `seed-ids`).
 Schema changes are Refinery SQL plus shared Zod/domain types and Rust domain types (`agents/DB.md`).
 
 Every schema change is multi-package (TS libs + `koloda` + web repos that apply the same SQL).
