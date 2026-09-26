@@ -12,6 +12,9 @@ use crate::domain::settings_ai::AISettings;
 use crate::domain::settings_hotkeys::HotkeysSettings;
 use crate::domain::settings_interface::InterfaceSettings;
 use crate::domain::settings_learning::LearningSettings;
+use crate::domain::time::{
+    deserialize_optional_timestamp, deserialize_timestamp, serialize_optional_timestamp, serialize_timestamp,
+};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Display, EnumString, Serialize, Deserialize)]
 #[strum(serialize_all = "kebab_case")]
@@ -29,7 +32,15 @@ pub struct Settings {
     pub id: i64,
     pub name: SettingsName,
     pub content: Value,
+    // WHY: accepts the RFC 3339 string `serialize_timestamp` emits, so the wire shape
+    // round-trips. Storage stays unix-ms integers (agents/DB.md); only the wire changes.
+    #[serde(deserialize_with = "deserialize_timestamp", serialize_with = "serialize_timestamp")]
     pub created_at: i64,
+    #[serde(
+        default,
+        deserialize_with = "deserialize_optional_timestamp",
+        serialize_with = "serialize_optional_timestamp"
+    )]
     pub updated_at: Option<i64>,
 }
 

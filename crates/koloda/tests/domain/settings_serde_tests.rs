@@ -27,9 +27,9 @@ fn test_settings_name_uses_kebab_case() {
 }
 
 /// Pins the settings row envelope as it crosses the NAPI layer: `content` is
-/// the embedded JSON object (never a stringified column), `name` is kebab-case.
-/// Unlike `Review`/`Card`, timestamps stay i64 millis — the renderer only ever
-/// consumes `content` (main unwraps the row), so this pins reality as-is.
+/// the embedded JSON object (never a stringified column), `name` is kebab-case,
+/// and timestamps serialize as RFC 3339 strings like every other entity — the
+/// renderer reviver turns them into `Date`, matching `Timestamps` in `@koloda/app`.
 #[test]
 fn test_settings_row_serializes_wire_shape() {
     let row = Settings {
@@ -40,16 +40,22 @@ fn test_settings_row_serializes_wire_shape() {
         updated_at: None,
     };
 
+    let wire = serde_json::to_value(&row).unwrap();
     assert_eq!(
-        serde_json::to_value(&row).unwrap(),
+        wire,
         json!({
             "id": 3,
             "name": "learning",
             "content": { "dayStartsAt": "04:00" },
-            "createdAt": 1_700_000_000_000_i64,
+            "createdAt": "2023-11-14T22:13:20+00:00",
             "updatedAt": null,
         })
     );
+
+    // The RFC 3339 wire form round-trips back to the stored unix-ms integer.
+    let parsed: Settings = serde_json::from_value(wire).unwrap();
+    assert_eq!(parsed.created_at, 1_700_000_000_000);
+    assert_eq!(parsed.updated_at, None);
 }
 
 /// The row `content` is the settings payload itself: keys must arrive camelCase
