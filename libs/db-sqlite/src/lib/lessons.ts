@@ -11,10 +11,12 @@ import type {
 import {
   cardRowSchema,
   convertTemplateToLessonTemplate,
+  insertReviewSchema,
   lessonAlgorithmRowSchema,
   lessonDeckSchema,
   lessonTemplateRowSchema,
   reviewRowSchema,
+  updateCardProgressSchema,
 } from "@koloda/srs";
 import { CARD_SELECT, REVIEW_SELECT } from "./columns";
 import type { DB } from "./db";
@@ -196,6 +198,12 @@ export async function submitLessonResult(db: DB, { card, review }: LessonResultD
   if (card.id !== review.cardId) throw new AppError("validation.lessons.result.card-review-mismatch");
 
   return throwKnownError("db.update", async () => {
+    // WHY: Twin of Rust `LessonResultData::validate` — a corrupted or buggy submit must
+    // fail here with the same catalog codes (zod issue messages), never poison the rows
+    // desktop would have rejected. Parse before the transaction; persist what was parsed.
+    const progress = updateCardProgressSchema.parse(card);
+    const reviewData = insertReviewSchema.parse(review);
+
     return db.transaction(async (tx) => {
       await tx.run(
         `UPDATE cards
@@ -204,16 +212,16 @@ export async function submitLessonResult(db: DB, { card, review }: LessonResultD
              last_reviewed_at = ?
          WHERE id = ?`,
         [
-          card.state,
-          card.dueAt,
-          card.stability,
-          card.difficulty,
-          card.scheduledDays,
-          card.learningSteps,
-          card.reps,
-          card.lapses,
-          card.lastReviewedAt ?? null,
-          card.id,
+          progress.state,
+          progress.dueAt,
+          progress.stability,
+          progress.difficulty,
+          progress.scheduledDays,
+          progress.learningSteps,
+          progress.reps,
+          progress.lapses,
+          progress.lastReviewedAt ?? null,
+          progress.id,
         ],
       );
 
@@ -224,16 +232,16 @@ export async function submitLessonResult(db: DB, { card, review }: LessonResultD
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           reviewId,
-          review.cardId,
-          review.rating,
-          review.state,
-          review.dueAt,
-          review.stability,
-          review.difficulty,
-          review.scheduledDays,
-          review.learningSteps,
-          review.time,
-          review.isIgnored,
+          reviewData.cardId,
+          reviewData.rating,
+          reviewData.state,
+          reviewData.dueAt,
+          reviewData.stability,
+          reviewData.difficulty,
+          reviewData.scheduledDays,
+          reviewData.learningSteps,
+          reviewData.time,
+          reviewData.isIgnored,
           nowMs(),
         ],
       );

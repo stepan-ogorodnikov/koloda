@@ -1,4 +1,4 @@
-import type { Modify, ObjectPropertiesMapping, UpdateData } from "@koloda/app";
+import type { ObjectPropertiesMapping, UpdateData } from "@koloda/app";
 import { mapObjectProperties, mapObjectPropertiesReverse, timestampsValidation } from "@koloda/app";
 import { createEmptyCard, Rating } from "ts-fsrs";
 import type { Card as CardFSRS, DateInput } from "ts-fsrs";
@@ -86,25 +86,26 @@ export type UpdateCardValues = z.input<typeof updateCardSchema>;
 
 export type UpdateCardData = UpdateData<Card, "id", UpdateCardValues>;
 
-// Mirrors koloda `UpdateCardProgress`: exactly the progress columns the lesson submit updates.
-// INVARIANT: Rust `due_at` is a required timestamp — FSRS always supplies `due` —
-// while `Card.dueAt` stays nullable for untouched rows.
-export type UpdateCardProgress = Modify<
-  Pick<
-    Card,
-    | "id"
-    | "dueAt"
-    | "state"
-    | "stability"
-    | "difficulty"
-    | "scheduledDays"
-    | "learningSteps"
-    | "reps"
-    | "lapses"
-    | "lastReviewedAt"
-  >,
-  { dueAt: Date }
->;
+// Mirrors koloda `UpdateCardProgress` + its `validate`: exactly the progress columns the
+// lesson submit updates. INVARIANT: fields are required (no zod defaults) — a missing
+// field must reject the way serde does on desktop. Rust `due_at` is a required timestamp
+// — FSRS always supplies `due` — while `Card.dueAt` stays nullable for untouched rows.
+export const updateCardProgressSchema = z
+  .object({
+    id: z.uuid(),
+    dueAt: z.date(),
+    state: z.int(),
+    stability: z.number(),
+    difficulty: z.number(),
+    scheduledDays: z.int(),
+    learningSteps: z.int(),
+    reps: z.int(),
+    lapses: z.int(),
+    lastReviewedAt: z.date().nullable(),
+  })
+  .superRefine(refineCardProgress);
+
+export type UpdateCardProgress = z.infer<typeof updateCardProgressSchema>;
 
 export type DeleteCardData = Pick<Card, "id">;
 

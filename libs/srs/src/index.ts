@@ -24,6 +24,7 @@ export {
   getInsertCardSchema,
   getUpdateCardSchema,
   insertCardSchema,
+  updateCardProgressSchema,
   updateCardSchema,
 } from "./lib/cards";
 export type {
@@ -74,6 +75,7 @@ export {
   calculateTodaysReviewTotals,
   createReviewFromReviewFSRS,
   getCurrentLearningDayRange,
+  insertReviewSchema,
   reviewRowSchema,
   reviewTotalsSchema,
 } from "./lib/reviews";

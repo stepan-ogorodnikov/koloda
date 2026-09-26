@@ -269,4 +269,50 @@ describe("lessons repository integration", () => {
     expect(storedReviews[0]).toMatchObject(review);
     expect(storedReviews[0]?.createdAt).toEqual(new Date("2026-01-10T12:00:00.000Z"));
   });
+
+  it("rejects out-of-bounds progress and persists nothing", async () => {
+    const { db } = testDb;
+    const { deck, template } = await seedDeckContext(db);
+    const card = await addCard(db, {
+      deckId: deck.id,
+      templateId: template.id,
+      content: createCardContent(template),
+      state: 0,
+    });
+    const updatedCard = {
+      id: card.id,
+      state: 2,
+      dueAt: new Date("2026-01-12T12:00:00.000Z"),
+      stability: 4.5,
+      difficulty: 11,
+      scheduledDays: 2,
+      learningSteps: 0,
+      reps: 1,
+      lapses: 0,
+      lastReviewedAt: new Date("2026-01-10T12:00:00.000Z"),
+    };
+    const review = {
+      cardId: card.id,
+      rating: 3,
+      state: 2,
+      dueAt: new Date("2026-01-12T12:00:00.000Z"),
+      stability: 4.5,
+      difficulty: 2.25,
+      scheduledDays: 2,
+      learningSteps: 0,
+      time: 1250,
+      isIgnored: false,
+    };
+
+    // Twin of desktop `submit_lesson_result_rejects_invalid_progress`: the zod issue
+    // message carries the same AppError-catalog code desktop puts on the error.
+    await expect(submitLessonResult(db, { card: updatedCard, review })).rejects.toMatchObject({
+      issues: [{ message: "validation.cards-progress.difficulty" }],
+    });
+
+    const storedCards = await getCards(db, { deckId: deck.id });
+    expect(storedCards).toHaveLength(1);
+    expect(storedCards[0]).toMatchObject({ id: card.id, state: 0, reps: 0 });
+    expect(await getReviews(db, { cardId: card.id })).toHaveLength(0);
+  });
 });

@@ -67,6 +67,65 @@ fn submit_lesson_result_updates_card_and_inserts_review() {
 }
 
 #[test]
+fn submit_lesson_result_rejects_invalid_progress() {
+    let db = test_db();
+    let algorithm_id = add_algorithm(&db, "FSRS");
+    let template_id = add_template(&db, "Basic");
+    let deck_id = add_deck(&db, &algorithm_id, &template_id, "Deck");
+    let card_id = add_card(&db, &deck_id, &template_id, "question");
+
+    let result = lessons::submit_lesson_result(
+        &db,
+        LessonResultData {
+            card: UpdateCardProgress {
+                id: card_id.clone(),
+                state: 2,
+                due_at: 1_900_000_000_000,
+                stability: 5.0,
+                difficulty: 11.0,
+                scheduled_days: 3,
+                learning_steps: 0,
+                reps: 1,
+                lapses: 0,
+                last_reviewed_at: Some(1_800_000_000_000),
+            },
+            review: InsertReviewData {
+                card_id: card_id.clone(),
+                rating: 3,
+                state: 2,
+                due_at: 1_900_000_000_000,
+                stability: 5.0,
+                difficulty: 5.0,
+                scheduled_days: 3,
+                learning_steps: 0,
+                time: 12,
+                is_ignored: false,
+            },
+        },
+    );
+
+    assert_eq!(
+        result.expect_err("out-of-bounds difficulty should reject").code,
+        error_codes::VALIDATION_CARDS_PROGRESS_DIFFICULTY
+    );
+
+    let stored = koloda::repo::cards::get_card(&db, &card_id)
+        .expect("card query should succeed")
+        .expect("card should exist");
+    assert_eq!(stored.state, 0);
+    assert_eq!(stored.reps, 0);
+
+    let saved_reviews = koloda::repo::reviews::get_reviews(
+        &db,
+        koloda::domain::reviews::GetReviewsData {
+            card_id: card_id.clone(),
+        },
+    )
+    .expect("reviews query should succeed");
+    assert!(saved_reviews.is_empty());
+}
+
+#[test]
 fn submit_lesson_result_rolls_back_when_review_insert_fails() {
     let db = test_db();
     let algorithm_id = add_algorithm(&db, "FSRS");
