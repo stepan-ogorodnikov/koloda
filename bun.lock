@@ -147,7 +147,6 @@
       "dependencies": {
         "@koloda/ai": "workspace:*",
         "@koloda/app": "workspace:*",
-        "@koloda/srs": "workspace:*",
       },
     },
     "libs/assistant-react": {

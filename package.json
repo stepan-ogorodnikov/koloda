@@ -13,7 +13,7 @@
     "test:rust": "nx run koloda:test",
     "check:workspace-deps": "bunx vitest run --config tools/vitest.config.mjs --configLoader runner && bun run tools/check-workspace-deps.ts",
     "check:commit": "nx run-many -t lint",
-    "check:push": "nx run-many -t lint,typecheck && nx run koloda:test",
+    "check:push": "nx run-many -t lint,typecheck && nx run koloda:test && bun run check:workspace-deps",
     "check:rust": "nx run koloda:lint",
     "check:web-deploy": "nx run-many -t lint,typecheck --exclude=tag:lang:rust && bun run test:libs && bun run check:workspace-deps",
     "check:web-all": "bun run check:web-deploy && nx run web-e2e:e2e",

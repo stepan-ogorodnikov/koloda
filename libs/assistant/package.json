@@ -15,7 +15,6 @@
   },
   "dependencies": {
     "@koloda/ai": "workspace:*",
-    "@koloda/app": "workspace:*",
-    "@koloda/srs": "workspace:*"
+    "@koloda/app": "workspace:*"
   }
 }
