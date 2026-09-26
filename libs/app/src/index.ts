@@ -13,13 +13,7 @@ export type {
   DeleteConversationData,
   SetConversationData,
 } from "./lib/conversations";
-export {
-  ENTITY_TITLE_MAX_LENGTH,
-  optionalProfileTitleSchema,
-  PROFILE_TITLE_MAX_LENGTH,
-  requiredEntityTitleSchema,
-  trimTitleValue,
-} from "./lib/titles";
+export { optionalProfileTitleSchema, PROFILE_TITLE_MAX_LENGTH, requiredEntityTitleSchema } from "./lib/titles";
 export { timestampsValidation } from "./lib/db";
 export type { Timestamps } from "./lib/db";
 export { getAppPlatform } from "./lib/environment";
@@ -85,9 +79,4 @@ export {
 } from "./lib/utility";
 export type { DeepPartial, Modify, ObjectPropertiesMapping, UpdateData } from "./lib/utility";
 export { formatTimestamp, timeFieldFormatOptions } from "./lib/timestamp-format";
-export type {
-  TimeFieldFormatOptions,
-  TimestampFormatter,
-  TimestampFormats,
-  TimestampKind,
-} from "./lib/timestamp-format";
+export type { TimestampFormatter, TimestampKind } from "./lib/timestamp-format";

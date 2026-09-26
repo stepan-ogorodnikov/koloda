@@ -200,7 +200,7 @@ export type DataChannel = keyof DataIpc;
  * Channels registered by `ai-ipc.ts` (secrets-capable main-side glue) rather
  * than by the data handler table in `data-ipc.ts`.
  */
-export type AiChannel = "cmd_ai_list_models" | "cmd_ai_chat_stream" | "cmd_ai_abort";
+type AiChannel = "cmd_ai_list_models" | "cmd_ai_chat_stream" | "cmd_ai_abort";
 
 /** Channels served by the `KolodaDb`-backed handler table in `data-ipc.ts`. */
 export type DataOnlyChannel = Exclude<DataChannel, AiChannel>;

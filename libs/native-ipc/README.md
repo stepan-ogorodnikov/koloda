@@ -13,7 +13,7 @@ surfacing as "no handler" at runtime. The human-readable surface it enforces is
 
 ## Architectural Map
 
-- `src/index.ts` — the whole package: `DataIpc` contract, `DataChannel`/`AiChannel`/
+- `src/index.ts` — the whole package: `DataIpc` contract, `DataChannel`/
   `DataOnlyChannel`/`IpcArgs`/`IpcResult` helpers, push-channel constants, `AiStreamEvent`.
 
 ### Does NOT own (prevent scope creep)
