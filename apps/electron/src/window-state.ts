@@ -22,6 +22,8 @@ export function loadWindowState(): WindowState {
       return state;
     }
   } catch {}
+  // WHY: a missing or corrupted window-state.json must degrade to defaults, never
+  // crash window startup.
   return defaults;
 }
 
@@ -38,6 +40,7 @@ export function saveWindowState(win: BrowserWindow) {
   try {
     writeFileSync(join(app.getPath("userData"), WINDOW_STATE_FILE), JSON.stringify(state));
   } catch {}
+  // WHY: bounds persistence is best-effort; a failed write must never fail close.
 }
 
 function isWithinDisplay(state: WindowState): boolean {

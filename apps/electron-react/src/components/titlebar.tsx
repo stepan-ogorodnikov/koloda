@@ -18,6 +18,9 @@ type WindowButtonPositionOptions = { titlebarHeight: number };
 
 const platform = getAppPlatform();
 
+// WHY: Win11 (build ≥ 22000) caption buttons are wider than Win10's. This estimate
+// only covers first paint — main returns the platform- and DPI-exact width via
+// get-overlay-width below.
 const defaultOverlayWidth = (() => {
   if (platform === "macos") return 64;
   if (platform === "linux") return Math.round(100 * window.devicePixelRatio);

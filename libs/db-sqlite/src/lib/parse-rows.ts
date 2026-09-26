@@ -1,6 +1,13 @@
 import type { z } from "zod";
 import type { SqlRow, SqlValue } from "./db";
 
+// INVARIANT: these key sets mirror how the shared V*.sql series stores each column (agents/DB.md).
+// Do not trim keys that look unused — on-disk rows depend on every branch below.
+// WHY: FSRS numeric columns coerce NULL to 0 because cards.stability/difficulty are
+// nullable in V1 (legacy rows); desktop loads NULL as 0.0 the same way
+// (crates/koloda/src/repo/cards.rs) — divergence would fail restored rows at schema.parse.
+// WHY: "state" is deliberately in both JSON_KEYS and ZERO_KEYS: conversations.state
+// is JSON text, cards.state/reviews.state are integers whose NULL means "new" (0).
 const DATE_KEYS = new Set(["createdAt", "updatedAt", "dueAt", "lastReviewedAt"]);
 const JSON_KEYS = new Set(["content", "state"]);
 const BOOL_KEYS = new Set(["isIgnored", "isLocked"]);
