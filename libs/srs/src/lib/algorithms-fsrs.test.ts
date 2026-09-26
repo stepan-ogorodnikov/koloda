@@ -28,13 +28,22 @@ function validPayload() {
 describe("createFSRSAlgorithm", () => {
   it("returns a working fsrs instance from the default algorithm", () => {
     const instance = createFSRSAlgorithm(DEFAULT_FSRS_ALGORITHM);
-    const card = createEmptyCard(new Date());
-    const grades = instance.repeat(card, new Date());
+    const now = new Date("2026-08-24T12:00:00.000Z");
+    const grades = instance.repeat(createEmptyCard(now), now);
 
-    expect(grades[Rating.Again]).toBeDefined();
-    expect(grades[Rating.Hard]).toBeDefined();
-    expect(grades[Rating.Good]).toBeDefined();
-    expect(grades[Rating.Easy]).toBeDefined();
+    // Initial stability is w[grade - 1]; fuzz jitters intervals, never stability,
+    // so these pins hold with the default algorithm's fuzz enabled.
+    expect(grades[Rating.Again].card.stability).toBeCloseTo(0.212, 5);
+    expect(grades[Rating.Hard].card.stability).toBeCloseTo(1.2931, 5);
+    expect(grades[Rating.Good].card.stability).toBeCloseTo(2.3065, 5);
+    expect(grades[Rating.Easy].card.stability).toBeCloseTo(8.2956, 5);
+
+    // Default learning steps (1m, 10m): Again/Hard/Good stay in Learning, Easy jumps to Review.
+    expect(grades[Rating.Again].card.state).toBe(State.Learning);
+    expect(grades[Rating.Hard].card.state).toBe(State.Learning);
+    expect(grades[Rating.Good].card.state).toBe(State.Learning);
+    expect(grades[Rating.Easy].card.state).toBe(State.Review);
+    expect(grades[Rating.Easy].card.due.getTime()).toBeGreaterThan(+now);
   });
 
   it("divides retention by 100 before passing to generatorParameters", () => {
@@ -129,19 +138,12 @@ describe("createFSRSAlgorithm", () => {
     expect(instance.parameters.relearning_steps).toEqual(["1d"]);
   });
 
-  it("uses fuzz setting from algorithm data", () => {
+  it("maps isFuzzEnabled onto generatorParameters.enable_fuzz", () => {
     const fuzzy = createFSRSAlgorithm({ ...DEFAULT_FSRS_ALGORITHM, isFuzzEnabled: true });
     const noFuzz = createFSRSAlgorithm({ ...DEFAULT_FSRS_ALGORITHM, isFuzzEnabled: false });
 
-    const now = new Date();
-    const card = createEmptyCard(now);
-    const fuzzyGrades = fuzzy.repeat(card, now);
-    const noFuzzGrades = noFuzz.repeat(card, now);
-
-    expect(fuzzyGrades[Rating.Good].card.due).toBeInstanceOf(Date);
-    expect(noFuzzGrades[Rating.Good].card.due).toBeInstanceOf(Date);
-    expect(fuzzyGrades[Rating.Good].card.stability).toBeGreaterThan(0);
-    expect(noFuzzGrades[Rating.Good].card.stability).toBeGreaterThan(0);
+    expect(fuzzy.parameters.enable_fuzz).toBe(true);
+    expect(noFuzz.parameters.enable_fuzz).toBe(false);
   });
 });
 
