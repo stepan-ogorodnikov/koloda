@@ -38,6 +38,9 @@ When modifying database schema:
    Touch `crates/koloda/src/migrations/mod.rs` (or `cargo clean -p koloda`).
    `embed_migrations!` snapshots the directory at compile time.
    An incremental build will not embed a newly added file.
+   Web snapshots the same directory at Vite build time (`import.meta.glob` in `libs/db-sqlite/src/lib/migrate.ts`) —
+   rebuild `@koloda/db-sqlite` (or `nx reset`) after adding a migration so a stale cached bundle does not ship
+   without the new file.
 3. **Update domain types** in `libs/srs` / `@koloda/app` / `@koloda/settings` (Zod) and `crates/koloda/src/domain/` (Rust).
 4. **Update both repo stacks** (`crates/koloda/src/repo/` and `libs/db-sqlite/src/lib/`).
 5. **Update the inventory snapshot** at `crates/koloda/src/migrations/schema-inventory.json` if columns, indexes, or FKs changed.
