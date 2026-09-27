@@ -6,7 +6,10 @@ import type { DB } from "./db";
 import type { TestDb } from "../test/test-helpers";
 import { createTestDb } from "../test/test-helpers";
 
-const BOOKKEEPING_TABLES = new Set(["_migrations", "__migrations"]);
+// INVARIANT: one shared bookkeeping name across both hosts (desktop twin:
+// schema_inventory_tests.rs). A legacy `__migrations` table here would mean the
+// rename shim in migrate.ts never ran.
+const BOOKKEEPING_TABLES = new Set(["_migrations"]);
 
 const SNAPSHOT_PATH = resolve(
   dirname(fileURLToPath(import.meta.url)),

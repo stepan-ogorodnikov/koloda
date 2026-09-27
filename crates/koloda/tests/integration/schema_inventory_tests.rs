@@ -4,7 +4,9 @@ use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::PathBuf;
 
-const BOOKKEEPING_TABLES: &[&str] = &["_migrations", "__migrations"];
+// INVARIANT: one shared bookkeeping name across both hosts (web twin:
+// schema-inventory.test.ts).
+const BOOKKEEPING_TABLES: &[&str] = &["_migrations"];
 
 #[derive(Debug, Serialize, Deserialize, PartialEq)]
 struct SchemaInventory {

@@ -8,6 +8,9 @@ Why two ownership boundaries exist: `docs/decisions/DUAL-PLATFORM-PERSISTENCE.md
 - **One SQL series**: `crates/koloda/src/migrations/`.
   Desktop embeds it with `refinery::embed_migrations!("src/migrations")` in `crates/koloda/src/migrations/mod.rs`.
   Web applies the same `V*.sql` files in filename order through `@koloda/db-sqlite`.
+  Both hosts record applied versions in a `_migrations` table private to each database
+  (desktop `crates/koloda/src/app/db.rs`, web `libs/db-sqlite/src/lib/migrate.ts`, which renames
+  pre-unification web `__migrations` tables in place).
 - **Rust core owns the desktop connection**.
   `apps/electron/src-rust` consumes `koloda`; it does not define migrations.
 - There is no Drizzle schema and no `db:generate` script.

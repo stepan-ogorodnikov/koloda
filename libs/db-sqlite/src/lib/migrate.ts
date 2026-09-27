@@ -1,7 +1,11 @@
 import type { DB } from "./db";
 import { nowMs } from "./sql";
 
-const MIGRATIONS_TABLE = "__migrations";
+// INVARIANT: both hosts record applied versions in `_migrations` (desktop twin:
+// MIGRATIONS_TABLE in crates/koloda/src/app/db.rs) — one shared name over the
+// shared V*.sql series.
+const MIGRATIONS_TABLE = "_migrations";
+const LEGACY_MIGRATIONS_TABLE = "__migrations";
 
 const migrationFiles: Record<string, { default: string }> = import.meta.glob(
   "../../../../crates/koloda/src/migrations/*.sql",
@@ -47,13 +51,33 @@ async function loadMigrationEntries(): Promise<[string, string][]> {
 }
 
 export async function ensureMigrationsTable(db: DB) {
-  await db.exec(`
-    CREATE TABLE IF NOT EXISTS ${MIGRATIONS_TABLE} (
-      id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-      name TEXT NOT NULL,
-      created_at INTEGER NOT NULL
-    )
-  `);
+  const tables = await db.all(`SELECT name FROM sqlite_master WHERE type = 'table' AND name IN (?, ?)`, [
+    MIGRATIONS_TABLE,
+    LEGACY_MIGRATIONS_TABLE,
+  ]);
+  const names = new Set(tables.map((row) => String(row.name)));
+
+  // WHY: pre-unification web databases tracked applied versions in `__migrations`.
+  // Renaming preserves the records so applied migrations are never re-run against
+  // existing tables; the legacy name exists nowhere else afterwards.
+  if (names.has(LEGACY_MIGRATIONS_TABLE)) {
+    if (names.has(MIGRATIONS_TABLE)) {
+      await db.exec(`DROP TABLE ${LEGACY_MIGRATIONS_TABLE}`);
+    } else {
+      await db.exec(`ALTER TABLE ${LEGACY_MIGRATIONS_TABLE} RENAME TO ${MIGRATIONS_TABLE}`);
+    }
+    return;
+  }
+
+  if (!names.has(MIGRATIONS_TABLE)) {
+    await db.exec(`
+      CREATE TABLE ${MIGRATIONS_TABLE} (
+        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+        name TEXT NOT NULL,
+        created_at INTEGER NOT NULL
+      )
+    `);
+  }
 }
 
 export async function getAppliedMigrationNames(db: DB): Promise<string[]> {
