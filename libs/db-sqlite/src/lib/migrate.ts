@@ -102,6 +102,13 @@ export async function applyPendingMigrations(db: DB) {
   }
 }
 
+// WHY: The status query doubles as web's upgrade hook — the lazy counterpart of
+// desktop's eager refinery run at startup. Pending migrations apply here on
+// purpose, so a queryFn that writes is correct. Safe because seeding is one
+// transaction (apps/web `setupFromScratch`): an interrupted setup rolls the
+// bookkeeping back too, status stays "blank", and it only flips to "ok" in a
+// fully migrated, seed-capable state. Desktop twin `get_db_status`
+// (crates/koloda/src/app/init.rs) is a pure read for that reason.
 export async function getStatus(db: DB) {
   await ensureMigrationsTable(db);
   const applied = await getAppliedMigrationNames(db);

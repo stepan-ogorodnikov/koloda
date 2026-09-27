@@ -33,6 +33,10 @@ pub struct SeedSettings {
     pub hotkeys: Value,
 }
 
+// WHY: Pure read — refinery upgrades the desktop schema eagerly at startup
+// (crates/koloda/src/app/db.rs). The web twin (libs/db-sqlite migrate.ts
+// `getStatus`) instead applies pending migrations inside the status query,
+// because web has no eager hook and the query doubles as its upgrade path.
 pub fn get_db_status(db: &Database) -> Result<DbStatus, AppError> {
     let settings_names = get_settings_names(db)?;
 
