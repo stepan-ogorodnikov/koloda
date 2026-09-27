@@ -254,6 +254,19 @@ describe("getCardContentValidation", () => {
     const { content: contentSchema } = getCardContentValidation(fields);
     expect(contentSchema.safeParse(content).success).toBe(success);
   });
+
+  it("reports missing keys with the field-empty code like the Rust twin", () => {
+    // Twin of koloda validate_content reusing field-empty for absent keys
+    // (crates/koloda/src/domain/cards.rs) — the UI catalog translates only
+    // that code, so a bare zod invalid_type would surface untranslated.
+    const { content: contentSchema } = getCardContentValidation(fields);
+    const result = contentSchema.safeParse({ [SEED_TEMPLATE_TYPE_BACK_FIELD_ID]: { text: "Back" } });
+
+    expect(result.success).toBe(false);
+    const issue = result.success ? undefined : result.error.issues[0];
+    expect(issue?.message).toBe("validation.cards.content.field-empty");
+    expect(issue?.path).toEqual([SEED_TEMPLATE_TYPE_FRONT_FIELD_ID]);
+  });
 });
 
 describe("getInsertCardSchema", () => {

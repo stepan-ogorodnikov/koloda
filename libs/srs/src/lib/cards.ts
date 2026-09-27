@@ -54,7 +54,27 @@ export function getCardContentValidation(fields: TemplateFields) {
     {},
   );
 
-  return { content: z.object(validation) };
+  return {
+    content: z
+      .object(validation)
+      .partial()
+      .superRefine((content, ctx) => {
+        // WHY: A missing field key must fail with the same code as an empty
+        // required field — Rust `validate_content` reuses field-empty for
+        // absent keys (crates/koloda/src/domain/cards.rs) and the UI catalog
+        // translates only that code; a bare zod invalid_type would surface
+        // untranslated. CARDS.md §Card Content: every template field is present.
+        for (const field of fields) {
+          if (content[field.id] === undefined) {
+            ctx.addIssue({
+              code: "custom",
+              message: "validation.cards.content.field-empty",
+              path: [field.id],
+            });
+          }
+        }
+      }),
+  };
 }
 
 export function getInsertCardSchema(template: Template) {
