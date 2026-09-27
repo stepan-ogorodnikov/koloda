@@ -1,4 +1,7 @@
-import { Add01Icon, Refresh04Icon } from "@hugeicons/core-free-icons";
+// WHY: deep per-icon imports - the core-free-icons barrel re-exports ~11k
+// modules and costs ~3s of module loading per isolated vitest file.
+import Add01Icon from "@hugeicons/core-free-icons/Add01Icon";
+import Refresh04Icon from "@hugeicons/core-free-icons/Refresh04Icon";
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { AIModel, AIProfile } from "@koloda/ai";
 import { AI_PROVIDER_LABELS } from "@koloda/ai";

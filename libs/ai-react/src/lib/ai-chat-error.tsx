@@ -1,4 +1,5 @@
-import { Cancel01Icon, Refresh04Icon } from "@hugeicons/core-free-icons";
+import Cancel01Icon from "@hugeicons/core-free-icons/Cancel01Icon";
+import Refresh04Icon from "@hugeicons/core-free-icons/Refresh04Icon";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Button, ErrorMessage, Fade } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";

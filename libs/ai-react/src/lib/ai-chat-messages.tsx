@@ -1,4 +1,4 @@
-import { ArrowDown02Icon } from "@hugeicons/core-free-icons";
+import ArrowDown02Icon from "@hugeicons/core-free-icons/ArrowDown02Icon";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Button, Fade, Tooltip, useLayoutHeaderScrollShadow } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";

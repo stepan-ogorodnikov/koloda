@@ -1,10 +1,10 @@
-import {
-  AlertCircleIcon,
-  ChevronRightIcon,
-  FolderLibraryIcon,
-  InvestigationIcon,
-  WrenchIcon,
-} from "@hugeicons/core-free-icons";
+// WHY: deep per-icon imports - the core-free-icons barrel re-exports ~11k
+// modules and costs ~3s of module loading per isolated vitest file.
+import AlertCircleIcon from "@hugeicons/core-free-icons/AlertCircleIcon";
+import ChevronRightIcon from "@hugeicons/core-free-icons/ChevronRightIcon";
+import FolderLibraryIcon from "@hugeicons/core-free-icons/FolderLibraryIcon";
+import InvestigationIcon from "@hugeicons/core-free-icons/InvestigationIcon";
+import WrenchIcon from "@hugeicons/core-free-icons/Wrench01Icon";
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { IconSvgElement } from "@hugeicons/react";
 import { BrainIcon, Button, CardsIcon, TextSwap } from "@koloda/ui";

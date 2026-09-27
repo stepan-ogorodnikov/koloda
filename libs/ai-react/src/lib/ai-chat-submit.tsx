@@ -1,4 +1,5 @@
-import { ArrowUp02Icon, StopIcon } from "@hugeicons/core-free-icons";
+import ArrowUp02Icon from "@hugeicons/core-free-icons/ArrowUp02Icon";
+import StopIcon from "@hugeicons/core-free-icons/StopIcon";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Button, Tooltip } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";

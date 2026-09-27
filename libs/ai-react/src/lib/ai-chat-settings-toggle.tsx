@@ -1,4 +1,4 @@
-import { Settings01Icon } from "@hugeicons/core-free-icons";
+import Settings01Icon from "@hugeicons/core-free-icons/Settings01Icon";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Button, Tooltip } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
