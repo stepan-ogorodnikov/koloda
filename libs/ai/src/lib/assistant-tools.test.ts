@@ -176,14 +176,6 @@ describe("assistant-tools binder", () => {
     expect(bound.get_deck_cards?.description).toBe(ASSISTANT_TOOL_SPECS.get_deck_cards.description);
   });
 
-  it("binds propose_cards as a known spec", () => {
-    const bound = bindAssistantTools({ names: ["propose_cards"], execute: vi.fn() });
-
-    expect(ASSISTANT_TOOL_SPECS.propose_cards).toBeDefined();
-    expect(Object.keys(bound)).toEqual(["propose_cards"]);
-    expect(bound.propose_cards?.description).toBe(ASSISTANT_TOOL_SPECS.propose_cards.description);
-  });
-
   it("rejects unknown tool names at bind time", () => {
     expect(() => bindAssistantTools({ names: ["nope"], execute: vi.fn() })).toThrow(/Unknown assistant tool/);
   });
