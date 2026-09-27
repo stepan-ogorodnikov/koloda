@@ -30,6 +30,37 @@ describe("ipc wire", () => {
     expect(typeof result.state.messages[0].metadata.createdAt).toBe("string");
   });
 
+  it("rehydrates timestamp fields nested in arrays and objects", () => {
+    const iso = "2026-01-02T03:04:05.000Z";
+    const result = fromWire<{
+      cards: Array<{ id: string; dueAt: Date; lastReviewedAt: Date | null }>;
+      content: { profiles: Array<{ id: string; createdAt: Date }> };
+    }>({
+      cards: [{ id: "c1", dueAt: iso, lastReviewedAt: null }],
+      content: { profiles: [{ id: "p1", createdAt: iso }] },
+    });
+
+    expect(result.cards[0].dueAt).toEqual(new Date(iso));
+    expect(result.content.profiles[0].createdAt).toEqual(new Date(iso));
+  });
+
+  it("keeps date-shaped strings that are not timestamp fields", () => {
+    // The V12 audit trap: a deck titled "2024-01-01" and a card field holding
+    // "2026-01-01" must survive the wire as strings.
+    const result = fromWire<{ title: string; content: Record<string, string> }>({
+      title: "2024-01-01",
+      content: { "01900000-0000-7000-8000-000000000001": "2026-01-01" },
+    });
+
+    expect(result.title).toBe("2024-01-01");
+    expect(result.content["01900000-0000-7000-8000-000000000001"]).toBe("2026-01-01");
+  });
+
+  it("keeps non-ISO strings under timestamp field names", () => {
+    const result = fromWire<{ dueAt: string }>({ dueAt: "not-a-date" });
+    expect(result.dueAt).toBe("not-a-date");
+  });
+
   it("round-trips conversation timestamps through the wire layer", () => {
     const ms = 1_700_000_001_000;
     const wire = toWire({

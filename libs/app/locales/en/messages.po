@@ -570,18 +570,26 @@ msgid "validation.templates.fields.too-few"
 msgstr "There has to be at least one field"
 
 #: ../../libs/app/src/lib/error.ts:88
+msgid "validation.templates.fields.id"
+msgstr "Invalid field id"
+
+#: ../../libs/app/src/lib/error.ts:89
 msgid "validation.templates.fields.type"
 msgstr "Invalid field type"
 
-#: ../../libs/app/src/lib/error.ts:91
+#: ../../libs/app/src/lib/error.ts:92
 msgid "validation.templates.layout.missing-field"
 msgstr "Every layout item must reference an existing field"
 
-#: ../../libs/app/src/lib/error.ts:90
+#: ../../libs/app/src/lib/error.ts:91
+msgid "validation.templates.layout.field"
+msgstr "Invalid layout field reference"
+
+#: ../../libs/app/src/lib/error.ts:93
 msgid "validation.templates.layout.operation"
 msgstr "Invalid layout operation"
 
-#: ../../libs/app/src/lib/error.ts:89
+#: ../../libs/app/src/lib/error.ts:90
 msgid "validation.templates.layout.too-few"
 msgstr "There has to be at least one layout item"
 

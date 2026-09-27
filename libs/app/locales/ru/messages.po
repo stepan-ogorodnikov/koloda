@@ -570,18 +570,26 @@ msgid "validation.templates.fields.too-few"
 msgstr "Необходимо хотя бы одно поле"
 
 #: ../../libs/app/src/lib/error.ts:88
+msgid "validation.templates.fields.id"
+msgstr "Недопустимый id поля"
+
+#: ../../libs/app/src/lib/error.ts:89
 msgid "validation.templates.fields.type"
 msgstr "Недопустимый тип поля"
 
-#: ../../libs/app/src/lib/error.ts:91
+#: ../../libs/app/src/lib/error.ts:92
 msgid "validation.templates.layout.missing-field"
 msgstr "Каждый элемент раскладки должен ссылаться на существующее поле"
 
-#: ../../libs/app/src/lib/error.ts:90
+#: ../../libs/app/src/lib/error.ts:91
+msgid "validation.templates.layout.field"
+msgstr "Недопустимая ссылка на поле раскладки"
+
+#: ../../libs/app/src/lib/error.ts:93
 msgid "validation.templates.layout.operation"
 msgstr "Недопустимое действие"
 
-#: ../../libs/app/src/lib/error.ts:89
+#: ../../libs/app/src/lib/error.ts:90
 msgid "validation.templates.layout.too-few"
 msgstr "Раскладка не может быть пустой"
 

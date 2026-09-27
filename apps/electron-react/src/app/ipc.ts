@@ -7,6 +7,10 @@
  * rehydrate timestamps from the Rust side.
  */
 
+// WHY: deep import — the root barrel re-exports Lingui macros, which have no
+// transform outside Vite/SWC (same reason `libs/ai` imports `@koloda/app/titles`).
+import { TIMESTAMP_FIELD_KEYS } from "@koloda/app/db";
+
 export type JsonPrimitive = string | number | boolean | null;
 export type JsonValue = JsonPrimitive | JsonValue[] | { [key: string]: JsonValue };
 
@@ -81,13 +85,22 @@ function walkWire(value: unknown, seen: WeakSet<object>, path: string): JsonValu
 
 export type WireReviver = (key: string, value: unknown) => unknown;
 
+const TIMESTAMP_KEYS: ReadonlySet<string> = new Set(TIMESTAMP_FIELD_KEYS);
+
 const defaultWireReviver: WireReviver = (path, value) => {
   // WHY: Conversation `state` is an opaque TS blob coerced by assistant-react
   // (`coerceConversationState`). Reviving ISO strings inside it turns
   // message metadata `createdAt` (intentionally a string) into a Date;
   // restore backfill then treats it as missing and writes epoch (1970).
   if (path === "state" || path.startsWith("state.")) return value;
-  return reviveDates(value);
+  // INVARIANT: revive by field name, matching web's DATE_KEYS conversion
+  // (libs/db-sqlite parse-rows) — both hosts must convert the same fields.
+  // Do not shape-sniff strings here: date-looking titles and card content
+  // ("2024-01-01") would arrive as Dates where the types say string.
+  const lastDot = path.lastIndexOf(".");
+  const key = lastDot === -1 ? path : path.slice(lastDot + 1);
+  if (!TIMESTAMP_KEYS.has(key)) return value;
+  return reviveIsoString(value);
 };
 
 export function fromWire<T = unknown>(value: unknown, reviver: WireReviver = defaultWireReviver): T {
@@ -117,7 +130,7 @@ function revive(value: unknown, path: string, reviver: WireReviver): unknown {
   return r;
 }
 
-function reviveDates(value: unknown): unknown {
+function reviveIsoString(value: unknown): unknown {
   if (typeof value !== "string") return value;
   if (value.length < 10) return value;
   if (value[4] !== "-" || value[7] !== "-") return value;

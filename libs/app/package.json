@@ -16,6 +16,11 @@
       "import": "./src/lib/titles.ts",
       "default": "./src/lib/titles.ts"
     },
+    "./db": {
+      "types": "./src/lib/db.ts",
+      "import": "./src/lib/db.ts",
+      "default": "./src/lib/db.ts"
+    },
     "./package.json": "./package.json"
   },
   "dependencies": {}

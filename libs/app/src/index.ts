@@ -14,7 +14,7 @@ export type {
   SetConversationData,
 } from "./lib/conversations";
 export { optionalProfileTitleSchema, PROFILE_TITLE_MAX_LENGTH, requiredEntityTitleSchema } from "./lib/titles";
-export { timestampsValidation } from "./lib/db";
+export { timestampsValidation, TIMESTAMP_FIELD_KEYS } from "./lib/db";
 export type { Timestamps } from "./lib/db";
 export { getAppPlatform } from "./lib/environment";
 export {
