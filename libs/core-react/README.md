@@ -6,7 +6,7 @@ No feature screens and no concrete DB backends.
 ## Where it sits
 
 Consumed by `@koloda/app-react`, `@koloda/srs-react`, `@koloda/assistant-react`, `@koloda/settings-react`, `@koloda/ui` (form/overlay/titlebar hotkeys), and apps that inject a concrete `queriesFn` into `queriesAtom`.
-Depends on `@koloda/app`, `@koloda/srs`, and `@koloda/ai` for types only.
+Depends on `@koloda/app`, `@koloda/srs`, `@koloda/ai`, and `@koloda/settings` for types only.
 Web implements `Queries` with `@koloda/db-sqlite`; desktop implements it via Electron `invoke` → `koloda`.
 
 ## Architectural Map
