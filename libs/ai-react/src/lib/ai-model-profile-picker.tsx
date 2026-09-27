@@ -135,7 +135,7 @@ export function AIModelProfilePicker({
         }
       >
         {(section) => (
-          <Select.ListBoxSection id={section.id}>
+          <Select.ListBoxSection id={section.id} key={section.id}>
             <Select.Header>
               <div className="flex flex-row items-center gap-2 min-w-0">
                 {section.title && <span className="truncate">{section.title}</span>}
