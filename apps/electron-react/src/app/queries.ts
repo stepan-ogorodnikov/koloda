@@ -181,9 +181,9 @@ export const queriesFn = (aiRuntime: AIRuntime): Queries => ({
       return undefined;
     },
   }),
-  getReviewsQuery: (data: GetReviewsData) => ({
-    queryKey: queryKeys.reviews.card(data),
-    queryFn: () => invoke("cmd_get_reviews", { data }),
+  getReviewsQuery: (params: GetReviewsData) => ({
+    queryKey: queryKeys.reviews.card(params),
+    queryFn: () => invoke("cmd_get_reviews", { params }),
   }),
   getAIProfilesQuery: () => ({
     queryKey: queryKeys.ai.profiles(),

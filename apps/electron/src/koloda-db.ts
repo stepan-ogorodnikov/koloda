@@ -101,7 +101,7 @@ export interface KolodaDb {
   getLessons(params: GetLessonsParams): LessonsResult;
   getLessonData(params: GetLessonDataParams): LessonData | null;
   submitLessonResult(data: LessonResultData): void;
-  getReviews(data: GetReviewsData): Review[];
+  getReviews(params: GetReviewsData): Review[];
   getTodaysReviewTotals(): TodaysReviewTotals;
 
   // AI profiles (no secrets — see the INVARIANT above)

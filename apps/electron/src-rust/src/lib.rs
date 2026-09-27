@@ -355,9 +355,9 @@ impl KolodaDb {
     }
 
     #[napi]
-    pub fn get_reviews(&self, data: serde_json::Value) -> Result<serde_json::Value> {
-        let data = from_wire(data)?;
-        let reviews = repo::reviews::get_reviews(&self.db, data).map_err(to_napi_error)?;
+    pub fn get_reviews(&self, params: serde_json::Value) -> Result<serde_json::Value> {
+        let params = from_wire(params)?;
+        let reviews = repo::reviews::get_reviews(&self.db, params).map_err(to_napi_error)?;
         to_value(&reviews)
     }
 

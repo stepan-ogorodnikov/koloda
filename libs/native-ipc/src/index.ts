@@ -172,7 +172,7 @@ export interface DataIpc {
   // `undefined`; the renderer's old `invoke<Review>` generic was never real.
   cmd_submit_lesson_result: { args: { data: LessonResultData }; result: void };
 
-  cmd_get_reviews: { args: { data: GetReviewsData }; result: Review[] };
+  cmd_get_reviews: { args: { params: GetReviewsData }; result: Review[] };
   cmd_get_todays_review_totals: { args: undefined; result: TodaysReviewTotals };
 
   cmd_get_ai_profiles: { args: undefined; result: AIProfile[] };
