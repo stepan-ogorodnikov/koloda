@@ -37,6 +37,10 @@ export const EXCLUSIVE_CONSUMERS: Record<string, readonly string[]> = {
   "@koloda/db-sqlite": ["@koloda/web"],
   "@koloda/native-ipc": ["@koloda/electron", "@koloda/electron-react"],
   "@koloda/e2e": ["@koloda/web-e2e", "@koloda/electron-e2e"],
+  // Non-@koloda specifiers listed here are collected by the tripwire too, so
+  // the Queries-seam rule holds against the concrete backend, not just the
+  // @koloda wrapper. (web's vite.config.ts sits outside scanned src/ trees.)
+  "wa-sqlite": ["@koloda/db-sqlite", "@koloda/web"],
 };
 
 const LAYER_MAY_IMPORT: Record<Layer, ReadonlySet<Layer>> = {

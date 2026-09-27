@@ -1,7 +1,7 @@
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { basename, join, relative, sep } from "node:path";
 import ts from "typescript";
-import { LAYER_TABLE_PATH, buildLayerMap, compareDirection, staleLayerEntries } from "./layers.ts";
+import { EXCLUSIVE_CONSUMERS, LAYER_TABLE_PATH, buildLayerMap, compareDirection, staleLayerEntries } from "./layers.ts";
 import type { DirectionIssue, Layer, PackageKind } from "./layers.ts";
 
 export type ReferenceKind = "import" | "export" | "import-equals" | "dynamic-import" | "require";
@@ -62,6 +62,18 @@ export function normalizeKolodaPackage(specifier: string): string | null {
   return `${KOLODA_PREFIX}${name}`;
 }
 
+// INVARIANT: non-@koloda roots listed in EXCLUSIVE_CONSUMERS are tracked so the
+// exclusivity rule fires on the concrete backend specifier, not only on the
+// @koloda wrapper package.
+const EXTERNAL_SPECIFIER_ROOTS = Object.keys(EXCLUSIVE_CONSUMERS).filter((name) => !name.startsWith(KOLODA_PREFIX));
+
+function normalizeExternalSpecifier(specifier: string): string | null {
+  for (const root of EXTERNAL_SPECIFIER_ROOTS) {
+    if (specifier === root || specifier.startsWith(`${root}/`)) return root;
+  }
+  return null;
+}
+
 export function isProductionSource(filePath: string): boolean {
   const normalized = filePath.split(sep).join("/");
   if (!normalized.includes("/src/")) return false;
@@ -102,7 +114,7 @@ export function collectFromSource(
   const unresolvable: UnresolvableReference[] = [];
 
   const recordLiteral = (specifier: string, node: ts.Node, kind: ReferenceKind) => {
-    const packageName = normalizeKolodaPackage(specifier);
+    const packageName = normalizeKolodaPackage(specifier) ?? normalizeExternalSpecifier(specifier);
     if (!packageName) return;
     const { line, column } = positionOf(sourceFile, node);
     references.push({ packageName, specifier, file: fileName, line, column, kind });
@@ -167,11 +179,18 @@ export function compareDependencies(args: {
   phantom: string[];
   badVersions: ManifestIssue[];
   imported: Set<string>;
+  external: string[];
 } {
   const declaredKoloda = Object.entries(args.declared).filter(([name]) => name.startsWith(KOLODA_PREFIX));
   const declaredNames = new Set(declaredKoloda.map(([name]) => name));
 
-  const imported = new Set(args.references.map((ref) => ref.packageName).filter((name) => name !== args.selfName));
+  // External exclusive specifiers (e.g. wa-sqlite) feed the direction check only;
+  // they are ordinary npm dependencies, so they never count as missing or phantom.
+  const imported = new Set(
+    args.references
+      .map((ref) => ref.packageName)
+      .filter((name) => name.startsWith(KOLODA_PREFIX) && name !== args.selfName),
+  );
 
   const missing = [...imported].filter((name) => !declaredNames.has(name)).sort();
   const phantom = [...declaredNames].filter((name) => !imported.has(name)).sort();
@@ -180,7 +199,11 @@ export function compareDependencies(args: {
     .map(([dependency, version]) => ({ packageName: args.selfName, dependency, version }))
     .sort((a, b) => a.dependency.localeCompare(b.dependency));
 
-  return { missing, phantom, badVersions, imported };
+  const external = [
+    ...new Set(args.references.map((ref) => ref.packageName).filter((name) => !name.startsWith(KOLODA_PREFIX))),
+  ].sort();
+
+  return { missing, phantom, badVersions, imported, external };
 }
 
 function walkProductionSources(pkgDir: string): string[] {
@@ -290,7 +313,7 @@ function checkDiscoveredPackage(
   });
   const { isUnclassified, forbidden } = compareDirection({
     selfName: pkg.name,
-    imported: compared.imported,
+    imported: [...compared.imported, ...compared.external],
     layers,
   });
 

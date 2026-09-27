@@ -48,7 +48,13 @@ describe("policy table", () => {
   });
 
   it("lists exclusive packages in the layer table", () => {
-    for (const name of Object.keys(EXCLUSIVE_CONSUMERS)) {
+    // External exclusive specifiers (e.g. wa-sqlite) are raw npm names, not
+    // workspace packages, so only @koloda keys must sit in the layer table.
+    const packageNames = Object.keys(EXCLUSIVE_CONSUMERS)
+      .filter((name) => name.startsWith("@koloda/"))
+      .sort();
+    expect(packageNames).toEqual(["@koloda/db-sqlite", "@koloda/e2e", "@koloda/native-ipc"]);
+    for (const name of packageNames) {
       expect(PACKAGE_LAYERS[name]).toBeDefined();
     }
   });
@@ -104,6 +110,19 @@ describe("forbiddenImportReason", () => {
     expect(forbiddenImportReason("@koloda/electron-react", "@koloda/e2e", layers)).toBe(
       "@koloda/e2e is exclusive to @koloda/web-e2e, @koloda/electron-e2e",
     );
+  });
+
+  it("enforces external exclusive specifiers like wa-sqlite", () => {
+    // The Queries-seam rule: only the @koloda/db-sqlite wrapper (and web) touch
+    // the concrete backend; desktop must never reach for the web SQLite build.
+    expect(forbiddenImportReason("@koloda/srs-react", "wa-sqlite", layers)).toBe(
+      "wa-sqlite is exclusive to @koloda/db-sqlite, @koloda/web",
+    );
+    expect(forbiddenImportReason("@koloda/electron", "wa-sqlite", layers)).toBe(
+      "wa-sqlite is exclusive to @koloda/db-sqlite, @koloda/web",
+    );
+    expect(forbiddenImportReason("@koloda/db-sqlite", "wa-sqlite", layers)).toBeNull();
+    expect(forbiddenImportReason("@koloda/web", "wa-sqlite", layers)).toBeNull();
   });
 
   it("ignores unknown workspace names and self-imports", () => {

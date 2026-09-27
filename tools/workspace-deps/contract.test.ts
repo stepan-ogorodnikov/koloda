@@ -87,6 +87,21 @@ describe("collectFromSource", () => {
     expect(references[0]?.specifier).toBe("@koloda/ui/primitives/button");
   });
 
+  it("collects external exclusive specifiers and normalizes their subpaths", () => {
+    const { references } = collectFromSource(
+      "libs/demo/src/lib/backend.ts",
+      `
+        import { SQLite3DB } from "wa-sqlite";
+        import wasmUrl from "wa-sqlite/dist/wa-sqlite.wasm?url";
+        import { z } from "zod";
+      `,
+    );
+    expect(references.map((r) => [r.packageName, r.specifier])).toEqual([
+      ["wa-sqlite", "wa-sqlite"],
+      ["wa-sqlite", "wa-sqlite/dist/wa-sqlite.wasm?url"],
+    ]);
+  });
+
   it("ignores comments and string text that resemble imports", () => {
     const { references, unresolvable } = collectFromSource(
       "libs/x/src/a.ts",
@@ -164,6 +179,29 @@ describe("compareDependencies", () => {
     expect(missing).toEqual(["@koloda/ui"]);
     expect(phantom).toEqual(["@koloda/srs"]);
     expect(badVersions).toEqual([{ packageName: "@koloda/app-react", dependency: "@koloda/ai", version: "^1.0.0" }]);
+  });
+
+  it("keeps external exclusive specifiers out of missing and phantom", () => {
+    // wa-sqlite is an ordinary npm dependency of db-sqlite, not a workspace dep;
+    // it feeds the direction check (via `external`), not the manifest check.
+    const { missing, phantom, external } = compareDependencies({
+      selfName: "@koloda/db-sqlite",
+      declared: {},
+      references: [
+        {
+          packageName: "wa-sqlite",
+          specifier: "wa-sqlite",
+          file: "libs/db-sqlite/src/lib/db.ts",
+          line: 1,
+          column: 1,
+          kind: "import",
+        },
+      ],
+    });
+
+    expect(missing).toEqual([]);
+    expect(phantom).toEqual([]);
+    expect(external).toEqual(["wa-sqlite"]);
   });
 });
 
