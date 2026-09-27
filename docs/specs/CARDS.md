@@ -135,7 +135,7 @@ The card's content stays the same; only its scheduling is wiped.
 
 - Every scheduling field is reset to its default value.
 - The card's full review history is removed.
-- The card becomes indistinguishable from a freshly added card, except for its creation time and content.
+- The card becomes indistinguishable from a freshly added card, except for its creation time, its update time, and its content.
 
 Reset is only available on cards that have been graded.
 Reset does not ask for confirmation.
