@@ -1,5 +1,4 @@
 import { AppError, throwKnownError } from "@koloda/app";
-import { deepMerge } from "@koloda/app";
 import { allowedSettings, settingsRowEnvelopeSchema, settingsRowSchema } from "@koloda/settings";
 import type { AllowedSettings, PatchSettingsData, SetSettingsData, SettingsName } from "@koloda/settings";
 import { z } from "zod";
@@ -51,11 +50,11 @@ export async function patchSettings<T extends SettingsName>(db: DB, { name, cont
 
     const envelope = parseRow(settingsRowEnvelopeSchema, original);
     const base = z.record(z.string(), z.unknown()).parse(envelope.content);
-    // INVARIANT: patch content stays flat scalars. deepMerge element-merges arrays
-    // and assigns null, while desktop json_patch::merge (RFC 7386) replaces arrays
-    // wholesale and deletes on null — keep patches scalar-only or align both sides
-    // first. Twin: patch_settings in crates/koloda/src/repo/settings.rs.
-    const merged = deepMerge(base, content);
+    // INVARIANT: patches merge per RFC 7386, matching desktop `json_patch::merge`
+    // (crates/koloda/src/repo/settings.rs): `null` deletes a key so the schema
+    // default refills it, arrays replace wholesale. Do not swap in deepMerge —
+    // it assigns null and element-merges arrays, which diverges from desktop.
+    const merged = mergePatch(base, content);
     const parsed = allowedSettings[name].parse(merged);
     const now = nowMs();
 
@@ -64,4 +63,27 @@ export async function patchSettings<T extends SettingsName>(db: DB, { name, cont
     const result = await db.get(`SELECT ${SETTINGS_SELECT} FROM settings WHERE name = ? LIMIT 1`, [name]);
     return parseRow(settingsRowSchema(name), result) as AllowedSettings<T>;
   });
+}
+
+function isMergeableObject(value: unknown): value is Record<string, unknown> {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    !Array.isArray(value) &&
+    !(value instanceof Date) &&
+    !(value instanceof Set) &&
+    !(value instanceof Map)
+  );
+}
+
+// RFC 7386 JSON Merge Patch, the web twin of desktop `json_patch::merge`.
+function mergePatch(target: unknown, patch: unknown): unknown {
+  if (!isMergeableObject(patch)) return patch;
+  const output: Record<string, unknown> = isMergeableObject(target) ? { ...target } : {};
+  for (const [key, value] of Object.entries(patch)) {
+    if (value === undefined) continue;
+    if (value === null) delete output[key];
+    else output[key] = mergePatch(output[key], value);
+  }
+  return output;
 }

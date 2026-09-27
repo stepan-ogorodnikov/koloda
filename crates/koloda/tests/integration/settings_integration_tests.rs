@@ -3,7 +3,7 @@ use koloda::domain::settings::SettingsName;
 use koloda::repo::settings;
 use serde_json::json;
 
-use crate::common::{counted_daily_limit, interface_settings, learning_settings, test_db};
+use crate::common::{counted_daily_limit, interface_settings, learning_settings, test_db, valid_learning_defaults};
 
 #[test]
 fn set_settings_updates_row_and_sets_updated_at() {
@@ -62,6 +62,101 @@ fn patch_settings_merges_nested_fields_without_overwriting_unpatched_values() {
         "01900000-0000-7000-8000-00000000007b"
     );
     assert!(patched.updated_at.is_some());
+}
+
+#[test]
+fn patch_settings_deletes_null_keys_so_schema_defaults_refill() {
+    let db = test_db();
+
+    let learning = json!({
+        "defaults": valid_learning_defaults(),
+        "dailyLimits": {
+            "total": 40,
+            "untouched": counted_daily_limit(10, true),
+            "learn": counted_daily_limit(5, false),
+            "review": counted_daily_limit(20, true),
+        },
+        "dayStartsAt": "05:00",
+        "learnAheadLimit": [0, 30],
+    });
+    settings::set_settings(&db, SettingsName::Learning, learning)
+        .expect("initial learning settings insert should succeed");
+
+    let patched = settings::patch_settings(
+        &db,
+        SettingsName::Learning,
+        json!({
+            "dailyLimits": {
+                "learn": {
+                    "value": null
+                }
+            }
+        }),
+    )
+    .expect("patch should succeed");
+
+    // Twin: "deletes a patched null key so the schema default refills" in
+    // libs/db-sqlite/src/lib/settings-reviews.integration.test.ts. RFC 7386
+    // deletes `value`; the learn default (0) refills while `counts` survives.
+    assert_eq!(patched.content["dailyLimits"]["total"], 40);
+    assert_eq!(patched.content["dailyLimits"]["learn"], counted_daily_limit(0, false));
+    assert_eq!(
+        patched.content["dailyLimits"]["untouched"],
+        counted_daily_limit(10, true)
+    );
+    assert_eq!(patched.content["dailyLimits"]["review"], counted_daily_limit(20, true));
+}
+
+#[test]
+fn patch_settings_replaces_arrays_wholesale() {
+    let db = test_db();
+
+    settings::set_settings(
+        &db,
+        SettingsName::Ai,
+        json!({
+            "profiles": [
+                {
+                    "id": "01900000-0000-7000-8000-000000000001",
+                    "title": "First",
+                    "whitelistModelIds": ["openai/gpt-4"],
+                    "createdAt": "2026-01-01T00:00:00Z"
+                },
+                {
+                    "id": "01900000-0000-7000-8000-000000000002",
+                    "title": "Second",
+                    "createdAt": "2026-01-02T00:00:00Z"
+                }
+            ]
+        }),
+    )
+    .expect("initial AI settings insert should succeed");
+
+    let patched = settings::patch_settings(
+        &db,
+        SettingsName::Ai,
+        json!({
+            "profiles": [
+                {
+                    "id": "01900000-0000-7000-8000-000000000001",
+                    "title": "Renamed",
+                    "createdAt": "2026-01-01T00:00:00Z"
+                }
+            ]
+        }),
+    )
+    .expect("patch should succeed");
+
+    // Twin: "replaces arrays wholesale instead of element-merging" in
+    // libs/db-sqlite/src/lib/settings-reviews.integration.test.ts. The whole
+    // array is replaced — one profile, and fields the patch omits do not survive.
+    let profiles = patched.content["profiles"]
+        .as_array()
+        .expect("profiles should be an array");
+    assert_eq!(profiles.len(), 1);
+    assert_eq!(profiles[0]["id"], "01900000-0000-7000-8000-000000000001");
+    assert_eq!(profiles[0]["title"], "Renamed");
+    assert!(profiles[0].get("whitelistModelIds").is_none());
 }
 
 #[test]

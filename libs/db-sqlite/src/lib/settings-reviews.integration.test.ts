@@ -64,6 +64,85 @@ describe("settings and review totals integration", () => {
     });
   });
 
+  it("deletes a patched null key so the schema default refills, like desktop RFC 7386", async () => {
+    const { db } = testDb;
+    const { algorithm, template } = await seedDeckContext(db);
+
+    await setSettings(db, {
+      name: "learning",
+      content: {
+        defaults: { algorithm: algorithm.id, template: template.id },
+        dailyLimits: {
+          total: 40,
+          untouched: { value: 10, counts: true },
+          learn: { value: 5, counts: false },
+          review: { value: 20, counts: true },
+        },
+        dayStartsAt: "05:00",
+        learnAheadLimit: [0, 30],
+      },
+    });
+
+    const result = await patchSettings(db, {
+      name: "learning",
+      content: {
+        dailyLimits: {
+          learn: { value: null },
+        },
+      },
+    });
+
+    // Twin: patch_settings_deletes_null_keys_so_schema_defaults_refill
+    // (crates/koloda/tests/integration/settings_integration_tests.rs). A patched
+    // null deletes `value`; the learn default (0) refills while `counts` survives.
+    expect(result.content).toMatchObject({
+      dailyLimits: {
+        total: 40,
+        learn: { value: 0, counts: false },
+        untouched: { value: 10, counts: true },
+        review: { value: 20, counts: true },
+      },
+    });
+  });
+
+  it("replaces arrays wholesale instead of element-merging, like desktop RFC 7386", async () => {
+    const { db } = testDb;
+
+    await setSettings(db, {
+      name: "ai",
+      content: {
+        profiles: [
+          {
+            id: "01900000-0000-7000-8000-000000000001",
+            title: "First",
+            whitelistModelIds: ["openai/gpt-4"],
+            createdAt: "2026-01-01T00:00:00.000Z",
+          },
+          { id: "01900000-0000-7000-8000-000000000002", title: "Second", createdAt: "2026-01-02T00:00:00.000Z" },
+        ],
+      },
+    });
+
+    const result = await patchSettings(db, {
+      name: "ai",
+      content: {
+        profiles: [
+          { id: "01900000-0000-7000-8000-000000000001", title: "Renamed", createdAt: "2026-01-01T00:00:00.000Z" },
+        ],
+      },
+    });
+
+    // Twin: patch_settings_replaces_arrays_wholesale
+    // (crates/koloda/tests/integration/settings_integration_tests.rs). The whole
+    // array is replaced — one profile, and fields the patch omits do not survive.
+    expect(result.content.profiles).toHaveLength(1);
+    expect(result.content.profiles[0]).toMatchObject({
+      id: "01900000-0000-7000-8000-000000000001",
+      title: "Renamed",
+    });
+    expect(result.content.profiles[0]).not.toHaveProperty("whitelistModelIds");
+  });
+
   it("returns normalized settings content with schema defaults applied", async () => {
     const { db } = testDb;
 

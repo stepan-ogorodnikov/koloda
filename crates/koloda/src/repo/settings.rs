@@ -118,10 +118,10 @@ pub fn patch_settings(db: &Database, name: SettingsName, patch: Value) -> Result
     throw_known_error(error_codes::DB_UPDATE, || {
         let existing = get_settings(db, name)?.ok_or_else(|| AppError::new(error_codes::DB_UPDATE, None))?;
         let mut merged = existing.content.clone();
-        // INVARIANT: patch content stays flat scalars. json_patch::merge (RFC 7386)
-        // replaces arrays wholesale and deletes keys on null, while web deepMerge
-        // element-merges arrays and assigns null — keep patches scalar-only or align
-        // both sides first. Twin: patchSettings in libs/db-sqlite/src/lib/settings.ts.
+        // INVARIANT: patches merge per RFC 7386 — `null` deletes a key so the
+        // schema default refills it, arrays replace wholesale. This is part of
+        // the shared patch contract, not a Rust detail. Twin: mergePatch in
+        // libs/db-sqlite/src/lib/settings.ts.
         json_patch::merge(&mut merged, &patch);
         let merged = name.normalize(merged)?;
 
