@@ -103,13 +103,7 @@ export const APP_SHUTDOWN_ACK_CHANNEL = "app:shutdown-ack";
 
 /** Renderer → main titlebar window controls. Single source of truth — do not redeclare these literals elsewhere. */
 
-export const WINDOW_MINIMIZE_CHANNEL = "window:minimize";
-
 export const WINDOW_MAXIMIZE_CHANNEL = "window:maximize";
-
-export const WINDOW_CLOSE_CHANNEL = "window:close";
-
-export const WINDOW_IS_MAXIMIZED_CHANNEL = "window:isMaximized";
 
 export const WINDOW_SET_TITLE_BAR_OVERLAY_CHANNEL = "window:set-title-bar-overlay";
 

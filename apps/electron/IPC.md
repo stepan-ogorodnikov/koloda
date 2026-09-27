@@ -66,7 +66,7 @@ over `KolodaDb`, streaming tool events back on the same channel.
 Channel names below are exported as `WINDOW_*_CHANNEL` constants from `@koloda/native-ipc` — both
 processes import them instead of repeating the literals.
 
-- `window:minimize`, `window:maximize` (toggles), `window:close`, `window:isMaximized`
+- `window:maximize` (toggle) — the only window-control channel the renderer invokes; native overlay buttons and traffic lights handle minimize and close
 - `window:set-title-bar-overlay` `{ color, symbolColor, height }` — non-macOS only; persists colors to `ui-prefs.json`
 - `window:get-overlay-width` — platform- and DPI-scaled overlay width
 - `window:set-window-button-position` `{ titlebarHeight }` — macOS traffic lights
