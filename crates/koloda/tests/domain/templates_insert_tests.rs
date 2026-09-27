@@ -1,3 +1,4 @@
+use koloda::app::error::error_codes;
 use koloda::domain::templates::InsertTemplateData;
 
 #[test]
@@ -366,6 +367,47 @@ fn test_layout_references_valid_field_ok() {
 
     let template: InsertTemplateData = serde_json::from_str(json).expect("Should deserialize");
     template.validate().unwrap();
+}
+
+#[test]
+fn test_field_id_not_uuid_fails_with_fields_id_code() {
+    // Twin: "rejects a non-uuid field id with the registered code" in
+    // libs/srs/src/lib/templates.test.ts — `z.uuid()` and `validate_uuid`
+    // must agree on shape and code.
+    let json = r#"{
+        "title": "Test Template",
+        "content": {
+            "fields": [
+                {"id": "not-a-uuid", "title": "Front", "type": "text", "isRequired": true}
+            ],
+            "layout": [
+                {"field": "not-a-uuid", "operation": "display"}
+            ]
+        }
+    }"#;
+
+    let template: InsertTemplateData = serde_json::from_str(json).expect("Should deserialize");
+    let err = template.validate().expect_err("Should fail with a non-uuid field id");
+    assert_eq!(err.code, error_codes::VALIDATION_TEMPLATES_FIELDS_ID);
+}
+
+#[test]
+fn test_layout_field_not_uuid_fails_with_layout_field_code() {
+    let json = r#"{
+        "title": "Test Template",
+        "content": {
+            "fields": [
+                {"id": "01900000-0000-7000-8000-000000000001", "title": "Front", "type": "text", "isRequired": true}
+            ],
+            "layout": [
+                {"field": "01900000000070008000000000000001", "operation": "display"}
+            ]
+        }
+    }"#;
+
+    let template: InsertTemplateData = serde_json::from_str(json).expect("Should deserialize");
+    let err = template.validate().expect_err("Should fail with a non-uuid layout ref");
+    assert_eq!(err.code, error_codes::VALIDATION_TEMPLATES_LAYOUT_FIELD);
 }
 
 #[test]

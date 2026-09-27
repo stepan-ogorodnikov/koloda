@@ -5,7 +5,7 @@
 use serde::{Deserialize, Serialize};
 
 use crate::app::error::{error_codes, AppError};
-use crate::domain::common::validate_title;
+use crate::domain::common::{validate_title, validate_uuid};
 use crate::domain::time::{
     deserialize_optional_timestamp, deserialize_timestamp, serialize_optional_timestamp, serialize_timestamp,
 };
@@ -123,7 +123,12 @@ fn validate_template_content(
         return Err(AppError::new(error_codes::VALIDATION_TEMPLATES_LAYOUT_TOO_FEW, None));
     }
 
+    // WHY: ids must be uuid-shaped, mirroring the TS `z.uuid()` twins. Shape is
+    // checked before the value checks so a bad id reports the id code, same as
+    // zod issue ordering on the TS side.
     for field in &content.fields {
+        validate_uuid(&field.id, error_codes::VALIDATION_TEMPLATES_FIELDS_ID)?;
+
         if !FIELD_TYPES.contains(&field.field_type.as_str()) {
             return Err(AppError::new(
                 error_codes::VALIDATION_TEMPLATES_FIELDS_TYPE,
@@ -133,6 +138,8 @@ fn validate_template_content(
     }
 
     for item in &content.layout {
+        validate_uuid(&item.field, error_codes::VALIDATION_TEMPLATES_LAYOUT_FIELD)?;
+
         if !LAYOUT_OPERATIONS.contains(&item.operation.as_str()) {
             return Err(AppError::new(
                 error_codes::VALIDATION_TEMPLATES_LAYOUT_OPERATION,

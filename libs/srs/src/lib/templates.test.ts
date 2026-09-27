@@ -140,4 +140,39 @@ describe("templates", () => {
     expect(issue?.path).toEqual(["content", "layout", 0, "operation"]);
     expect(issue?.message).toBe("validation.templates.layout.operation");
   });
+
+  it("rejects a non-uuid field id with the registered code", () => {
+    // Twin: test_field_id_not_uuid_fails_with_fields_id_code
+    // (crates/koloda/tests/domain/templates_insert_tests.rs) — `z.uuid()` and
+    // `validate_uuid` must agree on shape and code.
+    const result = insertTemplateSchema.safeParse({
+      title: "Basic",
+      content: {
+        fields: [{ id: "not-a-uuid", title: "Front", type: "text", isRequired: true }],
+        layout: [{ field: "not-a-uuid", operation: "display" }],
+      },
+    });
+
+    expect(result.success).toBe(false);
+    const issue = result.success
+      ? undefined
+      : result.error.issues.find((x) => x.path.join(".") === "content.fields.0.id");
+    expect(issue?.message).toBe("validation.templates.fields.id");
+  });
+
+  it("rejects a non-uuid layout reference with the registered code", () => {
+    const result = insertTemplateSchema.safeParse({
+      title: "Basic",
+      content: {
+        fields: ORIGINAL_FIELDS,
+        layout: [{ field: "01900000000070008000000000000001", operation: "display" }],
+      },
+    });
+
+    expect(result.success).toBe(false);
+    const issue = result.success
+      ? undefined
+      : result.error.issues.find((x) => x.path.join(".") === "content.layout.0.field");
+    expect(issue?.message).toBe("validation.templates.layout.field");
+  });
 });
