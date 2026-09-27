@@ -1,7 +1,8 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { AIModel } from "../models";
-import { OPENCODE_ZEN_BASE_URL } from "../provider-catalog";
+import { OPENCODE_GO_BASE_URL, OPENCODE_ZEN_BASE_URL } from "../provider-catalog";
 import { MODELS_DEV_API_URL, loadModelsDevCatalog, overlayFromModelsDev, resetModelsDevCache } from "./models-dev";
+import { fetchOpencodeGoModels } from "./opencode-go";
 import { fetchOpencodeZenModels } from "./opencode-zen";
 
 afterEach(() => {
@@ -187,7 +188,13 @@ describe("overlayFromModelsDev", () => {
   });
 });
 
-function stubGatewayAndCatalog(options: { gateway: unknown; catalog: Response | Promise<Response> | Error }): void {
+function stubGatewayAndCatalog(options: {
+  gateway: unknown;
+  catalog: Response | Promise<Response> | Error;
+  /** Provider gateway URL; defaults to the opencode-zen models endpoint. */
+  modelsUrl?: string;
+}): void {
+  const modelsUrl = options.modelsUrl ?? `${OPENCODE_ZEN_BASE_URL.replace(/\/$/, "")}/models`;
   vi.stubGlobal(
     "fetch",
     vi.fn(async (input: RequestInfo | URL) => {
@@ -196,7 +203,7 @@ function stubGatewayAndCatalog(options: { gateway: unknown; catalog: Response | 
         if (options.catalog instanceof Error) throw options.catalog;
         return options.catalog;
       }
-      if (url === `${OPENCODE_ZEN_BASE_URL.replace(/\/$/, "")}/models`) {
+      if (url === modelsUrl) {
         return jsonResponse(options.gateway);
       }
       throw new Error(`unexpected fetch: ${url}`);
@@ -297,5 +304,88 @@ describe("fetchOpencodeZenModels catalog join", () => {
         "User-Agent": expect.stringContaining("Mozilla/5.0"),
       },
     });
+  });
+});
+
+describe("fetchOpencodeGoModels catalog join", () => {
+  // Mirrors the opencode-zen cases: ADD-AI-PROVIDER step 9 requires the same
+  // fetchModels coverage for every provider in this family.
+  function stubGoGatewayAndCatalog(options: { gateway: unknown; catalog: Response | Promise<Response> | Error }) {
+    stubGatewayAndCatalog({ ...options, modelsUrl: `${OPENCODE_GO_BASE_URL.replace(/\/$/, "")}/models` });
+  }
+
+  it("applies catalog effort values for a matching id", async () => {
+    stubGoGatewayAndCatalog({
+      gateway: { data: [{ id: "deepseek-chat", name: "DeepSeek Chat" }] },
+      catalog: jsonResponse(
+        catalogFor("opencode-go", {
+          "deepseek-chat": {
+            reasoning_options: [{ type: "effort", values: ["low", "high", "max"] }],
+            limit: { context: 128000, output: 8192 },
+          },
+        }),
+      ),
+    });
+
+    const models = await fetchOpencodeGoModels("key");
+
+    expect(models).toEqual([
+      {
+        id: "deepseek-chat",
+        name: "DeepSeek Chat",
+        description: undefined,
+        context_length: 128000,
+        top_provider: { max_completion_tokens: 8192 },
+        architecture: undefined,
+        supported_parameters: undefined,
+        supported_reasoning_levels: [
+          { effort: "low", description: "" },
+          { effort: "high", description: "" },
+          { effort: "max", description: "" },
+        ],
+        default_reasoning_level: "low",
+      },
+    ]);
+  });
+
+  it("falls back to the prefix table when models.dev fails and the cache is empty", async () => {
+    stubGoGatewayAndCatalog({
+      gateway: { data: [{ id: "deepseek-chat" }, { id: "plain" }] },
+      catalog: new Error("network"),
+    });
+
+    const models = await fetchOpencodeGoModels();
+
+    expect(models.map((model) => model.id)).toEqual(["deepseek-chat", "plain"]);
+    expect(models[0]?.supported_reasoning_levels).toEqual(prefixDeepseek.levels);
+    expect(models[0]?.default_reasoning_level).toBe("medium");
+    expect(models[1]?.supported_reasoning_levels).toBeUndefined();
+  });
+
+  it("reuses a successful catalog after a later models.dev failure", async () => {
+    const catalogBody = catalogFor("opencode-go", {
+      "deepseek-chat": {
+        reasoning_options: [{ type: "effort", values: ["low", "high", "max"] }],
+      },
+    });
+    const gateway = { data: [{ id: "deepseek-chat" }] };
+
+    stubGoGatewayAndCatalog({ gateway, catalog: jsonResponse(catalogBody) });
+    await expect(fetchOpencodeGoModels()).resolves.toMatchObject([
+      { id: "deepseek-chat", default_reasoning_level: "low" },
+    ]);
+
+    stubGoGatewayAndCatalog({ gateway, catalog: new Response("nope", { status: 403 }) });
+    await expect(fetchOpencodeGoModels()).resolves.toMatchObject([
+      {
+        id: "deepseek-chat",
+        supported_reasoning_levels: [
+          { effort: "low", description: "" },
+          { effort: "high", description: "" },
+          { effort: "max", description: "" },
+        ],
+        default_reasoning_level: "low",
+      },
+    ]);
   });
 });
