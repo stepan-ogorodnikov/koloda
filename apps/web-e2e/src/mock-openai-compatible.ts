@@ -5,6 +5,7 @@ import {
   buildOpenAIToolCallJSON,
   buildOpenAIToolCallSSE,
   E2E_LM_STUDIO_MODEL_ID,
+  pickNextCompletion,
 } from "@koloda/e2e";
 import type { MockChatCompletionOptions, MockOpenAICompatibleHandle, MockOpenAICompatibleOptions } from "@koloda/e2e";
 
@@ -72,11 +73,7 @@ export async function mockOpenAICompatibleProvider(
   const completionsHandler = async (route: Route) => {
     completionRequests += 1;
     const requestBody = route.request().postData() ?? "";
-    // WHY: FIFO entries first keep explicitly scripted steps deterministic; the
-    // body-derived behavior only fills unscripted fall-through steps, and the
-    // static default stays last. Without completionFromBody this resolves
-    // exactly as before.
-    const next = queue.shift() ?? options.completionFromBody?.(requestBody) ?? { ...defaultCompletion };
+    const next = pickNextCompletion(queue, requestBody, defaultCompletion, options.completionFromBody);
 
     if (next.shouldHold) {
       await new Promise<void>((resolve) => {

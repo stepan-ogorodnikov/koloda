@@ -57,6 +57,22 @@ export type MockChatCompletionOptions = {
   errorBody?: unknown;
 };
 
+/**
+ * The transport-independent "which completion comes next" decision, shared by
+ * both suites' mock transports so a fallback-order change cannot diverge.
+ */
+export function pickNextCompletion(
+  queue: MockChatCompletionOptions[],
+  requestBody: string,
+  defaultCompletion: MockChatCompletionOptions,
+  completionFromBody?: (body: string) => MockChatCompletionOptions | undefined,
+): MockChatCompletionOptions {
+  // WHY: FIFO entries first keep explicitly scripted steps deterministic; the
+  // body-derived behavior only fills unscripted fall-through steps, and the
+  // static default stays last.
+  return queue.shift() ?? completionFromBody?.(requestBody) ?? { ...defaultCompletion };
+}
+
 export type MockOpenAICompatibleHandle = {
   /** LM Studio-style base URL including `/v1` (pass to `addLmStudioProfile`). */
   baseUrl: string;

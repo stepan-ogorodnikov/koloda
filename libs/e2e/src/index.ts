@@ -52,5 +52,6 @@ export {
   buildOpenAIToolCallJSON,
   buildOpenAIToolCallSSE,
   E2E_LM_STUDIO_MODEL_ID,
+  pickNextCompletion,
 } from "./ai-mock";
 export type { MockChatCompletionOptions, MockOpenAICompatibleHandle, MockOpenAICompatibleOptions } from "./ai-mock";
