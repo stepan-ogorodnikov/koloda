@@ -197,4 +197,16 @@ describe("review validation", () => {
     const { dueAt: _insertDueAt, ...insertWithout } = validInsertReview();
     expect(insertReviewSchema.safeParse(insertWithout).success).toBe(false);
   });
+
+  // Twin of koloda `InsertReviewData` / `Review`: serde rejects a missing key.
+  it.each(["stability", "difficulty", "scheduledDays", "learningSteps", "time", "isIgnored"] as const)(
+    "rejects omitted %s",
+    (field) => {
+      const { [field]: _rowOmitted, ...rowWithout } = validReview();
+      expect(reviewValidation.safeParse(rowWithout).success).toBe(false);
+
+      const { [field]: _insertOmitted, ...insertWithout } = validInsertReview();
+      expect(insertReviewSchema.safeParse(insertWithout).success).toBe(false);
+    },
+  );
 });

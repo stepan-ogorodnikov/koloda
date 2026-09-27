@@ -26,6 +26,8 @@ type ReviewRefinementValues = ProgressFieldValues & {
 
 export type { ReviewLog as ReviewFSRS } from "ts-fsrs";
 
+// INVARIANT: no zod defaults — a missing key must reject the way serde does on desktop
+// `Review` / `InsertReviewData`. Card scheduling fields stay defaulted (`./cards`).
 const reviewFieldsSchema = z.object({
   id: z.uuid(),
   cardId: cardValidation.shape.id,
@@ -33,12 +35,12 @@ const reviewFieldsSchema = z.object({
   state: z.int(),
   // INVARIANT: required — FSRS always supplies `due`. Twin of desktop `i64`. Card `dueAt` stays optional.
   dueAt: z.date(),
-  stability: z.number().default(0),
-  difficulty: z.number().default(0),
-  scheduledDays: z.int().default(0),
-  learningSteps: z.int().default(0),
-  time: z.int().default(0),
-  isIgnored: z.boolean().default(false),
+  stability: z.number(),
+  difficulty: z.number(),
+  scheduledDays: z.int(),
+  learningSteps: z.int(),
+  time: z.int(),
+  isIgnored: z.boolean(),
   createdAt: z.date(),
 });
 
@@ -52,9 +54,6 @@ export const reviewValidation = reviewFieldsSchema.superRefine(refineReview);
 
 export const reviewRowSchema = reviewValidation;
 
-// WHY: row type is the schema output, so defaulted fields are required —
-// same convention as `Card` in `./cards`. Runtime parse output is always
-// full; `z.input` typed consumers as if fields could be absent.
 export type Review = z.infer<typeof reviewValidation>;
 
 export type GetReviewsData = { cardId: Card["id"] };
