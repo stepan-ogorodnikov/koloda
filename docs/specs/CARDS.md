@@ -5,6 +5,7 @@
 Covers card content, scheduling state, adding, editing, deleting, resetting progress, preview, and card views.
 Does not cover deck or template management, lesson flow, the FSRS algorithm itself, or AI card generation.
 Accepting generated cards into a deck is covered; how those cards are generated is not.
+Deck, template, lesson, algorithm, and AI card generation behavior are covered by the decks, templates, lessons, algorithms, and assistant card generation specs.
 
 ## What it is
 

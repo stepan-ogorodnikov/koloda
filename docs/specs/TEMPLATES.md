@@ -4,6 +4,7 @@
 
 Covers template structure, fields, layout, locking, adding, cloning, editing, and deleting.
 Does not cover how cards store content, how lessons render fields during study, or learning settings defaults UI.
+Those are covered by the cards, lessons, and learning settings specs.
 
 ## What it is
 
