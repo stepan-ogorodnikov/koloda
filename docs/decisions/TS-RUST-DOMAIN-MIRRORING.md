@@ -20,6 +20,14 @@ Prefer deleting and reshaping call sites over compatibility shims (`agents/BACKW
 Schema and domain edits are multi-package by default (TS libs + `koloda`, including web SQLite repos).
 Do not remove Rust validation, move FSRS into Rust, or invent adapter layers unless that is an explicit new decision.
 
+### Accepted divergences
+
+These numeric/serde edges are deliberately not mirrored; do not re-flag them as drift.
+
+- Rust `i32` upper bounds are not mirrored in Zod (e.g. `reviews.time` rejects negatives on both sides, but only serde rejects values past 2^31−1). Values that large are nonsense for the fields involved.
+- FSRS learning-step amounts are `i64` in Rust vs the safe-integer bound (2^53) in Zod (`learningStepValidation` in `libs/srs/src/lib/algorithms-fsrs.ts`). Step durations can never approach either limit.
+- Rust `Option<T>` accepts an explicit JSON `null` where the TS twin uses `.optional()` (which rejects `null`, accepting only absence). Renderer payloads never carry explicit nulls (`toWire` drops `undefined`), so the leniency is reachable only by hand-crafted input, where failing open on desktop is harmless.
+
 ## Why
 
 Desktop validates and persists through Rust (`crates/koloda`, exposed to Electron through NAPI).

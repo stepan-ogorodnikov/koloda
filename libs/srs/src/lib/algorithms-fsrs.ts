@@ -28,6 +28,8 @@ export const FSRS6_WEIGHT_COUNT = 21;
 // spellings that `Number()` would otherwise accept or that fail `is_finite`.
 const WEIGHT_DECIMAL_PATTERN = /^[+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?$/;
 
+// WHY: Rust twin stores step amounts as i64; the 2^53 gap is an accepted
+// divergence (docs/decisions/TS-RUST-DOMAIN-MIRRORING.md).
 const learningStepValidation = z.tuple([z.number().int(), z.string()]);
 
 const algorithmFSRSBaseValidation = z.object({
