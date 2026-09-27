@@ -112,7 +112,12 @@ export async function addAIProfile(db: DB, data: AddAIProfileData): Promise<void
 
 export async function updateAIProfile(db: DB, data: UpdateAIProfileData): Promise<void> {
   const currentSettings = await getSettings<"ai">(db, "ai");
-  if (!currentSettings) return;
+  // INVARIANT: not-found before secrets validation, mirroring desktop
+  // `update_ai_profile` error precedence (crates/koloda/src/repo/ai.rs).
+  if (!currentSettings) throw new AppError("not-found.ai-profile", data.id);
+
+  const profileIndex = currentSettings.content.profiles.findIndex((p) => p.id === data.id);
+  if (profileIndex === -1) throw new AppError("not-found.ai-profile", data.id);
 
   if (data.secrets) {
     validateSecretsForInput(data.secrets);
@@ -120,28 +125,26 @@ export async function updateAIProfile(db: DB, data: UpdateAIProfileData): Promis
 
   const newContent = aiSettingsValidation.parse(
     produce(currentSettings.content, (draft) => {
-      const profile = draft.profiles.find((p) => p.id === data.id);
-      if (profile) {
-        if (data.title !== undefined) profile.title = data.title;
-        if (data.whitelistModelIds !== undefined) {
-          if (data.whitelistModelIds === null) {
-            delete profile.whitelistModelIds;
-          } else {
-            profile.whitelistModelIds = data.whitelistModelIds;
-          }
+      const profile = draft.profiles[profileIndex]!;
+      if (data.title !== undefined) profile.title = data.title;
+      if (data.whitelistModelIds !== undefined) {
+        if (data.whitelistModelIds === null) {
+          delete profile.whitelistModelIds;
+        } else {
+          profile.whitelistModelIds = data.whitelistModelIds;
         }
-        if (data.secrets !== undefined) {
-          const previous = profile.secrets;
-          const providerChanged = previous?.provider !== data.secrets.provider;
-          // WHY: Edit submits may omit apiKey when the user did not replace it.
-          // Keep the stored key unless the provider changed or a new key was sent.
-          if (!profileHasSecrets(data.secrets) && !providerChanged && profileHasSecrets(previous)) {
-            profile.secrets = { ...data.secrets, apiKey: previous!.apiKey } as AISecrets;
-          } else {
-            profile.secrets = data.secrets;
-          }
-          profile.hasSecrets = profileHasSecrets(profile.secrets);
+      }
+      if (data.secrets !== undefined) {
+        const previous = profile.secrets;
+        const providerChanged = previous?.provider !== data.secrets.provider;
+        // WHY: Edit submits may omit apiKey when the user did not replace it.
+        // Keep the stored key unless the provider changed or a new key was sent.
+        if (!profileHasSecrets(data.secrets) && !providerChanged && profileHasSecrets(previous)) {
+          profile.secrets = { ...data.secrets, apiKey: previous!.apiKey } as AISecrets;
+        } else {
+          profile.secrets = data.secrets;
         }
+        profile.hasSecrets = profileHasSecrets(profile.secrets);
       }
     }),
   );
@@ -156,7 +159,12 @@ export async function updateAIProfile(db: DB, data: UpdateAIProfileData): Promis
 
 export async function removeAIProfile(db: DB, data: RemoveAIProfileData): Promise<void> {
   const currentSettings = await getSettings<"ai">(db, "ai");
-  if (!currentSettings) return;
+  // WHY: desktop `remove_ai_profile` writes the default row when the settings
+  // row is absent, so the ai row exists after any remove (twin parity).
+  if (!currentSettings) {
+    await setSettings<"ai">(db, { name: "ai", content: { profiles: [] } });
+    return;
+  }
 
   const newContent = aiSettingsValidation.parse(
     produce(currentSettings.content, (draft) => {

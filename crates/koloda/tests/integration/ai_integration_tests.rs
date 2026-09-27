@@ -834,3 +834,60 @@ fn remove_ai_profile_rolls_back_settings_when_keyring_remove_fails() {
 
     test_store::teardown(guard);
 }
+
+#[test]
+fn update_ai_profile_not_found() {
+    let _guard = test_store::setup();
+    let db = test_db();
+
+    // Twin: "throws not-found on update when the ai settings row is absent" in
+    // apps/web/src/app/ai.test.ts — both hosts reject a missing-profile update.
+    let err = ai::update_ai_profile(
+        &db,
+        "01900000-0000-7000-8000-000000000009",
+        Some("Renamed".to_string()),
+        None,
+        None,
+    )
+    .expect_err("update without an ai settings row should fail");
+    assert_eq!(err.code, error_codes::NOT_FOUND_AI_PROFILE);
+
+    ai::add_ai_profile(
+        &db,
+        Some("OpenRouter".to_string()),
+        Some(AISecrets::OpenRouter {
+            api_key: Some("sk-or".to_string()),
+        }),
+        None,
+    )
+    .expect("profile should be added");
+
+    let err = ai::update_ai_profile(
+        &db,
+        "01900000-0000-7000-8000-000000000009",
+        Some("Renamed".to_string()),
+        None,
+        None,
+    )
+    .expect_err("update of a missing profile should fail");
+    assert_eq!(err.code, error_codes::NOT_FOUND_AI_PROFILE);
+}
+
+#[test]
+fn remove_ai_profile_creates_default_row_when_settings_absent() {
+    let _guard = test_store::setup();
+    let db = test_db();
+
+    // Twin: "creates the default ai row on remove when the settings row is absent"
+    // in apps/web/src/app/ai.test.ts — the ai row exists after any remove.
+    ai::remove_ai_profile(&db, "01900000-0000-7000-8000-000000000009")
+        .expect("remove without an ai settings row should succeed");
+
+    let settings = koloda::repo::settings::get_settings(&db, koloda::domain::settings::SettingsName::Ai)
+        .expect("query should succeed")
+        .expect("default ai settings row should exist after remove");
+    assert_eq!(
+        settings.content["profiles"].as_array().expect("profiles array").len(),
+        0
+    );
+}

@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { DB } from "@koloda/db-sqlite";
-import { addAIProfile, updateAIProfile } from "./ai";
+import { addAIProfile, removeAIProfile, updateAIProfile } from "./ai";
 
 const { store } = vi.hoisted(() => ({ store: new Map<string, unknown>() }));
 
@@ -103,5 +103,37 @@ describe("web AI profile save path", () => {
       baseUrl: "http://127.0.0.1:11434",
       apiKey: "local-key",
     });
+  });
+
+  it("throws not-found on update when the ai settings row is absent", async () => {
+    // Twin: update_ai_profile_not_found (crates/koloda/tests/integration/ai_integration_tests.rs).
+    await expect(updateAIProfile({} as DB, { id: PROFILE_ID, title: "X" })).rejects.toMatchObject({
+      code: "not-found.ai-profile",
+    });
+    expect(store.has("ai")).toBe(false);
+  });
+
+  it("throws not-found on update when the profile is missing", async () => {
+    seedAiSettings([{ id: "01900000-0000-7000-8000-000000000002", title: "Other", createdAt: CREATED_AT }]);
+
+    await expect(updateAIProfile({} as DB, { id: PROFILE_ID, title: "X" })).rejects.toMatchObject({
+      code: "not-found.ai-profile",
+    });
+  });
+
+  it("reports not-found before validating secrets when the profile is missing", async () => {
+    // Error precedence must mirror desktop: the lookup fails before input validation.
+    seedAiSettings([{ id: "01900000-0000-7000-8000-000000000002", title: "Other", createdAt: CREATED_AT }]);
+
+    await expect(
+      updateAIProfile({} as DB, { id: PROFILE_ID, secrets: { provider: "openrouter", apiKey: "" } }),
+    ).rejects.toMatchObject({ code: "not-found.ai-profile" });
+  });
+
+  it("creates the default ai row on remove when the settings row is absent", async () => {
+    // Twin: remove_ai_profile_creates_default_row_when_settings_absent
+    // (crates/koloda/tests/integration/ai_integration_tests.rs).
+    await removeAIProfile({} as DB, { id: PROFILE_ID });
+    expect(storedProfiles()).toEqual([]);
   });
 });
