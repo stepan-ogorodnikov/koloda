@@ -30,7 +30,7 @@ export function useAIProfiles(profileId?: string | null) {
   const defaultProfileId = useMemo(() => {
     if (profiles.length === 0) return null;
 
-    const sorted = [...profiles].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    const sorted = [...profiles].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
     return sorted[0].id;
   }, [profiles]);

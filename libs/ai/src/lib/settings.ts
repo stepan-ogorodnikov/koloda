@@ -15,7 +15,13 @@ export const aiProfileValidation = z.object({
   hasSecrets: z.boolean().default(false),
   // WHY: Unset = all models. A present array is the allowlist (`[]` means none).
   whitelistModelIds: z.array(z.string().min(1, "validation.settings-ai.profiles.whitelist-model-ids")).optional(),
-  createdAt: z.iso.datetime(),
+  // WHY: Stored rows carry ISO strings, but the runtime value is a Date on both
+  // hosts (desktop wire reviver; web getSettings re-parses through this schema).
+  // Accept both inputs so the double parse in libs/db-sqlite settings.ts keeps
+  // working; JSON.stringify of the parsed output writes the ISO string back.
+  createdAt: z
+    .union([z.iso.datetime(), z.date()])
+    .transform((value) => (value instanceof Date ? value : new Date(value))),
 });
 
 export type AIProfile = z.output<typeof aiProfileValidation>;

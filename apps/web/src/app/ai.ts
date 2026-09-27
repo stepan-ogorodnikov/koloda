@@ -50,7 +50,7 @@ function toPublicProfile(profile: {
   secrets?: AISecrets;
   hasSecrets?: boolean;
   whitelistModelIds?: string[];
-  createdAt: string;
+  createdAt: string | Date;
 }): AIProfile {
   // WHY: `hasSecrets` from stored key presence — not from a redacted `apiKey: null`.
   const hasSecrets = profile.hasSecrets === true || profileHasSecrets(profile.secrets);
@@ -60,7 +60,7 @@ function toPublicProfile(profile: {
     secrets: profile.secrets ? redactSecrets(profile.secrets) : undefined,
     hasSecrets,
     whitelistModelIds: profile.whitelistModelIds,
-    createdAt: profile.createdAt,
+    createdAt: new Date(profile.createdAt),
   };
 }
 
@@ -83,7 +83,6 @@ export async function addAIProfile(db: DB, data: AddAIProfileData): Promise<void
   }
 
   const id = crypto.randomUUID();
-  const now = new Date().toISOString();
 
   const newProfile: AIProfile = {
     id,
@@ -91,7 +90,7 @@ export async function addAIProfile(db: DB, data: AddAIProfileData): Promise<void
     secrets: data.secrets,
     hasSecrets: profileHasSecrets(data.secrets),
     whitelistModelIds: data.whitelistModelIds,
-    createdAt: now,
+    createdAt: new Date(),
   };
 
   const currentSettings = await getSettings<"ai">(db, "ai");

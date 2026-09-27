@@ -77,6 +77,30 @@ describe("aiProfileValidation whitelistModelIds", () => {
   });
 });
 
+describe("aiProfileValidation createdAt", () => {
+  const base = { id: "01900000-0000-7000-8000-000000000001" };
+
+  it("converts a stored ISO string into a Date", () => {
+    const parsed = aiProfileValidation.parse({ ...base, createdAt: "2026-01-01T00:00:00.000Z" });
+    expect(parsed.createdAt).toEqual(new Date("2026-01-01T00:00:00.000Z"));
+  });
+
+  it("accepts an already-revived Date", () => {
+    // WHY: Content re-parses after revival — web getSettings parses twice, and the
+    // desktop wire reviver hands Dates to any future parse. The second pass must
+    // not reject what the first produced.
+    const date = new Date("2026-01-01T00:00:00.000Z");
+    const parsed = aiProfileValidation.parse({ ...base, createdAt: date });
+    expect(parsed.createdAt).toEqual(date);
+  });
+
+  it("rejects a non-ISO string", () => {
+    const result = aiProfileValidation.safeParse({ ...base, createdAt: "not-a-date" });
+    expect(result.success).toBe(false);
+    expect(result.error!.issues[0]?.path).toEqual(["createdAt"]);
+  });
+});
+
 describe("aiProfileValidation id", () => {
   const base = { createdAt: "2026-01-01T00:00:00Z" };
 

@@ -63,7 +63,7 @@ export function createAIProfile(overrides: DeepPartial<AIProfile> = {}): AIProfi
       apiKey: null,
     },
     hasSecrets: true,
-    createdAt: DEFAULT_DATE.toISOString(),
+    createdAt: DEFAULT_DATE,
   };
 
   return deepMerge(base, overrides) as AIProfile;
