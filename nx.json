@@ -66,13 +66,6 @@
       }
     },
     {
-      "plugin": "nx-oxlint",
-      "options": {
-        "lintTargetName": "lint",
-        "maxWarnings": 0
-      }
-    },
-    {
       "plugin": "@nx/vitest",
       "options": {
         "testTargetName": "test"

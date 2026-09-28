@@ -16,7 +16,7 @@ The TS/Rust mirroring rationale is `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md`.
 - `nx run @koloda/electron:build` — packaged installer via electron-builder into `dist-pack/`
 - `nx run @koloda/electron:build-rust` — `cargo build` of the addon plus copy into `dist/`
 - `nx run @koloda/electron:test` — unit + renderer unit + e2e; `-c unit` / `-c e2e` select a subset
-- `nx run @koloda/electron:typecheck`, `nx run @koloda/electron:lint`
+- `nx run @koloda/electron:typecheck`
 
 ## Architectural Map
 

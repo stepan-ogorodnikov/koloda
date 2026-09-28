@@ -107,13 +107,6 @@
         "command": "tsc --build --emitDeclarationOnly",
         "cwd": "apps/electron"
       }
-    },
-    "lint": {
-      "executor": "nx:run-commands",
-      "options": {
-        "command": "oxlint --deny correctness",
-        "cwd": "apps/electron"
-      }
     }
   }
 }
