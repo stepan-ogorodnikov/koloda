@@ -13,6 +13,9 @@ export default defineConfig({
     },
   },
   test: {
+    pool: "threads",
+    isolate: false,
+    maxWorkers: 2,
     environment: "jsdom",
     include: ["libs/assistant-react/src/**/*.test.ts", "libs/assistant-react/src/**/*.test.tsx"],
     setupFiles: ["libs/assistant-react/src/test-setup.ts"],

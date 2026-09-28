@@ -6,6 +6,9 @@ export default defineConfig({
     tsconfigPaths: true,
   },
   test: {
+    pool: "threads",
+    isolate: false,
+    maxWorkers: 2,
     environment: "node",
     include: ["libs/core-react/src/**/*.test.ts"],
     setupFiles: ["libs/core-react/src/test-setup.ts"],

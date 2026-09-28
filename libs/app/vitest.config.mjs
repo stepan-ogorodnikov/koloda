@@ -13,6 +13,9 @@ export default defineConfig({
     },
   },
   test: {
+    pool: "threads",
+    isolate: false,
+    maxWorkers: 2,
     environment: "node",
     include: ["libs/app/src/**/*.test.ts"],
     setupFiles: ["libs/app/src/test-setup.ts"],

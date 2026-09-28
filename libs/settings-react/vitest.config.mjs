@@ -13,6 +13,9 @@ export default defineConfig({
     },
   },
   test: {
+    pool: "threads",
+    isolate: false,
+    maxWorkers: 2,
     environment: "jsdom",
     include: ["libs/settings-react/src/**/*.test.ts", "libs/settings-react/src/**/*.test.tsx"],
     setupFiles: ["libs/settings-react/src/test-setup.ts"],

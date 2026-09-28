@@ -22,6 +22,9 @@ export default defineConfig({
     exclude: ["wa-sqlite"],
   },
   test: {
+    pool: "threads",
+    isolate: false,
+    maxWorkers: 2,
     environment: "node",
     include: ["libs/db-sqlite/src/**/*.test.ts"],
     setupFiles: [resolve(__dirname, "src/test/setup.ts")],

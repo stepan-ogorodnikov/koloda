@@ -13,6 +13,8 @@ export default defineConfig({
     },
   },
   test: {
+    pool: "threads",
+    maxWorkers: 2,
     environment: "node",
     include: ["apps/web/src/**/*.test.ts"],
   },
