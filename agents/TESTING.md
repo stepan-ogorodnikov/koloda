@@ -185,3 +185,9 @@ A full `bun run test:libs` is not required to justify a unit change.
 - Rust: `cargo test -p koloda`.
   Domain vs persistence: `cargo test -p koloda --test domain` / `--test integration`.
   The integration harness is self-contained (in-memory SQLite); no external services.
+
+### Runner constraints
+
+Every lib Vitest config except `ui` and `srs-react` sets `isolate: false`, so files share one worker's module registry.
+A `vi.mock` of a package another file in the same project needs for real leaks across those files, and module mocks survive `vi.restoreAllMocks()`.
+`ui` and `srs-react` stay isolated because their mocks disagree with other files in the same project.
