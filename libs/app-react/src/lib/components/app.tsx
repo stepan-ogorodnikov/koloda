@@ -1,14 +1,6 @@
-import {
-  AiChat01Icon,
-  AlignBoxMiddleCenterIcon,
-  FolderLibraryIcon,
-  Home07Icon,
-  Settings01Icon,
-  Settings05Icon,
-} from "@hugeicons/core-free-icons";
 import { useHotkeysStatus } from "@koloda/core-react";
 import { useAssistantEngineHost, useConversationSaveHost } from "@koloda/assistant-react";
-import { Layout } from "@koloda/ui";
+import { AiIcon, AlgorithmsIcon, DecksIcon, HomeIcon, Layout, SettingsIcon, TemplatesIcon } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import type { PropsWithChildren } from "react";
 import { useEffect } from "react";
@@ -16,14 +8,14 @@ import { useAppHotkeys } from "../hooks/use-app-hotkeys";
 import { useGlobalSync } from "../hooks/use-global-sync";
 
 export const appMenu = [
-  { to: "/dashboard", t: msg`nav.home`, icon: Home07Icon },
-  { to: "/decks", t: msg`nav.decks`, icon: FolderLibraryIcon },
-  { to: "/algorithms", t: msg`nav.algorithms`, icon: Settings05Icon },
-  { to: "/templates", t: msg`nav.templates`, icon: AlignBoxMiddleCenterIcon },
-  { to: "/ai", t: msg`nav.ai`, icon: AiChat01Icon },
+  { to: "/dashboard", t: msg`nav.home`, icon: HomeIcon },
+  { to: "/decks", t: msg`nav.decks`, icon: DecksIcon },
+  { to: "/algorithms", t: msg`nav.algorithms`, icon: AlgorithmsIcon },
+  { to: "/templates", t: msg`nav.templates`, icon: TemplatesIcon },
+  { to: "/ai", t: msg`nav.ai`, icon: AiIcon },
 ];
 
-export const secondaryMenu = [{ to: "/settings", t: msg`nav.settings`, icon: Settings01Icon }];
+export const secondaryMenu = [{ to: "/settings", t: msg`nav.settings`, icon: SettingsIcon }];
 
 export function App({ children }: PropsWithChildren) {
   useGlobalSync();

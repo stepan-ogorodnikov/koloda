@@ -1,4 +1,3 @@
-import { Add01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { ZodIssue } from "@koloda/app";
 import { toFormErrors } from "@koloda/app";
@@ -7,8 +6,7 @@ import { useHotkeysSettings } from "@koloda/core-react";
 import { queriesAtom, queryKeys } from "@koloda/core-react";
 import type { Deck, InsertCardData, Template } from "@koloda/srs";
 import { getInsertCardSchema, insertCardSchema as schema } from "@koloda/srs";
-import { QueryState } from "@koloda/ui";
-import { Button, Dialog, Label, TextField, Tooltip, useAppForm } from "@koloda/ui";
+import { AddIcon, Button, Dialog, Label, QueryState, TextField, Tooltip, useAppForm } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -80,7 +78,7 @@ export function AddCard({ deckId, templateId }: AddCardProps) {
     <Dialog.Root isOpen={isOpen} onOpenChange={handleOpenChange}>
       <Tooltip content={_(msg`add-cards.trigger`)}>
         <Button variants={{ style: "dashed", size: "icon" }} aria-label={_(msg`add-cards.trigger`)}>
-          <HugeiconsIcon className="size-4 min-w-4" strokeWidth={3} icon={Add01Icon} aria-hidden="true" />
+          <HugeiconsIcon className="size-4 min-w-4" strokeWidth={3} icon={AddIcon} aria-hidden="true" />
         </Button>
       </Tooltip>
       <Dialog.Overlay>

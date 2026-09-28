@@ -1,10 +1,20 @@
-import { Add01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { toFormErrors } from "@koloda/app";
 import { queriesAtom, queryKeys } from "@koloda/core-react";
 import { DEFAULT_TEMPLATE, insertTemplateSchema as schema } from "@koloda/srs";
 import type { InsertTemplateData, Template } from "@koloda/srs";
-import { Button, Dialog, Label, Link, link, TextField, Tooltip, useAppForm, useMotionSetting } from "@koloda/ui";
+import {
+  AddIcon,
+  Button,
+  Dialog,
+  Label,
+  Link,
+  link,
+  TextField,
+  Tooltip,
+  useAppForm,
+  useMotionSetting,
+} from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useStore } from "@tanstack/react-form";
@@ -54,7 +64,7 @@ export function AddTemplate() {
     <Dialog.Root isOpen={isOpen} onOpenChange={setIsOpen}>
       <Tooltip content={_(msg`add-template.trigger`)}>
         <Button variants={{ style: "dashed", size: "icon" }} aria-label={_(msg`add-template.trigger`)}>
-          <HugeiconsIcon className="size-4 min-w-4" strokeWidth={3} icon={Add01Icon} aria-hidden="true" />
+          <HugeiconsIcon className="size-4 min-w-4" strokeWidth={3} icon={AddIcon} aria-hidden="true" />
         </Button>
       </Tooltip>
       <Dialog.Popover variants={{ class: "min-w-84" }}>

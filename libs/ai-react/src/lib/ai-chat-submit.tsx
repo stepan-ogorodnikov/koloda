@@ -1,7 +1,5 @@
-import ArrowUp02Icon from "@hugeicons/core-free-icons/ArrowUp02Icon";
-import StopIcon from "@hugeicons/core-free-icons/StopIcon";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Button, Tooltip } from "@koloda/ui";
+import { ArrowUpIcon, Button, StopIcon, Tooltip } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 
@@ -32,7 +30,7 @@ export function AIChatSubmit({ canSubmit, canCancel, onCancel }: AIChatSubmitPro
         type="submit"
         isDisabled={!canSubmit}
       >
-        <HugeiconsIcon className="size-5 min-w-5" strokeWidth={1.75} icon={ArrowUp02Icon} aria-hidden="true" />
+        <HugeiconsIcon className="size-5 min-w-5" strokeWidth={1.75} icon={ArrowUpIcon} aria-hidden="true" />
       </Button>
     </Tooltip>
   );

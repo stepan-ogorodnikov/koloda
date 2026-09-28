@@ -1,4 +1,3 @@
-import { Refresh04Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { ERROR_MESSAGES, formatAppError } from "@koloda/app";
 import { ColorSchemePicker, LanguagePicker } from "@koloda/settings-react";
@@ -11,6 +10,7 @@ import {
   OverlayFrameFooter,
   OverlayFrameHeader,
   OverlayFrameTitle,
+  RefreshIcon,
 } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
@@ -61,7 +61,7 @@ export function Setup() {
               <HugeiconsIcon
                 className="size-5 min-w-5 animate-spin"
                 strokeWidth={1.75}
-                icon={Refresh04Icon}
+                icon={RefreshIcon}
                 aria-hidden="true"
               />
             )}

@@ -1,6 +1,5 @@
-import ArrowDown02Icon from "@hugeicons/core-free-icons/ArrowDown02Icon";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Button, Fade, Tooltip, useLayoutHeaderScrollShadow } from "@koloda/ui";
+import { ArrowDownIcon, Button, Fade, Tooltip, useLayoutHeaderScrollShadow } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import type { UIMessage } from "ai";
@@ -78,12 +77,7 @@ export function AIChatMessages({
                 aria-label={_(msg`ai.chat.scroll-to-latest.label`)}
                 onPress={scroll.handleScrollToLatest}
               >
-                <HugeiconsIcon
-                  className="size-5 min-w-5"
-                  strokeWidth={1.75}
-                  icon={ArrowDown02Icon}
-                  aria-hidden="true"
-                />
+                <HugeiconsIcon className="size-5 min-w-5" strokeWidth={1.75} icon={ArrowDownIcon} aria-hidden="true" />
               </Button>
             </Tooltip>
           </Fade>

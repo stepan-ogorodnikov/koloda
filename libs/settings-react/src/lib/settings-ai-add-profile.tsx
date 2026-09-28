@@ -1,10 +1,9 @@
-import { Add01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { AiProvider, AISecrets } from "@koloda/ai";
 import { AI_PROVIDER_LABELS, AI_PROVIDERS } from "@koloda/ai";
 import { aiProvidersAtom } from "@koloda/core-react";
 import { queriesAtom, queryKeys } from "@koloda/core-react";
-import { Button, Dialog, Select } from "@koloda/ui";
+import { AddIcon, Button, Dialog, Select } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -117,7 +116,7 @@ export function SettingsAIAddProfile({
   return (
     <Dialog.Root isOpen={isOpen} onOpenChange={handleOpenChange}>
       <Button variants={{ style: "dashed", size: "icon" }} aria-label={label}>
-        <HugeiconsIcon className="size-4 min-w-4" strokeWidth={3} icon={Add01Icon} aria-hidden="true" />
+        <HugeiconsIcon className="size-4 min-w-4" strokeWidth={3} icon={AddIcon} aria-hidden="true" />
       </Button>
       {dialog}
     </Dialog.Root>

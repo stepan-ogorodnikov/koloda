@@ -1,11 +1,7 @@
-// WHY: deep per-icon imports - the core-free-icons barrel re-exports ~11k
-// modules and costs ~3s of module loading per isolated vitest file.
-import Add01Icon from "@hugeicons/core-free-icons/Add01Icon";
-import Refresh04Icon from "@hugeicons/core-free-icons/Refresh04Icon";
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { AIModel, AIProfile } from "@koloda/ai";
 import { AI_PROVIDER_LABELS } from "@koloda/ai";
-import { Button, Fade, Select, Tooltip } from "@koloda/ui";
+import { AddIcon, Button, Fade, RefreshIcon, Select, Tooltip } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { AnimatePresence } from "motion/react";
@@ -184,7 +180,7 @@ export function AIModelProfilePicker({
                       <HugeiconsIcon
                         className={modelPickerStatusIcon({ isLoading: section.status === "loading" })}
                         strokeWidth={1.75}
-                        icon={Refresh04Icon}
+                        icon={RefreshIcon}
                         aria-hidden="true"
                       />
                     </Button>
@@ -223,7 +219,7 @@ function ModelPickerNoProfiles({ message, addLabel, onActivate }: ModelPickerNoP
     <div className="flex flex-col items-center justify-center gap-3 h-full p-4">
       <p className="fg-level-3 text-center">{message}</p>
       <Button variants={{ style: "primary" }} aria-label={addLabel} onPress={onActivate} autoFocus>
-        <HugeiconsIcon className="size-5 min-w-5" strokeWidth={1.75} icon={Add01Icon} aria-hidden="true" />
+        <HugeiconsIcon className="size-5 min-w-5" strokeWidth={1.75} icon={AddIcon} aria-hidden="true" />
         {addLabel}
       </Button>
     </div>

@@ -1,6 +1,5 @@
-import { Undo02Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Button, Tooltip } from "@koloda/ui";
+import { Button, Tooltip, UndoIcon } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 
@@ -22,7 +21,7 @@ export function RevertMessageButton({ onPress }: RevertMessageButtonProps) {
         aria-label={_(msg`ai.chat.message.revert.tooltip`)}
         onPress={onPress}
       >
-        <HugeiconsIcon className="size-4 min-w-4" strokeWidth={1.75} icon={Undo02Icon} aria-hidden="true" />
+        <HugeiconsIcon className="size-4 min-w-4" strokeWidth={1.75} icon={UndoIcon} aria-hidden="true" />
       </Button>
     </Tooltip>
   );

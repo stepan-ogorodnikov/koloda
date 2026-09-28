@@ -2,12 +2,11 @@ import { RestrictToVerticalAxis } from "@dnd-kit/abstract/modifiers";
 import type { Modifiers } from "@dnd-kit/abstract";
 import { DragDropProvider, KeyboardSensor, PointerSensor } from "@dnd-kit/react";
 import { isSortable } from "@dnd-kit/react/sortable";
-import { Add01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { generateUuidv7 } from "@koloda/app";
 import { DEFAULT_TEMPLATE, DEFAULT_TEMPLATE_FIELD } from "@koloda/srs";
 import type { UpdateTemplateValues } from "@koloda/srs";
-import { Button, Draggable, withForm } from "@koloda/ui";
+import { AddIcon, Button, Draggable, withForm } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useStore } from "@tanstack/react-form";
@@ -73,7 +72,7 @@ export const TemplateFields = withForm({
                     <HugeiconsIcon
                       className="size-4 min-w-4 mx-0.5"
                       strokeWidth={3}
-                      icon={Add01Icon}
+                      icon={AddIcon}
                       aria-hidden="true"
                     />
                     {_(msg`template.fields.add-item`)}

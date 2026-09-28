@@ -1,7 +1,6 @@
 import { formatAppError, isAppError } from "@koloda/app";
-import { BadgeAlertIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Button, ErrorMessage } from "@koloda/ui";
+import { AlertIcon, Button, ErrorMessage } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import type { ErrorComponentProps } from "@tanstack/react-router";
@@ -19,7 +18,7 @@ export function RouteError({ error, reset }: ErrorComponentProps) {
 
   return (
     <div className="grow flex flex-col items-center justify-center gap-6 bg-level-1 px-4 fg-level-2">
-      <HugeiconsIcon className="size-8 min-w-8" strokeWidth={1.5} icon={BadgeAlertIcon} aria-hidden="true" />
+      <HugeiconsIcon className="size-8 min-w-8" strokeWidth={1.5} icon={AlertIcon} aria-hidden="true" />
       <ErrorMessage color="inherit" message={message} details={details} />
       <div className="flex flex-row items-center gap-4">
         <Button variants={{ style: "primary" }} onPress={reset}>

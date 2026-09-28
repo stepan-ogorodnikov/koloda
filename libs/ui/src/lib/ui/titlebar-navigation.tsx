@@ -1,9 +1,10 @@
-import { ArrowLeft01Icon, ArrowRight01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useCanGoBack, useRouter } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { ArrowLeftIcon } from "../icons/arrow-left-icon";
+import { ArrowRightIcon } from "../icons/arrow-right-icon";
 import { Button } from "../primitives/form/button";
 
 export function TitlebarNavigation() {
@@ -49,7 +50,12 @@ export function TitlebarNavigation() {
         isDisabled={!canGoBack}
         onPress={handleBack}
       >
-        <HugeiconsIcon className="size-5 min-w-5" strokeWidth={2} icon={ArrowLeft01Icon} aria-hidden="true" />
+        <HugeiconsIcon
+          className="size-5 min-w-5"
+          strokeWidth={2}
+          icon={ArrowLeftIcon}
+          aria-hidden="true"
+        />
       </Button>
       <Button
         variants={{ style: "ghost", size: "smallIcon" }}
@@ -57,7 +63,12 @@ export function TitlebarNavigation() {
         isDisabled={!canGoForward}
         onPress={handleForward}
       >
-        <HugeiconsIcon className="size-5 min-w-5" strokeWidth={2} icon={ArrowRight01Icon} aria-hidden="true" />
+        <HugeiconsIcon
+          className="size-5 min-w-5"
+          strokeWidth={2}
+          icon={ArrowRightIcon}
+          aria-hidden="true"
+        />
       </Button>
     </div>
   );

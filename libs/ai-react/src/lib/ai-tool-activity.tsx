@@ -1,13 +1,16 @@
-// WHY: deep per-icon imports - the core-free-icons barrel re-exports ~11k
-// modules and costs ~3s of module loading per isolated vitest file.
-import AlertCircleIcon from "@hugeicons/core-free-icons/AlertCircleIcon";
-import ChevronRightIcon from "@hugeicons/core-free-icons/ChevronRightIcon";
-import FolderLibraryIcon from "@hugeicons/core-free-icons/FolderLibraryIcon";
-import InvestigationIcon from "@hugeicons/core-free-icons/InvestigationIcon";
-import WrenchIcon from "@hugeicons/core-free-icons/Wrench01Icon";
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { IconSvgElement } from "@hugeicons/react";
-import { BrainIcon, Button, CardsIcon, TextSwap } from "@koloda/ui";
+import {
+  BrainIcon,
+  Button,
+  CardsIcon,
+  ChevronRightIcon,
+  DecksIcon,
+  ErrorIcon,
+  LookupIcon,
+  TextSwap,
+  ToolIcon,
+} from "@koloda/ui";
 import type { I18n } from "@lingui/core";
 import { msg, plural } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
@@ -295,7 +298,7 @@ function ToolCallStatusIcon({ name, status }: ToolCallStatusIconProps) {
       <HugeiconsIcon
         className="size-6 min-w-6"
         strokeWidth={1.75}
-        icon={AlertCircleIcon}
+        icon={ErrorIcon}
         aria-label={_(msg`ai.chat.tool-activity.failed`)}
       />
     );
@@ -320,12 +323,12 @@ function toolCallIcon(name: string): IconSvgElement {
     name === "get_deck" ||
     name === "get_template"
   ) {
-    return InvestigationIcon;
+    return LookupIcon;
   }
-  if (name === "add_deck") return FolderLibraryIcon;
+  if (name === "add_deck") return DecksIcon;
   if (name === "get_deck_cards" || name === "propose_cards") return CardsIcon;
-  // WHY: unknown protocol ids still render; they keep the generic search glyph.
-  return WrenchIcon;
+  // WHY: unknown protocol ids still render; they keep the generic tool glyph.
+  return ToolIcon;
 }
 
 type ToolPayloadBlockProps = {

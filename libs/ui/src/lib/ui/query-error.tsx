@@ -1,10 +1,11 @@
-import { BadgeAlertIcon, Refresh04Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { formatAppError, isAppError } from "@koloda/app";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useCallback, useState } from "react";
 import { tv } from "tailwind-variants";
+import { AlertIcon } from "../icons/alert-icon";
+import { RefreshIcon } from "../icons/refresh-icon";
 import { Button } from "../primitives/form/button";
 import { ErrorMessage } from "./error-message";
 
@@ -55,11 +56,26 @@ export function QueryError({ error, onRetry }: QueryErrorProps) {
   return (
     <div className="grow flex items-center justify-center my-12">
       <div className="flex flex-col items-center gap-4 fg-level-2">
-        <HugeiconsIcon className="size-8 min-w-8" strokeWidth={1.5} icon={BadgeAlertIcon} aria-hidden="true" />
+        <HugeiconsIcon
+          className="size-8 min-w-8"
+          strokeWidth={1.5}
+          icon={AlertIcon}
+          aria-hidden="true"
+        />
         <ErrorMessage color="inherit" message={message} details={details} />
         {onRetry && (
-          <Button variants={{ style: "ghost", class: queryErrorRetryButton({ isPending }) }} onClick={handleRetry}>
-            <HugeiconsIcon className={queryErrorRetryIcon({ isPending })} strokeWidth={1.75} icon={Refresh04Icon} />
+          <Button
+            variants={{
+              style: "ghost",
+              class: queryErrorRetryButton({ isPending }),
+            }}
+            onClick={handleRetry}
+          >
+            <HugeiconsIcon
+              className={queryErrorRetryIcon({ isPending })}
+              strokeWidth={1.75}
+              icon={RefreshIcon}
+            />
             {_(msg`query-error.retry`)}
           </Button>
         )}

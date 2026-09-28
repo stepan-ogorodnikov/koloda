@@ -1,12 +1,10 @@
-import { Undo02Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { ZodIssue } from "@koloda/app";
 import { toFormErrors } from "@koloda/app";
 import { queriesAtom, queryKeys, useTimestampFormatter } from "@koloda/core-react";
 import type { Card, UpdateCardValues } from "@koloda/srs";
 import { getUpdateCardSchema, updateCardSchema as schema } from "@koloda/srs";
-import { QueryState } from "@koloda/ui";
-import { Button, FormLayout, Label, TextField, useAppForm } from "@koloda/ui";
+import { Button, FormLayout, Label, QueryState, TextField, UndoIcon, useAppForm } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -141,7 +139,7 @@ export function CardDetails({ card }: CardDetailsProps) {
               <div className="flex flex-row flex-wrap items-center gap-2">
                 {!!card.state && (
                   <Button variants={{ style: "primary" }} onClick={handleProgressReset}>
-                    <HugeiconsIcon className="size-4 min-w-4" strokeWidth={2} icon={Undo02Icon} aria-hidden="true" />
+                    <HugeiconsIcon className="size-4 min-w-4" strokeWidth={2} icon={UndoIcon} aria-hidden="true" />
                     {_(msg`card.action.reset-progress`)}
                   </Button>
                 )}

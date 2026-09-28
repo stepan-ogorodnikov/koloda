@@ -1,16 +1,20 @@
-import { MinusSignIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { PropsWithChildren } from "react";
 import { Checkbox as ReactAriaCheckbox } from "react-aria-components";
 import type { CheckboxProps as ReactAriaCheckboxProps } from "react-aria-components";
 import { tv } from "tailwind-variants";
 import { CheckIcon } from "../../icons/check-icon";
+import { MinusIcon } from "../../icons/minus-icon";
 import type { TWVProps } from "../../types";
 import { label } from "./label";
 
-const checkbox = tv({ base: "group flex flex-row items-center gap-2 min-size-10 rounded-md focus-ring" });
+const checkbox = tv({
+  base: "group flex flex-row items-center gap-2 min-size-10 rounded-md focus-ring",
+});
 
-export type CheckboxProps = ReactAriaCheckboxProps & TWVProps<typeof checkbox> & PropsWithChildren;
+export type CheckboxProps = ReactAriaCheckboxProps &
+  TWVProps<typeof checkbox> &
+  PropsWithChildren;
 
 export function Checkbox({ variants, ...props }: CheckboxProps) {
   return <ReactAriaCheckbox className={checkbox(variants)} {...props} />;
@@ -35,8 +39,16 @@ const checkboxIndicatorMinus = [
 function CheckboxIndicator() {
   return (
     <div className={checkboxIndicator}>
-      <HugeiconsIcon className={checkboxIndicatorMinus} strokeWidth={4} icon={MinusSignIcon} />
-      <HugeiconsIcon className={checkboxIndicatorCheck} strokeWidth={4} icon={CheckIcon} />
+      <HugeiconsIcon
+        className={checkboxIndicatorMinus}
+        strokeWidth={4}
+        icon={MinusIcon}
+      />
+      <HugeiconsIcon
+        className={checkboxIndicatorCheck}
+        strokeWidth={4}
+        icon={CheckIcon}
+      />
     </div>
   );
 }

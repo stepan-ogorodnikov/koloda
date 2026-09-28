@@ -1,6 +1,5 @@
-import { BubbleChatAddIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Button } from "@koloda/ui";
+import { Button, NewConversationIcon } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useAtomValue } from "jotai";
@@ -23,7 +22,7 @@ export function AssistantNewConversationButton({ onStartNewConversation }: Assis
       isDisabled={!canStartNewConversation}
       onPress={onStartNewConversation}
     >
-      <HugeiconsIcon className="size-5 min-w-5" strokeWidth={1.75} icon={BubbleChatAddIcon} aria-hidden="true" />
+      <HugeiconsIcon className="size-5 min-w-5" strokeWidth={1.75} icon={NewConversationIcon} aria-hidden="true" />
       {_(msg`ai.chat.new-conversation.label`)}
     </Button>
   );

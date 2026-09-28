@@ -1,10 +1,20 @@
-import { Add01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { toFormErrors } from "@koloda/app";
 import { queriesAtom, queryKeys } from "@koloda/core-react";
 import { insertDeckSchema as schema } from "@koloda/srs";
 import type { Deck, InsertDeckData } from "@koloda/srs";
-import { Button, Dialog, Label, Link, link, TextField, Tooltip, useAppForm, useMotionSetting } from "@koloda/ui";
+import {
+  AddIcon,
+  Button,
+  Dialog,
+  Label,
+  Link,
+  link,
+  TextField,
+  Tooltip,
+  useAppForm,
+  useMotionSetting,
+} from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useStore } from "@tanstack/react-form";
@@ -59,7 +69,7 @@ export function AddDeck() {
     <Dialog.Root isOpen={isOpen} onOpenChange={setIsOpen}>
       <Tooltip content={_(msg`add-deck.trigger`)}>
         <Button variants={{ style: "dashed", size: "icon" }} aria-label={_(msg`add-deck.trigger`)}>
-          <HugeiconsIcon className="size-4 min-w-4" strokeWidth={3} icon={Add01Icon} aria-hidden="true" />
+          <HugeiconsIcon className="size-4 min-w-4" strokeWidth={3} icon={AddIcon} aria-hidden="true" />
         </Button>
       </Tooltip>
       <Dialog.Popover variants={{ class: "w-84" }}>

@@ -1,10 +1,9 @@
-import { AiMagicIcon, Refresh04Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { AIProfile } from "@koloda/ai";
 import { useAIProfilesModels } from "@koloda/ai-react";
 import { ERROR_MESSAGES, formatAppError } from "@koloda/app";
 import { queriesAtom, queryKeys } from "@koloda/core-react";
-import { Button, Checkbox, Dialog, ErrorMessage, SearchField, ToggleGroup } from "@koloda/ui";
+import { Button, Checkbox, Dialog, ErrorMessage, ModelsIcon, RefreshIcon, SearchField, ToggleGroup } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -65,7 +64,7 @@ export function SettingsAIProfileModels({ profile }: SettingsAIProfileModelsProp
   return (
     <Dialog.Root isOpen={isOpen} onOpenChange={handleOpenChange}>
       <Button variants={{ style: "ghost", size: "icon" }} aria-label={_(msg`settings.ai.models.trigger`)}>
-        <HugeiconsIcon className="size-5 min-w-5" strokeWidth={1.75} icon={AiMagicIcon} aria-hidden="true" />
+        <HugeiconsIcon className="size-5 min-w-5" strokeWidth={1.75} icon={ModelsIcon} aria-hidden="true" />
       </Button>
       <Dialog.Overlay>
         <Dialog.Modal variants={{ class: "w-full max-w-2xl h-[min(40rem,100%)] overflow-hidden" }}>
@@ -118,7 +117,7 @@ export function SettingsAIProfileModels({ profile }: SettingsAIProfileModelsProp
                       <HugeiconsIcon
                         className="size-5 min-w-5"
                         strokeWidth={1.75}
-                        icon={Refresh04Icon}
+                        icon={RefreshIcon}
                         aria-hidden="true"
                       />
                       {_(msg`settings.ai.models.retry`)}

@@ -1,8 +1,8 @@
-import { DragDropHorizontalIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import type { ComponentProps } from "react";
+import { DragIcon } from "../../icons/drag-icon";
 import { Button } from "../form/button";
 
 type DragHandleProps = ComponentProps<typeof Button>;
@@ -24,7 +24,7 @@ export function DragHandle(props: DragHandleProps) {
       <HugeiconsIcon
         className="size-5 min-w-5 fg-level-3 rotate-90"
         strokeWidth={1.75}
-        icon={DragDropHorizontalIcon}
+        icon={DragIcon}
         aria-hidden="true"
       />
     </Button>

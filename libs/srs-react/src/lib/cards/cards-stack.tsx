@@ -1,8 +1,7 @@
-import { ArrowLeft01Icon, ArrowRight01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { queriesAtom } from "@koloda/core-react";
 import type { Deck } from "@koloda/srs";
-import { Button, Fade, AnimatedNumber } from "@koloda/ui";
+import { AnimatedNumber, ArrowLeftIcon, ArrowRightIcon, Button, Fade } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useQuery } from "@tanstack/react-query";
@@ -36,7 +35,7 @@ export function CardsStack({ deckId, controlsNode }: CardsTableProps) {
                 isDisabled={index === 0}
                 onClick={() => setIndex((prev) => prev - 1)}
               >
-                <HugeiconsIcon className="size-5 min-w-5" strokeWidth={2} icon={ArrowLeft01Icon} aria-hidden="true" />
+                <HugeiconsIcon className="size-5 min-w-5" strokeWidth={2} icon={ArrowLeftIcon} aria-hidden="true" />
               </Button>
               <Button
                 variants={{ style: "bordered", size: "icon" }}
@@ -44,7 +43,7 @@ export function CardsStack({ deckId, controlsNode }: CardsTableProps) {
                 isDisabled={index >= cards.length - 1}
                 onClick={() => setIndex((prev) => prev + 1)}
               >
-                <HugeiconsIcon className="size-5 min-w-5" strokeWidth={2} icon={ArrowRight01Icon} aria-hidden="true" />
+                <HugeiconsIcon className="size-5 min-w-5" strokeWidth={2} icon={ArrowRightIcon} aria-hidden="true" />
               </Button>
             </div>
             {cards.length > 0 && (

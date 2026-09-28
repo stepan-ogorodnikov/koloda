@@ -1,9 +1,8 @@
-import { Cancel01Icon, Delete03Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { ERROR_MESSAGES, formatAppError } from "@koloda/app";
 import { queriesAtom, queryKeys } from "@koloda/core-react";
 import type { Card, Deck } from "@koloda/srs";
-import { Button, Dialog, ErrorMessage, Fade, AnimatedNumber } from "@koloda/ui";
+import { AnimatedNumber, Button, CloseIcon, DeleteIcon, Dialog, ErrorMessage, Fade } from "@koloda/ui";
 import { msg, plural } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -60,7 +59,7 @@ export function CardsTableSelectionControls({
         </div>
         <Dialog.Root isOpen={isOpen} onOpenChange={handleOpenChange}>
           <Button variants={{ style: "ghost" }} onClick={() => setIsOpen(true)}>
-            <HugeiconsIcon className="size-5 min-w-5" strokeWidth={1.75} icon={Delete03Icon} aria-hidden="true" />
+            <HugeiconsIcon className="size-5 min-w-5" strokeWidth={1.75} icon={DeleteIcon} aria-hidden="true" />
             <span>{_(msg`cards-table.selection.delete.trigger`)}</span>
           </Button>
           <Dialog.Popover variants={{ class: "my-2" }} placement="top">
@@ -92,7 +91,7 @@ export function CardsTableSelectionControls({
           aria-label={_(msg`cards-table.selection.clear`)}
           onClick={onClearSelection}
         >
-          <HugeiconsIcon className="size-5 min-w-5" strokeWidth={1.75} icon={Cancel01Icon} aria-hidden="true" />
+          <HugeiconsIcon className="size-5 min-w-5" strokeWidth={1.75} icon={CloseIcon} aria-hidden="true" />
         </Button>
       </div>
     </Fade>

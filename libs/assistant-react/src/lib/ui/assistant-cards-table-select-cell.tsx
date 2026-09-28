@@ -1,6 +1,5 @@
-import { AlertCircleIcon, CheckmarkCircle02Icon, DashedLineCircleIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Checkbox, Fade, tableCellContent } from "@koloda/ui";
+import { Checkbox, ErrorIcon, Fade, PendingIcon, SuccessIcon, tableCellContent } from "@koloda/ui";
 import type { SelectionTableFeatures } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
@@ -39,7 +38,7 @@ export function AssistantCardsTableSelectCell({ row }: AssistantCardsTableSelect
             className="size-4 min-w-4 fg-level-4 animate-spin"
             aria-label={_(msg`assistant.table.columns.status.pending`)}
             strokeWidth={1.75}
-            icon={DashedLineCircleIcon}
+            icon={PendingIcon}
           />
         </Fade>
       )}
@@ -49,7 +48,7 @@ export function AssistantCardsTableSelectCell({ row }: AssistantCardsTableSelect
             className="size-5 min-w-5 fg-success"
             aria-label={_(msg`assistant.table.columns.status.success`)}
             strokeWidth={1.75}
-            icon={CheckmarkCircle02Icon}
+            icon={SuccessIcon}
           />
         </Fade>
       )}
@@ -59,7 +58,7 @@ export function AssistantCardsTableSelectCell({ row }: AssistantCardsTableSelect
             className="size-5 min-w-5 fg-error"
             aria-label={_(msg`assistant.table.columns.status.error`)}
             strokeWidth={1.75}
-            icon={AlertCircleIcon}
+            icon={ErrorIcon}
           />
         </Fade>
       )}

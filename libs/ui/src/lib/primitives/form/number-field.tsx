@@ -1,9 +1,17 @@
-import { Add01Icon, MinusSignIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useContext, useRef, useState } from "react";
-import { Button, NumberField as ReactAriaNumberField, NumberFieldStateContext } from "react-aria-components";
-import type { ButtonProps, NumberFieldProps as ReactAriaNumberFieldProps } from "react-aria-components";
+import {
+  Button,
+  NumberField as ReactAriaNumberField,
+  NumberFieldStateContext,
+} from "react-aria-components";
+import type {
+  ButtonProps,
+  NumberFieldProps as ReactAriaNumberFieldProps,
+} from "react-aria-components";
 import { tv } from "tailwind-variants";
+import { AddIcon } from "../../icons/add-icon";
+import { MinusIcon } from "../../icons/minus-icon";
 import type { TWVProps } from "../../types";
 import { AnimatedNumber } from "../animations/number";
 import { button } from "./button";
@@ -13,10 +21,17 @@ import type { TextFieldInputProps } from "./text-field";
 
 export const numberField = tv({ extend: textField });
 
-export type NumberFieldProps = ReactAriaNumberFieldProps & TWVProps<typeof numberField>;
+export type NumberFieldProps = ReactAriaNumberFieldProps &
+  TWVProps<typeof numberField>;
 
 export function NumberField({ variants, ...props }: NumberFieldProps) {
-  return <ReactAriaNumberField className={numberField(variants)} formatOptions={{ useGrouping: false }} {...props} />;
+  return (
+    <ReactAriaNumberField
+      className={numberField(variants)}
+      formatOptions={{ useGrouping: false }}
+      {...props}
+    />
+  );
 }
 
 export const numberFieldGroup = tv({
@@ -30,17 +45,28 @@ export const numberFieldGroup = tv({
   defaultVariants: { size: "default", style: "input", isFocusable: true },
 });
 
-export type NumberFieldGroupProps = Omit<TextFieldInputProps, "variants"> & TWVProps<typeof numberFieldGroup>;
+export type NumberFieldGroupProps = Omit<TextFieldInputProps, "variants"> &
+  TWVProps<typeof numberFieldGroup>;
 
 function NumberFieldGroup({ variants, ...props }: NumberFieldGroupProps) {
   return (
     <FieldGroup className={numberFieldGroup(variants)}>
       <NumberFieldDecrement>
-        <HugeiconsIcon className="size-4 min-w-4" strokeWidth={2} icon={MinusSignIcon} aria-hidden="true" />
+        <HugeiconsIcon
+          className="size-4 min-w-4"
+          strokeWidth={2}
+          icon={MinusIcon}
+          aria-hidden="true"
+        />
       </NumberFieldDecrement>
       <NumberFieldInput {...props} />
       <NumberFieldIncrement>
-        <HugeiconsIcon className="size-4 min-w-4" strokeWidth={2} icon={Add01Icon} aria-hidden="true" />
+        <HugeiconsIcon
+          className="size-4 min-w-4"
+          strokeWidth={2}
+          icon={AddIcon}
+          aria-hidden="true"
+        />
       </NumberFieldIncrement>
     </FieldGroup>
   );
@@ -65,7 +91,8 @@ const numberFieldInput = tv({
   },
 });
 
-type NumberFieldInputProps = TWVProps<typeof numberFieldInput> & TextFieldInputProps;
+type NumberFieldInputProps = TWVProps<typeof numberFieldInput> &
+  TextFieldInputProps;
 
 function NumberFieldInput(props: NumberFieldInputProps) {
   const state = useContext(NumberFieldStateContext);
@@ -78,7 +105,9 @@ function NumberFieldInput(props: NumberFieldInputProps) {
     queueMicrotask(() => setIsAnimated(true));
   };
 
-  const handleBlur: React.ChangeEventHandler<HTMLInputElement> = ({ currentTarget: { value } }) => {
+  const handleBlur: React.ChangeEventHandler<HTMLInputElement> = ({
+    currentTarget: { value },
+  }) => {
     if (value === "") state?.decrementToMin();
   };
 

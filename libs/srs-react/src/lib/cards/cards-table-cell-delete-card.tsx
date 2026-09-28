@@ -1,9 +1,8 @@
-import { Delete03Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { ERROR_MESSAGES, formatAppError } from "@koloda/app";
 import { queriesAtom, queryKeys } from "@koloda/core-react";
 import type { Card, Deck } from "@koloda/srs";
-import { Button, Dialog, ErrorMessage, Fade } from "@koloda/ui";
+import { Button, DeleteIcon, Dialog, ErrorMessage, Fade } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -48,7 +47,7 @@ export function CardsTableCellDeleteCard({ id, deckId }: CardsTableCellDeleteCar
         aria-label={_(msg`delete-card.trigger`)}
       >
         <div className="p-1 rounded-md group-focus-ring">
-          <HugeiconsIcon className="size-5 min-w-5" strokeWidth={1.75} icon={Delete03Icon} aria-hidden="true" />
+          <HugeiconsIcon className="size-5 min-w-5" strokeWidth={1.75} icon={DeleteIcon} aria-hidden="true" />
         </div>
       </Button>
       <Dialog.Popover placement="left">

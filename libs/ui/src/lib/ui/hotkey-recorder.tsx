@@ -1,4 +1,3 @@
-import { Cancel01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
@@ -7,6 +6,7 @@ import type { Hotkey } from "@tanstack/react-hotkeys";
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { CheckIcon } from "../icons/check-icon";
+import { CloseIcon } from "../icons/close-icon";
 import { Button } from "../primitives/form/button";
 import { Dialog } from "../primitives/overlay/dialog";
 import { HotKey } from "./hotkey";
@@ -45,7 +45,9 @@ export function HotkeyRecorder({ onAccept, children }: HotkeyRecorderProps) {
               {value ? (
                 <HotKey value={value} />
               ) : (
-                <span className="fg-disabled animate-pulse">{_(msg`hotkey-recorder.input.placeholder`)}</span>
+                <span className="fg-disabled animate-pulse">
+                  {_(msg`hotkey-recorder.input.placeholder`)}
+                </span>
               )}
             </div>
             <Button
@@ -54,14 +56,24 @@ export function HotkeyRecorder({ onAccept, children }: HotkeyRecorderProps) {
               onPress={handleAccept}
               isDisabled={!value}
             >
-              <HugeiconsIcon className="size-4 min-w-4" strokeWidth={1.75} icon={CheckIcon} aria-hidden="true" />
+              <HugeiconsIcon
+                className="size-4 min-w-4"
+                strokeWidth={1.75}
+                icon={CheckIcon}
+                aria-hidden="true"
+              />
             </Button>
             <Button
               variants={{ size: "icon", style: "ghost" }}
               aria-label={_(msg`hotkey-recorder.cancel`)}
               onPress={() => setIsOpen(false)}
             >
-              <HugeiconsIcon className="size-4 min-w-4" strokeWidth={1.75} icon={Cancel01Icon} aria-hidden="true" />
+              <HugeiconsIcon
+                className="size-4 min-w-4"
+                strokeWidth={1.75}
+                icon={CloseIcon}
+                aria-hidden="true"
+              />
             </Button>
           </div>
         </Dialog.Body>

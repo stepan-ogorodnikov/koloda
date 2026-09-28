@@ -1,9 +1,13 @@
-import { Cancel01Icon, Search01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { ComponentProps } from "react";
-import { Input, SearchField as ReactAriaSearchField } from "react-aria-components";
+import {
+  Input,
+  SearchField as ReactAriaSearchField,
+} from "react-aria-components";
 import type { SearchFieldProps as ReactAriaSearchFieldProps } from "react-aria-components";
 import { tv } from "tailwind-variants";
+import { CloseIcon } from "../icons/close-icon";
+import { SearchIcon } from "../icons/search-icon";
 import type { TWVProps } from "../types";
 import { Button } from "./form/button";
 import type { ButtonProps } from "./form/button";
@@ -12,7 +16,8 @@ import type { FieldGroupProps } from "./form/field-group";
 
 export const searchField = tv({ base: "flex" });
 
-export type SearchFieldProps = ReactAriaSearchFieldProps & TWVProps<typeof searchField>;
+export type SearchFieldProps = ReactAriaSearchFieldProps &
+  TWVProps<typeof searchField>;
 
 export function SearchField({ variants, ...props }: SearchFieldProps) {
   return <ReactAriaSearchField className={searchField(variants)} {...props} />;
@@ -28,26 +33,44 @@ export const searchFieldGroup = tv({
   },
 });
 
-export type SearchFieldGroupProps = TWVProps<typeof searchFieldGroup> & FieldGroupProps;
+export type SearchFieldGroupProps = TWVProps<typeof searchFieldGroup> &
+  FieldGroupProps;
 
 function SearchFieldGroup({ variants, ...props }: SearchFieldGroupProps) {
-  return <FieldGroup className={searchFieldGroup(variants)} role="group" {...props} />;
+  return (
+    <FieldGroup
+      className={searchFieldGroup(variants)}
+      role="group"
+      {...props}
+    />
+  );
 }
 
 export const searchFieldInput = tv({
   base: "w-full min-w-0 px-2 border-0 bg-transparent outline-none",
 });
 
-export type SearchFieldInputProps = ComponentProps<typeof Input> & TWVProps<typeof searchFieldInput>;
+export type SearchFieldInputProps = ComponentProps<typeof Input> &
+  TWVProps<typeof searchFieldInput>;
 
-export function SearchFieldInput({ variants, ...props }: SearchFieldInputProps) {
+export function SearchFieldInput({
+  variants,
+  ...props
+}: SearchFieldInputProps) {
   return <Input className={searchFieldInput(variants)} {...props} />;
 }
 
 const searchFieldIcon = "size-4 min-w-4 fg-inactive pointer-events-none";
 
 function SearchFieldIcon() {
-  return <HugeiconsIcon className={searchFieldIcon} strokeWidth={2} icon={Search01Icon} aria-hidden="true" />;
+  return (
+    <HugeiconsIcon
+      className={searchFieldIcon}
+      strokeWidth={2}
+      icon={SearchIcon}
+      aria-hidden="true"
+    />
+  );
 }
 
 export type SearchFieldClearButtonProps = ButtonProps & {
@@ -61,10 +84,25 @@ const searchFieldClearButton = tv({
   },
 });
 
-function SearchFieldClearButton({ isHidden, ...props }: SearchFieldClearButtonProps) {
+function SearchFieldClearButton({
+  isHidden,
+  ...props
+}: SearchFieldClearButtonProps) {
   return (
-    <Button variants={{ style: "ghost", size: "miniIcon", class: searchFieldClearButton({ isHidden }) }} {...props}>
-      <HugeiconsIcon className="size-4 min-w-4" strokeWidth={1.75} icon={Cancel01Icon} aria-hidden="true" />
+    <Button
+      variants={{
+        style: "ghost",
+        size: "miniIcon",
+        class: searchFieldClearButton({ isHidden }),
+      }}
+      {...props}
+    >
+      <HugeiconsIcon
+        className="size-4 min-w-4"
+        strokeWidth={1.75}
+        icon={CloseIcon}
+        aria-hidden="true"
+      />
     </Button>
   );
 }

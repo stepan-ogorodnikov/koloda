@@ -1,8 +1,7 @@
-import { ComputerPhoneSyncIcon, Moon02Icon, Sun03Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { SCHEMES } from "@koloda/app";
 import { queriesAtom, schemeAtom } from "@koloda/core-react";
-import { Select } from "@koloda/ui";
+import { MoonIcon, Select, SunIcon, SystemThemeIcon } from "@koloda/ui";
 import type { SelectProps } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react";
@@ -10,9 +9,9 @@ import { useMutation } from "@tanstack/react-query";
 import { useAtom, useAtomValue } from "jotai";
 
 const ITEMS = [
-  { id: "light", Icon: Sun03Icon },
-  { id: "dark", Icon: Moon02Icon },
-  { id: "system", Icon: ComputerPhoneSyncIcon },
+  { id: "light", Icon: SunIcon },
+  { id: "dark", Icon: MoonIcon },
+  { id: "system", Icon: SystemThemeIcon },
 ] as const;
 
 type ColorSchemePickerProps = Partial<SelectProps<(typeof ITEMS)[number]>> & {

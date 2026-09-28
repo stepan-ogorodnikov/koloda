@@ -1,10 +1,9 @@
-import { ChangeScreenModeIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { toFormErrors } from "@koloda/app";
 import { queriesAtom, queryKeys } from "@koloda/core-react";
 import { cloneAlgorithmSchema as schema } from "@koloda/srs";
 import type { Algorithm } from "@koloda/srs";
-import { Button, Dialog, Label, Link, link, TextField, useAppForm, useMotionSetting } from "@koloda/ui";
+import { Button, CloneIcon, Dialog, Label, Link, link, TextField, useAppForm, useMotionSetting } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useStore } from "@tanstack/react-form";
@@ -54,7 +53,7 @@ export function CloneAlgorithm({ id }: CloneAlgorithmProps) {
   return (
     <Dialog.Root isOpen={isOpen} onOpenChange={setIsOpen}>
       <Button variants={{ style: "primary" }}>
-        <HugeiconsIcon className="size-5 min-w-5" strokeWidth={1.75} icon={ChangeScreenModeIcon} aria-hidden="true" />
+        <HugeiconsIcon className="size-5 min-w-5" strokeWidth={1.75} icon={CloneIcon} aria-hidden="true" />
         {_(msg`clone-algorithm.trigger`)}
       </Button>
       <Dialog.Popover variants={{ class: "min-w-84" }}>

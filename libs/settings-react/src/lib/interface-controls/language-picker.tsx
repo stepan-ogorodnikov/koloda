@@ -1,9 +1,8 @@
-import { TranslationIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { LANGUAGES } from "@koloda/app";
 import { langAtom } from "@koloda/core-react";
 import { queriesAtom } from "@koloda/core-react";
-import { Select } from "@koloda/ui";
+import { LanguageIcon, Select } from "@koloda/ui";
 import type { SelectProps } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
@@ -28,7 +27,7 @@ export function LanguagePicker({ label, showIcon = true, isPersisted = true, ...
       aria-label={!label ? _(msg`language-picker.label`) : undefined}
       icon={
         showIcon ? (
-          <HugeiconsIcon className="size-5" strokeWidth={1.75} icon={TranslationIcon} aria-hidden="true" />
+          <HugeiconsIcon className="size-5" strokeWidth={1.75} icon={LanguageIcon} aria-hidden="true" />
         ) : undefined
       }
       items={LANGUAGES}

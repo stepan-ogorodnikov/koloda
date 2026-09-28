@@ -1,7 +1,7 @@
-import { ChevronDoubleCloseIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { ComponentProps, ReactNode } from "react";
 import { tv } from "tailwind-variants";
+import { ChevronIcon } from "../../icons/chevron-icon";
 import type { TWVProps } from "../../types";
 import { Button, button } from "../form/button";
 import { formLayoutSectionContent } from "../form/form-layout";
@@ -11,7 +11,9 @@ const selectButton = tv({
   extend: button,
   base: "justify-between w-full min-w-0 font-normal",
   variants: {
-    layout: { form: [formLayoutSectionContent, "flex-row items-center max-w-60"] },
+    layout: {
+      form: [formLayoutSectionContent, "flex-row items-center max-w-60"],
+    },
     size: { default: "h-10 p-2" },
   },
   defaultVariants: { style: "bordered" },
@@ -24,7 +26,14 @@ export type SelectButtonProps = TWVProps<typeof selectButton> &
     children?: ReactNode;
   };
 
-export function SelectButton({ variants, showChevron = true, icon, children, ref, ...props }: SelectButtonProps) {
+export function SelectButton({
+  variants,
+  showChevron = true,
+  icon,
+  children,
+  ref,
+  ...props
+}: SelectButtonProps) {
   return (
     <Button ref={ref} className={selectButton(variants)} {...props}>
       {children || (
@@ -41,7 +50,7 @@ export function SelectButton({ variants, showChevron = true, icon, children, ref
         <HugeiconsIcon
           className="size-4 min-w-4 rotate-90"
           strokeWidth={2}
-          icon={ChevronDoubleCloseIcon}
+          icon={ChevronIcon}
           aria-hidden="true"
         />
       )}

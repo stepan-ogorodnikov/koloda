@@ -1,6 +1,5 @@
-import { CarouselHorizontal02Icon, TableIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { ToggleGroup, Tooltip } from "@koloda/ui";
+import { StackIcon, TableIcon, ToggleGroup, Tooltip } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { atom, useAtom } from "jotai";
@@ -26,12 +25,7 @@ export function CardsViewToggle() {
       </Tooltip>
       <Tooltip content={_(msg`cards.views.stack`)}>
         <ToggleGroup.Item variants={{ size: "icon" }} aria-label={_(msg`cards.views.stack`)} id="stack">
-          <HugeiconsIcon
-            className="size-5 min-w-5"
-            strokeWidth={1.75}
-            icon={CarouselHorizontal02Icon}
-            aria-hidden="true"
-          />
+          <HugeiconsIcon className="size-5 min-w-5" strokeWidth={1.75} icon={StackIcon} aria-hidden="true" />
         </ToggleGroup.Item>
       </Tooltip>
     </ToggleGroup>

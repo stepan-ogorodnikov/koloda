@@ -1,6 +1,5 @@
-import { Delete03Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Button, Dialog } from "@koloda/ui";
+import { Button, DeleteIcon, Dialog } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useState } from "react";
@@ -56,7 +55,7 @@ export function DeleteConversationButton({
           event.stopPropagation();
         }}
       >
-        <HugeiconsIcon className="size-5 min-w-5" strokeWidth={1.75} icon={Delete03Icon} aria-hidden="true" />
+        <HugeiconsIcon className="size-5 min-w-5" strokeWidth={1.75} icon={DeleteIcon} aria-hidden="true" />
       </Button>
       <Dialog.Popover placement="bottom">
         <DeleteConversationConfirmContent onConfirm={deleteConversation} isPending={isPending} error={error} />

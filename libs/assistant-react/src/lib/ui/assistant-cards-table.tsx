@@ -1,8 +1,7 @@
-import { BadgeAlertIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { GeneratedCard } from "@koloda/ai";
 import type { Deck, Template } from "@koloda/srs";
-import { Button, Table } from "@koloda/ui";
+import { AlertIcon, Button, Table } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import type { CardStatus } from "../state/conversation-reducer";
@@ -53,7 +52,7 @@ export function AssistantCardsTable({
       </div>
       {isTemplateUnavailable ? (
         <p className="self-center flex items-center justify-center gap-2 min-w-60 fg-level-3">
-          <HugeiconsIcon className="size-5 min-w-5" strokeWidth={1.75} icon={BadgeAlertIcon} aria-hidden="true" />
+          <HugeiconsIcon className="size-5 min-w-5" strokeWidth={1.75} icon={AlertIcon} aria-hidden="true" />
           {_(msg`assistant.template-unavailable`)}
         </p>
       ) : (

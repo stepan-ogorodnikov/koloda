@@ -1,11 +1,9 @@
-import { SquareLock01Icon, SquareUnlock01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { toFormErrors } from "@koloda/app";
 import { queriesAtom, queryKeys } from "@koloda/core-react";
 import type { Template as TemplateType, UpdateTemplateValues } from "@koloda/srs";
 import { updateTemplateSchema as schema } from "@koloda/srs";
-import { NotFound } from "@koloda/ui";
-import { FormLayout, formLayout, Label, TextField, useAppForm } from "@koloda/ui";
+import { FormLayout, formLayout, Label, LockIcon, NotFound, TextField, UnlockIcon, useAppForm } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -80,9 +78,9 @@ export function Template({ id }: TemplateProps) {
         <FormLayout.Section.Content>
           <div className="flex flex-row gap-2 fg-level-2 font-medium tracking-wide">
             {data?.isLocked ? (
-              <HugeiconsIcon className="size-5 min-w-5" strokeWidth={2} icon={SquareLock01Icon} />
+              <HugeiconsIcon className="size-5 min-w-5" strokeWidth={2} icon={LockIcon} />
             ) : (
-              <HugeiconsIcon className="size-5 min-w-5" strokeWidth={2} icon={SquareUnlock01Icon} />
+              <HugeiconsIcon className="size-5 min-w-5" strokeWidth={2} icon={UnlockIcon} />
             )}
             {data?.isLocked ? _(msg`template.status.locked`) : _(msg`template.status.unlocked`)}
           </div>

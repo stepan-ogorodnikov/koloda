@@ -1,4 +1,3 @@
-import { PanelLeftIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useAppHotkey, useHotkeysSettings } from "@koloda/core-react";
 import { msg } from "@lingui/core/macro";
@@ -6,6 +5,7 @@ import { useLingui } from "@lingui/react";
 import { useMediaQuery } from "@react-hook/media-query";
 import { useAtomValue } from "jotai";
 import { useCallback } from "react";
+import { SidebarIcon } from "../icons/sidebar-icon";
 import { layoutHasContentAtom } from "../layout/content";
 import { useLayoutDrawer } from "../layout/drawer";
 import { layoutHasNavAtom, useNavCollapsed } from "../layout/nav";
@@ -36,7 +36,9 @@ export function TitlebarSidebarControls() {
     open();
   }, [close, isWide, isOpen, open, toggleNavCollapsed]);
 
-  useAppHotkey(ui.toggleSidebarControls, handleAction, "", { ignoreInputs: false });
+  useAppHotkey(ui.toggleSidebarControls, handleAction, "", {
+    ignoreInputs: false,
+  });
 
   return (
     <div className="relative z-100 [-webkit-app-region:no-drag]">
@@ -47,7 +49,12 @@ export function TitlebarSidebarControls() {
         isDisabled={isDisabled}
         onPress={handleAction}
       >
-        <HugeiconsIcon className="size-5 min-w-5" strokeWidth={2} icon={PanelLeftIcon} aria-hidden="true" />
+        <HugeiconsIcon
+          className="size-5 min-w-5"
+          strokeWidth={2}
+          icon={SidebarIcon}
+          aria-hidden="true"
+        />
       </Button>
     </div>
   );

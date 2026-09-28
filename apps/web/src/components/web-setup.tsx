@@ -1,9 +1,9 @@
-import { BadgeAlertIcon, Refresh04Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { ERROR_MESSAGES, formatAppError } from "@koloda/app";
 import { ColorSchemePicker, LanguagePicker } from "@koloda/settings-react";
 import { langAtom, schemeAtom } from "@koloda/core-react";
 import {
+  AlertIcon,
   Button,
   ErrorMessage,
   overlayFrame,
@@ -11,6 +11,7 @@ import {
   OverlayFrameFooter,
   OverlayFrameHeader,
   OverlayFrameTitle,
+  RefreshIcon,
 } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
@@ -80,7 +81,7 @@ export function WebSetup() {
               <HugeiconsIcon
                 className="size-5 min-w-5 animate-spin"
                 strokeWidth={1.75}
-                icon={Refresh04Icon}
+                icon={RefreshIcon}
                 aria-hidden="true"
               />
             )}
@@ -112,7 +113,7 @@ function SetupAlertIcon() {
       <HugeiconsIcon
         className="absolute top-1/2 left-0 size-5 -translate-y-1/2 pointer-events-none"
         strokeWidth={1.75}
-        icon={BadgeAlertIcon}
+        icon={AlertIcon}
         aria-hidden="true"
       />
     </span>

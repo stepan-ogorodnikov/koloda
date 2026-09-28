@@ -1,6 +1,5 @@
-import { Copy01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Button, Tooltip } from "@koloda/ui";
+import { Button, CopyIcon, Tooltip } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 
@@ -24,7 +23,7 @@ export function CopyMessageButton({ text }: CopyMessageButtonProps) {
           void navigator.clipboard.writeText(text);
         }}
       >
-        <HugeiconsIcon className="size-4 min-w-4" strokeWidth={1.75} icon={Copy01Icon} aria-hidden="true" />
+        <HugeiconsIcon className="size-4 min-w-4" strokeWidth={1.75} icon={CopyIcon} aria-hidden="true" />
       </Button>
     </Tooltip>
   );

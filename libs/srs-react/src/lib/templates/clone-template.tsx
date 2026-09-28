@@ -1,10 +1,9 @@
-import { ChangeScreenModeIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { toFormErrors } from "@koloda/app";
 import { queriesAtom, queryKeys } from "@koloda/core-react";
 import { cloneTemplateSchema as schema } from "@koloda/srs";
 import type { Template } from "@koloda/srs";
-import { Button, Dialog, Label, Link, link, TextField, useAppForm, useMotionSetting } from "@koloda/ui";
+import { Button, CloneIcon, Dialog, Label, Link, link, TextField, useAppForm, useMotionSetting } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useStore } from "@tanstack/react-form";
@@ -54,7 +53,7 @@ export function CloneTemplate({ id }: CloneTemplateProps) {
   return (
     <Dialog.Root isOpen={isOpen} onOpenChange={setIsOpen}>
       <Button variants={{ style: "primary" }}>
-        <HugeiconsIcon className="size-5 min-w-5" strokeWidth={1.75} icon={ChangeScreenModeIcon} aria-hidden="true" />
+        <HugeiconsIcon className="size-5 min-w-5" strokeWidth={1.75} icon={CloneIcon} aria-hidden="true" />
         {_(msg`clone-template.trigger`)}
       </Button>
       <Dialog.Popover variants={{ class: "min-w-84" }}>
