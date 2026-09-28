@@ -46,6 +46,9 @@
       "path": "./libs/settings-react"
     },
     {
+      "path": "./apps/electron"
+    },
+    {
       "path": "./apps/electron-react"
     },
     {

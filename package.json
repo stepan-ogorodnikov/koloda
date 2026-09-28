@@ -13,10 +13,11 @@
     "test:rust": "nx run koloda:test",
     "check:workspace-deps": "bunx vitest run --config tools/vitest.config.mjs --configLoader runner && bun run tools/check-workspace-deps.ts",
     "lint": "oxlint --max-warnings=0",
+    "typecheck": "tsc -b --pretty false",
     "check:commit": "bun run lint && nx run koloda:lint",
-    "check:push": "bun run check:commit && nx run-many -t typecheck && nx run koloda:test && bun run check:workspace-deps",
+    "check:push": "bun run check:commit && bun run typecheck && nx run koloda:test && bun run check:workspace-deps",
     "check:rust": "nx run koloda:lint",
-    "check:web-deploy": "bun run lint && nx run-many -t typecheck && bun run test:libs && bun run check:workspace-deps",
+    "check:web-deploy": "bun run lint && bun run typecheck && bun run test:libs && bun run check:workspace-deps",
     "check:web-all": "bun run check:web-deploy && nx run web-e2e:e2e",
     "prepare": "git config core.hooksPath tools/hooks"
   },
