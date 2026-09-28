@@ -188,6 +188,16 @@ A full `bun run test:libs` is not required to justify a unit change.
 
 ### Runner constraints
 
-Every lib Vitest config except `ui` and `srs-react` sets `isolate: false`, so files share one worker's module registry.
-A `vi.mock` of a package another file in the same project needs for real leaks across those files, and module mocks survive `vi.restoreAllMocks()`.
-`ui` and `srs-react` stay isolated because their mocks disagree with other files in the same project.
+Lib Vitest configs use `pool: "threads"` and `maxWorkers: 2`.
+Ten of twelve libs set `isolate: false`, so their files share one worker's module registry; `ui` and `srs-react` keep Vitest's default isolation.
+Why isolation is not universal: a file-level `vi.mock(...)` rewrites that import for the whole worker and is not undone when the file finishes.
+When all twelve libs were flipped to `isolate: false`, only these two failed — `ui` (e.g. `query-error.test.tsx` mocks `@lingui/react`, so siblings that need the real catalog text render the mock; which files fail depends on worker scheduling under low `maxWorkers`) and `srs-react` (`lesson-reducer.test.ts` mocks `@koloda/srs`, so a later file that imports the real module gets stubs).
+Other `isolate: false` libs file-mock `@lingui/react` too and stay green, because no sibling imports it for real.
+`db-sqlite` also sets `fileParallelism: false`.
+All twelve lib test targets set `cache: true`; `nx.json` `parallel` is `8`, so `test:libs` runs at most eight of those projects at once.
+Root `.env` sets `NX_ISOLATE_PLUGINS=false`; the file is committed, allowed by a `.gitignore` negation.
+
+Vitest config stays per package; do not introduce a shared Vitest defaults file.
+The per-project differences are intentional: `ui`/`srs-react` isolation, `db-sqlite`'s `fileParallelism: false`, and uneven setup and `vi.restoreAllMocks()` habits.
+Under `isolate: false`, module mocks are not cleared by `vi.restoreAllMocks()`, and not every package calls it in setup — `libs/ai` and `libs/assistant` have no setup file, and `libs/db-sqlite`'s setup does not.
+A project can join `isolate: false` only when no file registers a module-level `vi.mock` of a shared package that siblings import for real; the fix is removing or replacing those mocks (a real i18n catalog in `ui`, real or injected `srs` in `srs-react`), not flipping the config alone.
