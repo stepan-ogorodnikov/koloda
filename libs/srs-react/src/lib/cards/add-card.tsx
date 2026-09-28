@@ -1,4 +1,3 @@
-import { HugeiconsIcon } from "@hugeicons/react";
 import type { ZodIssue } from "@koloda/app";
 import { toFormErrors } from "@koloda/app";
 import { useAppHotkey } from "@koloda/core-react";
@@ -78,7 +77,7 @@ export function AddCard({ deckId, templateId }: AddCardProps) {
     <Dialog.Root isOpen={isOpen} onOpenChange={handleOpenChange}>
       <Tooltip content={_(msg`add-cards.trigger`)}>
         <Button variants={{ style: "dashed", size: "icon" }} aria-label={_(msg`add-cards.trigger`)}>
-          <HugeiconsIcon className="size-4 min-w-4" strokeWidth={3} icon={AddIcon} aria-hidden="true" />
+          <AddIcon className="size-4 min-w-4" strokeWidth={3} aria-hidden="true" />
         </Button>
       </Tooltip>
       <Dialog.Overlay>

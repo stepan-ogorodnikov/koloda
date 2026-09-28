@@ -1,4 +1,3 @@
-import { HugeiconsIcon } from "@hugeicons/react";
 import { Checkbox, ErrorIcon, Fade, PendingIcon, SuccessIcon, tableCellContent } from "@koloda/ui";
 import type { SelectionTableFeatures } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
@@ -34,31 +33,28 @@ export function AssistantCardsTableSelectCell({ row }: AssistantCardsTableSelect
       )}
       {status === "pending" && (
         <Fade className={tableCellContent()} key="pending">
-          <HugeiconsIcon
+          <PendingIcon
             className="size-4 min-w-4 fg-level-4 animate-spin"
             aria-label={_(msg`assistant.table.columns.status.pending`)}
             strokeWidth={1.75}
-            icon={PendingIcon}
           />
         </Fade>
       )}
       {status === "success" && (
         <Fade className={tableCellContent()} key="success">
-          <HugeiconsIcon
+          <SuccessIcon
             className="size-5 min-w-5 fg-success"
             aria-label={_(msg`assistant.table.columns.status.success`)}
             strokeWidth={1.75}
-            icon={SuccessIcon}
           />
         </Fade>
       )}
       {status === "error" && (
         <Fade className={tableCellContent()} key="error">
-          <HugeiconsIcon
+          <ErrorIcon
             className="size-5 min-w-5 fg-error"
             aria-label={_(msg`assistant.table.columns.status.error`)}
             strokeWidth={1.75}
-            icon={ErrorIcon}
           />
         </Fade>
       )}

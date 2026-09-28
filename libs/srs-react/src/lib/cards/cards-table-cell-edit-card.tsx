@@ -1,4 +1,3 @@
-import { HugeiconsIcon } from "@hugeicons/react";
 import type { Card } from "@koloda/srs";
 import { Button, Dialog, EditIcon } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
@@ -19,7 +18,7 @@ export function CardsTableCellEditCard({ card }: CardsTableCellEditCardProps) {
         aria-label={_(msg`edit-card.trigger`)}
       >
         <div className="p-1 rounded-md group-focus-ring">
-          <HugeiconsIcon className="size-5 min-w-5" strokeWidth={1.75} icon={EditIcon} aria-hidden="true" />
+          <EditIcon className="size-5 min-w-5" strokeWidth={1.75} aria-hidden="true" />
         </div>
       </Button>
       <Dialog.Overlay>

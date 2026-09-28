@@ -1,4 +1,3 @@
-import { HugeiconsIcon } from "@hugeicons/react";
 import { AddIcon, Button } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
@@ -15,7 +14,7 @@ export function AssistantNoProfiles({ onAddProfile }: AssistantNoProfilesProps) 
     <div className="grow flex flex-col items-center justify-center gap-6 py-12">
       <p className="text-xl/6 font-bold fg-level-4 text-center">{_(msg`ai.chat.no-profiles`)}</p>
       <Button variants={{ style: "primary" }} aria-label={label} onPress={onAddProfile}>
-        <HugeiconsIcon className="size-5 min-w-5" strokeWidth={1.75} icon={AddIcon} aria-hidden="true" />
+        <AddIcon className="size-5 min-w-5" strokeWidth={1.75} aria-hidden="true" />
         {label}
       </Button>
     </div>

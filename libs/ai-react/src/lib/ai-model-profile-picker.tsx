@@ -1,4 +1,3 @@
-import { HugeiconsIcon } from "@hugeicons/react";
 import type { AIModel, AIProfile } from "@koloda/ai";
 import { AI_PROVIDER_LABELS } from "@koloda/ai";
 import { AddIcon, Button, Fade, RefreshIcon, Select, Tooltip } from "@koloda/ui";
@@ -177,10 +176,9 @@ export function AIModelProfilePicker({
                       isDisabled={section.status === "loading"}
                       onPress={() => section.refetch()}
                     >
-                      <HugeiconsIcon
+                      <RefreshIcon
                         className={modelPickerStatusIcon({ isLoading: section.status === "loading" })}
                         strokeWidth={1.75}
-                        icon={RefreshIcon}
                         aria-hidden="true"
                       />
                     </Button>
@@ -219,7 +217,7 @@ function ModelPickerNoProfiles({ message, addLabel, onActivate }: ModelPickerNoP
     <div className="flex flex-col items-center justify-center gap-3 h-full p-4">
       <p className="fg-level-3 text-center">{message}</p>
       <Button variants={{ style: "primary" }} aria-label={addLabel} onPress={onActivate} autoFocus>
-        <HugeiconsIcon className="size-5 min-w-5" strokeWidth={1.75} icon={AddIcon} aria-hidden="true" />
+        <AddIcon className="size-5 min-w-5" strokeWidth={1.75} aria-hidden="true" />
         {addLabel}
       </Button>
     </div>

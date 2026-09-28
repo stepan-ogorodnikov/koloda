@@ -2,7 +2,6 @@ import { RestrictToVerticalAxis } from "@dnd-kit/abstract/modifiers";
 import type { Modifiers } from "@dnd-kit/abstract";
 import { DragDropProvider, KeyboardSensor, PointerSensor } from "@dnd-kit/react";
 import { isSortable } from "@dnd-kit/react/sortable";
-import { HugeiconsIcon } from "@hugeicons/react";
 import { generateUuidv7 } from "@koloda/app";
 import { DEFAULT_TEMPLATE, DEFAULT_TEMPLATE_FIELD } from "@koloda/srs";
 import type { UpdateTemplateValues } from "@koloda/srs";
@@ -69,12 +68,7 @@ export const TemplateFields = withForm({
                       form.pushFieldValue("content.layout", { field: id, operation: "display" });
                     }}
                   >
-                    <HugeiconsIcon
-                      className="size-4 min-w-4 mx-0.5"
-                      strokeWidth={3}
-                      icon={AddIcon}
-                      aria-hidden="true"
-                    />
+                    <AddIcon className="size-4 min-w-4 mx-0.5" strokeWidth={3} aria-hidden="true" />
                     {_(msg`template.fields.add-item`)}
                   </Button>
                 </div>

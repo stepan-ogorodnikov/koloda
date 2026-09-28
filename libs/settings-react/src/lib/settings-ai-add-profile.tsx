@@ -1,4 +1,3 @@
-import { HugeiconsIcon } from "@hugeicons/react";
 import type { AiProvider, AISecrets } from "@koloda/ai";
 import { AI_PROVIDER_LABELS, AI_PROVIDERS } from "@koloda/ai";
 import { aiProvidersAtom } from "@koloda/core-react";
@@ -116,7 +115,7 @@ export function SettingsAIAddProfile({
   return (
     <Dialog.Root isOpen={isOpen} onOpenChange={handleOpenChange}>
       <Button variants={{ style: "dashed", size: "icon" }} aria-label={label}>
-        <HugeiconsIcon className="size-4 min-w-4" strokeWidth={3} icon={AddIcon} aria-hidden="true" />
+        <AddIcon className="size-4 min-w-4" strokeWidth={3} aria-hidden="true" />
       </Button>
       {dialog}
     </Dialog.Root>

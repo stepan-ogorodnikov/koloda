@@ -1,4 +1,3 @@
-import { HugeiconsIcon } from "@hugeicons/react";
 import type { ComponentProps, PropsWithChildren } from "react";
 import { tv } from "tailwind-variants";
 import { DeleteIcon } from "../icons/delete-icon";
@@ -18,19 +17,12 @@ const deleteButtonTrigger = tv({
   base: "disabled:cursor-not-allowed",
 });
 
-type DeleteDialogTriggerProps = PropsWithChildren &
-  ButtonProps &
-  TWVProps<typeof deleteButtonTrigger>;
+type DeleteDialogTriggerProps = PropsWithChildren & ButtonProps & TWVProps<typeof deleteButtonTrigger>;
 
 function DeleteDialogTrigger({ children, ...props }: DeleteDialogTriggerProps) {
   return (
     <Button className={deleteButtonTrigger({ style: "primary" })} {...props}>
-      <HugeiconsIcon
-        className="size-5"
-        strokeWidth={1.75}
-        icon={DeleteIcon}
-        aria-hidden="true"
-      />
+      <DeleteIcon className="size-5" strokeWidth={1.75} aria-hidden="true" />
       {children}
     </Button>
   );
@@ -41,11 +33,7 @@ function DeleteDialogFrame({ children }: PropsWithChildren) {
     <Dialog.Overlay>
       <Dialog.Modal variants={{ class: "w-full max-w-84" }}>
         <Dialog.Body>
-          <Dialog.Content
-            variants={{ class: "flex flex-col items-center gap-6 py-6 px-8" }}
-          >
-            {children}
-          </Dialog.Content>
+          <Dialog.Content variants={{ class: "flex flex-col items-center gap-6 py-6 px-8" }}>{children}</Dialog.Content>
         </Dialog.Body>
       </Dialog.Modal>
     </Dialog.Overlay>

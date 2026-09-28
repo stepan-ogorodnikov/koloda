@@ -1,4 +1,3 @@
-import { HugeiconsIcon } from "@hugeicons/react";
 import type { ZodIssue } from "@koloda/app";
 import { toFormErrors } from "@koloda/app";
 import { queriesAtom, queryKeys, useTimestampFormatter } from "@koloda/core-react";
@@ -139,7 +138,7 @@ export function CardDetails({ card }: CardDetailsProps) {
               <div className="flex flex-row flex-wrap items-center gap-2">
                 {!!card.state && (
                   <Button variants={{ style: "primary" }} onClick={handleProgressReset}>
-                    <HugeiconsIcon className="size-4 min-w-4" strokeWidth={2} icon={UndoIcon} aria-hidden="true" />
+                    <UndoIcon className="size-4 min-w-4" strokeWidth={2} aria-hidden="true" />
                     {_(msg`card.action.reset-progress`)}
                   </Button>
                 )}

@@ -1,4 +1,3 @@
-import { HugeiconsIcon } from "@hugeicons/react";
 import { toFormErrors } from "@koloda/app";
 import { queriesAtom, queryKeys } from "@koloda/core-react";
 import { cloneTemplateSchema as schema } from "@koloda/srs";
@@ -53,7 +52,7 @@ export function CloneTemplate({ id }: CloneTemplateProps) {
   return (
     <Dialog.Root isOpen={isOpen} onOpenChange={setIsOpen}>
       <Button variants={{ style: "primary" }}>
-        <HugeiconsIcon className="size-5 min-w-5" strokeWidth={1.75} icon={CloneIcon} aria-hidden="true" />
+        <CloneIcon className="size-5 min-w-5" strokeWidth={1.75} aria-hidden="true" />
         {_(msg`clone-template.trigger`)}
       </Button>
       <Dialog.Popover variants={{ class: "min-w-84" }}>

@@ -1,4 +1,3 @@
-import { HugeiconsIcon } from "@hugeicons/react";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useCanGoBack, useRouter } from "@tanstack/react-router";
@@ -50,12 +49,7 @@ export function TitlebarNavigation() {
         isDisabled={!canGoBack}
         onPress={handleBack}
       >
-        <HugeiconsIcon
-          className="size-5 min-w-5"
-          strokeWidth={2}
-          icon={ArrowLeftIcon}
-          aria-hidden="true"
-        />
+        <ArrowLeftIcon className="size-5 min-w-5" strokeWidth={2} aria-hidden="true" />
       </Button>
       <Button
         variants={{ style: "ghost", size: "smallIcon" }}
@@ -63,12 +57,7 @@ export function TitlebarNavigation() {
         isDisabled={!canGoForward}
         onPress={handleForward}
       >
-        <HugeiconsIcon
-          className="size-5 min-w-5"
-          strokeWidth={2}
-          icon={ArrowRightIcon}
-          aria-hidden="true"
-        />
+        <ArrowRightIcon className="size-5 min-w-5" strokeWidth={2} aria-hidden="true" />
       </Button>
     </div>
   );

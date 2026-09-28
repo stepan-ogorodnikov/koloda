@@ -1,4 +1,3 @@
-import { HugeiconsIcon } from "@hugeicons/react";
 import { Button, Dialog, MoreIcon } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
@@ -52,7 +51,7 @@ export function ConversationHeaderMenu({ conversationId, onClone, onActiveDelete
         aria-label={_(msg`ai.conversation.menu.trigger`)}
         isDisabled={!hasContext}
       >
-        <HugeiconsIcon className="size-5 min-w-5" strokeWidth={1.75} icon={MoreIcon} aria-hidden="true" />
+        <MoreIcon className="size-5 min-w-5" strokeWidth={1.75} aria-hidden="true" />
       </Button>
       <Dialog.Popover placement="bottom end">
         {showDeleteConfirm ? (

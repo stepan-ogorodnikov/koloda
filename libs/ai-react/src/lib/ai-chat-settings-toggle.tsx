@@ -1,4 +1,3 @@
-import { HugeiconsIcon } from "@hugeicons/react";
 import { Button, SettingsIcon, Tooltip } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
@@ -24,7 +23,7 @@ export function AIChatSettingsToggle({ isOpen, onOpenChange }: AIChatSettingsTog
         data-is-active={isOpen || undefined}
         onPress={() => onOpenChange?.(!isOpen)}
       >
-        <HugeiconsIcon className="size-5 min-w-5" strokeWidth={1.75} icon={SettingsIcon} aria-hidden="true" />
+        <SettingsIcon className="size-5 min-w-5" strokeWidth={1.75} aria-hidden="true" />
       </Button>
     </Tooltip>
   );

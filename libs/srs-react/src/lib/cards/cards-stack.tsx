@@ -1,4 +1,3 @@
-import { HugeiconsIcon } from "@hugeicons/react";
 import { queriesAtom } from "@koloda/core-react";
 import type { Deck } from "@koloda/srs";
 import { AnimatedNumber, ArrowLeftIcon, ArrowRightIcon, Button, Fade } from "@koloda/ui";
@@ -35,7 +34,7 @@ export function CardsStack({ deckId, controlsNode }: CardsTableProps) {
                 isDisabled={index === 0}
                 onClick={() => setIndex((prev) => prev - 1)}
               >
-                <HugeiconsIcon className="size-5 min-w-5" strokeWidth={2} icon={ArrowLeftIcon} aria-hidden="true" />
+                <ArrowLeftIcon className="size-5 min-w-5" strokeWidth={2} aria-hidden="true" />
               </Button>
               <Button
                 variants={{ style: "bordered", size: "icon" }}
@@ -43,7 +42,7 @@ export function CardsStack({ deckId, controlsNode }: CardsTableProps) {
                 isDisabled={index >= cards.length - 1}
                 onClick={() => setIndex((prev) => prev + 1)}
               >
-                <HugeiconsIcon className="size-5 min-w-5" strokeWidth={2} icon={ArrowRightIcon} aria-hidden="true" />
+                <ArrowRightIcon className="size-5 min-w-5" strokeWidth={2} aria-hidden="true" />
               </Button>
             </div>
             {cards.length > 0 && (

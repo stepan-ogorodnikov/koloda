@@ -1,5 +1,3 @@
-import { HugeiconsIcon } from "@hugeicons/react";
-import type { IconSvgElement } from "@hugeicons/react";
 import {
   BrainIcon,
   Button,
@@ -11,6 +9,7 @@ import {
   TextSwap,
   ToolIcon,
 } from "@koloda/ui";
+import type { IconComponent } from "@koloda/ui";
 import type { I18n } from "@lingui/core";
 import { msg, plural } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
@@ -128,16 +127,13 @@ type ReasoningStatusIconProps = { isRunning: boolean; runningLabel: string };
 function ReasoningStatusIcon({ isRunning, runningLabel }: ReasoningStatusIconProps) {
   return (
     <span className="inline-grid size-6 min-w-6">
-      <HugeiconsIcon
+      <BrainIcon
         className={reasoningIcon({ isRunning })}
         strokeWidth={1.75}
-        icon={BrainIcon}
         aria-hidden={isRunning ? undefined : true}
         aria-label={isRunning ? runningLabel : undefined}
       />
-      {isRunning ? (
-        <HugeiconsIcon className={reasoningIconHighlightClass} strokeWidth={1.75} icon={BrainIcon} aria-hidden="true" />
-      ) : null}
+      {isRunning ? <BrainIcon className={reasoningIconHighlightClass} strokeWidth={1.75} aria-hidden="true" /> : null}
     </span>
   );
 }
@@ -249,10 +245,9 @@ function ToolActivityRow({ call }: ToolActivityRowProps) {
 
 function FoldChevron() {
   return (
-    <HugeiconsIcon
+    <ChevronRightIcon
       className="size-5 min-w-5 group-aria-expanded/tool:rotate-90 transition-transform duration-250 ease-in-out"
       strokeWidth={2}
-      icon={ChevronRightIcon}
       aria-hidden="true"
     />
   );
@@ -295,27 +290,23 @@ function ToolCallStatusIcon({ name, status }: ToolCallStatusIconProps) {
 
   if (status === "error") {
     return (
-      <HugeiconsIcon
-        className="size-6 min-w-6"
-        strokeWidth={1.75}
-        icon={ErrorIcon}
-        aria-label={_(msg`ai.chat.tool-activity.failed`)}
-      />
+      <ErrorIcon className="size-6 min-w-6" strokeWidth={1.75} aria-label={_(msg`ai.chat.tool-activity.failed`)} />
     );
   }
 
+  const Icon = toolCallIcon(name);
+
   return (
-    <HugeiconsIcon
+    <Icon
       className="size-6 min-w-6"
       strokeWidth={1.75}
-      icon={toolCallIcon(name)}
       aria-hidden={status === "running" ? undefined : true}
       aria-label={status === "running" ? _(msg`ai.chat.tool-activity.running`) : undefined}
     />
   );
 }
 
-function toolCallIcon(name: string): IconSvgElement {
+function toolCallIcon(name: string): IconComponent {
   if (
     name === "list_decks" ||
     name === "list_templates" ||

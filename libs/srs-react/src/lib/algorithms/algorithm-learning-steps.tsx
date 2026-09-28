@@ -1,4 +1,3 @@
-import { HugeiconsIcon } from "@hugeicons/react";
 import { DEFAULT_FSRS_ALGORITHM, LEARNING_STEPS_UNITS } from "@koloda/srs";
 import type { UpdateAlgorithmValues } from "@koloda/srs";
 import { AddIcon, Button, DeleteIcon, FieldGroup, NumberField, Select, withForm } from "@koloda/ui";
@@ -73,12 +72,7 @@ export const AlgorithmLearningSteps = withForm({
                     field.removeValue(i);
                   }}
                 >
-                  <HugeiconsIcon
-                    className="size-5 min-w-5 mx-0.5"
-                    strokeWidth={1.75}
-                    icon={DeleteIcon}
-                    aria-hidden="true"
-                  />
+                  <DeleteIcon className="size-5 min-w-5 mx-0.5" strokeWidth={1.75} aria-hidden="true" />
                 </Button>
               </FieldGroup>
             ))}
@@ -91,7 +85,7 @@ export const AlgorithmLearningSteps = withForm({
                 field.pushValue(field.state.value[field.state.value.length - 1] || DEFAULT_FSRS_ALGORITHM[type][0]);
               }}
             >
-              <HugeiconsIcon className="size-4 min-w-4 mx-0.5" strokeWidth={3} icon={AddIcon} aria-hidden="true" />
+              <AddIcon className="size-4 min-w-4 mx-0.5" strokeWidth={3} aria-hidden="true" />
             </Button>
           </div>
         )}

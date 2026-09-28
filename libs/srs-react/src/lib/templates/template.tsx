@@ -1,4 +1,3 @@
-import { HugeiconsIcon } from "@hugeicons/react";
 import { toFormErrors } from "@koloda/app";
 import { queriesAtom, queryKeys } from "@koloda/core-react";
 import type { Template as TemplateType, UpdateTemplateValues } from "@koloda/srs";
@@ -78,9 +77,9 @@ export function Template({ id }: TemplateProps) {
         <FormLayout.Section.Content>
           <div className="flex flex-row gap-2 fg-level-2 font-medium tracking-wide">
             {data?.isLocked ? (
-              <HugeiconsIcon className="size-5 min-w-5" strokeWidth={2} icon={LockIcon} />
+              <LockIcon className="size-5 min-w-5" strokeWidth={2} />
             ) : (
-              <HugeiconsIcon className="size-5 min-w-5" strokeWidth={2} icon={UnlockIcon} />
+              <UnlockIcon className="size-5 min-w-5" strokeWidth={2} />
             )}
             {data?.isLocked ? _(msg`template.status.locked`) : _(msg`template.status.unlocked`)}
           </div>

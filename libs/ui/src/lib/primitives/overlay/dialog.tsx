@@ -1,27 +1,16 @@
-import { HugeiconsIcon } from "@hugeicons/react";
 import { useAppHotkey, useHotkeysSettings } from "@koloda/core-react";
 import type { HotkeyOptions } from "@tanstack/react-hotkeys";
 import type { ComponentProps } from "react";
 import { useRef } from "react";
 import type { DialogProps, ModalOverlayProps } from "react-aria-components";
-import {
-  Dialog as ReactAriaDialog,
-  DialogTrigger,
-  ModalOverlay,
-} from "react-aria-components";
+import { Dialog as ReactAriaDialog, DialogTrigger, ModalOverlay } from "react-aria-components";
 import { tv } from "tailwind-variants";
 import { dispatchKey } from "../../core/hotkeys";
 import { CloseIcon } from "../../icons/close-icon";
 import type { TWVProps } from "../../types";
 import { Button, button } from "../form/button";
 import type { ButtonProps } from "../form/button";
-import {
-  OverlayFrameContent,
-  OverlayFrameFooter,
-  OverlayFrameHeader,
-  OverlayFrameTitle,
-  overlay,
-} from "./overlay";
+import { OverlayFrameContent, OverlayFrameFooter, OverlayFrameHeader, OverlayFrameTitle, overlay } from "./overlay";
 import { Popover } from "./popover";
 import { Modal } from "./modal";
 
@@ -41,12 +30,7 @@ function DialogOverlay({ variants, ...props }: DialogOverlayProps) {
 }
 
 function DialogBody(props: DialogProps) {
-  return (
-    <ReactAriaDialog
-      className="grow min-h-0 flex flex-col focus-ring"
-      {...props}
-    />
-  );
+  return <ReactAriaDialog className="grow min-h-0 flex flex-col focus-ring" {...props} />;
 }
 
 type DialogPopoverProps = ComponentProps<typeof Popover>;
@@ -83,12 +67,7 @@ type DialogCloseProps = TWVProps<typeof dialogClose> & ButtonProps;
 function DialogClose({ variants, ...props }: DialogCloseProps) {
   return (
     <Button className={dialogClose(variants)} {...props}>
-      <HugeiconsIcon
-        className="size-4 min-w-4"
-        strokeWidth={1.75}
-        icon={CloseIcon}
-        aria-hidden="true"
-      />
+      <CloseIcon className="size-4 min-w-4" strokeWidth={1.75} aria-hidden="true" />
     </Button>
   );
 }

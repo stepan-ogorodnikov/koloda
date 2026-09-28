@@ -1,5 +1,3 @@
-import { HugeiconsIcon } from "@hugeicons/react";
-import type { IconSvgElement } from "@hugeicons/react";
 import type { MessageDescriptor } from "@lingui/core";
 import { useLingui } from "@lingui/react";
 import { useMediaQuery } from "@react-hook/media-query";
@@ -11,6 +9,7 @@ import { useCallback, useContext, useLayoutEffect } from "react";
 import { createPortal } from "react-dom";
 import { tv } from "tailwind-variants";
 import { useMotionSetting } from "../hooks/use-motion-settings";
+import type { IconComponent } from "../icons/icon";
 import { Link } from "../primitives/link";
 import { Tooltip } from "../primitives/overlay/tooltip/tooltip";
 import { getCSSVar } from "../utility";
@@ -50,10 +49,10 @@ const layoutNavLink = tv({
 type LayoutNavLinkProps = {
   to: string;
   msg: MessageDescriptor;
-  icon: IconSvgElement;
+  icon: IconComponent;
 };
 
-export function LayoutNavLink({ to, msg, icon }: LayoutNavLinkProps) {
+export function LayoutNavLink({ to, msg, icon: Icon }: LayoutNavLinkProps) {
   const { _ } = useLingui();
   const isMotionOn = useMotionSetting();
   const { close } = useLayoutDrawer();
@@ -68,7 +67,7 @@ export function LayoutNavLink({ to, msg, icon }: LayoutNavLinkProps) {
       placement="right"
     >
       <Link className={layoutNavLink()} to={to} viewTransition={isMotionOn} onClick={close} key={to}>
-        <HugeiconsIcon className="size-6 min-w-6" strokeWidth={1.75} icon={icon} aria-hidden="true" />
+        <Icon className="size-6 min-w-6" strokeWidth={1.75} aria-hidden="true" />
         <AnimatePresence initial={false}>
           {isTextVisible && (
             <motion.span

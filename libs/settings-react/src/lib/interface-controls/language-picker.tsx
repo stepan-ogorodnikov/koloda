@@ -1,4 +1,3 @@
-import { HugeiconsIcon } from "@hugeicons/react";
 import { LANGUAGES } from "@koloda/app";
 import { langAtom } from "@koloda/core-react";
 import { queriesAtom } from "@koloda/core-react";
@@ -25,11 +24,7 @@ export function LanguagePicker({ label, showIcon = true, isPersisted = true, ...
       popoverVariants={{ class: "min-w-48 w-[var(--trigger-width)]" }}
       label={label}
       aria-label={!label ? _(msg`language-picker.label`) : undefined}
-      icon={
-        showIcon ? (
-          <HugeiconsIcon className="size-5" strokeWidth={1.75} icon={LanguageIcon} aria-hidden="true" />
-        ) : undefined
-      }
+      icon={showIcon ? <LanguageIcon className="size-5" strokeWidth={1.75} aria-hidden="true" /> : undefined}
       items={LANGUAGES}
       value={i18n.locale}
       onChange={(key) => {

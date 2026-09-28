@@ -1,4 +1,3 @@
-import { HugeiconsIcon } from "@hugeicons/react";
 import { Button, CloseIcon, ErrorMessage, Fade, RefreshIcon } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
@@ -32,7 +31,7 @@ export function AIChatError({ message, details, isDismissed, onDismiss, onRetry 
               variants={{ style: "ghost", size: "small", class: "fg-link hover:fg-link-hover shrink-0" }}
               onPress={onRetry}
             >
-              <HugeiconsIcon className="size-4 min-w-4" strokeWidth={1.75} icon={RefreshIcon} aria-hidden="true" />
+              <RefreshIcon className="size-4 min-w-4" strokeWidth={1.75} aria-hidden="true" />
               {_(msg`ai.chat.error.retry-save`)}
             </Button>
           )}
@@ -42,7 +41,7 @@ export function AIChatError({ message, details, isDismissed, onDismiss, onRetry 
               aria-label={_(msg`ai.chat.error.close`)}
               onPress={onDismiss}
             >
-              <HugeiconsIcon className="size-4 min-w-4" strokeWidth={1.75} icon={CloseIcon} aria-hidden="true" />
+              <CloseIcon className="size-4 min-w-4" strokeWidth={1.75} aria-hidden="true" />
             </Button>
           )}
         </Fade>

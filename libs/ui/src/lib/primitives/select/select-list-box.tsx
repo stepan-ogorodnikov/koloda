@@ -1,4 +1,3 @@
-import { HugeiconsIcon } from "@hugeicons/react";
 import { useRef } from "react";
 import { ListBox, ListBoxItem, ListBoxSection, ListLayout, Virtualizer } from "react-aria-components";
 import type { ListBoxItemProps, ListBoxProps, ListBoxSectionProps } from "react-aria-components";
@@ -59,9 +58,7 @@ export function SelectListBoxItem({ children, ...props }: ListBoxItemProps) {
       {(state) => (
         <>
           {typeof children === "function" ? children(state) : children}
-          {state.isSelected && (
-            <HugeiconsIcon className="size-4 min-w-4" strokeWidth={2.5} icon={CheckIcon} aria-hidden="true" />
-          )}
+          {state.isSelected && <CheckIcon className="size-4 min-w-4" strokeWidth={2.5} aria-hidden="true" />}
         </>
       )}
     </ListBoxItem>

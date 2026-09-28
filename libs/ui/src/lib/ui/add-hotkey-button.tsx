@@ -1,4 +1,3 @@
-import { HugeiconsIcon } from "@hugeicons/react";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { AddIcon } from "../icons/add-icon";
@@ -20,12 +19,7 @@ export function AddHotkeyButton({ onAdd, isDisabled }: AddHotkeyButtonProps) {
         aria-label={_(msg`hotkey-recorder.add-button.label`)}
         isDisabled={isDisabled}
       >
-        <HugeiconsIcon
-          className="size-4 min-w-4"
-          strokeWidth={3}
-          icon={AddIcon}
-          aria-hidden="true"
-        />
+        <AddIcon className="size-4 min-w-4" strokeWidth={3} aria-hidden="true" />
       </Button>
     </HotkeyRecorder>
   );

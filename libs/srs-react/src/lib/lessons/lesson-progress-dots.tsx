@@ -1,4 +1,3 @@
-import { HugeiconsIcon } from "@hugeicons/react";
 import { CircleIcon, ErrorIcon, PlayIcon, SuccessIcon, useMotionSetting } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
@@ -55,18 +54,10 @@ export function LessonProgressDots() {
 
           return (
             <div className={lessonProgressCardDot({ isCurrent, type })} key={i} aria-hidden="true">
-              {status === "success" && (
-                <HugeiconsIcon className="size-4 min-w-4" strokeWidth={2} icon={SuccessIcon} aria-hidden="true" />
-              )}
-              {status === "error" && (
-                <HugeiconsIcon className="size-4 min-w-4" strokeWidth={2} icon={ErrorIcon} aria-hidden="true" />
-              )}
-              {!status && !isCurrent && (
-                <HugeiconsIcon className="size-4 min-w-4" strokeWidth={2} icon={CircleIcon} aria-hidden="true" />
-              )}
-              {!status && isCurrent && (
-                <HugeiconsIcon className="size-4 min-w-4" strokeWidth={2} icon={PlayIcon} aria-hidden="true" />
-              )}
+              {status === "success" && <SuccessIcon className="size-4 min-w-4" strokeWidth={2} aria-hidden="true" />}
+              {status === "error" && <ErrorIcon className="size-4 min-w-4" strokeWidth={2} aria-hidden="true" />}
+              {!status && !isCurrent && <CircleIcon className="size-4 min-w-4" strokeWidth={2} aria-hidden="true" />}
+              {!status && isCurrent && <PlayIcon className="size-4 min-w-4" strokeWidth={2} aria-hidden="true" />}
             </div>
           );
         })}

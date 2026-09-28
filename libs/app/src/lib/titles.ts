@@ -18,11 +18,8 @@ export const requiredEntityTitleSchema = z
   .pipe(z.string().min(1, tooShort).max(ENTITY_TITLE_MAX_LENGTH, tooLong));
 
 /** Optional AI profile title — whitespace-only becomes absent; otherwise trim then max 128 UTF-16 units. */
-export const optionalProfileTitleSchema = z.preprocess(
-  (val: string | null | undefined) => {
-    if (val === undefined || val === null) return undefined;
-    const trimmed = trimTitleValue(val);
-    return trimmed.length === 0 ? undefined : trimmed;
-  },
-  z.string().max(PROFILE_TITLE_MAX_LENGTH, tooLong).optional(),
-) as z.ZodType<string | undefined, string | undefined>;
+export const optionalProfileTitleSchema = z.preprocess((val: string | null | undefined) => {
+  if (val === undefined || val === null) return undefined;
+  const trimmed = trimTitleValue(val);
+  return trimmed.length === 0 ? undefined : trimmed;
+}, z.string().max(PROFILE_TITLE_MAX_LENGTH, tooLong).optional()) as z.ZodType<string | undefined, string | undefined>;

@@ -1,4 +1,3 @@
-import { HugeiconsIcon } from "@hugeicons/react";
 import { ArrowUpIcon, Button, StopIcon, Tooltip } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
@@ -19,7 +18,7 @@ export function AIChatSubmit({ canSubmit, canCancel, onCancel }: AIChatSubmitPro
         aria-label={_(msg`ai.chat.cancel.label`)}
         onPress={() => onCancel?.()}
       >
-        <HugeiconsIcon className="size-5 min-w-5" strokeWidth={1.75} icon={StopIcon} aria-hidden="true" />
+        <StopIcon className="size-5 min-w-5" strokeWidth={1.75} aria-hidden="true" />
       </Button>
     </Tooltip>
   ) : (
@@ -30,7 +29,7 @@ export function AIChatSubmit({ canSubmit, canCancel, onCancel }: AIChatSubmitPro
         type="submit"
         isDisabled={!canSubmit}
       >
-        <HugeiconsIcon className="size-5 min-w-5" strokeWidth={1.75} icon={ArrowUpIcon} aria-hidden="true" />
+        <ArrowUpIcon className="size-5 min-w-5" strokeWidth={1.75} aria-hidden="true" />
       </Button>
     </Tooltip>
   );

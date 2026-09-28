@@ -1,4 +1,3 @@
-import { HugeiconsIcon } from "@hugeicons/react";
 import { Button, CloseIcon, EditIcon, HotKey, HotkeyRecorder } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
@@ -28,7 +27,7 @@ export function SettingsHotkeysHotkey({ value, onChange, hasError }: SettingsHot
       </div>
       <HotkeyRecorder onAccept={onChange}>
         <Button variants={{ size: "icon", style: "ghost" }} aria-label={_(msg`hotkey-recorder.edit-button.label`)}>
-          <HugeiconsIcon className="size-5 min-w-5" strokeWidth={1.75} icon={EditIcon} aria-hidden="true" />
+          <EditIcon className="size-5 min-w-5" strokeWidth={1.75} aria-hidden="true" />
         </Button>
       </HotkeyRecorder>
       <Button
@@ -36,7 +35,7 @@ export function SettingsHotkeysHotkey({ value, onChange, hasError }: SettingsHot
         aria-label={_(msg`hotkey-recorder.delete-button.label`)}
         onPress={handleDelete}
       >
-        <HugeiconsIcon className="size-5 min-w-5" strokeWidth={2} icon={CloseIcon} aria-hidden="true" />
+        <CloseIcon className="size-5 min-w-5" strokeWidth={2} aria-hidden="true" />
       </Button>
     </div>
   );

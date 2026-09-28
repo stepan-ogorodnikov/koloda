@@ -1,4 +1,3 @@
-import { HugeiconsIcon } from "@hugeicons/react";
 import { formatAppError, isAppError } from "@koloda/app";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
@@ -56,12 +55,7 @@ export function QueryError({ error, onRetry }: QueryErrorProps) {
   return (
     <div className="grow flex items-center justify-center my-12">
       <div className="flex flex-col items-center gap-4 fg-level-2">
-        <HugeiconsIcon
-          className="size-8 min-w-8"
-          strokeWidth={1.5}
-          icon={AlertIcon}
-          aria-hidden="true"
-        />
+        <AlertIcon className="size-8 min-w-8" strokeWidth={1.5} aria-hidden="true" />
         <ErrorMessage color="inherit" message={message} details={details} />
         {onRetry && (
           <Button
@@ -71,11 +65,7 @@ export function QueryError({ error, onRetry }: QueryErrorProps) {
             }}
             onClick={handleRetry}
           >
-            <HugeiconsIcon
-              className={queryErrorRetryIcon({ isPending })}
-              strokeWidth={1.75}
-              icon={RefreshIcon}
-            />
+            <RefreshIcon className={queryErrorRetryIcon({ isPending })} strokeWidth={1.75} />
             {_(msg`query-error.retry`)}
           </Button>
         )}

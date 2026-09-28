@@ -28,6 +28,7 @@ export { EditIcon } from "./lib/icons/edit-icon";
 export { ErrorIcon } from "./lib/icons/error-icon";
 export { FilterIcon } from "./lib/icons/filter-icon";
 export { HomeIcon } from "./lib/icons/home-icon";
+export type { IconComponent, IconProps } from "./lib/icons/icon";
 export { LanguageIcon } from "./lib/icons/language-icon";
 export { LockIcon } from "./lib/icons/lock-icon";
 export { LookupIcon } from "./lib/icons/lookup-icon";

@@ -1,4 +1,3 @@
-import { HugeiconsIcon } from "@hugeicons/react";
 import type { AIProfile } from "@koloda/ai";
 import { useAIProfilesModels } from "@koloda/ai-react";
 import { ERROR_MESSAGES, formatAppError } from "@koloda/app";
@@ -64,7 +63,7 @@ export function SettingsAIProfileModels({ profile }: SettingsAIProfileModelsProp
   return (
     <Dialog.Root isOpen={isOpen} onOpenChange={handleOpenChange}>
       <Button variants={{ style: "ghost", size: "icon" }} aria-label={_(msg`settings.ai.models.trigger`)}>
-        <HugeiconsIcon className="size-5 min-w-5" strokeWidth={1.75} icon={ModelsIcon} aria-hidden="true" />
+        <ModelsIcon className="size-5 min-w-5" strokeWidth={1.75} aria-hidden="true" />
       </Button>
       <Dialog.Overlay>
         <Dialog.Modal variants={{ class: "w-full max-w-2xl h-[min(40rem,100%)] overflow-hidden" }}>
@@ -114,12 +113,7 @@ export function SettingsAIProfileModels({ profile }: SettingsAIProfileModelsProp
                       aria-label={_(msg`settings.ai.models.retry`)}
                       onPress={() => modelsState?.refetch()}
                     >
-                      <HugeiconsIcon
-                        className="size-5 min-w-5"
-                        strokeWidth={1.75}
-                        icon={RefreshIcon}
-                        aria-hidden="true"
-                      />
+                      <RefreshIcon className="size-5 min-w-5" strokeWidth={1.75} aria-hidden="true" />
                       {_(msg`settings.ai.models.retry`)}
                     </Button>
                   </div>

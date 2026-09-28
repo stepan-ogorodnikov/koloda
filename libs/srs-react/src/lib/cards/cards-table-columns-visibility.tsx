@@ -3,7 +3,6 @@ import type { Modifiers } from "@dnd-kit/abstract";
 import { DragDropProvider, KeyboardSensor, PointerSensor } from "@dnd-kit/react";
 import type { DragDropEventHandlers } from "@dnd-kit/react";
 import { isSortable } from "@dnd-kit/react/sortable";
-import { HugeiconsIcon } from "@hugeicons/react";
 import { Button, Checkbox, ColumnsIcon, Dialog, Draggable } from "@koloda/ui";
 import type { CardsTableFeatures } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
@@ -57,7 +56,7 @@ export function CardsTableColumnsVisibility<TData extends RowData>({
   return (
     <Dialog.Root>
       <Button variants={{ style: "bordered", size: "default" }}>
-        <HugeiconsIcon className="size-5 min-w-5" strokeWidth={1.75} icon={ColumnsIcon} aria-hidden="true" />
+        <ColumnsIcon className="size-5 min-w-5" strokeWidth={1.75} aria-hidden="true" />
         <span>{_(msg`cards-table.columns-menu.trigger`)}</span>
       </Button>
       <Dialog.Popover>

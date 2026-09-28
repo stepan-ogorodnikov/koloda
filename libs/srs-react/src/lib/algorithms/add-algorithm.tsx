@@ -1,4 +1,3 @@
-import { HugeiconsIcon } from "@hugeicons/react";
 import { toFormErrors } from "@koloda/app";
 import { queriesAtom, queryKeys } from "@koloda/core-react";
 import { DEFAULT_FSRS_ALGORITHM, insertAlgorithmSchema as schema } from "@koloda/srs";
@@ -64,7 +63,7 @@ export function AddAlgorithm() {
     <Dialog.Root isOpen={isOpen} onOpenChange={setIsOpen}>
       <Tooltip content={_(msg`add-algorithm.trigger`)}>
         <Button variants={{ style: "dashed", size: "icon" }} aria-label={_(msg`add-algorithm.trigger`)}>
-          <HugeiconsIcon className="size-4 min-w-4" strokeWidth={3} icon={AddIcon} aria-hidden="true" />
+          <AddIcon className="size-4 min-w-4" strokeWidth={3} aria-hidden="true" />
         </Button>
       </Tooltip>
       <Dialog.Popover variants={{ class: "min-w-84" }}>

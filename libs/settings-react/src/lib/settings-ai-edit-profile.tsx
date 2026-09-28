@@ -1,4 +1,3 @@
-import { HugeiconsIcon } from "@hugeicons/react";
 import type { AIProfile, AISecrets } from "@koloda/ai";
 import { queriesAtom, queryKeys } from "@koloda/core-react";
 import { Button, Dialog, EditIcon } from "@koloda/ui";
@@ -46,7 +45,7 @@ export function SettingsAIEditProfile({ profile }: SettingsAIEditProfileProps) {
         aria-label={_(msg`settings.ai.edit.trigger`)}
         onClick={() => setIsOpen(true)}
       >
-        <HugeiconsIcon className="size-5 min-w-5" strokeWidth={1.75} icon={EditIcon} aria-hidden="true" />
+        <EditIcon className="size-5 min-w-5" strokeWidth={1.75} aria-hidden="true" />
       </Button>
       <Dialog.Overlay>
         <Dialog.Modal variants={{ class: "w-full max-w-96" }}>

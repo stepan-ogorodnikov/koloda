@@ -1,4 +1,3 @@
-import { HugeiconsIcon } from "@hugeicons/react";
 import { useAppHotkey, useHotkeysSettings } from "@koloda/core-react";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
@@ -49,12 +48,7 @@ export function TitlebarSidebarControls() {
         isDisabled={isDisabled}
         onPress={handleAction}
       >
-        <HugeiconsIcon
-          className="size-5 min-w-5"
-          strokeWidth={2}
-          icon={SidebarIcon}
-          aria-hidden="true"
-        />
+        <SidebarIcon className="size-5 min-w-5" strokeWidth={2} aria-hidden="true" />
       </Button>
     </div>
   );

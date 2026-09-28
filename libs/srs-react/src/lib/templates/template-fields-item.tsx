@@ -1,4 +1,3 @@
-import { HugeiconsIcon } from "@hugeicons/react";
 import type { TemplateFieldType } from "@koloda/srs";
 import type { UpdateTemplateValues } from "@koloda/srs";
 import { DEFAULT_TEMPLATE, TEMPLATE_FIELD_TYPES_MESSAGES } from "@koloda/srs";
@@ -72,7 +71,7 @@ export const TemplateFieldsItem = withForm({
             variants={{ style: "ghost", size: "icon" }}
             onClick={onDelete}
           >
-            <HugeiconsIcon className="size-5 min-w-5" strokeWidth={1.75} icon={DeleteIcon} aria-hidden="true" />
+            <DeleteIcon className="size-5 min-w-5" strokeWidth={1.75} aria-hidden="true" />
           </Button>
         )}
       </>

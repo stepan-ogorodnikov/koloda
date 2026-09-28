@@ -1,4 +1,3 @@
-import { HugeiconsIcon } from "@hugeicons/react";
 import { ERROR_MESSAGES, formatAppError } from "@koloda/app";
 import { queriesAtom, queryKeys } from "@koloda/core-react";
 import type { Card, Deck } from "@koloda/srs";
@@ -59,7 +58,7 @@ export function CardsTableSelectionControls({
         </div>
         <Dialog.Root isOpen={isOpen} onOpenChange={handleOpenChange}>
           <Button variants={{ style: "ghost" }} onClick={() => setIsOpen(true)}>
-            <HugeiconsIcon className="size-5 min-w-5" strokeWidth={1.75} icon={DeleteIcon} aria-hidden="true" />
+            <DeleteIcon className="size-5 min-w-5" strokeWidth={1.75} aria-hidden="true" />
             <span>{_(msg`cards-table.selection.delete.trigger`)}</span>
           </Button>
           <Dialog.Popover variants={{ class: "my-2" }} placement="top">
@@ -91,7 +90,7 @@ export function CardsTableSelectionControls({
           aria-label={_(msg`cards-table.selection.clear`)}
           onClick={onClearSelection}
         >
-          <HugeiconsIcon className="size-5 min-w-5" strokeWidth={1.75} icon={CloseIcon} aria-hidden="true" />
+          <CloseIcon className="size-5 min-w-5" strokeWidth={1.75} aria-hidden="true" />
         </Button>
       </div>
     </Fade>

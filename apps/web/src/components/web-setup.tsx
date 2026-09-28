@@ -1,4 +1,3 @@
-import { HugeiconsIcon } from "@hugeicons/react";
 import { ERROR_MESSAGES, formatAppError } from "@koloda/app";
 import { ColorSchemePicker, LanguagePicker } from "@koloda/settings-react";
 import { langAtom, schemeAtom } from "@koloda/core-react";
@@ -77,14 +76,7 @@ export function WebSetup() {
         </OverlayFrameContent>
         <OverlayFrameFooter variants={{ class: "justify-center" }}>
           <Button variants={{ style: "primary" }} onClick={handleClick} isDisabled={!canSubmit}>
-            {isPending && (
-              <HugeiconsIcon
-                className="size-5 min-w-5 animate-spin"
-                strokeWidth={1.75}
-                icon={RefreshIcon}
-                aria-hidden="true"
-              />
-            )}
+            {isPending && <RefreshIcon className="size-5 min-w-5 animate-spin" strokeWidth={1.75} aria-hidden="true" />}
             {_(msg`web.setup.submit`)}
           </Button>
         </OverlayFrameFooter>
@@ -110,10 +102,9 @@ export function WebSetup() {
 function SetupAlertIcon() {
   return (
     <span className="relative inline-block h-lh w-5 mr-1.5 align-bottom">
-      <HugeiconsIcon
+      <AlertIcon
         className="absolute top-1/2 left-0 size-5 -translate-y-1/2 pointer-events-none"
         strokeWidth={1.75}
-        icon={AlertIcon}
         aria-hidden="true"
       />
     </span>

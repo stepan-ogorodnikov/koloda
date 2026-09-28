@@ -80,11 +80,7 @@ function setHandlesOptions(
   handles.forEach((handle) => handle.setOptions(value));
 }
 
-function getOptions(
-  options: HotkeyOptions | undefined,
-  scope: AppHotkeyScope,
-  scopes: Record<RuntimeScope, boolean>,
-) {
+function getOptions(options: HotkeyOptions | undefined, scope: AppHotkeyScope, scopes: Record<RuntimeScope, boolean>) {
   const { enabled = true } = options || {};
   if (!scope) return { ...options, enabled };
   return { ...options, enabled: enabled && !!scopes[scope] };

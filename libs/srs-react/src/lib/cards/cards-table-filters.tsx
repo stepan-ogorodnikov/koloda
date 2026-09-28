@@ -1,4 +1,3 @@
-import { HugeiconsIcon } from "@hugeicons/react";
 import type { Template } from "@koloda/srs";
 import { Button, Checkbox, Dialog, FilterIcon } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
@@ -30,7 +29,7 @@ export function CardsTableFilters({ filters, setFilters, templates }: CardsTable
   return (
     <Dialog.Root>
       <Button variants={{ style: "bordered", size: "default" }}>
-        <HugeiconsIcon className="size-5 min-w-5" strokeWidth={1.75} icon={FilterIcon} aria-hidden="true" />
+        <FilterIcon className="size-5 min-w-5" strokeWidth={1.75} aria-hidden="true" />
         <span>{_(msg`cards-table.filters.trigger`)}</span>
       </Button>
       <Dialog.Popover>

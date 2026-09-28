@@ -1,4 +1,3 @@
-import { HugeiconsIcon } from "@hugeicons/react";
 import { conversationHasTurns } from "@koloda/app";
 import { Button, DeleteIcon } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
@@ -37,7 +36,7 @@ export function DeleteConversationMenuAction({
         else onDraftDelete();
       }}
     >
-      <HugeiconsIcon className="size-5 min-w-5" strokeWidth={1.75} icon={DeleteIcon} aria-hidden="true" />
+      <DeleteIcon className="size-5 min-w-5" strokeWidth={1.75} aria-hidden="true" />
       {_(msg`ai.conversation.delete.action`)}
     </Button>
   );

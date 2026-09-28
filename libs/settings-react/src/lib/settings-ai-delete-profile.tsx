@@ -1,4 +1,3 @@
-import { HugeiconsIcon } from "@hugeicons/react";
 import type { AIProfile } from "@koloda/ai";
 import { queriesAtom, queryKeys } from "@koloda/core-react";
 import { Button, DeleteIcon, Dialog } from "@koloda/ui";
@@ -36,7 +35,7 @@ export function SettingsAIDeleteProfile({ profile }: SettingsAIDeleteProfileProp
     <Dialog.Root isOpen={isOpen} onOpenChange={setIsOpen}>
       <Button variants={{ style: "ghost", size: "icon" }} aria-label={_(msg`settings.ai.profiles.delete.trigger`)}>
         <div className="p-1 rounded-md group-focus-ring">
-          <HugeiconsIcon className="size-5 min-w-5" strokeWidth={1.75} icon={DeleteIcon} aria-hidden="true" />
+          <DeleteIcon className="size-5 min-w-5" strokeWidth={1.75} aria-hidden="true" />
         </div>
       </Button>
       <Dialog.Popover placement="left">

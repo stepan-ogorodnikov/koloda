@@ -1,4 +1,3 @@
-import { HugeiconsIcon } from "@hugeicons/react";
 import { StackIcon, TableIcon, ToggleGroup, Tooltip } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
@@ -20,12 +19,12 @@ export function CardsViewToggle() {
     >
       <Tooltip content={_(msg`cards.views.table`)}>
         <ToggleGroup.Item variants={{ size: "icon" }} aria-label={_(msg`cards.views.table`)} id="table">
-          <HugeiconsIcon className="size-5 min-w-5" strokeWidth={1.75} icon={TableIcon} aria-hidden="true" />
+          <TableIcon className="size-5 min-w-5" strokeWidth={1.75} aria-hidden="true" />
         </ToggleGroup.Item>
       </Tooltip>
       <Tooltip content={_(msg`cards.views.stack`)}>
         <ToggleGroup.Item variants={{ size: "icon" }} aria-label={_(msg`cards.views.stack`)} id="stack">
-          <HugeiconsIcon className="size-5 min-w-5" strokeWidth={1.75} icon={StackIcon} aria-hidden="true" />
+          <StackIcon className="size-5 min-w-5" strokeWidth={1.75} aria-hidden="true" />
         </ToggleGroup.Item>
       </Tooltip>
     </ToggleGroup>

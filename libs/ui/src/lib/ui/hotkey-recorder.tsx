@@ -1,4 +1,3 @@
-import { HugeiconsIcon } from "@hugeicons/react";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useHotkeyRecorder } from "@tanstack/react-hotkeys";
@@ -45,9 +44,7 @@ export function HotkeyRecorder({ onAccept, children }: HotkeyRecorderProps) {
               {value ? (
                 <HotKey value={value} />
               ) : (
-                <span className="fg-disabled animate-pulse">
-                  {_(msg`hotkey-recorder.input.placeholder`)}
-                </span>
+                <span className="fg-disabled animate-pulse">{_(msg`hotkey-recorder.input.placeholder`)}</span>
               )}
             </div>
             <Button
@@ -56,24 +53,14 @@ export function HotkeyRecorder({ onAccept, children }: HotkeyRecorderProps) {
               onPress={handleAccept}
               isDisabled={!value}
             >
-              <HugeiconsIcon
-                className="size-4 min-w-4"
-                strokeWidth={1.75}
-                icon={CheckIcon}
-                aria-hidden="true"
-              />
+              <CheckIcon className="size-4 min-w-4" strokeWidth={1.75} aria-hidden="true" />
             </Button>
             <Button
               variants={{ size: "icon", style: "ghost" }}
               aria-label={_(msg`hotkey-recorder.cancel`)}
               onPress={() => setIsOpen(false)}
             >
-              <HugeiconsIcon
-                className="size-4 min-w-4"
-                strokeWidth={1.75}
-                icon={CloseIcon}
-                aria-hidden="true"
-              />
+              <CloseIcon className="size-4 min-w-4" strokeWidth={1.75} aria-hidden="true" />
             </Button>
           </div>
         </Dialog.Body>

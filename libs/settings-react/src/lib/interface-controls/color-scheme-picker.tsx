@@ -1,4 +1,3 @@
-import { HugeiconsIcon } from "@hugeicons/react";
 import { SCHEMES } from "@koloda/app";
 import { queriesAtom, schemeAtom } from "@koloda/core-react";
 import { MoonIcon, Select, SunIcon, SystemThemeIcon } from "@koloda/ui";
@@ -41,7 +40,7 @@ export function ColorSchemePicker({ isPersisted = true, ...props }: ColorSchemeP
       {({ id, Icon }) => (
         <Select.ListBoxItem id={id} textValue={_(SCHEMES[id])} key={id}>
           <span className="flex flex-row items-center gap-2">
-            <HugeiconsIcon className="size-5" strokeWidth={1.75} icon={Icon} aria-hidden="true" />
+            <Icon className="size-5" strokeWidth={1.75} aria-hidden="true" />
             <Trans id={SCHEMES[id].id} />
           </span>
         </Select.ListBoxItem>

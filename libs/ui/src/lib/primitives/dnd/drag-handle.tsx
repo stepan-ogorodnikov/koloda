@@ -1,4 +1,3 @@
-import { HugeiconsIcon } from "@hugeicons/react";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import type { ComponentProps } from "react";
@@ -21,12 +20,7 @@ export function DragHandle(props: DragHandleProps) {
       aria-roledescription={_(msg`drag-handle.description`)}
       {...props}
     >
-      <HugeiconsIcon
-        className="size-5 min-w-5 fg-level-3 rotate-90"
-        strokeWidth={1.75}
-        icon={DragIcon}
-        aria-hidden="true"
-      />
+      <DragIcon className="size-5 min-w-5 fg-level-3 rotate-90" strokeWidth={1.75} aria-hidden="true" />
     </Button>
   );
 }

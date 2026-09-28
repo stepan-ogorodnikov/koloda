@@ -1,4 +1,3 @@
-import { HugeiconsIcon } from "@hugeicons/react";
 import { Button, CloneIcon } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
@@ -28,7 +27,7 @@ export function CloneConversationButton({ id, onClone, onClose }: CloneConversat
 
   return (
     <Button variants={{ style: "ghost", class: "justify-start px-2" }} onPress={handlePress} isDisabled={!hasContext}>
-      <HugeiconsIcon className="size-5 min-w-5" strokeWidth={1.75} icon={CloneIcon} aria-hidden="true" />
+      <CloneIcon className="size-5 min-w-5" strokeWidth={1.75} aria-hidden="true" />
       {_(msg`ai.conversation.clone.action`)}
     </Button>
   );

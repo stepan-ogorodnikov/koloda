@@ -1,4 +1,3 @@
-import { HugeiconsIcon } from "@hugeicons/react";
 import type { ComponentProps, ReactNode } from "react";
 import { tv } from "tailwind-variants";
 import { ChevronIcon } from "../../icons/chevron-icon";
@@ -26,14 +25,7 @@ export type SelectButtonProps = TWVProps<typeof selectButton> &
     children?: ReactNode;
   };
 
-export function SelectButton({
-  variants,
-  showChevron = true,
-  icon,
-  children,
-  ref,
-  ...props
-}: SelectButtonProps) {
+export function SelectButton({ variants, showChevron = true, icon, children, ref, ...props }: SelectButtonProps) {
   return (
     <Button ref={ref} className={selectButton(variants)} {...props}>
       {children || (
@@ -46,14 +38,7 @@ export function SelectButton({
           )}
         </SelectValue>
       )}
-      {showChevron && (
-        <HugeiconsIcon
-          className="size-4 min-w-4 rotate-90"
-          strokeWidth={2}
-          icon={ChevronIcon}
-          aria-hidden="true"
-        />
-      )}
+      {showChevron && <ChevronIcon className="size-4 min-w-4 rotate-90" strokeWidth={2} aria-hidden="true" />}
     </Button>
   );
 }
