@@ -15,8 +15,9 @@
     "lint": "oxlint --max-warnings=0",
     "typecheck": "tsc -b --pretty false",
     "check:commit": "bun run lint && nx run koloda:lint",
-    "check:push": "bun run check:commit && bun run typecheck && nx run koloda:test && bun run check:workspace-deps",
+    "check:push": "bun run tools/check-push.ts",
     "check:rust": "nx run koloda:lint",
+    "check:rust-push": "nx run koloda:lint && nx run koloda:test",
     "check:web-deploy": "bun run lint && bun run typecheck && bun run test:libs && bun run check:workspace-deps",
     "check:web-all": "bun run check:web-deploy && nx run web-e2e:e2e",
     "prepare": "git config core.hooksPath tools/hooks"

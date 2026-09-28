@@ -20,9 +20,6 @@ if [ "$pushing_main" -eq 0 ]; then
   exit 0
 fi
 
-# TypeScript lint, one `tsc -b`, cached Rust clippy, and `koloda` tests.
+# Web track (check:web-deploy) and Rust track (clippy, then koloda tests)
+# run together. Lib tests are on the web track. Playwright e2e is check:web-all.
 bun run check:push || exit 1
-
-# TS libs via vitest (PGlite/in-memory SQLite, self-contained; the
-# Playwright e2e suites are a separate, manual/web-deploy boundary).
-bun run test:libs || exit 1

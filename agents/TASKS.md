@@ -109,8 +109,8 @@ When the human asks to implement.
    - Then re-request review.
 5. Do not create the archive commit until review passes.
 6. Before that commit, required checks on the current tip are green.
-   - On a pull request, that is the PR Checks workflow job `checks` (`bun run check:push`, then `bun run test:libs`).
-   - On a `main` push without a PR, the local stand-in is those same scripts (pre-push).
+   - On a pull request, that is the PR Checks workflow job `checks` (`bun run check:push`).
+   - On a `main` push without a PR, the local stand-in is that same script (pre-push).
    - Do not archive on a red tip.
    - On a flake, re-run the checks.
    - Do not archive to get past red.
@@ -238,8 +238,8 @@ The checkbox is ticked when that commit exists.
 3. Before ending a session, update Open questions and Plan on the task branch.
    - The next session starts from the file.
 4. After review passes and the tip is green, archive as the last commit.
-   - On a pull request, that is the PR Checks workflow job `checks` (`bun run check:push`, then `bun run test:libs`).
-   - On a `main` push without a PR, the local stand-in is those same scripts (pre-push).
+   - On a pull request, that is the PR Checks workflow job `checks` (`bun run check:push`).
+   - On a `main` push without a PR, the local stand-in is that same script (pre-push).
    - Do not archive on a red tip.
    - On a flake, re-run the checks.
    - Do not archive to get past red.

@@ -56,6 +56,3 @@ jobs:
 
       - name: Check push
         run: bun run check:push
-
-      - name: Test libs
-        run: bun run test:libs
