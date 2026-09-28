@@ -58,7 +58,8 @@
       "options": {
         "command": "bunx vitest run --config apps/electron-react/vitest.config.mjs --configLoader runner"
       },
-      "configurations": {}
+      "configurations": {},
+      "cache": true
     }
   }
 }

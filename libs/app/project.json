@@ -1,7 +1,9 @@
 {
   "name": "@koloda/app",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "tags": ["type:lib"],
+  "tags": [
+    "type:lib"
+  ],
   "sourceRoot": "libs/app/src",
   "projectType": "library",
   "targets": {
@@ -10,7 +12,11 @@
       "options": {
         "command": "bunx vitest run --config libs/app/vitest.config.mjs --configLoader runner"
       },
-      "inputs": ["default", "^default"]
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "cache": true
     }
   }
 }
