@@ -213,3 +213,60 @@ test("creates a deck through add_deck and shows it on the cached decks list", as
     await mock.dispose();
   }
 });
+
+test("assistant reads deck notes as user-written context through tool output", async ({ page }) => {
+  const deckTitle = "E2E Noted Deck";
+  // WHY: past the 150-char preview budget — list_decks must cut the note and say
+  // so with notesTruncated, while get_deck returns it whole; the end marker proves
+  // the cut is real rather than a rendering artifact.
+  const note = `Use this deck for vocabulary, not cramming. ${"x".repeat(140)}END-OF-NOTE-MARKER`;
+
+  const mock = await mockOpenAICompatibleProvider({
+    completionFromBody: () => ({ text: "Noted.", chunkBy: "all" }),
+  });
+
+  try {
+    await setupApp(page);
+    await addLmStudioProfile(page, { baseUrl: mock.baseUrl });
+    const deckId = await createDeckAndOpenAssistant(page, deckTitle);
+    await waitForAssistantReady(page);
+
+    // The user writes the note in the deck edit form (Details tab).
+    await openSection(page, "Decks");
+    await page.getByRole("link", { name: deckTitle, exact: true }).click();
+    await page.getByRole("tab", { name: "Details", exact: true }).click();
+    const detailsPanel = page.getByRole("tabpanel", { name: "Details", exact: true });
+    const notesField = detailsPanel.getByRole("textbox", { name: "Notes", exact: true });
+    await notesField.fill(note);
+    const saveButton = page.locator("form").getByRole("button", { name: "Save", exact: true });
+    await saveButton.click();
+    await expect(saveButton).not.toBeVisible();
+    await expect(notesField).toHaveValue(note);
+
+    await openAssistantWithDeck(page);
+    await waitForAssistantReady(page);
+
+    const log = conversationLog(page);
+    mock.enqueueCompletion({ toolCall: { name: "list_decks", arguments: {} } });
+    mock.enqueueCompletion({ toolCall: { name: "get_deck", arguments: { deckId } } });
+
+    await sendAssistantMessage(page, "What is this deck for?");
+
+    const listDecksRow = log.getByRole("button", { name: /^List decks \d+ decks?$/ });
+    await expect(listDecksRow).toBeVisible({ timeout: 20_000 });
+    await listDecksRow.click();
+    const listDecksOutput = log.locator("pre").filter({ hasText: `"${deckTitle}"` });
+    await expect(listDecksOutput).toContainText("notesTruncated");
+    await expect(listDecksOutput).not.toContainText("END-OF-NOTE-MARKER");
+    await listDecksRow.click();
+    await expect(log.getByText("Output", { exact: true })).toHaveCount(0);
+
+    const getDeckRow = log.getByRole("button", { name: /^Get deck/ });
+    await expect(getDeckRow).toBeVisible({ timeout: 20_000 });
+    await getDeckRow.click();
+    const getDeckOutput = log.locator("pre").filter({ hasText: `"${deckTitle}"` });
+    await expect(getDeckOutput).toContainText("END-OF-NOTE-MARKER");
+  } finally {
+    await mock.dispose();
+  }
+});

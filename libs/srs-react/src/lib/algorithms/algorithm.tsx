@@ -72,6 +72,14 @@ export function Algorithm({ id }: AlgorithmProps) {
           </TextField>
         )}
       </form.Field>
+      <form.Field name="notes">
+        {(field) => (
+          <TextField variants={{ layout: "form" }} value={field.state.value ?? ""} onChange={field.handleChange}>
+            <Label variants={{ layout: "form" }}>{_(msg`algorithm.inputs.notes.label`)}</Label>
+            <TextField.TextArea variants={{ layout: "form" }} canAutoResize rows={2} />
+          </TextField>
+        )}
+      </form.Field>
       <form.Field name="content.retention">
         {(field) => (
           <Slider
