@@ -1,6 +1,6 @@
 # Entity notes
 
-Status: ready
+Status: done
 
 ## Intent
 
@@ -39,7 +39,7 @@ Out: assistant drafting notes; notes on cards; showing notes outside edit forms;
   Commit: Add notes to shared entity schemas and the web SQLite layer
   Depends on: 1
 
-- [ ] 3. Mirror notes in the Rust domain, repo, and electron DB surface
+- [x] 3. Mirror notes in the Rust domain, repo, and electron DB surface
   Progress (session 2): domain structs (Deck/Template/Algorithm + Update*Values), common.rs (`normalize_optional_notes`, `validate_notes`, NOTES_MAX_LENGTH), error code, repo mappers/SELECTs/UPDATEs, serde + integration test literals, `tests/domain/entity_notes_tests.rs` all edited; electron mirror needs NO edits (types flow from @koloda/srs). Remaining: (a) algorithm fixture needs 21 comma-separated weights (FSRS6_WEIGHT_COUNT=21) and integer retention 70–99; (b) drop unused `normalize_optional_notes` from domain/{decks,templates,algorithms}.rs imports; (c) fixture helpers return Result — unwrap only inside #[test] fns (clippy allow-unwrap-in-tests does not cover helpers); (d) cargo test -p koloda + clippy green, then commit.
   Goal: desktop parity.
   Domain structs Deck/Template/Algorithm gain `notes: Option<String>`; Update*Values gain Option<String>; normalization next to `normalize_required_title` in crates/koloda/src/domain/common.rs; repo decks.rs/templates.rs/algorithms.rs extend SELECTs, row mappers, and UPDATE SET; inserts and clones untouched; apps/electron/src/koloda-db.ts (hand-written NAPI mirror) gains notes in rows and update payloads.
@@ -49,7 +49,7 @@ Out: assistant drafting notes; notes on cards; showing notes outside edit forms;
   Commit: Mirror notes in the Rust domain, repo, and electron DB layer
   Depends on: 1
 
-- [ ] 4. Expose notes to the assistant read-only, truncated in list_decks
+- [x] 4. Expose notes to the assistant read-only, truncated in list_decks
   Goal: tool layer.
   libs/ai assistant-tools.ts: source types gain nullable notes; list_algorithms, list_templates, get_template, get_deck return the full note; list_decks returns a note truncated at a named ~150-char constant with an explicit truncation flag present only when actually truncated; notes omitted when absent; the five tool descriptions say the note is user-written context about the entity, not instructions; add_deck unchanged; get_deck_cards and propose_cards outputs never include notes; prompts.ts untouched (notes never in the system prompt).
   Constraints: no new AssistantToolDataSource methods; both host binders updated in the same change: apps/web/src/app/ai-runtime.ts, apps/electron/src/ai-ipc.ts; spec bullets in docs/specs/ASSISTANT-DATA-ACCESS.md (§Resources, §Tools).
@@ -58,7 +58,7 @@ Out: assistant drafting notes; notes on cards; showing notes outside edit forms;
   Commit: Expose entity notes in assistant tool output, truncated in list_decks
   Depends on: 2, 3
 
-- [ ] 5. Add the notes field to the three edit forms
+- [x] 5. Add the notes field to the three edit forms
   Goal: libs/srs-react deck-details.tsx, template.tsx, algorithm.tsx gain an optional plain-text notes textarea bound to the shared update schema (maxlength 1024, trims on save, whitespace-only saves as cleared); create and clone dialogs unchanged; label i18n keys in both hosts' locales per I18N.md.
   Constraints: no notes field in create/clone dialogs; no note display outside edit forms; forms keep the shared useAppForm pattern.
   Done when: each edit form shows, saves, and clears notes; >1024 blocked by the shared schema; form tests where the existing pattern has them pass.
@@ -68,4 +68,4 @@ Out: assistant drafting notes; notes on cards; showing notes outside edit forms;
 
 ## Outcome
 
-(filled at done)
+Shipped as five commits on `task/entity-notes` (eb145da, 54df8a0, 764b68d, 7d48002, 0c78460). Both hosts store nullable `notes` on decks, templates, and algorithms (V2, one shared SQL series); the shared TS boundary trims, normalizes whitespace-only to absent, and caps at 1024 UTF-16 units, mirrored in Rust (`validate_notes` counts UTF-16 like the TS limit; parity test back on the Rust list). The assistant reads notes through list_algorithms, list_templates, get_template, and get_deck (whole), and list_decks (150-char preview with explicit `notesTruncated`) — read-only, omitted when absent, never in get_deck_cards/propose_cards output or the system prompt. All three edit forms gained a Notes textarea (create and clone dialogs untouched). The e2e assertion for notes-through-tools landed with item 5 (the form is the only way to write a note); it runs on both hosts. The electron mirror needed no edits — its types flow from @koloda/srs. `bun run check:push` green at the tip.
