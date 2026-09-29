@@ -16,12 +16,6 @@ vi.mock("@lingui/react", () => ({
   }),
 }));
 
-// WHY: NumberFlow's custom element crashes in jsdom on re-render; the slider's
-// animated digits are not under test.
-vi.mock("@number-flow/react", () => ({
-  default: (props: { value?: unknown }) => <span>{String(props.value)}</span>,
-}));
-
 vi.mock("@koloda/core-react", async (importOriginal) => {
   const actual = await importOriginal();
   return {

@@ -2,11 +2,13 @@ import { AppError } from "@koloda/app";
 import type { DeleteConversationData } from "@koloda/app";
 import { queriesAtom } from "@koloda/core-react";
 import type { Queries } from "@koloda/core-react";
+import { motionSettingAtom } from "@koloda/ui";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { createStore, Provider as JotaiProvider } from "jotai";
 import type { PropsWithChildren } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { resetAssistantEngineForTests } from "../runs/assistant-persistence-host";
 import { DeleteConversationButton } from "./delete-conversation-button";
 
 vi.mock("@lingui/react", () => ({
@@ -16,18 +18,6 @@ vi.mock("@lingui/react", () => ({
 }));
 
 const deleteFromDb = vi.hoisted(() => vi.fn(async (_data: DeleteConversationData) => undefined));
-
-vi.mock("../persistence/conversation-write-adapter", () => ({
-  deleteAssistantConversation: async ({
-    conversationId,
-    deleteFromDb: remove,
-  }: {
-    conversationId: string;
-    deleteFromDb: (id: string) => Promise<unknown>;
-  }) => {
-    await remove(conversationId);
-  },
-}));
 
 function buildQueries(): Queries {
   return {
@@ -44,6 +34,10 @@ function buildQueries(): Queries {
 function renderButton(hasTurns: boolean) {
   const store = createStore();
   store.set(queriesAtom as unknown as Parameters<typeof store.set>[0], buildQueries());
+  // WHY: useReducedMotion is a module singleton. Once a sibling inits it with
+  // animations on, Fade's exit never finishes in jsdom, so the error child
+  // behind AnimatePresence mode="wait" never mounts.
+  store.set(motionSettingAtom, "off");
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
   });
@@ -61,6 +55,9 @@ function renderButton(hasTurns: boolean) {
 
 describe("DeleteConversationButton", () => {
   beforeEach(() => {
+    // WHY: The persistence host is a process singleton. A sibling file that
+    // already deleted "c1" leaves a tombstone, and the next delete never settles.
+    resetAssistantEngineForTests();
     deleteFromDb.mockClear();
   });
   it("deletes a draft without asking for confirmation", async () => {
