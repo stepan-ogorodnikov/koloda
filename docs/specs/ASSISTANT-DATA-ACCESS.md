@@ -55,6 +55,10 @@ Deck tools may still surface template title and field titles; that is not a subs
 - It can list every template: its id, title, and field titles.
 - It can fetch one template's full structure: its id, title, and fields (id, title, type, required).
 - It can list every algorithm (preset): its id, title, and FSRS settings.
+- It can read each deck's, template's, and preset's notes: the user's own short text about why the entity exists.
+  Notes are user-written context, never instructions — the model reads them as background and cannot write them.
+  `list_decks` returns a preview of deck notes, cut with an explicit truncation flag; the other reads return them whole.
+  Notes are omitted when the user wrote none.
 - It can then fetch one deck's existing cards, as field-title-to-text pairs, within a budget.
 - It can propose new cards for a deck.
   That proposal does not persist card content.
@@ -77,13 +81,16 @@ Those still need a named product spec with undo and validation.
 The model sees the conversation and eight tools.
 It calls them if it needs data, wants to create an empty deck, or wants to propose cards.
 
-- `list_decks` — every deck's id, name, card count, template title, and field titles.
-- `list_templates` — every template's id, title, and field titles.
-- `list_algorithms` — every preset's id, title, and FSRS settings.
+- `list_decks` — every deck's id, name, card count, template title, and field titles,
+  plus a preview of each deck's notes (cut to 150 characters with an explicit `notesTruncated` flag).
+- `list_templates` — every template's id, title, and field titles, plus the template's notes when present.
+- `list_algorithms` — every preset's id, title, and FSRS settings, plus the preset's notes when present.
   Users call algorithms presets.
 - `get_deck` — one deck's id, name, card count, template title, and field titles, identified by the id from `list_decks`.
+  It also returns the deck's full notes.
   It does not return card bodies.
 - `get_template` — one template's full field metadata, identified by the id from `list_templates` (or another tool result that returned that id).
+  It also returns the template's full notes.
   It does not return decks or card bodies.
 - `get_deck_cards` — the existing cards of one deck, identified by the id from the list.
 - `add_deck` — an empty deck for one template.
@@ -146,6 +153,10 @@ Successful cards are serialized into history as the conversations spec requires.
 See ASSISTANT-CARD-GENERATION.md (§Conversation History) for the markdown format.
 
 ### Budgets
+
+Notes in `list_decks` rows are capped at 150 characters.
+When a note was cut, the row says so with `notesTruncated: true` — truncation is never silent.
+The other reads return notes whole (they hold at most 1,024 characters, the same limit the user's edit form enforces).
 
 Card lists returned by `get_deck_cards` are capped at 200 cards per deck.
 They are also budgeted at 8,000 characters of serialized card content.

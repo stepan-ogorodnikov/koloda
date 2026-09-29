@@ -23,8 +23,8 @@ import type {
  */
 export type AssistantToolDataSource = {
   getDecks: () =>
-    | Promise<Array<{ id: string; title: string; templateId: string }>>
-    | Array<{ id: string; title: string; templateId: string }>;
+    | Promise<Array<{ id: string; title: string; templateId: string; notes?: string | null }>>
+    | Array<{ id: string; title: string; templateId: string; notes?: string | null }>;
   getTemplates: () => Promise<AssistantToolTemplate[]> | AssistantToolTemplate[];
   getAlgorithms: () => Promise<AssistantToolAlgorithm[]> | AssistantToolAlgorithm[];
   getCards: (params: { deckId: string }) => Promise<AssistantToolCard[]> | AssistantToolCard[];
@@ -72,6 +72,7 @@ export function createAssistantToolExecutor(data: AssistantToolDataSource): Assi
           title: deck.title,
           templateId: deck.templateId,
           cardCount: counts[deck.id] ?? 0,
+          notes: deck.notes,
         })),
         templates,
       );
@@ -99,6 +100,7 @@ export function createAssistantToolExecutor(data: AssistantToolDataSource): Assi
           title: deck.title,
           templateId: deck.templateId,
           cardCount: counts[deck.id] ?? 0,
+          notes: deck.notes,
         },
         templates,
       );
