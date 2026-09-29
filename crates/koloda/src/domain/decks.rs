@@ -3,7 +3,7 @@
 use serde::{Deserialize, Serialize};
 
 use crate::app::error::{error_codes, AppError};
-use crate::domain::common::{validate_title, validate_uuid};
+use crate::domain::common::{validate_notes, validate_title, validate_uuid};
 use crate::domain::time::{
     deserialize_optional_timestamp, deserialize_timestamp, serialize_optional_timestamp, serialize_timestamp,
 };
@@ -15,6 +15,9 @@ pub struct Deck {
     pub title: String,
     pub algorithm_id: String,
     pub template_id: String,
+    // WHY: absent notes round-trip as NULL — `default` accepts a missing key on the wire.
+    #[serde(default)]
+    pub notes: Option<String>,
     // WHY: accepts the RFC 3339 string `serialize_timestamp` emits, so the wire shape round-trips.
     #[serde(deserialize_with = "deserialize_timestamp", serialize_with = "serialize_timestamp")]
     pub created_at: i64,
@@ -40,6 +43,9 @@ pub struct UpdateDeckValues {
     pub title: String,
     pub algorithm_id: String,
     pub template_id: String,
+    // WHY: full-update semantics like the TS layer — None clears the note (stores NULL).
+    #[serde(default)]
+    pub notes: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -69,6 +75,7 @@ impl UpdateDeckValues {
         validate_title(&self.title)?;
         validate_uuid(&self.algorithm_id, error_codes::VALIDATION_DECKS_ALGORITHM)?;
         validate_uuid(&self.template_id, error_codes::VALIDATION_DECKS_TEMPLATE)?;
+        validate_notes(self.notes.as_deref())?;
         Ok(())
     }
 }

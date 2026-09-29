@@ -15,6 +15,7 @@ fn algorithm_fixture() -> Algorithm {
             relearning_steps: vec![(10, "m".to_string())],
             maximum_interval: 3650,
         },
+        notes: None,
         created_at: 1_699_999_000_000,
         updated_at: None,
     }
@@ -41,6 +42,7 @@ fn test_algorithm_serializes_wire_shape() {
                 "relearningSteps": [[10, "m"]],
                 "maximumInterval": 3650,
             },
+            "notes": null,
             "createdAt": "2023-11-14T21:56:40+00:00",
             "updatedAt": null,
         })

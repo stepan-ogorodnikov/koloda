@@ -11,7 +11,7 @@ use crate::domain::algorithms::{
     Algorithm, AlgorithmDeck, CloneAlgorithmData, DeleteAlgorithmData, InsertAlgorithmData, UpdateAlgorithmData,
 };
 use crate::domain::algorithms_fsrs::AlgorithmFSRS;
-use crate::domain::common::normalize_required_title;
+use crate::domain::common::{normalize_optional_notes, normalize_required_title};
 use crate::repo::settings;
 
 fn get_algorithm_row(row: &rusqlite::Row<'_>) -> Result<Algorithm, rusqlite::Error> {
@@ -24,6 +24,7 @@ fn get_algorithm_row(row: &rusqlite::Row<'_>) -> Result<Algorithm, rusqlite::Err
         content,
         created_at: row.get(3)?,
         updated_at: row.get(4)?,
+        notes: row.get(5)?,
     })
 }
 
@@ -39,7 +40,7 @@ pub fn get_algorithms(db: &Database) -> Result<Vec<Algorithm>, AppError> {
         db.with_conn(|conn| {
             let mut stmt = conn.prepare(
                 r#"
-                SELECT id, title, content, created_at, updated_at
+                SELECT id, title, content, created_at, updated_at, notes
                 FROM algorithms
                 ORDER BY created_at
                 "#,
@@ -57,7 +58,7 @@ pub fn get_algorithm(db: &Database, id: &str) -> Result<Option<Algorithm>, AppEr
         db.with_conn(|conn| {
             conn.query_row(
                 r#"
-                SELECT id, title, content, created_at, updated_at
+                SELECT id, title, content, created_at, updated_at, notes
                 FROM algorithms
                 WHERE id = ?1
                 LIMIT 1
@@ -123,6 +124,7 @@ pub fn update_algorithm(db: &Database, data: UpdateAlgorithmData) -> Result<Algo
 
         let now = get_current_timestamp()?;
         let title = normalize_required_title(&data.values.title);
+        let notes = normalize_optional_notes(data.values.notes.clone());
 
         db.with_conn(|conn| {
             let content = serde_json::to_string(&data.values.content)?;
@@ -132,10 +134,11 @@ pub fn update_algorithm(db: &Database, data: UpdateAlgorithmData) -> Result<Algo
                 SET
                     title = ?1,
                     content = ?2,
-                    updated_at = ?3
-                WHERE id = ?4
+                    notes = ?3,
+                    updated_at = ?4
+                WHERE id = ?5
                 "#,
-                params![title, content, now, data.id],
+                params![title, content, notes, now, data.id],
             )?;
 
             Ok(())

@@ -18,6 +18,7 @@ fn update_template_fails_with_not_found_when_template_is_missing() {
             id: "01900000-0000-7000-8000-0000000f423f".to_string(),
             values: UpdateTemplateValues {
                 title: "Renamed".to_string(),
+                notes: None,
                 content: TemplateContent {
                     fields: Vec::new(),
                     layout: Vec::new(),
@@ -153,6 +154,7 @@ fn update_template_locked_rejects_field_type_and_required_changes() {
             id: template_id.clone(),
             values: UpdateTemplateValues {
                 title: "Basic renamed".to_string(),
+                notes: None,
                 content: TemplateContent {
                     fields: changed_type_fields,
                     layout: original.content.layout.clone(),
@@ -178,6 +180,7 @@ fn update_template_locked_rejects_field_type_and_required_changes() {
             id: template_id.clone(),
             values: UpdateTemplateValues {
                 title: "Basic renamed".to_string(),
+                notes: None,
                 content: TemplateContent {
                     fields: changed_required_fields,
                     layout: original.content.layout.clone(),
@@ -226,6 +229,7 @@ fn update_template_locked_allows_title_change_and_adding_new_field() {
             id: template_id.clone(),
             values: UpdateTemplateValues {
                 title: "Basic v2".to_string(),
+                notes: None,
                 content: TemplateContent { fields, layout },
             },
         },
@@ -274,6 +278,7 @@ fn update_template_locked_rejects_removing_existing_field() {
             id: template_id.clone(),
             values: UpdateTemplateValues {
                 title: "Basic renamed".to_string(),
+                notes: None,
                 content: TemplateContent {
                     fields: filtered_fields,
                     layout: filtered_layout,

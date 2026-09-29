@@ -17,6 +17,7 @@ fn update_algorithm_fails_with_not_found_when_algorithm_is_missing() {
             values: UpdateAlgorithmValues {
                 title: "Renamed FSRS".to_string(),
                 content: fsrs_algorithm_content(),
+                notes: None,
             },
         },
     )

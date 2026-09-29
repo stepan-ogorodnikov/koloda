@@ -32,6 +32,7 @@ fn template_fixture() -> Template {
             ],
         },
         is_locked: true,
+        notes: None,
         created_at: 1_699_999_000_000,
         updated_at: None,
     }
@@ -60,6 +61,7 @@ fn test_template_serializes_wire_shape() {
                 ],
             },
             "isLocked": true,
+            "notes": null,
             "createdAt": "2023-11-14T21:56:40+00:00",
             "updatedAt": null,
         })
