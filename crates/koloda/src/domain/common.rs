@@ -3,6 +3,7 @@ use crate::app::error::{error_codes, AppError};
 pub const TITLE_MIN_LENGTH: usize = 1;
 pub const TITLE_MAX_LENGTH: usize = 255;
 pub const PROFILE_TITLE_MAX_LENGTH: usize = 128;
+pub const NOTES_MAX_LENGTH: usize = 1024;
 
 pub fn trim_title_value(title: &str) -> &str {
     title.trim()
@@ -10,6 +11,37 @@ pub fn trim_title_value(title: &str) -> &str {
 
 pub fn normalize_required_title(title: &str) -> String {
     title.trim().to_string()
+}
+
+/// Twin of the TS `optionalEntityNotesSchema` — trim, whitespace-only becomes
+/// absent (None) so the column stores NULL; DB null round-trips as None.
+pub fn normalize_optional_notes(notes: Option<String>) -> Option<String> {
+    notes.and_then(|value| {
+        let trimmed = value.trim();
+        if trimmed.is_empty() {
+            None
+        } else {
+            Some(trimmed.to_string())
+        }
+    })
+}
+
+pub fn validate_notes(notes: Option<&str>) -> Result<(), AppError> {
+    let Some(notes) = notes else {
+        return Ok(());
+    };
+
+    // WHY: count UTF-16 units like validate_title — the TS zod limit mirrors JS
+    // `.length`, so astral chars count 2 here, same as on web.
+    let length = trim_title_value(notes).encode_utf16().count();
+    if length > NOTES_MAX_LENGTH {
+        return Err(AppError::new(
+            error_codes::VALIDATION_COMMON_NOTES_TOO_LONG,
+            Some(format!("Max length: {NOTES_MAX_LENGTH}")),
+        ));
+    }
+
+    Ok(())
 }
 
 pub fn normalize_optional_title(title: Option<String>) -> Option<String> {

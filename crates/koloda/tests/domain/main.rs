@@ -16,6 +16,7 @@ mod conversations_tests;
 mod decks_serde_tests;
 mod decks_title_tests;
 mod decks_validation_tests;
+mod entity_notes_tests;
 mod learning_day_tests;
 mod lessons_amounts_tests;
 mod lessons_result_tests;

@@ -7,6 +7,7 @@ fn deck_fixture() -> Deck {
         title: "German".to_string(),
         algorithm_id: "01900000-0000-7000-8000-000000000001".to_string(),
         template_id: "01900000-0000-7000-8000-000000000002".to_string(),
+        notes: None,
         created_at: 1_699_999_000_000,
         updated_at: Some(1_700_000_400_000),
     }
@@ -25,6 +26,7 @@ fn test_deck_serializes_wire_shape() {
             "title": "German",
             "algorithmId": "01900000-0000-7000-8000-000000000001",
             "templateId": "01900000-0000-7000-8000-000000000002",
+            "notes": null,
             "createdAt": "2023-11-14T21:56:40+00:00",
             "updatedAt": "2023-11-14T22:20:00+00:00",
         })
@@ -40,7 +42,7 @@ fn test_deck_serializes_null_updated_at() {
     let value = serde_json::to_value(&deck).unwrap();
 
     assert_eq!(value["updatedAt"], serde_json::Value::Null);
-    assert_eq!(value.as_object().unwrap().len(), 6, "key set must not change");
+    assert_eq!(value.as_object().unwrap().len(), 7, "key set must not change");
 }
 
 #[test]

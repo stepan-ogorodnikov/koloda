@@ -56,6 +56,7 @@ fn update_deck_rejects_missing_deck() {
                 title: "Renamed".to_string(),
                 algorithm_id: algorithm_id.clone(),
                 template_id: template_id.clone(),
+                notes: None,
             },
         },
     )
@@ -79,6 +80,7 @@ fn update_deck_rejects_missing_algorithm_and_template() {
                 title: "Renamed".to_string(),
                 algorithm_id: "01900000-0000-7000-8000-0000000f423f".to_string(),
                 template_id: template_id.clone(),
+                notes: None,
             },
         },
     )
@@ -93,6 +95,7 @@ fn update_deck_rejects_missing_algorithm_and_template() {
                 title: "Renamed".to_string(),
                 algorithm_id: algorithm_id.clone(),
                 template_id: "01900000-0000-7000-8000-0000000f423f".to_string(),
+                notes: None,
             },
         },
     )

@@ -32,9 +32,6 @@ const TS_ONLY_ERROR_CODES = [
   "ai.http.502",
   "ai.http.503",
   "ai.http.504",
-  // TS-only until item 3 lands the Rust twin (validation.common.notes.too-long
-  // is enforced client-side first; crates/koloda catches up in the same task).
-  "validation.common.notes.too-long",
 ] as const;
 
 const RUST_ERROR_RS = resolve(dirname(fileURLToPath(import.meta.url)), "../../../../crates/koloda/src/app/error.rs");

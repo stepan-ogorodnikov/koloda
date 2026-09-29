@@ -22,7 +22,7 @@ Out: assistant drafting notes; notes on cards; showing notes outside edit forms;
 
 ## Plan
 
-- [ ] 1. Add the notes column on both hosts (migration parity)
+- [x] 1. Add the notes column on both hosts (migration parity)
   Goal: one new hand-written migration `crates/koloda/src/migrations/V2__entity_notes.sql` adding a nullable `notes text` column to decks, templates, and algorithms; refresh the embedded listings on both hosts; regenerate the schema inventory.
   Constraints: next V after V1; never edit applied files; no backticks; nullable, no NOT NULL, no default; one shared SQL series for both hosts (DB.md §Schema Change Workflow).
   Done when: `cargo test -p koloda` green after touching `crates/koloda/src/migrations/mod.rs` (or `cargo clean -p koloda`); inventory regenerated with `cargo test -p koloda --test integration write_schema_inventory_snapshot -- --ignored`; `bunx nx test @koloda/db-sqlite` green after rebuilding `@koloda/db-sqlite` (or `nx reset`) so the Vite glob embeds V2.
@@ -30,7 +30,7 @@ Out: assistant drafting notes; notes on cards; showing notes outside edit forms;
   Commit: Add nullable notes column to decks, templates, and algorithms
   Depends on: none
 
-- [ ] 2. Carry notes through the shared TS boundary and the web store
+- [x] 2. Carry notes through the shared TS boundary and the web store
   Goal: shared validation and web SQLite read/write support.
   Notes rule: plain text, trim, whitespace-only → absent (null), max 1024 after trim; constant next to `requiredEntityTitleSchema` (its module in libs/app); Zod schemas in libs/srs (deck/template/algorithm validation + row + update schemas) gain optional notes; libs/db-sqlite decks.ts/templates.ts/algorithms.ts SELECT, map, and update notes (null clears); inserts untouched (notes absent on create).
   Constraints: validation at the shared boundary both hosts call (libs/srs schemas; Rust mirrors in item 3); update path writes null as cleared; create paths leave notes NULL; i18n validation key for too-long in both hosts' locales (I18N.md).
@@ -40,6 +40,7 @@ Out: assistant drafting notes; notes on cards; showing notes outside edit forms;
   Depends on: 1
 
 - [ ] 3. Mirror notes in the Rust domain, repo, and electron DB surface
+  Progress (session 2): domain structs (Deck/Template/Algorithm + Update*Values), common.rs (`normalize_optional_notes`, `validate_notes`, NOTES_MAX_LENGTH), error code, repo mappers/SELECTs/UPDATEs, serde + integration test literals, `tests/domain/entity_notes_tests.rs` all edited; electron mirror needs NO edits (types flow from @koloda/srs). Remaining: (a) algorithm fixture needs 21 comma-separated weights (FSRS6_WEIGHT_COUNT=21) and integer retention 70–99; (b) drop unused `normalize_optional_notes` from domain/{decks,templates,algorithms}.rs imports; (c) fixture helpers return Result — unwrap only inside #[test] fns (clippy allow-unwrap-in-tests does not cover helpers); (d) cargo test -p koloda + clippy green, then commit.
   Goal: desktop parity.
   Domain structs Deck/Template/Algorithm gain `notes: Option<String>`; Update*Values gain Option<String>; normalization next to `normalize_required_title` in crates/koloda/src/domain/common.rs; repo decks.rs/templates.rs/algorithms.rs extend SELECTs, row mappers, and UPDATE SET; inserts and clones untouched; apps/electron/src/koloda-db.ts (hand-written NAPI mirror) gains notes in rows and update payloads.
   Constraints: inserts and clone paths untouched (new and cloned entities have no note); no adapter layers (BACKWARDS-COMPATIBILITY.md).

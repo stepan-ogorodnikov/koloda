@@ -7,7 +7,7 @@ use rusqlite::{params, Connection, OptionalExtension};
 use crate::app::db::{parse_json_column, Database};
 use crate::app::error::{error_codes, throw_known_error, AppError};
 use crate::app::utility::{get_current_timestamp, minted_uuidv7};
-use crate::domain::common::normalize_required_title;
+use crate::domain::common::{normalize_optional_notes, normalize_required_title};
 use crate::domain::templates::{
     CloneTemplateData, DeleteTemplateData, InsertTemplateData, Template, TemplateContent, TemplateDeck,
     UpdateTemplateData,
@@ -25,6 +25,7 @@ fn get_template_row(row: &rusqlite::Row<'_>) -> Result<Template, rusqlite::Error
         created_at: row.get(3)?,
         updated_at: row.get(4)?,
         is_locked: row.get(5)?,
+        notes: row.get(6)?,
     })
 }
 
@@ -50,7 +51,8 @@ pub fn get_templates(db: &Database) -> Result<Vec<Template>, AppError> {
                         SELECT 1 FROM cards c
                         WHERE c.template_id = t.id
                         LIMIT 1
-                    ) as is_locked
+                    ) as is_locked,
+                    t.notes
                 FROM templates t
                 ORDER BY t.created_at
                 "#,
@@ -78,7 +80,8 @@ pub fn get_template(db: &Database, id: &str) -> Result<Option<Template>, AppErro
                         SELECT 1 FROM cards c
                         WHERE c.template_id = ?1
                         LIMIT 1
-                    ) as is_locked
+                    ) as is_locked,
+                    t.notes
                 FROM templates t
                 WHERE t.id = ?1
                 LIMIT 1
@@ -114,7 +117,8 @@ pub fn get_templates_by_ids(
                     SELECT 1 FROM cards c
                     WHERE c.template_id = t.id
                     LIMIT 1
-                ) as is_locked
+                ) as is_locked,
+                t.notes
             FROM templates t
             WHERE t.id IN ({})
             "#,
@@ -201,6 +205,7 @@ pub fn update_template(db: &Database, data: UpdateTemplateData) -> Result<Templa
         }
         let now = get_current_timestamp()?;
         let title = normalize_required_title(&data.values.title);
+        let notes = normalize_optional_notes(data.values.notes.clone());
 
         db.with_conn(|conn| {
             conn.execute(
@@ -209,10 +214,11 @@ pub fn update_template(db: &Database, data: UpdateTemplateData) -> Result<Templa
                 SET
                     title = ?1,
                     content = ?2,
-                    updated_at = ?3
-                WHERE id = ?4
+                    notes = ?3,
+                    updated_at = ?4
+                WHERE id = ?5
                 "#,
-                params![title, serde_json::to_string(&data.values.content)?, now, data.id],
+                params![title, serde_json::to_string(&data.values.content)?, notes, now, data.id],
             )?;
 
             Ok(())

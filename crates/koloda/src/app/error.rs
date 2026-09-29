@@ -28,6 +28,7 @@ pub mod error_codes {
 
     pub const VALIDATION_COMMON_TITLE_TOO_SHORT: &str = "validation.common.title.too-short";
     pub const VALIDATION_COMMON_TITLE_TOO_LONG: &str = "validation.common.title.too-long";
+    pub const VALIDATION_COMMON_NOTES_TOO_LONG: &str = "validation.common.notes.too-long";
 
     pub const VALIDATION_DECKS_ALGORITHM: &str = "validation.decks.algorithm";
     pub const VALIDATION_DECKS_TEMPLATE: &str = "validation.decks.template";
