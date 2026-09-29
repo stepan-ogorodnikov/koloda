@@ -35,7 +35,7 @@ where
     D: Deserializer<'de>,
 {
     let value = Option::<String>::deserialize(deserializer)?;
-    Ok(value.and_then(|key| if key.trim().is_empty() { None } else { Some(key) }))
+    Ok(value.filter(|key| !key.trim().is_empty()))
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
