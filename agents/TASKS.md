@@ -3,16 +3,15 @@
 This guide defines how an agent creates and maintains a task file.
 A task file is one unit of work: intent, status, open questions, and the plan.
 
-A task that needs a file lives on its own branch and pull request.
+A task that needs a file lives on its own branch.
 Branch name: `task/<slug>`.
 The live file on that branch is `tasks/live/<slug>.md`.
 On `done`, move it to `tasks/archive/<slug>.md` on the same branch.
 Do that only when the tip is green.
-Then merge.
+The pull request opens after review passes, at Done, and exists to merge.
 Never commit on top of Archive.
 Do not rename the slug.
-To abandon the work, close the PR without merging and delete the branch.
-The branch deletion (or an abandon commit on the branch) records why.
+To abandon the work, delete the branch.
 
 The plan lives in the task file's Plan section.
 Do not write a separate plan file.
@@ -40,7 +39,8 @@ The status lives on one fixed line, exactly `Status: <draft|ready|done>`.
 One task = one branch = one PR.
 Parallel tasks are parallel branches and PRs.
 Do not serialize work on `main` to keep commits contiguous.
-The PR holds the commit train.
+The branch holds the commit train.
+The PR opens at Done and carries it to merge.
 
 ### Schedule (create)
 
@@ -53,10 +53,12 @@ The PR holds the commit train.
    - If `git log origin/main..HEAD` shows commits without `Task: <slug>`, stop.
    - A hit means the branch is contaminated.
 2. Add `tasks/live/<slug>.md` with `Status: draft`.
-3. Push and open a **draft** PR titled after the task.
-   - PR body includes one line: `Task: <slug>`.
-4. That draft PR is the scheduled unit of work.
-   - Finding scheduled and in-flight work means listing open PRs for `task/*` branches.
+3. Push the branch.
+   - Do not open a PR.
+   - The PR opens at Done, after review passes.
+4. The branch and its task file are the scheduled unit of work.
+   - Finding scheduled and in-flight work means listing `task/*` branches.
+   - Run `git ls-remote --heads origin 'task/*'`; also check local `git branch --list 'task/*'`.
    - Do not grep `main`.
 
 A `draft` file exists while intent and the plan are being shaped on the branch.
@@ -65,7 +67,7 @@ A `draft` file exists while intent and the plan are being shaped on the branch.
 
 Plan approval flips the file to `Status: ready`.
 Approval is not an instruction to implement.
-Keep the PR draft until the human explicitly asks to implement.
+Wait for the human to explicitly ask to implement.
 Do not change status for that ask.
 `ready` stays `ready` until `done`.
 
@@ -81,12 +83,13 @@ Do not assume merge order from PR numbers alone.
 
 When the human asks to implement.
 
-1. Keep the PR draft while implementing.
-2. Implement one Plan item per commit on `task/<slug>`.
-3. Every commit that belongs to the task carries one body line: `Task: <slug>`.
+1. Implement one Plan item per commit on `task/<slug>`.
+2. Every commit that belongs to the task carries one body line: `Task: <slug>`.
    - The slug is the identity.
    - The folder is not the identity.
-4. Tick each Plan checkbox when that commit exists.
+3. Tick each Plan checkbox when that commit exists.
+4. Push the branch as commits land.
+   - There is no PR yet.
 5. Keep history linear.
    - Never create a merge commit.
    - Never run `git merge`.
@@ -100,21 +103,22 @@ When the human asks to implement.
 
 ### Review (gate before archive)
 
-1. After the last Plan item, mark the PR ready for review.
-2. Do not archive yet.
-3. Review per `agents/REVIEW.md` plus the task's area guides.
-4. If changes are needed, add them as new commits on `task/<slug>`.
+1. Review after the last Plan item.
+   - Do not archive yet.
+   - The diff under review is `origin/main..HEAD`.
+   - Review per `agents/REVIEW.md` plus the task's area guides.
+2. If changes are needed, add them as new commits on `task/<slug>`.
    - Each commit carries a `Task: <slug>` trailer.
    - Update Plan checkboxes if scope changed.
-   - Then re-request review.
-5. Do not create the archive commit until review passes.
-6. Before that commit, required checks on the current tip are green.
-   - On a pull request, that is the PR Checks workflow job `checks` (`bun run check:push`).
-   - On a `main` push without a PR, the local stand-in is that same script (pre-push).
+   - Then re-run review.
+3. Do not create the archive commit until review passes.
+4. Before that commit, required checks on the current tip are green.
+   - No PR exists yet.
+   - Run `bun run check:push` locally.
    - Do not archive on a red tip.
    - On a flake, re-run the checks.
    - Do not archive to get past red.
-7. Nothing commits after archive except merge.
+5. Nothing commits after archive except merge.
    - Never commit on top of Archive.
    - If Archive is already the tip, recovery is reset, then re-archive (Done).
 
@@ -127,7 +131,7 @@ Gate: the branch merges only if all three hold.
 - Every commit carries `Task: <slug>`.
 
 The tip must be green at merge time.
-Same checks as before Archive: PR Checks job `checks`, or the local scripts on a `main` push without a PR.
+With the PR open, that is the PR Checks workflow job `checks` (`bun run check:push`).
 
 The Add commit adds `tasks/live/<slug>.md`.
 The Archive commit moves `tasks/live/<slug>.md` to `tasks/archive/<slug>.md`.
@@ -159,7 +163,11 @@ Required checks on the tip are green.
 1. Fill Outcome.
 2. Flip Status to `done`.
 3. Move `tasks/live/<slug>.md` to `tasks/archive/<slug>.md`.
-4. Merge the PR with rebase merge or fast-forward only.
+4. Push the branch, then open the PR.
+   - Title it after the task.
+   - PR body includes one line: `Task: <slug>`.
+5. Wait for the PR Checks workflow job `checks` to go green.
+6. Merge the PR with rebase merge or fast-forward only.
    - Do not create merge commits.
    - The tip is green.
    - After merge, the archive file is on the integration branch.
@@ -225,8 +233,8 @@ The checkbox is ticked when that commit exists.
 
 ## Session protocol
 
-1. Before starting work, list open `task/*` PRs.
-   - Include draft and ready for review.
+1. Before starting work, list `task/*` branches.
+   - Run `git ls-remote --heads origin 'task/*'`; also check local `git branch --list 'task/*'`.
    - For each overlapping candidate, read `tasks/live/<slug>.md` on that branch.
    - Check Intent and Scope.
    - If any overlap, surface it to the human.
@@ -238,21 +246,22 @@ The checkbox is ticked when that commit exists.
 3. Before ending a session, update Open questions and Plan on the task branch.
    - The next session starts from the file.
 4. After review passes and the tip is green, archive as the last commit.
-   - On a pull request, that is the PR Checks workflow job `checks` (`bun run check:push`).
-   - On a `main` push without a PR, the local stand-in is that same script (pre-push).
+   - No PR exists yet; run `bun run check:push` locally.
    - Do not archive on a red tip.
    - On a flake, re-run the checks.
    - Do not archive to get past red.
    - Fill Outcome.
    - Flip Status to `done`.
    - Move `tasks/live/<slug>.md` to `tasks/archive/<slug>.md`.
+   - Push, open the PR titled after the task, body line `Task: <slug>`.
+   - Wait for the PR Checks workflow job `checks` to go green.
    - Merge with rebase merge or fast-forward only.
    - Do not create merge commits.
    - Merge only when Add is oldest, Archive is newest, every commit has `Task: <slug>`, and the tip is green.
    - Never commit on top of Archive.
    - If Archive is already the tip and review or checks fail, reset it, fix, then re-archive.
-5. To abandon, close the PR without merging and delete the branch.
+5. To abandon, delete the branch locally and on `origin`.
+   - There is no PR to close.
 
 A new session starts from the task file on its branch.
-It also starts from the PR.
 It does not start from memory or chat history.
