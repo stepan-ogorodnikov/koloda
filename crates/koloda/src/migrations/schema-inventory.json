@@ -25,6 +25,13 @@
           "dflt_value": null
         },
         {
+          "name": "notes",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0,
+          "dflt_value": null
+        },
+        {
           "name": "title",
           "type": "TEXT",
           "notnull": 1,
@@ -296,6 +303,13 @@
           "dflt_value": null
         },
         {
+          "name": "notes",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0,
+          "dflt_value": null
+        },
+        {
           "name": "template_id",
           "type": "TEXT",
           "notnull": 1,
@@ -557,6 +571,13 @@
           "type": "TEXT",
           "notnull": 1,
           "pk": 1,
+          "dflt_value": null
+        },
+        {
+          "name": "notes",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0,
           "dflt_value": null
         },
         {
