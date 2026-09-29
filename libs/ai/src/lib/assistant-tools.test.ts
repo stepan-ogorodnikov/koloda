@@ -2,7 +2,12 @@ import { simulateReadableStream } from "ai";
 import { MockLanguageModelV3 } from "ai/test";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type * as AiSdkOllama from "ai-sdk-ollama";
-import { ASSISTANT_TOOL_MAX_CARDS_PER_DECK, ASSISTANT_TOOL_SPECS, bindAssistantTools } from "./assistant-tools";
+import {
+  ASSISTANT_TOOL_MAX_CARDS_PER_DECK,
+  ASSISTANT_TOOL_NOTE_PREVIEW_CHAR_BUDGET,
+  ASSISTANT_TOOL_SPECS,
+  bindAssistantTools,
+} from "./assistant-tools";
 import type {
   AssistantToolCard,
   AssistantToolEvent,
@@ -1011,5 +1016,106 @@ describe("chat tool streaming", () => {
     expect((error as DOMException).name).toBe("AbortError");
     expect(model.doStreamCalls).toHaveLength(2);
     expect(onChunk).toHaveBeenCalledWith({ kind: "text", text: "Partial " });
+  });
+});
+
+// Notes are user-written context about an entity, never instructions. They ride
+// the list/get read tools, stay omitted when the user wrote none, and list_decks
+// truncates them with an explicit flag — never a silent cut. get_deck_cards and
+// propose_cards never carry notes.
+describe("entity notes in tool output", () => {
+  const template: AssistantToolTemplate = {
+    id: "01900000-0000-7000-8000-000000000001",
+    title: "Basic",
+    content: {
+      fields: [{ id: "01900000-0000-7000-8000-00000000000a", title: "Front", type: "text", isRequired: true }],
+    },
+    notes: "Source: chapter 3 exercises",
+  };
+
+  it("list_templates carries the template note", () => {
+    expect(shapeListTemplatesOutput([template]).templates[0]?.notes).toBe("Source: chapter 3 exercises");
+  });
+
+  it("get_template carries the full template note", () => {
+    expect(shapeGetTemplateOutput(template).notes).toBe("Source: chapter 3 exercises");
+  });
+
+  it("omits notes when the user wrote none", () => {
+    const output = shapeListTemplatesOutput([{ ...template, notes: undefined }]);
+    expect(output.templates[0]).not.toHaveProperty("notes");
+    expect(shapeGetTemplateOutput({ ...template, notes: null })).not.toHaveProperty("notes");
+  });
+
+  it("list_algorithms carries the algorithm note", () => {
+    const content = {
+      type: "fsrs" as const,
+      retention: 90,
+      weights: "0.5",
+      isFuzzEnabled: true,
+      learningSteps: [] as Array<[number, string]>,
+      relearningSteps: [] as Array<[number, string]>,
+      maximumInterval: 3650,
+    };
+    const output = shapeListAlgorithmsOutput([
+      { id: "01900000-0000-7000-8000-000000000021", title: "Default", content, notes: "Vocabulary preset" },
+    ]);
+    expect(output.algorithms[0]?.notes).toBe("Vocabulary preset");
+  });
+
+  it("get_deck returns the note whole", () => {
+    const output = shapeGetDeckOutput(
+      {
+        id: "01900000-0000-7000-8000-000000000005",
+        title: "Spanish verbs",
+        templateId: template.id,
+        cardCount: 12,
+        notes: "a".repeat(400),
+      },
+      [template],
+    );
+    expect(output.notes).toHaveLength(400);
+    expect(output).not.toHaveProperty("notesTruncated");
+  });
+
+  it("list_decks truncates long notes and marks the truncation explicitly", () => {
+    const output = shapeListDecksOutput(
+      [
+        {
+          id: "01900000-0000-7000-8000-000000000005",
+          title: "Spanish verbs",
+          templateId: template.id,
+          cardCount: 12,
+          notes: "a".repeat(400),
+        },
+        {
+          id: "01900000-0000-7000-8000-000000000006",
+          title: "Short note",
+          templateId: template.id,
+          cardCount: 1,
+          notes: "For vocabulary, not cramming",
+        },
+        {
+          id: "01900000-0000-7000-8000-000000000007",
+          title: "No note",
+          templateId: template.id,
+          cardCount: 0,
+        },
+      ],
+      [template],
+    );
+    expect(output.decks[0]?.notes).toHaveLength(ASSISTANT_TOOL_NOTE_PREVIEW_CHAR_BUDGET);
+    expect(output.decks[0]?.notesTruncated).toBe(true);
+    expect(output.decks[1]?.notes).toBe("For vocabulary, not cramming");
+    expect(output.decks[1]).not.toHaveProperty("notesTruncated");
+    expect(output.decks[2]).not.toHaveProperty("notes");
+  });
+
+  it("describes notes as user-written context, not instructions", () => {
+    for (const name of ["list_decks", "list_templates", "list_algorithms", "get_deck", "get_template"] as const) {
+      const description = ASSISTANT_TOOL_SPECS[name].description;
+      expect(description).toMatch(/user-written context/);
+      expect(description).toMatch(/never instructions|rather than instructions|background/);
+    }
   });
 });

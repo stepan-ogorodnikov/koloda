@@ -24,7 +24,7 @@ import { ipcMain } from "electron";
 
 type KolodaDb = {
   getAiProfileSecrets: (profileId: string) => unknown;
-  getDecks: () => Array<{ id: string; title: string; templateId: string }>;
+  getDecks: () => Array<{ id: string; title: string; templateId: string; notes?: string | null }>;
   getTemplates: () => AssistantToolTemplate[];
   getAlgorithms: () => AssistantToolAlgorithm[];
   getCards: (params: { deckId: string }) => AssistantToolCard[];
