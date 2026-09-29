@@ -56,13 +56,10 @@ export async function updateDeck(db: DB, { id, values }: UpdateDeckData) {
     const template = await getTemplate(db, payload.templateId);
     if (!template) throw new AppError("not-found.decks.update.template", `Template id: ${payload.templateId}`);
 
-    await db.run(`UPDATE decks SET title = ?, algorithm_id = ?, template_id = ?, updated_at = ? WHERE id = ?`, [
-      payload.title,
-      payload.algorithmId,
-      payload.templateId,
-      nowMs(),
-      id,
-    ]);
+    await db.run(
+      `UPDATE decks SET title = ?, algorithm_id = ?, template_id = ?, notes = ?, updated_at = ? WHERE id = ?`,
+      [payload.title, payload.algorithmId, payload.templateId, payload.notes ?? null, nowMs(), id],
+    );
 
     const result = await getDeck(db, id);
     if (!result) throw new Error("no row returned");

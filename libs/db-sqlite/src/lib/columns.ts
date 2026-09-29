@@ -1,9 +1,10 @@
-export const ALGORITHM_SELECT = "id, title, content, created_at AS createdAt, updated_at AS updatedAt";
+export const ALGORITHM_SELECT = "id, title, content, notes, created_at AS createdAt, updated_at AS updatedAt";
 
-export const TEMPLATE_SELECT = "t.id, t.title, t.content, t.created_at AS createdAt, t.updated_at AS updatedAt";
+export const TEMPLATE_SELECT =
+  "t.id, t.title, t.content, t.notes, t.created_at AS createdAt, t.updated_at AS updatedAt";
 
 export const DECK_SELECT =
-  "id, title, algorithm_id AS algorithmId, template_id AS templateId, created_at AS createdAt, updated_at AS updatedAt";
+  "id, title, algorithm_id AS algorithmId, template_id AS templateId, notes, created_at AS createdAt, updated_at AS updatedAt";
 
 export const CARD_SELECT = `id, deck_id AS deckId, template_id AS templateId, content, state, due_at AS dueAt,
   stability, difficulty, scheduled_days AS scheduledDays, learning_steps AS learningSteps, reps, lapses,

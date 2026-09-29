@@ -72,3 +72,65 @@ describe.each(TITLE_SCHEMAS)("$name title bounds", ({ parse }) => {
     expect(result.data!.title).toBe("Deck name");
   });
 });
+
+// WHY: notes are optional plain text at the boundary both hosts call — trim,
+// whitespace-only becomes absent, max 1024 UTF-16 units. Undefined input stays
+// undefined so insert paths that omit the field keep the column NULL. Twin of
+// `crates/koloda/tests/domain/entity_notes_tests.rs`.
+const NOTES_SCHEMAS = [
+  {
+    name: "deckValidation",
+    parse: (notes: unknown) =>
+      deckValidation.safeParse({ id: ID, title: "German", algorithmId: ID, templateId: ID, notes }),
+  },
+  {
+    name: "algorithmValidation",
+    parse: (notes: unknown) =>
+      algorithmValidation.safeParse({ id: ID, title: "FSRS", content: DEFAULT_FSRS_ALGORITHM, notes }),
+  },
+  {
+    name: "templateValidation",
+    parse: (notes: unknown) =>
+      templateValidation.safeParse({ id: ID, title: "Basic", content: TEMPLATE_CONTENT, notes }),
+  },
+] as const;
+
+describe.each(NOTES_SCHEMAS)("$name notes", ({ parse }) => {
+  it("keeps notes undefined when the field is omitted", () => {
+    const result = parse(undefined);
+    expect(result.success).toBe(true);
+    expect(result.data!.notes).toBeUndefined();
+  });
+
+  it("trims surrounding whitespace", () => {
+    const result = parse("  Use this preset for vocabulary, not cramming  ");
+    expect(result.success).toBe(true);
+    expect(result.data!.notes).toBe("Use this preset for vocabulary, not cramming");
+  });
+
+  it("normalizes whitespace-only notes to undefined", () => {
+    const result = parse("   ");
+    expect(result.success).toBe(true);
+    expect(result.data!.notes).toBeUndefined();
+  });
+
+  it("treats null notes as absent on the DB round-trip", () => {
+    const result = parse(undefined);
+    expect(result.success).toBe(true);
+    expect(result.data!.notes).toBeUndefined();
+  });
+
+  it("accepts notes of exactly 1024 characters", () => {
+    const result = parse("a".repeat(1024));
+    expect(result.success).toBe(true);
+    expect(result.data!.notes).toHaveLength(1024);
+  });
+
+  it("rejects notes over 1024 characters with the shared message", () => {
+    const result = parse("a".repeat(1025));
+    expect(result.success).toBe(false);
+    const issue = result.error!.issues[0];
+    expect(issue?.path).toEqual(["notes"]);
+    expect(issue?.message).toBe("validation.common.notes.too-long");
+  });
+});

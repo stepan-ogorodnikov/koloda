@@ -50,9 +50,10 @@ export async function updateAlgorithm(db: DB, { id, values }: UpdateAlgorithmDat
     const existing = await getAlgorithm(db, id);
     if (!existing) throw new AppError("not-found.algorithms.update.algorithm", `Algorithm id: ${id}`);
 
-    await db.run(`UPDATE algorithms SET title = ?, content = ?, updated_at = ? WHERE id = ?`, [
+    await db.run(`UPDATE algorithms SET title = ?, content = ?, notes = ?, updated_at = ? WHERE id = ?`, [
       payload.title,
       JSON.stringify(payload.content),
+      payload.notes ?? null,
       nowMs(),
       id,
     ]);
