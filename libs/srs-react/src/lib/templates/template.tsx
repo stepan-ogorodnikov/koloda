@@ -72,6 +72,14 @@ export function Template({ id }: TemplateProps) {
           </TextField>
         )}
       </form.Field>
+      <form.Field name="notes">
+        {(field) => (
+          <TextField variants={{ layout: "form" }} value={field.state.value ?? ""} onChange={field.handleChange}>
+            <Label variants={{ layout: "form" }}>{_(msg`template.inputs.notes.label`)}</Label>
+            <TextField.TextArea variants={{ layout: "form" }} canAutoResize rows={2} />
+          </TextField>
+        )}
+      </form.Field>
       <FormLayout.Section>
         <FormLayout.Section.Term>{_(msg`template.status.title`)}</FormLayout.Section.Term>
         <FormLayout.Section.Content>

@@ -75,6 +75,14 @@ export function DeckDetails({ id }: DeckDetailsProps) {
           </field.TextField>
         )}
       </form.AppField>
+      <form.Field name="notes">
+        {(field) => (
+          <TextField variants={{ layout: "form" }} value={field.state.value ?? ""} onChange={field.handleChange}>
+            <Label variants={{ layout: "form" }}>{_(msg`deck.inputs.notes.label`)}</Label>
+            <TextField.TextArea variants={{ layout: "form" }} canAutoResize rows={2} />
+          </TextField>
+        )}
+      </form.Field>
       <form.Field name="algorithmId">
         {(field) => (
           <AlgorithmPicker variants={{ layout: "form" }} value={field.state.value} onChange={field.handleChange} />
