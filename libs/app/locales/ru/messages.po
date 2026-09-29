@@ -13,6 +13,10 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
+#: ../../libs/app/src/lib/error.ts:53
+msgid "{maximum, plural, other {validation.common.notes.too-long}}"
+msgstr "Заметка не может быть длиннее {maximum, plural, one {# символа} few {# символов} many {# символов} other {# символов}}"
+
 #: ../../libs/app/src/lib/error.ts:51
 msgid "{maximum, plural, other {validation.common.title.too-long}}"
 msgstr "Название не может быть длиннее {maximum, plural, one {# символа} few {# символов} many {# символов} other {# символов}}"
@@ -105,101 +109,9 @@ msgstr "Не удалось загрузить данные"
 msgid "db.update"
 msgstr "Не удалось обновить данные"
 
-#: ../../libs/app/src/lib/error.ts:99
-#: ../../libs/app/src/lib/error.ts:107
-msgid "validation.cards-progress.difficulty"
-msgstr "Сложность должна быть от 0 до 10"
-
-#: ../../libs/app/src/lib/error.ts:99
-#: ../../libs/app/src/lib/error.ts:107
-msgid "validation.reviews.difficulty"
-msgstr "Сложность должна быть от 0 до 10"
-
-#: ../../libs/app/src/lib/error.ts:112
+#: ../../libs/app/src/lib/error.ts:116
 msgid "keyring"
 msgstr "Не удалось получить доступ к системному хранилищу ключей"
-
-#: ../../libs/app/src/lib/error.ts:114
-msgid "windows-credentials"
-msgstr "Не удалось получить доступ к учётным данным Windows"
-
-#: ../../libs/app/src/lib/error.ts:97
-msgid "validation.cards-progress.state"
-msgstr "Недопустимое состояние карточки"
-
-#: ../../libs/app/src/lib/error.ts:66
-msgid "validation.settings-interface.scheme"
-msgstr "Недопустимая цветовая схема"
-
-#: ../../libs/app/src/lib/error.ts:68
-msgid "validation.settings-interface.dark-theme"
-msgstr "Недопустимая тёмная тема"
-
-#: ../../libs/app/src/lib/error.ts:70
-msgid "validation.settings-interface.date-format"
-msgstr "Недопустимый формат даты"
-
-#: ../../libs/app/src/lib/error.ts:78
-msgid "validation.algorithm.fsrs.weights"
-msgstr "Недопустимые веса FSRS"
-
-#: ../../libs/app/src/lib/error.ts:65
-msgid "validation.settings-interface.language"
-msgstr "Недопустимый язык"
-
-#: ../../libs/app/src/lib/error.ts:111
-msgid "validation.seed.learning-settings"
-msgstr "Недопустимые настройки обучения"
-
-#: ../../libs/app/src/lib/error.ts:74
-msgid "validation.algorithm.fsrs.learning-steps.unit"
-msgstr "Недопустимая единица шага обучения"
-
-#: ../../libs/app/src/lib/error.ts:67
-msgid "validation.settings-interface.light-theme"
-msgstr "Недопустимая светлая тема"
-
-#: ../../libs/app/src/lib/error.ts:69
-msgid "validation.settings-interface.motion"
-msgstr "Недопустимая настройка анимации"
-
-#: ../../libs/app/src/lib/error.ts:76
-msgid "validation.algorithm.fsrs.relearning-steps.unit"
-msgstr "Недопустимая единица шага переобучения"
-
-#: ../../libs/app/src/lib/error.ts:104
-msgid "validation.reviews.rating"
-msgstr "Недопустимая оценка повторения"
-
-#: ../../libs/app/src/lib/error.ts:105
-msgid "validation.reviews.state"
-msgstr "Недопустимое состояние повторения"
-
-#: ../../libs/app/src/lib/error.ts:71
-msgid "validation.settings-interface.time-format"
-msgstr "Недопустимый формат времени"
-
-#: ../../libs/app/src/lib/error.ts:103
-msgid "validation.cards-progress.lapses"
-msgstr "Количество провалов не может быть отрицательным"
-
-#: ../../libs/app/src/lib/error.ts:73
-msgid "validation.algorithm.fsrs.learning-steps.amount"
-msgstr "Длительность шага обучения должна быть больше нуля"
-
-#: ../../libs/app/src/lib/error.ts:101
-#: ../../libs/app/src/lib/error.ts:109
-msgid "validation.cards-progress.learning-steps"
-msgstr "Количество шагов обучения не может быть отрицательным"
-
-#: ../../libs/app/src/lib/error.ts:101
-#: ../../libs/app/src/lib/error.ts:109
-msgid "validation.reviews.learning-steps"
-msgstr "Количество шагов обучения не может быть отрицательным"
-
-#: ../../libs/app/src/lib/error.ts:77
-msgid "validation.algorithm.fsrs.maximum-interval"
-msgstr "Максимальный интервал должен быть больше нуля"
 
 #: ../../libs/app/src/lib/settings-interface.ts:38
 msgid "motion.off"
@@ -277,32 +189,6 @@ msgstr "Исходный шаблон не найден"
 msgid "not-found.templates.update.template"
 msgstr "Шаблон не найден"
 
-#: ../../libs/app/src/lib/error.ts:75
-msgid "validation.algorithm.fsrs.relearning-steps.amount"
-msgstr "Длительность шага переобучения должна быть больше нуля"
-
-#: ../../libs/app/src/lib/error.ts:102
-msgid "validation.cards-progress.reps"
-msgstr "Количество повторений не может быть отрицательным"
-
-#: ../../libs/app/src/lib/error.ts:72
-msgid "validation.algorithm.fsrs.retention"
-msgstr "Удержание должно быть от 70% до 99%"
-
-#: ../../libs/app/src/lib/error.ts:110
-msgid "validation.reviews.time"
-msgstr "Время повторения не может быть отрицательным"
-
-#: ../../libs/app/src/lib/error.ts:100
-#: ../../libs/app/src/lib/error.ts:108
-msgid "validation.cards-progress.scheduled-days"
-msgstr "Запланированные дни не могут быть отрицательными"
-
-#: ../../libs/app/src/lib/error.ts:100
-#: ../../libs/app/src/lib/error.ts:108
-msgid "validation.reviews.scheduled-days"
-msgstr "Запланированные дни не могут быть отрицательными"
-
 #: ../../libs/app/src/lib/settings-interface.ts:17
 msgid "scheme.dark"
 msgstr "Тёмная"
@@ -315,7 +201,7 @@ msgstr "Светлая"
 msgid "scheme.system"
 msgstr "Системная"
 
-#: ../../libs/app/src/lib/error.ts:113
+#: ../../libs/app/src/lib/error.ts:117
 msgid "secret-store"
 msgstr "Хранилище секретов недоступно"
 
@@ -467,37 +353,83 @@ msgstr "Переключить язык"
 msgid "settings.hotkeys.ui.toggle-sidebar-controls"
 msgstr "Переключить боковую панель"
 
-#: ../../libs/app/src/lib/error.ts:98
-#: ../../libs/app/src/lib/error.ts:106
-msgid "validation.cards-progress.stability"
-msgstr "Стабильность не может быть отрицательной"
-
-#: ../../libs/app/src/lib/error.ts:98
-#: ../../libs/app/src/lib/error.ts:106
-msgid "validation.reviews.stability"
-msgstr "Стабильность не может быть отрицательной"
-
 #: ../../libs/app/src/lib/error.ts:10
 msgid "unknown"
 msgstr "Произошла ошибка"
 
-#: ../../libs/app/src/lib/error.ts:83
+#: ../../libs/app/src/lib/error.ts:85
 msgid "validation.ai-providers.profile-id.duplicate"
 msgstr "Не удалось создать уникальный идентификатор профиля"
 
-#: ../../libs/app/src/lib/error.ts:85
+#: ../../libs/app/src/lib/error.ts:75
+msgid "validation.algorithm.fsrs.learning-steps.amount"
+msgstr "Длительность шага обучения должна быть больше нуля"
+
+#: ../../libs/app/src/lib/error.ts:76
+msgid "validation.algorithm.fsrs.learning-steps.unit"
+msgstr "Недопустимая единица шага обучения"
+
+#: ../../libs/app/src/lib/error.ts:79
+msgid "validation.algorithm.fsrs.maximum-interval"
+msgstr "Максимальный интервал должен быть больше нуля"
+
+#: ../../libs/app/src/lib/error.ts:77
+msgid "validation.algorithm.fsrs.relearning-steps.amount"
+msgstr "Длительность шага переобучения должна быть больше нуля"
+
+#: ../../libs/app/src/lib/error.ts:78
+msgid "validation.algorithm.fsrs.relearning-steps.unit"
+msgstr "Недопустимая единица шага переобучения"
+
+#: ../../libs/app/src/lib/error.ts:74
+msgid "validation.algorithm.fsrs.retention"
+msgstr "Удержание должно быть от 70% до 99%"
+
+#: ../../libs/app/src/lib/error.ts:80
+msgid "validation.algorithm.fsrs.weights"
+msgstr "Недопустимые веса FSRS"
+
+#: ../../libs/app/src/lib/error.ts:87
 msgid "validation.algorithms.delete-default"
 msgstr "Нельзя удалить алгоритм по умолчанию"
 
-#: ../../libs/app/src/lib/error.ts:86
+#: ../../libs/app/src/lib/error.ts:88
 msgid "validation.algorithms.delete-last"
 msgstr "Нельзя удалить последний алгоритм"
 
-#: ../../libs/app/src/lib/error.ts:84
+#: ../../libs/app/src/lib/error.ts:86
 msgid "validation.assistant-settings.temperature-range"
 msgstr "Температура должна быть от 0 до 2"
 
-#: ../../libs/app/src/lib/error.ts:96
+#: ../../libs/app/src/lib/error.ts:103
+msgid "validation.cards-progress.difficulty"
+msgstr "Сложность должна быть от 0 до 10"
+
+#: ../../libs/app/src/lib/error.ts:107
+msgid "validation.cards-progress.lapses"
+msgstr "Количество провалов не может быть отрицательным"
+
+#: ../../libs/app/src/lib/error.ts:105
+msgid "validation.cards-progress.learning-steps"
+msgstr "Количество шагов обучения не может быть отрицательным"
+
+#: ../../libs/app/src/lib/error.ts:106
+msgid "validation.cards-progress.reps"
+msgstr "Количество повторений не может быть отрицательным"
+
+#: ../../libs/app/src/lib/error.ts:104
+msgid "validation.cards-progress.scheduled-days"
+msgstr "Запланированные дни не могут быть отрицательными"
+
+#: ../../libs/app/src/lib/error.ts:102
+msgid "validation.cards-progress.stability"
+msgstr "Стабильность не может быть отрицательной"
+
+#: ../../libs/app/src/lib/error.ts:101
+msgid "validation.cards-progress.state"
+msgstr "Недопустимое состояние карточки"
+
+#: ../../libs/app/src/lib/error.ts:100
 msgid "validation.cards.content.field-empty"
 msgstr "Это поле не может быть пустым"
 
@@ -505,114 +437,178 @@ msgstr "Это поле не может быть пустым"
 msgid "validation.common.title.too-short"
 msgstr "Название не может быть пустым"
 
-#: ../../libs/app/src/lib/error.ts:52
+#: ../../libs/app/src/lib/error.ts:54
 msgid "validation.decks.algorithm"
 msgstr "Недопустимый алгоритм"
 
-#: ../../libs/app/src/lib/error.ts:53
+#: ../../libs/app/src/lib/error.ts:55
 msgid "validation.decks.template"
 msgstr "Недопустимый шаблон"
 
-#: ../../libs/app/src/lib/error.ts:63
+#: ../../libs/app/src/lib/error.ts:65
 msgid "validation.lessons.amounts.negative"
 msgstr "Количество не может быть отрицательным"
 
-#: ../../libs/app/src/lib/error.ts:62
+#: ../../libs/app/src/lib/error.ts:64
 msgid "validation.lessons.result.card-review-mismatch"
 msgstr "ID карточки и записи не совпадает"
 
-#: ../../libs/app/src/lib/error.ts:82
+#: ../../libs/app/src/lib/error.ts:111
+msgid "validation.reviews.difficulty"
+msgstr "Сложность должна быть от 0 до 10"
+
+#: ../../libs/app/src/lib/error.ts:113
+msgid "validation.reviews.learning-steps"
+msgstr "Количество шагов обучения не может быть отрицательным"
+
+#: ../../libs/app/src/lib/error.ts:108
+msgid "validation.reviews.rating"
+msgstr "Недопустимая оценка повторения"
+
+#: ../../libs/app/src/lib/error.ts:112
+msgid "validation.reviews.scheduled-days"
+msgstr "Запланированные дни не могут быть отрицательными"
+
+#: ../../libs/app/src/lib/error.ts:110
+msgid "validation.reviews.stability"
+msgstr "Стабильность не может быть отрицательной"
+
+#: ../../libs/app/src/lib/error.ts:109
+msgid "validation.reviews.state"
+msgstr "Недопустимое состояние повторения"
+
+#: ../../libs/app/src/lib/error.ts:114
+msgid "validation.reviews.time"
+msgstr "Время повторения не может быть отрицательным"
+
+#: ../../libs/app/src/lib/error.ts:115
+msgid "validation.seed.learning-settings"
+msgstr "Недопустимые настройки обучения"
+
+#: ../../libs/app/src/lib/error.ts:84
 msgid "validation.settings-ai.profiles.whitelist-model-ids"
 msgstr "ID модели не может быть пустым"
 
-#: ../../libs/app/src/lib/error.ts:79
+#: ../../libs/app/src/lib/error.ts:81
 msgid "validation.settings-ai.providers.api-key"
 msgstr "API key не может быть пустым"
 
-#: ../../libs/app/src/lib/error.ts:80
+#: ../../libs/app/src/lib/error.ts:82
 msgid "validation.settings-ai.providers.base-url"
 msgstr "Некорректный URL"
 
-#: ../../libs/app/src/lib/error.ts:81
+#: ../../libs/app/src/lib/error.ts:83
 msgid "validation.settings-ai.providers.id"
 msgstr "Идентификатор профиля обязателен"
 
-#: ../../libs/app/src/lib/error.ts:64
+#: ../../libs/app/src/lib/error.ts:66
 msgid "validation.settings-hotkeys.duplicate-keys"
 msgstr "Есть конфликтующие комбинации клавиш"
 
-#: ../../libs/app/src/lib/error.ts:55
+#: ../../libs/app/src/lib/error.ts:70
+msgid "validation.settings-interface.dark-theme"
+msgstr "Недопустимая тёмная тема"
+
+#: ../../libs/app/src/lib/error.ts:72
+msgid "validation.settings-interface.date-format"
+msgstr "Недопустимый формат даты"
+
+#: ../../libs/app/src/lib/error.ts:67
+msgid "validation.settings-interface.language"
+msgstr "Недопустимый язык"
+
+#: ../../libs/app/src/lib/error.ts:69
+msgid "validation.settings-interface.light-theme"
+msgstr "Недопустимая светлая тема"
+
+#: ../../libs/app/src/lib/error.ts:71
+msgid "validation.settings-interface.motion"
+msgstr "Недопустимая настройка анимации"
+
+#: ../../libs/app/src/lib/error.ts:68
+msgid "validation.settings-interface.scheme"
+msgstr "Недопустимая цветовая схема"
+
+#: ../../libs/app/src/lib/error.ts:73
+msgid "validation.settings-interface.time-format"
+msgstr "Недопустимый формат времени"
+
+#: ../../libs/app/src/lib/error.ts:57
 msgid "validation.settings-learning.daily-limits.learn-exceeds-total"
 msgstr "Лимит карточек заучивания не может быть больше общего лимита"
 
-#: ../../libs/app/src/lib/error.ts:56
+#: ../../libs/app/src/lib/error.ts:58
 msgid "validation.settings-learning.daily-limits.review-exceeds-total"
 msgstr "Лимит карточек повтора не может быть больше общего лимита"
 
-#: ../../libs/app/src/lib/error.ts:54
+#: ../../libs/app/src/lib/error.ts:56
 msgid "validation.settings-learning.daily-limits.untouched-exceeds-total"
 msgstr "Лимит новых карточек не может быть больше общего лимита"
 
-#: ../../libs/app/src/lib/error.ts:59
+#: ../../libs/app/src/lib/error.ts:61
 msgid "validation.settings-learning.day-starts-at"
 msgstr "Неверный формат настройки начала дня"
 
-#: ../../libs/app/src/lib/error.ts:60
+#: ../../libs/app/src/lib/error.ts:62
 msgid "validation.settings-learning.defaults.algorithm"
 msgstr "Недопустимый алгоритм"
 
-#: ../../libs/app/src/lib/error.ts:61
+#: ../../libs/app/src/lib/error.ts:63
 msgid "validation.settings-learning.defaults.template"
 msgstr "Недопустимый шаблон"
 
-#: ../../libs/app/src/lib/error.ts:57
+#: ../../libs/app/src/lib/error.ts:59
 msgid "validation.settings-learning.learn-ahead-limit.hours-range"
 msgstr "Часы должны быть от 0 до 48"
 
-#: ../../libs/app/src/lib/error.ts:58
+#: ../../libs/app/src/lib/error.ts:60
 msgid "validation.settings-learning.learn-ahead-limit.minutes-range"
 msgstr "Минуты должны быть от 0 до 59"
 
-#: ../../libs/app/src/lib/error.ts:94
+#: ../../libs/app/src/lib/error.ts:98
 msgid "validation.templates.delete-default"
 msgstr "Нельзя удалить шаблон по умолчанию"
 
-#: ../../libs/app/src/lib/error.ts:93
+#: ../../libs/app/src/lib/error.ts:97
 msgid "validation.templates.delete-locked"
 msgstr "Нельзя удалить заблокированный шаблон"
 
-#: ../../libs/app/src/lib/error.ts:95
+#: ../../libs/app/src/lib/error.ts:99
 msgid "validation.templates.delete-used"
 msgstr "Этот шаблон используется и не может быть удалён"
 
-#: ../../libs/app/src/lib/error.ts:87
-msgid "validation.templates.fields.too-few"
-msgstr "Необходимо хотя бы одно поле"
-
-#: ../../libs/app/src/lib/error.ts:88
+#: ../../libs/app/src/lib/error.ts:90
 msgid "validation.templates.fields.id"
 msgstr "Недопустимый id поля"
 
 #: ../../libs/app/src/lib/error.ts:89
+msgid "validation.templates.fields.too-few"
+msgstr "Необходимо хотя бы одно поле"
+
+#: ../../libs/app/src/lib/error.ts:91
 msgid "validation.templates.fields.type"
 msgstr "Недопустимый тип поля"
 
-#: ../../libs/app/src/lib/error.ts:92
-msgid "validation.templates.layout.missing-field"
-msgstr "Каждый элемент раскладки должен ссылаться на существующее поле"
-
-#: ../../libs/app/src/lib/error.ts:91
+#: ../../libs/app/src/lib/error.ts:93
 msgid "validation.templates.layout.field"
 msgstr "Недопустимая ссылка на поле раскладки"
 
-#: ../../libs/app/src/lib/error.ts:93
+#: ../../libs/app/src/lib/error.ts:95
+msgid "validation.templates.layout.missing-field"
+msgstr "Каждый элемент раскладки должен ссылаться на существующее поле"
+
+#: ../../libs/app/src/lib/error.ts:94
 msgid "validation.templates.layout.operation"
 msgstr "Недопустимое действие"
 
-#: ../../libs/app/src/lib/error.ts:90
+#: ../../libs/app/src/lib/error.ts:92
 msgid "validation.templates.layout.too-few"
 msgstr "Раскладка не может быть пустой"
 
-#: ../../libs/app/src/lib/error.ts:92
+#: ../../libs/app/src/lib/error.ts:96
 msgid "validation.templates.update-locked"
 msgstr "Нельзя обновить заблокированный шаблон"
+
+#: ../../libs/app/src/lib/error.ts:118
+msgid "windows-credentials"
+msgstr "Не удалось получить доступ к учётным данным Windows"

@@ -25,3 +25,38 @@ describe("deckValidation references", () => {
     expect(result.success).toBe(false);
   });
 });
+
+// Twin of `crates/koloda/tests/domain/entity_notes_tests.rs` — notes are optional
+// plain text: trim, whitespace-only becomes absent, max 1024 UTF-16 units.
+describe("deckValidation notes", () => {
+  it("leaves notes absent when the field is omitted", () => {
+    const result = deckValidation.parse(validDeck());
+    expect(result.notes).toBeUndefined();
+  });
+
+  it("treats null notes as absent (DB round-trip)", () => {
+    const result = deckValidation.safeParse({ ...validDeck(), notes: null });
+    expect(result.success).toBe(true);
+    expect(result.success ? result.data.notes : undefined).toBeUndefined();
+  });
+
+  it("trims surrounding whitespace", () => {
+    const result = deckValidation.parse({ ...validDeck(), notes: "  For vocabulary, not cramming  " });
+    expect(result.notes).toBe("For vocabulary, not cramming");
+  });
+
+  it("stores whitespace-only notes as absent", () => {
+    const result = deckValidation.parse({ ...validDeck(), notes: "   " });
+    expect(result.notes).toBeUndefined();
+  });
+
+  it("accepts notes of exactly 1024 characters", () => {
+    const result = deckValidation.parse({ ...validDeck(), notes: "x".repeat(1024) });
+    expect(result.notes).toHaveLength(1024);
+  });
+
+  it("rejects notes over 1024 characters", () => {
+    const result = deckValidation.safeParse({ ...validDeck(), notes: "x".repeat(1025) });
+    expect(result.success).toBe(false);
+  });
+});

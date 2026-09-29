@@ -84,9 +84,10 @@ export async function updateTemplate(db: DB, { id, values }: UpdateTemplateData)
       if (!isValid) throw new AppError("validation.templates.update-locked", errors.join(", "));
     }
 
-    await db.run(`UPDATE templates SET title = ?, content = ?, updated_at = ? WHERE id = ?`, [
+    await db.run(`UPDATE templates SET title = ?, content = ?, notes = ?, updated_at = ? WHERE id = ?`, [
       payload.title,
       JSON.stringify(payload.content),
+      payload.notes ?? null,
       nowMs(),
       id,
     ]);
