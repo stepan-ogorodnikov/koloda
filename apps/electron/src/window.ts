@@ -122,36 +122,24 @@ export function createWindow() {
 // WHY: A link in rendered markdown can navigate this window or open another one.
 // Either page would re-run the preload and inherit every IPC channel.
 function attachNavigationGuard(contents: WebContents, target: AppNavigationTarget) {
-  // WHY: will-navigate and will-frame-navigate both fire for the main frame.
-  let opening: string | null = null;
-  const openOnce = (url: string) => {
-    if (opening === url) return;
-    opening = url;
-    openInBrowser(url);
-    queueMicrotask(() => {
-      if (opening === url) opening = null;
-    });
-  };
-
   const stop = (url: string, preventDefault: () => void, openHttp: boolean) => {
     const decision = decideNavigation(url, target);
     if (decision.action === "allow") return;
     preventDefault();
-    if (openHttp && decision.action === "open-external") openOnce(decision.url);
+    if (openHttp && decision.action === "open-external") openInBrowser(decision.url);
   };
 
-  contents.on("will-navigate", (event) => {
-    stop(event.url, () => event.preventDefault(), true);
+  // WHY: will-frame-navigate covers the main frame too, so will-navigate is not
+  // also handled: both fire for one main-frame click and the link would open twice.
+  contents.on("will-frame-navigate", (event) => {
+    stop(event.url, () => event.preventDefault(), event.isMainFrame);
   });
   contents.on("will-redirect", (event) => {
     stop(event.url, () => event.preventDefault(), false);
   });
-  contents.on("will-frame-navigate", (event) => {
-    stop(event.url, () => event.preventDefault(), event.isMainFrame);
-  });
   contents.setWindowOpenHandler(({ url }) => {
     const decision = decideNavigation(url, target);
-    if (decision.action === "open-external") openOnce(decision.url);
+    if (decision.action === "open-external") openInBrowser(decision.url);
     return { action: "deny" };
   });
 }
