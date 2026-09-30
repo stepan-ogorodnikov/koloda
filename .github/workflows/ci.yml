@@ -64,7 +64,7 @@ jobs:
             nx-${{ runner.os }}-
 
       - name: Install
-        run: bun install
+        run: bun install --frozen-lockfile
 
       - name: Check push
         run: bun run check:push

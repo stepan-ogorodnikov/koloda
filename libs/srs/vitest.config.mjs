@@ -19,10 +19,9 @@ export default defineConfig({
     isolate: false,
     maxWorkers: 2,
     environment: "node",
-    include: ["libs/srs/src/**/*.test.ts"],
+    // WHY: reviews.dst.test.ts needs a process that starts in America/New_York.
+    // Threads share this process's ICU timezone, so that file runs from vitest.dst.config.mjs.
+    include: ["libs/srs/src/**/*.test.ts", "!libs/srs/src/lib/reviews.dst.test.ts"],
     setupFiles: ["libs/srs/src/test-setup.ts"],
-    env: {
-      TZ: "America/New_York",
-    },
   },
 });

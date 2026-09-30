@@ -1,8 +1,9 @@
 /**
- * Push gate. Runs the web track and the Rust track together and waits for both.
- * Web is `check:web-deploy` (oxlint, tsc -b, lib tests, workspace-deps).
+ * Push gate. Runs the web, Rust, and format tracks together and waits for all of them.
+ * Web is `check:web-deploy` (oxlint, tsc -b, lib tests, app unit tests, workspace-deps).
  * Rust is clippy, then `koloda` tests, sharing dist/target/koloda.
- * Either failure fails the run after both tracks have finished.
+ * Format is `dprint check`, including rustfmt on `.rs`.
+ * Any failure fails the run after every track has finished.
  *
  * Usage: bun run check:push
  */
@@ -24,6 +25,7 @@ export type TrackResult = {
 const tracks: readonly Track[] = [
   { name: "web", args: ["run", "check:web-deploy"] },
   { name: "rust", args: ["run", "check:rust-push"] },
+  { name: "format", args: ["run", "check:format"] },
 ];
 
 function prefix(stream: Readable, label: string, out: Writable): Promise<void> {

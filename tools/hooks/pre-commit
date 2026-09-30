@@ -15,8 +15,10 @@ command -v bun >/dev/null 2>&1 || exit 0
 # It formats working-tree content: for partially staged files this folds the
 # unstaged edits into the commit too — format before staging in that case.
 # Covers TS/TSX/JSON/CSS/YAML/HTML and .rs (via rustfmt --edition 2021).
-if command -v dprint >/dev/null 2>&1; then
-  dprint fmt --staged --allow-no-files || exit 1
+# The binary is the dprint devDependency, so a commit uses the same version
+# as CI and does not depend on a global install. Skip when it is not installed.
+if [ -e node_modules/.bin/dprint ] || [ -e node_modules/.bin/dprint.exe ]; then
+  bunx dprint fmt --staged --allow-no-files || exit 1
   git diff --cached --name-only --diff-filter=d -z | xargs -0 -r git add --
 fi
 

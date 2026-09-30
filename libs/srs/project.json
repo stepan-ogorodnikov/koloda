@@ -10,7 +10,7 @@
     "test": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "bunx vitest run --config libs/srs/vitest.config.mjs --configLoader runner"
+        "command": "bunx vitest run --config libs/srs/vitest.config.mjs --configLoader runner && bunx vitest run --config libs/srs/vitest.dst.config.mjs --configLoader runner"
       },
       "inputs": [
         "default",
