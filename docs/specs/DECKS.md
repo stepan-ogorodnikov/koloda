@@ -35,7 +35,7 @@ The user adds a deck by giving it a title and choosing an algorithm and a templa
 See LEARNING-SETTINGS.md (§Defaults) for the algorithm and template offered when the user does not pick otherwise.
 Two decks may have the same title; they remain distinct.
 
-The title is required and limited in length.
+The title is required and at most 255 characters long.
 Leading and trailing whitespace is stripped before a title is saved.
 A title that is empty or contains only whitespace is rejected.
 The chosen algorithm and template must already exist; otherwise add fails and nothing is created.

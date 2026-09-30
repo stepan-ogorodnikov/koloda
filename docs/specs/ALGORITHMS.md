@@ -34,7 +34,7 @@ It does not rewrite existing card scheduling numbers until those cards are grade
 
 Every algorithm is FSRS and has:
 
-- **Title** — required, limited in length
+- **Title** — required, at most 255 characters
 - **Retention** — integer from 70 through 99
 - **Fuzz** — on or off
 - **Weights** — exactly twenty-one comma-separated numbers
@@ -64,7 +64,7 @@ A new algorithm has no notes.
 After a successful add, the dialog offers a link to open the new algorithm.
 Changing the title again clears that success state so another add can be submitted.
 
-The title is required and limited in length.
+The title is required and at most 255 characters long.
 Leading and trailing whitespace is stripped before a title is saved.
 A title that is empty or contains only whitespace is rejected.
 

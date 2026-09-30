@@ -11,7 +11,7 @@ Local-first spaced repetition software powered by the [FSRS](https://github.com/
 ### Prerequisites
 
 - [Bun](https://bun.sh)
-- [Rust toolchain](https://rustup.rs) (1.88.0+)
+- [Rust toolchain](https://rustup.rs) (version pinned in `rust-toolchain.toml`; rustup installs it on first build)
 
 ```bash
 bun install

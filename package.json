@@ -43,7 +43,6 @@
     "@react-aria/i18n": "^3.12.14",
     "@react-aria/interactions": "^3.12.14",
     "@react-hook/media-query": "^1.1.1",
-    "@rolldown/binding-win32-x64-msvc": "^1.2.1",
     "@tailwindcss/typography": "^0.5.20",
     "@tailwindcss/vite": "^4.3.3",
     "@tanstack/devtools-vite": "^0.3.11",

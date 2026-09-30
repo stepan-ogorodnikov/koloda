@@ -87,7 +87,7 @@ Types that do not count toward Total leave Total room unused when those defaults
 The current learning day is the half-open window from that boundary up to the same time tomorrow.
 If the current clock time is before today's boundary, the user is still in the previous learning day.
 
-Today's review totals count non-ignored reviews created inside that window.
+Today's review totals count every review created inside that window.
 Reviews are bucketed by the state recorded on the review:
 
 - **New** — new

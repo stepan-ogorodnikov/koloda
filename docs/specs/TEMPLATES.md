@@ -108,7 +108,7 @@ The template editor shows timestamps, title, notes, lock status, fields, layout,
 Saving persists title, notes, fields, and layout together.
 Discard restores the last saved values.
 
-The template title is required and limited in length.
+The template title is required and at most 255 characters long.
 Leading and trailing whitespace is stripped before a title is saved.
 A title that is empty or contains only whitespace is rejected.
 Empty field titles are allowed.

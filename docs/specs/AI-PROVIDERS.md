@@ -111,6 +111,20 @@ Secrets are the per-provider credentials stored inside a profile.
 A profile must have all required fields filled in before it can be used for a run.
 Optional API keys are stored only when provided.
 
+### Storage
+
+On desktop, API keys are kept in the operating system's credential store:
+Windows Credential Manager, the macOS Keychain, or the Secret Service on Linux.
+The rest of the profile, including the base URL, is kept in the app's database.
+A stored key survives restarts.
+
+In the browser, API keys are kept in the app's local database in that browser, with the rest of the profile.
+They are not encrypted.
+Anyone with access to that browser profile can read them.
+
+Stored keys are never shown back in the interface; see §Editing a Profile.
+Deleting a profile removes its key from wherever it was stored.
+
 ### Validation
 
 Validation runs on the add and edit forms and again when the profile is saved.
@@ -129,7 +143,7 @@ Failed validation shows an error per field and prevents the request from being s
 On save, the app also rejects:
 
 - Profiles that cannot be identified.
-- Titles longer than the maximum allowed length.
+- Titles longer than 128 characters.
 - Required secret fields that are empty or whitespace-only on create.
 
 Optional profile titles are trimmed.
