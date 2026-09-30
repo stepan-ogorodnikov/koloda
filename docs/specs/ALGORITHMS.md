@@ -10,6 +10,7 @@ Grade-to-card-state updates are covered by the cards spec and learning settings 
 ## What it is
 
 An algorithm is a named FSRS parameter set used by decks when scheduling cards.
+It can also carry optional notes.
 The product lists these under Presets.
 Each deck points at one algorithm.
 Editing an algorithm, or pointing a deck at a different algorithm, changes the parameters used for later grades.
@@ -18,6 +19,7 @@ It does not rewrite existing card scheduling numbers until those cards are grade
 ## Core model
 
 - **Algorithm** — a titled FSRS preset
+- **Notes** — optional text the user writes about the algorithm
 - **Parameters** — retention, weights, fuzz, learning steps, relearning steps, and maximum interval
 - **Successor** — another algorithm that takes over decks when one is deleted
 
@@ -57,6 +59,7 @@ The previous saved algorithm remains unchanged.
 The user adds an algorithm by giving it a title.
 Two algorithms may have the same title; they remain distinct.
 The new algorithm starts from the built-in FSRS defaults for all parameters.
+A new algorithm has no notes.
 
 After a successful add, the dialog offers a link to open the new algorithm.
 Changing the title again clears that success state so another add can be submitted.
@@ -70,16 +73,23 @@ A title that is empty or contains only whitespace is rejected.
 The user can clone any algorithm.
 Clone asks for a new title and copies the source parameters into an independent algorithm.
 
-Clone does not copy decks.
+Clone does not copy decks or notes.
 After success, the dialog offers a link to open the clone.
 
 Cloning a missing source fails and creates nothing.
 
 ## Editing Algorithms
 
-The algorithm editor shows timestamps, title, parameters, and actions.
-Saving persists title and parameters together.
+The algorithm editor shows timestamps, title, notes, parameters, and actions.
+Saving persists title, notes, and parameters together.
 Discard restores the last saved values.
+
+Notes are optional.
+Leading and trailing whitespace is stripped before notes are saved.
+Notes that are empty or contain only whitespace are not kept.
+Notes are limited to 1,024 characters.
+Changing notes does not change scheduling parameters.
+See ASSISTANT-DATA-ACCESS.md (§Resources) for how the assistant reads notes.
 
 Changing parameters affects future grading for decks that use this algorithm.
 It does not immediately rewrite card due times or review history.

@@ -189,16 +189,58 @@ A full `bun run test:libs` is not required to justify a unit change.
 ### Runner constraints
 
 Lib Vitest configs use `pool: "threads"` and `maxWorkers: 2`.
-Ten of twelve libs set `isolate: false`, so their files share one worker's module registry; `ui` and `srs-react` keep Vitest's default isolation.
-Why isolation is not universal: a file-level `vi.mock(...)` rewrites that import for the whole worker and is not undone when the file finishes. Whichever file runs first decides the module. Vitest's sequencer runs slower files first when `results.json` has timings, and larger files first on a cold cache (CI). A warm local cache can therefore run the mocking file first and stay green while CI runs a larger sibling first. `--maxWorkers=1` puts every file of that project on the one worker, so the leak is deterministic instead of depending on which subset a worker drew.
-`ui` and `srs-react` stay isolated because a file-level mock there replaces a module siblings import for real — `ui` (e.g. `query-error.test.tsx` mocks `@lingui/react`, so siblings that need the real catalog text render the mock) and `srs-react` (`lesson-reducer.test.ts` mocks `@koloda/srs`, so a later file that imports the real module gets stubs).
+Ten of twelve libs set `isolate: false`, so their files share one worker's module registry.
+`ui` and `srs-react` keep Vitest's default isolation.
+Isolation is not universal because a file-level `vi.mock(...)` rewrites that import for the whole worker.
+The rewrite is not undone when the file finishes.
+Whichever file runs first decides the module.
+Vitest's sequencer runs slower files first when `results.json` has timings.
+It runs larger files first on a cold cache (CI).
+A warm local cache can therefore run the mocking file first and stay green.
+CI can run a larger sibling first.
+`--maxWorkers=1` puts every file of that project on the one worker.
+The leak is then deterministic instead of depending on which subset a worker drew.
+`ui` and `srs-react` stay isolated because a file-level mock there replaces a module siblings import for real.
+In `ui`, `query-error.test.tsx` mocks `@lingui/react`, so siblings that need the real catalog text render the mock.
+In `srs-react`, `lesson-reducer.test.ts` mocks `@koloda/srs`, so a later file that imports the real module gets stubs.
 Other `isolate: false` libs file-mock `@lingui/react` too and stay green, because no sibling imports it for real.
-The same leak already happens inside two libs that set `isolate: false`. `libs/ai` `chat-stream.test.ts` used to mock `ai` to record `streamText` calls, but `assistant-tools.test.ts` and `model-reasoning-extraction.test.ts` import `ai` for real; on a cold cache the real module loads first and the recorder sees no calls. That file tests the exported providerOptions helpers directly and does not mock `ai`. `libs/assistant-react` `assistant-settings.test.tsx` used to mock `@number-flow/react`, but a sibling that imports `@koloda/ui` loads the real module through the slider, and the real NumberFlow throws in jsdom (`this.el?.willUpdate is not a function`). The stub lives in `libs/assistant-react/src/test-setup.ts`, which runs before test files. `delete-conversation-button.test.tsx` and `conversation-header-menu.test.tsx` used to mock `conversation-write-adapter`, which `use-assistant-engine-host.test.ts` imports for real; they call the real coordinator and `resetAssistantEngineForTests()` so a sibling's tombstone cannot stick. The delete button also sets `motionSettingAtom` to `off`: `useReducedMotion` is a module singleton, and once a sibling inits it with animations on, Fade's exit never finishes in jsdom (`AnimatePresence mode="wait"` keeps the old child).
+The same leak already happens inside two libs that set `isolate: false`.
+`libs/ai` `chat-stream.test.ts` used to mock `ai` to record `streamText` calls.
+`assistant-tools.test.ts` and `model-reasoning-extraction.test.ts` import `ai` for real.
+On a cold cache the real module loads first and the recorder sees no calls.
+That file tests the exported providerOptions helpers directly and does not mock `ai`.
+`libs/assistant-react` `assistant-settings.test.tsx` used to mock `@number-flow/react`.
+A sibling that imports `@koloda/ui` loads the real module through the slider.
+The real NumberFlow throws in jsdom (`this.el?.willUpdate is not a function`).
+The stub lives in `libs/assistant-react/src/test-setup.ts`, which runs before test files.
+`delete-conversation-button.test.tsx` used to mock `conversation-write-adapter`.
+`conversation-header-menu.test.tsx` used to mock it too.
+`use-assistant-engine-host.test.ts` imports that adapter for real.
+Those tests call the real coordinator and `resetAssistantEngineForTests()` so a sibling's tombstone cannot stick.
+The delete button also sets `motionSettingAtom` to `off`.
+`useReducedMotion` is a module singleton.
+Once a sibling inits it with animations on, Fade's exit never finishes in jsdom.
+`AnimatePresence mode="wait"` keeps the old child.
 `db-sqlite` also sets `fileParallelism: false`.
-All twelve lib test targets set `cache: true`; `nx.json` `parallel` is `8`, so `test:libs` runs at most eight of those projects at once.
-Root `.env` sets `NX_ISOLATE_PLUGINS=false`; the file is committed, allowed by a `.gitignore` negation.
+All twelve lib test targets set `cache: true`.
+`nx.json` `parallel` is `8`, so `test:libs` runs at most eight of those projects at once.
+Root `.env` sets `NX_ISOLATE_PLUGINS=false`.
+The file is committed, allowed by a `.gitignore` negation.
 
-Vitest config stays per package; do not introduce a shared Vitest defaults file.
-The per-project differences are intentional: `ui`/`srs-react` isolation, `db-sqlite`'s `fileParallelism: false`, and uneven setup and `vi.restoreAllMocks()` habits.
-Under `isolate: false`, module mocks are not cleared by `vi.restoreAllMocks()`, and not every package calls it in setup — `libs/ai` and `libs/assistant` have no setup file, and `libs/db-sqlite`'s setup does not. A setup-file `vi.mock` is installed before any test file imports the real module, which is why the NumberFlow stub is there and not in `assistant-settings.test.tsx`.
-A project can join `isolate: false` only when no file registers a module-level `vi.mock` of a shared package that siblings import for real; the fix is removing or replacing those mocks (a real i18n catalog in `ui`, real or injected `srs` in `srs-react`, direct helper tests in `ai`, a setup-file stub in `assistant-react`), not flipping the config alone.
+Vitest config stays per package.
+Do not introduce a shared Vitest defaults file.
+The per-project differences are intentional.
+They include isolation for `ui` and `srs-react`, and `fileParallelism: false` for `db-sqlite`.
+Setup files and `vi.restoreAllMocks()` habits also differ by project.
+Under `isolate: false`, module mocks are not cleared by `vi.restoreAllMocks()`.
+Not every package calls it in setup.
+`libs/ai` and `libs/assistant` have no setup file, and `libs/db-sqlite`'s setup does not.
+A setup-file `vi.mock` is installed before any test file imports the real module.
+That is why the NumberFlow stub is there and not in `assistant-settings.test.tsx`.
+One file's module-level `vi.mock` blocks `isolate: false` if a sibling imports that package for real.
+The fix is removing or replacing those mocks, not flipping the config alone.
+Replacements already used:
+- a real i18n catalog in `ui`
+- real or injected `srs` in `srs-react`
+- direct helper tests in `ai`
+- a setup-file stub in `assistant-react`

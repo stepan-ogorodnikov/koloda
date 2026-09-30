@@ -2,19 +2,22 @@
 
 ## Scope
 
-Covers decks: creating with defaults, editing title/algorithm/template, cascade delete, and how decks relate to cards, lessons, and the assistant.
+Covers decks: creating with defaults, editing title, notes, algorithm, and template, and cascade delete.
+It also covers how decks relate to cards, lessons, and the assistant.
 Does not cover card browsing, reset progress, preview, lesson session flow, algorithm or template editing.
 Those are covered by the cards, lessons, algorithms, templates, and assistant specs.
 
 ## What it is
 
 A deck is a titled collection of cards that shares one algorithm and one current template.
+It can also carry optional notes.
 The algorithm schedules grades for cards in the deck.
 The current template is used when the user adds cards manually or generates cards into this deck.
 
 ## Core model
 
 - **Deck** — a titled collection with an algorithm and a current template
+- **Notes** — optional text the user writes about the deck
 - **Current template** — the template offered for new cards added to this deck
 
 Relationships:
@@ -41,6 +44,7 @@ After a successful add, the dialog offers a link to open the new deck.
 Changing the form again clears that success state so another add can be submitted.
 
 Adding a deck creates no cards.
+A new deck has no notes.
 
 ## Editing Decks
 
@@ -51,11 +55,20 @@ Each deck has two tabs: **Cards** and **Details**.
 On Details the user can change:
 
 - **Title**
+- **Notes**
 - **Algorithm**
 - **Template**
 
-Saving persists title, algorithm, and template together.
+Saving persists title, notes, algorithm, and template together.
 Discard restores the last saved values.
+
+Notes are optional.
+Leading and trailing whitespace is stripped before notes are saved.
+Notes that are empty or contain only whitespace are not kept.
+Notes are limited to 1,024 characters.
+Changing notes does not change the deck's cards.
+It does not change how those cards are scheduled.
+See ASSISTANT-DATA-ACCESS.md (§Resources) for how the assistant reads notes.
 
 Changing the algorithm affects future grading for cards in this deck.
 See ALGORITHMS.md (§What it is) for when existing scheduling numbers change.

@@ -9,13 +9,14 @@ Those are covered by the cards, lessons, and learning settings specs.
 ## What it is
 
 A template defines the shape of card content and how that content appears during study.
-It has a title, a list of fields, and a layout that maps those fields to study operations.
+It has a title, optional notes, a list of fields, and a layout that maps those fields to study operations.
 Decks and cards reference templates.
 See CARDS.md (§Relationships) for how a card keeps its template.
 
 ## Core model
 
 - **Template** — named content shape used by cards
+- **Notes** — optional text the user writes about the template
 - **Field** — one content slot: title, type, and whether it is required
 - **Layout item** — one study presentation of a field: which field, and which operation
 - **Lock** — whether any card currently uses the template
@@ -73,6 +74,7 @@ While locked:
 - Existing fields cannot change type or required.
 - Field titles can still be changed.
 - The template title can still be changed.
+- Notes can still be changed.
 - Fields and layout may still be reordered.
 - Layout operations may still be changed.
 - The template cannot be deleted.
@@ -86,6 +88,7 @@ Saving a locked template rejects removing existing fields or changing their type
 The user adds a template by giving it a title.
 Two templates may have the same title; they remain distinct.
 The new template starts from the built-in default shape: two required text fields ("Front" and "Back"), with Front displayed and Back typed.
+A new template has no notes.
 
 After a successful add, the dialog offers a link to open the new template.
 Changing the title again clears that success state so another add can be submitted.
@@ -94,15 +97,15 @@ Changing the title again clears that success state so another add can be submitt
 
 The user can clone any template, including a locked one.
 Clone asks for a new title and copies the source fields and layout into an independent template.
-It does not copy cards, decks, or lock status from the source.
+It does not copy cards, decks, lock status, or notes from the source.
 
 The clone starts unlocked if it has no cards of its own.
 After success, the dialog offers a link to open the clone.
 
 ## Editing Templates
 
-The template editor shows timestamps, title, lock status, fields, layout, and actions.
-Saving persists title, fields, and layout together.
+The template editor shows timestamps, title, notes, lock status, fields, layout, and actions.
+Saving persists title, notes, fields, and layout together.
 Discard restores the last saved values.
 
 The template title is required and limited in length.
@@ -110,8 +113,16 @@ Leading and trailing whitespace is stripped before a title is saved.
 A title that is empty or contains only whitespace is rejected.
 Empty field titles are allowed.
 
+Notes are optional.
+Leading and trailing whitespace is stripped before notes are saved.
+Notes that are empty or contain only whitespace are not kept.
+Notes are limited to 1,024 characters.
+Changing notes does not change fields or layout.
+It does not change lock status.
+See ASSISTANT-DATA-ACCESS.md (§Resources) for how the assistant reads notes.
+
 When the template is locked, the editor disables changing field type and required, and hides add-field and remove-field controls.
-Title edits, field-title edits, reorder, and layout edits remain available.
+Title edits, notes edits, field-title edits, reorder, and layout edits remain available.
 The learning settings default template can be edited while it remains the default.
 See LEARNING-SETTINGS.md (§Defaults).
 

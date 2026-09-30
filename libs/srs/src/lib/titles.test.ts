@@ -115,7 +115,7 @@ describe.each(NOTES_SCHEMAS)("$name notes", ({ parse }) => {
   });
 
   it("treats null notes as absent on the DB round-trip", () => {
-    const result = parse(undefined);
+    const result = parse(null);
     expect(result.success).toBe(true);
     expect(result.data!.notes).toBeUndefined();
   });
