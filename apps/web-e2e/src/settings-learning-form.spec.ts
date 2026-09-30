@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { createAlgorithm, createTemplate, openLearningSettings } from "@koloda/e2e";
+import { clickSwitch, createAlgorithm, createTemplate, openLearningSettings } from "@koloda/e2e";
 import { setupWeb, setupPageDefaults } from "./helpers";
 
 test.beforeEach(async ({ page }) => {
@@ -46,7 +46,7 @@ test("validates and resets the learning settings form", async ({ page }) => {
   await learnField.fill("10");
   await learnField.blur();
 
-  await learnSwitch.click({ force: true });
+  await clickSwitch(learnSwitch);
 
   await saveButton.scrollIntoViewIfNeeded();
   await saveButton.click();
@@ -67,7 +67,7 @@ test("validates and resets the learning settings form", async ({ page }) => {
   await reviewField.fill("0");
   await reviewField.blur();
 
-  await learnSwitch.click({ force: true });
+  await clickSwitch(learnSwitch);
   await expect(learnSwitch).not.toBeChecked();
 
   await saveButton.scrollIntoViewIfNeeded();
@@ -125,7 +125,7 @@ test("unlimited total allows a counted cap above any previous total", async ({ p
   const saveButton = page.locator("form").getByRole("button", { name: "Save", exact: true });
   const totalUnlimited = page.getByRole("switch", { name: "Unlimited" }).first();
 
-  await totalUnlimited.click();
+  await clickSwitch(totalUnlimited);
   await expect(totalUnlimited).toBeChecked();
   await expect(page.getByRole("textbox", { name: "Total" })).toBeDisabled();
 
@@ -135,7 +135,7 @@ test("unlimited total allows a counted cap above any previous total", async ({ p
 
   await saveButton.scrollIntoViewIfNeeded();
   await saveButton.click();
-  await expect(saveButton).toBeDisabled();
+  await expect(saveButton).toBeHidden();
   await expect(page.getByText("New can't be more than total")).not.toBeVisible();
 });
 

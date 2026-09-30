@@ -4,6 +4,7 @@ export {
   applyPageDefaults,
   bootstrapApp,
   cardRows,
+  clickSwitch,
   conversationLog,
   createAlgorithm,
   createDeck,

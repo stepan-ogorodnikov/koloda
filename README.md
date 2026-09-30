@@ -48,7 +48,7 @@ nx test electron
 nx run @koloda/electron:test:unit
 nx run @koloda/electron:test:e2e
 
-# Web Playwright e2e
+# Web Playwright e2e (also runs on the pages deploy)
 nx run web-e2e:e2e
 
 # Rust (workspace: koloda + Electron NAPI crate)

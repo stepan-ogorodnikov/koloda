@@ -8,6 +8,7 @@ const port = 4300;
 export default defineConfig({
   testDir: "./src",
   fullyParallel: false,
+  forbidOnly: !!process.env.CI,
   workers: 1,
   timeout: 45_000,
   expect: {

@@ -360,9 +360,22 @@ export async function editHotkey(page: Page, label: string, newKey: string) {
   await expect(dialog).not.toBeVisible();
 }
 
+// WHY: The switch role sits on a 1px input. The visible track covers it, so a click
+// on the input never lands. The label around the track and the text toggles it.
+export async function clickSwitch(control: Locator) {
+  await control.locator("xpath=ancestor::label[1]").click();
+}
+
 export async function dragTo(page: Page, source: Locator, target: Locator) {
   await source.scrollIntoViewIfNeeded();
   await target.scrollIntoViewIfNeeded();
+
+  // WHY: dnd-kit binds drag activation to the handle element, so the press must
+  // land on it. Right after a section mounts, the renderer can still hit-test
+  // the handle's center to the document root, and a press there starts nothing.
+  // hover() retries until the handle is the hit target at the point. It can
+  // also scroll, so the coordinates are read after it, not before.
+  await source.hover();
 
   const sourceBox = await source.boundingBox();
   const targetBox = await target.boundingBox();
@@ -372,17 +385,13 @@ export async function dragTo(page: Page, source: Locator, target: Locator) {
   const sourceY = sourceBox.y + sourceBox.height / 2;
   const targetX = targetBox.x + targetBox.width / 2;
   const targetY = targetBox.y + targetBox.height / 2;
+  const nudge = Math.sign(targetY - sourceY || 1) * 12;
 
-  // WHY: dnd-kit binds drag activation to the handle element, so the press must
-  // land on it. Right after a section mounts, the renderer can still hit-test
-  // the handle's center to the document root, and a press there starts nothing.
-  // hover() retries until the handle is the hit target at the point.
-  await source.hover();
   await page.mouse.down();
-  await page.mouse.move(sourceX, sourceY + 20, { steps: 3 });
+  await page.mouse.move(sourceX, sourceY + nudge, { steps: 3 });
   await page.waitForTimeout(150);
-  await page.mouse.move(targetX, targetY, { steps: 10 });
-  await page.waitForTimeout(100);
+  await page.mouse.move(targetX, targetY, { steps: 15 });
+  await page.waitForTimeout(150);
   await page.mouse.up();
 }
 
