@@ -63,6 +63,13 @@ jobs:
           restore-keys: |
             nx-${{ runner.os }}-
 
+      # dprint downloads the plugins listed in dprint.json on first run.
+      - name: Cache dprint
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/dprint
+          key: dprint-${{ runner.os }}-${{ hashFiles('dprint.json') }}
+
       - name: Install
         run: bun install --frozen-lockfile
 

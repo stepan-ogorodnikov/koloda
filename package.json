@@ -22,8 +22,8 @@
     "land": "bun run tools/land.ts",
     "check:rust": "nx run koloda:lint",
     "check:rust-push": "nx run koloda:lint && nx run koloda:test",
-    "check:web-deploy": "bun run lint && bun run typecheck && bun run test:libs && bun run test:app-unit && bun run check:workspace-deps",
-    "check:web-all": "bun run check:web-deploy && nx run web-e2e:e2e",
+    "check:ts": "bun run lint && bun run typecheck && bun run test:libs && bun run test:app-unit && bun run check:workspace-deps",
+    "check:web-all": "bun run check:ts && nx run web-e2e:e2e",
     "prepare": "git config core.hooksPath tools/hooks"
   },
   "dependencies": {
