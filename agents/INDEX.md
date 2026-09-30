@@ -4,7 +4,9 @@ Human-only routing table.
 Do not paste this file into a prompt.
 It exists so you can pick the minimal set of guides for a narrow task without bloating the model's context.
 
-There is no `AGENTS.md` on purpose.
+`AGENTS.md` holds only the rules every change needs, such as how changes reach `main`.
+Agents load it on their own.
+Everything else is routed here.
 Include only the guides the task needs.
 This file tells you which those are.
 
