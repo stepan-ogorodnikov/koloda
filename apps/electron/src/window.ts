@@ -1,7 +1,10 @@
-import { BrowserWindow, nativeTheme, screen } from "electron";
+import { BrowserWindow, nativeTheme, screen, shell } from "electron";
+import type { WebContents } from "electron";
 import os from "node:os";
 import { join } from "node:path";
 import { appDir, isDev } from "./env";
+import { appNavigationTarget, decideNavigation } from "./navigation-policy";
+import type { AppNavigationTarget } from "./navigation-policy";
 import { getDefaultSurfaceColor, loadUiPrefs } from "./ui-prefs";
 import { loadWindowState, saveWindowState } from "./window-state";
 import { APP_SHUTDOWN_REQUEST_CHANNEL } from "@koloda/native-ipc";
@@ -80,6 +83,9 @@ export function createWindow() {
           titleBarOverlay: getInitialTitleBarOverlay(),
         });
 
+  const target = appNavigationTarget({ isDev, appDir });
+  attachNavigationGuard(win.webContents, target);
+
   if (windowState.isMaximized) win.maximize();
 
   win.on("close", () => saveWindowState(win));
@@ -103,14 +109,57 @@ export function createWindow() {
     });
   }
 
-  if (isDev) {
-    win.loadURL("http://localhost:3000");
+  if (target.kind === "dev") {
+    win.loadURL(target.origin);
   } else {
     // WHY: Hash `/` so TanStack starts on the index route under file:// (see electron-react main.tsx).
-    win.loadFile(join(appDir, "../electron-react/index.html"), { hash: "/" });
+    win.loadFile(target.indexPath, { hash: "/" });
   }
 
   return win;
+}
+
+// WHY: A link in rendered markdown can navigate this window or open another one.
+// Either page would re-run the preload and inherit every IPC channel.
+function attachNavigationGuard(contents: WebContents, target: AppNavigationTarget) {
+  // WHY: will-navigate and will-frame-navigate both fire for the main frame.
+  let opening: string | null = null;
+  const openOnce = (url: string) => {
+    if (opening === url) return;
+    opening = url;
+    openInBrowser(url);
+    queueMicrotask(() => {
+      if (opening === url) opening = null;
+    });
+  };
+
+  const stop = (url: string, preventDefault: () => void, openHttp: boolean) => {
+    const decision = decideNavigation(url, target);
+    if (decision.action === "allow") return;
+    preventDefault();
+    if (openHttp && decision.action === "open-external") openOnce(decision.url);
+  };
+
+  contents.on("will-navigate", (event) => {
+    stop(event.url, () => event.preventDefault(), true);
+  });
+  contents.on("will-redirect", (event) => {
+    stop(event.url, () => event.preventDefault(), false);
+  });
+  contents.on("will-frame-navigate", (event) => {
+    stop(event.url, () => event.preventDefault(), event.isMainFrame);
+  });
+  contents.setWindowOpenHandler(({ url }) => {
+    const decision = decideNavigation(url, target);
+    if (decision.action === "open-external") openOnce(decision.url);
+    return { action: "deny" };
+  });
+}
+
+function openInBrowser(url: string) {
+  void shell.openExternal(url).catch(() => {
+    // WHY: a missing browser or a rejected launch must not take down the main process.
+  });
 }
 
 function attachWindowCloseCoordination(win: BrowserWindow) {

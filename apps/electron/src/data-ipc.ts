@@ -1,6 +1,7 @@
 import { ipcMain } from "electron";
 import type { DataOnlyChannel, IpcArgs, IpcResult } from "@koloda/native-ipc";
 import { registerAiIpc } from "./ai-ipc";
+import { assertAppSender } from "./app-sender";
 import type { KolodaDb } from "./koloda-db";
 
 type DataHandler = (
@@ -77,7 +78,10 @@ export function registerDataIpc(db: KolodaDb) {
   // contract union. `satisfies` above proves every key is a `DataOnlyChannel`
   // and every handler matches its channel, so this cast only widens the type.
   for (const [channel, handler] of Object.entries(dataHandlers) as [DataOnlyChannel, DataHandler][]) {
-    ipcMain.handle(channel, (_event, args: IpcArgs<DataOnlyChannel>) => handler(db, args));
+    ipcMain.handle(channel, (event, args: IpcArgs<DataOnlyChannel>) => {
+      assertAppSender(event);
+      return handler(db, args);
+    });
   }
 
   // INVARIANT: AI provider calls + secret loads stay in main. Do not add cmd_* for getAiProfileSecrets.

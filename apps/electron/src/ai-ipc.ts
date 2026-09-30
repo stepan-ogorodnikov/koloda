@@ -21,6 +21,7 @@ import type { AiStreamEvent, IpcArgs } from "@koloda/native-ipc";
 import { AI_STREAM_CHANNEL } from "@koloda/native-ipc";
 import type { IpcMainInvokeEvent, WebContents } from "electron";
 import { ipcMain } from "electron";
+import { assertAppSender } from "./app-sender";
 
 type KolodaDb = {
   getAiProfileSecrets: (profileId: string) => unknown;
@@ -173,7 +174,8 @@ function bindChatTools(
 }
 
 export function registerAiIpc(db: KolodaDb) {
-  ipcMain.handle("cmd_ai_list_models", async (_event, args: IpcArgs<"cmd_ai_list_models">) => {
+  ipcMain.handle("cmd_ai_list_models", async (event, args: IpcArgs<"cmd_ai_list_models">) => {
+    assertAppSender(event);
     try {
       const secrets = loadSecrets(db, args.profileId);
       return await wrapAIError(() => fetchModels(secrets));
@@ -183,6 +185,7 @@ export function registerAiIpc(db: KolodaDb) {
   });
 
   ipcMain.handle("cmd_ai_chat_stream", (event: IpcMainInvokeEvent, args: IpcArgs<"cmd_ai_chat_stream">) => {
+    assertAppSender(event);
     const { requestId, profileId, request } = args;
     const sender = event.sender;
     // WHY: Register before any work so cmd_ai_abort during start binds to this run.
@@ -228,7 +231,8 @@ export function registerAiIpc(db: KolodaDb) {
     })();
   });
 
-  ipcMain.handle("cmd_ai_abort", (_event, args: IpcArgs<"cmd_ai_abort">) => {
+  ipcMain.handle("cmd_ai_abort", (event, args: IpcArgs<"cmd_ai_abort">) => {
+    assertAppSender(event);
     activeControllers.get(args.requestId)?.abort();
   });
 }
