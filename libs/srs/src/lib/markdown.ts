@@ -12,7 +12,8 @@ const SVG_IMAGE_TAGS = new Set(["image", "feimage"]);
 
 export function markdownToHtml(markdown: string): string {
   const html = marked.parse(markdown, { async: false }) as string;
-  return DOMPurify.sanitize(html, { FORBID_TAGS: ["style"] });
+  // WHY: CSS can load a remote image via url(), from a <style> tag or a style attribute.
+  return DOMPurify.sanitize(html, { FORBID_TAGS: ["style"], FORBID_ATTR: ["style"] });
 }
 
 function isSafeImageUrl(value: string): boolean {
@@ -39,6 +40,8 @@ function dropRemoteImageUrl(node: Element, data: UponSanitizeAttributeHookEvent)
   if (!isSafeImageUrl(data.attrValue)) data.keepAttr = false;
 }
 
-if (typeof DOMPurify.addHook === "function") {
+// WHY: Without a DOM (node-environment tests import this module), DOMPurify
+// returns early and never defines addHook.
+if (DOMPurify.isSupported) {
   DOMPurify.addHook("uponSanitizeAttribute", dropRemoteImageUrl);
 }

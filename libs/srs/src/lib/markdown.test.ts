@@ -13,6 +13,7 @@ describe("markdownToHtml", () => {
         '<video poster="https://evil.example/c.png"></video>',
         '<svg><image href="https://evil.example/d.png"></image></svg>',
         "<style>b{background:url(https://evil.example/e.png)}</style>",
+        '<p style="background:url(https://evil.example/f.png)">styled</p>',
       ].join("\n"),
     );
 
