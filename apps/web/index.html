@@ -5,6 +5,11 @@
     <base href="%VITE_BASE%" />
 
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- WHY: img-src blocks remote markdown images. wasm-unsafe-eval loads wa-sqlite. http: is a user-set Ollama or LM Studio base URL. -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; base-uri 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self' https: http: ws: wss:;"
+    />
     <script src="./theme-boot.js"></script>
     <link rel="stylesheet" href="/src/styles.css" />
   </head>
