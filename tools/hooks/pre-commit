@@ -3,7 +3,7 @@
 #
 # Commit boundary: local, per-file checks — fast, true regardless of the rest
 # of the change, so intermediate commits of a bigger change still pass them.
-# Whole-program checks (typecheck, rust tests) live at the push boundary (pre-push).
+# Whole-program checks (typecheck, rust tests) run in CI before main can move.
 # Clippy is `koloda:lint`, cached. It and `koloda:test` share dist/target/koloda.
 # Escape hatch: git commit --no-verify.
 

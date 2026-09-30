@@ -1,11 +1,22 @@
-name: PR Checks
+name: CI
 
+# The main ruleset requires the job `checks` to pass on a commit before main
+# can move to it. Renaming the job blocks every push to main.
+# Branch pushes are how a commit gets checked; see `bun run land`.
+# Main itself is not re-checked: it only fast-forwards to checked commits.
 on:
+  push:
+    branches-ignore: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   checks:
@@ -17,12 +28,13 @@ jobs:
           fetch-depth: 0
 
       - name: Set up Bun
-        uses: oven-sh/setup-bun@v1
-
-      - name: Set up Rust
-        uses: dtolnay/rust-toolchain@stable
+        uses: oven-sh/setup-bun@v2
         with:
-          components: clippy
+          bun-version-file: package.json
+
+      # Installs the toolchain and components pinned in rust-toolchain.toml.
+      - name: Set up Rust
+        run: rustup toolchain install && rustc --version
 
       - name: Cache Bun
         uses: actions/cache@v4
@@ -39,9 +51,9 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
             dist/target
-          key: cargo-${{ runner.os }}-${{ hashFiles('Cargo.lock') }}
+          key: cargo-${{ runner.os }}-${{ hashFiles('rust-toolchain.toml') }}-${{ hashFiles('Cargo.lock') }}
           restore-keys: |
-            cargo-${{ runner.os }}-
+            cargo-${{ runner.os }}-${{ hashFiles('rust-toolchain.toml') }}-
 
       - name: Cache Nx
         uses: actions/cache@v4

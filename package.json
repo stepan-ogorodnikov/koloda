@@ -8,6 +8,7 @@
     "libs/*"
   ],
   "type": "module",
+  "packageManager": "bun@1.4.2",
   "scripts": {
     "test:libs": "nx run-many --target=test --projects=tag:type:lib",
     "test:rust": "nx run koloda:test",
@@ -16,6 +17,7 @@
     "typecheck": "tsc -b --pretty false",
     "check:commit": "bun run lint && nx run koloda:lint",
     "check:push": "bun run tools/check-push.ts",
+    "land": "bun run tools/land.ts",
     "check:rust": "nx run koloda:lint",
     "check:rust-push": "nx run koloda:lint && nx run koloda:test",
     "check:web-deploy": "bun run lint && bun run typecheck && bun run test:libs && bun run check:workspace-deps",

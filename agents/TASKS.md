@@ -8,7 +8,7 @@ Branch name: `task/<slug>`.
 The live file on that branch is `tasks/live/<slug>.md`.
 On `done`, move it to `tasks/archive/<slug>.md` on the same branch.
 Do that only when the tip is green.
-The pull request opens after review passes, at Done, and exists to merge.
+At Done, `bun run land` puts the branch on `main`.
 Never commit on top of Archive.
 Do not rename the slug.
 To abandon the work, delete the branch.
@@ -30,17 +30,18 @@ Create one when any of these hold.
 
 A small fix, a typo-level doc edit, or a mechanical rename does not need a task file.
 Git history is enough.
+It still reaches `main` only through `bun run land`, run from any branch or from `main`.
 
 ## Lifecycle
 
 Statuses: `draft` → `ready` → `done`.
 The status lives on one fixed line, exactly `Status: <draft|ready|done>`.
 
-One task = one branch = one PR.
-Parallel tasks are parallel branches and PRs.
+One task = one branch.
+Parallel tasks are parallel branches.
 Do not serialize work on `main` to keep commits contiguous.
 The branch holds the commit train.
-The PR opens at Done and carries it to merge.
+`bun run land` carries it to `main` at Done.
 
 ### Schedule (create)
 
@@ -54,8 +55,6 @@ The PR opens at Done and carries it to merge.
    - A hit means the branch is contaminated.
 2. Add `tasks/live/<slug>.md` with `Status: draft`.
 3. Push the branch.
-   - Do not open a PR.
-   - The PR opens at Done, after review passes.
 4. The branch and its task file are the scheduled unit of work.
    - Finding scheduled and in-flight work means listing `task/*` branches.
    - Run `git ls-remote --heads origin 'task/*'`; also check local `git branch --list 'task/*'`.
@@ -75,9 +74,9 @@ If the task depends on another open task, say so in Plan `Depends on:`.
 Then either stack or wait.
 
 - Stack this branch on that task's branch.
-- Wait to branch from `origin/main` until the dependency has merged.
+- Wait to branch from `origin/main` until the dependency has landed.
 
-Do not assume merge order from PR numbers alone.
+Do not assume the order in which tasks land.
 
 ### Implement
 
@@ -89,15 +88,13 @@ When the human asks to implement.
    - The folder is not the identity.
 3. Tick each Plan checkbox when that commit exists.
 4. Push the branch as commits land.
-   - There is no PR yet.
+   - Each push runs the CI job `checks` on the tip.
 5. Keep history linear.
    - Never create a merge commit.
    - Never run `git merge`.
    - Never run `git pull` without `--rebase`.
-   - Never run `gh pr merge --merge`.
    - To sync, run `git fetch origin && git rebase origin/main`.
-   - To merge the PR, use rebase merge or fast-forward only.
-   - Run `gh pr merge --rebase`.
+   - Never push to `main` directly; `bun run land` is the only way onto it.
    - Do not squash.
    - Plan items stay separate commits for reviewability.
 
@@ -113,31 +110,30 @@ When the human asks to implement.
    - Then re-run review.
 3. Do not create the archive commit until review passes.
 4. Before that commit, required checks on the current tip are green.
-   - No PR exists yet.
-   - Run `bun run check:push` locally.
+   - That is the CI job `checks` on the pushed tip, or `bun run check:push` locally.
    - Do not archive on a red tip.
    - On a flake, re-run the checks.
    - Do not archive to get past red.
-5. Nothing commits after archive except merge.
+5. Nothing commits after archive.
    - Never commit on top of Archive.
    - If Archive is already the tip, recovery is reset, then re-archive (Done).
 
-### Done (merge, gated)
+### Done (land, gated)
 
-Gate: the branch merges only if all three hold.
+Gate: the branch lands only if all three hold.
 
 - The oldest commit on `origin/main..HEAD` is the Add commit.
 - The newest commit on `origin/main..HEAD` is the Archive commit.
 - Every commit carries `Task: <slug>`.
 
-The tip must be green at merge time.
-With the PR open, that is the PR Checks workflow job `checks` (`bun run check:push`).
+The tip must be green when it lands.
+`main` accepts only a commit whose CI job `checks` (`bun run check:push`) passed.
 
 The Add commit adds `tasks/live/<slug>.md`.
 The Archive commit moves `tasks/live/<slug>.md` to `tasks/archive/<slug>.md`.
 The Archive commit has `Status: done` and Outcome filled.
 
-Verify with `git log origin/main..HEAD --oneline` before merging.
+Verify with `git log origin/main..HEAD --oneline` before landing.
 If Add is not first or Archive is not last, stop.
 If the tip is red, stop.
 
@@ -152,7 +148,7 @@ Re-pass review if the fix needs it.
 Create a new Archive commit.
 Status `done`, Outcome filled, move `live/` to `archive/`.
 Force-push with lease if the branch was already pushed.
-Merge only when Add is oldest, Archive is newest, every commit has `Task: <slug>`, and the tip is green.
+Land only when Add is oldest, Archive is newest, every commit has `Task: <slug>`, and the tip is green.
 Never commit on top of Archive.
 Reset and re-archive is the only path.
 
@@ -163,19 +159,16 @@ Required checks on the tip are green.
 1. Fill Outcome.
 2. Flip Status to `done`.
 3. Move `tasks/live/<slug>.md` to `tasks/archive/<slug>.md`.
-4. Push the branch, then open the PR.
-   - Title it after the task.
-   - PR body includes one line: `Task: <slug>`.
-5. Wait for the PR Checks workflow job `checks` to go green.
-6. Merge the PR with rebase merge or fast-forward only.
-   - Do not create merge commits.
-   - The tip is green.
-   - After merge, the archive file is on the integration branch.
+4. Run `bun run land`.
+   - It rebases onto `origin/main`, pushes the branch, and waits for `checks` on that exact tip.
+   - Then it fast-forwards `main` to the tip and deletes the remote branch.
+   - If `main` moved meanwhile, it rebases and checks again.
+   - If `checks` fails, it stops; reset Archive, fix, and re-archive as above.
+   - After landing, the archive file is on `main`.
    - The live path is gone.
 
 Commits on `main` may interleave across tasks.
-Recover one task's history from its merged PR.
-Or use `git log --grep='Task: <slug>'`.
+Recover one task's history with `git log --grep='Task: <slug>'`.
 
 ## File
 
@@ -246,22 +239,18 @@ The checkbox is ticked when that commit exists.
 3. Before ending a session, update Open questions and Plan on the task branch.
    - The next session starts from the file.
 4. After review passes and the tip is green, archive as the last commit.
-   - No PR exists yet; run `bun run check:push` locally.
+   - Green is the CI job `checks` on the pushed tip, or `bun run check:push` locally.
    - Do not archive on a red tip.
    - On a flake, re-run the checks.
    - Do not archive to get past red.
    - Fill Outcome.
    - Flip Status to `done`.
    - Move `tasks/live/<slug>.md` to `tasks/archive/<slug>.md`.
-   - Push, open the PR titled after the task, body line `Task: <slug>`.
-   - Wait for the PR Checks workflow job `checks` to go green.
-   - Merge with rebase merge or fast-forward only.
-   - Do not create merge commits.
-   - Merge only when Add is oldest, Archive is newest, every commit has `Task: <slug>`, and the tip is green.
+   - Run `bun run land`.
+   - Land only when Add is oldest, Archive is newest, every commit has `Task: <slug>`, and the tip is green.
    - Never commit on top of Archive.
    - If Archive is already the tip and review or checks fail, reset it, fix, then re-archive.
 5. To abandon, delete the branch locally and on `origin`.
-   - There is no PR to close.
 
 A new session starts from the task file on its branch.
 It does not start from memory or chat history.
