@@ -29,7 +29,7 @@ msgstr "Initializing the database"
 msgid "web.setup.storage"
 msgstr "All data stays on this device, in IndexedDB browser storage."
 
-#: src/components/web-setup.tsx:87
+#: src/components/web-setup.tsx:80
 msgid "web.setup.submit"
 msgstr "Get started"
 

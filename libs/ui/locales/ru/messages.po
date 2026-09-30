@@ -13,15 +13,15 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
-#: ../../libs/ui/src/lib/primitives/dnd/drag-handle.tsx:21
+#: ../../libs/ui/src/lib/primitives/dnd/drag-handle.tsx:20
 msgid "drag-handle.description"
 msgstr "Перетащите для изменения порядка расположения элементов"
 
-#: ../../libs/ui/src/lib/primitives/dnd/drag-handle.tsx:20
+#: ../../libs/ui/src/lib/primitives/dnd/drag-handle.tsx:19
 msgid "drag-handle.label"
 msgstr "Контроллер перетаскивания"
 
-#: ../../libs/ui/src/lib/ui/error-message.tsx:39
+#: ../../libs/ui/src/lib/ui/error-message.tsx:44
 msgid "error.details"
 msgstr "Подробности"
 
@@ -43,19 +43,19 @@ msgstr "Сохранить"
 msgid "form.updated-at {0}"
 msgstr "Обновлено {0}"
 
-#: ../../libs/ui/src/lib/ui/hotkey-recorder.tsx:53
+#: ../../libs/ui/src/lib/ui/hotkey-recorder.tsx:52
 msgid "hotkey-recorder.accept"
 msgstr "Сохранить эту комбинацию клавиш"
 
-#: ../../libs/ui/src/lib/ui/add-hotkey-button.tsx:20
+#: ../../libs/ui/src/lib/ui/add-hotkey-button.tsx:19
 msgid "hotkey-recorder.add-button.label"
 msgstr "Добавить комбинацию клавиш"
 
-#: ../../libs/ui/src/lib/ui/hotkey-recorder.tsx:61
+#: ../../libs/ui/src/lib/ui/hotkey-recorder.tsx:60
 msgid "hotkey-recorder.cancel"
 msgstr "Отменить"
 
-#: ../../libs/ui/src/lib/ui/hotkey-recorder.tsx:48
+#: ../../libs/ui/src/lib/ui/hotkey-recorder.tsx:47
 msgid "hotkey-recorder.input.placeholder"
 msgstr "Ожидание ввода"
 
@@ -79,7 +79,7 @@ msgstr "Не найдено"
 msgid "query-error.message"
 msgstr "Ошибка загрузки"
 
-#: ../../libs/ui/src/lib/ui/query-error.tsx:68
+#: ../../libs/ui/src/lib/ui/query-error.tsx:69
 msgid "query-error.retry"
 msgstr "Повторить"
 
@@ -87,27 +87,27 @@ msgstr "Повторить"
 msgid "query-loading.message"
 msgstr "Загрузка..."
 
-#: ../../libs/ui/src/lib/primitives/table/table-pagination.tsx:68
+#: ../../libs/ui/src/lib/primitives/table/table-pagination.tsx:65
 msgid "table.pagination.buttons.first"
 msgstr "Перейти на первую страницу"
 
-#: ../../libs/ui/src/lib/primitives/table/table-pagination.tsx:90
+#: ../../libs/ui/src/lib/primitives/table/table-pagination.tsx:87
 msgid "table.pagination.buttons.last"
 msgstr "Перейти на последнюю страницу"
 
-#: ../../libs/ui/src/lib/primitives/table/table-pagination.tsx:83
+#: ../../libs/ui/src/lib/primitives/table/table-pagination.tsx:80
 msgid "table.pagination.buttons.next"
 msgstr "Перейти на следующую страницу"
 
-#: ../../libs/ui/src/lib/primitives/table/table-pagination.tsx:75
+#: ../../libs/ui/src/lib/primitives/table/table-pagination.tsx:72
 msgid "table.pagination.buttons.previous"
 msgstr "Перейти на предыдущую страницу"
 
-#: ../../libs/ui/src/lib/primitives/table/table-pagination.tsx:109
+#: ../../libs/ui/src/lib/primitives/table/table-pagination.tsx:101
 msgid "table.pagination.page-size.label"
 msgstr "На странице:"
 
-#: ../../libs/ui/src/lib/primitives/table/table-pagination.tsx:61
+#: ../../libs/ui/src/lib/primitives/table/table-pagination.tsx:58
 msgid "table.pagination.records.label"
 msgstr "из"
 
@@ -119,6 +119,6 @@ msgstr "Назад"
 msgid "titlebar.navigation.forward"
 msgstr "Вперёд"
 
-#: ../../libs/ui/src/lib/ui/titlebar-sidebar-controls.tsx:45
+#: ../../libs/ui/src/lib/ui/titlebar-sidebar-controls.tsx:46
 msgid "titlebar.sidebar-controls.label"
 msgstr "Переключить боковую панель"

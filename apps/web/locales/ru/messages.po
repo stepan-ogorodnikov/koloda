@@ -29,7 +29,7 @@ msgstr "Заполнение базы данных"
 msgid "web.setup.storage"
 msgstr "Все данные остаются на этом устройстве в хранилище браузера IndexedDB."
 
-#: src/components/web-setup.tsx:87
+#: src/components/web-setup.tsx:80
 msgid "web.setup.submit"
 msgstr "Начать работу"
 

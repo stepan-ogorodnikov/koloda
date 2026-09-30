@@ -125,7 +125,7 @@ msgstr "Максимальный интервал"
 
 #: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:78
 msgid "algorithm.inputs.notes.label"
-msgstr "Заметка"
+msgstr "Заметки"
 
 #: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:130
 msgid "algorithm.inputs.relearning-steps.label"
@@ -367,7 +367,7 @@ msgstr "Действия"
 
 #: ../../libs/srs-react/src/lib/decks/deck-details.tsx:81
 msgid "deck.inputs.notes.label"
-msgstr "Заметка"
+msgstr "Заметки"
 
 #: ../../libs/srs-react/src/lib/decks/deck-details.tsx:73
 msgid "deck.inputs.title.label"
@@ -587,7 +587,7 @@ msgstr "Поля"
 
 #: ../../libs/srs-react/src/lib/templates/template.tsx:78
 msgid "template.inputs.notes.label"
-msgstr "Заметка"
+msgstr "Заметки"
 
 #: ../../libs/srs-react/src/lib/templates/template.tsx:70
 msgid "template.inputs.title.label"

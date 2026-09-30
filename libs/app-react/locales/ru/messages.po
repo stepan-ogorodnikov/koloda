@@ -33,39 +33,39 @@ msgstr "Вкладки колоды"
 msgid "decks.title"
 msgstr "Колоды"
 
-#: ../../libs/app-react/src/lib/components/app.tsx:23
+#: ../../libs/app-react/src/lib/components/app.tsx:15
 msgid "nav.ai"
 msgstr "Ассистент"
 
-#: ../../libs/app-react/src/lib/components/app.tsx:21
+#: ../../libs/app-react/src/lib/components/app.tsx:13
 msgid "nav.algorithms"
 msgstr "Алгоритмы"
 
-#: ../../libs/app-react/src/lib/components/app.tsx:20
+#: ../../libs/app-react/src/lib/components/app.tsx:12
 msgid "nav.decks"
 msgstr "Колоды"
 
-#: ../../libs/app-react/src/lib/components/app.tsx:19
+#: ../../libs/app-react/src/lib/components/app.tsx:11
 msgid "nav.home"
 msgstr "Главная"
 
-#: ../../libs/app-react/src/lib/components/app.tsx:26
+#: ../../libs/app-react/src/lib/components/app.tsx:18
 msgid "nav.settings"
 msgstr "Настройки"
 
-#: ../../libs/app-react/src/lib/components/app.tsx:22
+#: ../../libs/app-react/src/lib/components/app.tsx:14
 msgid "nav.templates"
 msgstr "Шаблоны"
 
-#: ../../libs/app-react/src/lib/components/route-error.tsx:18
+#: ../../libs/app-react/src/lib/components/route-error.tsx:16
 msgid "route-error.message"
 msgstr "Произошла ошибка"
 
-#: ../../libs/app-react/src/lib/components/route-error.tsx:29
+#: ../../libs/app-react/src/lib/components/route-error.tsx:27
 msgid "route-error.reload"
 msgstr "Перезагрузить приложение"
 
-#: ../../libs/app-react/src/lib/components/route-error.tsx:26
+#: ../../libs/app-react/src/lib/components/route-error.tsx:24
 msgid "route-error.retry"
 msgstr "Попробовать снова"
 
