@@ -8,7 +8,8 @@ Branch name: `task/<slug>`.
 The live file on that branch is `tasks/live/<slug>.md`.
 On `done`, move it to `tasks/archive/<slug>.md` on the same branch.
 Do that only when the tip is green.
-At Done, `bun run land` puts the branch on `main`.
+Done starts only when the human asks to land.
+Then `bun run land` puts the branch on `main`.
 Never commit on top of Archive.
 Do not rename the slug.
 To abandon the work, delete the branch.
@@ -41,7 +42,7 @@ One task = one branch.
 Parallel tasks are parallel branches.
 Do not serialize work on `main` to keep commits contiguous.
 The branch holds the commit train.
-`bun run land` carries it to `main` at Done.
+When the human asks to land, `bun run land` carries it to `main`.
 
 ### Schedule (create)
 
@@ -87,7 +88,7 @@ When the human asks to implement.
    - The slug is the identity.
    - The folder is not the identity.
 3. Tick each Plan checkbox when that commit exists.
-4. Push the branch as commits land.
+4. Push the branch as commits are made.
    - Each push runs the CI job `checks` on the tip.
 5. Keep history linear.
    - Never create a merge commit.
@@ -98,30 +99,34 @@ When the human asks to implement.
    - Do not squash.
    - Plan items stay separate commits for reviewability.
 
-### Review (gate before archive)
+### Self-review (agent, before the human's ask)
 
-1. Review after the last Plan item.
-   - Do not archive yet.
+Self-review is the agent checking its own work.
+It is not the human's approval.
+
+1. Self-review after the last Plan item.
    - The diff under review is `origin/main..HEAD`.
    - Review per `agents/REVIEW.md` plus the task's area guides.
 2. If changes are needed, add them as new commits on `task/<slug>`.
    - Each commit carries a `Task: <slug>` trailer.
    - Update Plan checkboxes if scope changed.
-   - Then re-run review.
-3. Do not create the archive commit until review passes.
-4. Before that commit, required checks on the current tip are green.
+   - Then self-review again.
+3. When self-review passes, required checks on the tip must be green.
    - That is the CI job `checks` on the pushed tip, or `bun run check:push` locally.
-   - Do not archive on a red tip.
    - On a flake, re-run the checks.
-   - Do not archive to get past red.
-5. Nothing commits after archive.
-   - Never commit on top of Archive.
-   - If Archive is already the tip, recovery is reset, then re-archive (Done).
+4. Then report to the human and wait.
+   - Do not archive yet.
+   - Archive happens at Done, after the human asks to land.
+   - If the human asks for changes, add commits and self-review again.
 
 ### Done (land, gated)
 
-Gate: the branch lands only if all three hold.
+Done starts only when the human asks to land.
+A passing self-review is not that ask.
 
+Gate: the branch lands only if all four hold.
+
+- The human asked to land.
 - The oldest commit on `origin/main..HEAD` is the Add commit.
 - The newest commit on `origin/main..HEAD` is the Archive commit.
 - Every commit carries `Task: <slug>`.
@@ -137,24 +142,26 @@ Verify with `git log origin/main..HEAD --oneline` before landing.
 If Add is not first or Archive is not last, stop.
 If the tip is red, stop.
 
-If Archive is already the tip and review needs changes, or checks are red, reset that Archive commit off the tip.
+Nothing commits after Archive.
+If Archive is already the tip and changes are needed, or checks are red, reset that Archive commit off the tip.
 Soft reset if reusing the task-file edit.
 Otherwise recreate Archive later.
 Add fix commits.
 Each carries `Task: <slug>`.
 Update Plan if scope changed.
 Get the tip green.
-Re-pass review if the fix needs it.
+Self-review again if the fix needs it.
 Create a new Archive commit.
 Status `done`, Outcome filled, move `live/` to `archive/`.
 Force-push with lease if the branch was already pushed.
-Land only when Add is oldest, Archive is newest, every commit has `Task: <slug>`, and the tip is green.
+Land only when the gate holds and the tip is green.
 Never commit on top of Archive.
 Reset and re-archive is the only path.
 
-On completion, work on the task branch.
-Review has passed.
+When the human asks to land, work on the task branch.
+Self-review has passed.
 Required checks on the tip are green.
+Do not archive on a red tip.
 
 1. Fill Outcome.
 2. Flip Status to `done`.
@@ -238,19 +245,19 @@ The checkbox is ticked when that commit exists.
    - Do not guess answers.
 3. Before ending a session, update Open questions and Plan on the task branch.
    - The next session starts from the file.
-4. After review passes and the tip is green, archive as the last commit.
+4. After self-review passes and the tip is green, report to the human and wait.
    - Green is the CI job `checks` on the pushed tip, or `bun run check:push` locally.
+   - Do not archive yet.
+5. When the human asks to land, archive as the last commit, then run `bun run land`.
    - Do not archive on a red tip.
-   - On a flake, re-run the checks.
    - Do not archive to get past red.
    - Fill Outcome.
    - Flip Status to `done`.
    - Move `tasks/live/<slug>.md` to `tasks/archive/<slug>.md`.
-   - Run `bun run land`.
-   - Land only when Add is oldest, Archive is newest, every commit has `Task: <slug>`, and the tip is green.
+   - Land only when the Done gate holds and the tip is green.
    - Never commit on top of Archive.
-   - If Archive is already the tip and review or checks fail, reset it, fix, then re-archive.
-5. To abandon, delete the branch locally and on `origin`.
+   - If Archive is already the tip and changes are needed or checks fail, reset it, fix, then re-archive.
+6. To abandon, delete the branch locally and on `origin`.
 
 A new session starts from the task file on its branch.
 It does not start from memory or chat history.
