@@ -17,8 +17,9 @@ Paste the listed guides into the prompt, plus the task description.
 Nothing else.
 For an audit, use the Auditing section, not the Authoring table alone.
 
-Before routing a change, grep live task files: `rg --crlf -l '^Status: (draft|ready)$' tasks/live`.
-If a hit's Intent or Scope overlaps the intended work, also paste that file and `agents/TASKS.md`.
+Before routing a change, list in-flight tasks: `git ls-remote --heads origin 'task/*'`.
+Task files live on their `task/<slug>` branch, not on `main`.
+If a task's Intent or Scope overlaps the intended work, also paste its `tasks/live/<slug>.md` and `agents/TASKS.md`.
 
 Load one primary spec, not a cluster.
 If the task crosses that spec's stated out-of-scope, add the sibling it names.

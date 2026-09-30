@@ -3,6 +3,7 @@
 ## Scope
 
 Covers card content, scheduling state, adding, editing, deleting, resetting progress, preview, and card views.
+It is also the home for what rendered markdown may contain, wherever the app renders it.
 Does not cover deck or template management, lesson flow, the FSRS algorithm itself, or AI card generation.
 Accepting generated cards into a deck is covered; how those cards are generated is not.
 Deck, template, lesson, algorithm, and AI card generation behavior are covered by the decks, templates, lessons, algorithms, and assistant card generation specs.
@@ -16,11 +17,11 @@ A card belongs to exactly one deck and uses exactly one template.
 ## Core model
 
 - **Card** — the unit of study; has content, a deck, a template, and scheduling state
-- **Card state** — where the card sits in the spaced-repetition flow (see [Card State](#card-state))
+- **Card state** — where the card sits in the spaced-repetition flow (see §Card State)
 - **Card content** — values for each field of the card's template, stored as text
 - **Scheduling data** — numbers that drive when the card comes up next, populated by the algorithm
 
-Relationships:
+### Relationships
 
 - A card belongs to exactly one deck and cannot be moved to another.
 - A card stores its own template.
@@ -46,6 +47,20 @@ Rendered markdown appears only in preview and lessons.
 
 Having any card on a template locks that template.
 See TEMPLATES.md (§Locking).
+
+## Rendered Markdown
+
+Markdown is rendered in card preview, in lessons, and in assistant messages, including reasoning.
+Rendering keeps the formatting and drops anything that could run code or reach the network on its own.
+
+- Scripts and other active content are removed.
+- Styles written into the content are removed; rendered markdown uses the app's own styles.
+- Images show only when they come from the app itself or are embedded in the text.
+  Images from other sites are not shown, so showing a card or a reply never contacts another site.
+- Links stay clickable.
+  In the desktop app, a web link opens in the system browser and the app window stays on the app.
+  Other kinds of links do nothing in the desktop app.
+  In the web app, a link follows normal browser behavior and leaves the app in the current tab.
 
 ## Card State
 

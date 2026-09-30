@@ -104,6 +104,8 @@ Raising them wastes the human reviewer's time and signals the reviewer did not r
 - Do not flag a pointer (`FILE.md (§Section)`) as missing detail. One home per rule is the point.
 - Do not suggest adding optional parameters or future-proofing branches. See Change Discipline in `agents/CODE-STYLE.md`.
 - Do not propose renaming or reformatting adjacent code the task did not touch. See Change Discipline in `agents/CODE-STYLE.md`.
+- Do not propose running the Playwright suites in the CI `checks` job or the push gate.
+  They run on the web deploy by design. See `agents/VERIFY.md`.
 
 ## How to write a comment
 

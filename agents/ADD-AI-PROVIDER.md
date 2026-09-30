@@ -4,7 +4,9 @@
 
 ## Overview
 
-AI providers require changes across 5 layers: TypeScript catalog/secrets, Rust domain, UI forms, chat streaming, and provider registry.
+AI providers require changes across these layers:
+TypeScript catalog/secrets, Rust domain and repository, provider module and registry, chat streaming, UI form config.
+Tests cover both languages.
 
 ## Workflow
 
@@ -91,7 +93,8 @@ Add one file per provider (e.g. `my-provider.ts`) that owns fetchModels, createC
 import { streamChatWithMyProvider } from "../chat-stream";
 import { AIError, throwForAIResponse } from "../error";
 import type { AIGenerationClient, AIProviderEntry } from "../provider-registry";
-import { isPresentApiKey, type AISecrets } from "../provider-secrets";
+import { isPresentApiKey } from "../provider-secrets";
+import type { AISecrets } from "../provider-secrets";
 import type { AIModel } from "../models";
 
 export async function fetchMyProviderModels(apiKey: string): Promise<AIModel[]> {
@@ -270,7 +273,7 @@ There is no per-provider registration step.
 `settings-ai-add-profile.tsx` passes the picker selection to the generic `AddAIProfileForm`.
 The picker lists whatever the host store enables (see step 8).
 `settings-ai-edit-profile.tsx` derives the provider from `profile.secrets?.provider` and renders `EditAIProfileForm`.
-Both resolve the entry added in step 7.
+Both resolve the entry added in step 6.
 Check that the add dialog renders the new fields and the edit dialog prefills them via `fromSecrets`.
 
 ### 8. Host enablement

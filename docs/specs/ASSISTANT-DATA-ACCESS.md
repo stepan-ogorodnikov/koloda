@@ -35,7 +35,7 @@ Duplicate prevention is the model's choice to inspect existing cards through a t
   Reasoning rows share that list; see ASSISTANT-MESSAGES.md (§Message Content).
 - **Budgets** — caps on tool output: 200 cards per deck list, 8,000 serialized characters, 200 accepted cards per proposal
 
-Relationships:
+### Relationships
 
 - Data access is always on; every provider behaves the same.
 - Discovery happens by tool calls during the run — never by system-prompt injection or submit-time snapshots.

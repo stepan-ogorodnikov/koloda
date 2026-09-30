@@ -21,7 +21,7 @@ See CARDS.md (§Relationships) for how a card keeps its template.
 - **Layout item** — one study presentation of a field: which field, and which operation
 - **Lock** — whether any card currently uses the template
 
-Relationships:
+### Relationships
 
 - Every template has at least one field and at least one layout item.
 - Each layout item points at a field that exists on the same template.

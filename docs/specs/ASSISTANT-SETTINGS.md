@@ -29,7 +29,7 @@ Whether settings are open is not remembered across reloads.
 - **Temperature** — sampling temperature sent with every run
 - **Built-in defaults** — the product's default prompt text and temperature
 
-Relationships:
+### Relationships
 
 - Saved settings are global; every conversation reads the same values.
 - Profile, model, and model parameters stay per conversation; see the conversations spec.

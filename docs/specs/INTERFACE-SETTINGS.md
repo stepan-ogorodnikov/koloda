@@ -26,7 +26,7 @@ Language and color scheme are also chosen during first setup, before any data ex
 - **Date format** — how dates are rendered across the app
 - **Time format** — how times of day are rendered across the app
 
-Relationships:
+### Relationships
 
 - Color scheme decides which of the light and dark themes is active.
 - The light and dark themes are separate choices, remembered separately.
@@ -48,9 +48,9 @@ The choice is saved with the interface settings.
 The document language follows the active locale for assistive tools.
 
 At startup the app does not read the saved language back.
-Startup picks the locale itself: a remembered last choice where the app keeps one, otherwise the device language, otherwise English.
-The desktop app starts from the device language each time.
-The web app remembers the last choice in the browser.
+Startup picks the locale itself.
+It uses the last choice remembered on this device, otherwise the device language, otherwise English.
+The web and desktop apps both remember the last choice locally.
 The saved value records the choice; it does not restore it.
 
 ## Color Scheme

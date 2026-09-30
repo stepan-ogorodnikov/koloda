@@ -22,7 +22,7 @@ Together they form a single turn in the conversation, tied to one AI run.
 - **Metadata kind** — chat-text or error; decides how an assistant message renders
 - **Revert point** — the user message a revert targets; in-memory, at most one per conversation
 
-Relationships:
+### Relationships
 
 - An assistant message inherits its state from its run.
 - A message pair maps to exactly one run; retry overwrites that pair in place.
@@ -185,10 +185,11 @@ The conversation history sent to the AI is rebuilt from the now-shorter message 
 ## Message Content
 
 Assistant text is displayed as rendered markdown, including leftover text on a mixed turn.
+What rendered markdown may contain is in CARDS.md (§Rendered Markdown).
 User messages are displayed as paragraphs.
 Reasoning is shown as an activity row on the same assistant message.
 It sits in the same activity list as tool calls, in the order they arrived.
-The reasoning text is displayed as rendered markdown, using the same sanitization as assistant text.
+The reasoning text is displayed as rendered markdown, under the same rules as assistant text.
 While the model is thinking, the row is labeled Thinking.
 When thinking finishes, the row is labeled Thought.
 The reasoning text is collapsed by default, including while thinking.

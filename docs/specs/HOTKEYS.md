@@ -28,7 +28,7 @@ Hotkeys that need activation gating also carry a runtime scope.
 - **Runtime scope** — when a hotkey is active, distinct from its category
 - **Action** — what the hotkey triggers
 
-Relationships:
+### Relationships
 
 - Each hotkey belongs to a category and has an action.
 - A hotkey has zero or more key bindings.

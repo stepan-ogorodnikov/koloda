@@ -151,7 +151,10 @@ pub const DARK_THEMES: &[&str] = &[/* … */, "my-dark"];
 TS and Rust registries must stay in sync.
 Zod and Rust validation both reject unknown theme ids.
 
-### 8. Verify in the UI
+### 8. Hand off a Manual verify block
+
+Do not start the app to check the theme yourself; see `agents/VERIFY.md`.
+End with a Manual verify block that covers these paths:
 
 1. Open Settings → Interface.
 2. Pick the new light and/or dark theme.
@@ -183,7 +186,7 @@ Do not change app `store.ts` seed values unless that is requested.
 - [ ] `@import` in `global.css`
 - [ ] Entry in TS `LIGHT_THEMES` or `DARK_THEMES`
 - [ ] Matching entry in Rust `LIGHT_THEMES` or `DARK_THEMES`
-- [ ] Visual check in light/dark scheme with the new theme selected
+- [ ] Manual verify block for the light/dark scheme with the new theme selected
 
 ## References
 

@@ -23,7 +23,7 @@ It does not rewrite existing card scheduling numbers until those cards are grade
 - **Parameters** — retention, weights, fuzz, learning steps, relearning steps, and maximum interval
 - **Successor** — another algorithm that takes over decks when one is deleted
 
-Relationships:
+### Relationships
 
 - A deck stores which algorithm to use and uses that algorithm's current parameters when grading.
 - Cards do not store an algorithm of their own; see DECKS.md (§Relationships).

@@ -33,7 +33,7 @@ Closing the dialog clears the session.
 - **Upload queue** — graded results waiting to be saved, one at a time
 - **Phase** — closed, preparing, configuring, loading-cards, studying, or finished
 
-Relationships:
+### Relationships
 
 - Available counts come from the user's decks and due times.
 - Amounts are chosen at init, then used to load lesson data.
@@ -198,7 +198,7 @@ Comparison ignores leading and trailing whitespace and letter case.
 If they match, the typed answer is shown as correct.
 If they do not match, the typed answer is shown as incorrect and the correct value is shown below it.
 
-Markdown fields are rendered as formatted content.
+Markdown fields are rendered as formatted content; see CARDS.md (§Rendered Markdown).
 They participate in reveal visibility through the layout, but they do not present a typing input.
 
 If every field in the layout is display-only, there is nothing to submit.

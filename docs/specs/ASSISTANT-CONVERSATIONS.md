@@ -31,7 +31,7 @@ The model may propose cards during that run.
 - **Prompt input** — the unsent composer text for this conversation
 - **Revert state** — in-memory only; hides messages from a past user message onward
 
-Relationships:
+### Relationships
 
 - A user message, its assistant message, and their run form one turn.
 - Only one run can be active per conversation at a time.

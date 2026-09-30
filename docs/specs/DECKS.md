@@ -20,7 +20,7 @@ The current template is used when the user adds cards manually or generates card
 - **Notes** — optional text the user writes about the deck
 - **Current template** — the template offered for new cards added to this deck
 
-Relationships:
+### Relationships
 
 - See CARDS.md (§Relationships) for deck membership and a card's own template.
 - Cards do not store an algorithm of their own; they use the deck's algorithm at grade time.

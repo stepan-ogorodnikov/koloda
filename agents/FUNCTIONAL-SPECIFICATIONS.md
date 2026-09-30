@@ -101,6 +101,7 @@ A reader who only has this file should know when they must open a sibling.
 A glossary, not a preview of later sections.
 Each bullet is a term and a short definition.
 Relationships are the invariants that belong in *this* spec.
+They sit under a `### Relationships` heading inside Core model, so siblings can point at `FILE.md (§Relationships)`.
 If a relationship is owned elsewhere, the bullet is a pointer, not a restatement.
 
 ### Concept sections

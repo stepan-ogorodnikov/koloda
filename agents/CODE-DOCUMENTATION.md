@@ -152,6 +152,13 @@ of statements. Fixture and mock docs may describe their config surface.
 Non-obvious behavior still gets `// WHY:` / `// INVARIANT:` / `// WORKAROUND:`
 tags. Separator banner lines (`// ====`) add no information and stay out.
 
+#### 4. Rust `// SAFETY:` Comments
+
+Every Rust `unsafe` block carries a `// SAFETY:` comment directly above it.
+The workspace clippy lint `undocumented_unsafe_blocks` requires it, so it is not optional.
+It states why the block upholds the invariants the unsafe operation needs.
+Use it only on `unsafe` blocks; everywhere else the tags above apply.
+
 ## Comments vs. decisions
 
 A tagged comment is the home for a local trap.

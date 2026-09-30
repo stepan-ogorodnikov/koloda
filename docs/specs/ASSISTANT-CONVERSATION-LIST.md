@@ -27,7 +27,7 @@ What a run does after it starts is a separate model.
 - **Clone** — a new conversation copied from an existing one
 - **Delete** — permanent removal of a conversation
 
-Relationships:
+### Relationships
 
 - A list row exists only after an identity is assigned.
 - Working takes priority over unread on the same row.

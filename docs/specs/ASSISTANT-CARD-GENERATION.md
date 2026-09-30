@@ -31,7 +31,7 @@ It goes through the same lifecycle: streaming, success, failure, cancellation, o
 - **Card status** — idle, pending, success, or error; tracked per card
 - **Selection** — which idle cards the add button will send; all cards start selected
 
-Relationships:
+### Relationships
 
 - Card generation happens inside a chat run; there is no separate mode.
 - Card content never persists without review; only cards the user adds from the review table reach the deck.

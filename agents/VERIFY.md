@@ -4,8 +4,16 @@ This guide defines how an agent proves a change without driving the running app.
 Machine checks stay on unit and integration tests.
 User-facing behavior is verified by the human from a short brief the agent writes.
 
-Playwright suites (`apps/web-e2e`, `apps/electron-e2e`) are CI and human tools.
-Do not treat them as the agent's proof loop.
+Playwright suites (`apps/web-e2e`, `apps/electron-e2e`) are human tools.
+The web suite also runs on the GitHub Pages deploy, before the build is published.
+The desktop suite runs only when a human runs it.
+
+Neither suite runs in the CI `checks` job that gates `main`.
+That is intentional.
+The deployed web app is the only public surface, and the suites are too heavy to run on every push.
+Do not add them to `checks` or to `bun run check:push`.
+
+Do not treat either suite as the agent's proof loop.
 
 ## Split of ownership
 
@@ -73,7 +81,8 @@ Do not include it for pure domain or schema work that has no UI surface.
 
 - `agents/TESTING.md` — what automated tests to write and which commands to run.
 - `agents/TASKS.md` — Plan `Done when` may point at test commands and at this Manual verify block.
-- `apps/web-e2e/README.md`, `apps/electron-e2e/README.md` — how humans or CI run Playwright.
+- `apps/web-e2e/README.md`, `apps/electron-e2e/README.md` — how humans run Playwright.
+  The web README also covers how the deploy runs its suite.
   That is not agent procedure.
 
 ## Checklist

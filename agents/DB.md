@@ -23,9 +23,8 @@ When modifying database schema:
 1. **Hand-write the next file** at `crates/koloda/src/migrations/V{n}__<name>.sql`.
    `n` is max existing `V` plus 1.
    Never edit a file that has already been applied.
-   Pre-release baseline reset is wipe local DBs and replace `V1`.
-   Do not `ALTER` the old integer schema.
-   Do not add `V6` on top of it.
+   A baseline reset (wipe local DBs and replace `V1`) is a pre-release exception, not the default.
+   Do it only when the human asks for one.
    Product tables stay structurally equivalent across hosts (same names, nullability, FKs, indexes).
    No backticks in SQL.
    Add `IF NOT EXISTS` to `CREATE TABLE` / `CREATE INDEX` / `CREATE UNIQUE INDEX`.

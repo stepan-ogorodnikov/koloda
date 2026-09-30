@@ -27,7 +27,7 @@ They are edited on the learning settings screen and take effect for later study.
 - **Day starts at** — local wall-clock time that begins a new learning day
 - **Learn-ahead limit** — how far into the future a graded card may still re-enter the same lesson
 
-Relationships:
+### Relationships
 
 - Daily limits and today's review totals shape lesson init defaults; see LESSONS.md (§Default Amounts).
 - Those same figures are shown on the lessons screen; see LESSONS.md (§Today's Progress).

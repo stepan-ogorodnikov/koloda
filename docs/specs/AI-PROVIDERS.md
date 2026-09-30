@@ -25,7 +25,7 @@ The app presents one consistent interface regardless of provider.
 - **Model** — a model available from a provider, identified by a model ID and a display name
 - **Model allowlist** — the per-profile restriction on which models are available
 
-Relationships:
+### Relationships
 
 - A profile belongs to one provider.
 - Secrets belong to one profile and are not shared across profiles.
