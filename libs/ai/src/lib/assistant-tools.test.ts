@@ -66,6 +66,24 @@ function createChatRequest(overrides: Partial<ChatStreamRequest> = {}): ChatStre
   };
 }
 
+/** Asks for get_deck_cards once; a request made after abort rejects like a real provider. */
+function createSingleToolCallModel() {
+  return new MockLanguageModelV3({
+    doStream: async ({ abortSignal }): Promise<MockStreamResult> => {
+      if (abortSignal?.aborted) throw new DOMException("Aborted", "AbortError");
+      return streamOf([
+        {
+          type: "tool-call",
+          toolCallId: "call-1",
+          toolName: "get_deck_cards",
+          input: JSON.stringify({ deckId: "01900000-0000-7000-8000-000000000007" }),
+        },
+        { type: "finish", finishReason: { unified: "tool-calls", raw: "tool-calls" }, usage: usage(3, 5) },
+      ]);
+    },
+  });
+}
+
 /** First call asks for a tool; later calls answer with text. */
 function createToolRoundTripModel() {
   let callCount = 0;
@@ -940,22 +958,7 @@ describe("chat tool streaming", () => {
 
   it("aborts cleanly mid-tool-run when the executor honors the abort signal", async () => {
     const controller = new AbortController();
-    const model = new MockLanguageModelV3({
-      doStream: async ({ abortSignal }): Promise<MockStreamResult> => {
-        // Mimics a provider whose in-flight request rejects once the signal fires.
-        if (abortSignal?.aborted) throw new DOMException("Aborted", "AbortError");
-        return streamOf([
-          {
-            type: "tool-call",
-            toolCallId: "call-1",
-            toolName: "get_deck_cards",
-            input: JSON.stringify({ deckId: "01900000-0000-7000-8000-000000000007" }),
-          },
-          { type: "finish", finishReason: { unified: "tool-calls", raw: "tool-calls" }, usage: usage(3, 5) },
-        ]);
-      },
-    });
-    fakeModelSlot.model = model;
+    fakeModelSlot.model = createSingleToolCallModel();
     const events: AssistantToolEvent[] = [];
     // The executor hangs like an in-flight query and settles only on abort.
     const executeTool = vi.fn(
@@ -964,18 +967,15 @@ describe("chat tool streaming", () => {
           controller.signal.addEventListener("abort", () => reject(new DOMException("Aborted", "AbortError")), {
             once: true,
           });
+          // The user cancels while this query is in flight.
+          controller.abort();
         }),
     );
-    const onToolEvent = (event: AssistantToolEvent) => {
-      events.push(event);
-      // Abort once the toolCall part has been delivered, so the run is cut mid-tool.
-      if (event.kind === "toolCall") controller.abort();
-    };
 
     // WHY: with no completed step recorded, the SDK rejects usage with the abort
     // reason; the stream must surface it unwrapped so callers can classify cancel.
     const error = await streamChatWithOllama(
-      createChatRequest({ tools: ["get_deck_cards"], executeTool, onToolEvent }),
+      createChatRequest({ tools: ["get_deck_cards"], executeTool, onToolEvent: (event) => events.push(event) }),
       vi.fn(),
       controller.signal,
       OLLAMA_OPTIONS,
@@ -992,6 +992,25 @@ describe("chat tool streaming", () => {
     ]);
   });
 
+  it("does not start the host tool when the run is canceled as its tool call arrives", async () => {
+    const controller = new AbortController();
+    fakeModelSlot.model = createSingleToolCallModel();
+    const executeTool = vi.fn().mockResolvedValue({ cards: [] });
+    const onToolEvent = (event: AssistantToolEvent) => {
+      if (event.kind === "toolCall") controller.abort();
+    };
+
+    const error = await streamChatWithOllama(
+      createChatRequest({ tools: ["get_deck_cards"], executeTool, onToolEvent }),
+      vi.fn(),
+      controller.signal,
+      OLLAMA_OPTIONS,
+    ).catch((caught: unknown) => caught);
+
+    expect((error as DOMException).name).toBe("AbortError");
+    expect(executeTool).not.toHaveBeenCalled();
+  });
+
   it("rejects with an AbortError when aborted after a completed tool step", async () => {
     const controller = new AbortController();
     const model = createAbortDuringAnswerModel();
@@ -1003,7 +1022,7 @@ describe("chat tool streaming", () => {
     });
 
     // WHY: with a completed step on record, the SDK resolves (not rejects) on abort —
-    // only the fullStream's `abort` part reveals the cancel. The run must still reject
+    // only the stream's `abort` part reveals the cancel. The run must still reject
     // so callers classify it as canceled, while the partial text stays delivered.
     const error = await streamChatWithOllama(
       createChatRequest({ tools: ["list_decks"], executeTool }),

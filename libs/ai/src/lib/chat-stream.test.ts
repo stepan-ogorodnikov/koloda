@@ -11,7 +11,7 @@ import {
 
 describe("provider option helpers pass a non-empty effort through", () => {
   it.each([
-    ["OpenAI", openAIProviderOptions, { openai: { reasoningEffort: "high" } }],
+    ["OpenAI", openAIProviderOptions, { openai: { reasoningEffort: "high", reasoningSummary: null } }],
     ["OpenRouter", openRouterProviderOptions, { openrouter: { reasoning: { effort: "high" } } }],
     ["opencode-go", opencodeGoProviderOptions, { "opencode-go": { reasoningEffort: "high" } }],
     ["opencode-zen", opencodeZenProviderOptions, { "opencode-zen": { reasoningEffort: "high" } }],

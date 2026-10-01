@@ -83,7 +83,7 @@ describe("wrapModelWithReasoningExtraction", () => {
     const result = streamText({ model, prompt: "Hi" });
     let reasoning = "";
     let text = "";
-    for await (const chunk of result.fullStream) {
+    for await (const chunk of result.stream) {
       if (chunk.type === "reasoning-delta") reasoning += chunk.text;
       if (chunk.type === "text-delta") text += chunk.text;
     }
@@ -119,7 +119,7 @@ describe("wrapModelWithReasoningExtraction", () => {
     const result = streamText({ model, prompt: "Hi" });
     let reasoning = "";
     let text = "";
-    for await (const chunk of result.fullStream) {
+    for await (const chunk of result.stream) {
       if (chunk.type === "reasoning-delta") reasoning += chunk.text;
       if (chunk.type === "text-delta") text += chunk.text;
     }

@@ -307,10 +307,18 @@ export function bindAssistantTools({ names, execute }: BindAssistantToolsOptions
     if (spec == null) throw new Error(`Unknown assistant tool: ${name}`);
     // WHY: explicit generics — spec schemas are a heterogeneous union, so tool()'s
     // INPUT inference cannot resolve; the dispatcher is untyped at this seam anyway.
-    bound[name] = tool<unknown, unknown>({
+    // All three are needed: with two, TypeScript picks the <INPUT, CONTEXT> overload.
+    // These tools take no per-tool context.
+    bound[name] = tool<unknown, unknown, Record<string, never>>({
       description: spec.description,
       inputSchema: spec.inputSchema,
-      execute: async (input) => execute(name, input),
+      execute: async (input, { abortSignal }) => {
+        // WHY: since AI SDK 7, a tool starts only after its tool-call part reaches the stream
+        // consumer, so a cancel on that part lands first. Never start a host tool (add_deck
+        // writes) for a run the user already canceled.
+        abortSignal?.throwIfAborted();
+        return execute(name, input);
+      },
     });
   }
   return bound;

@@ -1,5 +1,5 @@
 import type { ProviderOptions } from "@ai-sdk/provider-utils";
-import { stepCountIs, streamText } from "ai";
+import { isStepCount, streamText } from "ai";
 import { bindAssistantTools } from "./assistant-tools";
 import { AIError, wrapAIError } from "./error";
 import type { ChatStreamChunk, ChatStreamRequest } from "./generation";
@@ -41,12 +41,12 @@ async function runChatStream(
 
     temperature: resolveGenerationTemperature(request.input.temperature),
     // WHY: empty custom prompts are allowed; trim so whitespace-only is sent empty.
-    system: (request.systemPromptTemplate ?? DEFAULT_CHAT_PROMPT_TEMPLATE).trim(),
+    instructions: (request.systemPromptTemplate ?? DEFAULT_CHAT_PROMPT_TEMPLATE).trim(),
     messages: request.messages.map((m) => ({ role: m.role as "user" | "assistant", content: m.content })),
     abortSignal,
     // WHY: multi-step only exists for tool runs; stopWhen keeps them bounded. Without
     // tools there is exactly one step and the extra options would be dead weight.
-    ...(tools ? { tools, stopWhen: stepCountIs(CHAT_TOOL_STEP_BUDGET) } : {}),
+    ...(tools ? { tools, stopWhen: isStepCount(CHAT_TOOL_STEP_BUDGET) } : {}),
     ...(providerOptions ? { providerOptions } : {}),
     onError: ({ error }) => {
       streamedError = error;
@@ -54,7 +54,7 @@ async function runChatStream(
   });
 
   try {
-    for await (const part of result.fullStream) {
+    for await (const part of result.stream) {
       if (part.type === "text-delta") {
         onChunk({ kind: "text", text: part.text });
       } else if (part.type === "reasoning-delta") {
@@ -76,7 +76,7 @@ async function runChatStream(
   }
 
   // WHY: once a step has completed, the SDK resolves (instead of rejecting) on abort —
-  // the fullStream just ends with an `abort` part. Reject with the signal's reason so a
+  // the stream just ends with an `abort` part. Reject with the signal's reason so a
   // user cancel is never recorded as a successful, non-retryable run; partial chunks
   // already delivered via onChunk are preserved.
   if (wasAborted) {
@@ -86,8 +86,8 @@ async function runChatStream(
   // WHY: onError may fire without the for-await loop throwing; rethrow so callers still see the failure.
   if (streamedError) throw streamedError;
 
-  // WHY: `usage` is the final step only; `totalUsage` accumulates across tool steps.
-  const usage = await result.totalUsage;
+  // WHY: since AI SDK 7, `usage` totals every tool step; `finalStep.usage` is the last step only.
+  const usage = await result.usage;
   if (usage.inputTokens == null && usage.outputTokens == null) return undefined;
 
   return {
@@ -107,7 +107,9 @@ export function openRouterProviderOptions(reasoningEffort: string | undefined): 
 }
 
 export function openAIProviderOptions(reasoningEffort: string | undefined): ProviderOptions | undefined {
-  return reasoningEffort ? { openai: { reasoningEffort } } : undefined;
+  // WHY: since AI SDK 7 a reasoning effort turns on detailed reasoning summaries by default.
+  // Keep them off: OpenAI can require organization verification for summaries, failing the run.
+  return reasoningEffort ? { openai: { reasoningEffort, reasoningSummary: null } } : undefined;
 }
 
 export function deepseekProviderOptions(reasoningEffort: string | undefined): ProviderOptions | undefined {
