@@ -29,8 +29,14 @@ chrono = { version = "0.4", features = ["serde"] }
 uuid = { version = "1.0", features = ["v4", "v7"] }
 url = "2.5"
 
-[target.'cfg(not(windows))'.dependencies]
-keyring = "3"
+# WHY: keyring has no default store; without a platform feature it falls back to an in-memory mock and keys
+# vanish on restart. Each supported OS names its native store; other targets fail to build instead.
+# `vendored` builds libdbus from source so Linux builders need no libdbus-1-dev.
+[target.'cfg(target_os = "macos")'.dependencies]
+keyring = { version = "3", features = ["apple-native"] }
+
+[target.'cfg(target_os = "linux")'.dependencies]
+keyring = { version = "3", features = ["sync-secret-service", "crypto-rust", "vendored"] }
 
 [target.'cfg(windows)'.dependencies]
 windows-sys = { version = "0.61.2", features = ["Win32_Security_Credentials"] }
