@@ -1,6 +1,5 @@
-import { BrowserWindow, nativeTheme, screen, shell } from "electron";
+import { BrowserWindow, nativeTheme, shell } from "electron";
 import type { WebContents } from "electron";
-import os from "node:os";
 import { join } from "node:path";
 import { appDir, isDev } from "./env";
 import { appNavigationTarget, decideNavigation } from "./navigation-policy";
@@ -38,15 +37,6 @@ export function getWindowButtonPosition(titlebarHeight = TITLEBAR_HEIGHT) {
     x: WINDOW_BUTTON_X,
     y: Math.max(0, Math.round((titlebarHeight - MACOS_WINDOW_BUTTON_HEIGHT) / 2)),
   };
-}
-
-export function getWindowOverlayWidth(): number {
-  if (process.platform === "darwin") return 64;
-  const scaleFactor = screen.getPrimaryDisplay().scaleFactor;
-  if (process.platform === "linux") return Math.round(100 * scaleFactor);
-  const winBuild = parseInt(os.release().split(".").pop() || "0");
-  const base = winBuild >= 22000 ? 140 : 110;
-  return Math.round(base * scaleFactor);
 }
 
 export function createWindow() {

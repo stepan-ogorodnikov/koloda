@@ -2,13 +2,12 @@ import { BrowserWindow, ipcMain } from "electron";
 import { assertAppSender } from "./app-sender";
 import {
   APP_SHUTDOWN_ACK_CHANNEL,
-  WINDOW_GET_OVERLAY_WIDTH_CHANNEL,
   WINDOW_MAXIMIZE_CHANNEL,
   WINDOW_SET_TITLE_BAR_OVERLAY_CHANNEL,
   WINDOW_SET_WINDOW_BUTTON_POSITION_CHANNEL,
 } from "@koloda/native-ipc";
 import { saveUiPrefs } from "./ui-prefs";
-import { TITLEBAR_HEIGHT, getWindowButtonPosition, getWindowOverlayWidth, windowCloseCoordinators } from "./window";
+import { TITLEBAR_HEIGHT, getWindowButtonPosition, windowCloseCoordinators } from "./window";
 
 export function registerWindowIpc() {
   ipcMain.handle(APP_SHUTDOWN_ACK_CHANNEL, (event) => {
@@ -44,10 +43,6 @@ export function registerWindowIpc() {
       }
     },
   );
-  ipcMain.handle(WINDOW_GET_OVERLAY_WIDTH_CHANNEL, (event) => {
-    assertAppSender(event);
-    return getWindowOverlayWidth();
-  });
   ipcMain.handle(WINDOW_SET_WINDOW_BUTTON_POSITION_CHANNEL, (event, options: { titlebarHeight?: number }) => {
     assertAppSender(event);
     const win = BrowserWindow.fromWebContents(event.sender);

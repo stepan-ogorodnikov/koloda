@@ -1,12 +1,11 @@
 import { getAppPlatform } from "@koloda/app";
 import {
-  WINDOW_GET_OVERLAY_WIDTH_CHANNEL,
   WINDOW_MAXIMIZE_CHANNEL,
   WINDOW_SET_TITLE_BAR_OVERLAY_CHANNEL,
   WINDOW_SET_WINDOW_BUTTON_POSITION_CHANNEL,
 } from "@koloda/native-ipc";
 import { Titlebar as TitlebarContent } from "@koloda/ui";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 
 type TitlebarOverlayOptions = {
   color: string;
@@ -18,16 +17,15 @@ type WindowButtonPositionOptions = { titlebarHeight: number };
 
 const platform = getAppPlatform();
 
-// WHY: Win11 (build ≥ 22000) caption buttons are wider than Win10's. This estimate
-// only covers first paint — main returns the platform- and DPI-exact width via
-// get-overlay-width below.
-const defaultOverlayWidth = (() => {
-  if (platform === "macos") return 64;
-  if (platform === "linux") return Math.round(100 * window.devicePixelRatio);
-  const winBuild = parseInt(navigator.userAgent.match(/Windows NT \d+\.\d+;.*?(\d{5,})/)?.[1] || "0");
-  const base = winBuild >= 22000 ? 140 : 110;
-  return Math.round(base * window.devicePixelRatio);
-})();
+// WHY: macOS traffic lights sit at a fixed spot on the left (main's trafficLightPosition).
+// Elsewhere the window controls overlay reports its free area as titlebar-area-* env
+// variables. Linux places the controls by the desktop's layout (left, right, or only a
+// close button on GNOME), so a fixed right inset would overlap them or leave a gap.
+// The fallbacks apply when the overlay is hidden, e.g. in fullscreen.
+const titlebarContent =
+  platform === "macos"
+    ? "flex items-center h-full w-full pl-[64px]"
+    : "flex items-center h-full ml-[env(titlebar-area-x,0px)] w-[env(titlebar-area-width,100%)]";
 
 const titlebar = [
   "relative flex flex-col shrink-0",
@@ -39,14 +37,6 @@ export function Titlebar() {
   const titlebarRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<TitlebarOverlayOptions | undefined>(undefined);
   const windowButtonPositionRef = useRef<WindowButtonPositionOptions | undefined>(undefined);
-  const [overlayWidth, setOverlayWidth] = useState(defaultOverlayWidth);
-
-  useEffect(() => {
-    window.electronAPI
-      .invoke<number>(WINDOW_GET_OVERLAY_WIDTH_CHANNEL)
-      .then(setOverlayWidth)
-      .catch(() => {});
-  }, []);
 
   useEffect(() => {
     let rafId = 0;
@@ -142,10 +132,7 @@ export function Titlebar() {
       style={{ appRegion: "drag" } as React.CSSProperties}
       ref={titlebarRef}
     >
-      <div
-        className="flex items-center h-full w-full"
-        style={{ [platform === "macos" ? "paddingLeft" : "paddingRight"]: `${overlayWidth}px` }}
-      >
+      <div className={titlebarContent}>
         <TitlebarContent />
       </div>
       <div className="absolute inset-0" onDoubleClick={handleDragDoubleClick} />

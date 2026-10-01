@@ -107,8 +107,6 @@ export const WINDOW_MAXIMIZE_CHANNEL = "window:maximize";
 
 export const WINDOW_SET_TITLE_BAR_OVERLAY_CHANNEL = "window:set-title-bar-overlay";
 
-export const WINDOW_GET_OVERLAY_WIDTH_CHANNEL = "window:get-overlay-width";
-
 export const WINDOW_SET_WINDOW_BUTTON_POSITION_CHANNEL = "window:set-window-button-position";
 
 /**
