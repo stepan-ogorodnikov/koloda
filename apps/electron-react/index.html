@@ -6,9 +6,11 @@
     <base href="./" />
 
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- WHY: AI provider requests run in Electron's main process (apps/electron/src/ai-ipc.ts),
+         so the renderer needs no remote hosts. ws://localhost:3000 is Vite's dev HMR socket. -->
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self' ws: wss: https: http://localhost:* http://127.0.0.1:*;"
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self' ws://localhost:3000;"
     />
     <script src="./theme-boot.js"></script>
     <link rel="icon" type="image/x-icon" href="./favicon.ico" />
