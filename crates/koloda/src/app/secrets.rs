@@ -1,4 +1,8 @@
-use crate::app::error::{error_codes, AppError};
+// WHY: only the debug-only test store and the non-Windows keyring backend use `error_codes`;
+// a Windows release build has neither and would warn about an unused import.
+#[cfg(any(debug_assertions, not(target_os = "windows")))]
+use crate::app::error::error_codes;
+use crate::app::error::AppError;
 use std::collections::HashMap;
 use std::sync::{Arc, LazyLock, RwLock, RwLockReadGuard, RwLockWriteGuard};
 
