@@ -2,7 +2,7 @@ appId: com.koloda.app
 productName: KOLODA
 # WHY: electron is hoisted to the workspace root; builder can't require() it from
 # this package dir, and a ^ range is rejected as "not fixed". Pin explicitly.
-electronVersion: "35.7.5"
+electronVersion: "44.5.1"
 # WHY: Main is pre-bundled (bundle-main.ts) and the .node addon is copied into dist/.
 # Skipping install/rebuild avoids Bun's npm_execpath→bunx (node tries to parse the
 # PE binary) and npm's failure on workspace:* deps in this package.

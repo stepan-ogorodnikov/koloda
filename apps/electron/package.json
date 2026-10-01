@@ -7,7 +7,7 @@
   "dependencies": {},
   "devDependencies": {
     "@koloda/ai": "workspace:*",
-    "electron": "35.7.5",
+    "electron": "44.5.1",
     "electron-builder": "^25.1.8"
   }
 }
