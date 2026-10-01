@@ -23,6 +23,10 @@ files:
       - "!**/*.d.ts"
       - "!**/*.d.ts.map"
       - "!**/*.tsbuildinfo"
+  # WHY: main.cjs is a self-contained bundle, so the app needs no node_modules. Since v26,
+  # electron-builder's Bun collector falls back to the workspace root when this package
+  # declares no dependencies, and would pack every root dependency into the asar.
+  - "!**/node_modules/**"
 extraMetadata:
   main: main.cjs
 asarUnpack:
