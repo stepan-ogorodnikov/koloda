@@ -10,13 +10,13 @@ Agents do not run them to prove a change; see `agents/VERIFY.md`.
 
 Every test must survive one question: would it fail if the behavior were wrong, or only if the code changed?
 A test that only detects change is noise.
-Write each test so a plausible semantic bug — an inverted comparison, a dropped guard, a rejected cancel — makes it fail.
-Before writing the assertion, mentally apply such a mutation to the implementation and check the planned test would fail.
-If it would still pass, redesign the test before writing it.
-Every new or kept unit test must answer yes to the survival question.
-When that answer is non-obvious, record it in the change description or task notes.
-A test that only locks today's call shape, export list, or wiring is noise.
+That includes a test that only locks today's call shape, export list, or wiring.
 Delete it, or do not add it.
+
+Before writing the assertion, apply a plausible semantic bug to the implementation in your head.
+Examples: an inverted comparison, a dropped guard, a rejected cancel.
+If the planned test would still pass, redesign it before writing it.
+When the answer is non-obvious, record it in the change description or task notes.
 
 ## When tests are required
 
@@ -35,8 +35,6 @@ Delete it, or do not add it.
 | Integration | Persistence constraints: FK, cascade, rollback, transactions, SQL semantics | `crates/koloda/tests/integration/<entity>_integration_tests.rs`, `libs/db-sqlite/src/lib/*.integration.test.ts` |
 | E2e | User flows | `apps/web-e2e`, `apps/electron-e2e` |
 
-- Every rule has exactly one test home per implementation; the TS ↔ Rust twins required below are mirror coverage, not duplicates.
-- Do not re-test a validator through the repo layer unless the repo adds persistence-specific behavior.
 - Every entity keeps at least one full-field roundtrip at the integration layer: write every column, read it back, compare field-by-field.
   This is the only check that catches SQL↔struct column-mapping drift — validators and unit tests never see it.
   Trimming CRUD permutations must never remove an entity's last roundtrip.
@@ -49,8 +47,9 @@ Delete it, or do not add it.
 Each behavior has one home: the lowest unit layer that can see the failure.
 That layer is a domain function, reducer, engine, or the equivalent.
 Do not re-test the same rule through a higher door.
-A reducer case re-checked via the store, or an engine race re-checked via React, is a second door.
-Add the higher door only when it owns an isolation or routing rule the lower test cannot observe.
+A reducer case re-checked via the store, a validator via the repo, or an engine race via React is a second door.
+Add the higher door only when it owns behavior the lower test cannot observe.
+Examples: an isolation or routing rule, or persistence-specific behavior in the repo.
 If you add a second door, put one line of why above the test.
 Use `// WHY: …` or a sentence in the `describe`.
 The TS ↔ Rust twin rule is mirror coverage across languages.
@@ -100,7 +99,6 @@ Do not write:
 - Render-a-component-and-assert-it-rendered, or `toHaveProperty` presence loops.
 - Self-fulfilling tests where the guard or orchestration logic lives inside the test itself.
 - Mock-dominated tests: if the assertion re-observes what the mock fabricated, test the real unit or delete the test.
-- Re-runs of a sibling test through another door: a reducer re-tested through the store, a validator re-tested through the repo.
 
 Bad (tests the language runtime):
 
@@ -123,15 +121,12 @@ fn null_total_limit_is_no_cap() {
 
 ## Delete when
 
-When a change already edits a test file, delete tests in that file that fail the survival question.
-Also delete tests in that file that match Banned patterns.
-Do the same when the code under test forces test updates.
+When a change already edits a test file, or the code under test forces test updates, check that file.
+Delete its tests that fail the survival question or match Banned patterns, in the same change.
 Prefer deletion over skipping or weakening assertions.
+If deletion is out of scope for that commit, report the test in the task notes or change description.
+Never leave such a test unreported.
 Do not expand the change into a whole-package or monorepo cleanup unless cleanup is the task.
-Leaving a banned or survival-failing test you touched, unreported, is not allowed.
-Delete it in the same change.
-If deletion is out of scope for that commit, report it in the task or PR notes.
-Prefer delete when the test is local to the change.
 
 ## Coverage
 
@@ -189,58 +184,38 @@ A full `bun run test:libs` is not required to justify a unit change.
 ### Runner constraints
 
 Lib Vitest configs use `pool: "threads"` and `maxWorkers: 2`.
-Ten of twelve libs set `isolate: false`, so their files share one worker's module registry.
-`ui` and `srs-react` keep Vitest's default isolation.
-Isolation is not universal because a file-level `vi.mock(...)` rewrites that import for the whole worker.
-The rewrite is not undone when the file finishes.
-Whichever file runs first decides the module.
-Vitest's sequencer runs slower files first when `results.json` has timings.
-It runs larger files first on a cold cache (CI).
-A warm local cache can therefore run the mocking file first and stay green.
-CI can run a larger sibling first.
-`--maxWorkers=1` puts every file of that project on the one worker.
-The leak is then deterministic instead of depending on which subset a worker drew.
-`ui` and `srs-react` stay isolated because a file-level mock there replaces a module siblings import for real.
-In `ui`, `query-error.test.tsx` mocks `@lingui/react`, so siblings that need the real catalog text render the mock.
-In `srs-react`, `lesson-reducer.test.ts` mocks `@koloda/srs`, so a later file that imports the real module gets stubs.
-Other `isolate: false` libs file-mock `@lingui/react` too and stay green, because no sibling imports it for real.
-The same leak already happens inside two libs that set `isolate: false`.
-`libs/ai` `chat-stream.test.ts` used to mock `ai` to record `streamText` calls.
-`assistant-tools.test.ts` and `model-reasoning-extraction.test.ts` import `ai` for real.
-On a cold cache the real module loads first and the recorder sees no calls.
-That file tests the exported providerOptions helpers directly and does not mock `ai`.
-`libs/assistant-react` `assistant-settings.test.tsx` used to mock `@number-flow/react`.
-A sibling that imports `@koloda/ui` loads the real module through the slider.
-The real NumberFlow throws in jsdom (`this.el?.willUpdate is not a function`).
-The stub lives in `libs/assistant-react/src/test-setup.ts`, which runs before test files.
-`delete-conversation-button.test.tsx` used to mock `conversation-write-adapter`.
-`conversation-header-menu.test.tsx` used to mock it too.
-`use-assistant-engine-host.test.ts` imports that adapter for real.
-Those tests call the real coordinator and `resetAssistantEngineForTests()` so a sibling's tombstone cannot stick.
-The delete button also sets `motionSettingAtom` to `off`.
-`useReducedMotion` is a module singleton.
-Once a sibling inits it with animations on, Fade's exit never finishes in jsdom.
-`AnimatePresence mode="wait"` keeps the old child.
-`db-sqlite` also sets `fileParallelism: false`.
 All twelve lib test targets set `cache: true`.
 `nx.json` `parallel` is `8`, so `test:libs` runs at most eight of those projects at once.
 Root `.env` sets `NX_ISOLATE_PLUGINS=false`.
 The file is committed, allowed by a `.gitignore` negation.
 
+Ten of twelve libs set `isolate: false`, so their files share one worker's module registry.
+A file-level `vi.mock(...)` there rewrites that import for the whole worker.
+The rewrite is not undone when the file finishes, and `vi.restoreAllMocks()` does not clear it.
+Whichever file runs first decides the module.
+Vitest runs slower files first when `results.json` has timings, and larger files first on a cold cache (CI).
+So a warm local run can pass while CI fails.
+`--maxWorkers=1` puts every file of a project on one worker, which makes the leak deterministic.
+Process singletons leak across files the same way; reset them in the test that depends on them.
+
+`ui` and `srs-react` keep Vitest's default isolation.
+A file-level mock there replaces a module that siblings import for real:
+
+- `ui`: `query-error.test.tsx` mocks `@lingui/react`; siblings need the real catalog text.
+- `srs-react`: `lesson-reducer.test.ts` mocks `@koloda/srs`; later files import the real module.
+
+Other `isolate: false` libs file-mock `@lingui/react` too and pass, because no sibling imports it for real.
+`db-sqlite` also sets `fileParallelism: false`.
+
 Vitest config stays per package.
 Do not introduce a shared Vitest defaults file.
-The per-project differences are intentional.
-They include isolation for `ui` and `srs-react`, and `fileParallelism: false` for `db-sqlite`.
-Setup files and `vi.restoreAllMocks()` habits also differ by project.
-Under `isolate: false`, module mocks are not cleared by `vi.restoreAllMocks()`.
-Not every package calls it in setup.
-`libs/ai` and `libs/assistant` have no setup file, and `libs/db-sqlite`'s setup does not.
-A setup-file `vi.mock` is installed before any test file imports the real module.
-That is why the NumberFlow stub is there and not in `assistant-settings.test.tsx`.
-One file's module-level `vi.mock` blocks `isolate: false` if a sibling imports that package for real.
-The fix is removing or replacing those mocks, not flipping the config alone.
+The per-project differences are intentional, and setup files and `vi.restoreAllMocks()` habits differ too.
+
+Under `isolate: false`, a module-level `vi.mock` of a package a sibling imports for real is a bug.
+Fix it by removing or replacing the mock, not by flipping `isolate` alone.
 Replacements already used:
+
 - a real i18n catalog in `ui`
 - real or injected `srs` in `srs-react`
 - direct helper tests in `ai`
-- a setup-file stub in `assistant-react`
+- a setup-file stub in `assistant-react`, installed before any test file imports the real module

@@ -3,17 +3,8 @@
 This guide defines how an agent creates and maintains a task file.
 A task file is one unit of work: intent, status, open questions, and the plan.
 
-A task that needs a file lives on its own branch.
-Branch name: `task/<slug>`.
+A task that needs a file lives on its own branch, `task/<slug>`.
 The live file on that branch is `tasks/live/<slug>.md`.
-On `done`, move it to `tasks/archive/<slug>.md` on the same branch.
-Do that only when the tip is green.
-Done starts only when the human asks to land.
-Then `bun run land` puts the branch on `main`.
-Never commit on top of Archive.
-Do not rename the slug.
-To abandon the work, delete the branch.
-
 The plan lives in the task file's Plan section.
 Do not write a separate plan file.
 
@@ -41,8 +32,7 @@ The status lives on one fixed line, exactly `Status: <draft|ready|done>`.
 One task = one branch.
 Parallel tasks are parallel branches.
 Do not serialize work on `main` to keep commits contiguous.
-The branch holds the commit train.
-When the human asks to land, `bun run land` carries it to `main`.
+The branch holds the commit train until the human asks to land.
 
 ### Schedule (create)
 
@@ -52,15 +42,11 @@ When the human asks to land, `bun run land` carries it to `main`.
    - `git log origin/main..HEAD` must be empty.
    - Push or stash unrelated work first.
    - Then run `git checkout -b task/<slug> origin/main`.
-   - If `git log origin/main..HEAD` shows commits without `Task: <slug>`, stop.
-   - A hit means the branch is contaminated.
 2. Add `tasks/live/<slug>.md` with `Status: draft`.
 3. Push the branch.
-4. The branch and its task file are the scheduled unit of work.
-   - Finding scheduled and in-flight work means listing `task/*` branches.
-   - Run `git ls-remote --heads origin 'task/*'`; also check local `git branch --list 'task/*'`.
-   - Do not grep `main`.
 
+The branch and its task file are the scheduled unit of work.
+Find scheduled and in-flight work by listing `task/*` branches (§Session protocol), not by grepping `main`.
 A `draft` file exists while intent and the plan are being shaped on the branch.
 
 ### Ready (plan approved)
@@ -95,7 +81,6 @@ When the human asks to implement.
    - Never run `git merge`.
    - Never run `git pull` without `--rebase`.
    - To sync, run `git fetch origin && git rebase origin/main`.
-   - Never push to `main` directly; `bun run land` is the only way onto it.
    - Do not squash.
    - Plan items stay separate commits for reviewability.
 
@@ -115,8 +100,7 @@ It is not the human's approval.
    - That is the CI job `checks` on the pushed tip, or `bun run check:push` locally.
    - On a flake, re-run the checks.
 4. Then report to the human and wait.
-   - Do not archive yet.
-   - Archive happens at Done, after the human asks to land.
+   - Do not archive yet; that is Done.
    - If the human asks for changes, add commits and self-review again.
 
 ### Done (land, gated)
@@ -124,64 +108,54 @@ It is not the human's approval.
 Done starts only when the human asks to land.
 A passing self-review is not that ask.
 
-Gate: the branch lands only if all four hold.
+Gate: the branch lands only if all of these hold.
 
 - The human asked to land.
 - The oldest commit on `origin/main..HEAD` is the Add commit.
+  It adds `tasks/live/<slug>.md`.
 - The newest commit on `origin/main..HEAD` is the Archive commit.
+  It moves the file to `tasks/archive/<slug>.md`, with `Status: done` and Outcome filled.
 - Every commit carries `Task: <slug>`.
+- The tip is green: its CI job `checks` (`bun run check:push`) passed.
 
-The tip must be green when it lands.
-`main` accepts only a commit whose CI job `checks` (`bun run check:push`) passed.
+Check the order with `git log origin/main..HEAD --oneline` before landing.
+If the gate does not hold, stop.
 
-The Add commit adds `tasks/live/<slug>.md`.
-The Archive commit moves `tasks/live/<slug>.md` to `tasks/archive/<slug>.md`.
-The Archive commit has `Status: done` and Outcome filled.
-
-Verify with `git log origin/main..HEAD --oneline` before landing.
-If Add is not first or Archive is not last, stop.
-If the tip is red, stop.
-
-Nothing commits after Archive.
-If Archive is already the tip and changes are needed, or checks are red, reset that Archive commit off the tip.
-Soft reset if reusing the task-file edit.
-Otherwise recreate Archive later.
-Add fix commits.
-Each carries `Task: <slug>`.
-Update Plan if scope changed.
-Get the tip green.
-Self-review again if the fix needs it.
-Create a new Archive commit.
-Status `done`, Outcome filled, move `live/` to `archive/`.
-Force-push with lease if the branch was already pushed.
-Land only when the gate holds and the tip is green.
-Never commit on top of Archive.
-Reset and re-archive is the only path.
-
-When the human asks to land, work on the task branch.
-Self-review has passed.
-Required checks on the tip are green.
-Do not archive on a red tip.
+On the task branch, once self-review has passed and the tip is green:
 
 1. Fill Outcome.
 2. Flip Status to `done`.
-3. Move `tasks/live/<slug>.md` to `tasks/archive/<slug>.md`.
+3. Move `tasks/live/<slug>.md` to `tasks/archive/<slug>.md` and commit it as Archive.
 4. Run `bun run land`.
    - It rebases onto `origin/main`, pushes the branch, and waits for `checks` on that exact tip.
    - Then it fast-forwards `main` to the tip and deletes the remote branch.
    - If `main` moved meanwhile, it rebases and checks again.
-   - If `checks` fails, it stops; reset Archive, fix, and re-archive as above.
-   - After landing, the archive file is on `main`.
-   - The live path is gone.
+   - If `checks` fails, it stops; fix as in §Fix after Archive.
 
+After landing, the archive file is on `main` and the live path is gone.
 Commits on `main` may interleave across tasks.
 Recover one task's history with `git log --grep='Task: <slug>'`.
+
+### Fix after Archive
+
+Never commit on top of Archive.
+Do not archive on a red tip, or to get past red.
+If Archive is the tip and changes are needed or checks are red, reset and re-archive:
+
+1. Reset the Archive commit off the tip.
+   - Soft reset if reusing the task-file edit; otherwise recreate it later.
+2. Add fix commits, each with `Task: <slug>`.
+   - Update Plan if scope changed.
+3. Get the tip green.
+   - Self-review again if the fix needs it.
+4. Create a new Archive commit.
+5. Force-push with lease if the branch was already pushed.
 
 ## File
 
 Slug is lowercase kebab-case.
 Do not put status in the filename.
-Do not rename the file.
+Do not rename the slug or the file.
 The only move is `live/` → `archive/` on `done`.
 
 ```markdown
@@ -229,7 +203,6 @@ How to split work, present commit-message candidates, and get approval is `agent
 After approval, write each picked message as that item's `Commit:` line.
 Drop the other candidates.
 Flip Status to `ready`.
-The checkbox is ticked when that commit exists.
 
 ## Session protocol
 
@@ -245,18 +218,8 @@ The checkbox is ticked when that commit exists.
    - Do not guess answers.
 3. Before ending a session, update Open questions and Plan on the task branch.
    - The next session starts from the file.
-4. After self-review passes and the tip is green, report to the human and wait.
-   - Green is the CI job `checks` on the pushed tip, or `bun run check:push` locally.
-   - Do not archive yet.
-5. When the human asks to land, archive as the last commit, then run `bun run land`.
-   - Do not archive on a red tip.
-   - Do not archive to get past red.
-   - Fill Outcome.
-   - Flip Status to `done`.
-   - Move `tasks/live/<slug>.md` to `tasks/archive/<slug>.md`.
-   - Land only when the Done gate holds and the tip is green.
-   - Never commit on top of Archive.
-   - If Archive is already the tip and changes are needed or checks fail, reset it, fix, then re-archive.
+4. After self-review passes on a green tip, report to the human and wait (§Self-review).
+5. When the human asks to land, follow §Done.
 6. To abandon, delete the branch locally and on `origin`.
 
 A new session starts from the task file on its branch.

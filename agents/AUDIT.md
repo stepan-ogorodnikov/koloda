@@ -23,6 +23,7 @@ Always load these, even if the prompt omitted them:
 - `agents/CODE-DOCUMENTATION.md`
 - `agents/TESTING.md`
 - `agents/BACKWARDS-COMPATIBILITY.md`
+- `agents/REVIEW.md` (§Project-specific noise) — that section only
 
 Also load, when the target needs them:
 
@@ -134,41 +135,14 @@ A finding whose only basis is taste is not a finding.
 
 ## Noise: do not raise
 
-These look like findings but are wrong for this repo.
-The review noise list is not copied unchanged; the dropped item is the diff-scope rename rule.
+Apply the noise list in `agents/REVIEW.md` (§Project-specific noise), with these changes:
 
-- Do not request JSDoc or "document this function" for ordinary APIs.
-  Module/type orientation docs are allowed per `agents/CODE-DOCUMENTATION.md`.
-- Do not suggest adding deprecation shims, adapter layers, or compatibility wrappers.
-  Existing leftovers of those are residue — flag them.
-- Do not propose collapsing the TS ↔ Rust duplication or unifying the two persistence owners.
-  See `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md`.
-  Desync between the two sides is a finding; unification is not the fix.
-- Do not flag FSRS staying TypeScript-side as a bug, or suggest moving it into Rust.
-  The source of truth is TS. See `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md`.
-- Do not flag provider HTTP calls living in `libs/ai` instead of the store.
-  See `libs/ai/README.md`.
-- Do not flag `Select.Root = SelectRoot` style assignment as a reexport.
-  See `agents/CODE-STYLE.md`.
-- Do not request i18n for theme labels.
-  See `agents/ADD-COLOR-THEME.md`.
-- Do not propose a "cleaner" code shape that contradicts a spec.
-  If code and spec disagree, raise a Spec violation and stop.
-- Do not demand a new spec, extra sibling specs, or an "Edge Cases" section.
-  Cite `agents/FUNCTIONAL-SPECIFICATIONS.md`.
-  An existing "Edge Cases" dump is spec-hygiene residue.
-- Do not flag a pointer (`FILE.md (§Section)`) as missing detail.
-  One home per rule is the point.
-- Do not suggest adding optional parameters or future-proofing branches.
-  Existing ones are residue — flag them.
-- Do not flag anything lint already enforces.
-- Do not propose running the Playwright suites in the CI `checks` job or the push gate.
-  They run on the web deploy by design.
-  See `agents/VERIFY.md`.
-- Do not flag a product-only feature, or a demo gap such as missing export, backup, or multi-tab safety.
-  See `docs/decisions/APP-ROLES.md`.
+- Drop its rename rule.
+  Inconsistent naming across an area may be an Improvement when the payoff is concrete.
+- Where it says Blocking, raise a Spec violation.
+- It forbids proposing shims, optional parameters, and "Edge Cases" sections.
+  Existing ones are residue (§What to look for); flag them.
 
-Inconsistent naming across an area may be an Improvement when the payoff is concrete.
 There is no "task" whose untouched neighbors are off limits.
 
 ## Report
