@@ -17,6 +17,7 @@ Normally booted by `nx run @koloda/electron:serve`; runs standalone in a browser
 - `nx run @koloda/electron-react:test` — unit tests
 - `nx run @koloda/electron:build` — packaged build via electron-builder
 - `nx run @koloda/electron-react:lingui-extract` / `:lingui-compile` — locale catalogs
+- `nx run @koloda/electron-react:linge` — shorthand for `lingui-extract --clean`
 
 ## Architectural Map
 

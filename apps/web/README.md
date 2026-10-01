@@ -19,6 +19,7 @@ See `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md` (§Persistence owners).
 - `nx run @koloda/web:test-unit` — unit tests
 - `nx run @koloda/web:test` — Playwright e2e (config lives in `apps/web-e2e`)
 - `nx run @koloda/web:lingui-extract` / `@koloda/web:lingui-compile` — locale catalogs
+- `nx run @koloda/web:linge` — shorthand for `lingui-extract --clean`
 
 ## Architectural Map
 
