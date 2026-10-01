@@ -51,7 +51,7 @@ How a turn displays is covered by the messages spec.
 ### Conversation History
 
 When sending a new message, the full conversation history is sent to the AI provider.
-The rule is simple: what the user sees in the conversation is what the model gets.
+The history follows what the user sees in the conversation, with the exceptions below.
 This includes:
 
 - All user messages (if they have text content)
@@ -64,7 +64,6 @@ Interrupted cards are included: the interruption is environmental (shutdown/cras
 See ASSISTANT-CARD-GENERATION.md (§Conversation History) for the markdown serialization.
 Tool activity is not included in the history.
 See ASSISTANT-DATA-ACCESS.md (§Visibility).
-If the model needs current data again, it calls tools again.
 Messages that don't belong to any run are also excluded.
 Naming is covered by ASSISTANT-CONVERSATION-LIST.md (§Conversation Name).
 

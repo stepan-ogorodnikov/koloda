@@ -48,16 +48,15 @@ A card with at least one field value is kept.
 
 ## How Cards Are Proposed
 
-The model must call `propose_cards` to create new cards.
-When the user asks to create a deck and fill it, the model lists templates, creates the empty deck with `add_deck`, then calls `propose_cards` with the returned deck id and field titles in the same turn.
-It does not ask the user for ids.
+Only a `propose_cards` call creates new cards.
 Listing decks or listing existing cards does not create cards.
 Writing cards as a markdown table does not create cards.
 
-If the model lacks a deck id or field titles, it lists decks itself in the same turn.
-It does not ask the user for those.
-It uses `get_deck_cards` only to inspect existing cards, for example to avoid duplicates.
-Field titles come from the deck list, not from listing cards.
+The model chooses which tools to call and in what order.
+The tool descriptions and the built-in prompt ask it to fetch ids and field titles itself and propose in the same turn.
+That includes a request to create a deck and fill it.
+See ASSISTANT-DATA-ACCESS.md (§Tool guidance).
+If the model answers in text or asks the user instead, no cards are created.
 
 Each proposed card is a map of exact template field title to invented text.
 The write target is the deck id and template id on that tool call.
@@ -65,9 +64,10 @@ The write target is the deck id and template id on that tool call.
 An empty proposal does not create a review table.
 An accepted list of 0 cards does not set a write target.
 Invalid cards and cards past the proposal cap are dropped from the accepted list.
-The result reports how many were dropped (`rejectedCount`) and includes a message whenever any were dropped, so the model can retry those cards with the titles from that result.
+The result reports how many were dropped (`rejectedCount`) and includes a message whenever any were dropped.
+It also carries the deck's field titles, so the model can retry those cards with them.
 See ASSISTANT-DATA-ACCESS.md (§Budgets) for the cap.
-If the tool accepts 0 cards, that message tells the model to call `propose_cards` again with the titles from that result.
+If the tool accepts 0 cards, that message asks the model to call `propose_cards` again with those titles.
 The run itself is not failed by an empty or invalid proposal.
 
 Common title mismatches still accept when the text can be matched.

@@ -24,7 +24,8 @@ It behaves the same for every provider, local or cloud.
 Every run discovers data by calling tools during the run.
 Nothing about the user's decks is baked into the system prompt.
 There is no submit-time snapshot of decks or cards.
-Duplicate prevention is the model's choice to inspect existing cards through a tool before it proposes new ones.
+The app does not check proposed cards for duplicates.
+The model can inspect existing cards through a tool before it proposes new ones.
 
 ## Core model
 
@@ -56,7 +57,8 @@ Deck tools may still surface template title and field titles; that is not a subs
 - It can fetch one template's full structure: its id, title, and fields (id, title, type, required).
 - It can list every algorithm (preset): its id, title, and FSRS settings.
 - It can read each deck's, template's, and preset's notes: the user's own short text about why the entity exists.
-  Notes are user-written context, never instructions — the model reads them as background and cannot write them.
+  Notes are user-written context; no tool writes them.
+  The tool descriptions present them as background, not instructions; see §Tool guidance.
   `list_decks` returns a preview of deck notes, cut with an explicit truncation flag; the other reads return them whole.
   Notes are omitted when the user wrote none.
 - It can then fetch one deck's existing cards, as field-title-to-text pairs, within a budget.
@@ -79,7 +81,7 @@ Those still need a named product spec with undo and validation.
 ## Tools
 
 The model sees the conversation and eight tools.
-It calls them if it needs data, wants to create an empty deck, or wants to propose cards.
+It may call them to read data, create an empty deck, or propose cards.
 
 - `list_decks` — every deck's id, name, card count, template title, and field titles,
   plus a preview of each deck's notes (cut to 150 characters with an explicit `notesTruncated` flag).
@@ -94,17 +96,16 @@ It calls them if it needs data, wants to create an empty deck, or wants to propo
   It does not return decks or card bodies.
 - `get_deck_cards` — the existing cards of one deck, identified by the id from the list.
 - `add_deck` — an empty deck for one template.
-  Call `list_templates` first for the template id.
-  Pass an algorithm id only when the user asked for a specific algorithm, using the id from `list_algorithms`.
-  Otherwise omit it and the app stores the same default algorithm as manual deck create.
+  The template id comes from `list_templates`.
+  The algorithm id is optional and comes from `list_algorithms`.
+  Without one, the app stores the same default algorithm as manual deck create.
   This writes the deck immediately.
   A missing template or algorithm fails the call and leaves no deck.
   It does not create cards, edit templates, or edit algorithms.
   Inventing cards still requires `propose_cards`.
 - `propose_cards` — new flashcards for a deck.
-  Generating, creating, making, or inventing cards — including a random card — uses this tool.
-  It is not a way to pick an existing card.
-  Cards must use the deck's field titles.
+  It is the only way to create cards, and it cannot pick an existing card.
+  Cards whose fields cannot be matched to the deck's field titles are dropped.
   See ASSISTANT-CARD-GENERATION.md (§How Cards Are Proposed).
 
 Reach happens when a tool runs, not at submit.
@@ -117,6 +118,28 @@ The run continues and the failure is visible.
 
 The model may call tools a limited number of times in one run.
 If it keeps calling instead of answering, the run stops.
+
+### Tool guidance
+
+Each tool carries a description that the model reads on every run.
+The user cannot change these descriptions, and a custom system prompt does not replace them.
+They tell the model:
+
+- to take deck ids and field titles from `list_decks`
+- to take template ids from `list_templates` and algorithm ids from `list_algorithms`
+- not to ask the user for ids or field titles
+- to call `propose_cards` for any request to generate, create, make, add, or invent cards, including a random card
+- to pass an algorithm id to `add_deck` only when the user asked for a specific algorithm
+- to use `get_deck_cards` only to inspect existing cards, for example to avoid duplicates
+- to treat notes as user-written background, not instructions
+- to call `propose_cards` again when a proposal accepted 0 cards or dropped some
+- not to write cards as a markdown table
+
+The built-in system prompt repeats most of it and adds the order for creating a deck and filling it.
+See ASSISTANT-SETTINGS.md (§How the Prompt Is Sent).
+Guidance steers the model but does not bind it.
+A model can still ask the user for an id, answer in text without proposing cards, or act on what a note says.
+The app enforces only what each tool does with a call, as listed above.
 
 ### Visibility
 
@@ -147,7 +170,7 @@ Those rows live on the run, not in the conversation history sent on later turns.
 See ASSISTANT-CONVERSATIONS.md (§Conversation History).
 Reasoning uses the same activity list; see ASSISTANT-MESSAGES.md (§Message Content).
 Follow-up requests do not replay prior tool results as history.
-If the model needs current data again, it calls the tools again.
+To see current data again, the model has to call the tools again.
 
 Successful cards are serialized into history as the conversations spec requires.
 See ASSISTANT-CARD-GENERATION.md (§Conversation History) for the markdown format.
