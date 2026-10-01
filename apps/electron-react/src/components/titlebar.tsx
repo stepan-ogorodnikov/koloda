@@ -121,7 +121,10 @@ export function Titlebar() {
     };
   }, []);
 
-  const handleDragDoubleClick = () => {
+  // WHY: handled on the bar itself, not on a full-size overlay. Since Electron 44 an overlay
+  // over the bar counts as drag area on top of the no-drag buttons, and they stop taking clicks.
+  const handleDragDoubleClick = (event: React.MouseEvent) => {
+    if (event.target instanceof Element && event.target.closest("button")) return;
     void window.electronAPI.invoke(WINDOW_MAXIMIZE_CHANNEL);
   };
 
@@ -131,11 +134,11 @@ export function Titlebar() {
       data-react-aria-top-layer
       style={{ appRegion: "drag" } as React.CSSProperties}
       ref={titlebarRef}
+      onDoubleClick={handleDragDoubleClick}
     >
       <div className={titlebarContent}>
         <TitlebarContent />
       </div>
-      <div className="absolute inset-0" onDoubleClick={handleDragDoubleClick} />
     </div>
   );
 }
