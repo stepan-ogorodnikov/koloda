@@ -24,19 +24,19 @@ import { ipcMain } from "electron";
 import { assertAppSender } from "./app-sender";
 
 type KolodaDb = {
-  getAiProfileSecrets: (profileId: string) => unknown;
-  getDecks: () => Array<{ id: string; title: string; templateId: string; notes?: string | null }>;
-  getTemplates: () => AssistantToolTemplate[];
-  getAlgorithms: () => AssistantToolAlgorithm[];
-  getCards: (params: { deckId: string }) => AssistantToolCard[];
-  getCardCounts: () => Array<{ deckId: string; count: number }>;
-  getSettings: (params: { name: "learning" }) => { content: { defaults: { algorithm: string } } } | null;
-  addDeck: (data: { title: string; templateId: string; algorithmId: string }) => {
+  getAiProfileSecrets: (profileId: string) => Promise<unknown>;
+  getDecks: () => Promise<Array<{ id: string; title: string; templateId: string; notes?: string | null }>>;
+  getTemplates: () => Promise<AssistantToolTemplate[]>;
+  getAlgorithms: () => Promise<AssistantToolAlgorithm[]>;
+  getCards: (params: { deckId: string }) => Promise<AssistantToolCard[]>;
+  getCardCounts: () => Promise<Array<{ deckId: string; count: number }>>;
+  getSettings: (params: { name: "learning" }) => Promise<{ content: { defaults: { algorithm: string } } } | null>;
+  addDeck: (data: { title: string; templateId: string; algorithmId: string }) => Promise<{
     id: string;
     title: string;
     templateId: string;
     algorithmId: string;
-  };
+  }>;
 };
 
 // INVARIANT: Correlate concurrent streams by requestId; abort must cancel only that run.
@@ -64,10 +64,10 @@ function throwIpcError(error: unknown): never {
   throw new Error(JSON.stringify({ code, details: message }));
 }
 
-function loadSecrets(db: KolodaDb, profileId: string): AISecrets {
+async function loadSecrets(db: KolodaDb, profileId: string): Promise<AISecrets> {
   let raw: unknown;
   try {
-    raw = db.getAiProfileSecrets(profileId);
+    raw = await db.getAiProfileSecrets(profileId);
   } catch (error) {
     // WHY: NAPI AppError reasons are JSON `{ code, details }`.
     if (error instanceof Error) {
@@ -114,10 +114,10 @@ function toToolErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
-// INVARIANT: main-side executor over the NAPI KolodaDb surface; NAPI reads are
-// synchronous. Shaping and budgets live in @koloda/ai.
-function readDefaultAlgorithmId(db: KolodaDb): string {
-  const learning = db.getSettings({ name: "learning" });
+// INVARIANT: main-side executor over the NAPI KolodaDb surface. Shaping and
+// budgets live in @koloda/ai.
+async function readDefaultAlgorithmId(db: KolodaDb): Promise<string> {
+  const learning = await db.getSettings({ name: "learning" });
   const algorithmId = learning?.content.defaults.algorithm;
   if (!algorithmId) throw new Error("Algorithm not found: default");
   return algorithmId;
@@ -129,10 +129,10 @@ function createChatToolExecutor(db: KolodaDb) {
     getTemplates: () => db.getTemplates(),
     getAlgorithms: () => db.getAlgorithms(),
     getCards: ({ deckId }) => db.getCards({ deckId }),
-    getCardCounts: () => Object.fromEntries(db.getCardCounts().map((row) => [row.deckId, row.count])),
+    getCardCounts: async () => Object.fromEntries((await db.getCardCounts()).map((row) => [row.deckId, row.count])),
     getDefaultAlgorithmId: () => readDefaultAlgorithmId(db),
-    createDeck: ({ title, templateId, algorithmId }) => {
-      const deck = db.addDeck({ title, templateId, algorithmId });
+    createDeck: async ({ title, templateId, algorithmId }) => {
+      const deck = await db.addDeck({ title, templateId, algorithmId });
       return {
         id: deck.id,
         title: deck.title,
@@ -177,14 +177,14 @@ export function registerAiIpc(db: KolodaDb) {
   ipcMain.handle("cmd_ai_list_models", async (event, args: IpcArgs<"cmd_ai_list_models">) => {
     assertAppSender(event);
     try {
-      const secrets = loadSecrets(db, args.profileId);
+      const secrets = await loadSecrets(db, args.profileId);
       return await wrapAIError(() => fetchModels(secrets));
     } catch (error) {
       throwIpcError(error);
     }
   });
 
-  ipcMain.handle("cmd_ai_chat_stream", (event: IpcMainInvokeEvent, args: IpcArgs<"cmd_ai_chat_stream">) => {
+  ipcMain.handle("cmd_ai_chat_stream", async (event: IpcMainInvokeEvent, args: IpcArgs<"cmd_ai_chat_stream">) => {
     assertAppSender(event);
     const { requestId, profileId, request } = args;
     const sender = event.sender;
@@ -193,7 +193,7 @@ export function registerAiIpc(db: KolodaDb) {
 
     let secrets: AISecrets;
     try {
-      secrets = loadSecrets(db, profileId);
+      secrets = await loadSecrets(db, profileId);
     } catch (error) {
       endRequest(requestId, controller);
       throwIpcError(error);

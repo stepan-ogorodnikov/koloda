@@ -5,7 +5,11 @@ use koloda::domain::lessons::GetLessonsParams;
 use koloda::domain::settings::SettingsName;
 use koloda::repo;
 use napi::bindgen_prelude::*;
+use napi::{Env, JsObject};
 use napi_derive::napi;
+use std::panic::{self, AssertUnwindSafe};
+use std::sync::mpsc::{self, Sender};
+use std::thread;
 
 fn to_napi_error(err: AppError) -> Error {
     let error_json = serde_json::json!({
@@ -51,357 +55,494 @@ fn extract_name(params: serde_json::Value) -> Result<String> {
     from_wire::<P>(params).map(|p| p.name)
 }
 
+type Job = Box<dyn FnOnce(&Database) + Send>;
+
+// WHY: SQLite work used to run on Electron's main thread, so a slow query froze every
+// window. Each method now queues its body on one dedicated thread and returns a Promise.
+// INVARIANT: one FIFO worker — jobs run in call order, exactly as the synchronous calls did,
+// so a read issued after a write always sees it. Do not move this onto the libuv pool.
 #[napi]
 pub struct KolodaDb {
-    db: Database,
+    jobs: Sender<Job>,
+}
+
+impl KolodaDb {
+    fn run<T, F>(&self, env: Env, work: F) -> Result<JsObject>
+    where
+        T: ToNapiValue + Send + 'static,
+        F: FnOnce(&Database) -> Result<T> + Send + 'static,
+    {
+        let (deferred, promise) = env.create_deferred()?;
+        let job: Job = Box::new(move |db| {
+            // WHY: a panic would otherwise kill the worker and leave every later call pending.
+            match panic::catch_unwind(AssertUnwindSafe(|| work(db))) {
+                Ok(Ok(value)) => deferred.resolve(move |_| Ok(value)),
+                Ok(Err(err)) => deferred.reject(err),
+                Err(_) => deferred.reject(to_napi_error(AppError::new(
+                    error_codes::UNKNOWN,
+                    Some("Database worker panicked".to_string()),
+                ))),
+            }
+        });
+        self.jobs.send(job).map_err(|e| {
+            to_napi_error(AppError::new(
+                error_codes::UNKNOWN,
+                Some(format!("Database worker stopped: {e}")),
+            ))
+        })?;
+        Ok(promise)
+    }
 }
 
 #[napi]
 impl KolodaDb {
+    // WHY: open + migrate stays synchronous; it runs once at startup before any window exists.
     #[napi(constructor)]
     pub fn new(db_path: String) -> Result<Self> {
         let db = Database::init(db_path).map_err(to_napi_error)?;
-        Ok(Self { db })
+        let (jobs, queue) = mpsc::channel::<Job>();
+        thread::Builder::new()
+            .name("koloda-db".to_string())
+            .spawn(move || {
+                for job in queue {
+                    job(&db);
+                }
+            })
+            .map_err(|e| to_napi_error(AppError::new(error_codes::UNKNOWN, Some(e.to_string()))))?;
+        Ok(Self { jobs })
     }
 
     #[napi]
-    pub fn get_db_status(&self) -> Result<String> {
-        let status = init_mod::get_db_status(&self.db).map_err(to_napi_error)?;
-        Ok(match status {
-            koloda::app::init::DbStatus::Blank => "blank".to_string(),
-            koloda::app::init::DbStatus::Ok => "ok".to_string(),
+    pub fn get_db_status(&self, env: Env) -> Result<JsObject> {
+        self.run(env, move |db| {
+            let status = init_mod::get_db_status(db).map_err(to_napi_error)?;
+            Ok(match status {
+                koloda::app::init::DbStatus::Blank => "blank".to_string(),
+                koloda::app::init::DbStatus::Ok => "ok".to_string(),
+            })
         })
     }
 
     #[napi]
-    pub fn seed_db(&self, data: serde_json::Value) -> Result<()> {
-        let data: SeedData = from_wire(data)?;
-        init_mod::seed_db(&self.db, data).map_err(to_napi_error)
+    pub fn seed_db(&self, env: Env, data: serde_json::Value) -> Result<JsObject> {
+        self.run(env, move |db| {
+            let data: SeedData = from_wire(data)?;
+            init_mod::seed_db(db, data).map_err(to_napi_error)
+        })
     }
 
     #[napi]
-    pub fn get_cards(&self, params: serde_json::Value) -> Result<serde_json::Value> {
-        let params: koloda::domain::cards::GetCardsParams = from_wire(params)?;
-        let cards = repo::cards::get_cards(&self.db, &params.deck_id).map_err(to_napi_error)?;
-        to_value(&cards)
+    pub fn get_cards(&self, env: Env, params: serde_json::Value) -> Result<JsObject> {
+        self.run(env, move |db| {
+            let params: koloda::domain::cards::GetCardsParams = from_wire(params)?;
+            let cards = repo::cards::get_cards(db, &params.deck_id).map_err(to_napi_error)?;
+            to_value(&cards)
+        })
     }
 
     #[napi]
-    pub fn get_card_counts(&self) -> Result<serde_json::Value> {
-        let counts = repo::cards::get_card_counts(&self.db).map_err(to_napi_error)?;
-        to_value(&counts)
+    pub fn get_card_counts(&self, env: Env) -> Result<JsObject> {
+        self.run(env, move |db| {
+            let counts = repo::cards::get_card_counts(db).map_err(to_napi_error)?;
+            to_value(&counts)
+        })
     }
 
     #[napi]
-    pub fn get_card(&self, params: serde_json::Value) -> Result<Option<serde_json::Value>> {
-        let id = extract_id(params)?;
-        let card = repo::cards::get_card(&self.db, &id).map_err(to_napi_error)?;
-        card.map(|c| to_value(&c)).transpose()
+    pub fn get_card(&self, env: Env, params: serde_json::Value) -> Result<JsObject> {
+        self.run(env, move |db| {
+            let id = extract_id(params)?;
+            let card = repo::cards::get_card(db, &id).map_err(to_napi_error)?;
+            card.map(|c| to_value(&c)).transpose()
+        })
     }
 
     #[napi]
-    pub fn add_card(&self, data: serde_json::Value) -> Result<serde_json::Value> {
-        let data = from_wire(data)?;
-        let card = repo::cards::add_card(&self.db, data).map_err(to_napi_error)?;
-        to_value(&card)
+    pub fn add_card(&self, env: Env, data: serde_json::Value) -> Result<JsObject> {
+        self.run(env, move |db| {
+            let data = from_wire(data)?;
+            let card = repo::cards::add_card(db, data).map_err(to_napi_error)?;
+            to_value(&card)
+        })
     }
 
     #[napi]
-    pub fn add_cards(&self, cards_data: serde_json::Value) -> Result<serde_json::Value> {
-        let cards = from_wire(cards_data)?;
-        let result = repo::cards::add_cards(&self.db, cards).map_err(to_napi_error)?;
-        to_value(&result)
+    pub fn add_cards(&self, env: Env, cards_data: serde_json::Value) -> Result<JsObject> {
+        self.run(env, move |db| {
+            let cards = from_wire(cards_data)?;
+            let result = repo::cards::add_cards(db, cards).map_err(to_napi_error)?;
+            to_value(&result)
+        })
     }
 
     #[napi]
-    pub fn update_card(&self, data: serde_json::Value) -> Result<serde_json::Value> {
-        let data = from_wire(data)?;
-        let card = repo::cards::update_card(&self.db, data).map_err(to_napi_error)?;
-        to_value(&card)
+    pub fn update_card(&self, env: Env, data: serde_json::Value) -> Result<JsObject> {
+        self.run(env, move |db| {
+            let data = from_wire(data)?;
+            let card = repo::cards::update_card(db, data).map_err(to_napi_error)?;
+            to_value(&card)
+        })
     }
 
     #[napi]
-    pub fn delete_card(&self, data: serde_json::Value) -> Result<()> {
-        let data = from_wire(data)?;
-        repo::cards::delete_card(&self.db, data).map_err(to_napi_error)
+    pub fn delete_card(&self, env: Env, data: serde_json::Value) -> Result<JsObject> {
+        self.run(env, move |db| {
+            let data = from_wire(data)?;
+            repo::cards::delete_card(db, data).map_err(to_napi_error)
+        })
     }
 
     #[napi]
-    pub fn delete_cards(&self, data: serde_json::Value) -> Result<()> {
-        let data = from_wire(data)?;
-        repo::cards::delete_cards(&self.db, data).map_err(to_napi_error)
+    pub fn delete_cards(&self, env: Env, data: serde_json::Value) -> Result<JsObject> {
+        self.run(env, move |db| {
+            let data = from_wire(data)?;
+            repo::cards::delete_cards(db, data).map_err(to_napi_error)
+        })
     }
 
     #[napi]
-    pub fn reset_card_progress(&self, data: serde_json::Value) -> Result<serde_json::Value> {
-        let data = from_wire(data)?;
-        let card = repo::cards::reset_card_progress(&self.db, data).map_err(to_napi_error)?;
-        to_value(&card)
+    pub fn reset_card_progress(&self, env: Env, data: serde_json::Value) -> Result<JsObject> {
+        self.run(env, move |db| {
+            let data = from_wire(data)?;
+            let card = repo::cards::reset_card_progress(db, data).map_err(to_napi_error)?;
+            to_value(&card)
+        })
     }
 
     #[napi]
-    pub fn get_algorithms(&self) -> Result<serde_json::Value> {
-        let algorithms = repo::algorithms::get_algorithms(&self.db).map_err(to_napi_error)?;
-        to_value(&algorithms)
+    pub fn get_algorithms(&self, env: Env) -> Result<JsObject> {
+        self.run(env, move |db| {
+            let algorithms = repo::algorithms::get_algorithms(db).map_err(to_napi_error)?;
+            to_value(&algorithms)
+        })
     }
 
     #[napi]
-    pub fn get_algorithm(&self, params: serde_json::Value) -> Result<Option<serde_json::Value>> {
-        let id = extract_id(params)?;
-        let algorithm = repo::algorithms::get_algorithm(&self.db, &id).map_err(to_napi_error)?;
-        algorithm.map(|a| to_value(&a)).transpose()
+    pub fn get_algorithm(&self, env: Env, params: serde_json::Value) -> Result<JsObject> {
+        self.run(env, move |db| {
+            let id = extract_id(params)?;
+            let algorithm = repo::algorithms::get_algorithm(db, &id).map_err(to_napi_error)?;
+            algorithm.map(|a| to_value(&a)).transpose()
+        })
     }
 
     #[napi]
-    pub fn add_algorithm(&self, data: serde_json::Value) -> Result<serde_json::Value> {
-        let data = from_wire(data)?;
-        let algorithm = repo::algorithms::add_algorithm(&self.db, data).map_err(to_napi_error)?;
-        to_value(&algorithm)
+    pub fn add_algorithm(&self, env: Env, data: serde_json::Value) -> Result<JsObject> {
+        self.run(env, move |db| {
+            let data = from_wire(data)?;
+            let algorithm = repo::algorithms::add_algorithm(db, data).map_err(to_napi_error)?;
+            to_value(&algorithm)
+        })
     }
 
     #[napi]
-    pub fn update_algorithm(&self, data: serde_json::Value) -> Result<serde_json::Value> {
-        let data = from_wire(data)?;
-        let algorithm = repo::algorithms::update_algorithm(&self.db, data).map_err(to_napi_error)?;
-        to_value(&algorithm)
+    pub fn update_algorithm(&self, env: Env, data: serde_json::Value) -> Result<JsObject> {
+        self.run(env, move |db| {
+            let data = from_wire(data)?;
+            let algorithm = repo::algorithms::update_algorithm(db, data).map_err(to_napi_error)?;
+            to_value(&algorithm)
+        })
     }
 
     #[napi]
-    pub fn clone_algorithm(&self, data: serde_json::Value) -> Result<serde_json::Value> {
-        let data = from_wire(data)?;
-        let algorithm = repo::algorithms::clone_algorithm(&self.db, data).map_err(to_napi_error)?;
-        to_value(&algorithm)
+    pub fn clone_algorithm(&self, env: Env, data: serde_json::Value) -> Result<JsObject> {
+        self.run(env, move |db| {
+            let data = from_wire(data)?;
+            let algorithm = repo::algorithms::clone_algorithm(db, data).map_err(to_napi_error)?;
+            to_value(&algorithm)
+        })
     }
 
     #[napi]
-    pub fn delete_algorithm(&self, data: serde_json::Value) -> Result<()> {
-        let data = from_wire(data)?;
-        repo::algorithms::delete_algorithm(&self.db, data).map_err(to_napi_error)
+    pub fn delete_algorithm(&self, env: Env, data: serde_json::Value) -> Result<JsObject> {
+        self.run(env, move |db| {
+            let data = from_wire(data)?;
+            repo::algorithms::delete_algorithm(db, data).map_err(to_napi_error)
+        })
     }
 
     #[napi]
-    pub fn get_algorithm_decks(&self, params: serde_json::Value) -> Result<serde_json::Value> {
-        let id = extract_id(params)?;
-        let decks = repo::algorithms::get_algorithm_decks(&self.db, &id).map_err(to_napi_error)?;
-        to_value(&decks)
+    pub fn get_algorithm_decks(&self, env: Env, params: serde_json::Value) -> Result<JsObject> {
+        self.run(env, move |db| {
+            let id = extract_id(params)?;
+            let decks = repo::algorithms::get_algorithm_decks(db, &id).map_err(to_napi_error)?;
+            to_value(&decks)
+        })
     }
 
     #[napi]
-    pub fn get_decks(&self) -> Result<serde_json::Value> {
-        let decks = repo::decks::get_decks(&self.db).map_err(to_napi_error)?;
-        to_value(&decks)
+    pub fn get_decks(&self, env: Env) -> Result<JsObject> {
+        self.run(env, move |db| {
+            let decks = repo::decks::get_decks(db).map_err(to_napi_error)?;
+            to_value(&decks)
+        })
     }
 
     #[napi]
-    pub fn get_deck(&self, params: serde_json::Value) -> Result<Option<serde_json::Value>> {
-        let id = extract_id(params)?;
-        let deck = repo::decks::get_deck(&self.db, &id).map_err(to_napi_error)?;
-        deck.map(|d| to_value(&d)).transpose()
+    pub fn get_deck(&self, env: Env, params: serde_json::Value) -> Result<JsObject> {
+        self.run(env, move |db| {
+            let id = extract_id(params)?;
+            let deck = repo::decks::get_deck(db, &id).map_err(to_napi_error)?;
+            deck.map(|d| to_value(&d)).transpose()
+        })
     }
 
     #[napi]
-    pub fn add_deck(&self, data: serde_json::Value) -> Result<serde_json::Value> {
-        let data = from_wire(data)?;
-        let deck = repo::decks::add_deck(&self.db, data).map_err(to_napi_error)?;
-        to_value(&deck)
+    pub fn add_deck(&self, env: Env, data: serde_json::Value) -> Result<JsObject> {
+        self.run(env, move |db| {
+            let data = from_wire(data)?;
+            let deck = repo::decks::add_deck(db, data).map_err(to_napi_error)?;
+            to_value(&deck)
+        })
     }
 
     #[napi]
-    pub fn update_deck(&self, data: serde_json::Value) -> Result<serde_json::Value> {
-        let data = from_wire(data)?;
-        let deck = repo::decks::update_deck(&self.db, data).map_err(to_napi_error)?;
-        to_value(&deck)
+    pub fn update_deck(&self, env: Env, data: serde_json::Value) -> Result<JsObject> {
+        self.run(env, move |db| {
+            let data = from_wire(data)?;
+            let deck = repo::decks::update_deck(db, data).map_err(to_napi_error)?;
+            to_value(&deck)
+        })
     }
 
     #[napi]
-    pub fn delete_deck(&self, data: serde_json::Value) -> Result<()> {
-        let data = from_wire(data)?;
-        repo::decks::delete_deck(&self.db, data).map_err(to_napi_error)
+    pub fn delete_deck(&self, env: Env, data: serde_json::Value) -> Result<JsObject> {
+        self.run(env, move |db| {
+            let data = from_wire(data)?;
+            repo::decks::delete_deck(db, data).map_err(to_napi_error)
+        })
     }
 
     #[napi]
-    pub fn get_templates(&self) -> Result<serde_json::Value> {
-        let templates = repo::templates::get_templates(&self.db).map_err(to_napi_error)?;
-        to_value(&templates)
+    pub fn get_templates(&self, env: Env) -> Result<JsObject> {
+        self.run(env, move |db| {
+            let templates = repo::templates::get_templates(db).map_err(to_napi_error)?;
+            to_value(&templates)
+        })
     }
 
     #[napi]
-    pub fn get_template(&self, params: serde_json::Value) -> Result<Option<serde_json::Value>> {
-        let id = extract_id(params)?;
-        let template = repo::templates::get_template(&self.db, &id).map_err(to_napi_error)?;
-        template.map(|t| to_value(&t)).transpose()
+    pub fn get_template(&self, env: Env, params: serde_json::Value) -> Result<JsObject> {
+        self.run(env, move |db| {
+            let id = extract_id(params)?;
+            let template = repo::templates::get_template(db, &id).map_err(to_napi_error)?;
+            template.map(|t| to_value(&t)).transpose()
+        })
     }
 
     #[napi]
-    pub fn add_template(&self, data: serde_json::Value) -> Result<serde_json::Value> {
-        let data = from_wire(data)?;
-        let template = repo::templates::add_template(&self.db, data).map_err(to_napi_error)?;
-        to_value(&template)
+    pub fn add_template(&self, env: Env, data: serde_json::Value) -> Result<JsObject> {
+        self.run(env, move |db| {
+            let data = from_wire(data)?;
+            let template = repo::templates::add_template(db, data).map_err(to_napi_error)?;
+            to_value(&template)
+        })
     }
 
     #[napi]
-    pub fn update_template(&self, data: serde_json::Value) -> Result<serde_json::Value> {
-        let data = from_wire(data)?;
-        let template = repo::templates::update_template(&self.db, data).map_err(to_napi_error)?;
-        to_value(&template)
+    pub fn update_template(&self, env: Env, data: serde_json::Value) -> Result<JsObject> {
+        self.run(env, move |db| {
+            let data = from_wire(data)?;
+            let template = repo::templates::update_template(db, data).map_err(to_napi_error)?;
+            to_value(&template)
+        })
     }
 
     #[napi]
-    pub fn clone_template(&self, data: serde_json::Value) -> Result<serde_json::Value> {
-        let data = from_wire(data)?;
-        let template = repo::templates::clone_template(&self.db, data).map_err(to_napi_error)?;
-        to_value(&template)
+    pub fn clone_template(&self, env: Env, data: serde_json::Value) -> Result<JsObject> {
+        self.run(env, move |db| {
+            let data = from_wire(data)?;
+            let template = repo::templates::clone_template(db, data).map_err(to_napi_error)?;
+            to_value(&template)
+        })
     }
 
     #[napi]
-    pub fn delete_template(&self, data: serde_json::Value) -> Result<()> {
-        let data = from_wire(data)?;
-        repo::templates::delete_template(&self.db, data).map_err(to_napi_error)
+    pub fn delete_template(&self, env: Env, data: serde_json::Value) -> Result<JsObject> {
+        self.run(env, move |db| {
+            let data = from_wire(data)?;
+            repo::templates::delete_template(db, data).map_err(to_napi_error)
+        })
     }
 
     #[napi]
-    pub fn get_template_decks(&self, params: serde_json::Value) -> Result<serde_json::Value> {
-        let id = extract_id(params)?;
-        let decks = repo::templates::get_template_decks(&self.db, &id).map_err(to_napi_error)?;
-        to_value(&decks)
+    pub fn get_template_decks(&self, env: Env, params: serde_json::Value) -> Result<JsObject> {
+        self.run(env, move |db| {
+            let id = extract_id(params)?;
+            let decks = repo::templates::get_template_decks(db, &id).map_err(to_napi_error)?;
+            to_value(&decks)
+        })
     }
 
     #[napi]
-    pub fn get_settings(&self, params: serde_json::Value) -> Result<Option<serde_json::Value>> {
-        let name = extract_name(params)?;
-        let name = parse_settings_name(&name)?;
-        let settings = repo::settings::get_settings(&self.db, name).map_err(to_napi_error)?;
-        settings.map(|s| to_value(&s)).transpose()
+    pub fn get_settings(&self, env: Env, params: serde_json::Value) -> Result<JsObject> {
+        self.run(env, move |db| {
+            let name = extract_name(params)?;
+            let name = parse_settings_name(&name)?;
+            let settings = repo::settings::get_settings(db, name).map_err(to_napi_error)?;
+            settings.map(|s| to_value(&s)).transpose()
+        })
     }
 
     #[napi]
-    pub fn set_settings(&self, params: serde_json::Value) -> Result<serde_json::Value> {
-        #[derive(serde::Deserialize)]
-        struct P {
-            name: String,
-            content: serde_json::Value,
-        }
-        let p: P = from_wire(params)?;
-        let name = parse_settings_name(&p.name)?;
-        let settings = repo::settings::set_settings(&self.db, name, p.content).map_err(to_napi_error)?;
-        to_value(&settings)
+    pub fn set_settings(&self, env: Env, params: serde_json::Value) -> Result<JsObject> {
+        self.run(env, move |db| {
+            #[derive(serde::Deserialize)]
+            struct P {
+                name: String,
+                content: serde_json::Value,
+            }
+            let p: P = from_wire(params)?;
+            let name = parse_settings_name(&p.name)?;
+            let settings = repo::settings::set_settings(db, name, p.content).map_err(to_napi_error)?;
+            to_value(&settings)
+        })
     }
 
     #[napi]
-    pub fn patch_settings(&self, params: serde_json::Value) -> Result<serde_json::Value> {
-        #[derive(serde::Deserialize)]
-        struct P {
-            name: String,
-            content: serde_json::Value,
-        }
-        let p: P = from_wire(params)?;
-        let name = parse_settings_name(&p.name)?;
-        let settings = repo::settings::patch_settings(&self.db, name, p.content).map_err(to_napi_error)?;
-        to_value(&settings)
+    pub fn patch_settings(&self, env: Env, params: serde_json::Value) -> Result<JsObject> {
+        self.run(env, move |db| {
+            #[derive(serde::Deserialize)]
+            struct P {
+                name: String,
+                content: serde_json::Value,
+            }
+            let p: P = from_wire(params)?;
+            let name = parse_settings_name(&p.name)?;
+            let settings = repo::settings::patch_settings(db, name, p.content).map_err(to_napi_error)?;
+            to_value(&settings)
+        })
     }
 
     #[napi]
-    pub fn get_conversation(&self, params: serde_json::Value) -> Result<Option<serde_json::Value>> {
-        #[derive(serde::Deserialize)]
-        struct P {
-            id: String,
-        }
-        let p: P = from_wire(params)?;
-        let conversation = repo::conversations::get_conversation(&self.db, &p.id).map_err(to_napi_error)?;
-        conversation.map(|c| to_value(&c)).transpose()
+    pub fn get_conversation(&self, env: Env, params: serde_json::Value) -> Result<JsObject> {
+        self.run(env, move |db| {
+            #[derive(serde::Deserialize)]
+            struct P {
+                id: String,
+            }
+            let p: P = from_wire(params)?;
+            let conversation = repo::conversations::get_conversation(db, &p.id).map_err(to_napi_error)?;
+            conversation.map(|c| to_value(&c)).transpose()
+        })
     }
 
     #[napi]
-    pub fn get_conversations(&self) -> Result<serde_json::Value> {
-        let conversations = repo::conversations::get_conversations(&self.db).map_err(to_napi_error)?;
-        to_value(&conversations)
+    pub fn get_conversations(&self, env: Env) -> Result<JsObject> {
+        self.run(env, move |db| {
+            let conversations = repo::conversations::get_conversations(db).map_err(to_napi_error)?;
+            to_value(&conversations)
+        })
     }
 
     #[napi]
-    pub fn set_conversation(&self, params: serde_json::Value) -> Result<serde_json::Value> {
-        let input: repo::conversations::SetConversationInput = from_wire(params)?;
-        let conversation = repo::conversations::set_conversation(&self.db, input).map_err(to_napi_error)?;
-        to_value(&conversation)
+    pub fn set_conversation(&self, env: Env, params: serde_json::Value) -> Result<JsObject> {
+        self.run(env, move |db| {
+            let input: repo::conversations::SetConversationInput = from_wire(params)?;
+            let conversation = repo::conversations::set_conversation(db, input).map_err(to_napi_error)?;
+            to_value(&conversation)
+        })
     }
 
     #[napi]
-    pub fn delete_conversation(&self, params: serde_json::Value) -> Result<()> {
-        #[derive(serde::Deserialize)]
-        struct P {
-            id: String,
-        }
-        let p: P = from_wire(params)?;
-        repo::conversations::delete_conversation(&self.db, &p.id).map_err(to_napi_error)
+    pub fn delete_conversation(&self, env: Env, params: serde_json::Value) -> Result<JsObject> {
+        self.run(env, move |db| {
+            #[derive(serde::Deserialize)]
+            struct P {
+                id: String,
+            }
+            let p: P = from_wire(params)?;
+            repo::conversations::delete_conversation(db, &p.id).map_err(to_napi_error)
+        })
     }
 
     #[napi]
-    pub fn get_lessons(&self, params: serde_json::Value) -> Result<serde_json::Value> {
-        let params: GetLessonsParams = from_wire(params)?;
-        let lessons = repo::lessons::get_lessons(&self.db, params).map_err(to_napi_error)?;
-        to_value(&lessons)
+    pub fn get_lessons(&self, env: Env, params: serde_json::Value) -> Result<JsObject> {
+        self.run(env, move |db| {
+            let params: GetLessonsParams = from_wire(params)?;
+            let lessons = repo::lessons::get_lessons(db, params).map_err(to_napi_error)?;
+            to_value(&lessons)
+        })
     }
 
     #[napi]
-    pub fn get_lesson_data(&self, params: serde_json::Value) -> Result<Option<serde_json::Value>> {
-        let params = from_wire(params)?;
-        let data = repo::lessons::get_lesson_data(&self.db, &params).map_err(to_napi_error)?;
-        data.map(|d| to_value(&d)).transpose()
+    pub fn get_lesson_data(&self, env: Env, params: serde_json::Value) -> Result<JsObject> {
+        self.run(env, move |db| {
+            let params = from_wire(params)?;
+            let data = repo::lessons::get_lesson_data(db, &params).map_err(to_napi_error)?;
+            data.map(|d| to_value(&d)).transpose()
+        })
     }
 
     #[napi]
-    pub fn submit_lesson_result(&self, data: serde_json::Value) -> Result<()> {
-        let data = from_wire(data)?;
-        repo::lessons::submit_lesson_result(&self.db, data).map_err(to_napi_error)
+    pub fn submit_lesson_result(&self, env: Env, data: serde_json::Value) -> Result<JsObject> {
+        self.run(env, move |db| {
+            let data = from_wire(data)?;
+            repo::lessons::submit_lesson_result(db, data).map_err(to_napi_error)
+        })
     }
 
     #[napi]
-    pub fn get_reviews(&self, params: serde_json::Value) -> Result<serde_json::Value> {
-        let params = from_wire(params)?;
-        let reviews = repo::reviews::get_reviews(&self.db, params).map_err(to_napi_error)?;
-        to_value(&reviews)
+    pub fn get_reviews(&self, env: Env, params: serde_json::Value) -> Result<JsObject> {
+        self.run(env, move |db| {
+            let params = from_wire(params)?;
+            let reviews = repo::reviews::get_reviews(db, params).map_err(to_napi_error)?;
+            to_value(&reviews)
+        })
     }
 
     #[napi]
-    pub fn get_todays_review_totals(&self) -> Result<serde_json::Value> {
-        let totals = repo::reviews::get_todays_review_totals(&self.db).map_err(to_napi_error)?;
-        to_value(&totals)
+    pub fn get_todays_review_totals(&self, env: Env) -> Result<JsObject> {
+        self.run(env, move |db| {
+            let totals = repo::reviews::get_todays_review_totals(db).map_err(to_napi_error)?;
+            to_value(&totals)
+        })
     }
 
     #[napi]
-    pub fn get_ai_profiles(&self) -> Result<serde_json::Value> {
-        let profiles = repo::ai::get_ai_profiles(&self.db).map_err(to_napi_error)?;
-        to_value(&profiles)
+    pub fn get_ai_profiles(&self, env: Env) -> Result<JsObject> {
+        self.run(env, move |db| {
+            let profiles = repo::ai::get_ai_profiles(db).map_err(to_napi_error)?;
+            to_value(&profiles)
+        })
     }
 
     // INVARIANT: Main-process only — usable secrets for host AI handlers.
     // Do not register as a renderer `cmd_*`.
     #[napi]
-    pub fn get_ai_profile_secrets(&self, profile_id: String) -> Result<serde_json::Value> {
-        let secrets = repo::ai::get_ai_profile_secrets(&self.db, &profile_id).map_err(to_napi_error)?;
-        to_value(&secrets)
+    pub fn get_ai_profile_secrets(&self, env: Env, profile_id: String) -> Result<JsObject> {
+        self.run(env, move |db| {
+            let secrets = repo::ai::get_ai_profile_secrets(db, &profile_id).map_err(to_napi_error)?;
+            to_value(&secrets)
+        })
     }
 
     #[napi]
-    pub fn add_ai_profile(&self, data: serde_json::Value) -> Result<serde_json::Value> {
-        let data: koloda::domain::ai::AddProfileData = from_wire(data)?;
-        let profile = repo::ai::add_ai_profile(&self.db, data.title, data.secrets, data.whitelist_model_ids)
-            .map_err(to_napi_error)?;
-        to_value(&profile)
-    }
-
-    #[napi]
-    pub fn update_ai_profile(&self, data: serde_json::Value) -> Result<serde_json::Value> {
-        let data: koloda::domain::ai::UpdateProfileData = from_wire(data)?;
-        let profile =
-            repo::ai::update_ai_profile(&self.db, &data.id, data.title, data.secrets, data.whitelist_model_ids)
+    pub fn add_ai_profile(&self, env: Env, data: serde_json::Value) -> Result<JsObject> {
+        self.run(env, move |db| {
+            let data: koloda::domain::ai::AddProfileData = from_wire(data)?;
+            let profile = repo::ai::add_ai_profile(db, data.title, data.secrets, data.whitelist_model_ids)
                 .map_err(to_napi_error)?;
-        to_value(&profile)
+            to_value(&profile)
+        })
     }
 
     #[napi]
-    pub fn remove_ai_profile(&self, data: serde_json::Value) -> Result<()> {
-        let data: koloda::domain::ai::RemoveProfileData = from_wire(data)?;
-        repo::ai::remove_ai_profile(&self.db, &data.id).map_err(to_napi_error)
+    pub fn update_ai_profile(&self, env: Env, data: serde_json::Value) -> Result<JsObject> {
+        self.run(env, move |db| {
+            let data: koloda::domain::ai::UpdateProfileData = from_wire(data)?;
+            let profile = repo::ai::update_ai_profile(db, &data.id, data.title, data.secrets, data.whitelist_model_ids)
+                .map_err(to_napi_error)?;
+            to_value(&profile)
+        })
+    }
+
+    #[napi]
+    pub fn remove_ai_profile(&self, env: Env, data: serde_json::Value) -> Result<JsObject> {
+        self.run(env, move |db| {
+            let data: koloda::domain::ai::RemoveProfileData = from_wire(data)?;
+            repo::ai::remove_ai_profile(db, &data.id).map_err(to_napi_error)
+        })
     }
 }
 
