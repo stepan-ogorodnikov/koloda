@@ -93,7 +93,7 @@ Raising them wastes the human reviewer's time and signals the reviewer did not r
   Do not flag them as noise.
 - Do not suggest deprecation shims, adapter layers, or compatibility wrappers. See `agents/BACKWARDS-COMPATIBILITY.md`.
 - Do not propose collapsing the TS ↔ Rust duplication or unifying the two persistence owners.
-  See `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md` and `docs/decisions/DUAL-PLATFORM-PERSISTENCE.md`.
+  See `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md`.
 - Do not flag FSRS staying TypeScript-side as a bug, or suggest moving it into Rust.
   The source of truth is TS. See `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md`.
 - Do not flag provider HTTP calls living in `libs/ai` instead of the store. See `libs/ai/README.md`.

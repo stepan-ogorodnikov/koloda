@@ -1,6 +1,6 @@
 ### Database Migrations
 
-Why two ownership boundaries exist: `docs/decisions/DUAL-PLATFORM-PERSISTENCE.md`.
+Who owns persistence on each host, and why: `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md` (§Persistence owners).
 
 - **SQLite on both hosts**.
   Web uses `@koloda/db-sqlite` (`wa-sqlite` + `IDBBatchAtomicVFS`).
@@ -13,6 +13,9 @@ Why two ownership boundaries exist: `docs/decisions/DUAL-PLATFORM-PERSISTENCE.md
   pre-unification web `__migrations` tables in place).
 - **Rust core owns the desktop connection**.
   `apps/electron/src-rust` consumes `koloda`; it does not define migrations.
+- **Seed ids are shared**: both hosts use the `SEED_*` constants in `libs/app/src/lib/seed-ids.ts`
+  (Rust twin `crates/koloda/src/domain/seed_ids.rs`).
+  First-run content itself differs by host; see `docs/specs/INTERFACE-SETTINGS.md` (§First Setup).
 - There is no Drizzle schema and no `db:generate` script.
 - No `sync_*` tables yet; add them to this folder when sync work starts.
 

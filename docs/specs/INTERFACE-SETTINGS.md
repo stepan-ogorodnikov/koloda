@@ -141,6 +141,11 @@ On submit, the chosen language and scheme become the interface settings.
 Every field not chosen at setup starts at its default.
 The chosen language also selects the language of the seeded starter content.
 
+The starter content differs by platform:
+
+- Web — sample algorithms, templates, and decks with cards, so the app can be tried right away
+- Desktop — one algorithm and one template, and no decks
+
 ## Editing and Saving
 
 The interface settings screen has no save button.

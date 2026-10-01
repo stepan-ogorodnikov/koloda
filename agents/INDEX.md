@@ -47,7 +47,7 @@ The listed files are relative to the repo root.
 | Templates (fields, layout, locking) | `docs/specs/TEMPLATES.md` |
 | Algorithms / presets | `docs/specs/ALGORITHMS.md` |
 | Learning settings (defaults, daily limits, day boundary, learn-ahead limit) | `docs/specs/LEARNING-SETTINGS.md` |
-| Database schema change | `agents/DB.md`, `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md`, `docs/decisions/DUAL-PLATFORM-PERSISTENCE.md` |
+| Database schema change | `agents/DB.md`, `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md` |
 | Change inside `crates/koloda` (Rust domain, repos, settings slices, FSRS, reviews) | `agents/RUST.md`, `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md` |
 | Add a color theme | `agents/ADD-COLOR-THEME.md`, `docs/specs/INTERFACE-SETTINGS.md` |
 | Interface settings change (language, scheme, themes, motion) | `docs/specs/INTERFACE-SETTINGS.md`, `agents/I18N.md` |
@@ -78,7 +78,7 @@ Then add the same guides the author used for that change type, so the reviewer a
 | Templates diff | `docs/specs/TEMPLATES.md` |
 | Algorithms diff | `docs/specs/ALGORITHMS.md` |
 | Learning settings diff | `docs/specs/LEARNING-SETTINGS.md` |
-| Schema change diff | `agents/DB.md`, `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md`, `docs/decisions/DUAL-PLATFORM-PERSISTENCE.md` |
+| Schema change diff | `agents/DB.md`, `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md` |
 | `crates/koloda` / `koloda` crate diff | `agents/RUST.md`, `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md` |
 | Theme diff | `agents/ADD-COLOR-THEME.md`, `docs/specs/INTERFACE-SETTINGS.md` |
 | Interface settings diff | `docs/specs/INTERFACE-SETTINGS.md` |
@@ -99,8 +99,7 @@ Also add:
 - `agents/CSS.md` when UI is in scope
 - `agents/LAYOUT.md` when the target includes app-shell layout, the drawer, or the wide breakpoint
 - `agents/I18N.md` when user-visible strings are in scope
-- `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md` when the target crosses TypeScript and Rust
-- `docs/decisions/DUAL-PLATFORM-PERSISTENCE.md` when the target includes persistence
+- `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md` when the target crosses TypeScript and Rust, or includes persistence
 - `agents/ASSISTANT-MAP.md` for assistant
 - the package README for each package in scope
 - `apps/electron/IPC.md` when the target includes desktop IPC
@@ -116,8 +115,7 @@ Do not paste these unless the task touches them.
 Consult them yourself when a change crosses a boundary.
 
 - `agents/BACKWARDS-COMPATIBILITY.md` — deletion policy, no shims.
-- `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md` — why TS and Rust both exist.
-- `docs/decisions/DUAL-PLATFORM-PERSISTENCE.md` — why two persistence owners exist.
+- `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md` — why TS and Rust both exist, and who owns persistence on each host.
 - `libs/*/README.md`, `apps/*/README.md` — per-package "Where it sits" and "Does NOT own" boundaries.
 - `apps/electron/IPC.md` — the desktop renderer ↔ main IPC channel contract.
 

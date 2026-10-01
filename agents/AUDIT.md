@@ -30,8 +30,7 @@ Also load, when the target needs them:
 - `agents/I18N.md` — user-visible strings
 - `agents/FUNCTIONAL-SPECIFICATIONS.md` — any spec is in the audited surface
 - `agents/ASSISTANT-MAP.md` — assistant
-- `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md` — the target crosses TypeScript and Rust
-- `docs/decisions/DUAL-PLATFORM-PERSISTENCE.md` — the target includes persistence
+- `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md` — the target crosses TypeScript and Rust, or includes persistence
 - `apps/electron/IPC.md` — desktop IPC
 - the playbook for a half-finished recipe:
   `agents/ADD-AI-PROVIDER.md`, `agents/ADD-ASSISTANT-TOOL.md`, `agents/ADD-HOTKEY.md`, `agents/ADD-COLOR-THEME.md`, `agents/DB.md`
@@ -84,7 +83,7 @@ This list is the point of the audit:
 
 - Mirror desync — Zod / TS domain vs Rust domain disagree (`docs/decisions/TS-RUST-DOMAIN-MIRRORING.md`).
 - Host desync — web SQLite vs desktop SQLite / Refinery columns or behavior disagree.
-  See `docs/decisions/DUAL-PLATFORM-PERSISTENCE.md` and `agents/DB.md`.
+  See `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md` (§Persistence owners) and `agents/DB.md`.
 - IPC drift — `apps/electron/IPC.md` vs main or renderer.
 - Layer leaks — a package does work that its README `Does NOT own`, or that `agents/ASSISTANT-MAP.md` (§Do not reintroduce) forbids.
 - Missing trap comments — non-obvious code without `// WHY` / `// INVARIANT` / `// WORKAROUND`.
@@ -143,7 +142,7 @@ The review noise list is not copied unchanged; the dropped item is the diff-scop
 - Do not suggest adding deprecation shims, adapter layers, or compatibility wrappers.
   Existing leftovers of those are residue — flag them.
 - Do not propose collapsing the TS ↔ Rust duplication or unifying the two persistence owners.
-  See `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md`, `docs/decisions/DUAL-PLATFORM-PERSISTENCE.md`.
+  See `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md`.
   Desync between the two sides is a finding; unification is not the fix.
 - Do not flag FSRS staying TypeScript-side as a bug, or suggest moving it into Rust.
   The source of truth is TS. See `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md`.

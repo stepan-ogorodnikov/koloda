@@ -6,6 +6,20 @@ Keep a Rust desktop backend (`koloda`) and a TypeScript web/domain layer.
 Mirror domain shapes across both.
 Do not treat the duplication as accidental debt to collapse by removing one side.
 
+### Persistence owners
+
+Both hosts run SQLite on one migration series, `crates/koloda/src/migrations/V*.sql`.
+The schema workflow is `agents/DB.md`.
+
+| Platform | Owner |
+| --- | --- |
+| Web (`apps/web`) | `@koloda/db-sqlite`, in-process TypeScript over `wa-sqlite` |
+| Desktop (Electron) | `koloda` over rusqlite, exposed to Electron through NAPI |
+
+Do not run desktop DB I/O from TypeScript, or web DB I/O through Rust (for example a WASM `koloda`).
+Changing either owner needs a new decision.
+Product tables and columns stay structurally equivalent on both hosts.
+
 ### Split source of truth
 
 | Concern | Source of truth | Mirror / consumer |
@@ -30,16 +44,15 @@ These numeric/serde edges are deliberately not mirrored; do not re-flag them as 
 
 ## Why
 
-Desktop validates and persists through Rust (`crates/koloda`, exposed to Electron through NAPI).
-Web runs in TypeScript (`@koloda/db-sqlite` repos).
-The same product concepts exist in both languages.
-Functional specs describe behavior.
-Playbooks describe how to change a feature.
-Neither records which side owns which rule.
+Rust is the better choice for backend code in general, so it stays the desktop backend on its merits.
+It started as the backend of a Tauri desktop app and was kept on purpose when the desktop shell moved to Electron.
+The obvious alternative, running the web TypeScript repos in Electron's main process, is rejected for that reason.
+The cost is accepted: every schema or domain change lands in both languages.
 
 ## Applies when
 
 - A change touches both the TypeScript domain and `koloda`, including AI providers and schema.
+- A change touches web or desktop persistence ownership.
 - `agents/ADD-AI-PROVIDER.md` and `agents/DB.md` stay the how-to.
-- Platform engines and ownership are `docs/decisions/DUAL-PLATFORM-PERSISTENCE.md`.
 - A single-file quirk does not need this file.
+  UI that only uses the `Queries` contract does not need it either.

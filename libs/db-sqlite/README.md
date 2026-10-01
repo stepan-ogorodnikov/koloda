@@ -26,5 +26,5 @@ Wired to `apps/web`. Desktop apps do not use this package; they call `koloda` vi
 
 ## Read next
 
-- `docs/decisions/DUAL-PLATFORM-PERSISTENCE.md` — why web owns persistence in-process
+- `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md` (§Persistence owners) — why web owns persistence in-process
 - `agents/DB.md` — schema and Refinery port

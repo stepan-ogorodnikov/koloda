@@ -41,6 +41,5 @@ Normally booted by `nx run @koloda/electron:serve`; runs standalone in a browser
 ## Read next
 
 - `apps/electron/IPC.md` — the channel contract this renderer speaks
-- `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md` — why TS and Rust both exist
-- `docs/decisions/DUAL-PLATFORM-PERSISTENCE.md` — why two persistence owners exist
+- `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md` — why TS and Rust both exist, and who owns persistence
 - `docs/specs/` — behavior specs
