@@ -2,6 +2,7 @@
 
 Desktop renderer: the full UI in Electron's web layer, talking to the Rust core in the main process over IPC.
 No direct database access — every query and mutation crosses the IPC bridge.
+Role: product, with `apps/electron` (see `docs/decisions/APP-ROLES.md`).
 
 ## Where it sits
 

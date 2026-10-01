@@ -2,6 +2,7 @@
 
 Browser host of the app: the full UI running on in-browser SQLite (`wa-sqlite`) with no server.
 Data, settings, and AI profiles all live in the browser profile through IndexedDB.
+Role: demo, published as the live demo (see `docs/decisions/APP-ROLES.md`).
 
 ## Where it sits
 

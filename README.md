@@ -4,6 +4,10 @@ Local-first spaced repetition software powered by the [FSRS](https://github.com/
 
 [Live demo](https://stepan-ogorodnikov.github.io/koloda)
 
+The desktop app is the product.
+The live demo is a browser build for trying it out: data stays in that browser and has no backup or export,
+and some desktop features are not available there.
+
 > This project is in early stages. API and schema are subject to change.
 
 ## Getting Started

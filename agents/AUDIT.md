@@ -165,6 +165,8 @@ The review noise list is not copied unchanged; the dropped item is the diff-scop
 - Do not propose running the Playwright suites in the CI `checks` job or the push gate.
   They run on the web deploy by design.
   See `agents/VERIFY.md`.
+- Do not flag a product-only feature, or a demo gap such as missing export, backup, or multi-tab safety.
+  See `docs/decisions/APP-ROLES.md`.
 
 Inconsistent naming across an area may be an Improvement when the payoff is concrete.
 There is no "task" whose untouched neighbors are off limits.

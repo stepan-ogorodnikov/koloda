@@ -106,6 +106,8 @@ Raising them wastes the human reviewer's time and signals the reviewer did not r
 - Do not propose renaming or reformatting adjacent code the task did not touch. See Change Discipline in `agents/CODE-STYLE.md`.
 - Do not propose running the Playwright suites in the CI `checks` job or the push gate.
   They run on the web deploy by design. See `agents/VERIFY.md`.
+- Do not flag a product-only feature, or a demo gap such as missing export, backup, or multi-tab safety.
+  See `docs/decisions/APP-ROLES.md`.
 
 ## How to write a comment
 

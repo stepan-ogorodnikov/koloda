@@ -2,6 +2,7 @@
 
 Electron host: the main process, the preload bridge, and the Rust NAPI addon that owns the desktop database.
 No UI — the renderer is `apps/electron-react`; no domain logic — that lives in `crates/koloda`.
+Role: product, with `apps/electron-react` (see `docs/decisions/APP-ROLES.md`).
 
 ## Where it sits
 
