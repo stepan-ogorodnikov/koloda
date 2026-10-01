@@ -64,7 +64,8 @@ The write target is the deck id and template id on that tool call.
 An empty proposal does not create a review table.
 An accepted list of 0 cards does not set a write target.
 Invalid cards and cards past the proposal cap are dropped from the accepted list.
-The result reports how many were dropped (`rejectedCount`) and includes a message whenever any were dropped.
+Dropped cards do not fail the tool call and are never silently omitted.
+The result reports how many were dropped and includes a message whenever any were dropped.
 It also carries the deck's field titles, so the model can retry those cards with them.
 See ASSISTANT-DATA-ACCESS.md (§Budgets) for the cap.
 If the tool accepts 0 cards, that message asks the model to call `propose_cards` again with those titles.
@@ -83,15 +84,13 @@ Accepted cards appear as a table on the same assistant message as the rest of th
 The table has a selection column and one column per template field.
 All rows are initially selected.
 
-On a chat turn that proposed cards, the table sits below any tool activity and above leftover assistant text.
-Once cards are on screen, the pending status is not shown on the table.
-It attaches below the table while the turn is still pending; the exact conditions live in ASSISTANT-MESSAGES.md (§Message States).
+Where the table sits in the turn, and where the pending status goes, is in ASSISTANT-MESSAGES.md (§Message Display).
 
 On success, the table and an elapsed time display appear with the rest of the turn.
 On cancellation, the cards received before cancellation remain visible with a canceled status.
 On failure, the partial cards remain visible with a failed status and a retry button.
 
-If the template used for generation no longer exists (for example, after restoring a conversation from a previous session), a synthetic template is created from the stored field definitions.
+If the template used for generation no longer exists, the table is rebuilt from the fields saved with the run.
 The table still renders as a read-only snapshot: there is no selection column and no add button.
 The unavailable notice replaces the add button.
 
@@ -118,7 +117,7 @@ The status transitions are:
 Status is per-card, not per-run.
 Some cards in a run can succeed while others fail.
 
-When a run is restored from the database, any cards with pending status are reset to idle.
+When a conversation is restored, any cards with pending status are reset to idle.
 
 ## Card Selection
 
@@ -140,7 +139,7 @@ That deck and template are the ones from the proposal.
 If either write target is missing, add is disabled.
 
 Before the request is sent, all selected cards are marked as pending.
-On success, each card is individually marked as success or error based on the per-card result from the server.
+On success, each card is individually marked as success or error based on its own result.
 On a network error, all selected cards are marked as error.
 
 After a successful add, the deck's card list is refreshed.
@@ -154,16 +153,15 @@ The add button is disabled when:
 - There is no write-target deck
 - There is no write-target template
 
-If the write-target template no longer exists, the add button is not shown.
-The unavailable notice takes its place, and rows are not selectable.
+If the write-target template no longer exists, add is unavailable; see §Card Display.
 
 ## Conversation History
 
-Successfully generated cards are included in the conversation history sent to the AI, including cards from interrupted runs.
-See ASSISTANT-CONVERSATIONS.md (§Conversation History) for what else is included and what is omitted.
+ASSISTANT-CONVERSATIONS.md (§Conversation History) owns which cards are sent to the AI.
+It also owns their order relative to the turn's text.
+This section owns their format.
 
 The cards are serialized in markdown format: each card becomes a heading `## Card N` followed by `**Field Title**: value` lines.
-A chat turn that proposed cards is sent as those serialized cards, then any leftover assistant text from that run.
 
 ## Retry
 

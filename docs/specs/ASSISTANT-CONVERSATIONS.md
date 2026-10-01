@@ -6,8 +6,8 @@ Covers runs, conversation history, AI profile state, persistence, restore, error
 Does not cover creating a conversation, the list, naming, working and unread indicators, clone, or delete.
 Those are covered by ASSISTANT-CONVERSATION-LIST.md.
 Does not cover deck management, AI provider configuration, or assistant settings (prompt templates and temperature).
-Does not cover the streaming transport layer.
 Those prompt and temperature preferences are covered by the assistant settings spec.
+Does not cover the streaming transport layer.
 Card proposal display, selection, and add are covered by the card-generation spec.
 How the model reads decks is covered by the data-access spec.
 Message display is covered by the messages spec.
@@ -74,12 +74,10 @@ Every new run is a chat request.
 The model may call tools and propose cards during that run.
 Each run goes through a lifecycle:
 
-**streaming** → **success** | **failed** | **canceled** (`reason: user`) | **interrupted** (`reason: app_shutdown` | `crash_recovery`)
+**streaming** → **success** | **failed** | **canceled** | **interrupted**
 
-Only explicit user intent produces `canceled`.
-Graceful app shutdown produces `interrupted` / `app_shutdown`.
-A process crash (or forced termination) that left a streaming checkpoint produces `interrupted` / `crash_recovery` on restore.
-Success, failure, and streaming must not carry a termination reason.
+Only the user's cancel produces canceled.
+Interrupted means the app stopped the run; see §Interruption.
 
 ### Starting a Run
 
@@ -111,14 +109,15 @@ The user can see what was generated up to that point.
 The user can cancel an active run at any time.
 The text accumulated so far is kept — the message shows the partial response.
 Accepted cards stay visible; see ASSISTANT-CARD-GENERATION.md (§Card Display).
-Cancellation is recorded as `canceled` with `reason: user`.
+The run ends as canceled.
 
 ### Interruption
 
-A run can also end as `interrupted` without user cancel intent:
+A run ends as interrupted, not canceled, when the app stops it:
 
-- **app_shutdown** — graceful app close transitions active streaming runs before the final flush.
-- **crash_recovery** — a persisted streaming checkpoint found on restore means the previous process died mid-run.
+- **App close** — closing the app ends every streaming run before the final save.
+- **Crash** — if the app stopped without closing, a run still streaming becomes interrupted on restore.
+  See §Restore.
 
 Partial chat text and cards received before the interruption remain visible and eligible for retry.
 
@@ -179,12 +178,12 @@ Once a profile exists, these empty states are no longer shown.
 
 Conversations are saved automatically.
 Messages, runs, and AI profile state are saved together.
-Corrupt or unknown future formats fail restore rather than loading; see Restore.
+What happens when saved data cannot be read is in §Restore.
 The revert state is not saved.
 
 ### When Saves Happen
 
-- **During streaming**: at most once per second
+- **During streaming**: periodically, so a crash mid-run keeps most of the partial output
 - **While idle**: shortly after the last change
 - **On app close**: any pending save is flushed immediately
 
@@ -204,7 +203,7 @@ Which conversation reopens on reload is covered by ASSISTANT-CONVERSATION-LIST.m
 
 When a conversation is loaded:
 
-- A run that was still streaming becomes interrupted (crash recovery).
+- A run that was still streaming becomes interrupted.
   Partial output is kept so the user can retry.
   Elapsed time is the duration last saved while streaming, not the time since the run started.
   If no duration was saved, the indicator is omitted.
@@ -213,24 +212,19 @@ When a conversation is loaded:
 - Accepted cards on a turn still show as a review table.
 - No run is active after restore.
 - Revert state is cleared.
-- A dismissed stream error stays dismissed. After reload the error panel shows only if that failure was never dismissed.
+- A dismissed stream error stays dismissed; see §Dismissing Errors.
 
-If the stored data is corrupted or from an unknown future format, restore is blocked.
-The stored row is left untouched and is not loaded as an editable conversation, so autosave cannot overwrite it.
+If the saved conversation is corrupt or was written by a newer version of the app, restore is blocked.
+The saved conversation is left untouched and is not opened for editing, so autosave cannot overwrite it.
 The chat shows a recovery screen instead of an empty conversation.
 Reset and delete are explicit user actions on that screen.
-Reset replaces the stored row with a fresh empty conversation under the same identity.
+Reset replaces it with a fresh empty conversation under the same identity.
 Delete follows ASSISTANT-CONVERSATION-LIST.md (§Delete).
 
 ## Error Handling
 
 Each conversation tracks its own errors.
 The error panel shows the most recent error for the current conversation.
-
-Dismissed errors stay hidden until a new error occurs — then the panel reappears with the new error.
-
-Failed stream errors persist with the conversation.
-After reload the panel shows the latest undismissed failure.
 
 ### Stream Errors
 
@@ -247,7 +241,7 @@ It belongs to the old conversation.
 
 Stream errors can be dismissed by the user through the error panel button.
 A dismissed error stays hidden until a new failure occurs, at which point the panel reappears with the new error.
-Reloading does not re-show a dismissed error.
+After reload, the panel shows the latest failure only if it was never dismissed.
 
 Save errors are dismissed separately and are cleared by a successful save.
 
@@ -299,7 +293,6 @@ Runs that remain keep their write targets.
 
 ## Concurrent Behavior
 
-Only one run can be active at a time per conversation.
-If the user switches away, the run continues in the background.
+If the user switches away from a conversation with an active run, the run continues in the background.
 Updates still apply to the conversation that started the run, not the one now on screen.
 What happens to an in-flight run on delete is covered by ASSISTANT-CONVERSATION-LIST.md (§Delete).

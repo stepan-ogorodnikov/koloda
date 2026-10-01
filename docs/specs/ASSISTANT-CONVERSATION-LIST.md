@@ -75,7 +75,6 @@ A working or unread indicator may appear next to the conversation's name.
 
 A conversation is **working** when it has an active run that is still streaming.
 The working status indicator takes priority over the unread status indicator.
-The indicator is shown when the latest run is streaming.
 The working indicator is cleared when the run completes, fails, is canceled, or is interrupted.
 See ASSISTANT-CONVERSATIONS.md (§Runs).
 
@@ -84,7 +83,6 @@ See ASSISTANT-CONVERSATIONS.md (§Runs).
 A conversation is **unread** when its most recent run has finished.
 The user has not opened it since that run finished.
 A finished run is one whose status is success, failed, canceled, or interrupted — never streaming.
-The indicator is shown when the latest run finished streaming and has not been read by the user.
 The unread indicator is cleared when the user opens the conversation.
 
 A run that finishes in the currently-open conversation is automatically marked as read.

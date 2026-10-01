@@ -94,7 +94,7 @@ See ASSISTANT-CONVERSATIONS.md (§Runs) for the run lifecycle.
 The message state maps to the run state:
 
 - **pending/streaming**: text is empty or partial.
-  A pending shimmer indicator means the turn still owes a reply and nothing else already shows that.
+  A pending indicator means the turn still owes a reply and nothing else already shows that.
   It is shown for an empty turn, for cards with no leftover text yet, and for settled tool or thinking rows with no text yet.
   It is hidden while a tool or thinking row is still running, and once assistant text is streaming.
 - **success**: full content is displayed.
@@ -194,17 +194,17 @@ While the model is thinking, the row is labeled Thinking.
 When thinking finishes, the row is labeled Thought.
 The reasoning text is collapsed by default, including while thinking.
 The user can expand or collapse the row.
-A chevron after the label points right when collapsed and rotates down when expanded.
-An elapsed time follows the label, separated by a dot, the same way the message status shows it.
-It appears after one second. While the model is thinking the time ticks; when thinking finishes it freezes.
-Sub-second thinking is omitted.
+The row shows elapsed time once thinking has taken at least one second.
+While the model is thinking, the time ticks.
+When thinking finishes, it freezes.
+Sub-second thinking shows no time.
 Consecutive reasoning stays on one row.
 A new row starts after a tool call.
 Empty reasoning is not shown.
 Reasoning is not included in conversation history.
 See ASSISTANT-CONVERSATIONS.md (§Conversation History).
-Tool calls use the same expand and collapse control as reasoning; the disclosed payload is bordered. See ASSISTANT-DATA-ACCESS.md (§Visibility).
-Other non-text parts are shown as metadata lines, except step-start parts, which are hidden.
+Tool calls expand and collapse the same way; see ASSISTANT-DATA-ACCESS.md (§Visibility).
+Other non-text parts are shown as metadata lines, except step boundaries, which are hidden.
 Proposed cards stay in the review table; leftover markdown does not become cards.
 
 When extracting text for display or history, all text parts are joined with double newlines.

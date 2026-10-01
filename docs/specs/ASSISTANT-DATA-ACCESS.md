@@ -59,7 +59,8 @@ Deck tools may still surface template title and field titles; that is not a subs
 - It can read each deck's, template's, and preset's notes: the user's own short text about why the entity exists.
   Notes are user-written context; no tool writes them.
   The tool descriptions present them as background, not instructions; see §Tool guidance.
-  `list_decks` returns a preview of deck notes, cut with an explicit truncation flag; the other reads return them whole.
+  `list_decks` returns a preview of deck notes; the other reads return them whole.
+  See §Budgets.
   Notes are omitted when the user wrote none.
 - It can then fetch one deck's existing cards, as field-title-to-text pairs, within a budget.
 - It can propose new cards for a deck.
@@ -84,7 +85,7 @@ The model sees the conversation and eight tools.
 It may call them to read data, create an empty deck, or propose cards.
 
 - `list_decks` — every deck's id, name, card count, template title, and field titles,
-  plus a preview of each deck's notes (cut to 150 characters with an explicit `notesTruncated` flag).
+  plus a preview of each deck's notes.
 - `list_templates` — every template's id, title, and field titles, plus the template's notes when present.
 - `list_algorithms` — every preset's id, title, and FSRS settings, plus the preset's notes when present.
   Users call algorithms presets.
@@ -147,24 +148,20 @@ Tool traffic is visible in the chat feed as compact rows on that assistant messa
 
 - `list_decks`, `list_templates`, `list_algorithms`, `get_deck`, `get_template`, `get_deck_cards`, `add_deck`, and `propose_cards` show a translated label.
 - Any other tool shows the protocol id.
-- A successful `list_decks` also shows how many decks came back, after a dot.
-- A successful `list_templates` also shows how many templates came back, after a dot.
-- A successful `list_algorithms` also shows how many algorithms came back, after a dot.
-- A successful `get_deck` also shows the deck title, after a dot.
-- A successful `get_template` also shows the template title, after a dot.
-- A successful `get_deck_cards` also shows how many cards came back, after a dot.
-- A successful `add_deck` also shows the deck title, after a dot.
-- A successful `propose_cards` also shows how many cards were accepted, after a dot.
-- If any proposed cards were dropped, it also shows how many were skipped, after another dot.
-- A running call keeps the tool icon and shimmers the whole row.
+- A running call is marked as running.
 - A failed call is marked failed.
 - Expanding a row shows the protocol id, the input, and the output or error.
 - Tool and reasoning rows start collapsed, including while a call or thinking is in progress.
 - The user can expand or collapse the row.
-- A chevron after the label points right when collapsed and rotates down when expanded.
-- An elapsed time follows the label, separated by a dot, once the call has taken at least one second. A running call ticks; a finished call shows the frozen duration. Sub-second calls omit it.
-- Long payloads scroll inside the expanded region so they do not stretch the message.
-- The disclosed payload sits in a bordered container; the row and reasoning do not.
+- Elapsed time follows the same rules as reasoning; see ASSISTANT-MESSAGES.md (§Message Content).
+
+A successful call also shows a short summary next to its label:
+
+- `list_decks`, `list_templates`, `list_algorithms` — how many came back
+- `get_deck`, `add_deck` — the deck title
+- `get_template` — the template title
+- `get_deck_cards` — how many cards came back
+- `propose_cards` — how many cards were accepted, and how many were skipped when any were dropped
 
 Those rows live on the run, not in the conversation history sent on later turns.
 See ASSISTANT-CONVERSATIONS.md (§Conversation History).
@@ -178,7 +175,7 @@ See ASSISTANT-CARD-GENERATION.md (§Conversation History) for the markdown forma
 ### Budgets
 
 Notes in `list_decks` rows are capped at 150 characters.
-When a note was cut, the row says so with `notesTruncated: true` — truncation is never silent.
+When a note was cut, the result says so; truncation is never silent.
 The other reads return notes whole (they hold at most 1,024 characters, the same limit the user's edit form enforces).
 
 Card lists returned by `get_deck_cards` are capped at 200 cards per deck.
@@ -189,11 +186,8 @@ An oversized deck degrades to the capped list.
 It is never silently dropped.
 
 `propose_cards` uses the same 200-card cap for accepted cards.
-Invalid, empty, and over-cap cards are dropped from the accepted list.
-They do not fail the tool call.
-The result reports `rejectedCount` and includes a message whenever any were dropped.
-The activity row shows the skipped count next to the accepted count.
-Dropped cards are never silently omitted from the result.
+Cards past the cap are dropped and reported like invalid ones.
+See ASSISTANT-CARD-GENERATION.md (§How Cards Are Proposed).
 
 ### Retry
 
@@ -202,8 +196,6 @@ Those calls see the decks and cards as they are now, not as they were at the ori
 Tool activity is recorded again on the run, replacing the previous tool rows.
 
 See ASSISTANT-CONVERSATIONS.md (§Retry) for retry availability and AI profile state.
-
-Older stored access records from before tools are not sent on retry.
 
 ### Models that cannot call tools
 
@@ -214,13 +206,10 @@ The user can switch models and retry.
 
 ## Persistence
 
-Runs store tool activity on the run.
-Missing tool activity restores without it.
-Elapsed time on a tool or reasoning row is stored with that row.
-Rows saved before activity timers restore without them.
-A malformed value fails restore as corrupt, not as an empty conversation; see ASSISTANT-CONVERSATIONS.md (§Restore).
-After a crash, a run that was still streaming is interrupted.
-Any tool call that was still running is recorded as failed so it does not keep spinning.
-A reasoning row that was still running is closed as finished so it does not keep spinning.
-Stored access records from before tools are not sent to the model.
-Format versioning follows the conversations spec.
+Tool activity and the elapsed time of each tool and reasoning row are saved with the run.
+A row without a saved elapsed time shows none.
+Activity that cannot be read blocks restore as corrupt, not as an empty conversation.
+See ASSISTANT-CONVERSATIONS.md (§Restore).
+When a crash interrupts a run, a tool call that was still running restores as failed.
+A reasoning row that was still running restores as finished.
+Neither keeps showing as running.

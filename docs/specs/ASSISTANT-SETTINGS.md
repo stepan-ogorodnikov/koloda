@@ -47,7 +47,6 @@ The assistant uses the live built-in prompt, including later product updates to 
 Custom shows the saved custom prompt and is editable.
 If the user has never saved a custom prompt, switching to Custom copies the current built-in prompt into the editor as a starting point.
 Switching back to Default leaves that custom text in place.
-Discard restores the last saved source and custom text.
 
 A custom prompt that happens to equal today's built-in text stays Custom.
 It does not follow later product updates to the built-in prompt.
@@ -64,13 +63,12 @@ Invalid temperature is rejected on save; the previous saved settings remain unch
 ## How the Prompt Is Sent
 
 There are no placeholders.
+Braces in a custom prompt are sent as literal text.
 
 Default sends the current built-in prompt after trimming.
 Custom sends the saved custom text after trimming.
-Leftover brace placeholders in a previously saved custom prompt stay as literal text.
 
-The built-in default is plain text with no variables.
-It tells the model to invent cards through `propose_cards` and not to ask the user for field titles.
+The built-in prompt tells the model to invent cards through `propose_cards` and not to ask the user for field titles.
 When the user asks to create a deck and fill it, the prompt tells the model to call `list_templates`, then `add_deck`, then `propose_cards` in the same turn, and to omit the algorithm id unless the user asked for one.
 
 Tool descriptions carry their own guidance with either prompt; see ASSISTANT-DATA-ACCESS.md (§Tool guidance).
@@ -88,8 +86,5 @@ A run uses the settings that are current when the run starts.
 Changing settings does not rewrite past messages or past runs.
 Saving does not start a run and does not change the active conversation's messages.
 Unsaved Default or Custom does not affect runs.
-
-If the saved source is Default, that run uses the built-in prompt.
-If the saved source is Custom, that text is trimmed and used instead.
 
 Temperature omitted or unset falls back to 0.2 for the run.
