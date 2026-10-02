@@ -5,6 +5,7 @@
 Covers card content, scheduling state, adding, editing, deleting, resetting progress, preview, and card views.
 It is also the home for what rendered markdown may contain, wherever the app renders it.
 Does not cover deck or template management, lesson flow, the FSRS algorithm itself, or AI card generation.
+Images in card content (inserting, formats, where they show) are covered by MEDIA.md.
 Accepting generated cards into a deck is covered; how those cards are generated is not.
 Deck, template, lesson, algorithm, and AI card generation behavior are covered by the decks, templates, lessons, algorithms, and assistant card generation specs.
 
@@ -55,9 +56,8 @@ Rendering keeps the formatting and drops anything that could run code or reach t
 
 - Scripts and other active content are removed.
 - Styles written into the content are removed; rendered markdown uses the app's own styles.
-- Images show only when they are card attachments or come from the app itself.
-  A card attachment shows in card preview and lessons; in assistant messages its alt text shows instead.
-  While an attachment loads, its place stays empty; an attachment that is missing or cannot be read shows its alt text.
+- Images show only when they are card images or come from the app itself.
+  Where card images show is in MEDIA.md (§Where Images Show).
   Images from other sites or embedded in the text are not shown; their alt text shows instead.
   Showing a card or a reply never contacts another site.
 - Links stay clickable.

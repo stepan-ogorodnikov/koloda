@@ -5,6 +5,7 @@ import { toConversationListItem } from "@koloda/app";
 import { queryKeys } from "@koloda/core-react";
 import type { Queries } from "@koloda/core-react";
 import type {
+  AddAttachmentData,
   Algorithm,
   Attachment,
   CloneAlgorithmData,
@@ -31,7 +32,7 @@ import type {
   UpdateDeckData,
   UpdateTemplateData,
 } from "@koloda/srs";
-import { base64ToBytes } from "./base64";
+import { base64ToBytes, bytesToBase64 } from "./base64";
 import { invoke } from "./electron";
 import { getStatus, seedDB } from "./setup";
 
@@ -193,6 +194,10 @@ export const queriesFn = (aiRuntime: AIRuntime): Queries => ({
       const attachment = await invoke("cmd_get_attachment", { id });
       return attachment && { ...attachment, bytes: base64ToBytes(attachment.bytes) };
     },
+  }),
+  addAttachmentMutation: () => ({
+    mutationFn: (data: AddAttachmentData) =>
+      invoke("cmd_add_attachment", { data: { ...data, bytes: bytesToBase64(data.bytes) } }),
   }),
   getAIProfilesQuery: () => ({
     queryKey: queryKeys.ai.profiles(),

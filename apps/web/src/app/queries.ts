@@ -5,6 +5,7 @@ import type { PatchSettingsData, SetSettingsData, SettingsName } from "@koloda/s
 import { queryKeys } from "@koloda/core-react";
 import type { Queries } from "@koloda/core-react";
 import type {
+  AddAttachmentData,
   Algorithm,
   Attachment,
   CloneAlgorithmData,
@@ -34,6 +35,7 @@ import type {
 import type { DB } from "@koloda/db-sqlite";
 import {
   addAlgorithm,
+  addAttachment,
   addCard,
   addCards,
   addDeck,
@@ -189,6 +191,7 @@ export const queriesFn = (db: DB, aiRuntime: AIRuntime): Queries => ({
       return attachment && bytes ? { ...attachment, bytes } : null;
     },
   }),
+  addAttachmentMutation: () => ({ mutationFn: (data: AddAttachmentData) => addAttachment(db, data) }),
   addAIProfileMutation: () => ({ mutationFn: (data: AddAIProfileData) => addAIProfile(db, data) }),
   updateAIProfileMutation: () => ({ mutationFn: (data: UpdateAIProfileData) => updateAIProfile(db, data) }),
   removeAIProfileMutation: () => ({ mutationFn: (data: RemoveAIProfileData) => removeAIProfile(db, data) }),

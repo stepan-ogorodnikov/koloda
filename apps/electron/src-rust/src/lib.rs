@@ -2,13 +2,14 @@ use base64::prelude::{Engine as _, BASE64_STANDARD};
 use koloda::app::db::Database;
 use koloda::app::error::{error_codes, AppError};
 use koloda::app::init::{self as init_mod, SeedData};
-use koloda::domain::attachments::Attachment;
+use koloda::domain::attachments::{AddAttachmentData, Attachment};
 use koloda::domain::lessons::GetLessonsParams;
 use koloda::domain::settings::SettingsName;
 use koloda::repo;
 use napi::bindgen_prelude::*;
 use napi::{Env, JsObject};
 use napi_derive::napi;
+use std::num::NonZeroU32;
 use std::panic::{self, AssertUnwindSafe};
 use std::sync::mpsc::{self, Sender};
 use std::thread;
@@ -63,6 +64,13 @@ struct AttachmentContentWire {
     #[serde(flatten)]
     attachment: Attachment,
     bytes: String,
+}
+
+#[derive(serde::Deserialize)]
+struct AddAttachmentWire {
+    bytes: String,
+    width: Option<NonZeroU32>,
+    height: Option<NonZeroU32>,
 }
 
 type Job = Box<dyn FnOnce(&Database) + Send>;
@@ -524,6 +532,23 @@ impl KolodaDb {
                 bytes: BASE64_STANDARD.encode(bytes),
             })
             .map(Some)
+        })
+    }
+
+    #[napi]
+    pub fn add_attachment(&self, env: Env, data: serde_json::Value) -> Result<JsObject> {
+        self.run(env, move |db| {
+            let wire: AddAttachmentWire = from_wire(data)?;
+            let bytes = BASE64_STANDARD
+                .decode(wire.bytes)
+                .map_err(|e| to_napi_error(AppError::new(error_codes::UNKNOWN, Some(e.to_string()))))?;
+            let data = AddAttachmentData {
+                bytes,
+                width: wire.width,
+                height: wire.height,
+            };
+            let attachment = repo::attachments::add_attachment(db, data).map_err(to_napi_error)?;
+            to_value(&attachment)
         })
     }
 

@@ -9,6 +9,7 @@ import { useLingui } from "@lingui/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
 import { useEffect } from "react";
+import { CardContentTextArea } from "./card-content-text-area";
 import { CardReviews } from "./card-reviews";
 import { CardState } from "./card-state";
 import { DeleteCard } from "./delete-card";
@@ -75,13 +76,14 @@ export function CardDetails({ card }: CardDetailsProps) {
               <form.UpdatedAt timestamp={card?.updatedAt} />
             </form.Timestamps>
           </FormLayout.Section>
-          {data.content.fields.map(({ id, title }) => (
+          {data.content.fields.map(({ id, title, type }) => (
             <form.AppField name={`content.${id}.text`} key={id}>
               {(field) => (
                 <field.TextField variants={{ layout: "form" }}>
                   <Label variants={{ layout: "form" }}>{title}</Label>
                   <TextField.Content>
-                    <TextField.TextArea
+                    <CardContentTextArea
+                      fieldType={type}
                       variants={{ layout: "form", class: "resize-none" }}
                       canAutoResize
                       rows={1}

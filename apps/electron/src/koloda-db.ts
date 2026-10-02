@@ -14,6 +14,7 @@ import type { Conversation, DeleteConversationData, SetConversationData } from "
 import type { AllowedSettings, PatchSettingsData, SetSettingsData, SettingsName } from "@koloda/settings";
 import type {
   Algorithm,
+  Attachment,
   Card,
   CloneAlgorithmData,
   CloneTemplateData,
@@ -44,7 +45,13 @@ import type {
   UpdateDeckData,
   UpdateTemplateData,
 } from "@koloda/srs";
-import type { AttachmentContentWire, DbStatus, GetLessonsParams, SeedDbData } from "@koloda/native-ipc";
+import type {
+  AddAttachmentWire,
+  AttachmentContentWire,
+  DbStatus,
+  GetLessonsParams,
+  SeedDbData,
+} from "@koloda/native-ipc";
 
 export interface KolodaDb {
   // Lifecycle
@@ -107,6 +114,7 @@ export interface KolodaDb {
 
   // Attachments (bytes base64-encoded)
   getAttachment(params: { id: string }): Promise<AttachmentContentWire | null>;
+  addAttachment(data: AddAttachmentWire): Promise<Attachment>;
 
   // AI profiles (no secrets — see the INVARIANT above)
   getAiProfiles(): Promise<AIProfile[]>;

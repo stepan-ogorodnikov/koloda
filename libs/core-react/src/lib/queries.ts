@@ -8,6 +8,7 @@ import type {
 } from "@koloda/app";
 import type { AllowedSettings, PatchSettingsData, SetSettingsData, SettingsName } from "@koloda/settings";
 import type {
+  AddAttachmentData,
   Algorithm,
   Attachment,
   AttachmentContent,
@@ -98,6 +99,7 @@ export type Queries = {
   submitLessonResultMutation: () => UseMutationOptions<Review | undefined, AppError, LessonResultData, unknown>;
   getReviewsQuery: (data: GetReviewsData) => AppQueryOptions<Review[] | undefined>;
   getAttachmentQuery: (id: Attachment["id"]) => AppQueryOptions<AttachmentContent | null>;
+  addAttachmentMutation: () => UseMutationOptions<Attachment, AppError, AddAttachmentData, unknown>;
   addAIProfileMutation: () => UseMutationOptions<void, AppError, AddAIProfileData, unknown>;
   updateAIProfileMutation: () => UseMutationOptions<void, AppError, UpdateAIProfileData, unknown>;
   removeAIProfileMutation: () => UseMutationOptions<void, AppError, RemoveAIProfileData, unknown>;

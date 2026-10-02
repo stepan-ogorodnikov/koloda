@@ -40,7 +40,7 @@ The full method list lives in `src-rust/src/lib.rs`.
 - Conversations: `cmd_get_conversation`, `cmd_get_conversations`, `cmd_set_conversation`, `cmd_delete_conversation`
 - Lessons and reviews: `cmd_get_lessons`, `cmd_get_lesson_data`, `cmd_submit_lesson_result`,
   `cmd_get_reviews`, `cmd_get_todays_review_totals`
-- Attachments: `cmd_get_attachment` (meta plus base64 bytes, or `null`)
+- Attachments: `cmd_get_attachment` (meta plus base64 bytes, or `null`), `cmd_add_attachment` (base64 bytes)
 - AI profiles: `cmd_get_ai_profiles`, `cmd_add_ai_profile`, `cmd_update_ai_profile`, `cmd_remove_ai_profile`
 
 There is deliberately no command for reading AI profile secrets.

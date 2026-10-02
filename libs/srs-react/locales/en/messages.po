@@ -44,16 +44,16 @@ msgstr "New preset"
 msgid "add-algorithm.trigger"
 msgstr "New preset"
 
-#: ../../libs/srs-react/src/lib/cards/add-card.tsx:131
+#: ../../libs/srs-react/src/lib/cards/add-card.tsx:133
 msgid "add-card.submit"
 msgstr "Create card"
 
-#: ../../libs/srs-react/src/lib/cards/add-card.tsx:87
+#: ../../libs/srs-react/src/lib/cards/add-card.tsx:88
 msgid "add-cards.title"
 msgstr "Add card"
 
-#: ../../libs/srs-react/src/lib/cards/add-card.tsx:78
 #: ../../libs/srs-react/src/lib/cards/add-card.tsx:79
+#: ../../libs/srs-react/src/lib/cards/add-card.tsx:80
 msgid "add-cards.trigger"
 msgstr "Add cards"
 
@@ -181,36 +181,40 @@ msgstr "Delete relearning step number {0}"
 msgid "algorithm.relearning-steps.unit.{0}"
 msgstr "Time period for relearning step number {0}"
 
-#: ../../libs/srs-react/src/lib/cards/card-details.tsx:142
+#: ../../libs/srs-react/src/lib/cards/card-details.tsx:144
 msgid "card.action.reset-progress"
 msgstr "Reset progress"
 
-#: ../../libs/srs-react/src/lib/cards/card-details.tsx:136
+#: ../../libs/srs-react/src/lib/cards/card-content-text-area.tsx:134
+msgid "card.content.insert-image"
+msgstr "Insert image"
+
+#: ../../libs/srs-react/src/lib/cards/card-details.tsx:138
 msgid "card.labels.actions"
 msgstr "Actions"
 
-#: ../../libs/srs-react/src/lib/cards/card-details.tsx:116
+#: ../../libs/srs-react/src/lib/cards/card-details.tsx:118
 msgid "card.labels.difficulty"
 msgstr "Difficulty"
 
-#: ../../libs/srs-react/src/lib/cards/card-details.tsx:102
+#: ../../libs/srs-react/src/lib/cards/card-details.tsx:104
 #: ../../libs/srs-react/src/lib/cards/cards-table-filters.tsx:80
 msgid "card.labels.due-at"
 msgstr "Due"
 
-#: ../../libs/srs-react/src/lib/cards/card-details.tsx:123
+#: ../../libs/srs-react/src/lib/cards/card-details.tsx:125
 msgid "card.labels.lapses"
 msgstr "Lapses"
 
-#: ../../libs/srs-react/src/lib/cards/card-details.tsx:130
+#: ../../libs/srs-react/src/lib/cards/card-details.tsx:132
 msgid "card.labels.reviews"
 msgstr "Reviews"
 
-#: ../../libs/srs-react/src/lib/cards/card-details.tsx:109
+#: ../../libs/srs-react/src/lib/cards/card-details.tsx:111
 msgid "card.labels.stability"
 msgstr "Stability"
 
-#: ../../libs/srs-react/src/lib/cards/card-details.tsx:96
+#: ../../libs/srs-react/src/lib/cards/card-details.tsx:98
 #: ../../libs/srs-react/src/lib/cards/cards-table-filters.tsx:62
 msgid "card.labels.state"
 msgstr "Status"

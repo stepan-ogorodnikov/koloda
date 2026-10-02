@@ -11,6 +11,7 @@ import { useLingui } from "@lingui/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { CardContentTextArea } from "./card-content-text-area";
 
 type AddCardProps = {
   deckId: Deck["id"];
@@ -99,13 +100,14 @@ export function AddCard({ deckId, templateId }: AddCardProps) {
               <Dialog.Content variants={{ class: "justify-center pb-6" }}>
                 <QueryState query={query}>
                   {(data) => {
-                    return data.content.fields.map(({ id, title }, i) => (
+                    return data.content.fields.map(({ id, title, type }, i) => (
                       <form.AppField name={`content.${id}.text`} key={id}>
                         {(field) => (
                           <field.TextField>
                             <Label>{title}</Label>
                             <TextField.Content>
-                              <TextField.TextArea
+                              <CardContentTextArea
+                                fieldType={type}
                                 canAutoResize
                                 rows={1}
                                 maxRows={6}

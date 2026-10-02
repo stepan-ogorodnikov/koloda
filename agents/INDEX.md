@@ -42,6 +42,7 @@ The listed files are relative to the repo root.
 | Assistant conversation list (create, name, unread, clone, delete) | `docs/specs/ASSISTANT-CONVERSATION-LIST.md`, `agents/ASSISTANT-MAP.md` |
 | Assistant chat (anything else) | `agents/ASSISTANT-MAP.md` (it routes to one spec and the files) |
 | Cards (content, state, add/edit/delete, views) | `docs/specs/CARDS.md` |
+| Card images (insert, formats, where they show) | `docs/specs/MEDIA.md` |
 | Decks (create, edit algorithm/template, delete) | `docs/specs/DECKS.md` |
 | Lessons (overview, today's progress, session, amounts, grading, learn-ahead) | `docs/specs/LESSONS.md` |
 | Templates (fields, layout, locking) | `docs/specs/TEMPLATES.md` |
@@ -74,6 +75,7 @@ Then add the same guides the author used for that change type, so the reviewer a
 | Assistant conversation list diff | `docs/specs/ASSISTANT-CONVERSATION-LIST.md`, `agents/ASSISTANT-MAP.md` |
 | Assistant chat diff | `agents/ASSISTANT-MAP.md` (+ the one spec it names) |
 | Cards diff | `docs/specs/CARDS.md` |
+| Card images diff | `docs/specs/MEDIA.md` |
 | Decks diff | `docs/specs/DECKS.md` |
 | Lessons diff | `docs/specs/LESSONS.md` |
 | Templates diff | `docs/specs/TEMPLATES.md` |

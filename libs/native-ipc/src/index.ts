@@ -30,6 +30,7 @@ import type {
 } from "@koloda/app";
 import type { AllowedSettings, PatchSettingsData, SetSettingsData, SettingsName } from "@koloda/settings";
 import type {
+  AddAttachmentData,
   Algorithm,
   Attachment,
   Card,
@@ -80,6 +81,9 @@ export type SeedDbData = {
 
 /** Attachment read by `cmd_get_attachment`, with its bytes base64-encoded for the NAPI wire. */
 export type AttachmentContentWire = Attachment & { bytes: string };
+
+/** Payload for `cmd_add_attachment`, with its bytes base64-encoded for the NAPI wire. */
+export type AddAttachmentWire = Omit<AddAttachmentData, "bytes"> & { bytes: string };
 
 /** Lesson queue query for `cmd_get_lessons` (mirrors Rust `GetLessonsParams`). */
 export type GetLessonsParams = {
@@ -178,6 +182,7 @@ export interface DataIpc {
   cmd_get_todays_review_totals: { args: undefined; result: TodaysReviewTotals };
 
   cmd_get_attachment: { args: { id: string }; result: AttachmentContentWire | null };
+  cmd_add_attachment: { args: { data: AddAttachmentWire }; result: Attachment };
 
   cmd_get_ai_profiles: { args: undefined; result: AIProfile[] };
   cmd_add_ai_profile: { args: { data: AddAIProfileData }; result: AIProfile };
