@@ -31,6 +31,7 @@ The TS/Rust mirroring rationale is `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md`.
 - Window IPC: `src/window-ipc.ts` — `window:*` channels plus the shutdown ack. See `IPC.md`.
 - Data IPC: `src/data-ipc.ts` — `cmd_*` channels over the NAPI addon. See `IPC.md`.
 - AI IPC: `src/ai-ipc.ts` — model listing, streaming chat with per-request abort, main-side tool executor. See `IPC.md`.
+- Media IPC: `src/media-ipc.ts` — fetches a pasted image URL in main and stores it as an attachment. See `IPC.md`.
 - Close handshake: `src/window-close-coordinator.ts` — bounded 2500 ms shutdown request/ack so the renderer flushes before destroy.
 - Preload: `src/preload.ts` — `contextBridge` exposes `electronAPI`: generic `invoke`/`on` plus `webFrame` zoom controls.
 - Rust addon: `src-rust/` — `koloda-electron` cdylib; `KolodaDb` NAPI façade over `koloda` (SQLite at `<userData>/koloda.db`).

@@ -16,7 +16,8 @@ Desktop mirrors live in `crates/koloda/src/domain/`; keep TS and Rust aligned wh
 - Cards: `cards.ts` — content schema from template fields, FSRS state fields, insert/update/delete DTOs.
 - Reviews & lessons: `reviews.ts` — review logs and daily-limit helpers; `lessons.ts` — lesson types, filters, session DTOs.
 - Progress: `progress.ts` — shared progress-field bounds, error-code maps, and validation for cards and reviews.
-- Markdown: `markdown.ts` — `markdownToHtml` (marked + DOMPurify).
+- Attachments: `attachments.ts` — attachment meta and add schemas, magic-byte format sniffing, size cap, ref pattern.
+- Markdown: `markdown.ts` — `markdownToHtml` (marked + DOMPurify); attachment refs render as `<img data-attachment-id>`.
 - AI bridge (pure): `assistant-cards-generation.ts` — `transformGeneratedCards()` (`GeneratedCard` → `InsertCardData`).
 
 ### Does NOT own (prevent scope creep)
