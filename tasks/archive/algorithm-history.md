@@ -1,6 +1,6 @@
 # Algorithm history
 
-Status: ready
+Status: done
 
 ## Intent
 
@@ -62,4 +62,10 @@ Out: any UI; reading revisions through the app or assistant; linking reviews to 
 
 ## Outcome
 
-<what shipped>
+Shipped as four commits on `task/algorithm-history` (df13446, bd80c27, 7b62a22, 3acb643).
+ALGORITHMS.md gained a History section; V4 adds `algorithm_revisions` with no foreign key, so history survives delete.
+Both stores record a full parameter snapshot with actor `{"kind":"user"}` on add, clone, and first-run seed, and on saves whose parameters change, atomically with the algorithm write.
+Title-only, notes-only, no-op, and rejected saves record nothing; existing algorithms were not backfilled.
+The TS actor is a plain `AlgorithmRevisionActor` type rather than a Zod schema, since nothing reads actors yet; the Rust twin is a serde enum tagged by `kind`.
+Known edges: desktop stores retention as `90.0` and web as `90` (inherited from `algorithms.content`), and weights whitespace counts as a change on both hosts.
+`bun run check:push` green at the tip.
