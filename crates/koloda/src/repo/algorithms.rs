@@ -8,7 +8,8 @@ use crate::app::db::{parse_json_column, Database};
 use crate::app::error::{error_codes, throw_known_error, AppError};
 use crate::app::utility::{get_current_timestamp, minted_uuidv7};
 use crate::domain::algorithms::{
-    Algorithm, AlgorithmDeck, CloneAlgorithmData, DeleteAlgorithmData, InsertAlgorithmData, UpdateAlgorithmData,
+    Algorithm, AlgorithmDeck, AlgorithmRevisionActor, CloneAlgorithmData, DeleteAlgorithmData, InsertAlgorithmData,
+    UpdateAlgorithmData,
 };
 use crate::domain::algorithms_fsrs::AlgorithmFSRS;
 use crate::domain::common::{normalize_optional_notes, normalize_required_title};
@@ -77,7 +78,7 @@ pub fn add_algorithm(db: &Database, data: InsertAlgorithmData) -> Result<Algorit
         data.validate()?;
         let now = get_current_timestamp()?;
 
-        let id = db.with_conn(|conn| insert_algorithm(conn, &data, now, None))?;
+        let id = db.with_transaction(|tx| insert_algorithm(tx, &data, now, None))?;
 
         get_algorithm(db, &id)?.ok_or_else(|| AppError::new(error_codes::DB_ADD, None))
     })
@@ -107,28 +108,52 @@ pub(crate) fn insert_algorithm(
         "#,
         params![id, title, content, now],
     )?;
+    insert_algorithm_revision(conn, &id, &content, now)?;
 
     Ok(id)
+}
+
+fn insert_algorithm_revision(conn: &Connection, algorithm_id: &str, content: &str, now: i64) -> Result<(), AppError> {
+    let actor = serde_json::to_string(&AlgorithmRevisionActor::User)?;
+    conn.execute(
+        r#"
+        INSERT INTO algorithm_revisions (id, algorithm_id, content, actor, created_at)
+        VALUES (?1, ?2, ?3, ?4, ?5)
+        "#,
+        params![minted_uuidv7(None), algorithm_id, content, actor, now],
+    )?;
+
+    Ok(())
 }
 
 pub fn update_algorithm(db: &Database, data: UpdateAlgorithmData) -> Result<Algorithm, AppError> {
     throw_known_error(error_codes::DB_UPDATE, || {
         data.values.validate()?;
 
-        get_algorithm(db, &data.id)?.ok_or_else(|| {
-            AppError::new(
-                error_codes::NOT_FOUND_ALGORITHMS_UPDATE_ALGORITHM,
-                Some(format!("Algorithm id: {}", data.id)),
-            )
-        })?;
-
         let now = get_current_timestamp()?;
         let title = normalize_required_title(&data.values.title);
         let notes = normalize_optional_notes(data.values.notes.clone());
 
-        db.with_conn(|conn| {
+        db.with_transaction(|tx| {
+            let existing_content = tx
+                .query_row(
+                    "SELECT content FROM algorithms WHERE id = ?1",
+                    params![data.id],
+                    |row| {
+                        let content_str: String = row.get(0)?;
+                        parse_json_column::<AlgorithmFSRS>(0, &content_str)
+                    },
+                )
+                .optional()?
+                .ok_or_else(|| {
+                    AppError::new(
+                        error_codes::NOT_FOUND_ALGORITHMS_UPDATE_ALGORITHM,
+                        Some(format!("Algorithm id: {}", data.id)),
+                    )
+                })?;
+
             let content = serde_json::to_string(&data.values.content)?;
-            conn.execute(
+            tx.execute(
                 r#"
                 UPDATE algorithms
                 SET
@@ -140,6 +165,11 @@ pub fn update_algorithm(db: &Database, data: UpdateAlgorithmData) -> Result<Algo
                 "#,
                 params![title, content, notes, now, data.id],
             )?;
+            // WHY: title and notes are not parameters, so only a content change is a revision.
+            // Twin of TS `updateAlgorithm`.
+            if existing_content != data.values.content {
+                insert_algorithm_revision(tx, &data.id, &content, now)?;
+            }
 
             Ok(())
         })?;

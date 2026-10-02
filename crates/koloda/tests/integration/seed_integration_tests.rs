@@ -168,3 +168,27 @@ fn seed_db_persists_interface_learning_and_hotkeys_settings() {
     assert_eq!(learning.content["dayStartsAt"], "04:00");
     assert!(hotkeys.content["navigation"].is_object());
 }
+
+#[test]
+fn seed_db_records_one_revision_for_the_seeded_algorithm() {
+    let db = test_db();
+
+    seed_db(&db, seed_data("Algorithm A", "Template A")).expect("first seed should succeed");
+    seed_db(&db, seed_data("Algorithm B", "Template B")).expect("second seed should succeed");
+
+    let actors: Vec<String> = db
+        .with_conn(|conn| {
+            let mut stmt = conn.prepare("SELECT actor FROM algorithm_revisions WHERE algorithm_id = ?1")?;
+            let actors = stmt
+                .query_map(rusqlite::params![SEED_ALGORITHM_SIMPLE_ID], |row| row.get(0))?
+                .collect::<Result<Vec<_>, _>>()?;
+            Ok(actors)
+        })
+        .expect("revisions query should succeed");
+
+    assert_eq!(
+        actors,
+        vec![r#"{"kind":"user"}"#.to_string()],
+        "a reused seed adds no revision"
+    );
+}

@@ -1,5 +1,9 @@
+use koloda::app::db::Database;
 use koloda::app::error::error_codes;
-use koloda::domain::algorithms::{DeleteAlgorithmData, UpdateAlgorithmData, UpdateAlgorithmValues};
+use koloda::domain::algorithms::{
+    CloneAlgorithmData, DeleteAlgorithmData, InsertAlgorithmData, UpdateAlgorithmData, UpdateAlgorithmValues,
+};
+use koloda::domain::algorithms_fsrs::AlgorithmFSRS;
 use koloda::domain::settings::SettingsName;
 use koloda::repo::algorithms;
 
@@ -263,4 +267,179 @@ fn delete_algorithm_invalid_successor_does_not_mutate_decks_or_delete_algorithm(
 
     let algorithm = algorithms::get_algorithm(&db, &algorithm_id).expect("query should succeed");
     assert!(algorithm.is_some(), "source algorithm should remain");
+}
+
+struct Revision {
+    content: AlgorithmFSRS,
+    actor: String,
+    created_at: i64,
+}
+
+fn revisions(db: &Database, algorithm_id: &str) -> Vec<Revision> {
+    db.with_conn(|conn| {
+        let mut stmt = conn.prepare(
+            "SELECT content, actor, created_at FROM algorithm_revisions WHERE algorithm_id = ?1 ORDER BY created_at, id",
+        )?;
+        let rows = stmt
+            .query_map(rusqlite::params![algorithm_id], |row| {
+                let content: String = row.get(0)?;
+                Ok(Revision {
+                    content: serde_json::from_str(&content).expect("revision content should be FSRS JSON"),
+                    actor: row.get(1)?,
+                    created_at: row.get(2)?,
+                })
+            })?
+            .collect::<Result<Vec<_>, _>>()?;
+        Ok(rows)
+    })
+    .expect("revisions query should succeed")
+}
+
+fn update_values(title: &str, content: AlgorithmFSRS, notes: Option<&str>) -> UpdateAlgorithmValues {
+    UpdateAlgorithmValues {
+        title: title.to_string(),
+        content,
+        notes: notes.map(str::to_string),
+    }
+}
+
+#[test]
+fn add_algorithm_records_starting_parameters() {
+    let db = test_db();
+    let content = AlgorithmFSRS {
+        retention: 85.0,
+        ..fsrs_algorithm_content()
+    };
+
+    let algorithm = algorithms::add_algorithm(
+        &db,
+        InsertAlgorithmData {
+            title: "Added".to_string(),
+            content: content.clone(),
+        },
+    )
+    .expect("algorithm should be created");
+
+    let revisions = revisions(&db, &algorithm.id);
+    assert_eq!(revisions.len(), 1);
+    assert_eq!(revisions[0].content, content);
+    // Actor JSON is a wire contract shared with TS.
+    assert_eq!(revisions[0].actor, r#"{"kind":"user"}"#);
+    assert_eq!(revisions[0].created_at, algorithm.created_at);
+}
+
+#[test]
+fn clone_algorithm_starts_its_own_history_and_leaves_the_source_alone() {
+    let db = test_db();
+    let source_id = add_algorithm(&db, "Source");
+
+    let cloned = algorithms::clone_algorithm(
+        &db,
+        CloneAlgorithmData {
+            title: "Clone".to_string(),
+            source_id: source_id.clone(),
+        },
+    )
+    .expect("clone should succeed");
+
+    let cloned_revisions = revisions(&db, &cloned.id);
+    assert_eq!(cloned_revisions.len(), 1);
+    assert_eq!(cloned_revisions[0].content, fsrs_algorithm_content());
+    assert_eq!(revisions(&db, &source_id).len(), 1);
+}
+
+#[test]
+fn update_algorithm_appends_a_revision_when_parameters_change() {
+    let db = test_db();
+    let algorithm_id = add_algorithm(&db, "FSRS");
+    let content = AlgorithmFSRS {
+        retention: 92.0,
+        ..fsrs_algorithm_content()
+    };
+
+    let updated = algorithms::update_algorithm(
+        &db,
+        UpdateAlgorithmData {
+            id: algorithm_id.clone(),
+            values: update_values("FSRS", content.clone(), None),
+        },
+    )
+    .expect("update should succeed");
+
+    let revisions = revisions(&db, &algorithm_id);
+    assert_eq!(revisions.len(), 2);
+    assert_eq!(revisions[1].content, content);
+    assert_eq!(revisions[1].actor, r#"{"kind":"user"}"#);
+    assert_eq!(Some(revisions[1].created_at), updated.updated_at);
+}
+
+#[test]
+fn update_algorithm_records_nothing_when_parameters_do_not_change() {
+    let cases = [
+        ("title only", update_values("Renamed", fsrs_algorithm_content(), None)),
+        (
+            "notes only",
+            update_values("FSRS", fsrs_algorithm_content(), Some("Vocabulary")),
+        ),
+        ("nothing", update_values("FSRS", fsrs_algorithm_content(), None)),
+    ];
+
+    for (name, values) in cases {
+        let db = test_db();
+        let algorithm_id = add_algorithm(&db, "FSRS");
+
+        algorithms::update_algorithm(
+            &db,
+            UpdateAlgorithmData {
+                id: algorithm_id.clone(),
+                values,
+            },
+        )
+        .expect("update should succeed");
+
+        assert_eq!(
+            revisions(&db, &algorithm_id).len(),
+            1,
+            "a save changing {name} records nothing"
+        );
+    }
+}
+
+#[test]
+fn update_algorithm_records_nothing_when_rejected() {
+    let db = test_db();
+    let algorithm_id = add_algorithm(&db, "FSRS");
+    let content = AlgorithmFSRS {
+        retention: 50.0,
+        ..fsrs_algorithm_content()
+    };
+
+    algorithms::update_algorithm(
+        &db,
+        UpdateAlgorithmData {
+            id: algorithm_id.clone(),
+            values: update_values("FSRS", content, None),
+        },
+    )
+    .expect_err("an out-of-range retention should be rejected");
+
+    assert_eq!(revisions(&db, &algorithm_id).len(), 1);
+}
+
+#[test]
+fn delete_algorithm_keeps_history() {
+    let db = test_db();
+    let algorithm_id = add_algorithm(&db, "FSRS");
+    let _remaining_id = add_algorithm(&db, "Remaining");
+
+    algorithms::delete_algorithm(
+        &db,
+        DeleteAlgorithmData {
+            id: algorithm_id.clone(),
+            successor_id: None,
+        },
+    )
+    .expect("delete should succeed");
+
+    assert_eq!(revisions(&db, &algorithm_id).len(), 1);
 }

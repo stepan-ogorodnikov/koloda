@@ -52,7 +52,7 @@ Out: any UI; reading revisions through the app or assistant; linking reviews to 
   Commit: Record algorithm parameter revisions in the web store
   Depends on: 2
 
-- [ ] 4. Mirror revision recording in the Rust store
+- [x] 4. Mirror revision recording in the Rust store
   Goal: Rust actor type in `crates/koloda/src/domain/algorithms.rs` (serde enum tagged `kind`, only `User`), serialized identically to the TS shape.
   `crates/koloda/src/repo/algorithms.rs`: `insert_algorithm` also inserts the first revision on the connection it is given (covers `add_algorithm`, clone, and `app/init.rs` seeding, which already runs in a transaction); `add_algorithm` switches to `db.with_transaction`; `update_algorithm` runs its read, update, and revision insert in `db.with_transaction` and inserts a revision only when `AlgorithmFSRS` differs (it derives `PartialEq`).
   Constraints: twin of item 3 — same rules, same JSON; mark twin sites with comments like the existing ones; no new NAPI surface; seed integration tests that insert algorithms with raw SQL stay as they are.

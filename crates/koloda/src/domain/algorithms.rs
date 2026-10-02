@@ -67,6 +67,13 @@ pub struct DeleteAlgorithmData {
     pub successor_id: Option<String>,
 }
 
+/// Who changed an algorithm's parameters, stored as JSON tagged by `kind` (TS twin: `AlgorithmRevisionActor`).
+#[derive(Debug, Clone, Copy, PartialEq, Serialize)]
+#[serde(tag = "kind", rename_all = "camelCase")]
+pub enum AlgorithmRevisionActor {
+    User,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AlgorithmDeck {
