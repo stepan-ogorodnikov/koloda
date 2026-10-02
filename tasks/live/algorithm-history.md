@@ -37,7 +37,7 @@ Out: any UI; reading revisions through the app or assistant; linking reviews to 
   Commit: Specify algorithm parameter history
   Depends on: none
 
-- [ ] 2. Add the algorithm_revisions table on both hosts
+- [x] 2. Add the algorithm_revisions table on both hosts
   Goal: one new hand-written migration `crates/koloda/src/migrations/V4__algorithm_revisions.sql` creating `algorithm_revisions (id text PRIMARY KEY NOT NULL, algorithm_id text NOT NULL, content text NOT NULL, actor text NOT NULL, created_at integer NOT NULL)` with `CREATE INDEX IF NOT EXISTS` on `(algorithm_id, created_at)`; refresh the embedded listings on both hosts; regenerate the schema inventory.
   Constraints: next V after V3; never edit applied files; one shared SQL series for both hosts; no backticks; no foreign key to `algorithms` — revisions must outlive a deleted algorithm, and a NO ACTION FK would block the delete; no backfill.
   Done when: `cargo test -p koloda` green after touching `crates/koloda/src/migrations/mod.rs` (or `cargo clean -p koloda`); inventory regenerated with `cargo test -p koloda --test integration write_schema_inventory_snapshot -- --ignored`; `bunx nx test @koloda/db-sqlite` green after rebuilding `@koloda/db-sqlite` (or `nx reset`) so the Vite glob embeds V4.

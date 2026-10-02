@@ -1,6 +1,64 @@
 {
   "tables": [
     {
+      "name": "algorithm_revisions",
+      "columns": [
+        {
+          "name": "actor",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0,
+          "dflt_value": null
+        },
+        {
+          "name": "algorithm_id",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0,
+          "dflt_value": null
+        },
+        {
+          "name": "content",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0,
+          "dflt_value": null
+        },
+        {
+          "name": "created_at",
+          "type": "INTEGER",
+          "notnull": 1,
+          "pk": 0,
+          "dflt_value": null
+        },
+        {
+          "name": "id",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 1,
+          "dflt_value": null
+        }
+      ],
+      "indexes": [
+        {
+          "name": "algorithm_revisions_algorithm_id_created_at_idx",
+          "unique": 0,
+          "columns": [
+            "algorithm_id",
+            "created_at"
+          ]
+        },
+        {
+          "name": "sqlite_autoindex_algorithm_revisions_1",
+          "unique": 1,
+          "columns": [
+            "id"
+          ]
+        }
+      ],
+      "foreign_keys": []
+    },
+    {
       "name": "algorithms",
       "columns": [
         {
