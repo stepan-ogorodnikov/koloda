@@ -21,10 +21,13 @@ export const attachmentRowSchema = z.object({
 export type Attachment = z.infer<typeof attachmentRowSchema>;
 
 export const addAttachmentSchema = z.object({
-  bytes: z.instanceof(Uint8Array).superRefine((bytes, ctx) => {
-    const code = getAttachmentBytesError(bytes);
-    if (code) ctx.addIssue({ code: "custom", message: code });
-  }),
+  // WHY: Web Crypto and Blob take only ArrayBuffer-backed views, not shared memory.
+  bytes: z
+    .custom<Uint8Array<ArrayBuffer>>((value) => value instanceof Uint8Array && value.buffer instanceof ArrayBuffer)
+    .superRefine((bytes, ctx) => {
+      const code = getAttachmentBytesError(bytes);
+      if (code) ctx.addIssue({ code: "custom", message: code });
+    }),
   width: z.int().positive().optional(),
   height: z.int().positive().optional(),
 });

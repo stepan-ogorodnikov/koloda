@@ -65,6 +65,100 @@
       "foreign_keys": []
     },
     {
+      "name": "attachment_bytes",
+      "columns": [
+        {
+          "name": "bytes",
+          "type": "BLOB",
+          "notnull": 1,
+          "pk": 0,
+          "dflt_value": null
+        },
+        {
+          "name": "id",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 1,
+          "dflt_value": null
+        }
+      ],
+      "indexes": [
+        {
+          "name": "sqlite_autoindex_attachment_bytes_1",
+          "unique": 1,
+          "columns": [
+            "id"
+          ]
+        }
+      ],
+      "foreign_keys": [
+        {
+          "table": "attachments",
+          "from": "id",
+          "to": "id",
+          "on_delete": "CASCADE",
+          "on_update": "NO ACTION"
+        }
+      ]
+    },
+    {
+      "name": "attachments",
+      "columns": [
+        {
+          "name": "created_at",
+          "type": "INTEGER",
+          "notnull": 1,
+          "pk": 0,
+          "dflt_value": null
+        },
+        {
+          "name": "height",
+          "type": "INTEGER",
+          "notnull": 0,
+          "pk": 0,
+          "dflt_value": null
+        },
+        {
+          "name": "id",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 1,
+          "dflt_value": null
+        },
+        {
+          "name": "mime",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0,
+          "dflt_value": null
+        },
+        {
+          "name": "size",
+          "type": "INTEGER",
+          "notnull": 1,
+          "pk": 0,
+          "dflt_value": null
+        },
+        {
+          "name": "width",
+          "type": "INTEGER",
+          "notnull": 0,
+          "pk": 0,
+          "dflt_value": null
+        }
+      ],
+      "indexes": [
+        {
+          "name": "sqlite_autoindex_attachments_1",
+          "unique": 1,
+          "columns": [
+            "id"
+          ]
+        }
+      ],
+      "foreign_keys": []
+    },
+    {
       "name": "cards",
       "columns": [
         {

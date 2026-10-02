@@ -34,6 +34,8 @@ When modifying database schema:
    Storage conventions: timestamps are unix-ms integers, JSON is `text`, booleans are `0/1`.
    `reviews.due_at` is NOT NULL (FSRS always supplies `due`); `cards.due_at` is nullable (untouched cards).
    Product entity ids are client-minted UUIDv7 text primary keys.
+   `attachments.id` is the exception: the repo sets it to the lowercase hex SHA-256 of the bytes
+   (`docs/decisions/MEDIA-STORAGE.md`).
    `settings.id` stays `integer PRIMARY KEY AUTOINCREMENT` (rows are keyed by `name`).
    `conversations.id` stays text (v4 mint, not v7).
 2. **Refresh the embedded listing**.

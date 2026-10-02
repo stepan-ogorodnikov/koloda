@@ -48,6 +48,7 @@ The listed files are relative to the repo root.
 | Algorithms / presets | `docs/specs/ALGORITHMS.md` |
 | Learning settings (defaults, daily limits, day boundary, learn-ahead limit) | `docs/specs/LEARNING-SETTINGS.md` |
 | Database schema change | `agents/DB.md`, `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md` |
+| Card media storage (attachments, hash ids, byte store) | `docs/decisions/MEDIA-STORAGE.md`, `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md` |
 | Change inside `crates/koloda` (Rust domain, repos, settings slices, FSRS, reviews) | `agents/RUST.md`, `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md` |
 | Add a color theme | `agents/ADD-COLOR-THEME.md`, `docs/specs/INTERFACE-SETTINGS.md` |
 | Interface settings change (language, scheme, themes, motion) | `docs/specs/INTERFACE-SETTINGS.md`, `agents/I18N.md` |
@@ -79,6 +80,7 @@ Then add the same guides the author used for that change type, so the reviewer a
 | Algorithms diff | `docs/specs/ALGORITHMS.md` |
 | Learning settings diff | `docs/specs/LEARNING-SETTINGS.md` |
 | Schema change diff | `agents/DB.md`, `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md` |
+| Card media storage diff | `docs/decisions/MEDIA-STORAGE.md`, `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md` |
 | `crates/koloda` / `koloda` crate diff | `agents/RUST.md`, `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md` |
 | Theme diff | `agents/ADD-COLOR-THEME.md`, `docs/specs/INTERFACE-SETTINGS.md` |
 | Interface settings diff | `docs/specs/INTERFACE-SETTINGS.md` |

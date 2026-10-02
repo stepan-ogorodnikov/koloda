@@ -22,3 +22,5 @@ export const TEMPLATE_LOCKED_SELECT = `EXISTS(
   WHERE c.template_id = t.id
   LIMIT 1
 ) AS isLocked`;
+
+export const ATTACHMENT_SELECT = "id, mime, size, width, height, created_at AS createdAt";

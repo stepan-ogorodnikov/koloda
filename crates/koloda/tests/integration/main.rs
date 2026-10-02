@@ -4,6 +4,7 @@ mod common;
 
 mod ai_integration_tests;
 mod algorithms_integration_tests;
+mod attachments_integration_tests;
 mod cards_integration_tests;
 mod conversations_integration_tests;
 mod db_integration_tests;

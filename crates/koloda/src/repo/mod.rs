@@ -5,6 +5,8 @@
 
 pub mod ai;
 pub mod algorithms;
+pub mod attachment_bytes;
+pub mod attachments;
 pub mod cards;
 pub mod conversations;
 pub mod decks;
