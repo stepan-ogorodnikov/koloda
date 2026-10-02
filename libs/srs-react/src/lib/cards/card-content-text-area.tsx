@@ -11,7 +11,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
 import { useCallback, useRef, useState } from "react";
 import type { ClipboardEvent, DragEvent, FormEvent } from "react";
-import { FileTrigger } from "react-aria-components";
+import { FileTrigger, InputContext } from "react-aria-components";
 import {
   altFromFileName,
   altFromUrl,
@@ -172,16 +172,20 @@ function CardMarkdownTextArea({ ref, ...props }: TextFieldTextAreaProps) {
         onDrop={handleDrop}
       />
       <div className="flex flex-row flex-wrap gap-2 pt-1">
-        <FileTrigger
-          acceptedFileTypes={[...ATTACHMENT_MIMES]}
-          allowsMultiple
-          onSelect={(files) => void insertFiles(getImageFiles(files), (file) => altFromFileName(file.name))}
-        >
-          <Button variants={{ style: "ghost", size: "small" }} isDisabled={isInserting}>
-            <ImageIcon className="size-4 min-w-4" aria-hidden="true" />
-            {_(msg`card.content.insert-image`)}
-          </Button>
-        </FileTrigger>
+        {/* WHY: FileTrigger's hidden file input reads InputContext, which the enclosing TextField fills
+            with the field's text; a file input throws when its value is set to anything but "". */}
+        <InputContext.Provider value={null}>
+          <FileTrigger
+            acceptedFileTypes={[...ATTACHMENT_MIMES]}
+            allowsMultiple
+            onSelect={(files) => void insertFiles(getImageFiles(files), (file) => altFromFileName(file.name))}
+          >
+            <Button variants={{ style: "ghost", size: "small" }} isDisabled={isInserting}>
+              <ImageIcon className="size-4 min-w-4" aria-hidden="true" />
+              {_(msg`card.content.insert-image`)}
+            </Button>
+          </FileTrigger>
+        </InputContext.Provider>
         {pastedUrl && (
           <Button variants={{ style: "ghost", size: "small" }} isDisabled={isInserting} onPress={handleEmbed}>
             <ImageIcon className="size-4 min-w-4" aria-hidden="true" />
