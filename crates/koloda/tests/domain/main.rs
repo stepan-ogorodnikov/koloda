@@ -7,6 +7,7 @@ mod ai_tests;
 mod algorithms_fsrs_tests;
 mod algorithms_serde_tests;
 mod algorithms_tests;
+mod attachments_tests;
 mod cards_insert_tests;
 mod cards_progress_tests;
 mod cards_serde_tests;

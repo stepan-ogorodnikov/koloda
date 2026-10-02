@@ -17,6 +17,16 @@ export { DEFAULT_FSRS_ALGORITHM, FSRS_GRADES, LEARNING_STEPS_UNITS } from "./lib
 export type { AlgorithmFSRS } from "./lib/algorithms-fsrs";
 export { transformGeneratedCards } from "./lib/assistant-cards-generation";
 export {
+  ATTACHMENT_MAX_BYTES,
+  ATTACHMENT_MIMES,
+  ATTACHMENT_REF_PATTERN,
+  addAttachmentSchema,
+  attachmentRowSchema,
+  getAttachmentBytesError,
+  sniffImageMime,
+} from "./lib/attachments";
+export type { AddAttachmentData, Attachment, AttachmentMime } from "./lib/attachments";
+export {
   cardRowSchema,
   createCardFromCardFSRS,
   createUpdateCardProgress,

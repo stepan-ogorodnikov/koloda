@@ -83,6 +83,9 @@ pub mod error_codes {
 
     pub const VALIDATION_CARDS_CONTENT_FIELD_EMPTY: &str = "validation.cards.content.field-empty";
 
+    pub const VALIDATION_ATTACHMENTS_FORMAT: &str = "validation.attachments.format";
+    pub const VALIDATION_ATTACHMENTS_TOO_LARGE: &str = "validation.attachments.too-large";
+
     pub const VALIDATION_REVIEWS_RATING: &str = "validation.reviews.rating";
     pub const VALIDATION_REVIEWS_STATE: &str = "validation.reviews.state";
     pub const VALIDATION_REVIEWS_STABILITY: &str = "validation.reviews.stability";

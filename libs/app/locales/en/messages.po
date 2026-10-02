@@ -109,7 +109,7 @@ msgstr "Failed to load data"
 msgid "db.update"
 msgstr "Failed to update data"
 
-#: ../../libs/app/src/lib/error.ts:116
+#: ../../libs/app/src/lib/error.ts:118
 msgid "keyring"
 msgstr "Failed to access the system keyring"
 
@@ -201,7 +201,7 @@ msgstr "Light"
 msgid "scheme.system"
 msgstr "System"
 
-#: ../../libs/app/src/lib/error.ts:117
+#: ../../libs/app/src/lib/error.ts:119
 msgid "secret-store"
 msgstr "Secret store is unavailable"
 
@@ -401,31 +401,39 @@ msgstr "Last preset can't be deleted"
 msgid "validation.assistant-settings.temperature-range"
 msgstr "Temperature must be between 0 and 2"
 
-#: ../../libs/app/src/lib/error.ts:103
+#: ../../libs/app/src/lib/error.ts:101
+msgid "validation.attachments.format"
+msgstr "Only PNG, JPEG, GIF, WebP, and AVIF images are supported"
+
+#: ../../libs/app/src/lib/error.ts:102
+msgid "validation.attachments.too-large"
+msgstr "Image can't be larger than 5 MB"
+
+#: ../../libs/app/src/lib/error.ts:105
 msgid "validation.cards-progress.difficulty"
 msgstr "Difficulty must be between 0 and 10"
 
-#: ../../libs/app/src/lib/error.ts:107
+#: ../../libs/app/src/lib/error.ts:109
 msgid "validation.cards-progress.lapses"
 msgstr "Lapses must be non-negative"
 
-#: ../../libs/app/src/lib/error.ts:105
+#: ../../libs/app/src/lib/error.ts:107
 msgid "validation.cards-progress.learning-steps"
 msgstr "Learning steps must be non-negative"
 
-#: ../../libs/app/src/lib/error.ts:106
+#: ../../libs/app/src/lib/error.ts:108
 msgid "validation.cards-progress.reps"
 msgstr "Reps must be non-negative"
 
-#: ../../libs/app/src/lib/error.ts:104
+#: ../../libs/app/src/lib/error.ts:106
 msgid "validation.cards-progress.scheduled-days"
 msgstr "Scheduled days must be non-negative"
 
-#: ../../libs/app/src/lib/error.ts:102
+#: ../../libs/app/src/lib/error.ts:104
 msgid "validation.cards-progress.stability"
 msgstr "Stability must be non-negative"
 
-#: ../../libs/app/src/lib/error.ts:101
+#: ../../libs/app/src/lib/error.ts:103
 msgid "validation.cards-progress.state"
 msgstr "Invalid card state"
 
@@ -453,35 +461,35 @@ msgstr "Amount can't be negative"
 msgid "validation.lessons.result.card-review-mismatch"
 msgstr "Card id and review card id don't match"
 
-#: ../../libs/app/src/lib/error.ts:111
+#: ../../libs/app/src/lib/error.ts:113
 msgid "validation.reviews.difficulty"
 msgstr "Difficulty must be between 0 and 10"
 
-#: ../../libs/app/src/lib/error.ts:113
+#: ../../libs/app/src/lib/error.ts:115
 msgid "validation.reviews.learning-steps"
 msgstr "Learning steps must be non-negative"
 
-#: ../../libs/app/src/lib/error.ts:108
+#: ../../libs/app/src/lib/error.ts:110
 msgid "validation.reviews.rating"
 msgstr "Invalid review rating"
 
-#: ../../libs/app/src/lib/error.ts:112
+#: ../../libs/app/src/lib/error.ts:114
 msgid "validation.reviews.scheduled-days"
 msgstr "Scheduled days must be non-negative"
 
-#: ../../libs/app/src/lib/error.ts:110
+#: ../../libs/app/src/lib/error.ts:112
 msgid "validation.reviews.stability"
 msgstr "Stability must be non-negative"
 
-#: ../../libs/app/src/lib/error.ts:109
+#: ../../libs/app/src/lib/error.ts:111
 msgid "validation.reviews.state"
 msgstr "Invalid review state"
 
-#: ../../libs/app/src/lib/error.ts:114
+#: ../../libs/app/src/lib/error.ts:116
 msgid "validation.reviews.time"
 msgstr "Review time must be non-negative"
 
-#: ../../libs/app/src/lib/error.ts:115
+#: ../../libs/app/src/lib/error.ts:117
 msgid "validation.seed.learning-settings"
 msgstr "Invalid learning settings"
 
@@ -609,6 +617,6 @@ msgstr "There has to be at least one layout item"
 msgid "validation.templates.update-locked"
 msgstr "Cannot update locked template"
 
-#: ../../libs/app/src/lib/error.ts:118
+#: ../../libs/app/src/lib/error.ts:120
 msgid "windows-credentials"
 msgstr "Failed to access Windows credentials"

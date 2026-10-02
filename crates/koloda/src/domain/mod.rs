@@ -10,6 +10,7 @@
 pub mod ai;
 pub mod algorithms;
 pub mod algorithms_fsrs;
+pub mod attachments;
 pub mod cards;
 pub mod common;
 pub mod conversations;

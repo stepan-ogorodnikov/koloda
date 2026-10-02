@@ -109,7 +109,7 @@ msgstr "Не удалось загрузить данные"
 msgid "db.update"
 msgstr "Не удалось обновить данные"
 
-#: ../../libs/app/src/lib/error.ts:116
+#: ../../libs/app/src/lib/error.ts:118
 msgid "keyring"
 msgstr "Не удалось получить доступ к системному хранилищу ключей"
 
@@ -201,7 +201,7 @@ msgstr "Светлая"
 msgid "scheme.system"
 msgstr "Системная"
 
-#: ../../libs/app/src/lib/error.ts:117
+#: ../../libs/app/src/lib/error.ts:119
 msgid "secret-store"
 msgstr "Хранилище секретов недоступно"
 
@@ -401,31 +401,39 @@ msgstr "Нельзя удалить последний алгоритм"
 msgid "validation.assistant-settings.temperature-range"
 msgstr "Температура должна быть от 0 до 2"
 
-#: ../../libs/app/src/lib/error.ts:103
+#: ../../libs/app/src/lib/error.ts:101
+msgid "validation.attachments.format"
+msgstr "Поддерживаются только изображения PNG, JPEG, GIF, WebP и AVIF"
+
+#: ../../libs/app/src/lib/error.ts:102
+msgid "validation.attachments.too-large"
+msgstr "Изображение не может быть больше 5 МБ"
+
+#: ../../libs/app/src/lib/error.ts:105
 msgid "validation.cards-progress.difficulty"
 msgstr "Сложность должна быть от 0 до 10"
 
-#: ../../libs/app/src/lib/error.ts:107
+#: ../../libs/app/src/lib/error.ts:109
 msgid "validation.cards-progress.lapses"
 msgstr "Количество провалов не может быть отрицательным"
 
-#: ../../libs/app/src/lib/error.ts:105
+#: ../../libs/app/src/lib/error.ts:107
 msgid "validation.cards-progress.learning-steps"
 msgstr "Количество шагов обучения не может быть отрицательным"
 
-#: ../../libs/app/src/lib/error.ts:106
+#: ../../libs/app/src/lib/error.ts:108
 msgid "validation.cards-progress.reps"
 msgstr "Количество повторений не может быть отрицательным"
 
-#: ../../libs/app/src/lib/error.ts:104
+#: ../../libs/app/src/lib/error.ts:106
 msgid "validation.cards-progress.scheduled-days"
 msgstr "Запланированные дни не могут быть отрицательными"
 
-#: ../../libs/app/src/lib/error.ts:102
+#: ../../libs/app/src/lib/error.ts:104
 msgid "validation.cards-progress.stability"
 msgstr "Стабильность не может быть отрицательной"
 
-#: ../../libs/app/src/lib/error.ts:101
+#: ../../libs/app/src/lib/error.ts:103
 msgid "validation.cards-progress.state"
 msgstr "Недопустимое состояние карточки"
 
@@ -453,35 +461,35 @@ msgstr "Количество не может быть отрицательным
 msgid "validation.lessons.result.card-review-mismatch"
 msgstr "ID карточки и записи не совпадает"
 
-#: ../../libs/app/src/lib/error.ts:111
+#: ../../libs/app/src/lib/error.ts:113
 msgid "validation.reviews.difficulty"
 msgstr "Сложность должна быть от 0 до 10"
 
-#: ../../libs/app/src/lib/error.ts:113
+#: ../../libs/app/src/lib/error.ts:115
 msgid "validation.reviews.learning-steps"
 msgstr "Количество шагов обучения не может быть отрицательным"
 
-#: ../../libs/app/src/lib/error.ts:108
+#: ../../libs/app/src/lib/error.ts:110
 msgid "validation.reviews.rating"
 msgstr "Недопустимая оценка повторения"
 
-#: ../../libs/app/src/lib/error.ts:112
+#: ../../libs/app/src/lib/error.ts:114
 msgid "validation.reviews.scheduled-days"
 msgstr "Запланированные дни не могут быть отрицательными"
 
-#: ../../libs/app/src/lib/error.ts:110
+#: ../../libs/app/src/lib/error.ts:112
 msgid "validation.reviews.stability"
 msgstr "Стабильность не может быть отрицательной"
 
-#: ../../libs/app/src/lib/error.ts:109
+#: ../../libs/app/src/lib/error.ts:111
 msgid "validation.reviews.state"
 msgstr "Недопустимое состояние повторения"
 
-#: ../../libs/app/src/lib/error.ts:114
+#: ../../libs/app/src/lib/error.ts:116
 msgid "validation.reviews.time"
 msgstr "Время повторения не может быть отрицательным"
 
-#: ../../libs/app/src/lib/error.ts:115
+#: ../../libs/app/src/lib/error.ts:117
 msgid "validation.seed.learning-settings"
 msgstr "Недопустимые настройки обучения"
 
@@ -609,6 +617,6 @@ msgstr "Раскладка не может быть пустой"
 msgid "validation.templates.update-locked"
 msgstr "Нельзя обновить заблокированный шаблон"
 
-#: ../../libs/app/src/lib/error.ts:118
+#: ../../libs/app/src/lib/error.ts:120
 msgid "windows-credentials"
 msgstr "Не удалось получить доступ к учётным данным Windows"

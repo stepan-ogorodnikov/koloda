@@ -98,6 +98,8 @@ export const ERROR_MESSAGES = {
   "validation.templates.delete-default": msg`validation.templates.delete-default`,
   "validation.templates.delete-used": msg`validation.templates.delete-used`,
   "validation.cards.content.field-empty": msg`validation.cards.content.field-empty`,
+  "validation.attachments.format": msg`validation.attachments.format`,
+  "validation.attachments.too-large": msg`validation.attachments.too-large`,
   "validation.cards-progress.state": msg`validation.cards-progress.state`,
   "validation.cards-progress.stability": msg`validation.cards-progress.stability`,
   "validation.cards-progress.difficulty": msg`validation.cards-progress.difficulty`,
