@@ -1,6 +1,6 @@
 # Card media (images)
 
-Status: ready
+Status: done
 
 ## Intent
 
@@ -283,4 +283,10 @@ Out:
 
 ## Outcome
 
-(filled at archive)
+Users insert images into markdown card fields by paste, drop, or file pick on web and desktop.
+Each image is stored as an attachment and referenced as `![alt](attachment:<id>)`.
+Preview and lessons render those refs. A missing source, including a `data:` image, shows the alt text.
+Rejected formats and files over 5 MiB show a validation error and insert nothing.
+On desktop, Embed image stores a pasted image URL once; later display does not fetch it.
+The web demo leaves URL embedding out. A pasted URL stays text.
+Unreferenced attachments older than 24 hours are swept after startup.
