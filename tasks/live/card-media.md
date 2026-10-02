@@ -100,7 +100,7 @@ Out:
 
 ## Plan
 
-- [ ] 1. Stop rendering data URL images
+- [x] 1. Stop rendering data URL images
   Goal: In `libs/srs/src/lib/markdown.ts`, `isSafeImageUrl` stops accepting `data:` URLs.
   Such an image renders as its alt text, like a remote one.
   App-relative images stay.
@@ -117,7 +117,7 @@ Out:
   Commit: Stop rendering data URL images in markdown
   Depends on: none
 
-- [ ] 2. Add attachment domain twins
+- [x] 2. Add attachment domain twins
   Goal: Add the attachment domain to `libs/srs` and its Rust twin in `crates/koloda/src/domain/attachments.rs`.
   Types: `Attachment` meta (`id`, `mime`, `size`, nullable `width` and `height`, `createdAt`).
   Types: the add payload (bytes, optional `width` and `height`).
@@ -136,7 +136,7 @@ Out:
   Commit: Add attachment domain twins
   Depends on: none
 
-- [ ] 3. Store attachments on both backends
+- [x] 3. Store attachments on both backends
   Goal: Write `crates/koloda/src/migrations/V3__attachments.sql` (next free number) with two tables.
   `attachments`: `id` text PK, `mime` text NOT NULL, `size` integer NOT NULL, `width` integer, `height` integer,
   `created_at` integer NOT NULL.
@@ -163,7 +163,7 @@ Out:
   Commit: Store attachments on both backends
   Depends on: 2
 
-- [ ] 4. Render attachment images in card markdown
+- [x] 4. Render attachment images in card markdown
   Goal: Resolve attachment refs to images in card preview and lessons.
   In `libs/srs/src/lib/markdown.ts`, a dedicated `Marked` instance (not global `marked.use`) handles image tokens.
   An image whose URL is an attachment ref renders as `<img data-attachment-id="<id>" alt="…">` with no `src`.
@@ -197,7 +197,7 @@ Out:
   Commit: Render attachment images in card markdown
   Depends on: 1, 3
 
-- [ ] 5. Insert images from the card editor
+- [x] 5. Insert images from the card editor
   Goal: In the add-card and card-details markdown fields, insert images from paste, drop, and a pick button.
   Add `addAttachmentMutation` to `Queries` and `QUERIES_METHODS`, and implement it in both apps' `queries.ts`.
   Desktop adds `cmd_add_attachment` through the same layers as item 4; the NAPI layer decodes base64.
@@ -229,7 +229,7 @@ Out:
   Commit: Insert images from the card editor
   Depends on: 4
 
-- [ ] 6. Sweep unreferenced attachments
+- [x] 6. Sweep unreferenced attachments
   Goal: Delete attachments no card references, once per app session after the first render.
   Both repos run the same statement:
   `DELETE FROM attachments WHERE created_at < ? AND NOT EXISTS (SELECT 1 FROM cards WHERE instr(cards.content, 'attachment:' || attachments.id) > 0)`.
@@ -249,7 +249,7 @@ Out:
   Commit: Sweep unreferenced attachments after startup
   Depends on: 5
 
-- [ ] 7. Embed pasted image URLs on desktop
+- [x] 7. Embed pasted image URLs on desktop
   Goal: In the desktop app, let a pasted image URL become an attachment.
   When the pasted text in a markdown field is exactly one `http:` or `https:` URL, it pastes as text as today.
   An "Embed image" action then appears on that field until its next edit.
