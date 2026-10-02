@@ -44,11 +44,11 @@ Out: any UI; reading revisions through the app or assistant; linking reviews to 
   Commit: Add the algorithm_revisions table
   Depends on: none
 
-- [ ] 3. Record revisions in the web store
-  Goal: shared actor schema in libs/srs (Zod discriminated union on `kind`, only `user` for now) next to the algorithm schemas.
+- [x] 3. Record revisions in the web store
+  Goal: shared `AlgorithmRevisionActor` type in libs/srs (tagged by `kind`, only `user` for now) next to the algorithm schemas; a plain type, not a Zod schema, since nothing parses actors yet.
   libs/db-sqlite `algorithms.ts`: a revision insert (uuidv7 id, parsed `content` as JSON, actor `{"kind":"user"}`, the same timestamp as the algorithm write); `addAlgorithm` inserts the algorithm and its first revision in one `db.transaction` (covers clone and `apps/web/src/app/setup.ts` seeding, which already passes its own transaction — nested calls join it); `updateAlgorithm` runs its read, update, and revision insert in one `db.transaction` and inserts a revision only when `content` changed.
   Constraints: change detection compares the parsed new `content` with the stored parsed `content`, not raw form strings; title-only, notes-only, and no-op saves insert nothing; `deleteAlgorithm` leaves revisions untouched; no read API for revisions (tests query the table directly); no IPC or electron mirror changes.
-  Done when: `bunx nx test @koloda/db-sqlite` and `bunx nx test @koloda/srs` cover: add and clone record one revision with the starting snapshot; a parameter change appends one revision with the new snapshot and actor `user`; title/notes-only and no-op saves append none; a rejected save appends none; delete keeps revisions.
+  Done when: `bunx nx test @koloda/db-sqlite` covers: add and clone record one revision with the starting snapshot; a parameter change appends one revision with the new snapshot and actor `user`; title/notes-only and no-op saves append none; a rejected save appends none; delete keeps revisions.
   Commit: Record algorithm parameter revisions in the web store
   Depends on: 2
 

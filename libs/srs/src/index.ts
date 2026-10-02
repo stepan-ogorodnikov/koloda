@@ -7,6 +7,7 @@ export {
 } from "./lib/algorithms";
 export type {
   Algorithm,
+  AlgorithmRevisionActor,
   CloneAlgorithmData,
   DeleteAlgorithmData,
   InsertAlgorithmData,

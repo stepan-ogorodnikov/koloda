@@ -2,6 +2,8 @@ import { AppError, mintedUuidv7, throwKnownError } from "@koloda/app";
 import { algorithmRowSchema, deckWithOnlyTitleSchema, insertAlgorithmSchema, updateAlgorithmSchema } from "@koloda/srs";
 import type {
   Algorithm,
+  AlgorithmFSRS,
+  AlgorithmRevisionActor,
   CloneAlgorithmData,
   DeleteAlgorithmData,
   InsertAlgorithmData,
@@ -31,12 +33,16 @@ export async function addAlgorithm(db: DB, data: InsertAlgorithmData, id?: strin
   return throwKnownError("db.add", async () => {
     const payload = insertAlgorithmSchema.parse(data);
     const rowId = mintedUuidv7(id);
-    await db.run(`INSERT INTO algorithms (id, title, content, created_at, updated_at) VALUES (?, ?, ?, ?, NULL)`, [
-      rowId,
-      payload.title,
-      JSON.stringify(payload.content),
-      nowMs(),
-    ]);
+    const now = nowMs();
+    await db.transaction(async (tx) => {
+      await tx.run(`INSERT INTO algorithms (id, title, content, created_at, updated_at) VALUES (?, ?, ?, ?, NULL)`, [
+        rowId,
+        payload.title,
+        JSON.stringify(payload.content),
+        now,
+      ]);
+      await insertAlgorithmRevision(tx, rowId, payload.content, now);
+    });
     const result = await getAlgorithm(db, rowId);
     if (!result) throw new Error("no row returned");
     return result;
@@ -47,16 +53,23 @@ export async function updateAlgorithm(db: DB, { id, values }: UpdateAlgorithmDat
   return throwKnownError("db.update", async () => {
     const payload = updateAlgorithmSchema.parse(values);
 
-    const existing = await getAlgorithm(db, id);
-    if (!existing) throw new AppError("not-found.algorithms.update.algorithm", `Algorithm id: ${id}`);
+    await db.transaction(async (tx) => {
+      const existing = await getAlgorithm(tx, id);
+      if (!existing) throw new AppError("not-found.algorithms.update.algorithm", `Algorithm id: ${id}`);
 
-    await db.run(`UPDATE algorithms SET title = ?, content = ?, notes = ?, updated_at = ? WHERE id = ?`, [
-      payload.title,
-      JSON.stringify(payload.content),
-      payload.notes ?? null,
-      nowMs(),
-      id,
-    ]);
+      const now = nowMs();
+      const content = JSON.stringify(payload.content);
+      await tx.run(`UPDATE algorithms SET title = ?, content = ?, notes = ?, updated_at = ? WHERE id = ?`, [
+        payload.title,
+        content,
+        payload.notes ?? null,
+        now,
+        id,
+      ]);
+      // WHY: both sides went through the same schema parse, so key order matches and string equality is
+      // parameter equality. Title and notes are not parameters. Twin of Rust `update_algorithm`.
+      if (content !== JSON.stringify(existing.content)) await insertAlgorithmRevision(tx, id, payload.content, now);
+    });
 
     const result = await getAlgorithm(db, id);
     if (!result) throw new Error("no row returned");
@@ -100,6 +113,14 @@ export async function deleteAlgorithm(db: DB, { id, successorId }: DeleteAlgorit
       await tx.run(`DELETE FROM algorithms WHERE id = ?`, [id]);
     });
   });
+}
+
+async function insertAlgorithmRevision(db: DB, algorithmId: Algorithm["id"], content: AlgorithmFSRS, now: number) {
+  const actor: AlgorithmRevisionActor = { kind: "user" };
+  await db.run(
+    `INSERT INTO algorithm_revisions (id, algorithm_id, content, actor, created_at) VALUES (?, ?, ?, ?, ?)`,
+    [mintedUuidv7(), algorithmId, JSON.stringify(content), JSON.stringify(actor), now],
+  );
 }
 
 export async function getAlgorithmDecks(db: DB, id: Algorithm["id"]) {

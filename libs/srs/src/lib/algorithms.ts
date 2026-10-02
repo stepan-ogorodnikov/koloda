@@ -36,6 +36,9 @@ export const cloneAlgorithmSchema = insertAlgorithmSchema.pick({ title: true }).
   sourceId: algorithmValidation.shape.id,
 });
 
+/** Who changed an algorithm's parameters, stored as JSON tagged by `kind` (Rust twin: `AlgorithmRevisionActor`). */
+export type AlgorithmRevisionActor = { kind: "user" };
+
 export type DeleteAlgorithmData = {
   id: Algorithm["id"];
   successorId?: Algorithm["id"] | null;

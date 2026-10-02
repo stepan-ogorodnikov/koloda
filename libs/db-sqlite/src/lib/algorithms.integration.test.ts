@@ -19,6 +19,7 @@ import {
   getAlgorithms,
   updateAlgorithm,
 } from "./algorithms";
+import type { DB } from "./db";
 import { getDeck } from "./decks";
 
 describe("algorithms repository integration", () => {
@@ -202,6 +203,115 @@ describe("algorithms repository integration", () => {
         retention: 92,
         isFuzzEnabled: false,
       },
+    });
+  });
+
+  describe("revisions", () => {
+    async function getRevisions(db: DB, algorithmId: string) {
+      const rows = await db.all(
+        "SELECT algorithm_id, content, actor, created_at FROM algorithm_revisions WHERE algorithm_id = ? ORDER BY created_at, id",
+        [algorithmId],
+      );
+      return rows.map((row) => ({
+        algorithmId: row.algorithm_id,
+        content: JSON.parse(String(row.content)),
+        actor: row.actor,
+        createdAt: Number(row.created_at),
+      }));
+    }
+
+    it("records the starting parameters when an algorithm is added", async () => {
+      const { db } = testDb;
+      const content = { ...DEFAULT_FSRS_ALGORITHM, retention: 85 };
+
+      const algorithm = await addAlgorithm(db, { title: "Added", content });
+
+      // Actor JSON is a wire contract shared with Rust.
+      expect(await getRevisions(db, algorithm.id)).toEqual([
+        { algorithmId: algorithm.id, content, actor: '{"kind":"user"}', createdAt: algorithm.createdAt.getTime() },
+      ]);
+    });
+
+    it("starts a clone's history with its own revision and leaves the source's alone", async () => {
+      const { db } = testDb;
+      const source = await seedAlgorithm(db, { content: { ...DEFAULT_FSRS_ALGORITHM, retention: 85 } });
+
+      const cloned = await cloneAlgorithm(db, { title: "Clone", sourceId: source.id });
+
+      expect(await getRevisions(db, cloned.id)).toEqual([expect.objectContaining({ content: source.content })]);
+      expect(await getRevisions(db, source.id)).toHaveLength(1);
+    });
+
+    it("appends a revision with the new parameters when a save changes them", async () => {
+      const { db } = testDb;
+      const algorithm = await seedAlgorithm(db);
+      const content = { ...DEFAULT_FSRS_ALGORITHM, retention: 92 };
+
+      const updated = await updateAlgorithm(db, { id: algorithm.id, values: { title: algorithm.title, content } });
+
+      const revisions = await getRevisions(db, algorithm.id);
+      expect(revisions).toHaveLength(2);
+      expect(revisions[1]).toEqual({
+        algorithmId: algorithm.id,
+        content,
+        actor: '{"kind":"user"}',
+        createdAt: updated.updatedAt?.getTime(),
+      });
+    });
+
+    it.each([
+      { name: "the title only", values: { title: "Renamed" } },
+      { name: "the notes only", values: { notes: "Vocabulary" } },
+      { name: "nothing", values: {} },
+    ])("records nothing when a save changes $name", async ({ values }) => {
+      const { db } = testDb;
+      const algorithm = await seedAlgorithm(db);
+
+      await updateAlgorithm(db, {
+        id: algorithm.id,
+        values: { title: algorithm.title, content: algorithm.content, ...values },
+      });
+
+      expect(await getRevisions(db, algorithm.id)).toHaveLength(1);
+    });
+
+    it("records nothing when a save is rejected", async () => {
+      const { db } = testDb;
+      const algorithm = await seedAlgorithm(db);
+
+      await expect(
+        updateAlgorithm(db, {
+          id: algorithm.id,
+          values: { title: algorithm.title, content: { ...DEFAULT_FSRS_ALGORITHM, retention: 50 } },
+        }),
+      ).rejects.toThrow();
+
+      expect(await getRevisions(db, algorithm.id)).toHaveLength(1);
+    });
+
+    it("keeps history after the algorithm is deleted", async () => {
+      const { db } = testDb;
+      const algorithm = await seedAlgorithm(db);
+      await seedAlgorithm(db, { title: "Remaining" });
+
+      await deleteAlgorithm(db, { id: algorithm.id });
+
+      expect(await getRevisions(db, algorithm.id)).toHaveLength(1);
+    });
+
+    // WHY: first-run setup adds algorithms inside its own transaction; a rolled-back setup must leave no history.
+    it("rolls back the revision with an enclosing transaction", async () => {
+      const { db } = testDb;
+      const rollback = new Error("rollback");
+
+      await expect(
+        db.transaction(async (tx) => {
+          await addAlgorithm(tx, { title: "Seeded", content: DEFAULT_FSRS_ALGORITHM }, SEED_ALGORITHM_SIMPLE_ID);
+          throw rollback;
+        }),
+      ).rejects.toBe(rollback);
+
+      expect(await getRevisions(db, SEED_ALGORITHM_SIMPLE_ID)).toEqual([]);
     });
   });
 });
