@@ -185,7 +185,11 @@ msgstr "Тип временного отрезка для интервала п�
 msgid "card.action.reset-progress"
 msgstr "Сбросить прогресс"
 
-#: ../../libs/srs-react/src/lib/cards/card-content-text-area.tsx:134
+#: ../../libs/srs-react/src/lib/cards/card-content-text-area.tsx:188
+msgid "card.content.embed-image"
+msgstr "Встроить изображение"
+
+#: ../../libs/srs-react/src/lib/cards/card-content-text-area.tsx:182
 msgid "card.content.insert-image"
 msgstr "Вставить изображение"
 

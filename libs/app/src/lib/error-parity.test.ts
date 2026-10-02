@@ -9,7 +9,7 @@ import { ERROR_MESSAGES } from "./error";
 // `ERROR_MESSAGES` (`libs/app/src/lib/error.ts`). The Rust list is parsed from
 // the source file at test time (no pinned copy), so a code added on the Rust
 // side fails here until the message table catches up. TS-only codes are
-// allow-listed below; they are produced client-side, not by koloda.
+// allow-listed below; they are produced client-side or in Electron main, not by koloda.
 //
 // When adding a Rust error code:
 // 1. Add `pub const …` to `error_codes` in `crates/koloda/src/app/error.rs`
@@ -32,6 +32,7 @@ const TS_ONLY_ERROR_CODES = [
   "ai.http.502",
   "ai.http.503",
   "ai.http.504",
+  "attachments.fetch",
 ] as const;
 
 const RUST_ERROR_RS = resolve(dirname(fileURLToPath(import.meta.url)), "../../../../crates/koloda/src/app/error.rs");

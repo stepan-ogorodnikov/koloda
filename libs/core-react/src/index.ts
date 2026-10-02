@@ -1,4 +1,5 @@
 export { aiRuntimeAtom } from "./lib/ai-runtime";
+export { addAttachmentFromUrlAtom } from "./lib/attachment-from-url";
 export {
   aiProvidersAtom,
   appEntryAtom,

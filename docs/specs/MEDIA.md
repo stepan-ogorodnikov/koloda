@@ -2,7 +2,7 @@
 
 ## Scope
 
-Covers images in card content: how the user inserts them, which files are accepted, where they show, and cleanup.
+Covers images in card content: inserting files, embedding links, accepted files, where images show, and cleanup.
 What rendered markdown may contain in general is in CARDS.md (§Rendered Markdown).
 Card content, adding, and editing cards are in CARDS.md.
 Audio and video are not supported.
@@ -51,6 +51,23 @@ Pasting plain text and dropping files that are not images behave as in any text 
 
 An image is stored when it is inserted, before the card is saved.
 If the card is never saved, the image is removed later; see §Cleanup.
+
+## Embedding Images From Links
+
+In the desktop app, the user can turn a pasted image link into a stored image.
+
+- Pasting a single web link (http or https) into a markdown field pastes it as text, as usual.
+- An embed image action then appears on that field until the field is edited again.
+- Embedding downloads the image once and stores it like an inserted image.
+  The pasted link is replaced with the image's reference.
+  The alt text is the last part of the link's path, without the extension.
+- A link to something that is not an accepted image shows the format or size error; the link stays as text.
+- A link that cannot be downloaded shows a download error; the link stays as text.
+  That covers no connection, no answer in time, and an error from the site.
+- The download sends none of the app's own data, such as cookies.
+- Once embedded, showing the image never contacts the site again.
+
+In the web app, a pasted link always stays text, and no embed action appears.
 
 ## Formats and Size
 

@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { altFromFileName, insertAtSelection, toAttachmentImageMarkdown } from "./image-insertion";
+import {
+  altFromFileName,
+  altFromUrl,
+  getPastedHttpUrl,
+  insertAtSelection,
+  swapPastedUrl,
+  toAttachmentImageMarkdown,
+} from "./image-insertion";
 
 describe("insertAtSelection", () => {
   it.each([
@@ -27,5 +34,41 @@ describe("image markdown alt text", () => {
     [".hidden", ".hidden"],
   ])("derives the alt for %s from the name without its extension", (name, alt) => {
     expect(altFromFileName(name)).toBe(alt);
+  });
+});
+
+describe("pasted image URLs", () => {
+  it.each([
+    ["https://example.test/cat.png", "https://example.test/cat.png"],
+    [" http://example.test/a?b=c \n", "http://example.test/a?b=c"],
+    ["https://example.test/a https://example.test/b", null],
+    ["see https://example.test/a", null],
+    ["ftp://example.test/cat.png", null],
+    ["file:///tmp/cat.png", null],
+    ["cat.png", null],
+  ])("takes %j as an embeddable URL: %j", (text, expected) => {
+    expect(getPastedHttpUrl(text)).toBe(expected);
+  });
+
+  it.each([
+    ["https://example.test/img/cute%20cat.png?size=2", "cute cat"],
+    ["https://example.test/img/", "img"],
+    ["https://example.test/", ""],
+    ["https://example.test/100%.png", "100%"],
+  ])("derives the alt for %s from the last path segment", (url, alt) => {
+    expect(altFromUrl(url)).toBe(alt);
+  });
+
+  it("swaps the pasted URL for the image when it is still in place", () => {
+    const url = "https://example.test/cat.png";
+
+    expect(swapPastedUrl(`a ${url} b`, { url, start: 2 }, "IMG")).toEqual({ value: "a IMG b", cursor: 5 });
+  });
+
+  it("leaves the text alone when the pasted URL was edited away", () => {
+    const url = "https://example.test/cat.png";
+
+    expect(swapPastedUrl(`a ${url.slice(0, -1)}x b`, { url, start: 2 }, "IMG")).toBeNull();
+    expect(swapPastedUrl(`ab ${url}`, { url, start: 2 }, "IMG")).toBeNull();
   });
 });

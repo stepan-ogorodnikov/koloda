@@ -1,6 +1,6 @@
 import { AppError, toFormErrors } from "@koloda/app";
 import type { FormError } from "@koloda/app";
-import { queriesAtom } from "@koloda/core-react";
+import { addAttachmentFromUrlAtom, queriesAtom } from "@koloda/core-react";
 import type { AddAttachmentData, TemplateFieldType } from "@koloda/srs";
 import { ATTACHMENT_MAX_BYTES, ATTACHMENT_MIMES, getAttachmentBytesError } from "@koloda/srs";
 import { Button, ImageIcon, TextField, useFieldContext } from "@koloda/ui";
@@ -10,9 +10,17 @@ import { useLingui } from "@lingui/react";
 import { useMutation } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
 import { useCallback, useRef, useState } from "react";
-import type { ClipboardEvent, DragEvent } from "react";
+import type { ClipboardEvent, DragEvent, FormEvent } from "react";
 import { FileTrigger } from "react-aria-components";
-import { altFromFileName, insertAtSelection, toAttachmentImageMarkdown } from "./image-insertion";
+import {
+  altFromFileName,
+  altFromUrl,
+  getPastedHttpUrl,
+  insertAtSelection,
+  swapPastedUrl,
+  toAttachmentImageMarkdown,
+} from "./image-insertion";
+import type { PastedUrl } from "./image-insertion";
 
 type CardContentTextAreaProps = TextFieldTextAreaProps & { fieldType: TemplateFieldType };
 
@@ -46,7 +54,10 @@ function CardMarkdownTextArea({ ref, ...props }: TextFieldTextAreaProps) {
   const field = useFieldContext<string>();
   const { addAttachmentMutation } = useAtomValue(queriesAtom);
   const { mutateAsync } = useMutation(addAttachmentMutation());
+  const addAttachmentFromUrl = useAtomValue(addAttachmentFromUrlAtom);
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
+  const pendingUrlRef = useRef<PastedUrl | null>(null);
+  const [pastedUrl, setPastedUrl] = useState<PastedUrl | null>(null);
   const [errors, setErrors] = useState<FormError[]>([]);
   const [isInserting, setIsInserting] = useState(false);
 
@@ -69,6 +80,7 @@ function CardMarkdownTextArea({ ref, ...props }: TextFieldTextAreaProps) {
     const selectionStart = textArea?.selectionStart ?? end;
     const selectionEnd = textArea?.selectionEnd ?? end;
     setErrors([]);
+    setPastedUrl(null);
     setIsInserting(true);
 
     const images: string[] = [];
@@ -95,11 +107,46 @@ function CardMarkdownTextArea({ ref, ...props }: TextFieldTextAreaProps) {
 
   const handlePaste = (event: ClipboardEvent<HTMLTextAreaElement>) => {
     const files = getImageFiles(event.clipboardData.files);
-    if (files.length === 0) return;
+    if (files.length === 0) {
+      const text = event.clipboardData.getData("text/plain");
+      const url = addAttachmentFromUrl ? getPastedHttpUrl(text) : null;
+      const { selectionStart, selectionEnd } = event.currentTarget;
+      pendingUrlRef.current = url ? { url, start: Math.min(selectionStart, selectionEnd) + text.indexOf(url) } : null;
+      return;
+    }
     // WHY: a browser "Copy image" also puts HTML on the clipboard; the image data wins.
     // A pasted image's file name is always a generic one, so its alt stays empty.
     event.preventDefault();
     void insertFiles(files, () => "");
+  };
+
+  const handleInput = (event: FormEvent<HTMLTextAreaElement>) => {
+    // WHY: the paste's own input event shows the embed action; any later edit hides it.
+    const isPaste = (event.nativeEvent as InputEvent).inputType === "insertFromPaste";
+    setPastedUrl(isPaste ? pendingUrlRef.current : null);
+    pendingUrlRef.current = null;
+  };
+
+  const handleEmbed = async () => {
+    if (!pastedUrl || !addAttachmentFromUrl) return;
+    setErrors([]);
+    setIsInserting(true);
+    try {
+      const attachment = await addAttachmentFromUrl(pastedUrl.url);
+      const image = toAttachmentImageMarkdown(altFromUrl(pastedUrl.url), attachment.id);
+      const swapped = swapPastedUrl(field.state.value, pastedUrl, image);
+      setPastedUrl(null);
+      if (!swapped) return;
+      field.handleChange(swapped.value);
+      requestAnimationFrame(() => {
+        textAreaRef.current?.focus();
+        textAreaRef.current?.setSelectionRange(swapped.cursor, swapped.cursor);
+      });
+    } catch (error) {
+      setErrors(Object.values(toFormErrors(error)).flat());
+    } finally {
+      setIsInserting(false);
+    }
   };
 
   const handleDragOver = (event: DragEvent<HTMLTextAreaElement>) => {
@@ -120,10 +167,11 @@ function CardMarkdownTextArea({ ref, ...props }: TextFieldTextAreaProps) {
         {...props}
         ref={setRef}
         onPaste={handlePaste}
+        onInput={handleInput}
         onDragOver={handleDragOver}
         onDrop={handleDrop}
       />
-      <div className="flex flex-row pt-1">
+      <div className="flex flex-row flex-wrap gap-2 pt-1">
         <FileTrigger
           acceptedFileTypes={[...ATTACHMENT_MIMES]}
           allowsMultiple
@@ -134,6 +182,12 @@ function CardMarkdownTextArea({ ref, ...props }: TextFieldTextAreaProps) {
             {_(msg`card.content.insert-image`)}
           </Button>
         </FileTrigger>
+        {pastedUrl && (
+          <Button variants={{ style: "ghost", size: "small" }} isDisabled={isInserting} onPress={handleEmbed}>
+            <ImageIcon className="size-4 min-w-4" aria-hidden="true" />
+            {_(msg`card.content.embed-image`)}
+          </Button>
+        )}
       </div>
       {errors.length > 0 && <TextField.Errors errors={errors} />}
     </>

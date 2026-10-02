@@ -33,27 +33,27 @@ msgstr "Deck tabs"
 msgid "decks.title"
 msgstr "Decks"
 
-#: ../../libs/app-react/src/lib/components/app.tsx:15
+#: ../../libs/app-react/src/lib/components/app.tsx:16
 msgid "nav.ai"
 msgstr "Assistant"
 
-#: ../../libs/app-react/src/lib/components/app.tsx:13
+#: ../../libs/app-react/src/lib/components/app.tsx:14
 msgid "nav.algorithms"
 msgstr "Presets"
 
-#: ../../libs/app-react/src/lib/components/app.tsx:12
+#: ../../libs/app-react/src/lib/components/app.tsx:13
 msgid "nav.decks"
 msgstr "Decks"
 
-#: ../../libs/app-react/src/lib/components/app.tsx:11
+#: ../../libs/app-react/src/lib/components/app.tsx:12
 msgid "nav.home"
 msgstr "Dashboard"
 
-#: ../../libs/app-react/src/lib/components/app.tsx:18
+#: ../../libs/app-react/src/lib/components/app.tsx:19
 msgid "nav.settings"
 msgstr "Settings"
 
-#: ../../libs/app-react/src/lib/components/app.tsx:14
+#: ../../libs/app-react/src/lib/components/app.tsx:15
 msgid "nav.templates"
 msgstr "Templates"
 

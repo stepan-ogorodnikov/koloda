@@ -33,27 +33,27 @@ msgstr "Вкладки колоды"
 msgid "decks.title"
 msgstr "Колоды"
 
-#: ../../libs/app-react/src/lib/components/app.tsx:15
+#: ../../libs/app-react/src/lib/components/app.tsx:16
 msgid "nav.ai"
 msgstr "Ассистент"
 
-#: ../../libs/app-react/src/lib/components/app.tsx:13
+#: ../../libs/app-react/src/lib/components/app.tsx:14
 msgid "nav.algorithms"
 msgstr "Алгоритмы"
 
-#: ../../libs/app-react/src/lib/components/app.tsx:12
+#: ../../libs/app-react/src/lib/components/app.tsx:13
 msgid "nav.decks"
 msgstr "Колоды"
 
-#: ../../libs/app-react/src/lib/components/app.tsx:11
+#: ../../libs/app-react/src/lib/components/app.tsx:12
 msgid "nav.home"
 msgstr "Главная"
 
-#: ../../libs/app-react/src/lib/components/app.tsx:18
+#: ../../libs/app-react/src/lib/components/app.tsx:19
 msgid "nav.settings"
 msgstr "Настройки"
 
-#: ../../libs/app-react/src/lib/components/app.tsx:14
+#: ../../libs/app-react/src/lib/components/app.tsx:15
 msgid "nav.templates"
 msgstr "Шаблоны"
 

@@ -2,6 +2,7 @@ import { app } from "electron";
 import { createRequire } from "node:module";
 import { join } from "node:path";
 import { registerDataIpc } from "./data-ipc";
+import { registerMediaIpc } from "./media-ipc";
 import { appDir, isDev } from "./env";
 import type { KolodaDb } from "./koloda-db";
 import { createWindow } from "./window";
@@ -38,6 +39,7 @@ app.whenReady().then(() => {
 
   registerWindowIpc();
   registerDataIpc(db);
+  registerMediaIpc(db);
   createWindow();
 });
 

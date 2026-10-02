@@ -186,6 +186,9 @@ export interface DataIpc {
   cmd_add_attachment: { args: { data: AddAttachmentWire }; result: Attachment };
   cmd_sweep_attachments: { args: { data: SweepAttachmentsData }; result: void };
 
+  // Media commands (`media-ipc.ts`): the fetch runs in main, which CORS does not apply to.
+  cmd_add_attachment_from_url: { args: { url: string }; result: Attachment };
+
   cmd_get_ai_profiles: { args: undefined; result: AIProfile[] };
   cmd_add_ai_profile: { args: { data: AddAIProfileData }; result: AIProfile };
   cmd_update_ai_profile: { args: { data: UpdateAIProfileData }; result: AIProfile };
@@ -207,8 +210,11 @@ export type DataChannel = keyof DataIpc;
  */
 type AiChannel = "cmd_ai_list_models" | "cmd_ai_chat_stream" | "cmd_ai_abort";
 
+/** Channels registered by `media-ipc.ts` (network access in main) rather than by `data-ipc.ts`. */
+type MediaChannel = "cmd_add_attachment_from_url";
+
 /** Channels served by the `KolodaDb`-backed handler table in `data-ipc.ts`. */
-export type DataOnlyChannel = Exclude<DataChannel, AiChannel>;
+export type DataOnlyChannel = Exclude<DataChannel, AiChannel | MediaChannel>;
 
 export type IpcArgs<C extends DataChannel> = DataIpc[C]["args"];
 

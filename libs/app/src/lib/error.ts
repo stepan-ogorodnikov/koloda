@@ -25,6 +25,7 @@ export const ERROR_MESSAGES = {
   "ai.http.502": msg`ai.http.502`,
   "ai.http.503": msg`ai.http.503`,
   "ai.http.504": msg`ai.http.504`,
+  "attachments.fetch": msg`attachments.fetch`,
   "db.get": msg`db.get`,
   "db.add": msg`db.add`,
   "db.update": msg`db.update`,

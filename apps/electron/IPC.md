@@ -19,9 +19,9 @@ Main-to-renderer pushes arrive on `window.electronAPI.on(channel, callback)` sub
 - Data-command args mirror the `KolodaDb` NAPI method signatures — `{ params }` for reads, `{ data }` for writes,
   or the plain object where the method takes one.
 - Channel names and arg/result shapes are machine-checked against the `DataIpc` contract in `libs/native-ipc`
-  (`@koloda/native-ipc`), which both processes compile against. The contract covers every data and AI command plus
-  the `AI_STREAM_CHANNEL` (`ai:stream`) event payload (`AiStreamEvent`); window-channel args are typed at their
-  `window-ipc.ts` handlers, outside the contract.
+  (`@koloda/native-ipc`), which both processes compile against. The contract covers every data, AI, and media
+  command plus the `AI_STREAM_CHANNEL` (`ai:stream`) event payload (`AiStreamEvent`); window-channel args are typed
+  at their `window-ipc.ts` handlers, outside the contract.
 
 ## Data Commands
 
@@ -64,6 +64,14 @@ The three commands and the `AiStreamEvent` union are part of the `DataIpc` contr
 
 Functions do not cross IPC: the renderer strips them, and main recreates the assistant tool executor
 over `KolodaDb`, streaming tool events back on the same channel.
+
+## Media (`src/media-ipc.ts`)
+
+- `cmd_add_attachment_from_url` `{ url }` — fetches an image URL in main and stores it as an attachment.
+  - Only `http:` and `https:` URLs, checked on every redirect hop; no app cookies or credentials.
+  - Times out; aborts a body past the attachment size cap with `validation.attachments.too-large`.
+  - Network failure, timeout, and a non-2xx status are `attachments.fetch`.
+  - The bytes go through `KolodaDb.addAttachment`, so the repo sniffs, hashes, and dedupes them.
 
 ## Window and Lifecycle
 
