@@ -45,6 +45,7 @@ export const QUERIES_METHODS = [
   "getReviewsQuery",
   "getAttachmentQuery",
   "addAttachmentMutation",
+  "sweepAttachmentsMutation",
   "addAIProfileMutation",
   "updateAIProfileMutation",
   "removeAIProfileMutation",

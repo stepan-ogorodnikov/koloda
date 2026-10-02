@@ -38,6 +38,7 @@ import type {
   LessonsResult,
   ResetCardProgressData,
   Review,
+  SweepAttachmentsData,
   Template,
   TodaysReviewTotals,
   UpdateAlgorithmData,
@@ -115,6 +116,7 @@ export interface KolodaDb {
   // Attachments (bytes base64-encoded)
   getAttachment(params: { id: string }): Promise<AttachmentContentWire | null>;
   addAttachment(data: AddAttachmentWire): Promise<Attachment>;
+  sweepAttachments(data: SweepAttachmentsData): Promise<void>;
 
   // AI profiles (no secrets — see the INVARIANT above)
   getAiProfiles(): Promise<AIProfile[]>;

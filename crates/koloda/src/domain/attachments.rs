@@ -46,6 +46,13 @@ impl AddAttachmentData {
     }
 }
 
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SweepAttachmentsData {
+    #[serde(deserialize_with = "deserialize_timestamp")]
+    pub created_before: i64,
+}
+
 pub fn sniff_image_mime(bytes: &[u8]) -> Option<&'static str> {
     if bytes.starts_with(b"\x89PNG\r\n\x1a\n") {
         return Some(MIME_PNG);

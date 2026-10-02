@@ -5,6 +5,7 @@ import { msg } from "@lingui/core/macro";
 import type { PropsWithChildren } from "react";
 import { useEffect } from "react";
 import { useAppHotkeys } from "../hooks/use-app-hotkeys";
+import { useAttachmentSweep } from "../hooks/use-attachment-sweep";
 import { useGlobalSync } from "../hooks/use-global-sync";
 
 export const appMenu = [
@@ -20,6 +21,7 @@ export const secondaryMenu = [{ to: "/settings", t: msg`nav.settings`, icon: Set
 export function App({ children }: PropsWithChildren) {
   useGlobalSync();
   useAppHotkeys();
+  useAttachmentSweep();
   // WHY: Engine + persistence + shutdown listeners must outlive the AI route so
   // closing the app from another route still records `app_shutdown` / flush.
   useConversationSaveHost();

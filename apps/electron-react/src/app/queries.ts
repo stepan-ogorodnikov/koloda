@@ -26,6 +26,7 @@ import type {
   LessonFilters,
   LessonResultData,
   ResetCardProgressData,
+  SweepAttachmentsData,
   Template,
   UpdateAlgorithmData,
   UpdateCardData,
@@ -198,6 +199,9 @@ export const queriesFn = (aiRuntime: AIRuntime): Queries => ({
   addAttachmentMutation: () => ({
     mutationFn: (data: AddAttachmentData) =>
       invoke("cmd_add_attachment", { data: { ...data, bytes: bytesToBase64(data.bytes) } }),
+  }),
+  sweepAttachmentsMutation: () => ({
+    mutationFn: (data: SweepAttachmentsData) => invoke("cmd_sweep_attachments", { data }),
   }),
   getAIProfilesQuery: () => ({
     queryKey: queryKeys.ai.profiles(),

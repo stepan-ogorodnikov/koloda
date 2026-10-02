@@ -8,7 +8,7 @@ use sha2::{Digest, Sha256};
 use crate::app::db::Database;
 use crate::app::error::{error_codes, throw_known_error, AppError};
 use crate::app::utility::get_current_timestamp;
-use crate::domain::attachments::{AddAttachmentData, Attachment};
+use crate::domain::attachments::{AddAttachmentData, Attachment, SweepAttachmentsData};
 use crate::repo::attachment_bytes;
 
 fn get_attachment_row(row: &Row) -> Result<Attachment, rusqlite::Error> {
@@ -67,6 +67,24 @@ pub fn add_attachment(db: &Database, data: AddAttachmentData) -> Result<Attachme
 
 pub fn get_attachment(db: &Database, id: &str) -> Result<Option<Attachment>, AppError> {
     throw_known_error(error_codes::DB_GET, || db.with_conn(|conn| select_attachment(conn, id)))
+}
+
+pub fn sweep_attachments(db: &Database, data: SweepAttachmentsData) -> Result<(), AppError> {
+    throw_known_error(error_codes::DB_DELETE, || {
+        db.with_conn(|conn| {
+            // WHY: a hex id cannot be hidden by JSON escaping, so a substring match on the stored
+            // content finds every ref without parsing it. Bytes go through the foreign-key cascade.
+            conn.execute(
+                r#"
+                DELETE FROM attachments
+                WHERE created_at < ?1
+                  AND NOT EXISTS (SELECT 1 FROM cards WHERE instr(cards.content, 'attachment:' || attachments.id) > 0)
+                "#,
+                params![data.created_before],
+            )?;
+            Ok(())
+        })
+    })
 }
 
 pub fn get_attachment_bytes(db: &Database, id: &str) -> Result<Option<Vec<u8>>, AppError> {

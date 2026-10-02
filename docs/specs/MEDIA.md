@@ -2,7 +2,7 @@
 
 ## Scope
 
-Covers images in card content: how the user inserts them, which files are accepted, and where they show.
+Covers images in card content: how the user inserts them, which files are accepted, where they show, and cleanup.
 What rendered markdown may contain in general is in CARDS.md (§Rendered Markdown).
 Card content, adding, and editing cards are in CARDS.md.
 Audio and video are not supported.
@@ -50,6 +50,7 @@ Then the image is inserted and the rest is ignored.
 Pasting plain text and dropping files that are not images behave as in any text field.
 
 An image is stored when it is inserted, before the card is saved.
+If the card is never saved, the image is removed later; see §Cleanup.
 
 ## Formats and Size
 
@@ -84,3 +85,15 @@ Elsewhere the reference does not show an image:
 
 Showing an image never contacts another site and works offline.
 Other images follow CARDS.md (§Rendered Markdown).
+
+## Cleanup
+
+Only card text keeps a stored image.
+Once per app session, shortly after the app opens, the app removes stored images that no card references.
+
+- Only images stored more than 24 hours earlier are removed.
+  An image inserted into a card not saved yet, in this window or another tab, is kept for at least a day.
+- Removing a reference, or deleting its card, does not remove the image right away.
+- Assistant conversations do not keep an image.
+- A reference to a removed image shows its alt text.
+- Cleanup happens without any notice; if it fails, nothing is shown and it runs again next session.

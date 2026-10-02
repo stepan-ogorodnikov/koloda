@@ -57,6 +57,7 @@ import type {
   LessonsResult,
   ResetCardProgressData,
   Review,
+  SweepAttachmentsData,
   Template,
   TodaysReviewTotals,
   UpdateAlgorithmData,
@@ -183,6 +184,7 @@ export interface DataIpc {
 
   cmd_get_attachment: { args: { id: string }; result: AttachmentContentWire | null };
   cmd_add_attachment: { args: { data: AddAttachmentWire }; result: Attachment };
+  cmd_sweep_attachments: { args: { data: SweepAttachmentsData }; result: void };
 
   cmd_get_ai_profiles: { args: undefined; result: AIProfile[] };
   cmd_add_ai_profile: { args: { data: AddAIProfileData }; result: AIProfile };

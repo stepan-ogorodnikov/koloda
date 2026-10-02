@@ -2,7 +2,7 @@ use base64::prelude::{Engine as _, BASE64_STANDARD};
 use koloda::app::db::Database;
 use koloda::app::error::{error_codes, AppError};
 use koloda::app::init::{self as init_mod, SeedData};
-use koloda::domain::attachments::{AddAttachmentData, Attachment};
+use koloda::domain::attachments::{AddAttachmentData, Attachment, SweepAttachmentsData};
 use koloda::domain::lessons::GetLessonsParams;
 use koloda::domain::settings::SettingsName;
 use koloda::repo;
@@ -549,6 +549,14 @@ impl KolodaDb {
             };
             let attachment = repo::attachments::add_attachment(db, data).map_err(to_napi_error)?;
             to_value(&attachment)
+        })
+    }
+
+    #[napi]
+    pub fn sweep_attachments(&self, env: Env, data: serde_json::Value) -> Result<JsObject> {
+        self.run(env, move |db| {
+            let data: SweepAttachmentsData = from_wire(data)?;
+            repo::attachments::sweep_attachments(db, data).map_err(to_napi_error)
         })
     }
 

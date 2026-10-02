@@ -1,6 +1,6 @@
 import { throwKnownError } from "@koloda/app";
 import { addAttachmentSchema, attachmentRowSchema, sniffImageMime } from "@koloda/srs";
-import type { AddAttachmentData, Attachment, AttachmentMime } from "@koloda/srs";
+import type { AddAttachmentData, Attachment, AttachmentMime, SweepAttachmentsData } from "@koloda/srs";
 import { readAttachmentBytes, writeAttachmentBytes } from "./attachment-bytes";
 import { ATTACHMENT_SELECT } from "./columns";
 import type { DB } from "./db";
@@ -40,6 +40,19 @@ export async function addAttachment(db: DB, data: AddAttachmentData): Promise<At
 
 export async function getAttachment(db: DB, id: Attachment["id"]): Promise<Attachment | null> {
   return throwKnownError("db.get", async () => parseRowOrNull(attachmentRowSchema, await selectAttachment(db, id)));
+}
+
+export async function sweepAttachments(db: DB, { createdBefore }: SweepAttachmentsData) {
+  return throwKnownError("db.delete", async () => {
+    // WHY: a hex id cannot be hidden by JSON escaping, so a substring match on the stored
+    // content finds every ref without parsing it. Bytes go through the foreign-key cascade.
+    await db.run(
+      `DELETE FROM attachments
+       WHERE created_at < ?
+         AND NOT EXISTS (SELECT 1 FROM cards WHERE instr(cards.content, 'attachment:' || attachments.id) > 0)`,
+      [createdBefore],
+    );
+  });
 }
 
 export async function getAttachmentBytes(db: DB, id: Attachment["id"]): Promise<Uint8Array<ArrayBuffer> | null> {

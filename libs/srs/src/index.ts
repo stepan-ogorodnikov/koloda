@@ -25,7 +25,13 @@ export {
   getAttachmentBytesError,
   sniffImageMime,
 } from "./lib/attachments";
-export type { AddAttachmentData, Attachment, AttachmentContent, AttachmentMime } from "./lib/attachments";
+export type {
+  AddAttachmentData,
+  Attachment,
+  AttachmentContent,
+  AttachmentMime,
+  SweepAttachmentsData,
+} from "./lib/attachments";
 export {
   cardRowSchema,
   createCardFromCardFSRS,

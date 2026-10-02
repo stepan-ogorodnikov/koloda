@@ -36,6 +36,7 @@ import type {
   LessonResultData,
   ResetCardProgressData,
   Review,
+  SweepAttachmentsData,
   Template,
   TodaysReviewTotals,
   UpdateAlgorithmData,
@@ -100,6 +101,7 @@ export type Queries = {
   getReviewsQuery: (data: GetReviewsData) => AppQueryOptions<Review[] | undefined>;
   getAttachmentQuery: (id: Attachment["id"]) => AppQueryOptions<AttachmentContent | null>;
   addAttachmentMutation: () => UseMutationOptions<Attachment, AppError, AddAttachmentData, unknown>;
+  sweepAttachmentsMutation: () => UseMutationOptions<void, AppError, SweepAttachmentsData, unknown>;
   addAIProfileMutation: () => UseMutationOptions<void, AppError, AddAIProfileData, unknown>;
   updateAIProfileMutation: () => UseMutationOptions<void, AppError, UpdateAIProfileData, unknown>;
   removeAIProfileMutation: () => UseMutationOptions<void, AppError, RemoveAIProfileData, unknown>;

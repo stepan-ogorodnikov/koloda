@@ -22,6 +22,8 @@ export type Attachment = z.infer<typeof attachmentRowSchema>;
 
 export type AttachmentContent = Attachment & { bytes: Uint8Array<ArrayBuffer> };
 
+export type SweepAttachmentsData = { createdBefore: Date };
+
 export const addAttachmentSchema = z.object({
   // WHY: Web Crypto and Blob take only ArrayBuffer-backed views, not shared memory.
   bytes: z

@@ -7,7 +7,7 @@ export {
   getAlgorithms,
   updateAlgorithm,
 } from "./lib/algorithms";
-export { addAttachment, getAttachment, getAttachmentBytes } from "./lib/attachments";
+export { addAttachment, getAttachment, getAttachmentBytes, sweepAttachments } from "./lib/attachments";
 export {
   addCard,
   addCards,
