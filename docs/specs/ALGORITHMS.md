@@ -2,7 +2,7 @@
 
 ## Scope
 
-Covers algorithm presets: parameters, adding, cloning, editing, and deleting with a successor.
+Covers algorithm presets: parameters, adding, cloning, editing, deleting with a successor, and parameter history.
 Does not cover FSRS scheduling math, how grades update card state, or learning settings UI.
 How decks pick an algorithm is covered lightly; deck management itself is not.
 Grade-to-card-state updates are covered by the cards spec and learning settings by the learning settings spec; the FSRS scheduling math has no product spec.
@@ -22,6 +22,8 @@ It does not rewrite existing card scheduling numbers until those cards are grade
 - **Notes** — optional text the user writes about the algorithm
 - **Parameters** — retention, weights, fuzz, learning steps, relearning steps, and maximum interval
 - **Successor** — another algorithm that takes over decks when one is deleted
+- **Revision** — a recorded set of parameters, with when it was recorded and who made the change
+- **History** — the revisions of one algorithm, oldest first
 
 ### Relationships
 
@@ -73,7 +75,8 @@ A title that is empty or contains only whitespace is rejected.
 The user can clone any algorithm.
 Clone asks for a new title and copies the source parameters into an independent algorithm.
 
-Clone does not copy decks or notes.
+Clone does not copy decks, notes, or history.
+The clone's history starts with its own first revision; see §History.
 After success, the dialog offers a link to open the clone.
 
 Cloning a missing source fails and creates nothing.
@@ -93,6 +96,7 @@ See ASSISTANT-DATA-ACCESS.md (§Resources) for how the assistant reads notes.
 
 Changing parameters affects future grading for decks that use this algorithm.
 It does not immediately rewrite card due times or review history.
+A save that changes parameters adds a revision; see §History.
 The learning settings default algorithm can be edited while it remains the default.
 See LEARNING-SETTINGS.md (§Defaults).
 
@@ -116,3 +120,25 @@ The successor picker defaults to the first other algorithm.
 If the successor is missing or invalid, delete fails and decks are left unchanged.
 
 Deleting an algorithm does not delete decks or cards.
+It does not delete the algorithm's history; see §History.
+
+## History
+
+Every algorithm keeps a history of its parameters.
+History is recorded only; nothing in the product shows it yet.
+
+A revision is recorded when:
+
+- an algorithm is added, cloned, or created during first setup, with its starting parameters
+- a save changes any parameter, with the parameters after the save
+
+Each revision holds the full set of parameters, not only the ones that changed.
+It also records when it was recorded and who made the change.
+The user is the only author of changes for now.
+
+A save that changes only the title or notes records nothing.
+A save that changes nothing records nothing.
+A rejected save records nothing.
+
+History survives deleting its algorithm.
+Algorithms that existed before history was introduced have no revisions until their next parameter change.

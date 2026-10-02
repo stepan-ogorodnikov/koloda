@@ -29,7 +29,7 @@ Out: any UI; reading revisions through the app or assistant; linking reviews to 
 
 ## Plan
 
-- [ ] 1. Specify algorithm parameter history
+- [x] 1. Specify algorithm parameter history
   Goal: docs/specs/ALGORITHMS.md gains a History section, and Core model gains a **Revision** term.
   Rules to state: creating an algorithm (add, clone, first setup) records its starting parameters; every save that changes parameters records the new parameters, when, and who made the change; the user is the only author for now; title and notes edits, and saves that change nothing, are not recorded; a rejected save records nothing; deleting an algorithm keeps its history; algorithms that existed before history was introduced start their history at their next parameter change; history is not shown anywhere in the product yet.
   Constraints: follow FUNCTIONAL-SPECIFICATIONS.md — behavior only, no table, column, or type names; one home per rule; Cloning and Deleting sections point at History rather than restating it.
