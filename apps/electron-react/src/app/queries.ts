@@ -6,6 +6,7 @@ import { queryKeys } from "@koloda/core-react";
 import type { Queries } from "@koloda/core-react";
 import type {
   Algorithm,
+  Attachment,
   CloneAlgorithmData,
   CloneTemplateData,
   Deck,
@@ -30,6 +31,7 @@ import type {
   UpdateDeckData,
   UpdateTemplateData,
 } from "@koloda/srs";
+import { base64ToBytes } from "./base64";
 import { invoke } from "./electron";
 import { getStatus, seedDB } from "./setup";
 
@@ -184,6 +186,13 @@ export const queriesFn = (aiRuntime: AIRuntime): Queries => ({
   getReviewsQuery: (params: GetReviewsData) => ({
     queryKey: queryKeys.reviews.card(params),
     queryFn: () => invoke("cmd_get_reviews", { params }),
+  }),
+  getAttachmentQuery: (id: Attachment["id"]) => ({
+    queryKey: queryKeys.attachments.detail(id),
+    queryFn: async () => {
+      const attachment = await invoke("cmd_get_attachment", { id });
+      return attachment && { ...attachment, bytes: base64ToBytes(attachment.bytes) };
+    },
   }),
   getAIProfilesQuery: () => ({
     queryKey: queryKeys.ai.profiles(),

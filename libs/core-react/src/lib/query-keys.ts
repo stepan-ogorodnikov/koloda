@@ -1,6 +1,7 @@
 import type { SettingsName } from "@koloda/settings";
 import type {
   Algorithm,
+  Attachment,
   Deck,
   GetCardsParams,
   GetLessonDataParams,
@@ -21,6 +22,9 @@ export const queryKeys = {
     // WHY: deck mutations change which decks reference any algorithm; invalidate
     // every per-algorithm deck list via this prefix.
     decksAll: () => ["algorithm_decks"] as const,
+  },
+  attachments: {
+    detail: (id: Attachment["id"]) => ["attachments", id] as const,
   },
   cards: {
     all: () => ["cards"] as const,

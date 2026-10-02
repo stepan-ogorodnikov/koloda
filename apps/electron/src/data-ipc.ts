@@ -67,6 +67,8 @@ const dataHandlers = {
   cmd_get_reviews: (db, { params }: IpcArgs<"cmd_get_reviews">) => db.getReviews(params),
   cmd_get_todays_review_totals: (db) => db.getTodaysReviewTotals(),
 
+  cmd_get_attachment: (db, args: IpcArgs<"cmd_get_attachment">) => db.getAttachment(args),
+
   cmd_get_ai_profiles: (db) => db.getAiProfiles(),
   cmd_add_ai_profile: (db, { data }: IpcArgs<"cmd_add_ai_profile">) => db.addAiProfile(data),
   cmd_update_ai_profile: (db, { data }: IpcArgs<"cmd_update_ai_profile">) => db.updateAiProfile(data),

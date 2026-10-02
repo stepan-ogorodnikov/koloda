@@ -42,6 +42,6 @@ export async function getAttachment(db: DB, id: Attachment["id"]): Promise<Attac
   return throwKnownError("db.get", async () => parseRowOrNull(attachmentRowSchema, await selectAttachment(db, id)));
 }
 
-export async function getAttachmentBytes(db: DB, id: Attachment["id"]): Promise<Uint8Array | null> {
+export async function getAttachmentBytes(db: DB, id: Attachment["id"]): Promise<Uint8Array<ArrayBuffer> | null> {
   return throwKnownError("db.get", async () => readAttachmentBytes(db, id));
 }

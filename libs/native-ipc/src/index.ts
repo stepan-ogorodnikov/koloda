@@ -31,6 +31,7 @@ import type {
 import type { AllowedSettings, PatchSettingsData, SetSettingsData, SettingsName } from "@koloda/settings";
 import type {
   Algorithm,
+  Attachment,
   Card,
   CloneAlgorithmData,
   CloneTemplateData,
@@ -76,6 +77,9 @@ export type SeedDbData = {
     hotkeys: HotkeysSettings;
   };
 };
+
+/** Attachment read by `cmd_get_attachment`, with its bytes base64-encoded for the NAPI wire. */
+export type AttachmentContentWire = Attachment & { bytes: string };
 
 /** Lesson queue query for `cmd_get_lessons` (mirrors Rust `GetLessonsParams`). */
 export type GetLessonsParams = {
@@ -172,6 +176,8 @@ export interface DataIpc {
 
   cmd_get_reviews: { args: { params: GetReviewsData }; result: Review[] };
   cmd_get_todays_review_totals: { args: undefined; result: TodaysReviewTotals };
+
+  cmd_get_attachment: { args: { id: string }; result: AttachmentContentWire | null };
 
   cmd_get_ai_profiles: { args: undefined; result: AIProfile[] };
   cmd_add_ai_profile: { args: { data: AddAIProfileData }; result: AIProfile };

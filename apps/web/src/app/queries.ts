@@ -6,6 +6,7 @@ import { queryKeys } from "@koloda/core-react";
 import type { Queries } from "@koloda/core-react";
 import type {
   Algorithm,
+  Attachment,
   CloneAlgorithmData,
   CloneTemplateData,
   Deck,
@@ -48,6 +49,8 @@ import {
   getAlgorithm,
   getAlgorithmDecks,
   getAlgorithms,
+  getAttachment,
+  getAttachmentBytes,
   getCards,
   getConversation,
   getConversations,
@@ -178,6 +181,13 @@ export const queriesFn = (db: DB, aiRuntime: AIRuntime): Queries => ({
   getReviewsQuery: (data: GetReviewsData) => ({
     queryKey: queryKeys.reviews.card(data),
     queryFn: () => getReviews(db, data),
+  }),
+  getAttachmentQuery: (id: Attachment["id"]) => ({
+    queryKey: queryKeys.attachments.detail(id),
+    queryFn: async () => {
+      const [attachment, bytes] = await Promise.all([getAttachment(db, id), getAttachmentBytes(db, id)]);
+      return attachment && bytes ? { ...attachment, bytes } : null;
+    },
   }),
   addAIProfileMutation: () => ({ mutationFn: (data: AddAIProfileData) => addAIProfile(db, data) }),
   updateAIProfileMutation: () => ({ mutationFn: (data: UpdateAIProfileData) => updateAIProfile(db, data) }),

@@ -1,6 +1,8 @@
+use base64::prelude::{Engine as _, BASE64_STANDARD};
 use koloda::app::db::Database;
 use koloda::app::error::{error_codes, AppError};
 use koloda::app::init::{self as init_mod, SeedData};
+use koloda::domain::attachments::Attachment;
 use koloda::domain::lessons::GetLessonsParams;
 use koloda::domain::settings::SettingsName;
 use koloda::repo;
@@ -53,6 +55,14 @@ fn extract_name(params: serde_json::Value) -> Result<String> {
         name: String,
     }
     from_wire::<P>(params).map(|p| p.name)
+}
+
+// WHY: `toWire` walks a `Uint8Array` as a plain object, so attachment bytes cross IPC as base64.
+#[derive(serde::Serialize)]
+struct AttachmentContentWire {
+    #[serde(flatten)]
+    attachment: Attachment,
+    bytes: String,
 }
 
 type Job = Box<dyn FnOnce(&Database) + Send>;
@@ -496,6 +506,24 @@ impl KolodaDb {
         self.run(env, move |db| {
             let totals = repo::reviews::get_todays_review_totals(db).map_err(to_napi_error)?;
             to_value(&totals)
+        })
+    }
+
+    #[napi]
+    pub fn get_attachment(&self, env: Env, params: serde_json::Value) -> Result<JsObject> {
+        self.run(env, move |db| {
+            let id = extract_id(params)?;
+            let Some(attachment) = repo::attachments::get_attachment(db, &id).map_err(to_napi_error)? else {
+                return Ok(None);
+            };
+            let Some(bytes) = repo::attachments::get_attachment_bytes(db, &id).map_err(to_napi_error)? else {
+                return Ok(None);
+            };
+            to_value(&AttachmentContentWire {
+                attachment,
+                bytes: BASE64_STANDARD.encode(bytes),
+            })
+            .map(Some)
         })
     }
 

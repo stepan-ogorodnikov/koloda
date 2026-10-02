@@ -55,7 +55,9 @@ Rendering keeps the formatting and drops anything that could run code or reach t
 
 - Scripts and other active content are removed.
 - Styles written into the content are removed; rendered markdown uses the app's own styles.
-- Images show only when they come from the app itself.
+- Images show only when they are card attachments or come from the app itself.
+  A card attachment shows in card preview and lessons; in assistant messages its alt text shows instead.
+  While an attachment loads, its place stays empty; an attachment that is missing or cannot be read shows its alt text.
   Images from other sites or embedded in the text are not shown; their alt text shows instead.
   Showing a card or a reply never contacts another site.
 - Links stay clickable.

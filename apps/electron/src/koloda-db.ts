@@ -44,7 +44,7 @@ import type {
   UpdateDeckData,
   UpdateTemplateData,
 } from "@koloda/srs";
-import type { DbStatus, GetLessonsParams, SeedDbData } from "@koloda/native-ipc";
+import type { AttachmentContentWire, DbStatus, GetLessonsParams, SeedDbData } from "@koloda/native-ipc";
 
 export interface KolodaDb {
   // Lifecycle
@@ -104,6 +104,9 @@ export interface KolodaDb {
   submitLessonResult(data: LessonResultData): Promise<void>;
   getReviews(params: GetReviewsData): Promise<Review[]>;
   getTodaysReviewTotals(): Promise<TodaysReviewTotals>;
+
+  // Attachments (bytes base64-encoded)
+  getAttachment(params: { id: string }): Promise<AttachmentContentWire | null>;
 
   // AI profiles (no secrets — see the INVARIANT above)
   getAiProfiles(): Promise<AIProfile[]>;

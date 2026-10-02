@@ -9,6 +9,8 @@ import type {
 import type { AllowedSettings, PatchSettingsData, SetSettingsData, SettingsName } from "@koloda/settings";
 import type {
   Algorithm,
+  Attachment,
+  AttachmentContent,
   Card,
   CloneAlgorithmData,
   CloneTemplateData,
@@ -95,6 +97,7 @@ export type Queries = {
   getLessonDataQuery: (params: GetLessonDataParams) => AppQueryOptions<LessonData | null>;
   submitLessonResultMutation: () => UseMutationOptions<Review | undefined, AppError, LessonResultData, unknown>;
   getReviewsQuery: (data: GetReviewsData) => AppQueryOptions<Review[] | undefined>;
+  getAttachmentQuery: (id: Attachment["id"]) => AppQueryOptions<AttachmentContent | null>;
   addAIProfileMutation: () => UseMutationOptions<void, AppError, AddAIProfileData, unknown>;
   updateAIProfileMutation: () => UseMutationOptions<void, AppError, UpdateAIProfileData, unknown>;
   removeAIProfileMutation: () => UseMutationOptions<void, AppError, RemoveAIProfileData, unknown>;

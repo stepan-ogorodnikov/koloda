@@ -7,7 +7,8 @@ export async function writeAttachmentBytes(db: DB, id: string, bytes: Uint8Array
   await db.run(`INSERT INTO attachment_bytes (id, bytes) VALUES (?, ?)`, [id, bytes]);
 }
 
-export async function readAttachmentBytes(db: DB, id: string): Promise<Uint8Array | null> {
+export async function readAttachmentBytes(db: DB, id: string): Promise<Uint8Array<ArrayBuffer> | null> {
   const row = await db.get(`SELECT bytes FROM attachment_bytes WHERE id = ?`, [id]);
-  return row?.bytes instanceof Uint8Array ? row.bytes : null;
+  // WHY: wa-sqlite copies a blob out of WASM memory into its own ArrayBuffer (`sqlite3.row`).
+  return row?.bytes instanceof Uint8Array ? (row.bytes as Uint8Array<ArrayBuffer>) : null;
 }

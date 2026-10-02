@@ -15,6 +15,7 @@ Main-to-renderer pushes arrive on `window.electronAPI.on(channel, callback)` sub
   The renderer bridge re-parses them into `AppError` / `AIError`.
 - Values crossing the Rust boundary follow the NAPI wire format (`toWire`/`fromWire` in the renderer):
   `Date` as epoch ms, `BigInt` bounds-checked to safe integers.
+  Attachment bytes cross as base64 strings; `toWire` would walk a `Uint8Array` as a plain object.
 - Data-command args mirror the `KolodaDb` NAPI method signatures — `{ params }` for reads, `{ data }` for writes,
   or the plain object where the method takes one.
 - Channel names and arg/result shapes are machine-checked against the `DataIpc` contract in `libs/native-ipc`
@@ -39,6 +40,7 @@ The full method list lives in `src-rust/src/lib.rs`.
 - Conversations: `cmd_get_conversation`, `cmd_get_conversations`, `cmd_set_conversation`, `cmd_delete_conversation`
 - Lessons and reviews: `cmd_get_lessons`, `cmd_get_lesson_data`, `cmd_submit_lesson_result`,
   `cmd_get_reviews`, `cmd_get_todays_review_totals`
+- Attachments: `cmd_get_attachment` (meta plus base64 bytes, or `null`)
 - AI profiles: `cmd_get_ai_profiles`, `cmd_add_ai_profile`, `cmd_update_ai_profile`, `cmd_remove_ai_profile`
 
 There is deliberately no command for reading AI profile secrets.

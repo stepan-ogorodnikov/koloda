@@ -43,6 +43,7 @@ export const QUERIES_METHODS = [
   "getLessonDataQuery",
   "submitLessonResultMutation",
   "getReviewsQuery",
+  "getAttachmentQuery",
   "addAIProfileMutation",
   "updateAIProfileMutation",
   "removeAIProfileMutation",
