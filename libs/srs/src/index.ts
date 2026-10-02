@@ -87,6 +87,7 @@ export type {
   LessonsResult,
 } from "./lib/lessons";
 export { markdownToHtml } from "./lib/markdown";
+export type { MarkdownToHtmlOptions } from "./lib/markdown";
 export {
   calculateTodaysReviewTotals,
   createReviewFromReviewFSRS,

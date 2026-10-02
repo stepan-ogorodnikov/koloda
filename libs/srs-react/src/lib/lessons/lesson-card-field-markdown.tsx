@@ -5,7 +5,7 @@ import type { FieldComponentProps } from "./lesson-card-field-types";
 import { useAttachmentImages } from "./use-attachment-images";
 
 export function LessonCardFieldMarkdown({ value }: FieldComponentProps) {
-  const html = useMemo(() => markdownToHtml(value), [value]);
+  const html = useMemo(() => markdownToHtml(value, { shouldKeepAttachmentImages: true }), [value]);
   const ref = useRef<HTMLDivElement>(null);
   useAttachmentImages(ref, html);
 

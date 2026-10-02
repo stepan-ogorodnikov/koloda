@@ -28,17 +28,16 @@ describe("markdownToHtml", () => {
     expect(html).toContain('src="/cards/front.png"');
   });
 
-  it("drops data images and keeps their alt text", () => {
+  it("shows data and remote images as their alt text", () => {
     const html = markdownToHtml(
       [
         "![logo](data:image/gif;base64,R0lGODlhAQABAAAAACw=)",
         '<img src="data:image/gif;base64,R0lGODlhAQABAAAAACw=" alt="dot">',
+        "![a <b>](https://evil.example/c.png)",
       ].join("\n"),
     );
 
-    expect(html).not.toContain("data:");
-    expect(html).toContain('alt="logo"');
-    expect(html).toContain('alt="dot"');
+    expect(html).toBe("<p>logo\ndot\na &lt;b&gt;</p>\n");
   });
 });
 
@@ -47,7 +46,7 @@ describe("markdownToHtml attachment refs", () => {
 
   it("renders a ref as an image with its attachment id, its alt text, and no src", () => {
     const template = document.createElement("template");
-    template.innerHTML = markdownToHtml(`![a "b" <c>](attachment:${id})`);
+    template.innerHTML = markdownToHtml(`![a "b" <c>](attachment:${id})`, { shouldKeepAttachmentImages: true });
     const img = template.content.querySelector("img");
 
     expect(img?.dataset.attachmentId).toBe(id);
@@ -55,14 +54,14 @@ describe("markdownToHtml attachment refs", () => {
     expect(img?.hasAttribute("src")).toBe(false);
   });
 
+  it("shows a ref as its alt text when the caller does not resolve attachments", () => {
+    expect(markdownToHtml(`![label](attachment:${id})`)).toBe("<p>label</p>\n");
+  });
+
   it.each([
     ["63 hex characters", `attachment:${id.slice(1)}`],
     ["uppercase hex", `attachment:${id.toUpperCase()}`],
-  ])("leaves a malformed ref (%s) as a plain image without a source", (_, href) => {
-    const html = markdownToHtml(`![label](${href})`);
-
-    expect(html).not.toContain("data-attachment-id");
-    expect(html).not.toContain("attachment:");
-    expect(html).toContain('alt="label"');
+  ])("shows a malformed ref (%s) as its alt text", (_, href) => {
+    expect(markdownToHtml(`![label](${href})`, { shouldKeepAttachmentImages: true })).toBe("<p>label</p>\n");
   });
 });

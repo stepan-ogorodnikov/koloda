@@ -13,8 +13,7 @@ const AUTO_LOAD_ATTRS = new Set(["src", "poster", "background"]);
 const SVG_IMAGE_TAGS = new Set(["image", "feimage"]);
 
 // WHY: a dedicated instance keeps the attachment renderer out of the global `marked` defaults.
-// An attachment image has no src: the renderer resolves `data-attachment-id` from the database,
-// and without a resolver (assistant messages) it shows its alt text.
+// An attachment image has no src: the card renderer resolves `data-attachment-id` from the database.
 const cardMarkdown = new Marked({
   renderer: {
     image({ href, text, tokens }) {
@@ -26,10 +25,24 @@ const cardMarkdown = new Marked({
   },
 });
 
-export function markdownToHtml(markdown: string): string {
+export type MarkdownToHtmlOptions = { shouldKeepAttachmentImages?: boolean };
+
+export function markdownToHtml(
+  markdown: string,
+  { shouldKeepAttachmentImages = false }: MarkdownToHtmlOptions = {},
+): string {
   const html = cardMarkdown.parse(markdown, { async: false }) as string;
   // WHY: CSS can load a remote image via url(), from a <style> tag or a style attribute.
-  return DOMPurify.sanitize(html, { FORBID_TAGS: ["style"], FORBID_ATTR: ["style"] });
+  const config = { FORBID_TAGS: ["style"], FORBID_ATTR: ["style"] };
+  if (!DOMPurify.isSupported) return DOMPurify.sanitize(html, config);
+  const fragment = DOMPurify.sanitize(html, { ...config, RETURN_DOM_FRAGMENT: true });
+  // WHY: browsers draw a broken-image icon for an image without a source, so its alt text
+  // takes its place. Attachment images stay only for a caller that resolves them.
+  const sourceless = shouldKeepAttachmentImages ? "img:not([src]):not([data-attachment-id])" : "img:not([src])";
+  for (const img of fragment.querySelectorAll<HTMLImageElement>(sourceless)) img.replaceWith(img.alt);
+  const container = document.createElement("div");
+  container.append(fragment);
+  return container.innerHTML;
 }
 
 function escapeAttribute(value: string): string {

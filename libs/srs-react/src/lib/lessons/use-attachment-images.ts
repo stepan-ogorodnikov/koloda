@@ -34,16 +34,19 @@ export function useAttachmentImages(containerRef: RefObject<HTMLElement | null>,
     let isCurrent = true;
     const leases = Array.from(images, (img) => {
       const lease = cache.acquire(img.dataset.attachmentId ?? "");
-      // WHY: an image without a source shows its alt text; keep its place empty until the load settles.
-      // A missing or unreadable attachment keeps no source, so its alt text shows after that.
+      // WHY: browsers draw a broken-image icon for an image without a source or with unreadable bytes.
+      // Its place stays empty while it loads; a missing or unreadable attachment becomes its alt text.
       img.classList.add("invisible");
+      img.addEventListener("error", () => img.replaceWith(img.alt), { once: true });
       void lease.image.then((image) => {
         if (!isCurrent) return;
-        if (image) {
-          img.src = image.url;
-          if (image.width) img.width = image.width;
-          if (image.height) img.height = image.height;
+        if (!image) {
+          img.replaceWith(img.alt);
+          return;
         }
+        img.src = image.url;
+        if (image.width) img.width = image.width;
+        if (image.height) img.height = image.height;
         img.classList.remove("invisible");
       });
       return lease;
