@@ -55,8 +55,9 @@ Rendering keeps the formatting and drops anything that could run code or reach t
 
 - Scripts and other active content are removed.
 - Styles written into the content are removed; rendered markdown uses the app's own styles.
-- Images show only when they come from the app itself or are embedded in the text.
-  Images from other sites are not shown, so showing a card or a reply never contacts another site.
+- Images show only when they come from the app itself.
+  Images from other sites or embedded in the text are not shown; their alt text shows instead.
+  Showing a card or a reply never contacts another site.
 - Links stay clickable.
   In the desktop app, a web link opens in the system browser and the app window stays on the app.
   Other kinds of links do nothing in the desktop app.

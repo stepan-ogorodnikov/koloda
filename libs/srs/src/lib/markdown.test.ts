@@ -22,12 +22,22 @@ describe("markdownToHtml", () => {
     expect(html).not.toContain("<style");
   });
 
-  it("keeps relative and data images", () => {
-    const html = markdownToHtml(
-      ["![](/cards/front.png)", '<img src="data:image/gif;base64,R0lGODlhAQABAAAAACw=" alt="">'].join("\n"),
-    );
+  it("keeps relative images", () => {
+    const html = markdownToHtml("![](/cards/front.png)");
 
     expect(html).toContain('src="/cards/front.png"');
-    expect(html).toContain("data:image/gif;base64,R0lGODlhAQABAAAAACw=");
+  });
+
+  it("drops data images and keeps their alt text", () => {
+    const html = markdownToHtml(
+      [
+        "![logo](data:image/gif;base64,R0lGODlhAQABAAAAACw=)",
+        '<img src="data:image/gif;base64,R0lGODlhAQABAAAAACw=" alt="dot">',
+      ].join("\n"),
+    );
+
+    expect(html).not.toContain("data:");
+    expect(html).toContain('alt="logo"');
+    expect(html).toContain('alt="dot"');
   });
 });

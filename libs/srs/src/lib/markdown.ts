@@ -4,7 +4,8 @@ import { marked } from "marked";
 
 // WHY: A remote image URL is fetched as soon as the markdown is shown, so a
 // prompt injection can carry card text out in the query string. Links stay;
-// they wait for a click. Relative URLs and data:image URLs stay.
+// they wait for a click. Only relative URLs stay: data: URLs go too, because
+// inline image bytes bloat the text that every card read loads.
 const RELATIVE_IMAGE_BASE = "https://koloda.invalid";
 
 const AUTO_LOAD_ATTRS = new Set(["src", "poster", "background"]);
@@ -23,7 +24,6 @@ function isSafeImageUrl(value: string): boolean {
   } catch {
     return false;
   }
-  if (url.protocol === "data:") return url.pathname.toLowerCase().startsWith("image/");
   return url.origin === RELATIVE_IMAGE_BASE;
 }
 
