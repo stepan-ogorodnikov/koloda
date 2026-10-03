@@ -1,6 +1,6 @@
 # Sync protocol
 
-Status: ready
+Status: done
 
 ## Intent
 
@@ -101,4 +101,10 @@ Out:
 
 ## Outcome
 
-<what shipped>
+- `crates/koloda-sync-proto` exists as a workspace member with its own nx `lint` and `test` targets, wired into `check:commit`, `check:rust`, `check:rust-push`, and `test:rust`.
+- `crates/koloda-sync-proto/PROTOCOL.md` holds the protocol part of the accepted design (revision 3); behavior-only parts stay in the gitignored draft until their tasks move them into specs.
+- `docs/decisions/FIXED-CARD-PARENTS.md` records that a card's deck and template never change; `agents/INDEX.md` routes it and the sync protocol crate.
+- The crate implements the kind and field-group registry with the header allowlist, the hybrid logical clock with skew guards, the CBOR envelope codec with SHA-256 digest and size limits, schema-1 payloads for every group, and `seal`, which builds the header from the payload and round-trips before returning bytes.
+- Golden fixtures pin the sealed bytes of 28 samples (every group plus the four deletes); an ignored test regenerates them.
+- Deviations from the first plan text, reflected in the items: the header `op` is only `write` or `delete`; no separate nesting-depth limit, because every field decodes into a fixed type; fixtures are hex with `samples.rs` as their readable form; dependencies arrived with the items that use them.
+- Manual verify: none — no user-visible surface.
