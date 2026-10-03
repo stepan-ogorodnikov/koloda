@@ -459,8 +459,9 @@ There is no restore of deleted entities.
 
 ### Hybrid logical clock
 
-Every envelope carries a 64-bit HLC: 48 bits of wall milliseconds, 16 bits of counter.
-Ties break on `stamp_device`.
+Every envelope carries a 64-bit HLC: 48 bits of wall milliseconds above 16 bits of counter.
+The raw value therefore orders like the clock.
+Ties break on `stamp_device`, compared as its 16 raw UUID bytes.
 One HLC per commit; every envelope of a local transaction shares it.
 On counter overflow the wall part advances one millisecond.
 The device persists its last HLC, never issues a smaller one, and advances past every stamp it applies.

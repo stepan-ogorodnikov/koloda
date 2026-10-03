@@ -2,4 +2,5 @@
 //!
 //! Contract: `PROTOCOL.md` (update it in the same change as this crate). Ownership: crate `README.md`.
 
+pub mod hlc;
 pub mod registry;

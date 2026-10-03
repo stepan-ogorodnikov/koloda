@@ -67,7 +67,7 @@ Out:
   Commit: Define the sync kind and field-group registry
   Depends on: 1
 
-- [ ] 3. Add the hybrid logical clock
+- [x] 3. Add the hybrid logical clock
   Goal: 64-bit stamp (48 bits wall milliseconds, 16 bits counter); `tick(now)` for a local commit; `observe(stamp)` adopting a remote stamp, including one from ahead; counter overflow advances the wall part one millisecond; total order on `(hlc, stamp_device)`; checks for the skew rules in `PROTOCOL.md`: the client pauses when skew exceeds 5 minutes, and the server rejects a wall part more than 5 minutes ahead of server now.
   Constraints: no clock source inside the crate; callers pass time in; state is a plain value the caller persists.
   Done when: tests cover monotonicity under a backwards wall clock, adoption from ahead, overflow, the device tie-break, and both skew rules at exactly 5 minutes and one millisecond past.
