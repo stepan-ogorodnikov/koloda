@@ -92,7 +92,7 @@ pub fn get_card(db: &Database, id: &str) -> Result<Option<Card>, AppError> {
     throw_known_error(error_codes::DB_GET, || db.with_conn(|conn| select_card(conn, id)))
 }
 
-fn select_card(conn: &Connection, id: &str) -> Result<Option<Card>, AppError> {
+pub(crate) fn select_card(conn: &Connection, id: &str) -> Result<Option<Card>, AppError> {
     conn.query_row(
         r#"
         SELECT id, deck_id, template_id, content, state, due_at, stability, difficulty,

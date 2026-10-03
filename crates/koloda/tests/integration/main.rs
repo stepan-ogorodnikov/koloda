@@ -12,6 +12,7 @@ mod db_integration_tests;
 mod decks_integration_tests;
 mod e2e_learning_workflow_tests;
 mod lessons_integration_tests;
+mod lessons_sync_integration_tests;
 mod reviews_integration_tests;
 mod schema_inventory_tests;
 mod seed_integration_tests;

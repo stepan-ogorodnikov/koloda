@@ -65,7 +65,7 @@ Out:
   Commit: Capture card writes for sync
   Depends on: 2
 
-- [ ] 4. Capture grades
+- [x] 4. Capture grades
   Goal: `submit_lesson_result` emits `cards.scheduling` with the new scheduling and `reviews.row` with the card as parent, in one cohort.
   Done when: an integration test decodes both envelopes at one stamp and checks their values against the stored rows.
   Commit: Capture grades as scheduling plus review

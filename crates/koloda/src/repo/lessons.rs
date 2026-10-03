@@ -2,6 +2,7 @@
 //!
 //! SQL only. Validation lives in `domain/lessons`.
 
+use koloda_sync_proto::payload::Payload;
 use rusqlite::Row;
 
 use crate::app::db::{parse_json_column, Database};
@@ -13,9 +14,10 @@ use crate::domain::lessons::{
     GetLessonDataParams, GetLessonsParams, LessonAlgorithm, LessonAmounts, LessonData, LessonDeck, LessonResultData,
     LessonTemplate, LessonTemplateLayoutItem, LessonsResult,
 };
-use crate::repo::cards::get_card_row;
+use crate::repo::cards::{get_card_row, scheduling_payload, select_card};
 use crate::repo::fsrs_sql;
 use crate::repo::reviews;
+use crate::repo::sync::Capture;
 
 fn get_lesson_deck_row(row: &Row) -> Result<LessonDeck, rusqlite::Error> {
     Ok(LessonDeck {
@@ -352,7 +354,22 @@ pub fn submit_lesson_result(db: &Database, data: LessonResultData) -> Result<(),
 
             // WHY: review INSERT SQL lives in `reviews::insert_review` — single home for
             // review writes so future writers reuse the same statement.
-            reviews::insert_review(tx, &data.review, now)?;
+            let review_id = reviews::insert_review(tx, &data.review, now)?;
+
+            // INVARIANT: a grade publishes the new scheduling and its review in one commit, at one stamp.
+            if let Some(card) = select_card(tx, &data.card.id)? {
+                let mut capture = Capture::begin(tx)?;
+                capture.write(
+                    &card.id,
+                    Some(&card.deck_id),
+                    &Payload::CardScheduling(scheduling_payload(&card)),
+                )?;
+                capture.write(
+                    &review_id,
+                    None,
+                    &Payload::Review(reviews::review_payload(tx, &review_id)?),
+                )?;
+            }
 
             Ok(())
         })

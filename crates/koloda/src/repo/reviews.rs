@@ -2,6 +2,7 @@
 //!
 //! SQL only. Validation lives in `domain/reviews`.
 
+use koloda_sync_proto::payload as wire;
 use rusqlite::{params, Connection, Row};
 
 use crate::app::db::Database;
@@ -65,6 +66,33 @@ pub(crate) fn insert_review(conn: &Connection, data: &InsertReviewData, now: i64
     )?;
 
     Ok(id)
+}
+
+pub(crate) fn review_payload(conn: &Connection, id: &str) -> Result<wire::Review, AppError> {
+    let review = conn.query_row(
+        r#"
+        SELECT id, card_id, rating, state, due_at, stability, difficulty,
+               scheduled_days, learning_steps, time, is_ignored, created_at
+        FROM reviews
+        WHERE id = ?1
+        "#,
+        params![id],
+        get_review_row,
+    )?;
+
+    Ok(wire::Review {
+        card_id: review.card_id,
+        rating: i64::from(review.rating),
+        state: i64::from(review.state),
+        due_at: review.due_at,
+        stability: review.stability,
+        difficulty: review.difficulty,
+        scheduled_days: i64::from(review.scheduled_days),
+        learning_steps: i64::from(review.learning_steps),
+        time: i64::from(review.time),
+        is_ignored: review.is_ignored,
+        created_at: review.created_at,
+    })
 }
 
 pub fn get_reviews(db: &Database, data: GetReviewsData) -> Result<Vec<Review>, AppError> {
