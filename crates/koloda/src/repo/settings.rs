@@ -4,6 +4,7 @@
 
 use std::str::FromStr;
 
+use koloda_sync_proto::payload::{DefaultAlgorithm, DefaultTemplate, Payload, SettingValue};
 use rusqlite::types::{FromSql, FromSqlResult, ValueRef};
 use rusqlite::{params, Connection, OptionalExtension};
 use serde_json::Value;
@@ -13,6 +14,9 @@ use crate::app::error::{error_codes, throw_known_error, AppError};
 use crate::app::utility::get_current_timestamp;
 use crate::domain::settings::{Settings, SettingsName};
 use crate::domain::settings_learning::{LearningDefaults, LearningSettings};
+use crate::repo::sync::Capture;
+
+const LEARNING_SYNC_ID: &str = "learning";
 
 impl FromSql for SettingsName {
     fn column_result(value: ValueRef<'_>) -> FromSqlResult<Self> {
@@ -88,7 +92,23 @@ pub fn set_settings(db: &Database, name: SettingsName, content: Value) -> Result
         let content = name.normalize(content)?;
         let now = get_current_timestamp()?;
 
-        db.with_conn(|conn| upsert_settings(conn, name, &content, now))?;
+        db.with_transaction(|tx| {
+            if name != SettingsName::Learning {
+                return upsert_settings(tx, name, &content, now);
+            }
+
+            let previous: Option<String> = tx
+                .query_row(
+                    "SELECT content FROM settings WHERE name = ?1",
+                    params![name.to_string()],
+                    |row| row.get(0),
+                )
+                .optional()?;
+            upsert_settings(tx, name, &content, now)?;
+            // WHY: an unreadable previous document counts as absent, so every key is captured.
+            let previous = previous.and_then(|text| serde_json::from_str::<Value>(&text).ok());
+            capture_learning(tx, previous.as_ref(), &content)
+        })?;
 
         get_settings(db, name)?.ok_or_else(|| AppError::new(error_codes::DB_UPDATE, None))
     })
@@ -110,6 +130,47 @@ pub(crate) fn upsert_settings(
         "#,
         params![name.to_string(), content.to_string(), now, now],
     )?;
+
+    Ok(())
+}
+
+// INVARIANT: each learning key is its own sync group; only keys whose value changed are captured
+// (crates/koloda-sync-proto/PROTOCOL.md, Field groups and merge). Other settings slices do not sync.
+fn capture_learning(conn: &Connection, previous: Option<&Value>, next: &Value) -> Result<(), AppError> {
+    let mut capture = Capture::begin(conn)?;
+    let changed = |pointer: &str| previous.and_then(|value| value.pointer(pointer)) != next.pointer(pointer);
+
+    if changed("/defaults/algorithm") {
+        if let Some(algorithm_id) = next.pointer("/defaults/algorithm").and_then(Value::as_str) {
+            let payload = Payload::LearningDefaultAlgorithm(DefaultAlgorithm {
+                algorithm_id: algorithm_id.to_string(),
+            });
+            capture.write(LEARNING_SYNC_ID, None, &payload)?;
+        }
+    }
+    if changed("/defaults/template") {
+        if let Some(template_id) = next.pointer("/defaults/template").and_then(Value::as_str) {
+            let payload = Payload::LearningDefaultTemplate(DefaultTemplate {
+                template_id: template_id.to_string(),
+            });
+            capture.write(LEARNING_SYNC_ID, None, &payload)?;
+        }
+    }
+
+    type ValueGroup = (&'static str, fn(SettingValue) -> Payload);
+    let keys: [ValueGroup; 3] = [
+        ("/dailyLimits", Payload::LearningDailyLimits),
+        ("/dayStartsAt", Payload::LearningDayStartsAt),
+        ("/learnAheadLimit", Payload::LearningLearnAheadLimit),
+    ];
+    for (pointer, payload) in keys {
+        if let Some(value) = next.pointer(pointer).filter(|_| changed(pointer)) {
+            let value = SettingValue {
+                value: value.to_string(),
+            };
+            capture.write(LEARNING_SYNC_ID, None, &payload(value))?;
+        }
+    }
 
     Ok(())
 }

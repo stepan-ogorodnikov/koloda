@@ -84,7 +84,7 @@ Out:
   Commit: Capture template and algorithm writes for sync
   Depends on: 2
 
-- [ ] 7. Capture learning settings writes
+- [x] 7. Capture learning settings writes
   Goal: setting or patching `learning` emits one envelope per changed key group: `defaults.algorithm`, `defaults.template` (with refs), `dailyLimits`, `dayStartsAt`, `learnAheadLimit`, each value as its JSON text; other settings slices emit nothing.
   Done when: integration tests cover a single-key change, a multi-key change in one cohort, and a no-op save.
   Commit: Capture learning settings writes per key
