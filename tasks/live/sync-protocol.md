@@ -83,7 +83,7 @@ Out:
   Commit: Encode and decode sync envelopes
   Depends on: 2, 3
 
-- [ ] 5. Encode every schema-1 payload with a round-trip check
+- [x] 5. Encode every schema-1 payload with a round-trip check
   Goal: wire structs for the payload of every registry group at schema 1, matching the column lists in `PROTOCOL.md`, including `initial_product_ts` on creates, `product_ts` on contributing groups, `wall_ms` on `cards.reset`, and the `successor` hint on algorithm deletes.
   `encode_checked` encodes, decodes, and compares before returning bytes, so an encoder bug fails the caller's write.
   Header builders derive `parent` and `refs` (hard and soft) from the payload, so they agree by construction.

@@ -1,4 +1,4 @@
-//! Envelope frame and header codec (`PROTOCOL.md` §Envelope encoding). The payload stays opaque bytes here.
+//! Envelope frame and header codec (`PROTOCOL.md` §Envelope encoding). Payload codecs: `payload.rs`.
 
 use std::fmt;
 
@@ -110,7 +110,7 @@ impl Envelope {
             header: self.header.encode()?,
             payload: self.payload.clone(),
         };
-        to_cbor(&frame, Part::Envelope)
+        encode_cbor(&frame, Part::Envelope)
     }
 
     pub fn decode(bytes: &[u8]) -> Result<Envelope, EnvelopeError> {
@@ -119,7 +119,7 @@ impl Envelope {
             bytes.len(),
             MAX_HEADER_BYTES + MAX_PAYLOAD_BYTES + MAX_FRAME_OVERHEAD_BYTES,
         )?;
-        let frame: WireFrame = from_cbor(bytes, Part::Envelope)?;
+        let frame: WireFrame = decode_cbor(bytes, Part::Envelope)?;
         check_len(Part::Payload, frame.payload.len(), MAX_PAYLOAD_BYTES)?;
         Ok(Envelope {
             header: Header::decode(&frame.header)?,
@@ -132,12 +132,12 @@ impl Header {
     // INVARIANT: these bytes travel unchanged inside the envelope; E2EE uses them as AEAD associated data.
     pub fn encode(&self) -> Result<Vec<u8>, EnvelopeError> {
         self.validate()?;
-        to_cbor(&self.to_wire(), Part::Header)
+        encode_cbor(&self.to_wire(), Part::Header)
     }
 
     pub fn decode(bytes: &[u8]) -> Result<Header, EnvelopeError> {
         check_len(Part::Header, bytes.len(), MAX_HEADER_BYTES)?;
-        let wire: WireHeader = from_cbor(bytes, Part::Header)?;
+        let wire: WireHeader = decode_cbor(bytes, Part::Header)?;
         let header = Header::from_wire(wire)?;
         header.validate()?;
         Ok(header)
@@ -268,7 +268,7 @@ fn check_len(part: Part, len: usize, max: usize) -> Result<(), EnvelopeError> {
     }
 }
 
-fn to_cbor<T: Serialize>(value: &T, part: Part) -> Result<Vec<u8>, EnvelopeError> {
+pub(crate) fn encode_cbor<T: Serialize>(value: &T, part: Part) -> Result<Vec<u8>, EnvelopeError> {
     let mut bytes = Vec::new();
     ciborium::into_writer(value, &mut bytes).map_err(|error| EnvelopeError::Malformed {
         part,
@@ -279,7 +279,7 @@ fn to_cbor<T: Serialize>(value: &T, part: Part) -> Result<Vec<u8>, EnvelopeError
 
 // WHY: `from_reader` applies ciborium's default recursion limit, and every target type is fixed,
 // so nesting depth is bounded without a separate depth check.
-fn from_cbor<T: for<'de> Deserialize<'de>>(bytes: &[u8], part: Part) -> Result<T, EnvelopeError> {
+pub(crate) fn decode_cbor<T: for<'de> Deserialize<'de>>(bytes: &[u8], part: Part) -> Result<T, EnvelopeError> {
     ciborium::from_reader(bytes).map_err(|error| EnvelopeError::Malformed {
         part,
         reason: error.to_string(),

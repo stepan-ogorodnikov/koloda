@@ -4,4 +4,5 @@
 
 pub mod envelope;
 pub mod hlc;
+pub mod payload;
 pub mod registry;

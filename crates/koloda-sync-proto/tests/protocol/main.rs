@@ -2,4 +2,6 @@
 
 mod envelope_tests;
 mod hlc_tests;
+mod payload_tests;
 mod registry_tests;
+mod samples;

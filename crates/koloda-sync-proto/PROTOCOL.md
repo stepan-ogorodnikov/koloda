@@ -142,6 +142,56 @@ Decoding validates the header against the registry:
 Limits: a header is at most 16 KiB and a payload at most 512 KiB.
 Every field decodes into a fixed type, so nesting depth is bounded without a separate limit.
 
+## Payloads
+
+A payload is a CBOR map whose shape the header's kind, group, and `schema` decide.
+Every kind is at schema 1.
+Optional values are encoded as null, except a delete's `successor`, which is omitted when absent.
+Unknown keys are rejected.
+JSON columns travel as the JSON text the row stores: card content, template structure, algorithm parameters,
+a revision's actor, and each learning-settings value.
+
+| Kind / group | Payload keys |
+| --- | --- |
+| `cards` / `create` | `deck_id`, `template_id`, `content`, `scheduling` (the scheduling map below), `created_at`, `initial_product_ts`, `legacy_product_ts_floor` |
+| `cards` / `content` | `content`, `updated_at` |
+| `cards` / `scheduling` | `state`, `due_at`, `stability`, `difficulty`, `scheduled_days`, `learning_steps`, `reps`, `lapses`, `last_reviewed_at` |
+| `cards` / `reset` | `wall_ms` |
+| `reviews` / `row` | `card_id`, `rating`, `state`, `due_at`, `stability`, `difficulty`, `scheduled_days`, `learning_steps`, `time`, `is_ignored`, `created_at` |
+| `decks` / `create` | `title`, `notes`, `created_at`, `initial_product_ts`, `legacy_product_ts_floor` |
+| `templates`, `algorithms` / `create` | `title`, `notes`, `content`, `created_at`, `initial_product_ts`, `legacy_product_ts_floor` |
+| `decks`, `templates`, `algorithms` / `title` | `title`, `updated_at` |
+| `decks`, `templates`, `algorithms` / `notes` | `notes`, `updated_at` |
+| `templates` / `structure`, `algorithms` / `content` | `content`, `updated_at` |
+| `decks` / `algorithm` | `algorithm_id`, `updated_at` |
+| `decks` / `template` | `template_id`, `updated_at` |
+| `algorithm_revisions` / `row` | `algorithm_id`, `content`, `actor`, `created_at` |
+| `settings.learning` / `defaults.algorithm` | `algorithm_id` |
+| `settings.learning` / `defaults.template` | `template_id` |
+| `settings.learning` / `dailyLimits`, `dayStartsAt`, `learnAheadLimit` | `value` |
+| any kind / delete | `successor` (algorithms only) |
+
+`updated_at` in a payload is that group's product timestamp; the receiver stores it as the register's `product_ts`.
+`initial_product_ts` maps group names to the product timestamps of the synthetic registers a create writes.
+A group absent from the map starts with a null `product_ts`.
+
+### Sealing
+
+The writer seals a payload into an envelope:
+
+1. Kind, group, and op come from the payload's type.
+2. `parent` comes from the payload when it carries its parent: `deck_id` on a card create, `card_id` on a review.
+   Card updates and card deletes carry no deck, so the writer passes the deck from the row.
+   A given parent that disagrees with the payload's is an error.
+3. `refs` come from the payload: algorithm and template pointers, and the card's template on create.
+   Attachment ids are every `attachment:<64 lowercase hex>` link in the card's content text, sorted and unique.
+   A hex id cannot be hidden by JSON escaping, so the text scan finds every link without parsing.
+4. The header and payload are encoded, decoded back, and compared with the input.
+   A mismatch fails the write before anything is queued.
+
+Only algorithm deletes carry a `successor`.
+A receiver that meets a schema it does not know decodes nothing and holds (§Schema versions).
+
 ## Identity
 
 ### Primary keys

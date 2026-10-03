@@ -16,6 +16,7 @@ The server links only this crate, never `koloda`, so nothing here may depend on 
 - `src/lib.rs` — crate root.
 - `src/envelope.rs` — envelope frame and header codec, header validation, digest, and size limits.
 - `src/hlc.rs` — hybrid logical clock, stamp order, and skew guards; callers pass time in.
+- `src/payload.rs` — schema-1 payloads for every group, and sealing: header from payload, then a round-trip check.
 - `src/registry.rs` — kinds, field groups, classes, lanes, parents, refs, and the header allowlist.
 
 ### Does NOT own (prevent scope creep)
