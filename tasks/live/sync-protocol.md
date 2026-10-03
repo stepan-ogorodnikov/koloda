@@ -44,7 +44,7 @@ Out:
 
 ## Plan
 
-- [ ] 1. Add the koloda-sync-proto crate and its protocol contract
+- [x] 1. Add the koloda-sync-proto crate and its protocol contract
   Goal: new library crate `crates/koloda-sync-proto`: workspace member in the root `Cargo.toml`, `serde` dependency, `[lints] workspace = true`, `src/lib.rs` with only a module doc pointing at `PROTOCOL.md` and the README.
   `project.json` with `lint` and `test` targets shaped like `crates/koloda/project.json`; wire them into the root `check:rust` and `check:rust-push` scripts so `check:commit`, `check:push`, and CI run them, with nx cache inputs covering the new crate (the existing `koloda:lint` cache is keyed on `crates/koloda` only).
   `README.md` in the shape of `crates/koloda/README.md`: where it sits (linked by the future sync engine and server; never by the web host), architectural map, and "Does NOT own" (sync tables and apply, transport, the server, product behavior).
