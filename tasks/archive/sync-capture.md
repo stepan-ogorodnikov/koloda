@@ -1,6 +1,6 @@
 # Sync capture
 
-Status: ready
+Status: done
 
 ## Intent
 
@@ -92,4 +92,9 @@ Out:
 
 ## Outcome
 
-<what shipped>
+- Migration `V5__sync_capture.sql` adds `sync_state`, `sync_stamps`, `sync_origins`, `sync_outbox`, `sync_cohorts`, and `sync_tombstones` to the shared series; web databases create them and never write them.
+- `crates/koloda/src/repo/sync.rs` holds device enrollment and `Capture`: one HLC tick, `commit_id`, and cohort per commit; consecutive sender sequences; registers, origins, and tombstones; replacement of a group's pending not-in-flight row at the tail. It is a no-op until the database is enrolled.
+- Every Rust product write path captures its envelopes in its own transaction: cards (add, edit, delete, reset as two envelopes at one stamp), grades (scheduling plus review), decks (create plus both pointers, changed groups, one tombstone), templates and algorithms (create, revisions, changed groups, successor reassignment then tombstone), and learning settings (one group per changed key).
+- `PROTOCOL.md` now says where the sync tables live, drops `cards.reviews_reset_at` (backfill has three phases), and states that a delete appends at the tail and replaces nothing. `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md` records the Rust-only capture divergence; `agents/RUST.md` routes product write paths to `Capture`; `agents/DB.md` and the crate README name the tables.
+- Deviations from the first plan text: the `koloda-sync-proto` dependency arrived in item 2; the proto `Payload` gained `product_ts`, `initial_product_ts`, and `legacy_product_ts_floor` accessors; read-then-write repo paths now run in one transaction so capture stays atomic with the product write.
+- Manual verify: none — nothing enrolls a database outside tests yet, so no user-visible behavior changed.
