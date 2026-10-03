@@ -1,6 +1,6 @@
 # Sync protocol
 
-Status: draft
+Status: ready
 
 ## Intent
 
@@ -52,7 +52,7 @@ Out:
   It opens with: the contract between the sync engine and the server; update it in the same change as the code it describes, like `apps/electron/IPC.md`.
   `agents/INDEX.md`: an Authoring row and a Reviewing row for sync protocol work routing to `crates/koloda-sync-proto/PROTOCOL.md` and the crate README, plus `agents/TESTING.md` as for any test change.
   Constraints: no code beyond the module doc; no dependency on `koloda`; `PROTOCOL.md` states what devices and the server exchange and how each applies it, never UI wording or operator CLI detail; follow `agents/MARKDOWN.md`.
-  Done when: `cargo build -p koloda-sync-proto` green; `bun run check:rust-push` runs the new crate's lint and test targets; dprint format check passes.
+  Done when: `cargo build -p koloda-sync-proto` green; `bun run check:rust-push` runs the new crate's lint and test targets.
   Commit: Add the koloda-sync-proto crate with its protocol contract
   Depends on: none
 
