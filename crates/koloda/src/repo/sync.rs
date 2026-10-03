@@ -146,6 +146,14 @@ impl<'c> Capture<'c> {
         insert_outbox(conn, sender_seq, kind, id, Some(group_name), commit, &sealed)
     }
 
+    // INVARIANT: call before a product reset deletes the card's reviews; their origins go with them.
+    pub fn forget_card_reviews(&mut self, card_id: &str) -> Result<(), AppError> {
+        if self.device.is_none() {
+            return Ok(());
+        }
+        forget_card_reviews(self.conn, card_id)
+    }
+
     // INVARIANT: call before the product rows of the entity and its descendants are deleted; the register
     // and origin cleanup reads them to find descendant ids.
     pub fn delete(
@@ -398,14 +406,17 @@ fn forget_entity(conn: &Connection, kind: Kind, id: &str) -> Result<(), AppError
                 )?;
             }
         }
-        Kind::Cards => {
-            conn.execute(
-                "DELETE FROM sync_origins WHERE kind = 'reviews' AND id IN (SELECT id FROM reviews WHERE card_id = ?1)",
-                params![id],
-            )?;
-        }
+        Kind::Cards => forget_card_reviews(conn, id)?,
         _ => {}
     }
+    Ok(())
+}
+
+fn forget_card_reviews(conn: &Connection, card_id: &str) -> Result<(), AppError> {
+    conn.execute(
+        "DELETE FROM sync_origins WHERE kind = 'reviews' AND id IN (SELECT id FROM reviews WHERE card_id = ?1)",
+        params![card_id],
+    )?;
     Ok(())
 }
 

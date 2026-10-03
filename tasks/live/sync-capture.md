@@ -58,7 +58,7 @@ Out:
   Commit: Record each commit's sync envelopes in the outbox
   Depends on: 1
 
-- [ ] 3. Capture card writes
+- [x] 3. Capture card writes
   Goal: `add_card` / `add_cards` emit `cards.create` (deck as parent, template ref, attachment refs from content, initial scheduling); `update_card` emits `cards.content` only when content changed; `delete_card` / `delete_cards` emit one tombstone per card with the deck as parent; `reset_card_progress` emits `cards.reset` (`wall_ms` = commit wall time) and blank `cards.scheduling` in one cohort.
   Constraints: product SQL and behavior unchanged; capture inside the existing transactions.
   Done when: integration tests per path decode the outbox and assert groups, parent, refs, payload values, one stamp per commit, and that a no-op content save emits nothing.

@@ -83,3 +83,22 @@ pub fn count(db: &Database, sql: &str) -> i64 {
     db.with_conn(|conn| Ok(conn.query_row(sql, [], |row| row.get(0))?))
         .expect("count query runs")
 }
+
+pub struct DeckFixture {
+    pub algorithm: String,
+    pub template: String,
+    pub deck: String,
+}
+
+/// Creates an algorithm, a template, and a deck before enrolling, so the outbox holds only what a test writes.
+pub fn enrolled_deck(db: &Database) -> DeckFixture {
+    let algorithm = super::fixtures::add_algorithm(db, "FSRS");
+    let template = super::fixtures::add_template(db, "Basic");
+    let deck = super::fixtures::add_deck(db, &algorithm, &template, "Spanish");
+    enroll(db);
+    DeckFixture {
+        algorithm,
+        template,
+        deck,
+    }
+}

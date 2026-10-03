@@ -3,7 +3,9 @@
 //! SQL only. Validation lives in `domain/cards`.
 
 use crate::domain::cards::{AddCardsItemError, AddCardsItemResult, AddCardsResponse};
-use rusqlite::{params, OptionalExtension};
+use koloda_sync_proto::payload::{self as wire, InitialProductTs, Payload};
+use koloda_sync_proto::registry::Kind;
+use rusqlite::{params, Connection, OptionalExtension};
 
 use crate::app::db::{parse_json_column, Database};
 use crate::app::error::{error_codes, throw_known_error, AppError};
@@ -17,6 +19,7 @@ use std::collections::HashMap;
 
 use crate::repo::decks::{get_deck, get_decks_by_ids};
 use crate::repo::fsrs_sql;
+use crate::repo::sync::Capture;
 use crate::repo::templates::{get_template, get_templates_by_ids};
 
 pub fn get_card_row(row: &rusqlite::Row<'_>) -> Result<Card, rusqlite::Error> {
@@ -86,23 +89,47 @@ pub fn get_card_counts(db: &Database) -> Result<Vec<CardCount>, AppError> {
 }
 
 pub fn get_card(db: &Database, id: &str) -> Result<Option<Card>, AppError> {
-    throw_known_error(error_codes::DB_GET, || {
-        db.with_conn(|conn| {
-            conn.query_row(
-                r#"
-                SELECT id, deck_id, template_id, content, state, due_at, stability, difficulty,
-                       scheduled_days, learning_steps, reps, lapses, last_reviewed_at, created_at, updated_at
-                FROM cards
-                WHERE id = ?1
-                LIMIT 1
-                "#,
-                params![id],
-                get_card_row,
-            )
-            .optional()
-            .map_err(AppError::from)
-        })
-    })
+    throw_known_error(error_codes::DB_GET, || db.with_conn(|conn| select_card(conn, id)))
+}
+
+fn select_card(conn: &Connection, id: &str) -> Result<Option<Card>, AppError> {
+    conn.query_row(
+        r#"
+        SELECT id, deck_id, template_id, content, state, due_at, stability, difficulty,
+               scheduled_days, learning_steps, reps, lapses, last_reviewed_at, created_at, updated_at
+        FROM cards
+        WHERE id = ?1
+        LIMIT 1
+        "#,
+        params![id],
+        get_card_row,
+    )
+    .optional()
+    .map_err(AppError::from)
+}
+
+pub(crate) fn scheduling_payload(card: &Card) -> wire::CardScheduling {
+    wire::CardScheduling {
+        state: i64::from(card.state),
+        due_at: card.due_at,
+        stability: card.stability,
+        difficulty: card.difficulty,
+        scheduled_days: i64::from(card.scheduled_days),
+        learning_steps: i64::from(card.learning_steps),
+        reps: i64::from(card.reps),
+        lapses: i64::from(card.lapses),
+        last_reviewed_at: card.last_reviewed_at,
+    }
+}
+
+fn capture_card_delete(capture: &mut Capture<'_>, conn: &Connection, id: &str) -> Result<(), AppError> {
+    let deck_id: Option<String> = conn
+        .query_row("SELECT deck_id FROM cards WHERE id = ?1", params![id], |row| row.get(0))
+        .optional()?;
+    match deck_id {
+        Some(deck_id) => capture.delete(Kind::Cards, id, Some(&deck_id), None),
+        None => Ok(()),
+    }
 }
 
 pub fn add_card(db: &Database, data: InsertCardData) -> Result<Card, AppError> {
@@ -187,10 +214,11 @@ fn insert_card_data(db: &Database, data: &InsertCardData, template: &Template) -
     data.validate(&template.content.fields)?;
 
     let now = get_current_timestamp()?;
+    let content = serde_json::to_string(&data.content)?;
 
-    let id = db.with_conn(|conn| {
+    let id = db.with_transaction(|tx| {
         let id = minted_uuidv7(None);
-        conn.execute(
+        tx.execute(
             r#"
             INSERT INTO cards (id, deck_id, template_id, content, state, due_at, stability,
                               difficulty, scheduled_days, learning_steps, reps, lapses,
@@ -201,7 +229,7 @@ fn insert_card_data(db: &Database, data: &InsertCardData, template: &Template) -
                 id,
                 data.deck_id,
                 data.template_id,
-                serde_json::to_string(&data.content)?,
+                content,
                 data.state.unwrap_or(0),
                 data.due_at,
                 // WHY: NULL here desyncs desktop IPC from web `z.number()`;
@@ -215,6 +243,21 @@ fn insert_card_data(db: &Database, data: &InsertCardData, template: &Template) -
                 data.last_reviewed_at,
                 now
             ],
+        )?;
+
+        let card = select_card(tx, &id)?.ok_or_else(|| AppError::new(error_codes::DB_ADD, None))?;
+        Capture::begin(tx)?.write(
+            &id,
+            None,
+            &Payload::CardCreate(wire::CardCreate {
+                deck_id: card.deck_id.clone(),
+                template_id: card.template_id.clone(),
+                content: content.clone(),
+                scheduling: scheduling_payload(&card),
+                created_at: card.created_at,
+                initial_product_ts: InitialProductTs::new(),
+                legacy_product_ts_floor: None,
+            }),
         )?;
 
         Ok(id)
@@ -242,16 +285,28 @@ pub fn update_card(db: &Database, data: UpdateCardData) -> Result<Card, AppError
         data.values.validate(&template.content.fields)?;
 
         let now = get_current_timestamp()?;
+        let content = serde_json::to_string(&data.values.content)?;
 
-        db.with_conn(|conn| {
-            conn.execute(
+        db.with_transaction(|tx| {
+            tx.execute(
                 r#"
                 UPDATE cards
                 SET content = ?1, updated_at = ?2
                 WHERE id = ?3
                 "#,
-                params![serde_json::to_string(&data.values.content)?, now, data.id],
+                params![content, now, data.id],
             )?;
+
+            if original.content != data.values.content {
+                Capture::begin(tx)?.write(
+                    &data.id,
+                    Some(&original.deck_id),
+                    &Payload::CardContent(wire::CardContent {
+                        content,
+                        updated_at: Some(now),
+                    }),
+                )?;
+            }
 
             Ok(())
         })?;
@@ -263,6 +318,7 @@ pub fn update_card(db: &Database, data: UpdateCardData) -> Result<Card, AppError
 pub fn delete_card(db: &Database, data: DeleteCardData) -> Result<(), AppError> {
     throw_known_error(error_codes::DB_DELETE, || {
         db.with_transaction(|tx| {
+            capture_card_delete(&mut Capture::begin(tx)?, tx, &data.id)?;
             tx.execute("DELETE FROM reviews WHERE card_id = ?1", params![data.id])?;
             tx.execute("DELETE FROM cards WHERE id = ?1", params![data.id])?;
 
@@ -290,6 +346,10 @@ pub fn delete_cards(db: &Database, data: DeleteCardsData) -> Result<(), AppError
         let params: Vec<&dyn rusqlite::ToSql> = data.ids.iter().map(|id| id as &dyn rusqlite::ToSql).collect();
 
         db.with_transaction(|tx| {
+            let mut capture = Capture::begin(tx)?;
+            for id in &data.ids {
+                capture_card_delete(&mut capture, tx, id)?;
+            }
             tx.execute(&reviews_sql, params.as_slice())?;
             tx.execute(&cards_sql, params.as_slice())?;
 
@@ -300,14 +360,17 @@ pub fn delete_cards(db: &Database, data: DeleteCardsData) -> Result<(), AppError
 
 pub fn reset_card_progress(db: &Database, data: ResetCardProgressData) -> Result<Card, AppError> {
     throw_known_error(error_codes::DB_UPDATE, || {
-        get_card(db, &data.id)?.ok_or_else(|| {
+        let card = get_card(db, &data.id)?.ok_or_else(|| {
             AppError::new(
                 error_codes::NOT_FOUND_CARDS_RESET_CARD,
                 Some(format!("Card id: {}", data.id)),
             )
         })?;
+        let now = get_current_timestamp()?;
 
         db.with_transaction(|tx| {
+            let mut capture = Capture::begin(tx)?;
+            capture.forget_card_reviews(&data.id)?;
             tx.execute("DELETE FROM reviews WHERE card_id = ?1", params![data.id])?;
 
             tx.execute(
@@ -322,6 +385,20 @@ pub fn reset_card_progress(db: &Database, data: ResetCardProgressData) -> Result
                     reset_to_new = fsrs_sql::eq_state("state", CardState::New),
                 ),
                 params![data.id],
+            )?;
+
+            // INVARIANT: reset publishes `cards.reset` and blank `cards.scheduling` in one commit, at one stamp
+            // (crates/koloda-sync-proto/PROTOCOL.md, Reset progress).
+            let reset = select_card(tx, &data.id)?.ok_or_else(|| AppError::new(error_codes::DB_UPDATE, None))?;
+            capture.write(
+                &data.id,
+                Some(&card.deck_id),
+                &Payload::CardReset(wire::CardReset { wall_ms: now }),
+            )?;
+            capture.write(
+                &data.id,
+                Some(&card.deck_id),
+                &Payload::CardScheduling(scheduling_payload(&reset)),
             )?;
 
             Ok(())
