@@ -2,7 +2,9 @@
 //!
 //! SQL only. Validation lives in `domain/decks`.
 
-use rusqlite::{params, OptionalExtension};
+use koloda_sync_proto::payload::{self as wire, InitialProductTs, Payload};
+use koloda_sync_proto::registry::Kind;
+use rusqlite::{params, Connection, OptionalExtension};
 
 use crate::app::db::Database;
 use crate::app::error::{error_codes, throw_known_error, AppError};
@@ -10,6 +12,7 @@ use crate::app::utility::{get_current_timestamp, minted_uuidv7};
 use crate::domain::common::{normalize_optional_notes, normalize_required_title};
 use crate::domain::decks::{Deck, DeleteDeckData, InsertDeckData, UpdateDeckData};
 use crate::repo::algorithms::get_algorithm;
+use crate::repo::sync::Capture;
 use crate::repo::templates::get_template;
 
 fn get_deck_row(row: &rusqlite::Row<'_>) -> Result<Deck, rusqlite::Error> {
@@ -72,22 +75,22 @@ pub fn get_decks_by_ids(db: &Database, ids: &[String]) -> Result<Vec<Deck>, AppE
 }
 
 pub fn get_deck(db: &Database, id: &str) -> Result<Option<Deck>, AppError> {
-    throw_known_error(error_codes::DB_GET, || {
-        db.with_conn(|conn| {
-            conn.query_row(
-                r#"
-                SELECT id, title, algorithm_id, template_id, created_at, updated_at, notes
-                FROM decks
-                WHERE id = ?1
-                LIMIT 1
-                "#,
-                params![id],
-                get_deck_row,
-            )
-            .optional()
-            .map_err(AppError::from)
-        })
-    })
+    throw_known_error(error_codes::DB_GET, || db.with_conn(|conn| select_deck(conn, id)))
+}
+
+fn select_deck(conn: &Connection, id: &str) -> Result<Option<Deck>, AppError> {
+    conn.query_row(
+        r#"
+        SELECT id, title, algorithm_id, template_id, created_at, updated_at, notes
+        FROM decks
+        WHERE id = ?1
+        LIMIT 1
+        "#,
+        params![id],
+        get_deck_row,
+    )
+    .optional()
+    .map_err(AppError::from)
 }
 
 pub fn add_deck(db: &Database, data: InsertDeckData) -> Result<Deck, AppError> {
@@ -110,14 +113,46 @@ pub fn add_deck(db: &Database, data: InsertDeckData) -> Result<Deck, AppError> {
         let now = get_current_timestamp()?;
         let title = normalize_required_title(&data.title);
 
-        let id = db.with_conn(|conn| {
+        let id = db.with_transaction(|tx| {
             let id = minted_uuidv7(None);
-            conn.execute(
+            tx.execute(
                 r#"
                 INSERT INTO decks (id, title, algorithm_id, template_id, created_at, updated_at)
                 VALUES (?1, ?2, ?3, ?4, ?5, NULL)
                 "#,
                 params![id, title, data.algorithm_id, data.template_id, now],
+            )?;
+
+            // INVARIANT: a deck create carries no pointers; its algorithm and template travel as same-commit
+            // update groups (crates/koloda-sync-proto/PROTOCOL.md, Existence and order).
+            let deck = select_deck(tx, &id)?.ok_or_else(|| AppError::new(error_codes::DB_ADD, None))?;
+            let mut capture = Capture::begin(tx)?;
+            capture.write(
+                &id,
+                None,
+                &Payload::DeckCreate(wire::DeckCreate {
+                    title: deck.title.clone(),
+                    notes: deck.notes.clone(),
+                    created_at: deck.created_at,
+                    initial_product_ts: InitialProductTs::new(),
+                    legacy_product_ts_floor: None,
+                }),
+            )?;
+            capture.write(
+                &id,
+                None,
+                &Payload::DeckAlgorithm(wire::DeckAlgorithm {
+                    algorithm_id: deck.algorithm_id.clone(),
+                    updated_at: deck.updated_at,
+                }),
+            )?;
+            capture.write(
+                &id,
+                None,
+                &Payload::DeckTemplate(wire::DeckTemplate {
+                    template_id: deck.template_id.clone(),
+                    updated_at: deck.updated_at,
+                }),
             )?;
 
             Ok(id)
@@ -154,8 +189,9 @@ pub fn update_deck(db: &Database, data: UpdateDeckData) -> Result<Deck, AppError
         let title = normalize_required_title(&data.values.title);
         let notes = normalize_optional_notes(data.values.notes.clone());
 
-        db.with_conn(|conn| {
-            conn.execute(
+        db.with_transaction(|tx| {
+            let original = select_deck(tx, &data.id)?;
+            tx.execute(
                 r#"
                 UPDATE decks
                 SET
@@ -176,6 +212,38 @@ pub fn update_deck(db: &Database, data: UpdateDeckData) -> Result<Deck, AppError
                 ],
             )?;
 
+            let Some(original) = original else {
+                return Ok(());
+            };
+            let updated_at = Some(now);
+            let mut capture = Capture::begin(tx)?;
+            if original.title != title {
+                capture.write(&data.id, None, &Payload::DeckTitle(wire::Title { title, updated_at }))?;
+            }
+            if original.notes != notes {
+                capture.write(&data.id, None, &Payload::DeckNotes(wire::Notes { notes, updated_at }))?;
+            }
+            if original.algorithm_id != data.values.algorithm_id {
+                capture.write(
+                    &data.id,
+                    None,
+                    &Payload::DeckAlgorithm(wire::DeckAlgorithm {
+                        algorithm_id: data.values.algorithm_id.clone(),
+                        updated_at,
+                    }),
+                )?;
+            }
+            if original.template_id != data.values.template_id {
+                capture.write(
+                    &data.id,
+                    None,
+                    &Payload::DeckTemplate(wire::DeckTemplate {
+                        template_id: data.values.template_id.clone(),
+                        updated_at,
+                    }),
+                )?;
+            }
+
             Ok(())
         })?;
 
@@ -186,6 +254,9 @@ pub fn update_deck(db: &Database, data: UpdateDeckData) -> Result<Deck, AppError
 pub fn delete_deck(db: &Database, data: DeleteDeckData) -> Result<(), AppError> {
     throw_known_error(error_codes::DB_DELETE, || {
         db.with_transaction(|tx| {
+            if select_deck(tx, &data.id)?.is_some() {
+                Capture::begin(tx)?.delete(Kind::Decks, &data.id, None, None)?;
+            }
             tx.execute(
                 r#"
                 DELETE FROM reviews

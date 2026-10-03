@@ -10,6 +10,7 @@ mod cards_sync_integration_tests;
 mod conversations_integration_tests;
 mod db_integration_tests;
 mod decks_integration_tests;
+mod decks_sync_integration_tests;
 mod e2e_learning_workflow_tests;
 mod lessons_integration_tests;
 mod lessons_sync_integration_tests;

@@ -71,7 +71,7 @@ Out:
   Commit: Capture grades as scheduling plus review
   Depends on: 2
 
-- [ ] 5. Capture deck writes
+- [x] 5. Capture deck writes
   Goal: `add_deck` emits `decks.create`, `decks.algorithm`, and `decks.template` in one cohort; `update_deck` emits only the changed groups among `title`, `notes`, `algorithm`, `template`; `delete_deck` emits one deck tombstone and nothing for its cards or reviews.
   Done when: integration tests cover create, each single-group edit, a no-op save, and delete.
   Commit: Capture deck writes for sync
