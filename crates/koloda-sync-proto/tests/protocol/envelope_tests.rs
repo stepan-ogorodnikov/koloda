@@ -139,7 +139,17 @@ fn decode_enforces_size_limits_at_the_limit_and_one_past() {
     let fitting = header_with_id_len(1_000 + MAX_HEADER_BYTES - base_len);
     let fitting_bytes = fitting.encode().unwrap();
     assert_eq!(fitting_bytes.len(), MAX_HEADER_BYTES);
-    assert_eq!(Header::decode(&fitting_bytes), Ok(fitting));
+    assert_eq!(Header::decode(&fitting_bytes), Ok(fitting.clone()));
+
+    let both_at_limit = Envelope {
+        header: fitting,
+        payload: vec![0; MAX_PAYLOAD_BYTES],
+    };
+    assert_eq!(
+        Envelope::decode(&both_at_limit.encode().unwrap()),
+        Ok(both_at_limit),
+        "frame overhead must fit beside a full header and a full payload"
+    );
 
     let oversized = header_with_id_len(1_001 + MAX_HEADER_BYTES - base_len)
         .encode()

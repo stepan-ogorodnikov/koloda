@@ -266,7 +266,6 @@ impl Payload {
         }
     }
 
-    /// The parent foreign key this payload carries itself, if any.
     pub fn parent(&self) -> Option<&str> {
         match self {
             Payload::CardCreate(create) => Some(&create.deck_id),
@@ -369,6 +368,7 @@ impl Payload {
             (Kind::SettingsLearning, Some(Group::LearnAheadLimit)) => {
                 Payload::LearningLearnAheadLimit(decode_cbor(bytes, part)?)
             }
+            // WHY: a validated header never names a group outside its kind; callers may pass an unvalidated one.
             (kind, Some(group)) => {
                 return Err(PayloadError::Envelope(EnvelopeError::Registry(
                     RegistryError::GroupNotInKind { kind, group },

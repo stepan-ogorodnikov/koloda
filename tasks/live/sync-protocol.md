@@ -45,7 +45,7 @@ Out:
 ## Plan
 
 - [x] 1. Add the koloda-sync-proto crate and its protocol contract
-  Goal: new library crate `crates/koloda-sync-proto`: workspace member in the root `Cargo.toml`, `serde` dependency, `[lints] workspace = true`, `src/lib.rs` with only a module doc pointing at `PROTOCOL.md` and the README.
+  Goal: new library crate `crates/koloda-sync-proto`: workspace member in the root `Cargo.toml` (dependencies arrive with the items that use them), `[lints] workspace = true`, `src/lib.rs` with only a module doc pointing at `PROTOCOL.md` and the README.
   `project.json` with `lint` and `test` targets shaped like `crates/koloda/project.json`; wire them into the root `check:rust` and `check:rust-push` scripts so `check:commit`, `check:push`, and CI run them, with nx cache inputs covering the new crate (the existing `koloda:lint` cache is keyed on `crates/koloda` only).
   `README.md` in the shape of `crates/koloda/README.md`: where it sits (linked by the future sync engine and server; never by the web host), architectural map, and "Does NOT own" (sync tables and apply, transport, the server, product behavior).
   `PROTOCOL.md`, transcribed from the draft: trust model; envelope header and what the server reads; field groups, classes, existence and order, registers, `updated_at`, apply rule, collision outcomes; deletes, cascades, reset, referent repair, arrivals; HLC, skew guards, cohorts, sender sequence, pull cursor, legacy backfill phases; devices and the behind/fork procedure; endpoints, push outcomes, holds, corrupt envelopes, lanes, cycle, outbox, backfill, bootstrap, metered pause; re-bootstrap, heal and authoritative restore; join probe, Add and Replace remint rules, re-attach; attachment refs, upload, download, lifetime, E2EE wire ids; schema versions; client sync tables; the accepted rulings (no change history, no rejected list); conformance cases.
@@ -85,10 +85,10 @@ Out:
 
 - [x] 5. Encode every schema-1 payload with a round-trip check
   Goal: wire structs for the payload of every registry group at schema 1, matching the column lists in `PROTOCOL.md`, including `initial_product_ts` on creates, `product_ts` on contributing groups, `wall_ms` on `cards.reset`, and the `successor` hint on algorithm deletes.
-  `encode_checked` encodes, decodes, and compares before returning bytes, so an encoder bug fails the caller's write.
+  `seal` builds the header from the payload, encodes, decodes, and compares before returning bytes, so an encoder bug fails the caller's write.
   Header builders derive `parent` and `refs` (hard and soft) from the payload, so they agree by construction.
   Constraints: dedicated wire structs; no dependency on `koloda`; one table-driven round-trip test across groups rather than one test per group.
-  Done when: every group round-trips; a lossy encoder fails `encode_checked` with its error; refs derived from a card payload name its template and its linked attachment ids.
+  Done when: every group round-trips; a payload that cannot round-trip (a NaN stability) fails `seal` with its error; refs derived from a card payload name its template and its linked attachment ids.
   Commit: Encode sync payloads with a round-trip check
   Depends on: 4
 
