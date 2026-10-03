@@ -17,6 +17,7 @@ Rust is the source of truth for the AI provider enum and secrets redaction; `@ko
 - Domain: `domain/` — cards (`CardState`), shared FSRS progress validators (`progress`), decks, templates, algorithms/`AlgorithmFSRS`, lessons, reviews, conversations (opaque `state`), settings slices (`LearningDefaults`, `DailyLimits`), `ai`, attachments (format sniffing, size cap), timestamp serde (`time`).
 - Repos: `repo/` — SQLite repos parallel to `@koloda/db-sqlite` (plus AI secrets redaction/reconstruction). Owns `rusqlite` adapters (e.g. `FromSql` for `SettingsName`).
   `repo/attachment_bytes.rs` is the only reader and writer of `attachment_bytes` (`docs/decisions/MEDIA-STORAGE.md`).
+  `repo/sync.rs` owns the `sync_*` tables: device enrollment and `Capture`, which product writes use to record sync envelopes.
 - App runtime: `app/` — DB connection (`parse_json_column` for JSON TEXT columns), init/seed, keyring secrets, clock/UUID helpers.
 - Shared errors: `app::error` (`AppError` + `error_codes`) is the intentional crate-wide error type. Domain validation returns it so codes stay aligned with `@koloda/app`; domain must not import `rusqlite`.
 - Migrations: `migrations/` — owned Refinery SQL embedded via `embed_migrations!`.

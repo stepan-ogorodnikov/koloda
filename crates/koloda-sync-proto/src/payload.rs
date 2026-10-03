@@ -274,6 +274,41 @@ impl Payload {
         }
     }
 
+    /// The group's product timestamp (`updated_at`), stored on the register as `product_ts`.
+    pub fn product_ts(&self) -> Option<i64> {
+        match self {
+            Payload::CardContent(value) => value.updated_at,
+            Payload::DeckTitle(value) | Payload::TemplateTitle(value) | Payload::AlgorithmTitle(value) => {
+                value.updated_at
+            }
+            Payload::DeckNotes(value) | Payload::TemplateNotes(value) | Payload::AlgorithmNotes(value) => {
+                value.updated_at
+            }
+            Payload::DeckAlgorithm(value) => value.updated_at,
+            Payload::DeckTemplate(value) => value.updated_at,
+            Payload::TemplateStructure(value) | Payload::AlgorithmContent(value) => value.updated_at,
+            _ => None,
+        }
+    }
+
+    pub fn initial_product_ts(&self) -> Option<&InitialProductTs> {
+        match self {
+            Payload::CardCreate(value) => Some(&value.initial_product_ts),
+            Payload::DeckCreate(value) => Some(&value.initial_product_ts),
+            Payload::TemplateCreate(value) | Payload::AlgorithmCreate(value) => Some(&value.initial_product_ts),
+            _ => None,
+        }
+    }
+
+    pub fn legacy_product_ts_floor(&self) -> Option<i64> {
+        match self {
+            Payload::CardCreate(value) => value.legacy_product_ts_floor,
+            Payload::DeckCreate(value) => value.legacy_product_ts_floor,
+            Payload::TemplateCreate(value) | Payload::AlgorithmCreate(value) => value.legacy_product_ts_floor,
+            _ => None,
+        }
+    }
+
     pub fn refs(&self) -> Refs {
         let mut refs = Refs::default();
         match self {

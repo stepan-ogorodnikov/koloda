@@ -15,6 +15,7 @@ This file only tells you where to start.
 | FSRS progress field bounds | `src/domain/progress.rs` |
 | Daily-limit / review-totals policy | `src/domain/reviews.rs::calculate_todays_review_totals` |
 | Review row writes | `src/repo/reviews.rs::insert_review` |
+| A product write path (sync capture) | `src/repo/sync.rs::Capture` + `crates/koloda-sync-proto/PROTOCOL.md` (§Field groups and merge) |
 | Schema / migrations | `agents/DB.md` |
 | AI provider enum / secrets redaction | `agents/ADD-AI-PROVIDER.md` |
 | Hotkeys settings | `agents/ADD-HOTKEY.md` |
@@ -61,6 +62,12 @@ so card-progress and review namespaces stay distinct.
 **Review totals policy** — `calculate_todays_review_totals` in `src/domain/reviews.rs` is pure.
 
 - Keep it in sync with `calculateTodaysReviewTotals` in `libs/srs/src/lib/reviews.ts`.
+
+**Sync capture** — every product write path opens `Capture::begin` inside its transaction.
+
+- Record only the field groups whose values changed; a save that changes nothing records nothing.
+- Call `Capture::delete` before deleting product rows; it reads descendants to forget their registers.
+- Capture is a no-op until the database is enrolled, so web parity and non-sync tests are unaffected.
 
 **Review writes** — `insert_review` in `src/repo/reviews.rs` is the single write path (`pub(crate)`).
 

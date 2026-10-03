@@ -825,7 +825,9 @@ Each row holds the fully encoded envelope, its digest, `commit_id`, and an in-fl
 There is at most one not-in-flight row per group.
 A second local write to the same group deletes that row and inserts a new envelope at the tail seq.
 An in-flight row is never changed; the new write is a new tail row.
-A delete replaces a not-in-flight create or update the same way.
+A delete is appended at the tail and replaces nothing.
+The entity's earlier pending rows still push first, so a pending child never names a parent the server has not seen;
+the tombstone then removes both.
 
 Lost response: retry the same bytes; do not re-stamp or coalesce into that seq.
 

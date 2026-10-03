@@ -40,6 +40,7 @@ These numeric/serde edges are deliberately not mirrored; do not re-flag them as 
 
 - Rust `i32` upper bounds are not mirrored in Zod (e.g. `reviews.time` rejects negatives on both sides, but only serde rejects values past 2^31−1). Values that large are nonsense for the fields involved.
 - FSRS learning-step amounts are `i64` in Rust vs the safe-integer bound (2^53) in Zod (`learningStepValidation` in `libs/srs/src/lib/algorithms-fsrs.ts`). Step durations can never approach either limit.
+- Desktop repos also write sync bookkeeping (`sync_*` tables) in the same transaction as each product write; the web repos do not, because the web host does not sync (`docs/decisions/APP-ROLES.md`). The `sync_*` tables still exist on both hosts through the shared migration series.
 - Rust `Option<T>` accepts an explicit JSON `null` where the TS twin uses `.optional()` (which rejects `null`, accepting only absence). Renderer payloads never carry explicit nulls (`toWire` drops `undefined`), so the leniency is reachable only by hand-crafted input, where failing open on desktop is harmless.
 
 ## Why

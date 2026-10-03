@@ -4,6 +4,7 @@ use koloda::app::db::Database;
 use serde_json::json;
 
 pub mod fixtures;
+pub mod sync;
 
 pub fn test_db() -> Database {
     Database::in_memory().expect("in-memory database should initialize")

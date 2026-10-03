@@ -955,6 +955,7 @@ dependencies = [
  "chrono-tz",
  "json-patch",
  "keyring",
+ "koloda-sync-proto",
  "refinery",
  "rusqlite",
  "serde",

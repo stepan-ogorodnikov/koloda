@@ -48,7 +48,7 @@ Out:
   Commit: Add sync bookkeeping tables and device enrollment
   Depends on: none
 
-- [ ] 2. Record a commit's envelopes in the outbox
+- [x] 2. Record a commit's envelopes in the outbox
   Goal: a capture session opened inside a repo transaction when the database is enrolled: it ticks the HLC once from `sync_state` and the wall clock, mints one `commit_id`, seals each write with `koloda_sync_proto::payload::seal`, assigns consecutive `sender_seq`s, writes the register (`sync_stamps`) or origin (`sync_origins`), the tombstone row for deletes, the outbox row, and one `local` cohort row, and persists the clock and next seq.
   A second write to a group whose not-in-flight outbox row exists deletes that row and appends a new one at the tail.
   A session on a database that is not enrolled does nothing.
