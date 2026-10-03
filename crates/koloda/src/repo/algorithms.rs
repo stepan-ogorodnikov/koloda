@@ -2,6 +2,8 @@
 //!
 //! SQL only. Validation lives in `domain/algorithms`.
 
+use koloda_sync_proto::payload::{self as wire, InitialProductTs, Payload};
+use koloda_sync_proto::registry::Kind;
 use rusqlite::{params, Connection, OptionalExtension};
 
 use crate::app::db::{parse_json_column, Database};
@@ -14,6 +16,7 @@ use crate::domain::algorithms::{
 use crate::domain::algorithms_fsrs::AlgorithmFSRS;
 use crate::domain::common::{normalize_optional_notes, normalize_required_title};
 use crate::repo::settings;
+use crate::repo::sync::Capture;
 
 fn get_algorithm_row(row: &rusqlite::Row<'_>) -> Result<Algorithm, rusqlite::Error> {
     let content_str: String = row.get(2)?;
@@ -108,22 +111,56 @@ pub(crate) fn insert_algorithm(
         "#,
         params![id, title, content, now],
     )?;
-    insert_algorithm_revision(conn, &id, &content, now)?;
+    let revision = insert_algorithm_revision(conn, &id, &content, now)?;
+
+    let mut capture = Capture::begin(conn)?;
+    capture.write(
+        &id,
+        None,
+        &Payload::AlgorithmCreate(wire::DocumentCreate {
+            title,
+            notes: None,
+            content,
+            created_at: now,
+            initial_product_ts: InitialProductTs::new(),
+            legacy_product_ts_floor: None,
+        }),
+    )?;
+    capture.write(&revision.id, None, &Payload::AlgorithmRevision(revision.payload))?;
 
     Ok(id)
 }
 
-fn insert_algorithm_revision(conn: &Connection, algorithm_id: &str, content: &str, now: i64) -> Result<(), AppError> {
+struct InsertedRevision {
+    id: String,
+    payload: wire::AlgorithmRevision,
+}
+
+fn insert_algorithm_revision(
+    conn: &Connection,
+    algorithm_id: &str,
+    content: &str,
+    now: i64,
+) -> Result<InsertedRevision, AppError> {
+    let id = minted_uuidv7(None);
     let actor = serde_json::to_string(&AlgorithmRevisionActor::User)?;
     conn.execute(
         r#"
         INSERT INTO algorithm_revisions (id, algorithm_id, content, actor, created_at)
         VALUES (?1, ?2, ?3, ?4, ?5)
         "#,
-        params![minted_uuidv7(None), algorithm_id, content, actor, now],
+        params![id, algorithm_id, content, actor, now],
     )?;
 
-    Ok(())
+    Ok(InsertedRevision {
+        id,
+        payload: wire::AlgorithmRevision {
+            algorithm_id: algorithm_id.to_string(),
+            content: content.to_string(),
+            actor,
+            created_at: now,
+        },
+    })
 }
 
 pub fn update_algorithm(db: &Database, data: UpdateAlgorithmData) -> Result<Algorithm, AppError> {
@@ -135,13 +172,17 @@ pub fn update_algorithm(db: &Database, data: UpdateAlgorithmData) -> Result<Algo
         let notes = normalize_optional_notes(data.values.notes.clone());
 
         db.with_transaction(|tx| {
-            let existing_content = tx
+            let (existing_title, existing_notes, existing_content) = tx
                 .query_row(
-                    "SELECT content FROM algorithms WHERE id = ?1",
+                    "SELECT title, notes, content FROM algorithms WHERE id = ?1",
                     params![data.id],
                     |row| {
-                        let content_str: String = row.get(0)?;
-                        parse_json_column::<AlgorithmFSRS>(0, &content_str)
+                        let content_str: String = row.get(2)?;
+                        Ok((
+                            row.get::<_, String>(0)?,
+                            row.get::<_, Option<String>>(1)?,
+                            parse_json_column::<AlgorithmFSRS>(2, &content_str)?,
+                        ))
                     },
                 )
                 .optional()?
@@ -165,10 +206,32 @@ pub fn update_algorithm(db: &Database, data: UpdateAlgorithmData) -> Result<Algo
                 "#,
                 params![title, content, notes, now, data.id],
             )?;
+            let updated_at = Some(now);
+            let mut capture = Capture::begin(tx)?;
+            if existing_title != title {
+                capture.write(
+                    &data.id,
+                    None,
+                    &Payload::AlgorithmTitle(wire::Title { title, updated_at }),
+                )?;
+            }
+            if existing_notes != notes {
+                capture.write(
+                    &data.id,
+                    None,
+                    &Payload::AlgorithmNotes(wire::Notes { notes, updated_at }),
+                )?;
+            }
             // WHY: title and notes are not parameters, so only a content change is a revision.
             // Twin of TS `updateAlgorithm`.
             if existing_content != data.values.content {
-                insert_algorithm_revision(tx, &data.id, &content, now)?;
+                let revision = insert_algorithm_revision(tx, &data.id, &content, now)?;
+                capture.write(
+                    &data.id,
+                    None,
+                    &Payload::AlgorithmContent(wire::JsonContent { content, updated_at }),
+                )?;
+                capture.write(&revision.id, None, &Payload::AlgorithmRevision(revision.payload))?;
             }
 
             Ok(())
@@ -212,6 +275,8 @@ pub fn delete_algorithm(db: &Database, data: DeleteAlgorithmData) -> Result<(), 
                 return Err(AppError::new(error_codes::VALIDATION_ALGORITHMS_DELETE_LAST, None));
             }
 
+            let mut capture = Capture::begin(tx)?;
+            let mut successor: Option<String> = None;
             let has_decks: bool = tx
                 .query_row(
                     r#"
@@ -260,6 +325,11 @@ pub fn delete_algorithm(db: &Database, data: DeleteAlgorithmData) -> Result<(), 
                     ));
                 }
 
+                let reassigned: Vec<(String, Option<i64>)> = tx
+                    .prepare("SELECT id, updated_at FROM decks WHERE algorithm_id = ?1")?
+                    .query_map(params![data.id], |row| Ok((row.get(0)?, row.get(1)?)))?
+                    .collect::<Result<_, _>>()?;
+
                 tx.execute(
                     r#"
                 UPDATE decks
@@ -268,8 +338,30 @@ pub fn delete_algorithm(db: &Database, data: DeleteAlgorithmData) -> Result<(), 
                 "#,
                     params![successor_id, data.id],
                 )?;
+
+                // WHY: the reassignment leaves `decks.updated_at` alone, so each pointer keeps the deck's
+                // current product timestamp; it never raises the deck's `updated_at` on another device.
+                for (deck_id, updated_at) in reassigned {
+                    capture.write(
+                        &deck_id,
+                        None,
+                        &Payload::DeckAlgorithm(wire::DeckAlgorithm {
+                            algorithm_id: successor_id.clone(),
+                            updated_at,
+                        }),
+                    )?;
+                }
+                successor = Some(successor_id);
             }
 
+            let does_algorithm_exist: bool = tx.query_row(
+                "SELECT COUNT(*) > 0 FROM algorithms WHERE id = ?1",
+                params![data.id],
+                |row| row.get(0),
+            )?;
+            if does_algorithm_exist {
+                capture.delete(Kind::Algorithms, &data.id, None, successor.as_deref())?;
+            }
             tx.execute("DELETE FROM algorithms WHERE id = ?1", params![data.id])?;
 
             Ok(())

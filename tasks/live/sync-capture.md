@@ -77,7 +77,7 @@ Out:
   Commit: Capture deck writes for sync
   Depends on: 2
 
-- [ ] 6. Capture template and algorithm writes
+- [x] 6. Capture template and algorithm writes
   Goal: templates: add and clone emit `templates.create`; update emits changed groups among `title`, `notes`, `structure`; delete emits a tombstone.
   Algorithms: add and clone emit `algorithms.create` plus the `algorithm_revisions.row` the repo records; update emits changed groups among `title`, `notes`, `content`, plus the revision row when parameters changed; delete emits `decks.algorithm` for every reassigned deck and then the tombstone with the `successor` hint, in one cohort.
   Done when: integration tests cover each path, including a parameter save that emits a revision and a title-only save that does not.

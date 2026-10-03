@@ -2,6 +2,8 @@
 //!
 //! SQL only. Validation lives in `domain/templates`.
 
+use koloda_sync_proto::payload::{self as wire, InitialProductTs, Payload};
+use koloda_sync_proto::registry::Kind;
 use rusqlite::{params, Connection, OptionalExtension};
 
 use crate::app::db::{parse_json_column, Database};
@@ -13,6 +15,7 @@ use crate::domain::templates::{
     UpdateTemplateData,
 };
 use crate::repo::settings;
+use crate::repo::sync::Capture;
 
 fn get_template_row(row: &rusqlite::Row<'_>) -> Result<Template, rusqlite::Error> {
     let content_str: String = row.get(2)?;
@@ -142,7 +145,7 @@ pub fn add_template(db: &Database, data: InsertTemplateData) -> Result<Template,
         data.validate()?;
         let now = get_current_timestamp()?;
 
-        let id = db.with_conn(|conn| insert_template(conn, &data, now, None))?;
+        let id = db.with_transaction(|tx| insert_template(tx, &data, now, None))?;
 
         get_template(db, &id)?.ok_or_else(|| AppError::new(error_codes::DB_ADD, None))
     })
@@ -164,15 +167,51 @@ pub(crate) fn insert_template(
 ) -> Result<String, AppError> {
     let id = minted_uuidv7(id);
     let title = normalize_required_title(&data.title);
+    let content = serde_json::to_string(&data.content)?;
     conn.execute(
         r#"
         INSERT INTO templates (id, title, content, created_at, updated_at)
         VALUES (?1, ?2, ?3, ?4, NULL)
         "#,
-        params![id, title, serde_json::to_string(&data.content)?, now],
+        params![id, title, content, now],
+    )?;
+
+    Capture::begin(conn)?.write(
+        &id,
+        None,
+        &Payload::TemplateCreate(wire::DocumentCreate {
+            title,
+            notes: None,
+            content,
+            created_at: now,
+            initial_product_ts: InitialProductTs::new(),
+            legacy_product_ts_floor: None,
+        }),
     )?;
 
     Ok(id)
+}
+
+struct StoredTemplate {
+    title: String,
+    notes: Option<String>,
+    content: String,
+}
+
+fn select_stored_template(conn: &Connection, id: &str) -> Result<Option<StoredTemplate>, AppError> {
+    conn.query_row(
+        "SELECT title, notes, content FROM templates WHERE id = ?1",
+        params![id],
+        |row| {
+            Ok(StoredTemplate {
+                title: row.get(0)?,
+                notes: row.get(1)?,
+                content: row.get(2)?,
+            })
+        },
+    )
+    .optional()
+    .map_err(AppError::from)
 }
 
 pub fn is_template_locked(db: &Database, id: &str) -> Result<bool, AppError> {
@@ -207,8 +246,11 @@ pub fn update_template(db: &Database, data: UpdateTemplateData) -> Result<Templa
         let title = normalize_required_title(&data.values.title);
         let notes = normalize_optional_notes(data.values.notes.clone());
 
-        db.with_conn(|conn| {
-            conn.execute(
+        let content = serde_json::to_string(&data.values.content)?;
+
+        db.with_transaction(|tx| {
+            let stored = select_stored_template(tx, &data.id)?;
+            tx.execute(
                 r#"
                 UPDATE templates
                 SET
@@ -218,8 +260,35 @@ pub fn update_template(db: &Database, data: UpdateTemplateData) -> Result<Templa
                     updated_at = ?4
                 WHERE id = ?5
                 "#,
-                params![title, serde_json::to_string(&data.values.content)?, notes, now, data.id],
+                params![title, content, notes, now, data.id],
             )?;
+
+            let Some(stored) = stored else {
+                return Ok(());
+            };
+            let updated_at = Some(now);
+            let mut capture = Capture::begin(tx)?;
+            if stored.title != title {
+                capture.write(
+                    &data.id,
+                    None,
+                    &Payload::TemplateTitle(wire::Title { title, updated_at }),
+                )?;
+            }
+            if stored.notes != notes {
+                capture.write(
+                    &data.id,
+                    None,
+                    &Payload::TemplateNotes(wire::Notes { notes, updated_at }),
+                )?;
+            }
+            if stored.content != content {
+                capture.write(
+                    &data.id,
+                    None,
+                    &Payload::TemplateStructure(wire::JsonContent { content, updated_at }),
+                )?;
+            }
 
             Ok(())
         })?;
@@ -275,6 +344,9 @@ pub fn delete_template(db: &Database, data: DeleteTemplateData) -> Result<(), Ap
                 return Err(AppError::new(error_codes::VALIDATION_TEMPLATES_DELETE_USED, None));
             }
 
+            if select_stored_template(tx, &data.id)?.is_some() {
+                Capture::begin(tx)?.delete(Kind::Templates, &data.id, None, None)?;
+            }
             tx.execute("DELETE FROM templates WHERE id = ?1", params![data.id])?;
             Ok(())
         })

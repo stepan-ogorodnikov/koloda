@@ -4,6 +4,7 @@ mod common;
 
 mod ai_integration_tests;
 mod algorithms_integration_tests;
+mod algorithms_sync_integration_tests;
 mod attachments_integration_tests;
 mod cards_integration_tests;
 mod cards_sync_integration_tests;
@@ -20,3 +21,4 @@ mod seed_integration_tests;
 mod settings_integration_tests;
 mod sync_integration_tests;
 mod templates_integration_tests;
+mod templates_sync_integration_tests;
