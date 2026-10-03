@@ -31,11 +31,11 @@ Out:
 
 ## Open questions
 
-- [ ] Area guides? — open; to be routed by the human. Likely `agents/RUST.md`, `agents/DB.md`, `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md`, `agents/TESTING.md`, `agents/CODE-DOCUMENTATION.md`, `crates/koloda-sync-proto/PROTOCOL.md`.
-- [ ] Where do sync tables live? — open. `agents/DB.md` says to add `sync_*` tables to the one shared migration series, so web databases would create them and never write them. `PROTOCOL.md` (§Client state, ruling 21) still calls them native-only, a leftover from the dual-dialect era. Recommendation: follow `agents/DB.md`; reword `PROTOCOL.md` to "only native hosts write them".
-- [ ] Add `cards.reviews_reset_at` now? — open. `PROTOCOL.md` names it as the receiver's display copy of a reset's `wall_ms`, but nothing displays it and backfill no longer needs it (surviving pre-sync reviews are already post-reset). Recommendation: defer it to the feature that shows reset time; capture takes `wall_ms` from the commit's wall clock, and `PROTOCOL.md` stops calling the column part of the footprint.
-- [ ] How does the TS ↔ Rust mirroring decision treat Rust-only capture? — open. Recommendation: add an accepted divergence to `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md`: native repos also write sync bookkeeping; the web repos do not, because the web host does not sync.
-- [ ] Capture when an entity it references is unstamped (a pre-enrollment row)? — open. Recommendation: in this task, enrollment is only exercised on databases whose rows are all created after it; the backfill task adds capture-on-touch. No runtime guard now.
+- [x] Area guides? — `agents/RUST.md`, `agents/DB.md`, `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md`, `agents/TESTING.md`, `agents/CODE-DOCUMENTATION.md`, `agents/MARKDOWN.md` for doc edits, and `crates/koloda-sync-proto/PROTOCOL.md`; self-review adds `agents/REVIEW.md`.
+- [x] Where do sync tables live? — in the one shared migration series, per `agents/DB.md`; web databases create them and never write them. `PROTOCOL.md` (§Client state, ruling 21) is reworded to "only native hosts write them".
+- [x] Add `cards.reviews_reset_at` now? — no; deferred to the feature that shows reset time. Nothing displays it, and backfill does not need it (surviving pre-sync reviews are already post-reset). Capture takes `wall_ms` from the commit's wall clock; `PROTOCOL.md` stops calling the column part of the footprint.
+- [x] How does the TS ↔ Rust mirroring decision treat Rust-only capture? — as an accepted divergence in `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md`: native repos also write sync bookkeeping; the web repos do not, because the web host does not sync.
+- [x] Capture when an entity it references is unstamped (a pre-enrollment row)? — no runtime guard now; tests enroll only databases whose rows are all created after enrollment, and the backfill task adds capture-on-touch.
 
 ## Plan
 
@@ -45,7 +45,7 @@ Out:
   Constraints: per `agents/DB.md` (next V, never edit applied files, `IF NOT EXISTS`, no backticks, timestamps as unix-ms integers, blobs for bytes); no product table changes; per the open question on placement.
   Update `crates/koloda-sync-proto/PROTOCOL.md` (§Client state, rulings) per the open questions on table placement and `cards.reviews_reset_at`.
   Done when: `cargo test -p koloda` green including the inventory; `bunx nx test @koloda/db-sqlite` green after rebuilding the web bundle; enrollment round-trips in an integration test.
-  Commit: <candidates presented in chat>
+  Commit: Add sync bookkeeping tables and device enrollment
   Depends on: none
 
 - [ ] 2. Record a commit's envelopes in the outbox
@@ -55,39 +55,39 @@ Out:
   Add the accepted divergence to `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md` per the open question; add the `sync` module to the architectural map in `crates/koloda/README.md`; add an `agents/RUST.md` routing row and per-task note: every product write path opens a capture session in its transaction.
   Constraints: one HLC and one `commit_id` per transaction; seal failures fail the transaction; no repo call sites yet.
   Done when: integration tests drive a session directly and assert outbox order, shared stamp and commit id, register and origin rows, coalescing, and no rows when not enrolled.
-  Commit: <candidates presented in chat>
+  Commit: Record each commit's sync envelopes in the outbox
   Depends on: 1
 
 - [ ] 3. Capture card writes
   Goal: `add_card` / `add_cards` emit `cards.create` (deck as parent, template ref, attachment refs from content, initial scheduling); `update_card` emits `cards.content` only when content changed; `delete_card` / `delete_cards` emit one tombstone per card with the deck as parent; `reset_card_progress` emits `cards.reset` (`wall_ms` = commit wall time) and blank `cards.scheduling` in one cohort.
   Constraints: product SQL and behavior unchanged; capture inside the existing transactions.
   Done when: integration tests per path decode the outbox and assert groups, parent, refs, payload values, one stamp per commit, and that a no-op content save emits nothing.
-  Commit: <candidates presented in chat>
+  Commit: Capture card writes for sync
   Depends on: 2
 
 - [ ] 4. Capture grades
   Goal: `submit_lesson_result` emits `cards.scheduling` with the new scheduling and `reviews.row` with the card as parent, in one cohort.
   Done when: an integration test decodes both envelopes at one stamp and checks their values against the stored rows.
-  Commit: <candidates presented in chat>
+  Commit: Capture grades as scheduling plus review
   Depends on: 2
 
 - [ ] 5. Capture deck writes
   Goal: `add_deck` emits `decks.create`, `decks.algorithm`, and `decks.template` in one cohort; `update_deck` emits only the changed groups among `title`, `notes`, `algorithm`, `template`; `delete_deck` emits one deck tombstone and nothing for its cards or reviews.
   Done when: integration tests cover create, each single-group edit, a no-op save, and delete.
-  Commit: <candidates presented in chat>
+  Commit: Capture deck writes for sync
   Depends on: 2
 
 - [ ] 6. Capture template and algorithm writes
   Goal: templates: add and clone emit `templates.create`; update emits changed groups among `title`, `notes`, `structure`; delete emits a tombstone.
   Algorithms: add and clone emit `algorithms.create` plus the `algorithm_revisions.row` the repo records; update emits changed groups among `title`, `notes`, `content`, plus the revision row when parameters changed; delete emits `decks.algorithm` for every reassigned deck and then the tombstone with the `successor` hint, in one cohort.
   Done when: integration tests cover each path, including a parameter save that emits a revision and a title-only save that does not.
-  Commit: <candidates presented in chat>
+  Commit: Capture template and algorithm writes for sync
   Depends on: 2
 
 - [ ] 7. Capture learning settings writes
   Goal: setting or patching `learning` emits one envelope per changed key group: `defaults.algorithm`, `defaults.template` (with refs), `dailyLimits`, `dayStartsAt`, `learnAheadLimit`, each value as its JSON text; other settings slices emit nothing.
   Done when: integration tests cover a single-key change, a multi-key change in one cohort, and a no-op save.
-  Commit: <candidates presented in chat>
+  Commit: Capture learning settings writes per key
   Depends on: 2
 
 ## Outcome
