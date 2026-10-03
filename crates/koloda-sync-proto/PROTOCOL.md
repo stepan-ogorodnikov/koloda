@@ -147,6 +147,12 @@ Writes to different groups of the same entity never conflict.
 Every envelope carries a random `commit_id`.
 All envelopes captured by one local transaction share it and one stamp.
 
+The header `op` is `write` or `delete`.
+A write names one group of its kind; the group's class decides whether it creates, updates, or inserts.
+A delete names no group and tombstones the whole entity.
+Only cards, decks, templates, and algorithms have deletes.
+Kinds, groups, ops, and lanes travel as the strings in the tables below.
+
 | Kind | Group | Class | Columns | Lane |
 | --- | --- | --- | --- | --- |
 | `cards` | `create` | create | Whole row as inserted, including `deck_id` and `template_id` | hot |
@@ -396,7 +402,7 @@ Reviews never get tombstones of their own.
 A 50k-card deck delete is a single envelope, applied in chunks on both sides.
 
 A card's `deck_id` and `template_id` are fixed at creation and never appear in an update group.
-That is what makes the cascade by ancestry a single envelope.
+That is what makes the cascade by ancestry a single envelope (`docs/decisions/FIXED-CARD-PARENTS.md`).
 
 ### Reset progress
 
@@ -1093,7 +1099,7 @@ Change one only by a new decision, not by editing rules in passing.
 2. Product timestamps (`created_at`, `updated_at`, `last_reviewed_at`, reset time, UUIDv7 time) are never merge keys
    or distributed order.
 3. Every referenced kind publishes an immutable `create`; there is no upsert class.
-4. Envelope `parent`, `cards.deck_id`, and `cards.template_id` are immutable.
+4. Envelope `parent`, `cards.deck_id`, and `cards.template_id` are immutable (`docs/decisions/FIXED-CARD-PARENTS.md`).
 5. A card whose deck or template is tombstoned is dropped rather than rescued.
 6. Reviews have no tombstones; they die with their card or under `cards.reset`.
 7. The seed algorithm and seed template are undeletable.

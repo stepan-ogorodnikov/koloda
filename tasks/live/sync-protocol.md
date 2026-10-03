@@ -56,13 +56,14 @@ Out:
   Commit: Add the koloda-sync-proto crate with its protocol contract
   Depends on: none
 
-- [ ] 2. Define the kind and field-group registry
+- [x] 2. Define the kind and field-group registry
   Goal: `Kind`, `Group`, `Op`, `Class` (create, update, immutable), `Lane` (hot, cold), and one registry entry per kind listing its groups with class, lane, parent kind, hard refs, soft refs, and whether the group contributes to `updated_at`, as the field-group and refs tables in `PROTOCOL.md`: cards (create, content, scheduling, reset), reviews (row), decks (create, title, notes, algorithm, template), templates (create, title, notes, structure), algorithms (create, title, notes, content), algorithm_revisions (row), settings.learning (defaults.algorithm, defaults.template, dailyLimits, dayStartsAt, learnAheadLimit).
-  A header allowlist accepts a `(kind, group, op, lane)` only when the registry allows it: delete only on kinds that have tombstones (not reviews, revisions, or settings), no update op on immutable groups, lane matching the kind.
+  The header `op` is `write` (names a group; the group's class decides create, update, or immutable insert) or `delete` (names no group).
+  A header allowlist accepts a `(kind, group, op)` only when the registry allows it: the group belongs to the kind, a write names a group, a delete names none and targets a kind with tombstones (not reviews, revisions, or settings); a lane check accepts a kind only in its own lane.
   Add `docs/decisions/FIXED-CARD-PARENTS.md` per `agents/DECISIONS.md`: a card's deck and template are fixed at creation and never appear in an update group; a feature that moves a card or changes its template must first pick a delete-cascade strategy (birth parent, per-card tombstones, or server-reported deaths); why: sync cascades a deck or template delete to cards by the parent and template recorded at creation.
   Point at it from `PROTOCOL.md` and from a new `agents/INDEX.md` Authoring row for moving a card or changing its template (with `docs/specs/CARDS.md`).
   Constraints: string ids on the wire for kinds and groups; no payload types yet; tests in one test crate root `tests/protocol/main.rs` with modules, no extra roots.
-  Done when: one table-driven allowlist test covers accepted triples and each rejection (unknown kind, unknown group, delete on a kind without tombstones, update on an immutable group, lane mismatch) with exact error variants; `cargo test -p koloda-sync-proto` green.
+  Done when: one table-driven allowlist test covers accepted triples and each rejection (unknown kind, group, or op; group not in the kind; write without a group; delete with a group; delete on a kind without tombstones) with exact error variants, plus a lane test; `cargo test -p koloda-sync-proto` green.
   Commit: Define the sync kind and field-group registry
   Depends on: 1
 

@@ -42,6 +42,7 @@ The listed files are relative to the repo root.
 | Assistant conversation list (create, name, unread, clone, delete) | `docs/specs/ASSISTANT-CONVERSATION-LIST.md`, `agents/ASSISTANT-MAP.md` |
 | Assistant chat (anything else) | `agents/ASSISTANT-MAP.md` (it routes to one spec and the files) |
 | Cards (content, state, add/edit/delete, views) | `docs/specs/CARDS.md` |
+| Move a card between decks or change a card's template | `docs/specs/CARDS.md`, `docs/decisions/FIXED-CARD-PARENTS.md` |
 | Card images (insert, formats, where they show) | `docs/specs/MEDIA.md` |
 | Decks (create, edit algorithm/template, delete) | `docs/specs/DECKS.md` |
 | Lessons (overview, today's progress, session, amounts, grading, learn-ahead) | `docs/specs/LESSONS.md` |

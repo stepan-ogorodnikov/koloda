@@ -2,8 +2,14 @@
 name = "koloda-sync-proto"
 version = "0.0.1"
 edition = "2021"
+# One explicit test binary (`protocol`). Do not add `tests/*.rs` crate roots.
+autotests = false
 
 [lints]
 workspace = true
+
+[[test]]
+name = "protocol"
+path = "tests/protocol/main.rs"
 
 [dependencies]

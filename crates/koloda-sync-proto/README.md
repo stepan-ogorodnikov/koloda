@@ -14,6 +14,7 @@ The server links only this crate, never `koloda`, so nothing here may depend on 
 ## Architectural Map
 
 - `src/lib.rs` — crate root.
+- `src/registry.rs` — kinds, field groups, classes, lanes, parents, refs, and the header allowlist.
 
 ### Does NOT own (prevent scope creep)
 
