@@ -73,7 +73,8 @@ describe("attachments repository integration", () => {
 
   // WHY: guards the wa-sqlite heap reservation in db.ts — cap-sized blobs must not grow
   // WASM memory mid-read and corrupt what comes back.
-  it("writes and reads back three cap-sized blobs in a row", async () => {
+  // WHY: ~1.4s locally, but past the 5s default on a CI runner busy with the Rust build.
+  it("writes and reads back three cap-sized blobs in a row", { timeout: 20_000 }, async () => {
     const { db } = testDb;
     const blobs = [1, 2, 3].map((fill) => pngOfLength(ATTACHMENT_MAX_BYTES, fill));
 
