@@ -1142,6 +1142,8 @@ The server's attachment store is re-uploaded under the new names.
 
 `schema` is a per-kind integer.
 Any change to a payload shape bumps it, including adding or removing a group.
+The golden envelopes in this crate's `fixtures/` pin the bytes of every group at its current schema.
+A change that alters them changes the wire, so it needs a schema bump once any device has written that schema.
 A client reads every version of a kind up to its own, filling newer fields with defaults.
 
 The server stores one `write_schema[kind]`, the only version accepted on push.

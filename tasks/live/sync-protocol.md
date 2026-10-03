@@ -92,8 +92,8 @@ Out:
   Commit: Encode sync payloads with a round-trip check
   Depends on: 4
 
-- [ ] 6. Add conformance fixtures
-  Goal: `fixtures/` with golden envelopes for every kind and group at schema 1: the encoded bytes plus a readable decoded form; a table-driven test that decodes each fixture to its readable form and re-encodes it to the same bytes.
+- [x] 6. Add conformance fixtures
+  Goal: `fixtures/` with golden envelopes for every kind and group at schema 1, as hex of the sealed bytes; the readable form is the matching entry in `tests/protocol/samples.rs`; a table-driven test seals each sample to the golden bytes and decodes the golden bytes back to the sample; an ignored test regenerates the files, like koloda's schema inventory snapshot.
   Constraints: fixtures are data, not generated at test time; a codec change that alters bytes updates fixtures in the same change.
   Done when: fixture tests green; `bun run check:push` green.
   Commit: Add sync protocol conformance fixtures

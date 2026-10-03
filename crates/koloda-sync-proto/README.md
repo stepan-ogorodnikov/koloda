@@ -19,6 +19,9 @@ The server links only this crate, never `koloda`, so nothing here may depend on 
 - `src/payload.rs` — schema-1 payloads for every group, and sealing: header from payload, then a round-trip check.
 - `src/registry.rs` — kinds, field groups, classes, lanes, parents, refs, and the header allowlist.
 
+- `tests/protocol/` — one test binary; `samples.rs` holds one sample per group.
+- `fixtures/` — golden sealed bytes of each sample, as hex; `fixtures_tests.rs` says how to regenerate them.
+
 ### Does NOT own (prevent scope creep)
 
 - Sync tables, capture, apply, and repair — the native persistence layer (`koloda`)
