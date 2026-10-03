@@ -14,4 +14,5 @@ pub mod fsrs_sql;
 pub mod lessons;
 pub mod reviews;
 pub mod settings;
+pub mod sync;
 pub mod templates;

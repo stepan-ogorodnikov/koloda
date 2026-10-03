@@ -15,4 +15,5 @@ mod reviews_integration_tests;
 mod schema_inventory_tests;
 mod seed_integration_tests;
 mod settings_integration_tests;
+mod sync_integration_tests;
 mod templates_integration_tests;

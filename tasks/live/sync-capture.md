@@ -39,9 +39,9 @@ Out:
 
 ## Plan
 
-- [ ] 1. Add sync bookkeeping tables and device enrollment
+- [x] 1. Add sync bookkeeping tables and device enrollment
   Goal: migration `V5__sync_capture.sql` creating `sync_state` (singleton: device id, last HLC raw, next sender seq), `sync_stamps` (`kind`, `id`, `group` primary key; `hlc`, `stamp_device`, `sender`, `sender_seq`, `product_ts`, `synthetic`), `sync_origins` (same key; stamp, sender columns, `legacy_product_ts_floor`), `sync_outbox` (`sender_seq` primary key; `kind`, `id`, `group`, `commit_id`, envelope bytes, digest, `in_flight`), `sync_cohorts` (`commit_id` primary key; `state`, original stamp), `sync_tombstones` (`kind`, `id` primary key; stamp, sender columns, `successor`); refresh embedded listings on both hosts and the schema inventory.
-  `koloda` depends on `koloda-sync-proto`; a `sync` module holds enrollment (`enroll_device(db, device_id)` writes `sync_state`) and reads whether capture is on.
+  `crates/koloda/src/repo/sync.rs` holds enrollment (`enroll_device(db, device_id)` writes `sync_state`) and reads the enrolled device; `koloda` gains its `koloda-sync-proto` dependency in item 2, where it is first used.
   Constraints: per `agents/DB.md` (next V, never edit applied files, `IF NOT EXISTS`, no backticks, timestamps as unix-ms integers, blobs for bytes); no product table changes; per the open question on placement.
   Update `crates/koloda-sync-proto/PROTOCOL.md` (§Client state, rulings) per the open questions on table placement and `cards.reviews_reset_at`.
   Done when: `cargo test -p koloda` green including the inventory; `bunx nx test @koloda/db-sqlite` green after rebuilding the web bundle; enrollment round-trips in an integration test.

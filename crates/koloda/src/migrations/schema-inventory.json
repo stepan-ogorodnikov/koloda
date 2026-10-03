@@ -702,6 +702,375 @@
       "foreign_keys": []
     },
     {
+      "name": "sync_cohorts",
+      "columns": [
+        {
+          "name": "commit_id",
+          "type": "BLOB",
+          "notnull": 1,
+          "pk": 1,
+          "dflt_value": null
+        },
+        {
+          "name": "hlc",
+          "type": "INTEGER",
+          "notnull": 1,
+          "pk": 0,
+          "dflt_value": null
+        },
+        {
+          "name": "stamp_device",
+          "type": "BLOB",
+          "notnull": 1,
+          "pk": 0,
+          "dflt_value": null
+        },
+        {
+          "name": "state",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0,
+          "dflt_value": null
+        }
+      ],
+      "indexes": [
+        {
+          "name": "sqlite_autoindex_sync_cohorts_1",
+          "unique": 1,
+          "columns": [
+            "commit_id"
+          ]
+        }
+      ],
+      "foreign_keys": []
+    },
+    {
+      "name": "sync_origins",
+      "columns": [
+        {
+          "name": "group_name",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 3,
+          "dflt_value": null
+        },
+        {
+          "name": "hlc",
+          "type": "INTEGER",
+          "notnull": 1,
+          "pk": 0,
+          "dflt_value": null
+        },
+        {
+          "name": "id",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 2,
+          "dflt_value": null
+        },
+        {
+          "name": "kind",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 1,
+          "dflt_value": null
+        },
+        {
+          "name": "legacy_product_ts_floor",
+          "type": "INTEGER",
+          "notnull": 0,
+          "pk": 0,
+          "dflt_value": null
+        },
+        {
+          "name": "sender",
+          "type": "BLOB",
+          "notnull": 1,
+          "pk": 0,
+          "dflt_value": null
+        },
+        {
+          "name": "sender_seq",
+          "type": "INTEGER",
+          "notnull": 1,
+          "pk": 0,
+          "dflt_value": null
+        },
+        {
+          "name": "stamp_device",
+          "type": "BLOB",
+          "notnull": 1,
+          "pk": 0,
+          "dflt_value": null
+        }
+      ],
+      "indexes": [
+        {
+          "name": "sqlite_autoindex_sync_origins_1",
+          "unique": 1,
+          "columns": [
+            "kind",
+            "id",
+            "group_name"
+          ]
+        }
+      ],
+      "foreign_keys": []
+    },
+    {
+      "name": "sync_outbox",
+      "columns": [
+        {
+          "name": "commit_id",
+          "type": "BLOB",
+          "notnull": 1,
+          "pk": 0,
+          "dflt_value": null
+        },
+        {
+          "name": "digest",
+          "type": "BLOB",
+          "notnull": 1,
+          "pk": 0,
+          "dflt_value": null
+        },
+        {
+          "name": "envelope",
+          "type": "BLOB",
+          "notnull": 1,
+          "pk": 0,
+          "dflt_value": null
+        },
+        {
+          "name": "group_name",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0,
+          "dflt_value": null
+        },
+        {
+          "name": "id",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0,
+          "dflt_value": null
+        },
+        {
+          "name": "in_flight",
+          "type": "INTEGER",
+          "notnull": 1,
+          "pk": 0,
+          "dflt_value": null
+        },
+        {
+          "name": "kind",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0,
+          "dflt_value": null
+        },
+        {
+          "name": "sender_seq",
+          "type": "INTEGER",
+          "notnull": 1,
+          "pk": 1,
+          "dflt_value": null
+        }
+      ],
+      "indexes": [
+        {
+          "name": "sync_outbox_kind_id_group_name_idx",
+          "unique": 0,
+          "columns": [
+            "kind",
+            "id",
+            "group_name"
+          ]
+        }
+      ],
+      "foreign_keys": []
+    },
+    {
+      "name": "sync_stamps",
+      "columns": [
+        {
+          "name": "group_name",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 3,
+          "dflt_value": null
+        },
+        {
+          "name": "hlc",
+          "type": "INTEGER",
+          "notnull": 1,
+          "pk": 0,
+          "dflt_value": null
+        },
+        {
+          "name": "id",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 2,
+          "dflt_value": null
+        },
+        {
+          "name": "kind",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 1,
+          "dflt_value": null
+        },
+        {
+          "name": "product_ts",
+          "type": "INTEGER",
+          "notnull": 0,
+          "pk": 0,
+          "dflt_value": null
+        },
+        {
+          "name": "sender",
+          "type": "BLOB",
+          "notnull": 1,
+          "pk": 0,
+          "dflt_value": null
+        },
+        {
+          "name": "sender_seq",
+          "type": "INTEGER",
+          "notnull": 1,
+          "pk": 0,
+          "dflt_value": null
+        },
+        {
+          "name": "stamp_device",
+          "type": "BLOB",
+          "notnull": 1,
+          "pk": 0,
+          "dflt_value": null
+        },
+        {
+          "name": "synthetic",
+          "type": "INTEGER",
+          "notnull": 1,
+          "pk": 0,
+          "dflt_value": null
+        }
+      ],
+      "indexes": [
+        {
+          "name": "sqlite_autoindex_sync_stamps_1",
+          "unique": 1,
+          "columns": [
+            "kind",
+            "id",
+            "group_name"
+          ]
+        }
+      ],
+      "foreign_keys": []
+    },
+    {
+      "name": "sync_state",
+      "columns": [
+        {
+          "name": "device_id",
+          "type": "BLOB",
+          "notnull": 1,
+          "pk": 0,
+          "dflt_value": null
+        },
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "notnull": 1,
+          "pk": 1,
+          "dflt_value": null
+        },
+        {
+          "name": "last_hlc",
+          "type": "INTEGER",
+          "notnull": 1,
+          "pk": 0,
+          "dflt_value": null
+        },
+        {
+          "name": "next_sender_seq",
+          "type": "INTEGER",
+          "notnull": 1,
+          "pk": 0,
+          "dflt_value": null
+        }
+      ],
+      "indexes": [],
+      "foreign_keys": []
+    },
+    {
+      "name": "sync_tombstones",
+      "columns": [
+        {
+          "name": "hlc",
+          "type": "INTEGER",
+          "notnull": 1,
+          "pk": 0,
+          "dflt_value": null
+        },
+        {
+          "name": "id",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 2,
+          "dflt_value": null
+        },
+        {
+          "name": "kind",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 1,
+          "dflt_value": null
+        },
+        {
+          "name": "sender",
+          "type": "BLOB",
+          "notnull": 1,
+          "pk": 0,
+          "dflt_value": null
+        },
+        {
+          "name": "sender_seq",
+          "type": "INTEGER",
+          "notnull": 1,
+          "pk": 0,
+          "dflt_value": null
+        },
+        {
+          "name": "stamp_device",
+          "type": "BLOB",
+          "notnull": 1,
+          "pk": 0,
+          "dflt_value": null
+        },
+        {
+          "name": "successor",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0,
+          "dflt_value": null
+        }
+      ],
+      "indexes": [
+        {
+          "name": "sqlite_autoindex_sync_tombstones_1",
+          "unique": 1,
+          "columns": [
+            "kind",
+            "id"
+          ]
+        }
+      ],
+      "foreign_keys": []
+    },
+    {
       "name": "templates",
       "columns": [
         {

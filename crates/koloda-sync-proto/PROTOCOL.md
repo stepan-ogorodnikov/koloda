@@ -243,7 +243,7 @@ Kinds, groups, ops, and lanes travel as the strings in the tables below.
 | `cards` | `create` | create | Whole row as inserted, including `deck_id` and `template_id` | hot |
 | `cards` | `content` | update | `content`, `updated_at` | hot |
 | `cards` | `scheduling` | update | `state`, `due_at`, `stability`, `difficulty`, `scheduled_days`, `learning_steps`, `reps`, `lapses`, `last_reviewed_at` | hot |
-| `cards` | `reset` | update | `wall_ms` (feeds `cards.reviews_reset_at`) | hot |
+| `cards` | `reset` | update | `wall_ms` (display time of the reset) | hot |
 | `reviews` | `row` | immutable | Every column | cold |
 | `decks` | `create` | create | Whole row as inserted, except `algorithm_id` and `template_id` | hot |
 | `decks` | `title` | update | `title`, `updated_at` | hot |
@@ -505,8 +505,8 @@ Because blank scheduling shares the reset stamp, one comparison decides both reg
 Applying a winning reset also writes blank scheduling at the reset stamp unless scheduling already beats it.
 That covers a reset arriving before its paired scheduling envelope.
 
-`cards.reviews_reset_at` is a product column: the winning reset's `wall_ms`, for display.
-It is not a merge key.
+A reset's `wall_ms` is display data and never a merge key.
+The product stores it only once a feature shows reset time.
 Reset stays O(1) on the wire for a card with thousands of reviews.
 
 ### Referents are not parents
@@ -597,17 +597,17 @@ The client advances to `scanned_through`, so empty pages are safe.
 
 Enabling sync treats pre-sync data as one imported snapshot.
 It never reconstructs order from product timestamps or UUIDv7 time.
-Backfill reserves non-overlapping HLC ranges for four phases, durably and resumably:
+Backfill reserves non-overlapping HLC ranges for three phases, durably and resumably:
 
 1. immutable creates (including algorithm revisions) and current non-scheduling groups, in referent and ancestor
    order;
-2. real legacy resets and their blank scheduling;
-3. reviews currently present, ordered by `(created_at, id)`;
-4. current card scheduling snapshots.
+2. reviews currently present, ordered by `(created_at, id)`;
+3. current card scheduling snapshots.
 
-A non-null `reviews_reset_at` becomes a phase-2 reset.
-Surviving reviews get phase-3 stamps strictly above it.
-Every legacy card gets a phase-4 scheduling snapshot.
+Pre-sync resets leave no record, and none is needed.
+A product reset already deleted the reviews it cut off, so every surviving review is newer than any reset.
+A legacy card's reset register is only the synthetic floor from its create, which never cuts off a review.
+Every legacy card gets a phase-3 scheduling snapshot, so its final scheduling sorts after its reviews.
 Allocation never exceeds the absolute server-time cap.
 The device's last HLC moves past the final range before ordinary capture.
 
@@ -1159,8 +1159,8 @@ Regeneration of held writes preserves `(hlc, stamp_device, commit_id)`.
 
 ## Client state
 
-The native persistence layer keeps these tables beside the product tables.
-They are device-local runtime state and are not part of the product schema shared with the web host.
+These tables live in the one shared migration series, so web databases have them too.
+Only native hosts write them; they are device-local runtime state, never synced.
 
 | Table | Key | Holds |
 | --- | --- | --- |
@@ -1174,7 +1174,7 @@ They are device-local runtime state and are not part of the product schema share
 | `sync_delete_jobs` | `(kind, id)` | Resumable local cascade |
 | `sync_attachment_queue` | `(id, direction)` | Pending uploads and fetches |
 
-With the product column `cards.reviews_reset_at`, they are the whole schema footprint of sync.
+They are the whole schema footprint of sync.
 
 Each syncable kind is defined once in this crate's registry: groups, class, parent, refs, lane, and codec.
 Adding a kind later (conversations, AI settings) is a registry entry plus capture in the persistence layer.
@@ -1215,7 +1215,7 @@ Change one only by a new decision, not by editing rules in passing.
     Algorithms split into `title`, `notes`, and `content`.
 19. Algorithm revisions sync as immutable rows with no parent and outlive their algorithm.
 20. UUIDv7 ids, accepting that they reveal creation time.
-21. Sync bookkeeping tables are native-only.
+21. Sync bookkeeping tables are device-local, and only native hosts write them.
 22. Interface settings reach a new device only as a one-shot pairing hint.
 23. The stale-device threshold is 90 days; skew tolerance is 5 minutes.
 24. Bulk transfers above 20 MB pause on metered networks; tiny incremental sync never does.
@@ -1271,7 +1271,7 @@ Every implementation of the engine and the server must pass these.
 - Algorithm repair racing a template edit on the same deck; template tombstone racing a card created under it.
 - Review pushed during the `hot` pull; snapshot opened mid-delete.
 - Client and server running out of disk during a 20M-review deck delete.
-- Pre-sync card and review with equal timestamps and no reset; a surviving review older than an old reset.
+- Pre-sync card and review with equal timestamps; a pre-sync reset card whose surviving reviews predate its scheduling.
 - Card linking an attachment the server lacks (`missing_attachments`, upload, another device fetches).
 - Attachment unlinked on A while B offline re-links it; attachment GC then re-link.
 - Image removed from a card by an edit becomes collectable.

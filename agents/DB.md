@@ -17,7 +17,8 @@ Who owns persistence on each host, and why: `docs/decisions/TS-RUST-DOMAIN-MIRRO
   (Rust twin `crates/koloda/src/domain/seed_ids.rs`).
   First-run content itself differs by host; see `docs/specs/INTERFACE-SETTINGS.md` (§First Setup).
 - There is no Drizzle schema and no `db:generate` script.
-- No `sync_*` tables yet; add them to this folder when sync work starts.
+- Sync bookkeeping tables (`sync_*`) live in this series too, so web databases create them.
+  Only the desktop store writes them (`crates/koloda-sync-proto/PROTOCOL.md` §Client state).
 
 #### Schema Change Workflow
 
