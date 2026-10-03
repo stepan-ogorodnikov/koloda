@@ -1,6 +1,6 @@
 # Sync capture
 
-Status: draft
+Status: ready
 
 ## Intent
 
