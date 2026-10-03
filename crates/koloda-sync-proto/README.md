@@ -14,6 +14,7 @@ The server links only this crate, never `koloda`, so nothing here may depend on 
 ## Architectural Map
 
 - `src/lib.rs` — crate root.
+- `src/envelope.rs` — envelope frame and header codec, header validation, digest, and size limits.
 - `src/hlc.rs` — hybrid logical clock, stamp order, and skew guards; callers pass time in.
 - `src/registry.rs` — kinds, field groups, classes, lanes, parents, refs, and the header allowlist.
 

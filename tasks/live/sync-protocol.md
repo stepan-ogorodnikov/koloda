@@ -74,8 +74,8 @@ Out:
   Commit: Add the hybrid logical clock for sync stamps
   Depends on: 1
 
-- [ ] 4. Encode and decode the envelope header and frame
-  Goal: the envelope (`kind`, `id`, `parent`, `refs`, `group`, `op`, `hlc`, `stamp_device`, `schema`, `commit_id`, opaque `payload` bytes), its CBOR encoding with `ciborium`, the SHA-256 digest with `sha2`, and decode limits (body size, nesting depth, payload size) returning typed errors.
+- [x] 4. Encode and decode the envelope header and frame
+  Goal: the envelope (`kind`, `id`, `parent`, `refs`, `group`, `op`, `hlc`, `stamp_device`, `schema`, `commit_id`, opaque `payload` bytes), its CBOR encoding with `ciborium`, the SHA-256 digest with `sha2`, and decode limits (header size, payload size) returning typed errors; every field decodes into a fixed type, so nesting depth needs no separate limit.
   Decoding validates the header against the registry allowlist.
   The header encodes to bytes on its own, because E2EE later uses them as AEAD associated data.
   Constraints: payload stays opaque bytes here; deterministic encoding (fixed field order) so golden bytes are stable.

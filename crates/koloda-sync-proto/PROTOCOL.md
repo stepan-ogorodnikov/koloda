@@ -107,6 +107,41 @@ Capture builds the header and payload from the same row values.
 Payload foreign keys therefore equal header `parent` and `refs` by construction.
 That is a codec invariant covered by conformance tests, not a runtime check on apply.
 
+## Envelope encoding
+
+An envelope is a CBOR map of two byte strings, `header` then `payload`.
+The header is itself CBOR, carried as bytes so it reaches the receiver unchanged.
+Under E2EE those exact bytes are the AEAD associated data.
+
+The header is a CBOR map with these keys, in this order; optional keys are omitted when absent:
+
+| Key | Value |
+| --- | --- |
+| `kind` | Kind string (§Field groups and merge) |
+| `id` | Entity id string |
+| `parent` | Parent id string; present exactly when the kind has a parent |
+| `refs` | Map of `algorithm_id`, `template_id` (strings), and `attachment_ids` (array of strings); omitted when empty |
+| `group` | Group string; present on writes, absent on deletes |
+| `op` | `write` or `delete` |
+| `hlc` | Raw 64-bit HLC (§Clocks and order) |
+| `stamp_device` | 16 raw UUID bytes |
+| `schema` | Payload schema version of the kind (§Schema versions) |
+| `commit_id` | 16 random bytes shared by one commit |
+
+Unknown keys are rejected.
+One logical header has one encoding: `attachment_ids` are sorted and unique, and an empty `refs` map is omitted.
+The digest is the SHA-256 of the encoded envelope bytes.
+
+Decoding validates the header against the registry:
+
+- the kind, group, and op are known, and the group belongs to the kind;
+- a write names a group, and a delete names none and targets a kind with tombstones;
+- `parent` is present exactly when the kind has a parent;
+- a write carries every hard ref of its group and no ref its group lacks; a delete carries no refs.
+
+Limits: a header is at most 16 KiB and a payload at most 512 KiB.
+Every field decodes into a fixed type, so nesting depth is bounded without a separate limit.
+
 ## Identity
 
 ### Primary keys
