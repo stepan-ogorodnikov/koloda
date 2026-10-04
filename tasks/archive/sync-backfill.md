@@ -1,6 +1,6 @@
 # Sync backfill
 
-Status: ready
+Status: done
 
 ## Intent
 
@@ -160,4 +160,13 @@ Out:
   Depends on: 3
 
 ## Outcome
+
+- `enroll_device` takes `SpaceRole::Creator` or `SpaceRole::Joiner` and, in that transaction, reserves one stamp per backfill phase and moves `last_hlc` past the last of them.
+- Migration `V7__sync_backfill.sql` adds `role`, the three phase stamps, and the scan watermark to `sync_state` in the shared series. A NULL `backfill_step` means backfill has finished. Web databases have the columns and never write them.
+- `create_payload` (algorithms, templates, cards), `create_payloads` (decks: create plus both pointers), and `revision_payload` encode a stored row. The existing create paths call them, so a fresh row's envelopes are unchanged. `learning_payloads` with no previous document emits every learning group.
+- `backfill_batch` tops the outbox up by a bounded number of envelopes and advances the watermark in the same transaction: phase 1 creates and current groups in referent order, then `learning` on a creator; phase 2 reviews by `(created_at, id)`; phase 3 a scheduling snapshot for each card whose scheduling register is still the synthetic floor of its phase-1 create. A joiner skips seed ids, the seed algorithm's revisions, and `learning`. A batch never splits one entity's envelopes and never replaces an existing origin or a register that already holds a write.
+- While backfill is unfinished, `Capture::write` backfills unstamped referents, the parent chain, and the entity's own create into the triggering commit. Deletes skip that check. A joiner's stamp-zero seed counts as stamped. After phase 3, capture makes no extra query per write.
+- `FakeSpace::assert_referents_first` checks referent order in the log, and a delete needs no earlier parent. Backfill tests drain batches into the fake space.
+- `PROTOCOL.md` §Existing rows at enable time, §Backfill, and §Client state describe the phase stamps, the scan order, touch checks, and joiner skips. `agents/RUST.md`, the crate README, and `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md` route desktop backfill.
+- Manual verify: none — nothing drives the scan in production yet, so no user-visible behavior changed.
 
