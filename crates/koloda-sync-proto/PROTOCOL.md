@@ -387,7 +387,7 @@ For every incoming envelope, in order:
    Do not invent a row; do not repair-publish.
 4. Delete: record the tombstone and fence the id.
    For a template or algorithm, sweep pointers first (§Deletes).
-   Then enqueue a resumable delete job, and delete stamps and origins under it.
+   Then delete the entity and its descendants, with their stamps, origins, and pending local rows.
    Done.
 5. Immutable: a review is compared with `cards.reset` only when that register is non-synthetic.
    If it does not strictly beat it, drop.
@@ -405,7 +405,7 @@ For every incoming envelope, in order:
    Delete any **not-in-flight** pending outbox row for the same group.
    An in-flight row stays until its outcome arrives; the server returns it as `stale`.
    A winning `cards.reset` also blanks `cards.scheduling` at its stamp unless scheduling already beats it.
-   It hides and schedules deletion of reviews that do not strictly beat it.
+   It deletes the reviews that do not strictly beat it, with their origins and pending local rows.
    A winning `cards.content` enqueues fetches for attachments it links that are not local (§Attachments).
 
 Step 9 discards a pending local write because pushing it would republish remote content under a losing stamp.
@@ -443,14 +443,15 @@ A union-by-field-id merge for `templates.structure` is a candidate for that hook
 
 ### Tombstones
 
-The product schema keeps no soft-delete column, but a large local delete is logically immediate and physically
-chunked.
-Deletion records a local fence, a `sync_tombstones` row, and a `sync_delete_jobs` row, then publishes
-`op = Delete`.
-Repository reads and writes treat an active deletion scope as absent while physical descendants remain.
-Jobs delete reviews, cards, then the root in bounded keyset transactions.
-They run under a maintenance budget even while sync is paused.
+The product schema keeps no soft-delete column.
+Deletion records a local fence and a `sync_tombstones` row, then publishes `op = Delete`.
+The cascade deletes reviews, cards, then the root in the same transaction.
+That holds for a local delete and for an applied remote tombstone.
 A tombstone is terminal: no later create or update of that entity applies, regardless of stamp.
+
+Very large deletes may later move to chunked `sync_delete_jobs` that run under a maintenance budget.
+Repository reads would then treat an active deletion scope as absent while physical descendants remain.
+That changes when rows are physically removed, not what is logically dead.
 
 ### Cascades by ancestry and header refs
 
@@ -497,7 +498,7 @@ It then chunk-removes their heads and records their fences.
 Deleting a card does the same for its reviews.
 Deleting a template also drops and fences cards whose `refs.template_id` names it.
 Reviews never get tombstones of their own.
-A 50k-card deck delete is a single envelope, applied in chunks on both sides.
+A 50k-card deck delete is a single envelope: the server removes it in chunks, and a device in one transaction.
 
 A card's `deck_id` and `template_id` are fixed at creation and never appear in an update group.
 That is what makes the cascade by ancestry a single envelope (`docs/decisions/FIXED-CARD-PARENTS.md`).
@@ -847,8 +848,7 @@ Triggers: every local commit (coalesced over ~300 ms), every nudge, app foregrou
 poll every few minutes when the socket is down.
 A grade reaches another live device in about a second.
 
-Local delete jobs, reset review cleanup, and attachment transfers run under a maintenance budget even while the
-cycle is paused.
+Attachment transfers run under a maintenance budget even while the cycle is paused.
 
 ### Outbox
 
@@ -946,7 +946,7 @@ Every local create after the barrier stores that generation on its origin.
 3. Catch up incrementally, both lanes, to a head observed after the lease.
 4. Classify atomically:
    - post-barrier creates (not present at the barrier, origin carries this generation): keep, with their outbox;
-   - pre-barrier ids still absent: the server deleted them; enqueue delete jobs, including any post-barrier edits to
+   - pre-barrier ids still absent: the server deleted them; delete them, including any post-barrier edits to
      them, and drop their outbox;
    - post-barrier ids the server fenced: drop.
 5. Push what remains.
@@ -1221,7 +1221,7 @@ Only native hosts write them; they are device-local runtime state, never synced.
 | `sync_cohorts` | `commit_id` | Members, `local` / `uncertain` / `fixed`, original stamp |
 | `sync_tombstones` | `(kind, id)` | Stamp, sender, hints |
 | `sync_held` | `sender_seq` | Consumed `held` envelopes and their reason |
-| `sync_delete_jobs` | `(kind, id)` | Resumable local cascade |
+| `sync_delete_jobs` | `(kind, id)` | Resumable local cascade for chunked deletes; not built while a delete cascades in one transaction (§Deletes) |
 | `sync_attachment_queue` | `(id, direction)` | Pending uploads and fetches |
 
 They are the whole schema footprint of sync.

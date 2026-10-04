@@ -110,6 +110,33 @@ impl StampValues {
         Ok(())
     }
 
+    // INVARIANT: the tombstone row is this device's fence: no later envelope for the entity applies, whatever its
+    // stamp (PROTOCOL.md, Tombstones).
+    fn write_tombstone(
+        &self,
+        conn: &Connection,
+        kind: Kind,
+        id: &str,
+        successor: Option<&str>,
+    ) -> Result<(), AppError> {
+        conn.execute(
+            r#"
+            INSERT OR REPLACE INTO sync_tombstones (kind, id, hlc, stamp_device, sender, sender_seq, successor)
+            VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)
+            "#,
+            params![
+                kind.as_wire(),
+                id,
+                self.hlc,
+                self.stamp_device.as_slice(),
+                self.sender.as_slice(),
+                self.sender_seq,
+                successor
+            ],
+        )?;
+        Ok(())
+    }
+
     fn write_origin(
         &self,
         conn: &Connection,
@@ -137,6 +164,51 @@ impl StampValues {
         )?;
         Ok(())
     }
+}
+
+// WHY: the tombstone fences the entity and its descendants, so their registers and origins describe rows
+// that are about to be deleted; descendant ids are read from product rows that still exist.
+fn forget_entity(conn: &Connection, kind: Kind, id: &str) -> Result<(), AppError> {
+    conn.execute(
+        "DELETE FROM sync_stamps WHERE kind = ?1 AND id = ?2",
+        params![kind.as_wire(), id],
+    )?;
+    conn.execute(
+        "DELETE FROM sync_origins WHERE kind = ?1 AND id = ?2",
+        params![kind.as_wire(), id],
+    )?;
+
+    match kind {
+        Kind::Decks => {
+            conn.execute(
+                r#"
+                DELETE FROM sync_origins
+                WHERE kind = 'reviews'
+                  AND id IN (SELECT r.id FROM reviews r JOIN cards c ON c.id = r.card_id WHERE c.deck_id = ?1)
+                "#,
+                params![id],
+            )?;
+            for table in ["sync_stamps", "sync_origins"] {
+                conn.execute(
+                    &format!(
+                        "DELETE FROM {table} WHERE kind = 'cards' AND id IN (SELECT id FROM cards WHERE deck_id = ?1)"
+                    ),
+                    params![id],
+                )?;
+            }
+        }
+        Kind::Cards => forget_card_reviews(conn, id)?,
+        _ => {}
+    }
+    Ok(())
+}
+
+fn forget_card_reviews(conn: &Connection, card_id: &str) -> Result<(), AppError> {
+    conn.execute(
+        "DELETE FROM sync_origins WHERE kind = 'reviews' AND id IN (SELECT id FROM reviews WHERE card_id = ?1)",
+        params![card_id],
+    )?;
+    Ok(())
 }
 
 fn delete_empty_cohort(conn: &Connection, commit_id: &[u8]) -> Result<(), AppError> {

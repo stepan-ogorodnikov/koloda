@@ -86,11 +86,12 @@ Out:
   Commit: Apply remote reviews under reset cutoffs
   Depends on: 4
 
-- [ ] 6. Apply tombstones
+- [x] 6. Apply tombstones
   Goal: apply rule step 1 drops envelopes for a fenced entity or one under a fenced ancestor; step 4 records the `sync_tombstones` row with the entry's sender metadata and `successor`, then cascades in the page's transaction: a deck's cards and their reviews, a card's reviews, with their registers and origins.
   A tombstone for an id this replica does not hold is recorded as a fence; a later create of a fenced id is dropped.
   Pending local rows of a dead entity or its descendants are dropped with their cohorts.
   Reword `PROTOCOL.md` §Deletes (Tombstones), apply rule steps 4 and 9, §Transport (Cycle), and §Client state: deletes and reset-killed reviews cascade in the apply transaction, and chunked delete jobs are a later optimization of the same logical rule.
+  Constraints: a template or algorithm tombstone deletes only its row until item 7 adds the pointer sweep, so a referenced one fails the page on its foreign keys.
   Done when: tests cover a deck deleted on A while B adds and edits a card in it (delete wins; the card is gone on both); a card deleted with its reviews; a tombstone for an unknown id that later fences its create; a pending local child dropped by a remote tombstone.
   Commit: Apply remote tombstones with their cascades
   Depends on: 5

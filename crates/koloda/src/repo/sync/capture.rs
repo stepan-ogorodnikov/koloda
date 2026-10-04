@@ -5,7 +5,7 @@ use koloda_sync_proto::registry::{allow, Class, Kind};
 use rusqlite::{params, Connection, OptionalExtension};
 use uuid::Uuid;
 
-use super::{delete_empty_cohort, protocol_error, StampValues, ROW_GROUP};
+use super::{delete_empty_cohort, forget_card_reviews, forget_entity, protocol_error, StampValues, ROW_GROUP};
 use crate::app::error::AppError;
 use crate::app::utility::get_current_timestamp;
 
@@ -131,21 +131,7 @@ impl<'c> Capture<'c> {
         let sender_seq = state.next_seq(conn)?;
         let stamp_values = StampValues::new(commit.stamp, state.device, sender_seq)?;
 
-        conn.execute(
-            r#"
-            INSERT OR REPLACE INTO sync_tombstones (kind, id, hlc, stamp_device, sender, sender_seq, successor)
-            VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)
-            "#,
-            params![
-                kind.as_wire(),
-                id,
-                stamp_values.hlc,
-                stamp_values.stamp_device.as_slice(),
-                stamp_values.sender.as_slice(),
-                sender_seq,
-                successor
-            ],
-        )?;
+        stamp_values.write_tombstone(conn, kind, id, successor)?;
         forget_entity(conn, kind, id)?;
 
         // WHY: a delete never replaces pending rows of its entity. Earlier creates still push first, so a pending
@@ -236,51 +222,6 @@ fn insert_outbox(
             sealed.bytes,
             digest(&sealed.bytes).0.as_slice()
         ],
-    )?;
-    Ok(())
-}
-
-// WHY: the tombstone fences the entity and its descendants, so their registers and origins describe rows
-// that are about to be deleted; descendant ids are read from product rows that still exist.
-fn forget_entity(conn: &Connection, kind: Kind, id: &str) -> Result<(), AppError> {
-    conn.execute(
-        "DELETE FROM sync_stamps WHERE kind = ?1 AND id = ?2",
-        params![kind.as_wire(), id],
-    )?;
-    conn.execute(
-        "DELETE FROM sync_origins WHERE kind = ?1 AND id = ?2",
-        params![kind.as_wire(), id],
-    )?;
-
-    match kind {
-        Kind::Decks => {
-            conn.execute(
-                r#"
-                DELETE FROM sync_origins
-                WHERE kind = 'reviews'
-                  AND id IN (SELECT r.id FROM reviews r JOIN cards c ON c.id = r.card_id WHERE c.deck_id = ?1)
-                "#,
-                params![id],
-            )?;
-            for table in ["sync_stamps", "sync_origins"] {
-                conn.execute(
-                    &format!(
-                        "DELETE FROM {table} WHERE kind = 'cards' AND id IN (SELECT id FROM cards WHERE deck_id = ?1)"
-                    ),
-                    params![id],
-                )?;
-            }
-        }
-        Kind::Cards => forget_card_reviews(conn, id)?,
-        _ => {}
-    }
-    Ok(())
-}
-
-fn forget_card_reviews(conn: &Connection, card_id: &str) -> Result<(), AppError> {
-    conn.execute(
-        "DELETE FROM sync_origins WHERE kind = 'reviews' AND id IN (SELECT id FROM reviews WHERE card_id = ?1)",
-        params![card_id],
     )?;
     Ok(())
 }

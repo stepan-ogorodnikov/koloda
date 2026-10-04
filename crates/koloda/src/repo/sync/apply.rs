@@ -14,7 +14,7 @@ use rusqlite::{params, Connection, OptionalExtension, ToSql};
 use serde_json::{Map, Value};
 use uuid::Uuid;
 
-use super::{delete_empty_cohort, protocol_error, StampValues, ROW_GROUP};
+use super::{delete_empty_cohort, forget_entity, protocol_error, StampValues, ROW_GROUP};
 use crate::app::db::Database;
 use crate::app::error::{error_codes, throw_known_error, AppError};
 use crate::domain::cards::CardState;
@@ -119,7 +119,7 @@ fn read_clock(conn: &Connection) -> Result<HlcClock, AppError> {
 
 fn apply_entry(conn: &Connection, entry: &Entry, changed: &mut Changed) -> Result<(), AppError> {
     let header = &entry.header;
-    if !has_referents(conn, header)? {
+    if is_dead(conn, header)? || !has_referents(conn, header)? {
         return Ok(());
     }
 
@@ -130,8 +130,25 @@ fn apply_entry(conn: &Connection, entry: &Entry, changed: &mut Changed) -> Resul
         Some(Class::Create) => apply_create(conn, entry, changed),
         Some(Class::Update) => apply_update(conn, entry, changed),
         Some(Class::Immutable) => apply_immutable(conn, entry, changed),
-        None => Ok(()),
+        None => apply_delete(conn, entry, changed),
     }
+}
+
+// INVARIANT: a tombstone is terminal. No envelope for a fenced entity, or for a child of a fenced parent, applies
+// whatever its stamp (apply rule step 1). A review under a dead card's dead deck meets an absent card in step 3.
+fn is_dead(conn: &Connection, header: &Header) -> Result<bool, AppError> {
+    let parent = header.kind.spec().parent.zip(header.parent.as_deref());
+    for (kind, id) in std::iter::once((header.kind, header.id.as_str())).chain(parent) {
+        let is_fenced: bool = conn.query_row(
+            "SELECT EXISTS (SELECT 1 FROM sync_tombstones WHERE kind = ?1 AND id = ?2)",
+            params![kind.as_wire(), id],
+            |row| row.get(0),
+        )?;
+        if is_fenced {
+            return Ok(true);
+        }
+    }
+    Ok(false)
 }
 
 // INVARIANT: a missing parent or referent drops the envelope (apply rule step 3). Apply never invents a row,
@@ -530,6 +547,80 @@ fn apply_immutable(conn: &Connection, entry: &Entry, changed: &mut Changed) -> R
     entry.values.write_origin(conn, kind, id, ROW_GROUP, None)?;
 
     changed.mark(kind);
+    Ok(())
+}
+
+// INVARIANT: a remote tombstone fences its id even when this device never held the entity, so a create that
+// arrives later is dropped (apply rule steps 1 and 4).
+fn apply_delete(conn: &Connection, entry: &Entry, changed: &mut Changed) -> Result<(), AppError> {
+    let kind = entry.header.kind;
+    let id = entry.header.id.as_str();
+    let Payload::Delete { delete, .. } = &entry.payload else {
+        return Err(protocol_error("a delete carries a delete payload"));
+    };
+    entry
+        .values
+        .write_tombstone(conn, kind, id, delete.successor.as_deref())?;
+    if !is_present(conn, kind, id)? {
+        return Ok(());
+    }
+
+    drop_pending_subtree(conn, kind, id)?;
+    forget_entity(conn, kind, id)?;
+    delete_subtree(conn, kind, id, changed)
+}
+
+// WHY: pending local writes of a dead entity or its descendants would only come back fenced, so they are dropped
+// with their cohorts in the transaction that kills them (PROTOCOL.md, Outbox). In-flight rows wait for their outcome.
+fn drop_pending_subtree(conn: &Connection, kind: Kind, id: &str) -> Result<(), AppError> {
+    let descendants = match kind {
+        Kind::Decks => {
+            r#"
+            OR (kind = 'cards' AND id IN (SELECT id FROM cards WHERE deck_id = ?1))
+            OR (kind = 'reviews' AND id IN (SELECT r.id FROM reviews r JOIN cards c ON c.id = r.card_id WHERE c.deck_id = ?1))
+            "#
+        }
+        Kind::Cards => "OR (kind = 'reviews' AND id IN (SELECT id FROM reviews WHERE card_id = ?1))",
+        _ => "",
+    };
+    let scope = format!(
+        "in_flight = 0 AND ((kind = '{}' AND id = ?1) {descendants})",
+        kind.as_wire()
+    );
+
+    let commits: Vec<Vec<u8>> = conn
+        .prepare(&format!("SELECT DISTINCT commit_id FROM sync_outbox WHERE {scope}"))?
+        .query_map(params![id], |row| row.get(0))?
+        .collect::<Result<_, _>>()?;
+    conn.execute(&format!("DELETE FROM sync_outbox WHERE {scope}"), params![id])?;
+    for commit_id in commits {
+        delete_empty_cohort(conn, &commit_id)?;
+    }
+    Ok(())
+}
+
+fn delete_subtree(conn: &Connection, kind: Kind, id: &str, changed: &mut Changed) -> Result<(), AppError> {
+    let (reviews, cards) = match kind {
+        Kind::Decks => (
+            conn.execute(
+                "DELETE FROM reviews WHERE card_id IN (SELECT id FROM cards WHERE deck_id = ?1)",
+                params![id],
+            )?,
+            conn.execute("DELETE FROM cards WHERE deck_id = ?1", params![id])?,
+        ),
+        Kind::Cards => (conn.execute("DELETE FROM reviews WHERE card_id = ?1", params![id])?, 0),
+        _ => (0, 0),
+    };
+    let (table, _) = table(kind);
+    conn.execute(&format!("DELETE FROM {table} WHERE id = ?1"), params![id])?;
+
+    changed.mark(kind);
+    if cards > 0 {
+        changed.mark(Kind::Cards);
+    }
+    if reviews > 0 {
+        changed.mark(Kind::Reviews);
+    }
     Ok(())
 }
 
