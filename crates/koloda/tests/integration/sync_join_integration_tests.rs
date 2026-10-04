@@ -4,6 +4,7 @@ use std::collections::HashMap;
 use std::num::NonZeroU32;
 
 use koloda::app::db::Database;
+use koloda::app::init::seed_joiner_db;
 use koloda::domain::algorithms::{DeleteAlgorithmData, UpdateAlgorithmData, UpdateAlgorithmValues};
 use koloda::domain::attachments::AddAttachmentData;
 use koloda::domain::decks::{DeleteDeckData, UpdateDeckData, UpdateDeckValues};
@@ -15,7 +16,7 @@ use koloda::repo::attachments::add_attachment;
 use koloda::repo::decks::{delete_deck, get_deck, update_deck};
 use koloda::repo::settings::{get_settings, set_settings};
 use koloda::repo::sync::backfill::{backfill_batch, Backfill};
-use koloda::repo::sync::join::{add_to_space, begin_import, join_mode, probe_ids, JoinMode, Known};
+use koloda::repo::sync::join::{add_to_space, begin_import, join_mode, probe_ids, replace_with_space, JoinMode, Known};
 use koloda::repo::sync::{enroll_device, SpaceRole};
 use koloda::repo::templates::{delete_template, get_template, update_template};
 use koloda_sync_proto::registry::Kind;
@@ -884,4 +885,117 @@ fn an_edited_seed_algorithm_the_space_holds_is_reminted_with_its_revisions() {
         "the revisions are reminted too"
     );
     assert_eq!(learning(&joiner)["defaults"]["algorithm"], json!(reminted));
+}
+
+#[test]
+fn replace_leaves_no_local_product_rows_and_keeps_device_local_data() {
+    // Covers PROTOCOL.md conformance: Replace leaves no local product rows.
+    let creator = seeded_db();
+    let template = add_template(&creator, "Vocabulary");
+    let deck = add_deck(&creator, SEED_ALGORITHM_SIMPLE_ID, &template, "Spanish");
+    add_card(&creator, &deck, &template, "hola");
+    enroll_as(&creator, SpaceRole::Creator);
+    let mut space = FakeSpace::default();
+    space.drain_backfill(&creator, 100);
+
+    let joiner = seeded_db();
+    let algorithm = add_algorithm(&joiner, "FSRS");
+    let deck = add_deck(&joiner, &algorithm, SEED_TEMPLATE_TYPE_ID, "German");
+    let card = add_card(&joiner, &deck, SEED_TEMPLATE_TYPE_ID, "hallo");
+    insert_review_row(&joiner, &card, 2, 0, 1_727_000_000_000);
+    add_conversation(&joiner, "conversation-1", json!({ "cardIds": [card] }));
+    let mut bytes = b"\x89PNG\r\n\x1a\n".to_vec();
+    bytes.resize(16, 0);
+    add_attachment(
+        &joiner,
+        AddAttachmentData {
+            bytes,
+            width: None,
+            height: None,
+        },
+    )
+    .expect("attachment adds");
+    let local = |db: &Database| -> Vec<Vec<Vec<Value>>> {
+        ["settings", "conversations", "attachments", "attachment_bytes"]
+            .into_iter()
+            .map(|table| dump(db, table))
+            .collect()
+    };
+    let before = local(&joiner);
+
+    begin_import(&joiner, Uuid::now_v7(), SPACE).expect("claim records");
+    replace_with_space(&joiner).expect("file joins through Replace");
+
+    for table in SYNCED_TABLES {
+        assert!(ids(&joiner, table).is_empty(), "Replace leaves no {table}");
+    }
+    assert_eq!(local(&joiner), before, "settings, conversations, and attachments stay");
+    assert!(drain(&joiner).is_empty(), "Replace leaves nothing to backfill");
+    for table in RECORDED_TABLES {
+        assert_eq!(count(&joiner, &format!("SELECT COUNT(*) FROM {table}")), 0, "{table}");
+    }
+
+    space.pull(&joiner);
+    for table in SYNCED_TABLES {
+        assert_eq!(dump(&joiner, table), dump(&creator, table), "{table}");
+    }
+}
+
+#[test]
+fn add_and_replace_refuse_a_file_that_is_not_pending() {
+    let db = seeded_db();
+    add_deck(&db, SEED_ALGORITHM_SIMPLE_ID, SEED_TEMPLATE_TYPE_ID, "Spanish");
+    enroll_as(&db, SpaceRole::Joiner);
+
+    assert_eq!(add_to_space(&db, &HashMap::new()).unwrap_err().code, "db.update");
+    assert_eq!(replace_with_space(&db).unwrap_err().code, "db.delete");
+    assert_eq!(
+        count(&db, "SELECT COUNT(*) FROM decks"),
+        1,
+        "an active file keeps its rows"
+    );
+}
+
+#[test]
+fn a_blank_joiner_holds_no_seed_rows_and_takes_the_spaces_real_defaults() {
+    // Covers PROTOCOL.md conformance: Space created after its device deleted the seed algorithm, for a blank
+    // joiner.
+    let creator = seeded_db();
+    let algorithm = add_algorithm(&creator, "FSRS");
+    set_learning_defaults(&creator, &algorithm, SEED_TEMPLATE_TYPE_ID);
+    delete_algorithm(
+        &creator,
+        DeleteAlgorithmData {
+            id: SEED_ALGORITHM_SIMPLE_ID.to_string(),
+            successor_id: None,
+        },
+    )
+    .expect("seed algorithm deletes");
+    enroll_as(&creator, SpaceRole::Creator);
+    let mut space = FakeSpace::default();
+    space.drain_backfill(&creator, 100);
+
+    let joiner = test_db();
+    assert_eq!(join_mode(&joiner, SPACE).unwrap(), JoinMode::Blank);
+    seed_joiner_db(&joiner, seed_data("Simple", "Basic").settings).expect("blank joiner seeds");
+    for table in SYNCED_TABLES {
+        assert!(ids(&joiner, table).is_empty(), "a blank joiner holds no {table}");
+    }
+    assert_eq!(
+        learning(&joiner)["defaults"],
+        json!({ "algorithm": SEED_ALGORITHM_SIMPLE_ID, "template": SEED_TEMPLATE_TYPE_ID })
+    );
+
+    enroll_device(&joiner, Uuid::now_v7(), SPACE, SpaceRole::Joiner).expect("blank joiner enrolls");
+    assert!(drain(&joiner).is_empty(), "a blank joiner backfills nothing");
+    space.pull(&joiner);
+
+    assert_eq!(
+        learning(&joiner)["defaults"],
+        json!({ "algorithm": algorithm, "template": SEED_TEMPLATE_TYPE_ID }),
+        "the defaults never stay on the seed id the space deleted"
+    );
+    for table in SYNCED_TABLES {
+        assert_eq!(dump(&joiner, table), dump(&creator, table), "{table}");
+    }
 }

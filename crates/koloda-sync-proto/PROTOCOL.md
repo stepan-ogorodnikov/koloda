@@ -1046,7 +1046,9 @@ Joining looks at the local file:
 | Was in this space | Re-attach |
 
 A file is blank until its first-run seed writes settings.
-It holds only the untouched first-run seed when its rows are the seed algorithm with its one revision and the seed
+A blank file that joins seeds only its settings.
+Its `learning` defaults name the seed ids until the space's `learning` document overlays them.
+A file holds only the untouched first-run seed when its rows are the seed algorithm with its one revision and the seed
 template, both unmodified, and it has no deck or card; `learning` does not count.
 A seed row is unmodified while its `updated_at` is NULL.
 Every save sets it, even one that changes nothing.
@@ -1108,7 +1110,10 @@ Accepted edge: two copies of one never-synced file that probe at the same moment
 Their creates for shared ids then collapse into one (`stale`), and their edits merge by LWW instead of
 duplicating.
 
-**Replace** deletes every product row and sync table, keeps device-local settings, then joins as a blank file.
+**Replace** deletes every product row, then joins as a blank file.
+It keeps the settings rows, conversations, and attachments.
+`learning` stays at stamp zero, so the space's document overlays it.
+Cards that arrive from the space reuse local attachment bytes; the startup sweep removes images no card references.
 
 ### Re-attach
 

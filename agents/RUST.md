@@ -95,6 +95,7 @@ so card-progress and review namespaces stay distinct.
 - The space id is stored at enrollment; only an `active` file in the same space re-attaches.
 - `add_to_space` keeps, deletes, or remints seed rows, remints known rows with their dependents, then reserves the
   backfill stamps as a joiner.
+- `replace_with_space` deletes product rows only; a blank joiner seeds with `seed_joiner_db` and enrolls.
 - Join tests probe through `FakeSpace::probe`; `copy_of` stands in for a copied file.
 
 **Review writes** — `insert_review` in `src/repo/reviews.rs` is the single write path (`pub(crate)`).

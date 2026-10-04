@@ -1,5 +1,5 @@
-//! Joining an existing space: the local mode check, the claim, the ids the space is probed for, and Add
-//! (`crates/koloda-sync-proto/PROTOCOL.md` §Joining).
+//! Joining an existing space: the local mode check, the claim, the ids the space is probed for, Add, and Replace
+//! (`crates/koloda-sync-proto/PROTOCOL.md` §Joining). A blank file seeds with `app::init::seed_joiner_db`.
 
 use std::collections::HashMap;
 
@@ -155,6 +155,28 @@ pub fn add_to_space(db: &Database, known: &HashMap<String, Known>) -> Result<(),
             remint(tx, |id| {
                 reminted_seeds.contains(&id.as_str()) || (known.contains_key(id) && !is_seed(id))
             })?;
+            activate(tx)
+        })
+    })
+}
+
+pub fn replace_with_space(db: &Database) -> Result<(), AppError> {
+    throw_known_error(error_codes::DB_DELETE, || {
+        db.with_transaction(|tx| {
+            require_pending(tx)?;
+            // WHY: only product rows go. Settings stay at stamp zero for the space to overlay, and conversations are
+            // device-local. Attachments are content-addressed: cards from the space reuse their bytes, and the
+            // startup sweep removes the rest.
+            for table in [
+                "reviews",
+                "cards",
+                "decks",
+                "algorithm_revisions",
+                "algorithms",
+                "templates",
+            ] {
+                tx.execute(&format!("DELETE FROM {table}"), [])?;
+            }
             activate(tx)
         })
     })

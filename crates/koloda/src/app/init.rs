@@ -54,12 +54,7 @@ pub fn seed_db(db: &Database, data: SeedData) -> Result<(), AppError> {
     let interface = SettingsName::Interface.normalize(data.settings.interface)?;
     let hotkeys = SettingsName::Hotkeys.normalize(data.settings.hotkeys)?;
     let now = get_current_timestamp()?;
-    let mut learning_settings: LearningSettings = serde_json::from_value(data.settings.learning).map_err(|e| {
-        AppError::new(
-            error_codes::VALIDATION_SEED_LEARNING_SETTINGS,
-            Some(format!("learning settings must be valid LearningSettings JSON: {e}")),
-        )
-    })?;
+    let mut learning_settings = parse_learning_settings(data.settings.learning)?;
 
     db.with_transaction(|tx| {
         let algorithm_id = match algorithms::oldest_algorithm_id(tx)? {
@@ -92,6 +87,34 @@ pub fn seed_db(db: &Database, data: SeedData) -> Result<(), AppError> {
         settings::upsert_settings(tx, SettingsName::Hotkeys, &hotkeys, now)?;
 
         Ok(())
+    })
+}
+
+pub fn seed_joiner_db(db: &Database, settings: SeedSettings) -> Result<(), AppError> {
+    let interface = SettingsName::Interface.normalize(settings.interface)?;
+    let hotkeys = SettingsName::Hotkeys.normalize(settings.hotkeys)?;
+    let now = get_current_timestamp()?;
+    let mut learning_settings = parse_learning_settings(settings.learning)?;
+    // WHY: a joining file skips the seed rows, so its defaults name seed ids it does not hold until the space's
+    // learning document overlays them (crates/koloda-sync-proto/PROTOCOL.md, Joining).
+    learning_settings.defaults.algorithm = crate::domain::seed_ids::SEED_ALGORITHM_SIMPLE_ID.to_string();
+    learning_settings.defaults.template = crate::domain::seed_ids::SEED_TEMPLATE_TYPE_ID.to_string();
+    let learning = SettingsName::Learning.normalize(serde_json::to_value(&learning_settings)?)?;
+
+    db.with_transaction(|tx| {
+        settings::upsert_settings(tx, SettingsName::Interface, &interface, now)?;
+        settings::upsert_settings(tx, SettingsName::Learning, &learning, now)?;
+        settings::upsert_settings(tx, SettingsName::Hotkeys, &hotkeys, now)?;
+        Ok(())
+    })
+}
+
+fn parse_learning_settings(learning: Value) -> Result<LearningSettings, AppError> {
+    serde_json::from_value(learning).map_err(|e| {
+        AppError::new(
+            error_codes::VALIDATION_SEED_LEARNING_SETTINGS,
+            Some(format!("learning settings must be valid LearningSettings JSON: {e}")),
+        )
     })
 }
 

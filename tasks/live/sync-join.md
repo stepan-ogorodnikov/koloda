@@ -148,7 +148,7 @@ Out:
   Commit: Keep, delete, or remint seed rows when a database joins
   Depends on: 2
 
-- [ ] 4. Replace local data or join as a blank database
+- [x] 4. Replace local data or join as a blank database
   Goal: `replace_with_space(db)` works only on a pending file.
   In one transaction it deletes every review, card, deck, algorithm revision, algorithm, and template. It then turns the file `active` as a joiner and reserves the backfill stamps.
   It keeps:
