@@ -890,6 +890,11 @@ Capture that touches an unstamped entity backfills, in the same transaction and 
 4. the entity's own create and current groups;
 5. the triggering write.
 
+The backfilled envelopes join the triggering commit and share its stamp.
+Capture checks only while backfill runs; once the last phase finishes, every row is stamped.
+A delete backfills nothing, because a tombstone for an id the server does not hold is accepted as a fence.
+A joiner's stamp-zero seed row counts as stamped, so an edit of it pushes only the edit.
+
 ### Bootstrap
 
 Rough sizes for a heavy user (500k cards, 20M reviews):

@@ -5,7 +5,10 @@ use koloda_sync_proto::registry::{allow, Class, Kind};
 use rusqlite::{params, Connection, OptionalExtension};
 use uuid::Uuid;
 
-use super::{delete_empty_cohort, forget_card_reviews, forget_entity, protocol_error, StampValues, ROW_GROUP};
+use super::backfill;
+use super::{
+    delete_empty_cohort, forget_card_reviews, forget_entity, protocol_error, SpaceRole, StampValues, ROW_GROUP,
+};
 use crate::app::error::AppError;
 use crate::app::utility::get_current_timestamp;
 
@@ -22,6 +25,8 @@ struct DeviceState {
     next_sender_seq: i64,
     commit: Option<Commit>,
     reserved: Option<Hlc>,
+    role: SpaceRole,
+    is_backfilling: bool,
 }
 
 #[derive(Clone, Copy)]
@@ -32,16 +37,19 @@ struct Commit {
 
 impl<'c> Capture<'c> {
     pub fn begin(conn: &'c Connection) -> Result<Capture<'c>, AppError> {
-        let row: Option<(Vec<u8>, i64, i64)> = conn
+        let row: Option<(Vec<u8>, i64, i64, String, bool)> = conn
             .query_row(
-                "SELECT device_id, last_hlc, next_sender_seq FROM sync_state WHERE id = 1",
+                r#"
+                SELECT device_id, last_hlc, next_sender_seq, role, backfill_step IS NOT NULL
+                FROM sync_state WHERE id = 1
+                "#,
                 [],
-                |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
+                |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?, row.get(4)?)),
             )
             .optional()?;
 
         let device = match row {
-            Some((device, last_hlc, next_sender_seq)) => Some(DeviceState {
+            Some((device, last_hlc, next_sender_seq, role, is_backfilling)) => Some(DeviceState {
                 device: DeviceId(<[u8; 16]>::try_from(device.as_slice()).map_err(protocol_error)?),
                 clock: HlcClock {
                     last: Hlc::from_raw(u64::try_from(last_hlc).map_err(protocol_error)?),
@@ -49,6 +57,8 @@ impl<'c> Capture<'c> {
                 next_sender_seq,
                 commit: None,
                 reserved: None,
+                role: SpaceRole::from_sql(&role)?,
+                is_backfilling,
             }),
             None => None,
         };
@@ -69,6 +79,19 @@ impl<'c> Capture<'c> {
     }
 
     pub fn write(&mut self, id: &str, parent: Option<&str>, payload: &Payload) -> Result<(), AppError> {
+        if let Some(role) = self
+            .device
+            .as_ref()
+            .filter(|state| state.is_backfilling)
+            .map(|state| state.role)
+        {
+            backfill::touch(self.conn, self, role, id, parent, payload)?;
+        }
+        self.write_envelope(id, parent, payload)
+    }
+
+    // INVARIANT: skips the referent check of `write`; only backfill calls it, after it has stamped every referent.
+    pub(super) fn write_envelope(&mut self, id: &str, parent: Option<&str>, payload: &Payload) -> Result<(), AppError> {
         let conn = self.conn;
         let Some(state) = self.device.as_mut() else {
             return Ok(());

@@ -70,6 +70,8 @@ so card-progress and review namespaces stay distinct.
 - Record only the field groups whose values changed; a save that changes nothing records nothing.
 - Call `Capture::delete` before deleting product rows; it reads descendants to forget their registers.
 - Capture is a no-op until the database is enrolled, so web parity and non-sync tests are unaffected.
+- While backfill runs, `Capture::write` first backfills any unstamped row its envelope names (`backfill::touch`).
+  Backfill itself writes through `write_envelope`, which skips that check.
 
 **Remote apply** — `apply_page` writes product rows with its own SQL, never through repo write paths that capture.
 

@@ -248,8 +248,15 @@ fn a_delete_records_a_tombstone_and_forgets_its_descendants() {
         count(&db, "SELECT COUNT(*) FROM sync_tombstones WHERE kind = 'decks'"),
         1
     );
-    assert_eq!(count(&db, "SELECT COUNT(*) FROM sync_stamps"), 0);
-    assert_eq!(count(&db, "SELECT COUNT(*) FROM sync_origins"), 0);
+    let subtree = "kind IN ('decks', 'cards', 'reviews')";
+    assert_eq!(
+        count(&db, &format!("SELECT COUNT(*) FROM sync_stamps WHERE {subtree}")),
+        0
+    );
+    assert_eq!(
+        count(&db, &format!("SELECT COUNT(*) FROM sync_origins WHERE {subtree}")),
+        0
+    );
 
     let entries = outbox(&db);
     assert_eq!(entries.len(), 4, "pending creates stay queued ahead of the tombstone");

@@ -5,13 +5,16 @@ use std::collections::HashMap;
 
 use koloda::app::db::Database;
 use koloda::domain::algorithms::{DeleteAlgorithmData, UpdateAlgorithmData, UpdateAlgorithmValues};
-use koloda::domain::cards::{UpdateCardData, UpdateCardValues};
-use koloda::domain::decks::{UpdateDeckData, UpdateDeckValues};
+use koloda::domain::cards::{UpdateCardData, UpdateCardProgress, UpdateCardValues};
+use koloda::domain::decks::{DeleteDeckData, UpdateDeckData, UpdateDeckValues};
+use koloda::domain::lessons::LessonResultData;
+use koloda::domain::reviews::InsertReviewData;
 use koloda::domain::seed_ids::{SEED_ALGORITHM_SIMPLE_ID, SEED_TEMPLATE_TYPE_ID};
 use koloda::domain::settings::SettingsName;
 use koloda::repo::algorithms::{delete_algorithm, get_algorithm, update_algorithm};
-use koloda::repo::cards::update_card;
-use koloda::repo::decks::{get_deck, update_deck};
+use koloda::repo::cards::{get_card, update_card};
+use koloda::repo::decks::{delete_deck, get_deck, update_deck};
+use koloda::repo::lessons::submit_lesson_result;
 use koloda::repo::settings::{get_settings, set_settings};
 use koloda::repo::sync::backfill::{backfill_batch, Backfill};
 use koloda::repo::sync::SpaceRole;
@@ -34,6 +37,7 @@ struct Legacy {
     algorithm: String,
     template: String,
     deck: String,
+    card: String,
 }
 
 fn seeded_db() -> Database {
@@ -92,7 +96,7 @@ fn legacy_rows(db: &Database) -> Legacy {
     update_card(
         db,
         UpdateCardData {
-            id: card,
+            id: card.clone(),
             values: UpdateCardValues {
                 content: card_content("hola", "hello"),
             },
@@ -106,6 +110,7 @@ fn legacy_rows(db: &Database) -> Legacy {
         algorithm,
         template,
         deck,
+        card,
     }
 }
 
@@ -366,4 +371,203 @@ fn the_scan_keeps_registers_that_remote_writes_set_on_a_legacy_row() {
         assert_eq!(register.sender, remote, "{group}");
         assert!(!register.is_synthetic, "{group}");
     }
+}
+
+fn grade(db: &Database, card: &str) {
+    submit_lesson_result(
+        db,
+        LessonResultData {
+            card: UpdateCardProgress {
+                id: card.to_string(),
+                state: 2,
+                due_at: 1_900_000_000_000,
+                stability: 5.5,
+                difficulty: 4.25,
+                scheduled_days: 7,
+                learning_steps: 0,
+                reps: 1,
+                lapses: 0,
+                last_reviewed_at: Some(1_800_000_000_000),
+            },
+            review: InsertReviewData {
+                card_id: card.to_string(),
+                rating: 3,
+                state: 2,
+                due_at: 1_900_000_000_000,
+                stability: 5.5,
+                difficulty: 4.25,
+                scheduled_days: 7,
+                learning_steps: 0,
+                time: 12,
+                is_ignored: false,
+            },
+        },
+    )
+    .expect("grade submits");
+}
+
+fn writes(entries: &[OutboxEntry]) -> Vec<(Kind, Option<Group>, String)> {
+    entries
+        .iter()
+        .map(|entry| {
+            let header = &entry.envelope.header;
+            (header.kind, header.group, header.id.clone())
+        })
+        .collect()
+}
+
+/// The envelopes that backfill the legacy deck and the algorithm and template it points at.
+fn deck_backfill(legacy: &Legacy) -> Vec<(Kind, Option<Group>, String)> {
+    vec![
+        (Kind::Algorithms, Some(Group::Create), legacy.algorithm.clone()),
+        (Kind::Templates, Some(Group::Create), legacy.template.clone()),
+        (Kind::Decks, Some(Group::Create), legacy.deck.clone()),
+        (Kind::Decks, Some(Group::Algorithm), legacy.deck.clone()),
+        (Kind::Decks, Some(Group::Template), legacy.deck.clone()),
+    ]
+}
+
+#[test]
+fn a_card_added_to_a_legacy_deck_backfills_its_referents_first_and_the_scan_skips_them() {
+    // Covers PROTOCOL.md conformance: Card create before referent backfill.
+    let (creator, legacy) = legacy_creator();
+    let joiner = joiner();
+    let mut space = FakeSpace::default();
+
+    let card = add_card(&creator, &legacy.deck, &legacy.template, "nuevo");
+
+    let mut expected = deck_backfill(&legacy);
+    expected.push((Kind::Cards, Some(Group::Create), card.clone()));
+    assert_eq!(writes(&outbox(&creator)), expected);
+
+    space.push(&creator);
+    space.pull(&joiner);
+    assert!(
+        get_card(&joiner, &card).unwrap().is_some(),
+        "the joiner holds the new card"
+    );
+
+    let scanned = drain(&creator, 100);
+    for written in &expected {
+        assert!(!writes(&scanned).contains(written), "{written:?} is backfilled twice");
+    }
+    space.push(&creator);
+    space.assert_referents_first();
+}
+
+#[test]
+fn an_edit_or_grade_of_a_legacy_card_backfills_the_card_before_the_write() {
+    for is_grade in [false, true] {
+        let (creator, legacy) = legacy_creator();
+
+        if is_grade {
+            grade(&creator, &legacy.card);
+        } else {
+            update_card(
+                &creator,
+                UpdateCardData {
+                    id: legacy.card.clone(),
+                    values: UpdateCardValues {
+                        content: card_content("hola", "hi"),
+                    },
+                },
+            )
+            .unwrap();
+        }
+
+        let entries = outbox(&creator);
+        let mut expected = deck_backfill(&legacy);
+        expected.push((Kind::Cards, Some(Group::Create), legacy.card.clone()));
+        if is_grade {
+            expected.push((Kind::Cards, Some(Group::Scheduling), legacy.card.clone()));
+            let review = entries
+                .last()
+                .expect("the review is pending")
+                .envelope
+                .header
+                .id
+                .clone();
+            expected.push((Kind::Reviews, Some(Group::Row), review));
+        } else {
+            expected.push((Kind::Cards, Some(Group::Content), legacy.card.clone()));
+        }
+        assert_eq!(writes(&entries), expected, "grade: {is_grade}");
+        let commits: std::collections::HashSet<_> =
+            entries.iter().map(|entry| entry.envelope.header.commit_id).collect();
+        assert_eq!(
+            commits.len(),
+            1,
+            "the backfill joins the write's commit; grade: {is_grade}"
+        );
+    }
+}
+
+#[test]
+fn a_learning_default_switched_to_a_legacy_algorithm_backfills_that_algorithm_first() {
+    let creator = seeded_db();
+    let legacy = legacy_rows(&creator);
+    let other = add_algorithm(&creator, "Other");
+    enroll_as(&creator, SpaceRole::Creator);
+
+    set_learning(&creator, &other, &legacy.template);
+
+    assert_eq!(
+        writes(&outbox(&creator)),
+        [
+            (Kind::Algorithms, Some(Group::Create), other),
+            (
+                Kind::SettingsLearning,
+                Some(Group::DefaultsAlgorithm),
+                "learning".to_string()
+            ),
+        ]
+    );
+}
+
+#[test]
+fn deleting_a_legacy_deck_enqueues_only_its_tombstone_and_the_scan_finds_none_of_its_cards() {
+    let (creator, legacy) = legacy_creator();
+
+    delete_deck(
+        &creator,
+        DeleteDeckData {
+            id: legacy.deck.clone(),
+        },
+    )
+    .unwrap();
+
+    assert_eq!(writes(&outbox(&creator)), [(Kind::Decks, None, legacy.deck.clone())]);
+    let scanned = drain(&creator, 100);
+    assert!(
+        scanned
+            .iter()
+            .all(|entry| !matches!(entry.envelope.header.kind, Kind::Decks | Kind::Cards)
+                || entry.envelope.header.group.is_none()),
+        "nothing of the deleted deck is backfilled"
+    );
+}
+
+#[test]
+fn a_joiners_edit_of_a_stamp_zero_seed_algorithm_enqueues_only_the_edit() {
+    let joiner = seeded_db();
+    enroll_as(&joiner, SpaceRole::Joiner);
+    let seed = get_algorithm(&joiner, SEED_ALGORITHM_SIMPLE_ID).unwrap().unwrap();
+
+    update_algorithm(
+        &joiner,
+        UpdateAlgorithmData {
+            id: seed.id.clone(),
+            values: UpdateAlgorithmValues {
+                title: "Simple, renamed".to_string(),
+                content: seed.content,
+                notes: seed.notes,
+            },
+        },
+    )
+    .unwrap();
+
+    assert_eq!(
+        writes(&outbox(&joiner)),
+        [(Kind::Algorithms, Some(Group::Title), seed.id)]
+    );
 }

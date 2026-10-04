@@ -169,7 +169,7 @@ fn deleting_cards_records_one_tombstone_per_card_under_its_deck() {
         tombstones[1].envelope.header.commit_id, tombstones[2].envelope.header.commit_id,
         "a batch delete is one commit"
     );
-    assert_eq!(count(&db, "SELECT COUNT(*) FROM sync_stamps"), 0);
+    assert_eq!(count(&db, "SELECT COUNT(*) FROM sync_stamps WHERE kind = 'cards'"), 0);
 }
 
 #[test]

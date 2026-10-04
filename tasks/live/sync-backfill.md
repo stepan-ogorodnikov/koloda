@@ -114,7 +114,7 @@ Out:
   Commit: Backfill pre-sync creates when a device enrolls
   Depends on: 1
 
-- [ ] 3. Backfill unstamped referents when capture touches them
+- [x] 3. Backfill unstamped referents when capture touches them
   Goal: while backfill is unfinished, `Capture::write` first stamps every entity the new envelope names.
   That covers the header's parent chain and its algorithm and template refs, recursively, in the order `PROTOCOL.md` §Backfill lists:
   1. unstamped algorithms;

@@ -7,7 +7,7 @@ use koloda_sync_proto::registry::{allow, Class, Kind};
 use rusqlite::{params, Connection, OptionalExtension};
 use serde_json::Value;
 
-use super::apply::table;
+use super::apply::{is_present, table};
 use super::capture::Capture;
 use super::{protocol_error, SpaceRole, CREATE_GROUP, ROW_GROUP};
 use crate::app::db::Database;
@@ -159,7 +159,7 @@ fn run_batch(conn: &Connection, max_envelopes: usize) -> Result<Backfill, AppErr
                 return Ok(Backfill::Pending);
             }
             for payload in &payloads {
-                capture.write(&id, None, payload)?;
+                capture.write_envelope(&id, None, payload)?;
             }
             budget = budget.saturating_sub(payloads.len());
             has_written |= !payloads.is_empty();
@@ -316,4 +316,124 @@ fn holds_register(conn: &Connection, id: &str, payload: &Payload) -> Result<bool
         |row| row.get(0),
     )
     .map_err(AppError::from)
+}
+
+// INVARIANT: no envelope reaches the outbox before the rows it names. While backfill runs, a write that names an
+// unstamped row backfills it first, in the same commit and in PROTOCOL.md §Backfill order: algorithms, templates,
+// the parent chain from the root down, then the written entity itself. A delete never gets here: a tombstone for
+// an id the server does not hold is accepted as a fence.
+pub(super) fn touch(
+    conn: &Connection,
+    capture: &mut Capture<'_>,
+    role: SpaceRole,
+    id: &str,
+    parent: Option<&str>,
+    payload: &Payload,
+) -> Result<(), AppError> {
+    let (kind, group, op) = payload.target();
+    let is_update = allow(kind, group, op)
+        .map_err(protocol_error)?
+        .is_some_and(|spec| spec.class == Class::Update);
+
+    let mut chain = Vec::new();
+    let mut next = if is_update {
+        Some((kind, id.to_string()))
+    } else {
+        payload
+            .parent()
+            .or(parent)
+            .zip(kind.spec().parent)
+            .map(|(parent, parent_kind)| (parent_kind, parent.to_string()))
+    };
+    while let Some((kind, id)) = next {
+        next = ancestor(conn, kind, &id)?;
+        if needs_backfill(conn, role, kind, &id)? {
+            chain.push((kind, id));
+        }
+    }
+
+    let refs = payload.refs();
+    let mut algorithms: Vec<String> = refs.algorithm_id.into_iter().collect();
+    let mut templates: Vec<String> = refs.template_id.into_iter().collect();
+    for (kind, id) in &chain {
+        match kind {
+            Kind::Decks => {
+                let (algorithm, template): (String, String) = conn.query_row(
+                    "SELECT algorithm_id, template_id FROM decks WHERE id = ?1",
+                    params![id],
+                    |row| Ok((row.get(0)?, row.get(1)?)),
+                )?;
+                algorithms.push(algorithm);
+                templates.push(template);
+            }
+            Kind::Cards => {
+                templates.push(
+                    conn.query_row("SELECT template_id FROM cards WHERE id = ?1", params![id], |row| {
+                        row.get(0)
+                    })?,
+                );
+            }
+            _ => {}
+        }
+    }
+
+    let mut backfilled: Vec<(Kind, String)> = Vec::new();
+    let referents = algorithms
+        .into_iter()
+        .map(|id| (Kind::Algorithms, id))
+        .chain(templates.into_iter().map(|id| (Kind::Templates, id)));
+    for (kind, id) in referents {
+        if !backfilled.contains(&(kind, id.clone())) && needs_backfill(conn, role, kind, &id)? {
+            backfill_entity(conn, capture, kind, &id)?;
+            backfilled.push((kind, id));
+        }
+    }
+    for (kind, id) in chain.iter().rev() {
+        backfill_entity(conn, capture, *kind, id)?;
+    }
+    Ok(())
+}
+
+fn ancestor(conn: &Connection, kind: Kind, id: &str) -> Result<Option<(Kind, String)>, AppError> {
+    if kind != Kind::Cards {
+        return Ok(None);
+    }
+    let deck: Option<String> = conn
+        .query_row("SELECT deck_id FROM cards WHERE id = ?1", params![id], |row| row.get(0))
+        .optional()?;
+    Ok(deck.map(|deck| (Kind::Decks, deck)))
+}
+
+fn needs_backfill(conn: &Connection, role: SpaceRole, kind: Kind, id: &str) -> Result<bool, AppError> {
+    let has_create = kind.spec().groups.iter().any(|spec| spec.class == Class::Create);
+    // WHY: a joiner's untouched seed row stays at stamp zero; the space already holds it (PROTOCOL.md, Seed identity).
+    let is_joiner_seed = role == SpaceRole::Joiner
+        && matches!(
+            (kind, id),
+            (Kind::Algorithms, SEED_ALGORITHM_SIMPLE_ID) | (Kind::Templates, SEED_TEMPLATE_TYPE_ID)
+        );
+    if !has_create || is_joiner_seed || !is_present(conn, kind, id)? {
+        return Ok(false);
+    }
+
+    let is_stamped: bool = conn.query_row(
+        "SELECT EXISTS (SELECT 1 FROM sync_origins WHERE kind = ?1 AND id = ?2 AND group_name = ?3)",
+        params![kind.as_wire(), id, CREATE_GROUP],
+        |row| row.get(0),
+    )?;
+    Ok(!is_stamped)
+}
+
+fn backfill_entity(conn: &Connection, capture: &mut Capture<'_>, kind: Kind, id: &str) -> Result<(), AppError> {
+    let step = match kind {
+        Kind::Algorithms => Step::Algorithms,
+        Kind::Templates => Step::Templates,
+        Kind::Decks => Step::Decks,
+        Kind::Cards => Step::Cards,
+        other => return Err(protocol_error(format!("{other:?} has no create to backfill"))),
+    };
+    for payload in entity_payloads(conn, step, id)? {
+        capture.write_envelope(id, None, &payload)?;
+    }
+    Ok(())
 }

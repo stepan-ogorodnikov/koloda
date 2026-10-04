@@ -35,9 +35,13 @@ pub struct Origin {
     pub sender_seq: i64,
 }
 
-/// Enrolls as a joiner, so a seeded replica's starter rows and `learning` document stay at stamp zero.
+/// Enrolls as a joiner whose earlier rows the space already holds: backfill runs to the end and its envelopes are
+/// dropped, so the outbox holds only what a test writes afterwards. A seeded replica's starter rows and `learning`
+/// document stay at stamp zero.
 pub fn enroll(db: &Database) -> Uuid {
-    enroll_as(db, SpaceRole::Joiner)
+    let device = enroll_as(db, SpaceRole::Joiner);
+    FakeSpace::default().drain_backfill(db, 100);
+    device
 }
 
 pub fn enroll_as(db: &Database, role: SpaceRole) -> Uuid {
