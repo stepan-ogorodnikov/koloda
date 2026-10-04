@@ -1,10 +1,13 @@
-//! Sync capture readers: enroll a test database and decode what capture wrote.
+//! Sync test support: enroll a test database, decode what capture wrote, and exchange outboxes between replicas
+//! through a fake space.
 
 use koloda::app::db::Database;
 use koloda::repo::sync;
+use koloda::repo::sync::apply::{apply_page, Page, PageEntry};
 use koloda_sync_proto::envelope::Envelope;
 use koloda_sync_proto::hlc::Hlc;
 use koloda_sync_proto::payload::Payload;
+use koloda_sync_proto::registry::{Kind, Lane};
 use uuid::Uuid;
 
 pub struct OutboxEntry {
@@ -16,15 +19,155 @@ pub struct OutboxEntry {
 
 pub struct Register {
     pub hlc: Hlc,
+    pub sender: Uuid,
     pub sender_seq: i64,
     pub product_ts: Option<i64>,
     pub is_synthetic: bool,
+}
+
+pub struct Origin {
+    pub hlc: Hlc,
+    pub sender: Uuid,
+    pub sender_seq: i64,
 }
 
 pub fn enroll(db: &Database) -> Uuid {
     let device = Uuid::now_v7();
     sync::enroll_device(db, device).expect("test database enrolls");
     device
+}
+
+/// A blank enrolled database, so every row a test writes on it is captured.
+pub fn replica() -> Database {
+    let db = super::test_db();
+    enroll(&db);
+    db
+}
+
+/// Stands in for the server's log: it orders pushed envelopes per lane and serves them to other senders.
+/// It makes none of the server's checks (stale heads, existence, compaction).
+#[derive(Default)]
+pub struct FakeSpace {
+    hot: Vec<LogEntry>,
+    cold: Vec<LogEntry>,
+}
+
+struct LogEntry {
+    seq: i64,
+    sender: Uuid,
+    sender_seq: i64,
+    envelope: Vec<u8>,
+}
+
+impl FakeSpace {
+    /// Accepts every not-in-flight outbox row, as an `applied` push outcome would, and clears it.
+    pub fn push(&mut self, replica: &Database) {
+        let sender = device(replica);
+        let rows: Vec<(i64, Vec<u8>)> = replica
+            .with_conn(|conn| {
+                let mut stmt = conn
+                    .prepare("SELECT sender_seq, envelope FROM sync_outbox WHERE in_flight = 0 ORDER BY sender_seq")?;
+                let rows = stmt
+                    .query_map([], |row| Ok((row.get(0)?, row.get(1)?)))?
+                    .collect::<Result<Vec<_>, _>>()?;
+                Ok(rows)
+            })
+            .expect("outbox reads");
+
+        for (sender_seq, envelope) in rows {
+            let kind = Envelope::decode(&envelope)
+                .expect("outbox envelope decodes")
+                .header
+                .kind;
+            let log = match kind.spec().lane {
+                Lane::Hot => &mut self.hot,
+                Lane::Cold => &mut self.cold,
+            };
+            let seq = i64::try_from(log.len()).expect("log length fits") + 1;
+            log.push(LogEntry {
+                seq,
+                sender,
+                sender_seq,
+                envelope,
+            });
+        }
+
+        replica
+            .with_conn(|conn| {
+                conn.execute("DELETE FROM sync_outbox WHERE in_flight = 0", [])?;
+                conn.execute(
+                    "DELETE FROM sync_cohorts WHERE commit_id NOT IN (SELECT commit_id FROM sync_outbox)",
+                    [],
+                )?;
+                Ok(())
+            })
+            .expect("outbox clears");
+    }
+
+    /// Applies everything other senders pushed past the replica's cursors: `hot` first, then `cold`.
+    pub fn pull(&self, replica: &Database) -> Vec<Kind> {
+        let own = device(replica);
+        let mut changed = Vec::new();
+        for (lane, log) in [(Lane::Hot, &self.hot), (Lane::Cold, &self.cold)] {
+            let after = cursor(replica, lane);
+            let page = Page {
+                lane,
+                entries: log
+                    .iter()
+                    .filter(|entry| entry.seq > after && entry.sender != own)
+                    .map(|entry| PageEntry {
+                        sender: entry.sender,
+                        sender_seq: entry.sender_seq,
+                        envelope: entry.envelope.clone(),
+                    })
+                    .collect(),
+                scanned_through: log.last().map_or(after, |entry| entry.seq),
+            };
+            changed.extend(apply_page(replica, &page).expect("page applies"));
+        }
+        changed
+    }
+}
+
+pub fn device(db: &Database) -> Uuid {
+    sync::enrolled_device(db)
+        .expect("device reads")
+        .expect("database is enrolled")
+}
+
+pub fn cursor(db: &Database, lane: Lane) -> i64 {
+    let column = match lane {
+        Lane::Hot => "cursor_hot",
+        Lane::Cold => "cursor_cold",
+    };
+    count(db, &format!("SELECT {column} FROM sync_state WHERE id = 1"))
+}
+
+pub fn last_hlc(db: &Database) -> Hlc {
+    let raw = count(db, "SELECT last_hlc FROM sync_state WHERE id = 1");
+    Hlc::from_raw(u64::try_from(raw).expect("stored HLC is non-negative"))
+}
+
+pub fn origin(db: &Database, kind: &str, id: &str, group: &str) -> Option<Origin> {
+    db.with_conn(|conn| {
+        let origin = conn.query_row(
+            "SELECT hlc, sender, sender_seq FROM sync_origins WHERE kind = ?1 AND id = ?2 AND group_name = ?3",
+            rusqlite::params![kind, id, group],
+            |row| {
+                Ok(Origin {
+                    hlc: Hlc::from_raw(u64::try_from(row.get::<_, i64>(0)?).expect("stored HLC is non-negative")),
+                    sender: Uuid::from_slice(&row.get::<_, Vec<u8>>(1)?).expect("sender is a UUID"),
+                    sender_seq: row.get(2)?,
+                })
+            },
+        );
+        match origin {
+            Ok(origin) => Ok(Some(origin)),
+            Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
+            Err(error) => Err(error.into()),
+        }
+    })
+    .expect("origin reads")
 }
 
 pub fn outbox(db: &Database) -> Vec<OutboxEntry> {
@@ -57,16 +200,17 @@ pub fn register(db: &Database, kind: &str, id: &str, group: &str) -> Option<Regi
     db.with_conn(|conn| {
         let register = conn.query_row(
             r#"
-            SELECT hlc, sender_seq, product_ts, synthetic FROM sync_stamps
+            SELECT hlc, sender, sender_seq, product_ts, synthetic FROM sync_stamps
             WHERE kind = ?1 AND id = ?2 AND group_name = ?3
             "#,
             rusqlite::params![kind, id, group],
             |row| {
                 Ok(Register {
                     hlc: Hlc::from_raw(u64::try_from(row.get::<_, i64>(0)?).expect("stored HLC is non-negative")),
-                    sender_seq: row.get(1)?,
-                    product_ts: row.get(2)?,
-                    is_synthetic: row.get(3)?,
+                    sender: Uuid::from_slice(&row.get::<_, Vec<u8>>(1)?).expect("sender is a UUID"),
+                    sender_seq: row.get(2)?,
+                    product_ts: row.get(3)?,
+                    is_synthetic: row.get(4)?,
                 })
             },
         );

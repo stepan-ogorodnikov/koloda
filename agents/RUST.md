@@ -16,6 +16,7 @@ This file only tells you where to start.
 | Daily-limit / review-totals policy | `src/domain/reviews.rs::calculate_todays_review_totals` |
 | Review row writes | `src/repo/reviews.rs::insert_review` |
 | A product write path (sync capture) | `src/repo/sync/capture.rs::Capture` + `crates/koloda-sync-proto/PROTOCOL.md` (§Field groups and merge) |
+| Applying remote sync envelopes | `src/repo/sync/apply.rs::apply_page` + `crates/koloda-sync-proto/PROTOCOL.md` (§Field groups and merge, Apply rule) |
 | Schema / migrations | `agents/DB.md` |
 | AI provider enum / secrets redaction | `agents/ADD-AI-PROVIDER.md` |
 | Hotkeys settings | `agents/ADD-HOTKEY.md` |
@@ -68,6 +69,11 @@ so card-progress and review namespaces stay distinct.
 - Record only the field groups whose values changed; a save that changes nothing records nothing.
 - Call `Capture::delete` before deleting product rows; it reads descendants to forget their registers.
 - Capture is a no-op until the database is enrolled, so web parity and non-sync tests are unaffected.
+
+**Remote apply** — `apply_page` writes product rows with its own SQL, never through repo write paths that capture.
+
+- A remote write that went through one would re-enter the outbox.
+- Two-replica tests exchange outboxes through `FakeSpace` in `tests/common/sync.rs`.
 
 **Review writes** — `insert_review` in `src/repo/reviews.rs` is the single write path (`pub(crate)`).
 

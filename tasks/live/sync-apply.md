@@ -59,10 +59,10 @@ Out:
   Commit: Split sync bookkeeping into enrollment and capture modules
   Depends on: none
 
-- [ ] 3. Add the fake space and apply creates
+- [x] 3. Add the fake space and apply creates
   Goal: `crates/koloda/src/repo/sync/apply.rs` with an entry point, `apply_page(db, page)`, that decodes each entry of one page, validates its header against the registry, and applies the page in one transaction, returning the kinds it changed for the engine's UI events.
   A page is a lane, its entries (envelope bytes plus `seq`, `sender`, `sender_seq`), and `scanned_through`; apply advances that lane's cursor to `scanned_through` in the same transaction.
-  This item implements apply rule steps 1–3 for live and missing referents and step 6: insert if absent, with synthetic registers whose `product_ts` comes from `initial_product_ts`, and a `create` origin carrying the entry's sender metadata; overlay of a stamp-zero seed row (a seed id with no `create` origin); deck placeholders from the lowest live algorithm and template id; the device clock observes every applied stamp.
+  This item implements apply rule step 3 for missing referents, step 5 for algorithm revisions (insert if absent, with a `row` origin), and step 6 for creates: insert if absent, with synthetic registers whose `product_ts` comes from `initial_product_ts`, and a `create` origin carrying the entry's sender metadata; overlay of a stamp-zero seed row (a seed id with no register or origin); deck placeholders from the lowest live algorithm and template id; the device clock observes every applied stamp.
   Migration `V6__sync_cursors.sql` adds `cursor_hot` and `cursor_cold` to `sync_state`; refresh the embedded listings on both hosts and the schema inventory per `agents/DB.md`.
   A test-only fake space in `crates/koloda/tests/common/sync.rs`: `push(replica)` moves a replica's not-in-flight outbox rows into a shared log with consecutive seqs and the replica's device as sender; `pull(replica)` applies every later entry from another sender as one page.
   Extend the accepted divergence in `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md` (desktop repos also apply envelopes other devices captured); add the `apply` module to the `crates/koloda/README.md` map and an `agents/RUST.md` routing row for remote apply.

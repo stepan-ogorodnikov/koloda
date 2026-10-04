@@ -20,6 +20,7 @@ mod schema_inventory_tests;
 mod seed_integration_tests;
 mod settings_integration_tests;
 mod settings_sync_integration_tests;
+mod sync_apply_integration_tests;
 mod sync_integration_tests;
 mod templates_integration_tests;
 mod templates_sync_integration_tests;

@@ -974,6 +974,20 @@
       "name": "sync_state",
       "columns": [
         {
+          "name": "cursor_cold",
+          "type": "INTEGER",
+          "notnull": 1,
+          "pk": 0,
+          "dflt_value": "0"
+        },
+        {
+          "name": "cursor_hot",
+          "type": "INTEGER",
+          "notnull": 1,
+          "pk": 0,
+          "dflt_value": "0"
+        },
+        {
           "name": "device_id",
           "type": "BLOB",
           "notnull": 1,

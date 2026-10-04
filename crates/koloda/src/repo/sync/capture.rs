@@ -5,12 +5,9 @@ use koloda_sync_proto::registry::{allow, Class, Kind};
 use rusqlite::{params, Connection, OptionalExtension};
 use uuid::Uuid;
 
-use super::protocol_error;
+use super::{protocol_error, StampValues, ROW_GROUP};
 use crate::app::error::AppError;
 use crate::app::utility::get_current_timestamp;
-
-const CREATE_GROUP: &str = "create";
-const ROW_GROUP: &str = "row";
 
 /// One commit's sync capture, opened inside the repo transaction that writes the product rows.
 /// It does nothing when the database is not enrolled, and nothing until its first write.
@@ -76,17 +73,7 @@ impl<'c> Capture<'c> {
         let stamp_values = StampValues::new(commit.stamp, state.device, sender_seq)?;
 
         match class {
-            Class::Create => {
-                stamp_values.write_origin(conn, kind, id, CREATE_GROUP, payload.legacy_product_ts_floor())?;
-                // WHY: a create stamps every update group of its entity at its own stamp, marked synthetic, so a
-                // same-commit update (deck pointers) still wins and later remote envelopes always meet a register.
-                let initial = payload.initial_product_ts();
-                for spec in kind.spec().groups.iter().filter(|spec| spec.class == Class::Update) {
-                    let name = spec.group.as_wire();
-                    let product_ts = initial.and_then(|initial| initial.get(name).copied());
-                    stamp_values.write_register(conn, kind, id, name, product_ts, true)?;
-                }
-            }
+            Class::Create => stamp_values.write_create(conn, kind, id, payload)?,
             Class::Update => stamp_values.write_register(conn, kind, id, group_name, payload.product_ts(), false)?,
             Class::Immutable => stamp_values.write_origin(conn, kind, id, ROW_GROUP, None)?,
         }
@@ -153,8 +140,8 @@ impl<'c> Capture<'c> {
                 kind.as_wire(),
                 id,
                 stamp_values.hlc,
-                stamp_values.device.as_slice(),
-                stamp_values.device.as_slice(),
+                stamp_values.stamp_device.as_slice(),
+                stamp_values.sender.as_slice(),
                 sender_seq,
                 successor
             ],
@@ -205,82 +192,6 @@ impl DeviceState {
             params![self.next_sender_seq],
         )?;
         Ok(sender_seq)
-    }
-}
-
-struct StampValues {
-    hlc: i64,
-    stamp_device: [u8; 16],
-    device: [u8; 16],
-    sender_seq: i64,
-}
-
-impl StampValues {
-    fn new(stamp: Stamp, device: DeviceId, sender_seq: i64) -> Result<StampValues, AppError> {
-        Ok(StampValues {
-            hlc: i64::try_from(stamp.hlc.raw()).map_err(protocol_error)?,
-            stamp_device: stamp.device.0,
-            device: device.0,
-            sender_seq,
-        })
-    }
-
-    fn write_register(
-        &self,
-        conn: &Connection,
-        kind: Kind,
-        id: &str,
-        group_name: &str,
-        product_ts: Option<i64>,
-        is_synthetic: bool,
-    ) -> Result<(), AppError> {
-        conn.execute(
-            r#"
-            INSERT OR REPLACE INTO sync_stamps
-                (kind, id, group_name, hlc, stamp_device, sender, sender_seq, product_ts, synthetic)
-            VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)
-            "#,
-            params![
-                kind.as_wire(),
-                id,
-                group_name,
-                self.hlc,
-                self.stamp_device.as_slice(),
-                self.device.as_slice(),
-                self.sender_seq,
-                product_ts,
-                is_synthetic
-            ],
-        )?;
-        Ok(())
-    }
-
-    fn write_origin(
-        &self,
-        conn: &Connection,
-        kind: Kind,
-        id: &str,
-        group_name: &str,
-        legacy_product_ts_floor: Option<i64>,
-    ) -> Result<(), AppError> {
-        conn.execute(
-            r#"
-            INSERT OR REPLACE INTO sync_origins
-                (kind, id, group_name, hlc, stamp_device, sender, sender_seq, legacy_product_ts_floor)
-            VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)
-            "#,
-            params![
-                kind.as_wire(),
-                id,
-                group_name,
-                self.hlc,
-                self.stamp_device.as_slice(),
-                self.device.as_slice(),
-                self.sender_seq,
-                legacy_product_ts_floor
-            ],
-        )?;
-        Ok(())
     }
 }
 

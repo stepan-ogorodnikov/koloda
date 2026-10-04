@@ -1,15 +1,22 @@
-//! Sync bookkeeping SQL: device enrollment here, capture of product writes in `capture`
-//! (`crates/koloda-sync-proto/PROTOCOL.md` §Field groups and merge, §Clocks and order, §Client state).
+//! Sync bookkeeping SQL: device enrollment here, capture of product writes in `capture`, and remote envelopes
+//! in `apply` (`crates/koloda-sync-proto/PROTOCOL.md` §Field groups and merge, §Clocks and order, §Client state).
 //!
 //! Only the desktop store writes the `sync_*` tables; the web host does not sync.
 
+pub mod apply;
 pub mod capture;
 
+use koloda_sync_proto::hlc::{DeviceId, Stamp};
+use koloda_sync_proto::payload::Payload;
+use koloda_sync_proto::registry::{Class, Kind};
 use rusqlite::{params, Connection, OptionalExtension};
 use uuid::Uuid;
 
 use crate::app::db::Database;
 use crate::app::error::{error_codes, throw_known_error, AppError};
+
+const CREATE_GROUP: &str = "create";
+const ROW_GROUP: &str = "row";
 
 pub fn enroll_device(db: &Database, device_id: Uuid) -> Result<(), AppError> {
     throw_known_error(error_codes::DB_ADD, || {
@@ -39,6 +46,97 @@ fn select_enrolled_device(conn: &Connection) -> Result<Option<Uuid>, AppError> {
     device
         .map(|bytes| Uuid::from_slice(&bytes).map_err(protocol_error))
         .transpose()
+}
+
+/// The stamp and sender metadata one envelope writes into registers, origins, and tombstones.
+/// `sender` is who pushed it: this device for a local write, the pull entry's sender for a remote one.
+struct StampValues {
+    hlc: i64,
+    stamp_device: [u8; 16],
+    sender: [u8; 16],
+    sender_seq: i64,
+}
+
+impl StampValues {
+    fn new(stamp: Stamp, sender: DeviceId, sender_seq: i64) -> Result<StampValues, AppError> {
+        Ok(StampValues {
+            hlc: i64::try_from(stamp.hlc.raw()).map_err(protocol_error)?,
+            stamp_device: stamp.device.0,
+            sender: sender.0,
+            sender_seq,
+        })
+    }
+
+    fn write_create(&self, conn: &Connection, kind: Kind, id: &str, payload: &Payload) -> Result<(), AppError> {
+        self.write_origin(conn, kind, id, CREATE_GROUP, payload.legacy_product_ts_floor())?;
+        // WHY: a create stamps every update group of its entity at its own stamp, marked synthetic, so a
+        // same-commit update (deck pointers) still wins and later remote envelopes always meet a register.
+        let initial = payload.initial_product_ts();
+        for spec in kind.spec().groups.iter().filter(|spec| spec.class == Class::Update) {
+            let name = spec.group.as_wire();
+            let product_ts = initial.and_then(|initial| initial.get(name).copied());
+            self.write_register(conn, kind, id, name, product_ts, true)?;
+        }
+        Ok(())
+    }
+
+    fn write_register(
+        &self,
+        conn: &Connection,
+        kind: Kind,
+        id: &str,
+        group_name: &str,
+        product_ts: Option<i64>,
+        is_synthetic: bool,
+    ) -> Result<(), AppError> {
+        conn.execute(
+            r#"
+            INSERT OR REPLACE INTO sync_stamps
+                (kind, id, group_name, hlc, stamp_device, sender, sender_seq, product_ts, synthetic)
+            VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)
+            "#,
+            params![
+                kind.as_wire(),
+                id,
+                group_name,
+                self.hlc,
+                self.stamp_device.as_slice(),
+                self.sender.as_slice(),
+                self.sender_seq,
+                product_ts,
+                is_synthetic
+            ],
+        )?;
+        Ok(())
+    }
+
+    fn write_origin(
+        &self,
+        conn: &Connection,
+        kind: Kind,
+        id: &str,
+        group_name: &str,
+        legacy_product_ts_floor: Option<i64>,
+    ) -> Result<(), AppError> {
+        conn.execute(
+            r#"
+            INSERT OR REPLACE INTO sync_origins
+                (kind, id, group_name, hlc, stamp_device, sender, sender_seq, legacy_product_ts_floor)
+            VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)
+            "#,
+            params![
+                kind.as_wire(),
+                id,
+                group_name,
+                self.hlc,
+                self.stamp_device.as_slice(),
+                self.sender.as_slice(),
+                self.sender_seq,
+                legacy_product_ts_floor
+            ],
+        )?;
+        Ok(())
+    }
 }
 
 fn protocol_error(error: impl std::fmt::Display) -> AppError {
