@@ -1,6 +1,6 @@
 # Sync join
 
-Status: draft
+Status: ready
 
 ## Intent
 
@@ -45,12 +45,12 @@ Out:
 
 ## Open questions
 
-- [ ] Area guides? — open; proposed: the same as sync-backfill (`agents/RUST.md`, `agents/DB.md`, `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md`, `agents/TESTING.md`, `agents/CODE-DOCUMENTATION.md`, `agents/CODE-STYLE.md`, `agents/MARKDOWN.md`, and `crates/koloda-sync-proto/PROTOCOL.md`), plus `agents/REVIEW.md` for self-review.
-- [ ] What makes a seed row unmodified? — open; proposed: a NULL `updated_at`. Every save sets it, even one that changes nothing, so a no-op save counts as modified and the row is reminted. Rust cannot compare against the first-run content, which the TS host supplies.
-- [ ] When are a file's old sync tables cleared? — open; proposed: when the claim is recorded, not at Add. The old device id is replaced at that point anyway, and a clean pending state cannot push or apply anything from the old space. `PROTOCOL.md` moves "clear every sync table" from Add's steps to the claim.
-- [ ] While import is pending, does capture record local writes? — open; proposed: no. Capture, backfill, and apply all stand still. Add's backfill picks up any row written meanwhile, and Replace deletes it.
-- [ ] Space id format? — open; proposed: a UUID stored as a 16-byte blob, like `device_id`.
-- [ ] Does Replace keep attachments and conversations? — open; proposed: yes, both. Conversations are device-local. Attachments are content-addressed, so cards arriving from the space reuse local bytes, and the startup sweep removes images no card references.
+- [x] Area guides? — the same as sync-backfill (`agents/RUST.md`, `agents/DB.md`, `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md`, `agents/TESTING.md`, `agents/CODE-DOCUMENTATION.md`, `agents/CODE-STYLE.md`, `agents/MARKDOWN.md`, and `crates/koloda-sync-proto/PROTOCOL.md`), plus `agents/REVIEW.md` for self-review.
+- [x] What makes a seed row unmodified? — a NULL `updated_at`. Every save sets it, even one that changes nothing, so a no-op save counts as modified and the row is reminted. Rust cannot compare against the first-run content, which the TS host supplies.
+- [x] When are a file's old sync tables cleared? — when the claim is recorded, not at Add. The old device id is replaced at that point anyway, and a clean pending state cannot push or apply anything from the old space. `PROTOCOL.md` moves "clear every sync table" from Add's steps to the claim.
+- [x] While import is pending, does capture record local writes? — no. Capture, backfill, and apply all stand still. Add's backfill picks up any row written meanwhile, and Replace deletes it.
+- [x] Space id format? — a UUID stored as a 16-byte blob, like `device_id`.
+- [x] Does Replace keep attachments and conversations? — yes, both. Conversations are device-local. Attachments are content-addressed, so cards arriving from the space reuse local bytes, and the startup sweep removes images no card references.
 
 ## Plan
 
@@ -89,10 +89,7 @@ Out:
   - Probe. Paging with a small limit lists every hot-lane id once, seed ids included, and no review or `learning` id.
 
   `cargo test -p koloda` and `bunx nx test @koloda/db-sqlite` (after rebuilding the web bundle) are green.
-  Commit: <pick>
-  - a. Record the joined space and the import phase
-  - b. Tell a joining file's mode and record its claim
-  - c. Add the import phase for files that join a space
+  Commit: Record the joined space and the import phase
   Depends on: none
 
 - [ ] 2. Remint known rows when a used database joins
@@ -126,9 +123,7 @@ Out:
     - After both replicas sync, each holds both versions of every known entity, and the log passes `assert_referents_first`.
   - Pointers. A reminted deck still points at an algorithm that was not known. Cards on a reminted template keep their content and field ids. The `learning` defaults follow a reminted algorithm and template.
   - Device-local data. A conversation and an attachment survive Add unchanged.
-  Commit: <pick>
-  - a. Remint rows the space already holds when a database joins
-  - b. Add a used database to a space by reminting known rows
+  Commit: Remint rows the space already holds when a database joins
   Depends on: 1
 
 - [ ] 3. Keep, delete, or remint seed rows on join
@@ -150,9 +145,7 @@ Out:
   - "Add with decks on an unmodified seed algorithm the space deleted". The seed is reminted and its decks follow; an unused one is deleted.
 
   An edited seed algorithm that the space holds live is reminted with its revisions.
-  Commit: <pick>
-  - a. Keep, delete, or remint seed rows when a database joins
-  - b. Apply the seed-row rules when a database joins
+  Commit: Keep, delete, or remint seed rows when a database joins
   Depends on: 2
 
 - [ ] 4. Replace local data or join as a blank database
@@ -171,9 +164,7 @@ Out:
   - "Space created after its device deleted the seed algorithm", for a blank joiner: no seed rows after seeding, and after a pull its `learning` defaults name the creator's real default, not the seed id.
 
   `bun run check:push` is green.
-  Commit: <pick>
-  - a. Replace local data or start blank when joining a space
-  - b. Join a space as a blank database, optionally replacing local data
+  Commit: Replace local data or start blank when joining a space
   Depends on: 2
 
 ## Outcome
