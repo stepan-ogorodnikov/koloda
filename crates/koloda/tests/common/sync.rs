@@ -5,13 +5,17 @@ use koloda::app::db::Database;
 use koloda::app::error::AppError;
 use koloda::repo::sync::apply::{apply_page, Page, PageEntry};
 use koloda::repo::sync::backfill::{backfill_batch, Backfill};
+use koloda::repo::sync::join::{probe_ids, Known};
 use koloda::repo::sync::repair::{repair_dangling_defaults, Starter};
 use koloda::repo::sync::{self, SpaceRole};
 use koloda_sync_proto::envelope::Envelope;
 use koloda_sync_proto::hlc::{DeviceId, Hlc, Stamp};
 use koloda_sync_proto::payload::{seal, Payload, Seal};
 use koloda_sync_proto::registry::{allow, Class, Kind, Lane, Op};
-use std::collections::HashSet;
+use rusqlite::backup::Backup;
+use rusqlite::Connection;
+use std::collections::{HashMap, HashSet};
+use std::time::Duration;
 use uuid::Uuid;
 
 /// The space every test replica enrolls in.
@@ -238,6 +242,48 @@ impl FakeSpace {
         }
     }
 
+    /// Answers the replica's probe ids as `ids/known` would. An id with a create or immutable envelope in the log is
+    /// live; a tombstoned id, or a card under a tombstoned deck, is fenced.
+    pub fn probe(&self, replica: &Database) -> HashMap<String, Known> {
+        let mut live = HashSet::new();
+        let mut fenced = HashSet::new();
+        let mut card_decks = HashMap::new();
+        for entry in self.hot.iter().chain(&self.cold) {
+            let header = Envelope::decode(&entry.envelope)
+                .expect("logged envelope decodes")
+                .header;
+            let class = allow(header.kind, header.group, header.op)
+                .expect("logged header is allowed")
+                .map(|spec| spec.class);
+            if header.op == Op::Delete {
+                fenced.insert(header.id);
+            } else if class != Some(Class::Update) {
+                if let (Kind::Cards, Some(deck)) = (header.kind, &header.parent) {
+                    card_decks.insert(header.id.clone(), deck.clone());
+                }
+                live.insert(header.id);
+            }
+        }
+
+        let mut known = HashMap::new();
+        let mut after = None;
+        loop {
+            let page = probe_ids(replica, after.as_ref(), 50).expect("probe page reads");
+            for (_, id) in &page {
+                let is_fenced = fenced.contains(id) || card_decks.get(id).is_some_and(|deck| fenced.contains(deck));
+                if is_fenced {
+                    known.insert(id.clone(), Known::Fenced);
+                } else if live.contains(id) {
+                    known.insert(id.clone(), Known::Live);
+                }
+            }
+            match page.last() {
+                Some(last) => after = Some(last.clone()),
+                None => return known,
+            }
+        }
+    }
+
     /// Applies everything other senders pushed past the replica's cursors, `hot` first, then `cold`, and then
     /// repairs dangling learning defaults as the engine does after catch-up.
     pub fn pull(&self, replica: &Database) -> Vec<Kind> {
@@ -263,6 +309,19 @@ impl FakeSpace {
         changed.extend(repair_dangling_defaults(replica, &starter()).expect("defaults repair"));
         changed
     }
+}
+
+/// A byte-for-byte copy of a database, as a user copying the file would make.
+pub fn copy_of(db: &Database) -> Database {
+    let mut copy = Connection::open_in_memory().expect("copy opens");
+    db.with_conn(|conn| {
+        Backup::new(conn, &mut copy)?.run_to_completion(64, Duration::ZERO, None)?;
+        Ok(())
+    })
+    .expect("database copies");
+    copy.pragma_update(None, "foreign_keys", "ON")
+        .expect("copy enforces foreign keys");
+    Database::new(copy)
 }
 
 /// The first-run content a repair creates when a kind has no live row left.

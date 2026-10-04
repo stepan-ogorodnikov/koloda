@@ -1077,7 +1077,12 @@ The user then picks **Add** or **Replace**; known ids mean a likely copy, for wh
    - a deck with its cards and their reviews;
    - a card with its reviews;
    - an algorithm with its revisions;
-   - a template alone.
+   - a template alone;
+   - a revision alone.
+
+   Live and fenced ids are reminted alike.
+   A dependent moves with its known parent even when the space never saw the dependent.
+   Reminted rows keep every other column, including `created_at` and `updated_at`.
 2. Seed rows the space holds live:
    - the seed algorithm keeps its id if unmodified; its local revisions are deleted and the space's history
      arrives;

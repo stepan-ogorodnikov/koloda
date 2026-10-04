@@ -92,7 +92,7 @@ Out:
   Commit: Record the joined space and the import phase
   Depends on: none
 
-- [ ] 2. Remint known rows when a used database joins
+- [x] 2. Remint known rows when a used database joins
   Goal: `add_to_space(db, known)` takes the probe's answer, each known id marked live or fenced, and works only on a pending file.
   In one transaction it:
   1. remints each known entity other than a seed row, and its dependents, with fresh UUIDv7 ids, rewriting every pointer that names them:

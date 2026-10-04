@@ -20,7 +20,7 @@ Rust is the source of truth for the AI provider enum and secrets redaction; `@ko
   `repo/sync/` owns the `sync_*` tables; `mod.rs` enrolls the device.
   Product writes record sync envelopes through `Capture` in `capture.rs`.
   `backfill.rs` moves rows written before enrollment into the outbox in bounded batches.
-  `join.rs` tells a joining file's mode, records its claim, and lists the ids the space is probed for.
+  `join.rs` tells a joining file's mode, records its claim, lists the ids the space is probed for, and remints known rows on Add.
   `apply_page` in `apply.rs` applies envelopes other devices captured; `repair.rs` repoints pointers to dead rows.
 - App runtime: `app/` — DB connection (`parse_json_column` for JSON TEXT columns), init/seed, keyring secrets, clock/UUID helpers.
 - Shared errors: `app::error` (`AppError` + `error_codes`) is the intentional crate-wide error type. Domain validation returns it so codes stay aligned with `@koloda/app`; domain must not import `rusqlite`.

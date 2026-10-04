@@ -1,24 +1,40 @@
 //! Joining an existing space (`crates/koloda-sync-proto/PROTOCOL.md` §Joining).
 
+use std::collections::HashMap;
+use std::num::NonZeroU32;
+
 use koloda::app::db::Database;
 use koloda::domain::algorithms::{DeleteAlgorithmData, UpdateAlgorithmData, UpdateAlgorithmValues};
+use koloda::domain::attachments::AddAttachmentData;
+use koloda::domain::decks::{DeleteDeckData, UpdateDeckData, UpdateDeckValues};
 use koloda::domain::seed_ids::{SEED_ALGORITHM_SIMPLE_ID, SEED_TEMPLATE_TYPE_ID};
 use koloda::domain::settings::SettingsName;
 use koloda::domain::templates::{UpdateTemplateData, UpdateTemplateValues};
 use koloda::repo::algorithms::{delete_algorithm, get_algorithm, update_algorithm};
-use koloda::repo::decks::delete_deck;
+use koloda::repo::attachments::add_attachment;
+use koloda::repo::decks::{delete_deck, get_deck, update_deck};
 use koloda::repo::settings::{get_settings, set_settings};
 use koloda::repo::sync::backfill::backfill_batch;
-use koloda::repo::sync::join::{begin_import, join_mode, probe_ids, JoinMode};
+use koloda::repo::sync::join::{add_to_space, begin_import, join_mode, probe_ids, JoinMode, Known};
 use koloda::repo::sync::{enroll_device, SpaceRole};
 use koloda::repo::templates::{get_template, update_template};
 use koloda_sync_proto::registry::Kind;
+use rusqlite::types::Value;
 use serde_json::json;
 use uuid::Uuid;
 
-use crate::common::fixtures::{add_algorithm, add_card, add_deck, add_template, insert_review_row};
-use crate::common::sync::{apply, count, device, enroll_as, hot_page, outbox, SPACE};
+use crate::common::fixtures::{add_algorithm, add_card, add_conversation, add_deck, add_template, insert_review_row};
+use crate::common::sync::{apply, copy_of, count, device, enroll_as, hot_page, outbox, FakeSpace, SPACE};
 use crate::common::{seed_data, test_db};
+
+const SYNCED_TABLES: [&str; 6] = [
+    "algorithms",
+    "algorithm_revisions",
+    "templates",
+    "decks",
+    "cards",
+    "reviews",
+];
 
 const OTHER_SPACE: Uuid = Uuid::from_u128(0x0192_0000_0000_7000_8000_0000_0000_05ad);
 
@@ -221,7 +237,7 @@ fn a_claim_clears_what_the_file_recorded_for_another_space() {
     let db = seeded_db();
     enroll_device(&db, Uuid::now_v7(), OTHER_SPACE, SpaceRole::Creator).expect("database enrolls");
     let deck = add_deck(&db, SEED_ALGORITHM_SIMPLE_ID, SEED_TEMPLATE_TYPE_ID, "Spanish");
-    delete_deck(&db, koloda::domain::decks::DeleteDeckData { id: deck }).expect("deck deletes");
+    delete_deck(&db, DeleteDeckData { id: deck }).expect("deck deletes");
     apply(&db, &hot_page(Uuid::now_v7(), vec![], 7)).expect("empty page applies");
     for table in RECORDED_TABLES {
         assert!(
@@ -332,4 +348,345 @@ fn probe_pages_list_every_hot_lane_id_once() {
     .flat_map(|(kind, ids)| ids.into_iter().map(move |id| (kind, id)))
     .collect();
     assert_eq!(probed, expected, "reviews and learning are never probed");
+}
+
+// WHY: the seed algorithm's local revisions stay on a joiner and are never pushed, so they are left out.
+fn dump(db: &Database, table: &str) -> Vec<Vec<Value>> {
+    let filter = match table {
+        "algorithm_revisions" => format!("WHERE algorithm_id != '{SEED_ALGORITHM_SIMPLE_ID}'"),
+        _ => String::new(),
+    };
+    db.with_conn(|conn| {
+        let mut stmt = conn.prepare(&format!("SELECT * FROM {table} {filter} ORDER BY id"))?;
+        let width = stmt.column_count();
+        let rows = stmt
+            .query_map([], |row| (0..width).map(|index| row.get(index)).collect())?
+            .collect::<Result<Vec<_>, _>>()?;
+        Ok(rows)
+    })
+    .expect("table reads")
+}
+
+fn column(db: &Database, sql: &str) -> Vec<String> {
+    db.with_conn(|conn| {
+        let mut stmt = conn.prepare(sql)?;
+        let ids = stmt.query_map([], |row| row.get(0))?.collect::<Result<Vec<_>, _>>()?;
+        Ok(ids)
+    })
+    .expect("column reads")
+}
+
+fn ids(db: &Database, table: &str) -> Vec<String> {
+    column(db, &format!("SELECT id FROM {table} ORDER BY id"))
+}
+
+fn id_titled(db: &Database, table: &str, title: &str) -> String {
+    let mut ids = column(db, &format!("SELECT id FROM {table} WHERE title = '{title}'"));
+    assert_eq!(ids.len(), 1, "{table} holds one row titled {title}");
+    ids.remove(0)
+}
+
+fn row(db: &Database, table: &str, id: &str) -> Vec<Value> {
+    dump(db, table)
+        .into_iter()
+        .find(|row| row.first() == Some(&Value::Text(id.to_string())))
+        .expect("row exists")
+}
+
+fn set_learning_defaults(db: &Database, algorithm: &str, template: &str) {
+    let mut learning = learning(db);
+    *learning
+        .pointer_mut("/defaults/algorithm")
+        .expect("learning settings hold the key") = json!(algorithm);
+    *learning
+        .pointer_mut("/defaults/template")
+        .expect("learning settings hold the key") = json!(template);
+    set_settings(db, SettingsName::Learning, learning).expect("learning settings save");
+}
+
+fn learning(db: &Database) -> serde_json::Value {
+    get_settings(db, SettingsName::Learning)
+        .expect("learning settings read")
+        .expect("learning settings exist")
+        .content
+}
+
+/// Claims a code, probes the space, and adds the file, as the join wizard will.
+fn add(space: &FakeSpace, db: &Database) {
+    begin_import(db, Uuid::now_v7(), SPACE).expect("claim records");
+    let known = space.probe(db);
+    add_to_space(db, &known).expect("file joins through Add");
+}
+
+/// A creator's file, a copy of it taken before the creator made the space, and what the copy wrote afterwards.
+struct Copied {
+    creator: Database,
+    copy: Database,
+    space: FakeSpace,
+    creator_ids: HashMap<&'static str, Vec<String>>,
+    deck: String,
+    deleted_deck: String,
+    later_algorithm: String,
+    later_deck: String,
+    later_card: String,
+    dependents: [(&'static str, String); 2],
+}
+
+fn copied() -> Copied {
+    let creator = seeded_db();
+    let algorithm = add_algorithm(&creator, "FSRS");
+    let template = add_template(&creator, "Vocabulary");
+    let deck = add_deck(&creator, &algorithm, &template, "Spanish");
+    let card = add_card(&creator, &deck, &template, "hola");
+    insert_review_row(&creator, &card, 2, 0, 1_727_000_000_000);
+    let deleted_deck = add_deck(&creator, &algorithm, &template, "Old");
+    add_card(&creator, &deleted_deck, &template, "viejo");
+    set_learning_defaults(&creator, &algorithm, &template);
+    let copy = copy_of(&creator);
+    let creator_ids = SYNCED_TABLES
+        .into_iter()
+        .map(|table| (table, ids(&creator, table)))
+        .collect();
+
+    let mut space = FakeSpace::default();
+    enroll_as(&creator, SpaceRole::Creator);
+    space.drain_backfill(&creator, 100);
+    delete_deck(
+        &creator,
+        DeleteDeckData {
+            id: deleted_deck.clone(),
+        },
+    )
+    .expect("deck deletes");
+    space.push(&creator);
+
+    let later_algorithm = add_algorithm(&copy, "FSRS later");
+    let stored = get_deck(&copy, &deck).expect("deck reads").expect("deck exists");
+    update_deck(
+        &copy,
+        UpdateDeckData {
+            id: deck.clone(),
+            values: UpdateDeckValues {
+                title: stored.title,
+                algorithm_id: later_algorithm.clone(),
+                template_id: stored.template_id,
+                notes: stored.notes,
+            },
+        },
+    )
+    .expect("deck updates");
+    let added_to_known = add_card(&copy, &deck, &template, "nuevo");
+    insert_review_row(&copy, &added_to_known, 2, 0, 1_727_000_000_500);
+    let added_review = column(
+        &copy,
+        &format!("SELECT id FROM reviews WHERE card_id = '{added_to_known}'"),
+    )
+    .remove(0);
+    let later_deck = add_deck(&copy, &algorithm, &template, "Spanish later");
+    let later_card = add_card(&copy, &later_deck, &template, "luego");
+
+    add(&space, &copy);
+    Copied {
+        creator,
+        copy,
+        space,
+        creator_ids,
+        deck,
+        deleted_deck,
+        later_algorithm,
+        later_deck,
+        later_card,
+        dependents: [("cards", added_to_known), ("reviews", added_review)],
+    }
+}
+
+#[test]
+fn add_remints_exactly_the_known_rows_and_their_dependents() {
+    let copied = copied();
+
+    for table in SYNCED_TABLES {
+        let shared: Vec<String> = ids(&copied.copy, table)
+            .into_iter()
+            .filter(|id| copied.creator_ids[table].contains(id))
+            .collect();
+        let expected = match table {
+            "algorithms" => vec![SEED_ALGORITHM_SIMPLE_ID.to_string()],
+            "templates" => vec![SEED_TEMPLATE_TYPE_ID.to_string()],
+            _ => vec![],
+        };
+        assert_eq!(shared, expected, "{table} the copy shares with the space after Add");
+    }
+    for (table, id) in &copied.dependents {
+        assert!(
+            !ids(&copied.copy, table).contains(id),
+            "{table} the copy added under a known deck moves with it"
+        );
+    }
+    assert_eq!(
+        count(&copied.copy, "SELECT COUNT(*) FROM reviews"),
+        2,
+        "reviews are reminted, not dropped"
+    );
+    for (table, id) in [
+        ("algorithms", &copied.later_algorithm),
+        ("decks", &copied.later_deck),
+        ("cards", &copied.later_card),
+    ] {
+        assert!(
+            ids(&copied.copy, table).contains(id),
+            "{table} written only on the copy keeps its id"
+        );
+    }
+    assert_eq!(
+        count(&copied.copy, "SELECT COUNT(*) FROM decks WHERE title = 'Old'"),
+        1,
+        "a row the space deleted is reminted, not dropped"
+    );
+}
+
+#[test]
+fn reminted_rows_keep_their_values_and_pointers_follow_them() {
+    let copied = copied();
+    let (creator, copy) = (&copied.creator, &copied.copy);
+    let algorithm = id_titled(copy, "algorithms", "FSRS");
+    let template = id_titled(copy, "templates", "Vocabulary");
+    let deck = id_titled(copy, "decks", "Spanish");
+
+    assert_eq!(
+        row(copy, "templates", &template)[1..],
+        row(creator, "templates", &id_titled(creator, "templates", "Vocabulary"))[1..],
+        "a reminted template keeps its content, field ids included"
+    );
+
+    let deck_pointers = |id: &str| {
+        column(
+            copy,
+            &format!("SELECT algorithm_id || ' ' || template_id FROM decks WHERE id = '{id}'"),
+        )
+    };
+    assert_eq!(
+        deck_pointers(&deck),
+        [format!("{} {template}", copied.later_algorithm)],
+        "a reminted deck keeps an algorithm the space did not know"
+    );
+    assert_eq!(
+        deck_pointers(&copied.later_deck),
+        [format!("{algorithm} {template}")],
+        "a deck written only on the copy follows reminted referents"
+    );
+    assert_eq!(
+        column(
+            copy,
+            &format!("SELECT template_id FROM cards WHERE id = '{}'", copied.later_card)
+        ),
+        [template.as_str()]
+    );
+
+    let card = column(copy, "SELECT id FROM cards WHERE content LIKE '%hola%'").remove(0);
+    let creator_card = column(creator, "SELECT id FROM cards WHERE content LIKE '%hola%'").remove(0);
+    let (copy_row, creator_row) = (row(copy, "cards", &card), row(creator, "cards", &creator_card));
+    assert_eq!(
+        copy_row[1..3],
+        [Value::Text(deck), Value::Text(template.clone())],
+        "the card moves with its deck"
+    );
+    assert_eq!(copy_row[3..], creator_row[3..], "the card keeps every other column");
+    assert_eq!(
+        column(copy, "SELECT card_id FROM reviews WHERE created_at = 1727000000000"),
+        [card],
+        "the review follows its card"
+    );
+
+    assert_eq!(
+        learning(copy)["defaults"],
+        json!({ "algorithm": algorithm, "template": template }),
+        "the learning defaults follow the reminted algorithm and template"
+    );
+}
+
+#[test]
+fn add_of_a_copy_converges_with_both_versions_of_every_known_row() {
+    let mut copied = copied();
+    copied.space.drain_backfill(&copied.copy, 4);
+    copied.space.pull(&copied.creator);
+    copied.space.pull(&copied.copy);
+
+    copied.space.assert_referents_first();
+    for table in SYNCED_TABLES {
+        assert_eq!(dump(&copied.copy, table), dump(&copied.creator, table), "{table}");
+    }
+    assert_eq!(
+        count(&copied.creator, "SELECT COUNT(*) FROM decks WHERE title = 'Spanish'"),
+        2,
+        "the creator holds its deck and the copy's"
+    );
+    let decks = ids(&copied.creator, "decks");
+    assert!(decks.contains(&copied.deck));
+    assert!(!decks.contains(&copied.deleted_deck), "the deleted deck stays deleted");
+}
+
+#[test]
+fn add_of_an_unrelated_database_remints_nothing() {
+    let creator = seeded_db();
+    let algorithm = add_algorithm(&creator, "FSRS");
+    add_deck(&creator, &algorithm, SEED_TEMPLATE_TYPE_ID, "Spanish");
+    enroll_as(&creator, SpaceRole::Creator);
+    let mut space = FakeSpace::default();
+    space.drain_backfill(&creator, 100);
+
+    let joiner = seeded_db();
+    let template = add_template(&joiner, "Vocabulary");
+    let deck = add_deck(&joiner, SEED_ALGORITHM_SIMPLE_ID, &template, "German");
+    let card = add_card(&joiner, &deck, &template, "hallo");
+    insert_review_row(&joiner, &card, 2, 0, 1_727_000_000_000);
+    let joiner_ids = || -> Vec<Vec<String>> { SYNCED_TABLES.into_iter().map(|table| ids(&joiner, table)).collect() };
+    let before = joiner_ids();
+
+    add(&space, &joiner);
+    assert_eq!(joiner_ids(), before, "no local id is known to the space");
+
+    space.drain_backfill(&joiner, 100);
+    space.pull(&creator);
+    space.pull(&joiner);
+    space.assert_referents_first();
+    for table in SYNCED_TABLES {
+        assert_eq!(dump(&joiner, table), dump(&creator, table), "{table}");
+    }
+    assert_eq!(
+        count(&creator, "SELECT COUNT(*) FROM decks"),
+        2,
+        "both decks reach the creator"
+    );
+}
+
+#[test]
+fn add_leaves_device_local_data_alone() {
+    let db = seeded_db();
+    let deck = add_deck(&db, SEED_ALGORITHM_SIMPLE_ID, SEED_TEMPLATE_TYPE_ID, "Spanish");
+    let card = add_card(&db, &deck, SEED_TEMPLATE_TYPE_ID, "hola");
+    add_conversation(&db, "conversation-1", json!({ "cardIds": [card] }));
+    let mut bytes = b"\x89PNG\r\n\x1a\n".to_vec();
+    bytes.resize(16, 0);
+    add_attachment(
+        &db,
+        AddAttachmentData {
+            bytes,
+            width: NonZeroU32::new(640),
+            height: NonZeroU32::new(480),
+        },
+    )
+    .expect("attachment adds");
+    let local = |db: &Database| -> Vec<Vec<Vec<Value>>> {
+        ["conversations", "attachments", "attachment_bytes"]
+            .into_iter()
+            .map(|table| dump(db, table))
+            .collect()
+    };
+    let before = local(&db);
+
+    begin_import(&db, Uuid::now_v7(), SPACE).expect("claim records");
+    add_to_space(&db, &HashMap::from([(card.clone(), Known::Live)])).expect("file joins through Add");
+
+    assert!(!ids(&db, "cards").contains(&card), "the known card is reminted");
+    assert_eq!(local(&db), before, "conversations and attachments are never rewritten");
 }
