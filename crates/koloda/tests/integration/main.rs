@@ -22,6 +22,7 @@ mod settings_integration_tests;
 mod settings_sync_integration_tests;
 mod sync_apply_integration_tests;
 mod sync_integration_tests;
+mod sync_reviews_integration_tests;
 mod sync_updates_integration_tests;
 mod templates_integration_tests;
 mod templates_sync_integration_tests;

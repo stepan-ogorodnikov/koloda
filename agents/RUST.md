@@ -77,7 +77,7 @@ so card-progress and review namespaces stay distinct.
 
 **Review writes** — `insert_review` in `src/repo/reviews.rs` is the single write path (`pub(crate)`).
 
-- Its only caller today is `submit_lesson_result` in `src/repo/lessons.rs`.
+- Its callers are `submit_lesson_result` in `src/repo/lessons.rs` and remote apply in `src/repo/sync/apply.rs`, which passes the review id it received.
 - A new writer goes through `insert_review` inside its own transaction, never fresh INSERT SQL.
 
 ## Non-negotiables

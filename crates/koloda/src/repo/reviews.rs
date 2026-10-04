@@ -41,8 +41,13 @@ fn get_review_row(row: &Row) -> Result<Review, rusqlite::Error> {
 // public repo surface stays read-side until a real second writer appears.
 // INVARIANT: callers validate `data` (see `InsertReviewData::validate`) and wrap
 // errors with their own operation code; this helper is a raw write primitive.
-pub(crate) fn insert_review(conn: &Connection, data: &InsertReviewData, now: i64) -> Result<String, AppError> {
-    let id = minted_uuidv7(None);
+pub(crate) fn insert_review(
+    conn: &Connection,
+    data: &InsertReviewData,
+    now: i64,
+    id: Option<&str>,
+) -> Result<String, AppError> {
+    let id = minted_uuidv7(id);
     conn.execute(
         r#"
         INSERT INTO reviews (id, card_id, rating, state, due_at, stability, difficulty,

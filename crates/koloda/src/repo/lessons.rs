@@ -354,7 +354,7 @@ pub fn submit_lesson_result(db: &Database, data: LessonResultData) -> Result<(),
 
             // WHY: review INSERT SQL lives in `reviews::insert_review` — single home for
             // review writes so future writers reuse the same statement.
-            let review_id = reviews::insert_review(tx, &data.review, now)?;
+            let review_id = reviews::insert_review(tx, &data.review, now, None)?;
 
             // INVARIANT: a grade publishes the new scheduling and its review in one commit, at one stamp.
             if let Some(card) = select_card(tx, &data.card.id)? {

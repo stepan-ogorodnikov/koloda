@@ -78,7 +78,7 @@ Out:
   Commit: Apply remote field-group updates by last writer wins
   Depends on: 3
 
-- [ ] 5. Apply reviews and resets
+- [x] 5. Apply reviews and resets
   Goal: apply rule step 5 for reviews: dropped unless the review's stamp strictly beats a non-synthetic `cards.reset` register, otherwise inserted with an origin.
   A winning `cards.reset` blanks scheduling at its stamp unless scheduling already beats it, and deletes the reviews that do not strictly beat it, with their origins, in the same transaction.
   A remote reset that kills a pending local grade drops both of that grade's outbox rows in the same transaction.

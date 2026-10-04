@@ -6,7 +6,9 @@
 
 use koloda_sync_proto::envelope::{Envelope, Header};
 use koloda_sync_proto::hlc::{DeviceId, Hlc, HlcClock, Stamp};
-use koloda_sync_proto::payload::{AlgorithmRevision, CardCreate, CardScheduling, DeckCreate, DocumentCreate, Payload};
+use koloda_sync_proto::payload::{
+    AlgorithmRevision, CardCreate, CardScheduling, DeckCreate, DocumentCreate, Payload, Review,
+};
 use koloda_sync_proto::registry::{allow, check_lane, Class, Kind, Lane};
 use rusqlite::{params, Connection, OptionalExtension, ToSql};
 use serde_json::{Map, Value};
@@ -15,7 +17,10 @@ use uuid::Uuid;
 use super::{delete_empty_cohort, protocol_error, StampValues, ROW_GROUP};
 use crate::app::db::Database;
 use crate::app::error::{error_codes, throw_known_error, AppError};
+use crate::domain::cards::CardState;
+use crate::domain::reviews::InsertReviewData;
 use crate::domain::seed_ids::{SEED_ALGORITHM_SIMPLE_ID, SEED_TEMPLATE_TYPE_ID};
+use crate::repo::reviews::insert_review;
 
 /// One pull page: one lane's entries in `seq` order, and the highest seq the server examined for that lane.
 pub struct Page {
@@ -30,10 +35,24 @@ pub struct PageEntry {
     pub envelope: Vec<u8>,
 }
 
+const SCHEDULING_GROUP: &str = "scheduling";
+const RESET_GROUP: &str = "reset";
+
 struct Entry {
     header: Header,
     payload: Payload,
     values: StampValues,
+}
+
+#[derive(Default)]
+struct Changed(Vec<Kind>);
+
+impl Changed {
+    fn mark(&mut self, kind: Kind) {
+        if !self.0.contains(&kind) {
+            self.0.push(kind);
+        }
+    }
 }
 
 /// Applies one page and returns the kinds whose product rows it changed.
@@ -49,12 +68,10 @@ pub fn apply_page(db: &Database, page: &Page) -> Result<Vec<Kind>, AppError> {
 
         db.with_transaction(|tx| {
             let mut clock = read_clock(tx)?;
-            let mut changed = Vec::new();
+            let mut changed = Changed::default();
             for entry in &entries {
                 clock.observe(entry.header.stamp.hlc);
-                if apply_entry(tx, entry)? && !changed.contains(&entry.header.kind) {
-                    changed.push(entry.header.kind);
-                }
+                apply_entry(tx, entry, &mut changed)?;
             }
 
             let cursor = match page.lane {
@@ -67,7 +84,7 @@ pub fn apply_page(db: &Database, page: &Page) -> Result<Vec<Kind>, AppError> {
                 params![last_hlc, page.scanned_through],
             )?;
 
-            Ok(changed)
+            Ok(changed.0)
         })
     })
 }
@@ -100,20 +117,20 @@ fn read_clock(conn: &Connection) -> Result<HlcClock, AppError> {
     })
 }
 
-fn apply_entry(conn: &Connection, entry: &Entry) -> Result<bool, AppError> {
+fn apply_entry(conn: &Connection, entry: &Entry, changed: &mut Changed) -> Result<(), AppError> {
     let header = &entry.header;
     if !has_referents(conn, header)? {
-        return Ok(false);
+        return Ok(());
     }
 
     let class = allow(header.kind, header.group, header.op)
         .map_err(protocol_error)?
         .map(|spec| spec.class);
     match class {
-        Some(Class::Create) => apply_create(conn, entry),
-        Some(Class::Update) => apply_update(conn, entry),
-        Some(Class::Immutable) => apply_immutable(conn, entry),
-        None => Ok(false),
+        Some(Class::Create) => apply_create(conn, entry, changed),
+        Some(Class::Update) => apply_update(conn, entry, changed),
+        Some(Class::Immutable) => apply_immutable(conn, entry, changed),
+        None => Ok(()),
     }
 }
 
@@ -133,11 +150,11 @@ fn has_referents(conn: &Connection, header: &Header) -> Result<bool, AppError> {
     Ok(true)
 }
 
-fn apply_create(conn: &Connection, entry: &Entry) -> Result<bool, AppError> {
+fn apply_create(conn: &Connection, entry: &Entry, changed: &mut Changed) -> Result<(), AppError> {
     let kind = entry.header.kind;
     let id = entry.header.id.as_str();
     if is_present(conn, kind, id)? && !is_stamp_zero_seed(conn, kind, id)? {
-        return Ok(false);
+        return Ok(());
     }
 
     match &entry.payload {
@@ -150,7 +167,8 @@ fn apply_create(conn: &Connection, entry: &Entry) -> Result<bool, AppError> {
     entry.values.write_create(conn, kind, id, &entry.payload)?;
     refresh_updated_at(conn, kind, id)?;
 
-    Ok(true)
+    changed.mark(kind);
+    Ok(())
 }
 
 // WHY: every first run mints the seed ids again. An untouched local seed row (no register, no origin) is the
@@ -246,7 +264,7 @@ fn upsert_document(conn: &Connection, kind: Kind, id: &str, create: &DocumentCre
     Ok(())
 }
 
-fn apply_update(conn: &Connection, entry: &Entry) -> Result<bool, AppError> {
+fn apply_update(conn: &Connection, entry: &Entry, changed: &mut Changed) -> Result<(), AppError> {
     let kind = entry.header.kind;
     let id = entry.header.id.as_str();
     let group = entry
@@ -255,7 +273,7 @@ fn apply_update(conn: &Connection, entry: &Entry) -> Result<bool, AppError> {
         .map(|group| group.as_wire())
         .ok_or_else(|| protocol_error("an update names a group"))?;
     if !is_present(conn, kind, id)? || !beats_register(conn, kind, id, group, entry.header.stamp)? {
-        return Ok(false);
+        return Ok(());
     }
 
     write_group(conn, id, &entry.payload)?;
@@ -264,14 +282,78 @@ fn apply_update(conn: &Connection, entry: &Entry) -> Result<bool, AppError> {
         .write_register(conn, kind, id, group, entry.payload.product_ts(), false)?;
     refresh_updated_at(conn, kind, id)?;
     discard_pending(conn, kind, id, group)?;
+    if let Payload::CardReset(_) = &entry.payload {
+        cut_off_at_reset(conn, id, entry, changed)?;
+    }
 
-    Ok(true)
+    changed.mark(kind);
+    Ok(())
 }
 
-// INVARIANT: an equal stamp wins only over a synthetic register, the floor a create wrote for its same-commit
-// groups; after that, equal stamps do not beat (apply rule step 8). No register means a row this device never
-// captured, which any stamp beats.
-fn beats_register(conn: &Connection, kind: Kind, id: &str, group: &str, stamp: Stamp) -> Result<bool, AppError> {
+// INVARIANT: a reset and its blank scheduling share one stamp, so one comparison decides both registers. The
+// reset writes the blank scheduling itself in case its paired envelope has not arrived, and deletes every review
+// that does not strictly beat it; a review this device never stamped counts as older (PROTOCOL.md, Reset progress).
+fn cut_off_at_reset(conn: &Connection, card_id: &str, entry: &Entry, changed: &mut Changed) -> Result<(), AppError> {
+    let reset = entry.header.stamp;
+    if beats_register(conn, Kind::Cards, card_id, SCHEDULING_GROUP, reset)? {
+        write_scheduling(conn, card_id, &blank_scheduling())?;
+        entry
+            .values
+            .write_register(conn, Kind::Cards, card_id, SCHEDULING_GROUP, None, false)?;
+        discard_pending(conn, Kind::Cards, card_id, SCHEDULING_GROUP)?;
+    }
+
+    let reviews: Vec<(String, Option<i64>, Option<Vec<u8>>)> = conn
+        .prepare(
+            r#"
+            SELECT r.id, o.hlc, o.stamp_device
+            FROM reviews r
+            LEFT JOIN sync_origins o ON o.kind = 'reviews' AND o.id = r.id AND o.group_name = 'row'
+            WHERE r.card_id = ?1
+            "#,
+        )?
+        .query_map(params![card_id], |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)))?
+        .collect::<Result<_, _>>()?;
+    for (review_id, hlc, device) in reviews {
+        let does_survive = match hlc.zip(device) {
+            Some((hlc, device)) => stored_stamp(hlc, &device)? > reset,
+            None => false,
+        };
+        if does_survive {
+            continue;
+        }
+
+        conn.execute("DELETE FROM reviews WHERE id = ?1", params![review_id])?;
+        conn.execute(
+            "DELETE FROM sync_origins WHERE kind = 'reviews' AND id = ?1",
+            params![review_id],
+        )?;
+        discard_pending(conn, Kind::Reviews, &review_id, ROW_GROUP)?;
+        changed.mark(Kind::Reviews);
+    }
+    Ok(())
+}
+
+fn blank_scheduling() -> CardScheduling {
+    CardScheduling {
+        state: i64::from(CardState::New.as_i32()),
+        due_at: None,
+        stability: 0.0,
+        difficulty: 0.0,
+        scheduled_days: 0,
+        learning_steps: 0,
+        reps: 0,
+        lapses: 0,
+        last_reviewed_at: None,
+    }
+}
+
+struct Register {
+    stamp: Stamp,
+    is_synthetic: bool,
+}
+
+fn read_register(conn: &Connection, kind: Kind, id: &str, group: &str) -> Result<Option<Register>, AppError> {
     let register: Option<(i64, Vec<u8>, bool)> = conn
         .query_row(
             "SELECT hlc, stamp_device, synthetic FROM sync_stamps WHERE kind = ?1 AND id = ?2 AND group_name = ?3",
@@ -279,15 +361,40 @@ fn beats_register(conn: &Connection, kind: Kind, id: &str, group: &str, stamp: S
             |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
         )
         .optional()?;
-    let Some((hlc, device, is_synthetic)) = register else {
-        return Ok(true);
-    };
+    register
+        .map(|(hlc, device, is_synthetic)| {
+            Ok(Register {
+                stamp: stored_stamp(hlc, &device)?,
+                is_synthetic,
+            })
+        })
+        .transpose()
+}
 
-    let held = Stamp {
+// INVARIANT: an equal stamp wins only over a synthetic register, the floor a create wrote for its same-commit
+// groups; after that, equal stamps do not beat (apply rule step 8). No register means a row this device never
+// captured, which any stamp beats.
+fn beats_register(conn: &Connection, kind: Kind, id: &str, group: &str, stamp: Stamp) -> Result<bool, AppError> {
+    Ok(match read_register(conn, kind, id, group)? {
+        Some(held) => stamp > held.stamp || (stamp == held.stamp && held.is_synthetic),
+        None => true,
+    })
+}
+
+// WHY: a create's synthetic reset register is a floor, not a reset; only a reset that really happened cuts off
+// reviews (apply rule step 5).
+fn survives_reset(conn: &Connection, card_id: &str, stamp: Stamp) -> Result<bool, AppError> {
+    Ok(match read_register(conn, Kind::Cards, card_id, RESET_GROUP)? {
+        Some(reset) if !reset.is_synthetic => stamp > reset.stamp,
+        _ => true,
+    })
+}
+
+fn stored_stamp(hlc: i64, device: &[u8]) -> Result<Stamp, AppError> {
+    Ok(Stamp {
         hlc: Hlc::from_raw(u64::try_from(hlc).map_err(protocol_error)?),
-        device: DeviceId(<[u8; 16]>::try_from(device.as_slice()).map_err(protocol_error)?),
-    };
-    Ok(stamp > held || (stamp == held && is_synthetic))
+        device: DeviceId(<[u8; 16]>::try_from(device).map_err(protocol_error)?),
+    })
 }
 
 fn write_group(conn: &Connection, id: &str, payload: &Payload) -> Result<(), AppError> {
@@ -403,19 +510,42 @@ fn discard_pending(conn: &Connection, kind: Kind, id: &str, group: &str) -> Resu
     Ok(())
 }
 
-fn apply_immutable(conn: &Connection, entry: &Entry) -> Result<bool, AppError> {
+fn apply_immutable(conn: &Connection, entry: &Entry, changed: &mut Changed) -> Result<(), AppError> {
     let kind = entry.header.kind;
     let id = entry.header.id.as_str();
-    let Payload::AlgorithmRevision(revision) = &entry.payload else {
-        return Ok(false);
-    };
     if is_present(conn, kind, id)? {
-        return Ok(false);
+        return Ok(());
     }
 
-    insert_algorithm_revision(conn, id, revision)?;
+    match &entry.payload {
+        Payload::Review(review) => {
+            if !survives_reset(conn, &review.card_id, entry.header.stamp)? {
+                return Ok(());
+            }
+            insert_review(conn, &review_data(review)?, review.created_at, Some(id))?;
+        }
+        Payload::AlgorithmRevision(revision) => insert_algorithm_revision(conn, id, revision)?,
+        _ => return Err(protocol_error("an immutable group carries an immutable payload")),
+    }
     entry.values.write_origin(conn, kind, id, ROW_GROUP, None)?;
-    Ok(true)
+
+    changed.mark(kind);
+    Ok(())
+}
+
+fn review_data(review: &Review) -> Result<InsertReviewData, AppError> {
+    Ok(InsertReviewData {
+        card_id: review.card_id.clone(),
+        rating: i32::try_from(review.rating).map_err(protocol_error)?,
+        state: i32::try_from(review.state).map_err(protocol_error)?,
+        due_at: review.due_at,
+        stability: review.stability,
+        difficulty: review.difficulty,
+        scheduled_days: i32::try_from(review.scheduled_days).map_err(protocol_error)?,
+        learning_steps: i32::try_from(review.learning_steps).map_err(protocol_error)?,
+        time: i32::try_from(review.time).map_err(protocol_error)?,
+        is_ignored: review.is_ignored,
+    })
 }
 
 fn insert_algorithm_revision(conn: &Connection, id: &str, revision: &AlgorithmRevision) -> Result<(), AppError> {
