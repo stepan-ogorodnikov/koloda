@@ -5,7 +5,7 @@ use koloda_sync_proto::registry::{allow, Class, Kind};
 use rusqlite::{params, Connection, OptionalExtension};
 use uuid::Uuid;
 
-use super::{protocol_error, StampValues, ROW_GROUP};
+use super::{delete_empty_cohort, protocol_error, StampValues, ROW_GROUP};
 use crate::app::error::AppError;
 use crate::app::utility::get_current_timestamp;
 
@@ -236,17 +236,6 @@ fn insert_outbox(
             sealed.bytes,
             digest(&sealed.bytes).0.as_slice()
         ],
-    )?;
-    Ok(())
-}
-
-fn delete_empty_cohort(conn: &Connection, commit_id: &[u8]) -> Result<(), AppError> {
-    conn.execute(
-        r#"
-        DELETE FROM sync_cohorts
-        WHERE commit_id = ?1 AND NOT EXISTS (SELECT 1 FROM sync_outbox WHERE commit_id = ?1)
-        "#,
-        params![commit_id],
     )?;
     Ok(())
 }

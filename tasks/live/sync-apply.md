@@ -71,7 +71,7 @@ Out:
   Commit: Apply remote creates through a fake sync space
   Depends on: 2
 
-- [ ] 4. Apply updates
+- [x] 4. Apply updates
   Goal: apply rule steps 7–9 for every update group: drop when the row is absent; compare `(hlc, stamp_device)` with the register, where equal plus synthetic wins once; apply the payload, replace the group's `product_ts`, and recompute `updated_at` as the max of the entity's register `product_ts` values and its `legacy_product_ts_floor`; write the register with the entry's sender metadata and `synthetic = 0`; delete a not-in-flight pending outbox row for the same group, and its cohort once empty.
   Learning groups patch one key of the `learning` document; a remote `algorithms.content` records no revision.
   Done when: tests cover a remote edit applied; a remote edit losing to a newer pending local edit, which stays queued; a newer remote edit discarding an older pending local one; an in-flight local row left alone; tied stamps; `updated_at` dropping back when a losing replica held a later product timestamp; a parameter apply that records no revision; a single learning key changed remotely.

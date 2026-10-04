@@ -5,13 +5,14 @@
 //! write must not re-enter the outbox.
 
 use koloda_sync_proto::envelope::{Envelope, Header};
-use koloda_sync_proto::hlc::{DeviceId, Hlc, HlcClock};
-use koloda_sync_proto::payload::{AlgorithmRevision, CardCreate, DeckCreate, DocumentCreate, Payload};
+use koloda_sync_proto::hlc::{DeviceId, Hlc, HlcClock, Stamp};
+use koloda_sync_proto::payload::{AlgorithmRevision, CardCreate, CardScheduling, DeckCreate, DocumentCreate, Payload};
 use koloda_sync_proto::registry::{allow, check_lane, Class, Kind, Lane};
-use rusqlite::{params, Connection, OptionalExtension};
+use rusqlite::{params, Connection, OptionalExtension, ToSql};
+use serde_json::{Map, Value};
 use uuid::Uuid;
 
-use super::{protocol_error, StampValues, ROW_GROUP};
+use super::{delete_empty_cohort, protocol_error, StampValues, ROW_GROUP};
 use crate::app::db::Database;
 use crate::app::error::{error_codes, throw_known_error, AppError};
 use crate::domain::seed_ids::{SEED_ALGORITHM_SIMPLE_ID, SEED_TEMPLATE_TYPE_ID};
@@ -110,8 +111,9 @@ fn apply_entry(conn: &Connection, entry: &Entry) -> Result<bool, AppError> {
         .map(|spec| spec.class);
     match class {
         Some(Class::Create) => apply_create(conn, entry),
+        Some(Class::Update) => apply_update(conn, entry),
         Some(Class::Immutable) => apply_immutable(conn, entry),
-        Some(Class::Update) | None => Ok(false),
+        None => Ok(false),
     }
 }
 
@@ -241,6 +243,163 @@ fn upsert_document(conn: &Connection, kind: Kind, id: &str, create: &DocumentCre
         ),
         params![id, create.title, create.notes, create.content, create.created_at],
     )?;
+    Ok(())
+}
+
+fn apply_update(conn: &Connection, entry: &Entry) -> Result<bool, AppError> {
+    let kind = entry.header.kind;
+    let id = entry.header.id.as_str();
+    let group = entry
+        .header
+        .group
+        .map(|group| group.as_wire())
+        .ok_or_else(|| protocol_error("an update names a group"))?;
+    if !is_present(conn, kind, id)? || !beats_register(conn, kind, id, group, entry.header.stamp)? {
+        return Ok(false);
+    }
+
+    write_group(conn, id, &entry.payload)?;
+    entry
+        .values
+        .write_register(conn, kind, id, group, entry.payload.product_ts(), false)?;
+    refresh_updated_at(conn, kind, id)?;
+    discard_pending(conn, kind, id, group)?;
+
+    Ok(true)
+}
+
+// INVARIANT: an equal stamp wins only over a synthetic register, the floor a create wrote for its same-commit
+// groups; after that, equal stamps do not beat (apply rule step 8). No register means a row this device never
+// captured, which any stamp beats.
+fn beats_register(conn: &Connection, kind: Kind, id: &str, group: &str, stamp: Stamp) -> Result<bool, AppError> {
+    let register: Option<(i64, Vec<u8>, bool)> = conn
+        .query_row(
+            "SELECT hlc, stamp_device, synthetic FROM sync_stamps WHERE kind = ?1 AND id = ?2 AND group_name = ?3",
+            params![kind.as_wire(), id, group],
+            |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
+        )
+        .optional()?;
+    let Some((hlc, device, is_synthetic)) = register else {
+        return Ok(true);
+    };
+
+    let held = Stamp {
+        hlc: Hlc::from_raw(u64::try_from(hlc).map_err(protocol_error)?),
+        device: DeviceId(<[u8; 16]>::try_from(device.as_slice()).map_err(protocol_error)?),
+    };
+    Ok(stamp > held || (stamp == held && is_synthetic))
+}
+
+fn write_group(conn: &Connection, id: &str, payload: &Payload) -> Result<(), AppError> {
+    let (sql, value): (&str, &dyn ToSql) = match payload {
+        Payload::CardContent(group) => ("UPDATE cards SET content = ?1 WHERE id = ?2", &group.content),
+        Payload::CardScheduling(scheduling) => return write_scheduling(conn, id, scheduling),
+        Payload::CardReset(_) => return Ok(()),
+        Payload::DeckTitle(group) => ("UPDATE decks SET title = ?1 WHERE id = ?2", &group.title),
+        Payload::DeckNotes(group) => ("UPDATE decks SET notes = ?1 WHERE id = ?2", &group.notes),
+        Payload::DeckAlgorithm(group) => ("UPDATE decks SET algorithm_id = ?1 WHERE id = ?2", &group.algorithm_id),
+        Payload::DeckTemplate(group) => ("UPDATE decks SET template_id = ?1 WHERE id = ?2", &group.template_id),
+        Payload::TemplateTitle(group) => ("UPDATE templates SET title = ?1 WHERE id = ?2", &group.title),
+        Payload::TemplateNotes(group) => ("UPDATE templates SET notes = ?1 WHERE id = ?2", &group.notes),
+        Payload::TemplateStructure(group) => ("UPDATE templates SET content = ?1 WHERE id = ?2", &group.content),
+        Payload::AlgorithmTitle(group) => ("UPDATE algorithms SET title = ?1 WHERE id = ?2", &group.title),
+        Payload::AlgorithmNotes(group) => ("UPDATE algorithms SET notes = ?1 WHERE id = ?2", &group.notes),
+        // WHY: a remote parameter change records no local revision; the writer's revision arrives as its own
+        // envelope (PROTOCOL.md, Groups).
+        Payload::AlgorithmContent(group) => ("UPDATE algorithms SET content = ?1 WHERE id = ?2", &group.content),
+        Payload::LearningDefaultAlgorithm(_)
+        | Payload::LearningDefaultTemplate(_)
+        | Payload::LearningDailyLimits(_)
+        | Payload::LearningDayStartsAt(_)
+        | Payload::LearningLearnAheadLimit(_) => return patch_learning(conn, id, payload),
+        _ => return Err(protocol_error("an update group carries an update payload")),
+    };
+    conn.execute(sql, params![value, id])?;
+    Ok(())
+}
+
+fn write_scheduling(conn: &Connection, id: &str, scheduling: &CardScheduling) -> Result<(), AppError> {
+    conn.execute(
+        r#"
+        UPDATE cards
+        SET state = ?1, due_at = ?2, stability = ?3, difficulty = ?4, scheduled_days = ?5, learning_steps = ?6,
+            reps = ?7, lapses = ?8, last_reviewed_at = ?9
+        WHERE id = ?10
+        "#,
+        params![
+            scheduling.state,
+            scheduling.due_at,
+            scheduling.stability,
+            scheduling.difficulty,
+            scheduling.scheduled_days,
+            scheduling.learning_steps,
+            scheduling.reps,
+            scheduling.lapses,
+            scheduling.last_reviewed_at,
+            id
+        ],
+    )?;
+    Ok(())
+}
+
+const DEFAULT_ALGORITHM_PATH: &[&str] = &["defaults", "algorithm"];
+const DEFAULT_TEMPLATE_PATH: &[&str] = &["defaults", "template"];
+const DAILY_LIMITS_PATH: &[&str] = &["dailyLimits"];
+const DAY_STARTS_AT_PATH: &[&str] = &["dayStartsAt"];
+const LEARN_AHEAD_LIMIT_PATH: &[&str] = &["learnAheadLimit"];
+
+// INVARIANT: each learning key is its own register, so a remote group replaces only its key and leaves the
+// rest of the stored document as this device holds it.
+fn patch_learning(conn: &Connection, id: &str, payload: &Payload) -> Result<(), AppError> {
+    let (path, value): (&[&str], Value) = match payload {
+        Payload::LearningDefaultAlgorithm(group) => (DEFAULT_ALGORITHM_PATH, Value::from(group.algorithm_id.as_str())),
+        Payload::LearningDefaultTemplate(group) => (DEFAULT_TEMPLATE_PATH, Value::from(group.template_id.as_str())),
+        Payload::LearningDailyLimits(group) => (DAILY_LIMITS_PATH, serde_json::from_str(&group.value)?),
+        Payload::LearningDayStartsAt(group) => (DAY_STARTS_AT_PATH, serde_json::from_str(&group.value)?),
+        Payload::LearningLearnAheadLimit(group) => (LEARN_AHEAD_LIMIT_PATH, serde_json::from_str(&group.value)?),
+        _ => return Err(protocol_error("a learning group carries a learning payload")),
+    };
+    let content: String = conn.query_row("SELECT content FROM settings WHERE name = ?1", params![id], |row| {
+        row.get(0)
+    })?;
+    let mut document: Value = serde_json::from_str(&content)?;
+
+    let (key, parents) = path
+        .split_last()
+        .ok_or_else(|| protocol_error("a learning key has a path"))?;
+    let mut node = &mut document;
+    for parent in parents {
+        node = node
+            .as_object_mut()
+            .ok_or_else(|| protocol_error("the learning document is an object"))?
+            .entry(*parent)
+            .or_insert_with(|| Value::Object(Map::new()));
+    }
+    node.as_object_mut()
+        .ok_or_else(|| protocol_error("the learning document is an object"))?
+        .insert((*key).to_string(), value);
+
+    conn.execute(
+        "UPDATE settings SET content = ?1 WHERE name = ?2",
+        params![document.to_string(), id],
+    )?;
+    Ok(())
+}
+
+// INVARIANT: a remote write that wins its register replaces the pending local write for that group; pushing it
+// would republish a value under a losing stamp (apply rule step 9). An in-flight row stays until its outcome.
+fn discard_pending(conn: &Connection, kind: Kind, id: &str, group: &str) -> Result<(), AppError> {
+    let commits: Vec<Vec<u8>> = conn
+        .prepare("SELECT commit_id FROM sync_outbox WHERE kind = ?1 AND id = ?2 AND group_name = ?3 AND in_flight = 0")?
+        .query_map(params![kind.as_wire(), id, group], |row| row.get(0))?
+        .collect::<Result<_, _>>()?;
+    conn.execute(
+        "DELETE FROM sync_outbox WHERE kind = ?1 AND id = ?2 AND group_name = ?3 AND in_flight = 0",
+        params![kind.as_wire(), id, group],
+    )?;
+    for commit_id in commits {
+        delete_empty_cohort(conn, &commit_id)?;
+    }
     Ok(())
 }
 

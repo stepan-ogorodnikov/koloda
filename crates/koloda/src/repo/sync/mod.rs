@@ -139,6 +139,17 @@ impl StampValues {
     }
 }
 
+fn delete_empty_cohort(conn: &Connection, commit_id: &[u8]) -> Result<(), AppError> {
+    conn.execute(
+        r#"
+        DELETE FROM sync_cohorts
+        WHERE commit_id = ?1 AND NOT EXISTS (SELECT 1 FROM sync_outbox WHERE commit_id = ?1)
+        "#,
+        params![commit_id],
+    )?;
+    Ok(())
+}
+
 fn protocol_error(error: impl std::fmt::Display) -> AppError {
     AppError::new(error_codes::UNKNOWN, Some(error.to_string()))
 }

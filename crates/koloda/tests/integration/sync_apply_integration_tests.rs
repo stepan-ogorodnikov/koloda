@@ -5,60 +5,24 @@ use koloda::domain::seed_ids::SEED_ALGORITHM_SIMPLE_ID;
 use koloda::repo::algorithms::{get_algorithm, update_algorithm};
 use koloda::repo::cards::get_card;
 use koloda::repo::decks::get_deck;
-use koloda::repo::sync::apply::{apply_page, Page, PageEntry};
+use koloda::repo::sync::apply::{apply_page, Page};
 use koloda::repo::templates::get_template;
-use koloda_sync_proto::hlc::{DeviceId, Hlc, Stamp};
 use koloda_sync_proto::payload::{
-    seal, CardCreate, CardScheduling, DeckCreate, DocumentCreate, InitialProductTs, Payload, Review, Seal,
+    CardCreate, CardScheduling, DeckCreate, DocumentCreate, InitialProductTs, Payload, Review,
 };
 use koloda_sync_proto::registry::{Kind, Lane};
 use uuid::Uuid;
 
 use crate::common::fixtures::{add_algorithm, add_card, add_deck, add_template};
-use crate::common::sync::{count, cursor, device, enroll, last_hlc, origin, register, replica, FakeSpace};
+use crate::common::sync::{
+    count, cursor, device, enroll, hot_page, last_hlc, origin, register, replica, sealed, stamp, FakeSpace,
+};
 use crate::common::{fsrs_algorithm_content, seed_data, test_db};
 
 const WALL_MS: u64 = 1_727_000_000_000;
 const ALGORITHM: &str = "01920000-0000-7000-8000-0000000000a1";
 const DECK: &str = "01920000-0000-7000-8000-0000000000d1";
 const CARD: &str = "01920000-0000-7000-8000-0000000000c1";
-
-fn stamp(device: Uuid, wall_ms: u64) -> Stamp {
-    Stamp {
-        hlc: Hlc::new(wall_ms, 0).expect("wall time fits"),
-        device: DeviceId(*device.as_bytes()),
-    }
-}
-
-fn sealed(id: &str, parent: Option<&str>, stamp: Stamp, payload: &Payload) -> Vec<u8> {
-    seal(
-        Seal {
-            id: id.to_string(),
-            parent: parent.map(str::to_string),
-            stamp,
-            commit_id: [7; 16],
-        },
-        payload,
-    )
-    .expect("payload seals")
-    .bytes
-}
-
-fn hot_page(sender: Uuid, envelopes: Vec<Vec<u8>>, scanned_through: i64) -> Page {
-    Page {
-        lane: Lane::Hot,
-        entries: envelopes
-            .into_iter()
-            .enumerate()
-            .map(|(index, envelope)| PageEntry {
-                sender,
-                sender_seq: i64::try_from(index).expect("index fits") + 1,
-                envelope,
-            })
-            .collect(),
-        scanned_through,
-    }
-}
 
 fn algorithm_create(title: &str, initial_product_ts: InitialProductTs, floor: Option<i64>) -> Payload {
     Payload::AlgorithmCreate(DocumentCreate {

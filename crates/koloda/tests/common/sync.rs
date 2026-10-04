@@ -5,8 +5,8 @@ use koloda::app::db::Database;
 use koloda::repo::sync;
 use koloda::repo::sync::apply::{apply_page, Page, PageEntry};
 use koloda_sync_proto::envelope::Envelope;
-use koloda_sync_proto::hlc::Hlc;
-use koloda_sync_proto::payload::Payload;
+use koloda_sync_proto::hlc::{DeviceId, Hlc, Stamp};
+use koloda_sync_proto::payload::{seal, Payload, Seal};
 use koloda_sync_proto::registry::{Kind, Lane};
 use uuid::Uuid;
 
@@ -42,6 +42,65 @@ pub fn replica() -> Database {
     let db = super::test_db();
     enroll(&db);
     db
+}
+
+/// A database seeded before enrollment, so its starter rows and `learning` document are at stamp zero.
+pub fn seeded_replica() -> Database {
+    let db = super::test_db();
+    koloda::app::init::seed_db(&db, super::seed_data("Simple", "Basic")).expect("test database seeds");
+    enroll(&db);
+    db
+}
+
+pub fn stamp(device: Uuid, wall_ms: u64) -> Stamp {
+    Stamp {
+        hlc: Hlc::new(wall_ms, 0).expect("wall time fits"),
+        device: DeviceId(*device.as_bytes()),
+    }
+}
+
+pub fn sealed(id: &str, parent: Option<&str>, stamp: Stamp, payload: &Payload) -> Vec<u8> {
+    seal(
+        Seal {
+            id: id.to_string(),
+            parent: parent.map(str::to_string),
+            stamp,
+            commit_id: [7; 16],
+        },
+        payload,
+    )
+    .expect("payload seals")
+    .bytes
+}
+
+/// A page of hand-sealed envelopes from one remote sender, numbered from sender seq 1.
+pub fn hot_page(sender: Uuid, envelopes: Vec<Vec<u8>>, scanned_through: i64) -> Page {
+    page(Lane::Hot, sender, envelopes, scanned_through)
+}
+
+pub fn page(lane: Lane, sender: Uuid, envelopes: Vec<Vec<u8>>, scanned_through: i64) -> Page {
+    Page {
+        lane,
+        entries: envelopes
+            .into_iter()
+            .enumerate()
+            .map(|(index, envelope)| PageEntry {
+                sender,
+                sender_seq: i64::try_from(index).expect("index fits") + 1,
+                envelope,
+            })
+            .collect(),
+        scanned_through,
+    }
+}
+
+/// Marks every pending outbox row as sent, as a push in progress would.
+pub fn mark_in_flight(db: &Database) {
+    db.with_conn(|conn| {
+        conn.execute("UPDATE sync_outbox SET in_flight = 1", [])?;
+        Ok(())
+    })
+    .expect("outbox rows go in flight");
 }
 
 /// Stands in for the server's log: it orders pushed envelopes per lane and serves them to other senders.
