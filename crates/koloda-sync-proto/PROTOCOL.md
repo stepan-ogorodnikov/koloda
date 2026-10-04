@@ -627,25 +627,28 @@ The client advances to `scanned_through`, so empty pages are safe.
 
 Enabling sync treats pre-sync data as one imported snapshot.
 It never reconstructs order from product timestamps or UUIDv7 time.
-Backfill reserves non-overlapping HLC ranges for three phases, durably and resumably:
+Enrollment reserves one stamp per phase, in phase order, and stores them with the scan's watermark:
 
 1. immutable creates (including algorithm revisions) and current non-scheduling groups, in referent and ancestor
-   order;
+   order, then the `learning` document's groups on the device that creates the space;
 2. reviews currently present, ordered by `(created_at, id)`;
 3. current card scheduling snapshots.
+
+Only the order between phases matters; within a phase, log order orders the rows.
+Each batch is one commit and cohort at its phase's stamp.
 
 Pre-sync resets leave no record, and none is needed.
 A product reset already deleted the reviews it cut off, so every surviving review is newer than any reset.
 A legacy card's reset register is only the synthetic floor from its create, which never cuts off a review.
 Every legacy card gets a phase-3 scheduling snapshot, so its final scheduling sorts after its reviews.
 Allocation never exceeds the absolute server-time cap.
-The device's last HLC moves past the final range before ordinary capture.
+The enrollment transaction moves the device's last HLC to the last reserved stamp.
+Every later capture therefore sorts after every phase.
 
 Unmodified seed rows on a joining device get stamp zero and are skipped.
 So are the seed algorithm's revisions, which a join deletes (§Joining).
 
-The device that creates the space also backfills the `learning` document's groups in phase 1.
-Every joiner's stamp-zero copy is then overlaid by the creator's values, not left on the first-run defaults.
+The creator's `learning` groups overlay every joiner's stamp-zero copy, so no joiner stays on the first-run defaults.
 A joining device never backfills them (§Joining).
 
 ## Devices
@@ -871,9 +874,13 @@ Those pending members are dropped in the same transaction.
 ### Backfill
 
 Enabling sync with existing data does not materialize the whole database into the outbox.
-A resumable scan walks algorithms (with revisions), templates, decks, cards, and reviews by id.
+A resumable scan walks algorithms, algorithm revisions, templates, decks, and cards by id.
 On the device that creates the space it then covers the `learning` document.
+Reviews and scheduling snapshots follow (§Existing rows at enable time).
 It tops the outbox up in bounded batches and advances its watermark in the same transaction.
+A batch never splits one entity's envelopes.
+It skips a row that already has an origin, and a group that already has a register.
+Both were written since enrollment and hold a newer head.
 
 Capture that touches an unstamped entity backfills, in the same transaction and order:
 
@@ -1214,7 +1221,7 @@ Only native hosts write them; they are device-local runtime state, never synced.
 
 | Table | Key | Holds |
 | --- | --- | --- |
-| `sync_state` | Singleton | `device_id`, `space_id`, `epoch`, join phase, cursors, last HLC, `next_sender_seq`, last observed server seq, skew, backfill watermark, rebase barrier |
+| `sync_state` | Singleton | `device_id`, `space_id`, `epoch`, join phase, cursors, last HLC, `next_sender_seq`, last observed server seq, skew, role (creator or joiner), backfill phase stamps and watermark, rebase barrier |
 | `sync_stamps` | `(kind, id, group)` | LWW register (§Field groups and merge) |
 | `sync_origins` | `(kind, id, group)` | Stamp and sender of immutable rows; legacy timestamp floor for creates |
 | `sync_outbox` | `sender_seq` | Encoded envelope, digest, `commit_id`, in-flight flag |

@@ -16,7 +16,7 @@ use crate::domain::settings::{Settings, SettingsName};
 use crate::domain::settings_learning::{LearningDefaults, LearningSettings};
 use crate::repo::sync::capture::Capture;
 
-const LEARNING_SYNC_ID: &str = "learning";
+pub(crate) const LEARNING_SYNC_ID: &str = "learning";
 
 impl FromSql for SettingsName {
     fn column_result(value: ValueRef<'_>) -> FromSqlResult<Self> {
@@ -107,7 +107,11 @@ pub fn set_settings(db: &Database, name: SettingsName, content: Value) -> Result
             upsert_settings(tx, name, &content, now)?;
             // WHY: an unreadable previous document counts as absent, so every key is captured.
             let previous = previous.and_then(|text| serde_json::from_str::<Value>(&text).ok());
-            capture_learning(&mut Capture::begin(tx)?, previous.as_ref(), &content)
+            let mut capture = Capture::begin(tx)?;
+            for payload in learning_payloads(previous.as_ref(), &content) {
+                capture.write(LEARNING_SYNC_ID, None, &payload)?;
+            }
+            Ok(())
         })?;
 
         get_settings(db, name)?.ok_or_else(|| AppError::new(error_codes::DB_UPDATE, None))
@@ -136,27 +140,22 @@ pub(crate) fn upsert_settings(
 
 // INVARIANT: each learning key is its own sync group; only keys whose value changed are captured
 // (crates/koloda-sync-proto/PROTOCOL.md, Field groups and merge). Other settings slices do not sync.
-pub(crate) fn capture_learning(
-    capture: &mut Capture<'_>,
-    previous: Option<&Value>,
-    next: &Value,
-) -> Result<(), AppError> {
+pub(crate) fn learning_payloads(previous: Option<&Value>, next: &Value) -> Vec<Payload> {
+    let mut payloads = Vec::new();
     let changed = |pointer: &str| previous.and_then(|value| value.pointer(pointer)) != next.pointer(pointer);
 
     if changed("/defaults/algorithm") {
         if let Some(algorithm_id) = next.pointer("/defaults/algorithm").and_then(Value::as_str) {
-            let payload = Payload::LearningDefaultAlgorithm(DefaultAlgorithm {
+            payloads.push(Payload::LearningDefaultAlgorithm(DefaultAlgorithm {
                 algorithm_id: algorithm_id.to_string(),
-            });
-            capture.write(LEARNING_SYNC_ID, None, &payload)?;
+            }));
         }
     }
     if changed("/defaults/template") {
         if let Some(template_id) = next.pointer("/defaults/template").and_then(Value::as_str) {
-            let payload = Payload::LearningDefaultTemplate(DefaultTemplate {
+            payloads.push(Payload::LearningDefaultTemplate(DefaultTemplate {
                 template_id: template_id.to_string(),
-            });
-            capture.write(LEARNING_SYNC_ID, None, &payload)?;
+            }));
         }
     }
 
@@ -171,11 +170,11 @@ pub(crate) fn capture_learning(
             let value = SettingValue {
                 value: value.to_string(),
             };
-            capture.write(LEARNING_SYNC_ID, None, &payload(value))?;
+            payloads.push(payload(value));
         }
     }
 
-    Ok(())
+    payloads
 }
 
 pub fn patch_settings(db: &Database, name: SettingsName, patch: Value) -> Result<Settings, AppError> {

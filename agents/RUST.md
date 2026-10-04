@@ -17,6 +17,7 @@ This file only tells you where to start.
 | Review row writes | `src/repo/reviews.rs::insert_review` |
 | A product write path (sync capture) | `src/repo/sync/capture.rs::Capture` + `crates/koloda-sync-proto/PROTOCOL.md` (§Field groups and merge) |
 | Applying remote sync envelopes | `src/repo/sync/apply.rs::apply_page` + `crates/koloda-sync-proto/PROTOCOL.md` (§Field groups and merge, Apply rule) |
+| Enabling sync on a database that already holds rows | `src/repo/sync/backfill.rs::backfill_batch` + `crates/koloda-sync-proto/PROTOCOL.md` (§Existing rows at enable time, Backfill) |
 | Schema / migrations | `agents/DB.md` |
 | AI provider enum / secrets redaction | `agents/ADD-AI-PROVIDER.md` |
 | Hotkeys settings | `agents/ADD-HOTKEY.md` |
@@ -76,6 +77,13 @@ so card-progress and review namespaces stay distinct.
 - Repairs of pointers to a dead referent are the exception.
   `repair.rs` publishes them through `Capture`, like local writes.
 - Two-replica tests exchange outboxes through `FakeSpace` in `tests/common/sync.rs`.
+
+**Backfill** — `enroll_device` reserves one stamp per backfill phase.
+`backfill_batch` scans rows written before enrollment into the outbox.
+
+- Each kind's create payload comes from its stored row (`create_payload` in its repo), shared with the create paths.
+- A joiner skips seed rows, the seed algorithm's revisions, and `learning`; only the space's creator backfills them.
+- Backfill tests drain into `FakeSpace` and call `assert_referents_first`.
 
 **Review writes** — `insert_review` in `src/repo/reviews.rs` is the single write path (`pub(crate)`).
 

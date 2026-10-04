@@ -1,6 +1,6 @@
 use koloda::app::db::Database;
 use koloda::app::error::AppError;
-use koloda::repo::sync::{self, capture::Capture};
+use koloda::repo::sync::{self, capture::Capture, SpaceRole};
 use koloda_sync_proto::payload::{
     CardCreate, CardScheduling, DeckCreate, InitialProductTs, Notes, Payload, Review, Title,
 };
@@ -56,10 +56,10 @@ fn enrollment_records_one_device_and_refuses_a_second() {
     assert_eq!(sync::enrolled_device(&db).unwrap(), None);
 
     let device = Uuid::now_v7();
-    sync::enroll_device(&db, device).unwrap();
+    sync::enroll_device(&db, device, SpaceRole::Joiner).unwrap();
     assert_eq!(sync::enrolled_device(&db).unwrap(), Some(device));
 
-    let second = sync::enroll_device(&db, Uuid::now_v7());
+    let second = sync::enroll_device(&db, Uuid::now_v7(), SpaceRole::Joiner);
     assert_eq!(second.unwrap_err().code, "db.add");
     assert_eq!(
         sync::enrolled_device(&db).unwrap(),

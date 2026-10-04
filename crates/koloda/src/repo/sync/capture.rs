@@ -21,6 +21,7 @@ struct DeviceState {
     clock: HlcClock,
     next_sender_seq: i64,
     commit: Option<Commit>,
+    reserved: Option<Hlc>,
 }
 
 #[derive(Clone, Copy)]
@@ -47,11 +48,24 @@ impl<'c> Capture<'c> {
                 },
                 next_sender_seq,
                 commit: None,
+                reserved: None,
             }),
             None => None,
         };
 
         Ok(Capture { conn, device })
+    }
+
+    // INVARIANT: a backfill phase writes at the stamp enrollment reserved, below `last_hlc`. It never ticks the
+    // clock, so writes captured later stay above every backfill phase.
+    pub(super) fn begin_reserved(conn: &'c Connection, hlc: Hlc) -> Result<Capture<'c>, AppError> {
+        let mut capture = Capture::begin(conn)?;
+        let state = capture
+            .device
+            .as_mut()
+            .ok_or_else(|| protocol_error("only an enrolled database backfills"))?;
+        state.reserved = Some(hlc);
+        Ok(capture)
     }
 
     pub fn write(&mut self, id: &str, parent: Option<&str>, payload: &Payload) -> Result<(), AppError> {
@@ -146,8 +160,10 @@ impl DeviceState {
             return Ok(commit);
         }
 
-        let now = u64::try_from(get_current_timestamp()?).map_err(protocol_error)?;
-        let hlc = self.clock.tick(now).map_err(protocol_error)?;
+        let hlc = match self.reserved {
+            Some(hlc) => hlc,
+            None => self.tick(conn)?,
+        };
         let commit = Commit {
             stamp: Stamp {
                 hlc,
@@ -157,7 +173,6 @@ impl DeviceState {
         };
         let raw_hlc = i64::try_from(hlc.raw()).map_err(protocol_error)?;
 
-        conn.execute("UPDATE sync_state SET last_hlc = ?1 WHERE id = 1", params![raw_hlc])?;
         conn.execute(
             r#"
             INSERT INTO sync_cohorts (commit_id, state, hlc, stamp_device)
@@ -168,6 +183,14 @@ impl DeviceState {
 
         self.commit = Some(commit);
         Ok(commit)
+    }
+
+    fn tick(&mut self, conn: &Connection) -> Result<Hlc, AppError> {
+        let now = u64::try_from(get_current_timestamp()?).map_err(protocol_error)?;
+        let hlc = self.clock.tick(now).map_err(protocol_error)?;
+        let raw_hlc = i64::try_from(hlc.raw()).map_err(protocol_error)?;
+        conn.execute("UPDATE sync_state SET last_hlc = ?1 WHERE id = 1", params![raw_hlc])?;
+        Ok(hlc)
     }
 
     fn next_seq(&mut self, conn: &Connection) -> Result<i64, AppError> {

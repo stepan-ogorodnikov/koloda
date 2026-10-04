@@ -3,13 +3,15 @@
 
 use koloda::app::db::Database;
 use koloda::app::error::AppError;
-use koloda::repo::sync;
 use koloda::repo::sync::apply::{apply_page, Page, PageEntry};
+use koloda::repo::sync::backfill::{backfill_batch, Backfill};
 use koloda::repo::sync::repair::{repair_dangling_defaults, Starter};
+use koloda::repo::sync::{self, SpaceRole};
 use koloda_sync_proto::envelope::Envelope;
 use koloda_sync_proto::hlc::{DeviceId, Hlc, Stamp};
 use koloda_sync_proto::payload::{seal, Payload, Seal};
-use koloda_sync_proto::registry::{Kind, Lane};
+use koloda_sync_proto::registry::{allow, Class, Kind, Lane, Op};
+use std::collections::HashSet;
 use uuid::Uuid;
 
 pub struct OutboxEntry {
@@ -33,9 +35,14 @@ pub struct Origin {
     pub sender_seq: i64,
 }
 
+/// Enrolls as a joiner, so a seeded replica's starter rows and `learning` document stay at stamp zero.
 pub fn enroll(db: &Database) -> Uuid {
+    enroll_as(db, SpaceRole::Joiner)
+}
+
+pub fn enroll_as(db: &Database, role: SpaceRole) -> Uuid {
     let device = Uuid::now_v7();
-    sync::enroll_device(db, device).expect("test database enrolls");
+    sync::enroll_device(db, device, role).expect("test database enrolls");
     device
 }
 
@@ -106,14 +113,17 @@ pub fn mark_in_flight(db: &Database) {
 }
 
 /// Stands in for the server's log: it orders pushed envelopes per lane and serves them to other senders.
-/// It makes none of the server's checks (stale heads, existence, compaction).
+/// It makes none of the server's checks (stale heads, existence, compaction); `assert_referents_first` checks the
+/// order the existence check relies on.
 #[derive(Default)]
 pub struct FakeSpace {
     hot: Vec<LogEntry>,
     cold: Vec<LogEntry>,
+    pushed: usize,
 }
 
 struct LogEntry {
+    order: usize,
     seq: i64,
     sender: Uuid,
     sender_seq: i64,
@@ -145,7 +155,9 @@ impl FakeSpace {
                 Lane::Cold => &mut self.cold,
             };
             let seq = i64::try_from(log.len()).expect("log length fits") + 1;
+            self.pushed += 1;
             log.push(LogEntry {
+                order: self.pushed,
                 seq,
                 sender,
                 sender_seq,
@@ -163,6 +175,58 @@ impl FakeSpace {
                 Ok(())
             })
             .expect("outbox clears");
+    }
+
+    /// Runs backfill in batches of `max_envelopes`, pushing after each, until it finishes.
+    pub fn drain_backfill(&mut self, replica: &Database, max_envelopes: usize) {
+        while backfill_batch(replica, max_envelopes).expect("backfill batch runs") == Backfill::Pending {
+            self.push(replica);
+        }
+        self.push(replica);
+    }
+
+    /// Fails unless every logged envelope's parent and algorithm or template ref, and the entity an update names,
+    /// was created or deleted earlier in the log, across both lanes. The `learning` document is never created.
+    pub fn assert_referents_first(&self) {
+        let mut entries: Vec<&LogEntry> = self.hot.iter().chain(&self.cold).collect();
+        entries.sort_by_key(|entry| entry.order);
+
+        let mut known: HashSet<(Kind, String)> = HashSet::new();
+        for entry in entries {
+            let header = Envelope::decode(&entry.envelope)
+                .expect("logged envelope decodes")
+                .header;
+            let class = allow(header.kind, header.group, header.op)
+                .expect("logged header is allowed")
+                .map(|spec| spec.class);
+
+            let mut needed = Vec::new();
+            if let (Some(parent), Some(parent_kind)) = (&header.parent, header.kind.spec().parent) {
+                needed.push((parent_kind, parent.clone()));
+            }
+            if let Some(algorithm_id) = &header.refs.algorithm_id {
+                needed.push((Kind::Algorithms, algorithm_id.clone()));
+            }
+            if let Some(template_id) = &header.refs.template_id {
+                needed.push((Kind::Templates, template_id.clone()));
+            }
+            if class == Some(Class::Update) && header.kind != Kind::SettingsLearning {
+                needed.push((header.kind, header.id.clone()));
+            }
+            for (kind, id) in needed {
+                assert!(
+                    known.contains(&(kind, id.clone())),
+                    "{:?} {} {:?} names {kind:?} {id} before the log holds it",
+                    header.kind,
+                    header.id,
+                    header.group,
+                );
+            }
+
+            if class != Some(Class::Update) || header.op == Op::Delete {
+                known.insert((header.kind, header.id));
+            }
+        }
     }
 
     /// Applies everything other senders pushed past the replica's cursors, `hot` first, then `cold`, and then

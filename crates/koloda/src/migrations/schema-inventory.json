@@ -974,6 +974,48 @@
       "name": "sync_state",
       "columns": [
         {
+          "name": "backfill_after_id",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0,
+          "dflt_value": null
+        },
+        {
+          "name": "backfill_after_ts",
+          "type": "INTEGER",
+          "notnull": 0,
+          "pk": 0,
+          "dflt_value": null
+        },
+        {
+          "name": "backfill_create_hlc",
+          "type": "INTEGER",
+          "notnull": 1,
+          "pk": 0,
+          "dflt_value": "0"
+        },
+        {
+          "name": "backfill_review_hlc",
+          "type": "INTEGER",
+          "notnull": 1,
+          "pk": 0,
+          "dflt_value": "0"
+        },
+        {
+          "name": "backfill_scheduling_hlc",
+          "type": "INTEGER",
+          "notnull": 1,
+          "pk": 0,
+          "dflt_value": "0"
+        },
+        {
+          "name": "backfill_step",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0,
+          "dflt_value": null
+        },
+        {
           "name": "cursor_cold",
           "type": "INTEGER",
           "notnull": 1,
@@ -1014,6 +1056,13 @@
           "notnull": 1,
           "pk": 0,
           "dflt_value": null
+        },
+        {
+          "name": "role",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0,
+          "dflt_value": "'joiner'"
         }
       ],
       "indexes": [],

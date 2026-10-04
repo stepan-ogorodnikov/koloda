@@ -70,7 +70,7 @@ Out:
   Commit: Build sync create payloads from stored rows
   Depends on: none
 
-- [ ] 2. Backfill pre-sync creates when a device enrolls
+- [x] 2. Backfill pre-sync creates when a device enrolls
   Goal: `enroll_device(db, device_id, role)` takes `SpaceRole::Creator` or `SpaceRole::Joiner`.
   In the enrollment transaction it reserves three stamps from the device clock, one per phase and in phase order, and moves `last_hlc` past the last of them.
   Migration `V7__sync_backfill.sql` adds the role, the three stamps, and the watermark (phase, kind, last `created_at`, last id) to `sync_state`.
@@ -104,7 +104,8 @@ Out:
 
   Done when: tests in `crates/koloda/tests/integration/sync_backfill_integration_tests.rs` cover:
   - Equal rows and order. A creator with a custom algorithm and its revisions, a custom template, decks, cards, and changed learning settings, all written before enrollment, drains into the fake space. The log passes `assert_referents_first`, and a seeded joiner ends with equal rows, `updated_at` values, and learning settings.
-  - Batch size. Draining one envelope per batch gives the same log as one large batch.
+  - Batch size. Batches of two envelopes enqueue in scan order, and no batch splits a deck's create from its pointers.
+  - Existing heads. Registers that remote writes set on a legacy row survive the scan, and their groups are not backfilled.
   - Clock. A write captured after enrollment is stamped above the phase-3 stamp.
   - Joiner skips. A joiner enqueues nothing for its seed rows, the seed algorithm's revisions, or `learning`; the conformance case "Start-fresh-then-Join does not push a second initial seed revision".
   - The conformance case "Space created after its device deleted the seed algorithm": the joiner's learning default ends on the creator's real default, not the seed id.

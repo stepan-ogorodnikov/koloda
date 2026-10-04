@@ -1,9 +1,11 @@
-//! Sync bookkeeping SQL: device enrollment here, capture of product writes in `capture`, and remote envelopes
-//! in `apply` (`crates/koloda-sync-proto/PROTOCOL.md` §Field groups and merge, §Clocks and order, §Client state).
+//! Sync bookkeeping SQL: device enrollment here, capture of product writes in `capture`, rows that predate
+//! enrollment in `backfill`, and remote envelopes in `apply` (`crates/koloda-sync-proto/PROTOCOL.md` §Field
+//! groups and merge, §Clocks and order, §Client state).
 //!
 //! Only the desktop store writes the `sync_*` tables; the web host does not sync.
 
 pub mod apply;
+pub mod backfill;
 pub mod capture;
 pub mod repair;
 
@@ -19,18 +21,45 @@ use crate::app::error::{error_codes, throw_known_error, AppError};
 const CREATE_GROUP: &str = "create";
 const ROW_GROUP: &str = "row";
 
-pub fn enroll_device(db: &Database, device_id: Uuid) -> Result<(), AppError> {
+/// The device's part in its space. Only the creator backfills seed rows and the `learning` document; a joiner
+/// takes both from the space (PROTOCOL.md, Existing rows at enable time).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum SpaceRole {
+    Creator,
+    Joiner,
+}
+
+impl SpaceRole {
+    fn as_sql(self) -> &'static str {
+        match self {
+            SpaceRole::Creator => "creator",
+            SpaceRole::Joiner => "joiner",
+        }
+    }
+
+    fn from_sql(value: &str) -> Result<SpaceRole, AppError> {
+        match value {
+            "creator" => Ok(SpaceRole::Creator),
+            "joiner" => Ok(SpaceRole::Joiner),
+            other => Err(protocol_error(format!("unknown space role {other}"))),
+        }
+    }
+}
+
+pub fn enroll_device(db: &Database, device_id: Uuid, role: SpaceRole) -> Result<(), AppError> {
     throw_known_error(error_codes::DB_ADD, || {
-        db.with_conn(|conn| {
-            conn.execute(
+        db.with_transaction(|tx| {
+            tx.execute(
                 r#"
-                INSERT INTO sync_state (id, device_id, last_hlc, next_sender_seq)
-                VALUES (1, ?1, 0, 1)
+                INSERT INTO sync_state (id, device_id, last_hlc, next_sender_seq, role)
+                VALUES (1, ?1, 0, 1, ?2)
                 "#,
-                params![device_id.as_bytes().as_slice()],
+                params![device_id.as_bytes().as_slice(), role.as_sql()],
             )?;
 
-            Ok(())
+            // INVARIANT: the backfill stamps are reserved in the enrollment transaction, so every write captured
+            // after enrollment is stamped above them.
+            backfill::reserve(tx)
         })
     })
 }
@@ -102,12 +131,21 @@ impl StampValues {
         product_ts: Option<i64>,
         is_synthetic: bool,
     ) -> Result<(), AppError> {
+        // WHY: a synthetic floor never replaces a register. A backfilled create can follow a real write to a group
+        // of the same entity, and that newer head must stay.
+        let verb = if is_synthetic {
+            "INSERT OR IGNORE"
+        } else {
+            "INSERT OR REPLACE"
+        };
         conn.execute(
-            r#"
-            INSERT OR REPLACE INTO sync_stamps
-                (kind, id, group_name, hlc, stamp_device, sender, sender_seq, product_ts, synthetic)
-            VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)
-            "#,
+            &format!(
+                r#"
+                {verb} INTO sync_stamps
+                    (kind, id, group_name, hlc, stamp_device, sender, sender_seq, product_ts, synthetic)
+                VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)
+                "#
+            ),
             params![
                 kind.as_wire(),
                 id,
