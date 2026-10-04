@@ -1,6 +1,6 @@
 # Sync apply
 
-Status: ready
+Status: done
 
 ## Intent
 
@@ -116,4 +116,13 @@ Out:
 
 ## Outcome
 
-<what shipped>
+- `PROTOCOL.md` lets seed rows be deleted: a dead pointer repairs to the `successor`, else the lowest live id, else a new default row; joiners keep a seed id only while the space holds it live; hot bootstrap streams referent kinds first; the space creator backfills the `learning` document.
+- `crates/koloda/src/repo/sync/` splits into `mod.rs` (enrollment and shared register, origin, and tombstone writes), `capture.rs`, `apply.rs`, and `repair.rs`.
+- `apply_page` applies one pull page in one transaction and returns the kinds it changed: creates with synthetic registers, seed overlay, and repair-target deck placeholders; last-writer-wins updates with derived `updated_at` and discarded losing local writes; reviews under reset cutoffs; tombstones that fence, cascade, and drop pending local writes; pointer repair for dead templates and algorithms, including new default rows from the host's `Starter` content.
+- `repair_dangling_defaults` repairs learning defaults that name no live row; the engine calls it after catch-up.
+- Migration `V6__sync_cursors.sql` adds `cursor_hot` and `cursor_cold`; apply advances the page's lane in the same transaction.
+- `insert_review` takes an optional id so remote reviews keep theirs; remote reviews are validated before the insert.
+- Tests: `FakeSpace` in `tests/common/sync.rs` exchanges outboxes between replicas; apply, update, review, tombstone, repair, and collision suites cover every collision row that needs no transport.
+- `PROTOCOL.md` now says deletes and reset-killed reviews cascade in the apply transaction, with chunked `sync_delete_jobs` left as a later optimization; the TS ↔ Rust mirroring divergence, the crate README, and `agents/RUST.md` describe remote apply and repair.
+- Deviations from the first plan text, reflected in the items: item 3 also applies algorithm revisions; apply writes the clock per entry so a repair is stamped above the tombstone it follows; a deck create with no live template gets a new default instead of failing; "later write wins" collision tests compare pending stamps, since concurrent writes can share a millisecond.
+- Manual verify: none — nothing delivers envelopes outside tests yet, so no user-visible behavior changed.
