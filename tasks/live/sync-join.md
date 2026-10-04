@@ -126,7 +126,7 @@ Out:
   Commit: Remint rows the space already holds when a database joins
   Depends on: 1
 
-- [ ] 3. Keep, delete, or remint seed rows on join
+- [x] 3. Keep, delete, or remint seed rows on join
   Goal: `add_to_space` applies the seed-row rules in `PROTOCOL.md` §Joining:
   - if the space holds the seed algorithm live, it keeps its id while unmodified, and its local revisions are deleted so the space's history arrives;
   - if the space holds the seed template live, it keeps its id while unmodified and no local card uses it;

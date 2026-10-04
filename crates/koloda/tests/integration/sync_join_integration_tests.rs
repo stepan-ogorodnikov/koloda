@@ -9,22 +9,22 @@ use koloda::domain::attachments::AddAttachmentData;
 use koloda::domain::decks::{DeleteDeckData, UpdateDeckData, UpdateDeckValues};
 use koloda::domain::seed_ids::{SEED_ALGORITHM_SIMPLE_ID, SEED_TEMPLATE_TYPE_ID};
 use koloda::domain::settings::SettingsName;
-use koloda::domain::templates::{UpdateTemplateData, UpdateTemplateValues};
+use koloda::domain::templates::{DeleteTemplateData, UpdateTemplateData, UpdateTemplateValues};
 use koloda::repo::algorithms::{delete_algorithm, get_algorithm, update_algorithm};
 use koloda::repo::attachments::add_attachment;
 use koloda::repo::decks::{delete_deck, get_deck, update_deck};
 use koloda::repo::settings::{get_settings, set_settings};
-use koloda::repo::sync::backfill::backfill_batch;
+use koloda::repo::sync::backfill::{backfill_batch, Backfill};
 use koloda::repo::sync::join::{add_to_space, begin_import, join_mode, probe_ids, JoinMode, Known};
 use koloda::repo::sync::{enroll_device, SpaceRole};
-use koloda::repo::templates::{get_template, update_template};
+use koloda::repo::templates::{delete_template, get_template, update_template};
 use koloda_sync_proto::registry::Kind;
 use rusqlite::types::Value;
 use serde_json::json;
 use uuid::Uuid;
 
 use crate::common::fixtures::{add_algorithm, add_card, add_conversation, add_deck, add_template, insert_review_row};
-use crate::common::sync::{apply, copy_of, count, device, enroll_as, hot_page, outbox, FakeSpace, SPACE};
+use crate::common::sync::{apply, copy_of, count, device, enroll_as, hot_page, outbox, FakeSpace, OutboxEntry, SPACE};
 use crate::common::{seed_data, test_db};
 
 const SYNCED_TABLES: [&str; 6] = [
@@ -350,14 +350,9 @@ fn probe_pages_list_every_hot_lane_id_once() {
     assert_eq!(probed, expected, "reviews and learning are never probed");
 }
 
-// WHY: the seed algorithm's local revisions stay on a joiner and are never pushed, so they are left out.
 fn dump(db: &Database, table: &str) -> Vec<Vec<Value>> {
-    let filter = match table {
-        "algorithm_revisions" => format!("WHERE algorithm_id != '{SEED_ALGORITHM_SIMPLE_ID}'"),
-        _ => String::new(),
-    };
     db.with_conn(|conn| {
-        let mut stmt = conn.prepare(&format!("SELECT * FROM {table} {filter} ORDER BY id"))?;
+        let mut stmt = conn.prepare(&format!("SELECT * FROM {table} ORDER BY id"))?;
         let width = stmt.column_count();
         let rows = stmt
             .query_map([], |row| (0..width).map(|index| row.get(index)).collect())?
@@ -409,13 +404,6 @@ fn learning(db: &Database) -> serde_json::Value {
         .expect("learning settings read")
         .expect("learning settings exist")
         .content
-}
-
-/// Claims a code, probes the space, and adds the file, as the join wizard will.
-fn add(space: &FakeSpace, db: &Database) {
-    begin_import(db, Uuid::now_v7(), SPACE).expect("claim records");
-    let known = space.probe(db);
-    add_to_space(db, &known).expect("file joins through Add");
 }
 
 /// A creator's file, a copy of it taken before the creator made the space, and what the copy wrote afterwards.
@@ -485,7 +473,7 @@ fn copied() -> Copied {
     let later_deck = add_deck(&copy, &algorithm, &template, "Spanish later");
     let later_card = add_card(&copy, &later_deck, &template, "luego");
 
-    add(&space, &copy);
+    space.join_by_add(&copy);
     Copied {
         creator,
         copy,
@@ -639,10 +627,22 @@ fn add_of_an_unrelated_database_remints_nothing() {
     let deck = add_deck(&joiner, SEED_ALGORITHM_SIMPLE_ID, &template, "German");
     let card = add_card(&joiner, &deck, &template, "hallo");
     insert_review_row(&joiner, &card, 2, 0, 1_727_000_000_000);
-    let joiner_ids = || -> Vec<Vec<String>> { SYNCED_TABLES.into_iter().map(|table| ids(&joiner, table)).collect() };
+    // WHY: the seed algorithm's local revisions give way to the space's history, so they are left out.
+    let joiner_ids = || -> Vec<Vec<String>> {
+        SYNCED_TABLES
+            .into_iter()
+            .map(|table| match table {
+                "algorithm_revisions" => column(
+                    &joiner,
+                    &format!("SELECT id FROM {table} WHERE algorithm_id != '{SEED_ALGORITHM_SIMPLE_ID}' ORDER BY id"),
+                ),
+                _ => ids(&joiner, table),
+            })
+            .collect()
+    };
     let before = joiner_ids();
 
-    add(&space, &joiner);
+    space.join_by_add(&joiner);
     assert_eq!(joiner_ids(), before, "no local id is known to the space");
 
     space.drain_backfill(&joiner, 100);
@@ -689,4 +689,199 @@ fn add_leaves_device_local_data_alone() {
 
     assert!(!ids(&db, "cards").contains(&card), "the known card is reminted");
     assert_eq!(local(&db), before, "conversations and attachments are never rewritten");
+}
+
+/// A creator that holds both seed rows, with its backfill pushed to the space.
+fn seeded_space() -> (Database, FakeSpace) {
+    let creator = seeded_db();
+    enroll_as(&creator, SpaceRole::Creator);
+    let mut space = FakeSpace::default();
+    space.drain_backfill(&creator, 100);
+    (creator, space)
+}
+
+fn drain(db: &Database) -> Vec<OutboxEntry> {
+    while backfill_batch(db, 100).expect("backfill batch runs") == Backfill::Pending {}
+    outbox(db)
+}
+
+fn sole_id(db: &Database, table: &str) -> String {
+    let mut ids = ids(db, table);
+    assert_eq!(ids.len(), 1, "{table} holds one row");
+    ids.remove(0)
+}
+
+#[test]
+fn an_untouched_seed_file_keeps_seed_rows_at_stamp_zero_and_pushes_nothing() {
+    // Covers PROTOCOL.md conformance: Start-fresh-then-Join overlays seeds, and does not push a second initial
+    // seed revision.
+    let creator = seeded_db();
+    rename_seed_algorithm(&creator);
+    rename_seed_template(&creator);
+    enroll_as(&creator, SpaceRole::Creator);
+    let mut space = FakeSpace::default();
+    space.drain_backfill(&creator, 100);
+
+    let joiner = seeded_db();
+    assert_eq!(join_mode(&joiner, SPACE).unwrap(), JoinMode::UntouchedSeed);
+    space.join_by_add(&joiner);
+
+    assert_eq!(ids(&joiner, "algorithms"), [SEED_ALGORITHM_SIMPLE_ID]);
+    assert_eq!(ids(&joiner, "templates"), [SEED_TEMPLATE_TYPE_ID]);
+    assert!(
+        ids(&joiner, "algorithm_revisions").is_empty(),
+        "the seed algorithm's local revisions give way to the space's history"
+    );
+    assert!(drain(&joiner).is_empty(), "a joiner never pushes the seed rows");
+
+    space.pull(&joiner);
+    for table in SYNCED_TABLES {
+        assert_eq!(dump(&joiner, table), dump(&creator, table), "{table}");
+    }
+    assert_eq!(
+        get_algorithm(&joiner, SEED_ALGORITHM_SIMPLE_ID).unwrap().unwrap().title,
+        "Simple tuned",
+        "the space's seed create overlays the local row"
+    );
+}
+
+#[test]
+fn an_untouched_seed_file_deletes_a_seed_template_the_space_deleted() {
+    // Covers PROTOCOL.md conformance: Start-fresh-then-Join into a space that deleted the seed template.
+    let (creator, mut space) = seeded_space();
+    let template = add_template(&creator, "Vocabulary");
+    set_learning_defaults(&creator, SEED_ALGORITHM_SIMPLE_ID, &template);
+    delete_template(
+        &creator,
+        DeleteTemplateData {
+            id: SEED_TEMPLATE_TYPE_ID.to_string(),
+        },
+    )
+    .expect("seed template deletes");
+    space.push(&creator);
+
+    let joiner = seeded_db();
+    space.join_by_add(&joiner);
+
+    assert!(
+        ids(&joiner, "templates").is_empty(),
+        "the local seed template is deleted"
+    );
+    assert!(drain(&joiner).is_empty(), "the seed template is never pushed");
+    space.pull(&joiner);
+    assert_eq!(ids(&joiner, "templates"), [template]);
+}
+
+#[test]
+fn add_keeps_an_unmodified_seed_algorithm_and_remints_a_used_seed_template() {
+    // Covers PROTOCOL.md conformance: Add keeps an unmodified seed algorithm and remints a used seed template.
+    let (creator, mut space) = seeded_space();
+    let joiner = seeded_db();
+    let deck = add_deck(&joiner, SEED_ALGORITHM_SIMPLE_ID, SEED_TEMPLATE_TYPE_ID, "German");
+    let card = add_card(&joiner, &deck, SEED_TEMPLATE_TYPE_ID, "hallo");
+
+    space.join_by_add(&joiner);
+
+    let template = sole_id(&joiner, "templates");
+    assert_ne!(
+        template, SEED_TEMPLATE_TYPE_ID,
+        "a seed template with local cards is reminted"
+    );
+    assert_eq!(ids(&joiner, "algorithms"), [SEED_ALGORITHM_SIMPLE_ID]);
+    assert_eq!(
+        column(
+            &joiner,
+            &format!("SELECT algorithm_id || ' ' || template_id FROM decks WHERE id = '{deck}'")
+        ),
+        [format!("{SEED_ALGORITHM_SIMPLE_ID} {template}")]
+    );
+    assert_eq!(
+        column(&joiner, &format!("SELECT template_id FROM cards WHERE id = '{card}'")),
+        [template.as_str()]
+    );
+
+    space.drain_backfill(&joiner, 100);
+    space.pull(&creator);
+    space.pull(&joiner);
+    space.assert_referents_first();
+    for table in SYNCED_TABLES {
+        assert_eq!(dump(&joiner, table), dump(&creator, table), "{table}");
+    }
+    assert_eq!(
+        count(&creator, "SELECT COUNT(*) FROM templates WHERE title = 'Basic'"),
+        2,
+        "the space holds two starter templates"
+    );
+}
+
+#[test]
+fn add_remints_an_unmodified_seed_algorithm_the_space_deleted_only_while_decks_use_it() {
+    // Covers PROTOCOL.md conformance: Add with decks on an unmodified seed algorithm the space deleted.
+    let (creator, mut space) = seeded_space();
+    let algorithm = add_algorithm(&creator, "FSRS");
+    set_learning_defaults(&creator, &algorithm, SEED_TEMPLATE_TYPE_ID);
+    delete_algorithm(
+        &creator,
+        DeleteAlgorithmData {
+            id: SEED_ALGORITHM_SIMPLE_ID.to_string(),
+            successor_id: None,
+        },
+    )
+    .expect("seed algorithm deletes");
+    space.push(&creator);
+
+    let used = seeded_db();
+    let deck = add_deck(&used, SEED_ALGORITHM_SIMPLE_ID, SEED_TEMPLATE_TYPE_ID, "German");
+    space.join_by_add(&used);
+    let reminted = sole_id(&used, "algorithms");
+    assert_ne!(reminted, SEED_ALGORITHM_SIMPLE_ID);
+    assert_eq!(
+        column(&used, &format!("SELECT algorithm_id FROM decks WHERE id = '{deck}'")),
+        [reminted.as_str()],
+        "the deck follows the reminted seed"
+    );
+    assert_eq!(
+        column(&used, "SELECT algorithm_id FROM algorithm_revisions"),
+        [reminted.as_str()],
+        "the seed's revision moves with it"
+    );
+
+    let unused = seeded_db();
+    space.join_by_add(&unused);
+    assert!(
+        ids(&unused, "algorithms").is_empty(),
+        "an unused seed the space deleted is deleted"
+    );
+    assert!(ids(&unused, "algorithm_revisions").is_empty());
+
+    space.drain_backfill(&used, 100);
+    space.pull(&creator);
+    space.assert_referents_first();
+    assert_eq!(
+        column(&creator, &format!("SELECT algorithm_id FROM decks WHERE id = '{deck}'")),
+        [reminted.as_str()]
+    );
+}
+
+#[test]
+fn an_edited_seed_algorithm_the_space_holds_is_reminted_with_its_revisions() {
+    let (_creator, space) = seeded_space();
+    let joiner = seeded_db();
+    rename_seed_algorithm(&joiner);
+    let revisions = ids(&joiner, "algorithm_revisions");
+
+    space.join_by_add(&joiner);
+
+    let reminted = id_titled(&joiner, "algorithms", "Simple tuned");
+    assert_ne!(reminted, SEED_ALGORITHM_SIMPLE_ID);
+    let moved = column(
+        &joiner,
+        &format!("SELECT id FROM algorithm_revisions WHERE algorithm_id = '{reminted}'"),
+    );
+    assert_eq!(moved.len(), revisions.len(), "every revision moves with the algorithm");
+    assert!(
+        moved.iter().all(|id| !revisions.contains(id)),
+        "the revisions are reminted too"
+    );
+    assert_eq!(learning(&joiner)["defaults"]["algorithm"], json!(reminted));
 }

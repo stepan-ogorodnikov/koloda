@@ -28,8 +28,7 @@ use uuid::Uuid;
 
 use crate::common::fixtures::{add_algorithm, add_card, add_deck, add_template, insert_review_row};
 use crate::common::sync::{
-    apply, count, device, enroll_as, hot_page, last_hlc, outbox, register, sealed, seeded_replica, stamp, FakeSpace,
-    OutboxEntry,
+    apply, count, device, enroll_as, hot_page, last_hlc, outbox, register, sealed, stamp, FakeSpace, OutboxEntry,
 };
 use crate::common::{card_content, fsrs_algorithm_content, seed_data, test_db};
 
@@ -143,18 +142,12 @@ fn learning(db: &Database) -> serde_json::Value {
         .content
 }
 
-/// A seeded joiner after a seed-only join: its starter rows stay at stamp zero, and the seed algorithm's local
-/// revisions are gone because the space's history replaces them (PROTOCOL.md, Joining).
-fn joiner() -> Database {
-    let db = seeded_replica();
-    db.with_conn(|conn| {
-        conn.execute(
-            "DELETE FROM algorithm_revisions WHERE algorithm_id = ?1",
-            [SEED_ALGORITHM_SIMPLE_ID],
-        )?;
-        Ok(())
-    })
-    .expect("seed revisions delete");
+/// A seeded file that joined the space through Add. Seed rows the space holds stay at stamp zero, and the seed
+/// algorithm's local revisions are gone because the space's history replaces them (PROTOCOL.md, Joining).
+fn joiner(space: &FakeSpace) -> Database {
+    let db = seeded_db();
+    space.join_by_add(&db);
+    assert!(drain(&db, 100).is_empty(), "a seeded joiner backfills nothing");
     db
 }
 
@@ -195,11 +188,11 @@ fn target(entry: &OutboxEntry) -> (Kind, String) {
 #[test]
 fn a_joiner_converges_on_every_row_and_learning_setting_the_creator_held_before_enrolling() {
     let (creator, legacy) = legacy_creator();
-    let joiner = joiner();
     let mut space = FakeSpace::default();
 
     space.drain_backfill(&creator, 100);
     space.assert_referents_first();
+    let joiner = joiner(&space);
     space.pull(&joiner);
 
     let deck = get_deck(&creator, &legacy.deck).unwrap().unwrap();
@@ -344,10 +337,10 @@ fn a_space_created_after_its_device_deleted_the_seed_algorithm_moves_a_joiners_d
     )
     .unwrap();
     enroll_as(&creator, SpaceRole::Creator);
-    let joiner = joiner();
     let mut space = FakeSpace::default();
 
     space.drain_backfill(&creator, 100);
+    let joiner = joiner(&space);
     space.pull(&joiner);
 
     assert_eq!(
@@ -451,7 +444,6 @@ fn deck_backfill(legacy: &Legacy) -> Vec<(Kind, Option<Group>, String)> {
 fn a_card_added_to_a_legacy_deck_backfills_its_referents_first_and_the_scan_skips_them() {
     // Covers PROTOCOL.md conformance: Card create before referent backfill.
     let (creator, legacy) = legacy_creator();
-    let joiner = joiner();
     let mut space = FakeSpace::default();
 
     let card = add_card(&creator, &legacy.deck, &legacy.template, "nuevo");
@@ -461,6 +453,7 @@ fn a_card_added_to_a_legacy_deck_backfills_its_referents_first_and_the_scan_skip
     assert_eq!(writes(&outbox(&creator)), expected);
 
     space.push(&creator);
+    let joiner = joiner(&space);
     space.pull(&joiner);
     assert!(
         get_card(&joiner, &card).unwrap().is_some(),
@@ -639,10 +632,10 @@ fn a_pre_sync_review_survives_when_it_shares_its_cards_timestamp() {
     let created_at = get_card(&creator, &legacy.card).unwrap().unwrap().created_at;
     insert_review_row(&creator, &legacy.card, 2, 0, created_at);
     enroll_as(&creator, SpaceRole::Creator);
-    let joiner = joiner();
     let mut space = FakeSpace::default();
 
     space.drain_backfill(&creator, 100);
+    let joiner = joiner(&space);
     space.pull(&joiner);
 
     assert_eq!(reviews_of(&joiner, &legacy.card), reviews_of(&creator, &legacy.card));
@@ -663,10 +656,10 @@ fn a_card_reset_before_sync_reaches_a_joiner_with_its_surviving_review_and_final
     .unwrap();
     grade(&creator, &legacy.card, 11);
     enroll_as(&creator, SpaceRole::Creator);
-    let joiner = joiner();
     let mut space = FakeSpace::default();
 
     space.drain_backfill(&creator, 100);
+    let joiner = joiner(&space);
     space.pull(&joiner);
 
     assert_eq!(reviews_of(&joiner, &legacy.card), reviews_of(&creator, &legacy.card));
@@ -681,9 +674,9 @@ fn a_card_reset_before_sync_reaches_a_joiner_with_its_surviving_review_and_final
 #[test]
 fn a_reset_after_backfill_cuts_off_every_backfilled_review_on_the_joiner() {
     let (creator, legacy) = legacy_creator();
-    let joiner = joiner();
     let mut space = FakeSpace::default();
     space.drain_backfill(&creator, 100);
+    let joiner = joiner(&space);
     space.pull(&joiner);
     assert!(
         !reviews_of(&joiner, &legacy.card).is_empty(),
@@ -706,11 +699,11 @@ fn a_reset_after_backfill_cuts_off_every_backfilled_review_on_the_joiner() {
 #[test]
 fn a_card_graded_remotely_before_phase_three_keeps_that_grade_and_gets_no_snapshot() {
     let (creator, legacy) = legacy_creator();
-    let joiner = joiner();
     let mut space = FakeSpace::default();
     // WHY: one large batch stops at the end of phase 1, so the joiner can grade before the snapshots run.
     assert_eq!(backfill_batch(&creator, 1000).unwrap(), Backfill::Pending);
     space.push(&creator);
+    let joiner = joiner(&space);
     space.pull(&joiner);
 
     grade(&joiner, &legacy.card, 13);

@@ -5,7 +5,7 @@ use koloda::app::db::Database;
 use koloda::app::error::AppError;
 use koloda::repo::sync::apply::{apply_page, Page, PageEntry};
 use koloda::repo::sync::backfill::{backfill_batch, Backfill};
-use koloda::repo::sync::join::{probe_ids, Known};
+use koloda::repo::sync::join::{add_to_space, begin_import, probe_ids, Known};
 use koloda::repo::sync::repair::{repair_dangling_defaults, Starter};
 use koloda::repo::sync::{self, SpaceRole};
 use koloda_sync_proto::envelope::Envelope;
@@ -282,6 +282,13 @@ impl FakeSpace {
                 None => return known,
             }
         }
+    }
+
+    /// Claims a code, probes the space, and adds the file through Add, as the join wizard will.
+    pub fn join_by_add(&self, replica: &Database) {
+        begin_import(replica, Uuid::now_v7(), SPACE).expect("claim records");
+        let known = self.probe(replica);
+        add_to_space(replica, &known).expect("file joins through Add");
     }
 
     /// Applies everything other senders pushed past the replica's cursors, `hot` first, then `cold`, and then

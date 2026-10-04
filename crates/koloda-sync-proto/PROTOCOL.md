@@ -1051,6 +1051,8 @@ template, both unmodified, and it has no deck or card; `learning` does not count
 A seed row is unmodified while its `updated_at` is NULL.
 Every save sets it, even one that changes nothing.
 A file was in this space when its sync state is active there; a file still in `import_pending` is judged by its rows.
+A file holding only the untouched first-run seed goes through the same claim, probe, and Add as a used file.
+It joins without asking the user, and only Add's seed-row rules change it.
 
 Every mode claims the code, receives an active token, and runs the normal cycle with a union bootstrap.
 There is no server-side provisional state; a used file only waits locally for the user's choice.

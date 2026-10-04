@@ -93,7 +93,8 @@ so card-progress and review namespaces stay distinct.
 
 - While pending, `Capture` records nothing, and `backfill_batch` and `apply_page` refuse.
 - The space id is stored at enrollment; only an `active` file in the same space re-attaches.
-- `add_to_space` remints known rows with their dependents, then reserves the backfill stamps as a joiner.
+- `add_to_space` keeps, deletes, or remints seed rows, remints known rows with their dependents, then reserves the
+  backfill stamps as a joiner.
 - Join tests probe through `FakeSpace::probe`; `copy_of` stands in for a copied file.
 
 **Review writes** — `insert_review` in `src/repo/reviews.rs` is the single write path (`pub(crate)`).

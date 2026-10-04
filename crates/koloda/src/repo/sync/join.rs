@@ -5,7 +5,7 @@ use std::collections::HashMap;
 
 use koloda_sync_proto::payload::{DefaultAlgorithm, DefaultTemplate, Payload};
 use koloda_sync_proto::registry::Kind;
-use rusqlite::{params, Connection, Params};
+use rusqlite::{params, Connection, OptionalExtension, Params};
 use uuid::Uuid;
 
 use super::apply::{patch_learning, table};
@@ -151,7 +151,10 @@ pub fn add_to_space(db: &Database, known: &HashMap<String, Known>) -> Result<(),
     throw_known_error(error_codes::DB_UPDATE, || {
         db.with_transaction(|tx| {
             require_pending(tx)?;
-            remint_known(tx, known)?;
+            let reminted_seeds = settle_seeds(tx, known)?;
+            remint(tx, |id| {
+                reminted_seeds.contains(&id.as_str()) || (known.contains_key(id) && !is_seed(id))
+            })?;
             activate(tx)
         })
     })
@@ -180,16 +183,84 @@ fn activate(conn: &Connection) -> Result<(), AppError> {
     backfill::reserve(conn)
 }
 
+fn is_seed(id: &str) -> bool {
+    id == SEED_ALGORITHM_SIMPLE_ID || id == SEED_TEMPLATE_TYPE_ID
+}
+
+// WHY: every first run mints the seed ids again, so a seed id the space holds is the same starter row, not a copy.
+// An unmodified one the space holds live is overlaid by the space's create. Any other seed row that is in use moves
+// to a new id, because a joiner never pushes a seed id; an unused one is deleted (PROTOCOL.md, Joining).
+fn settle_seeds(conn: &Connection, known: &HashMap<String, Known>) -> Result<Vec<&'static str>, AppError> {
+    let mut reminted = Vec::new();
+
+    if let Some(is_unmodified) = is_unmodified(conn, Kind::Algorithms, SEED_ALGORITHM_SIMPLE_ID)? {
+        let is_live = known.get(SEED_ALGORITHM_SIMPLE_ID) == Some(&Known::Live);
+        let is_used = exists(
+            conn,
+            "SELECT 1 FROM decks WHERE algorithm_id = ?1",
+            SEED_ALGORITHM_SIMPLE_ID,
+        )?;
+        if is_unmodified && (is_live || !is_used) {
+            conn.execute(
+                "DELETE FROM algorithm_revisions WHERE algorithm_id = ?1",
+                [SEED_ALGORITHM_SIMPLE_ID],
+            )?;
+            if !is_live {
+                conn.execute("DELETE FROM algorithms WHERE id = ?1", [SEED_ALGORITHM_SIMPLE_ID])?;
+            }
+        } else {
+            reminted.push(SEED_ALGORITHM_SIMPLE_ID);
+        }
+    }
+
+    if let Some(is_unmodified) = is_unmodified(conn, Kind::Templates, SEED_TEMPLATE_TYPE_ID)? {
+        let is_live = known.get(SEED_TEMPLATE_TYPE_ID) == Some(&Known::Live);
+        let has_cards = exists(
+            conn,
+            "SELECT 1 FROM cards WHERE template_id = ?1",
+            SEED_TEMPLATE_TYPE_ID,
+        )?;
+        let has_decks = exists(
+            conn,
+            "SELECT 1 FROM decks WHERE template_id = ?1",
+            SEED_TEMPLATE_TYPE_ID,
+        )?;
+        if is_unmodified && !has_cards && (is_live || !has_decks) {
+            if !is_live {
+                conn.execute("DELETE FROM templates WHERE id = ?1", [SEED_TEMPLATE_TYPE_ID])?;
+            }
+        } else {
+            reminted.push(SEED_TEMPLATE_TYPE_ID);
+        }
+    }
+
+    Ok(reminted)
+}
+
+fn is_unmodified(conn: &Connection, kind: Kind, id: &str) -> Result<Option<bool>, AppError> {
+    let (table, key) = table(kind);
+    let is_unmodified = conn
+        .query_row(
+            &format!("SELECT updated_at IS NULL FROM {table} WHERE {key} = ?1"),
+            [id],
+            |row| row.get(0),
+        )
+        .optional()?;
+    Ok(is_unmodified)
+}
+
+fn exists(conn: &Connection, sql: &str, id: &str) -> Result<bool, AppError> {
+    let is_found = conn.query_row(&format!("SELECT EXISTS ({sql})"), [id], |row| row.get(0))?;
+    Ok(is_found)
+}
+
 // WHY: the space would drop a known id as a duplicate, or fence it. The row moves to a new id with every row whose
 // id follows from it, so both copies survive; pointers that name it move along.
-fn remint_known(conn: &Connection, known: &HashMap<String, Known>) -> Result<(), AppError> {
-    let is_known =
-        |id: &String| known.contains_key(id) && id != SEED_ALGORITHM_SIMPLE_ID && id != SEED_TEMPLATE_TYPE_ID;
-
+fn remint(conn: &Connection, is_known: impl Fn(&String) -> bool) -> Result<(), AppError> {
     let algorithms = mint(
         column(conn, "SELECT id FROM algorithms", [])?
             .into_iter()
-            .filter(is_known),
+            .filter(&is_known),
     );
     let revisions = mint(
         pairs(conn, "SELECT id, algorithm_id FROM algorithm_revisions")?
@@ -200,9 +271,9 @@ fn remint_known(conn: &Connection, known: &HashMap<String, Known>) -> Result<(),
     let templates = mint(
         column(conn, "SELECT id FROM templates", [])?
             .into_iter()
-            .filter(is_known),
+            .filter(&is_known),
     );
-    let decks = mint(column(conn, "SELECT id FROM decks", [])?.into_iter().filter(is_known));
+    let decks = mint(column(conn, "SELECT id FROM decks", [])?.into_iter().filter(&is_known));
     let cards = mint(
         pairs(conn, "SELECT id, deck_id FROM cards")?
             .into_iter()
