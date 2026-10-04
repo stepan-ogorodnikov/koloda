@@ -73,12 +73,14 @@ so card-progress and review namespaces stay distinct.
 **Remote apply** — `apply_page` writes product rows with its own SQL, never through repo write paths that capture.
 
 - A remote write that went through one would re-enter the outbox.
-- Repairs of pointers to a dead referent are the exception: `repair.rs` publishes them through `Capture`, like local writes.
+- Repairs of pointers to a dead referent are the exception.
+  `repair.rs` publishes them through `Capture`, like local writes.
 - Two-replica tests exchange outboxes through `FakeSpace` in `tests/common/sync.rs`.
 
 **Review writes** — `insert_review` in `src/repo/reviews.rs` is the single write path (`pub(crate)`).
 
-- Its callers are `submit_lesson_result` in `src/repo/lessons.rs` and remote apply in `src/repo/sync/apply.rs`, which passes the review id it received.
+- Its callers are `submit_lesson_result` in `src/repo/lessons.rs` and remote apply in `src/repo/sync/apply.rs`.
+  Remote apply passes the review id it received.
 - A new writer goes through `insert_review` inside its own transaction, never fresh INSERT SQL.
 
 ## Non-negotiables

@@ -35,10 +35,10 @@ fn get_review_row(row: &Row) -> Result<Review, rusqlite::Error> {
     })
 }
 
-// WHY pub(crate): no NAPI `cmd_*` needs a direct review insert today — the only
-// writer is `submit_lesson_result`, which calls this inside its own transaction.
+// WHY pub(crate): no NAPI `cmd_*` needs a direct review insert today — the writers are
+// `submit_lesson_result` and remote sync apply, each inside its own transaction.
 // Keeping it internal mirrors the seed helpers (`insert_algorithm`, …) so the
-// public repo surface stays read-side until a real second writer appears.
+// public repo surface stays read-side.
 // INVARIANT: callers validate `data` (see `InsertReviewData::validate`) and wrap
 // errors with their own operation code; this helper is a raw write primitive.
 pub(crate) fn insert_review(

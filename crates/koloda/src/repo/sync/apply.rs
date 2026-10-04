@@ -323,6 +323,7 @@ fn insert_deck(
     Ok(())
 }
 
+// WHY: the conflict branch is the stamp-zero seed overlay; any other existing id never reaches here (`apply_create`).
 fn upsert_document(conn: &Connection, kind: Kind, id: &str, create: &DocumentCreate) -> Result<(), AppError> {
     let (table, _) = table(kind);
     conn.execute(
@@ -479,6 +480,8 @@ fn write_group(conn: &Connection, id: &str, payload: &Payload) -> Result<(), App
     let (sql, value): (&str, &dyn ToSql) = match payload {
         Payload::CardContent(group) => ("UPDATE cards SET content = ?1 WHERE id = ?2", &group.content),
         Payload::CardScheduling(scheduling) => return write_scheduling(conn, id, scheduling),
+        // WHY: a reset has no product column of its own; its effects on scheduling and reviews run once its register
+        // wins (`cut_off_at_reset`).
         Payload::CardReset(_) => return Ok(()),
         Payload::DeckTitle(group) => ("UPDATE decks SET title = ?1 WHERE id = ?2", &group.title),
         Payload::DeckNotes(group) => ("UPDATE decks SET notes = ?1 WHERE id = ?2", &group.notes),
@@ -600,7 +603,9 @@ fn apply_immutable(conn: &Connection, entry: &Entry, changed: &mut Changed) -> R
             if !survives_reset(conn, &review.card_id, entry.header.stamp)? {
                 return Ok(());
             }
-            insert_review(conn, &review_data(review)?, review.created_at, Some(id))?;
+            let data = review_data(review)?;
+            data.validate()?;
+            insert_review(conn, &data, review.created_at, Some(id))?;
         }
         Payload::AlgorithmRevision(revision) => insert_algorithm_revision(conn, id, revision)?,
         _ => return Err(protocol_error("an immutable group carries an immutable payload")),
