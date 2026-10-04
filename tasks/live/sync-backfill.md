@@ -1,6 +1,6 @@
 # Sync backfill
 
-Status: draft
+Status: ready
 
 ## Intent
 
@@ -47,11 +47,11 @@ Out:
 ## Open questions
 
 - [x] Area guides? — the same as sync-apply: `agents/RUST.md`, `agents/DB.md`, `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md`, `agents/TESTING.md`, `agents/CODE-DOCUMENTATION.md`, `agents/CODE-STYLE.md` (change discipline), `agents/MARKDOWN.md` for doc edits, and `crates/koloda-sync-proto/PROTOCOL.md`. Self-review adds `agents/REVIEW.md`.
-- [ ] Phase stamps: reserve one stamp per phase, or a range of stamps with one per row or batch? — open
-- [ ] How does backfill learn the device's role: an enrollment parameter, or a separate start call? — open
-- [ ] On a joiner, does a write to a stamp-zero seed row backfill the seed's create? — open
-- [ ] Batch unit: envelopes or entities, and may a batch split one entity's envelopes? — open
-- [ ] When does capture stop checking for unstamped referents? — open
+- [x] Phase stamps: reserve one stamp per phase, or a range of stamps with one per row or batch? — one stamp per phase. Only the order between phases matters; within a phase the log order sets row order. Each batch is still its own commit and cohort. `PROTOCOL.md` says "one stamp per phase" instead of "ranges".
+- [x] How does backfill learn the device's role: an enrollment parameter, or a separate start call? — an enrollment parameter, so the stamps are reserved in the enrollment transaction and no write lands between the two. The join task's Add mode can reuse the reservation after it remints.
+- [x] On a joiner, does a write to a stamp-zero seed row backfill the seed's create? — no; only the edit is enqueued. The space already holds the seed, and a backfilled create would stamp its groups synthetic at the joiner's stamp, beating the space's older edits locally while the server drops the create as a duplicate.
+- [x] Batch unit: envelopes or entities, and may a batch split one entity's envelopes? — a maximum number of envelopes, never splitting one entity's envelopes; the engine sizes batches to the room left in the outbox.
+- [x] When does capture stop checking for unstamped referents? — once phase 3 finishes. Every row is stamped by then, except a joiner's untouched seeds, which count as stamped.
 
 ## Plan
 
@@ -67,7 +67,7 @@ Out:
   `capture_learning` in `crates/koloda/src/repo/settings.rs` takes the `Capture` from its caller, so a caller can pass no previous value and emit every learning group.
   Constraints: no behavior change, including the bytes that capture writes; existing tests change only where they call moved helpers.
   Done when: `cargo test -p koloda` and `cargo clippy -p koloda --all-targets -- -D warnings` are green.
-  Commit: candidates — "Build sync create payloads from stored rows"; "Share sync create encoders between capture and backfill"
+  Commit: Build sync create payloads from stored rows
   Depends on: none
 
 - [ ] 2. Backfill pre-sync creates when a device enrolls
@@ -110,7 +110,7 @@ Out:
   - The conformance case "Space created after its device deleted the seed algorithm": the joiner's learning default ends on the creator's real default, not the seed id.
 
   `cargo test -p koloda` and `bunx nx test @koloda/db-sqlite` (after rebuilding the web bundle) are green.
-  Commit: candidates — "Backfill pre-sync creates when a device enrolls"; "Scan existing rows into the outbox when sync is enabled"; "Reserve backfill stamps and scan referents first"
+  Commit: Backfill pre-sync creates when a device enrolls
   Depends on: 1
 
 - [ ] 3. Backfill unstamped referents when capture touches them
@@ -138,7 +138,7 @@ Out:
   - Delete. A legacy deck deleted before the scan reaches it enqueues only its tombstone, and the scan later finds none of its cards.
   - No duplicates. A row backfilled by touch is skipped by the scan.
   - Joiner seed. A joiner's edit of a stamp-zero seed algorithm enqueues only the edit.
-  Commit: candidates — "Backfill unstamped referents when capture touches them"; "Capture referents before the write that names them"
+  Commit: Backfill unstamped referents when capture touches them
   Depends on: 2
 
 - [ ] 4. Backfill reviews and scheduling snapshots
@@ -155,7 +155,7 @@ Out:
   - New card. A card created after enrollment gets no snapshot.
 
   `bun run check:push` is green.
-  Commit: candidates — "Backfill reviews and scheduling snapshots"; "Finish backfill with reviews, then scheduling"
+  Commit: Backfill reviews and scheduling snapshots
   Depends on: 3
 
 ## Outcome
