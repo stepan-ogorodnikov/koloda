@@ -19,7 +19,7 @@ use std::collections::HashMap;
 
 use crate::repo::decks::{get_deck, get_decks_by_ids};
 use crate::repo::fsrs_sql;
-use crate::repo::sync::Capture;
+use crate::repo::sync::capture::Capture;
 use crate::repo::templates::{get_template, get_templates_by_ids};
 
 pub fn get_card_row(row: &rusqlite::Row<'_>) -> Result<Card, rusqlite::Error> {

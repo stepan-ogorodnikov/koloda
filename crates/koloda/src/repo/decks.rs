@@ -12,7 +12,7 @@ use crate::app::utility::{get_current_timestamp, minted_uuidv7};
 use crate::domain::common::{normalize_optional_notes, normalize_required_title};
 use crate::domain::decks::{Deck, DeleteDeckData, InsertDeckData, UpdateDeckData};
 use crate::repo::algorithms::get_algorithm;
-use crate::repo::sync::Capture;
+use crate::repo::sync::capture::Capture;
 use crate::repo::templates::get_template;
 
 fn get_deck_row(row: &rusqlite::Row<'_>) -> Result<Deck, rusqlite::Error> {

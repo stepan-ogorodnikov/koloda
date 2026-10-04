@@ -2,7 +2,7 @@ use koloda::domain::cards::{
     DeleteCardData, DeleteCardsData, InsertCardData, ResetCardProgressData, UpdateCardData, UpdateCardValues,
 };
 use koloda::repo::cards;
-use koloda::repo::sync::Capture;
+use koloda::repo::sync::capture::Capture;
 use koloda_sync_proto::envelope::Refs;
 use koloda_sync_proto::payload::{CardScheduling, Delete, Payload, Review};
 use koloda_sync_proto::registry::Kind;

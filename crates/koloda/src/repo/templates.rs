@@ -15,7 +15,7 @@ use crate::domain::templates::{
     UpdateTemplateData,
 };
 use crate::repo::settings;
-use crate::repo::sync::Capture;
+use crate::repo::sync::capture::Capture;
 
 fn get_template_row(row: &rusqlite::Row<'_>) -> Result<Template, rusqlite::Error> {
     let content_str: String = row.get(2)?;

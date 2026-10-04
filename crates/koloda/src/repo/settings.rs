@@ -14,7 +14,7 @@ use crate::app::error::{error_codes, throw_known_error, AppError};
 use crate::app::utility::get_current_timestamp;
 use crate::domain::settings::{Settings, SettingsName};
 use crate::domain::settings_learning::{LearningDefaults, LearningSettings};
-use crate::repo::sync::Capture;
+use crate::repo::sync::capture::Capture;
 
 const LEARNING_SYNC_ID: &str = "learning";
 

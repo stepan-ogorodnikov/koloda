@@ -15,7 +15,7 @@ This file only tells you where to start.
 | FSRS progress field bounds | `src/domain/progress.rs` |
 | Daily-limit / review-totals policy | `src/domain/reviews.rs::calculate_todays_review_totals` |
 | Review row writes | `src/repo/reviews.rs::insert_review` |
-| A product write path (sync capture) | `src/repo/sync.rs::Capture` + `crates/koloda-sync-proto/PROTOCOL.md` (§Field groups and merge) |
+| A product write path (sync capture) | `src/repo/sync/capture.rs::Capture` + `crates/koloda-sync-proto/PROTOCOL.md` (§Field groups and merge) |
 | Schema / migrations | `agents/DB.md` |
 | AI provider enum / secrets redaction | `agents/ADD-AI-PROVIDER.md` |
 | Hotkeys settings | `agents/ADD-HOTKEY.md` |

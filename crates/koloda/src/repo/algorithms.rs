@@ -16,7 +16,7 @@ use crate::domain::algorithms::{
 use crate::domain::algorithms_fsrs::AlgorithmFSRS;
 use crate::domain::common::{normalize_optional_notes, normalize_required_title};
 use crate::repo::settings;
-use crate::repo::sync::Capture;
+use crate::repo::sync::capture::Capture;
 
 fn get_algorithm_row(row: &rusqlite::Row<'_>) -> Result<Algorithm, rusqlite::Error> {
     let content_str: String = row.get(2)?;

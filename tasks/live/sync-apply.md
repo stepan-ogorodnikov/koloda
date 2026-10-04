@@ -51,7 +51,7 @@ Out:
   Commit: Let seed rows be deleted under the sync protocol
   Depends on: none
 
-- [ ] 2. Split sync bookkeeping into enrollment and capture modules
+- [x] 2. Split sync bookkeeping into enrollment and capture modules
   Goal: move `crates/koloda/src/repo/sync.rs` into `crates/koloda/src/repo/sync/mod.rs` (enrollment: `enroll_device`, `enrolled_device`, and shared helpers) and `crates/koloda/src/repo/sync/capture.rs` (`Capture` and its helpers), and update every import.
   Point the `crates/koloda/README.md` architectural map and the `agents/RUST.md` routing row at the new paths.
   Constraints: no behavior change; tests change only their imports, if at all.

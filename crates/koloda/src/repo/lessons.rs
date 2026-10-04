@@ -17,7 +17,7 @@ use crate::domain::lessons::{
 use crate::repo::cards::{get_card_row, scheduling_payload, select_card};
 use crate::repo::fsrs_sql;
 use crate::repo::reviews;
-use crate::repo::sync::Capture;
+use crate::repo::sync::capture::Capture;
 
 fn get_lesson_deck_row(row: &Row) -> Result<LessonDeck, rusqlite::Error> {
     Ok(LessonDeck {
