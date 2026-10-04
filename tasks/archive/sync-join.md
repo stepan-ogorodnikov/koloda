@@ -1,6 +1,6 @@
 # Sync join
 
-Status: ready
+Status: done
 
 ## Intent
 
@@ -168,3 +168,18 @@ Out:
   Depends on: 2
 
 ## Outcome
+
+- Migration `V8__sync_join.sql` adds `space_id` and `join_phase` (`import_pending` or `active`) to `sync_state`. `enroll_device` takes the space id.
+- `join_mode` tells a file's mode: `Reattach` when it is active in that space, `Blank` with no settings rows, `UntouchedSeed` when its only rows are the unmodified seed algorithm with its one revision and the unmodified seed template, and `Used` otherwise. A seed row is unmodified while its `updated_at` is NULL.
+- `begin_import` records a claim: it clears every `sync_*` table and writes a fresh `import_pending` state row. While pending, `Capture` records nothing, and `backfill_batch` and `apply_page` refuse. `PROTOCOL.md` moves "clear every sync table" from Add's steps to the claim.
+- `probe_ids` pages through algorithm, revision, template, deck, and card ids, seed ids included.
+- `add_to_space` takes the probe's answer (`Known::Live` or `Known::Fenced`). In one transaction it applies the seed-row rules, remints every known entity with its dependents and rewrites the pointers and `learning` defaults that name them, then turns the file `active` as a joiner and reserves the backfill stamps. Dependents move with a known parent even when the space never saw them. An untouched-seed file joins through the same path without a choice.
+- `replace_with_space` deletes every product row and keeps settings, conversations, and attachments. `seed_joiner_db` seeds a blank joiner's settings with `learning` defaults on the seed ids; the blank joiner then enrolls as a joiner.
+- `PROTOCOL.md` §Joining, `agents/RUST.md`, the crate README, and `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md` describe and route the join.
+- Deviations from the plan text:
+  - `FakeSpace::known(ids)` became `FakeSpace::probe(replica)`, which pages `probe_ids` itself; `FakeSpace::join_by_add` claims, probes, and adds.
+  - `copy_of` needs rusqlite's `backup` feature, added as a dev dependency only.
+  - `seed_db` and `seed_joiner_db` share `parse_learning_settings`.
+  - The backfill tests' `joiner()` fixture became `joiner(&space)` and is created after the creator pushes, so it probes a space that holds the seed rows.
+  - Self-review added a seed-template case table (live, fenced, edited, used only by decks) and the error for a kind `probe_ids` does not list.
+- Manual verify: none — nothing calls the join yet, so no user-visible behavior changed.
