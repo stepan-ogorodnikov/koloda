@@ -349,6 +349,9 @@ fn probe_pages_list_every_hot_lane_id_once() {
     .flat_map(|(kind, ids)| ids.into_iter().map(move |id| (kind, id)))
     .collect();
     assert_eq!(probed, expected, "reviews and learning are never probed");
+
+    let after_review = (Kind::Reviews, String::new());
+    assert_eq!(probe_ids(&db, Some(&after_review), 3).unwrap_err().code, "db.get");
 }
 
 fn dump(db: &Database, table: &str) -> Vec<Vec<Value>> {
@@ -862,6 +865,31 @@ fn add_remints_an_unmodified_seed_algorithm_the_space_deleted_only_while_decks_u
         column(&creator, &format!("SELECT algorithm_id FROM decks WHERE id = '{deck}'")),
         [reminted.as_str()]
     );
+}
+
+#[test]
+fn a_seed_template_that_only_decks_use_keeps_its_id_only_while_unmodified_and_live() {
+    for (name, known, is_edited, is_kept) in [
+        ("live", Known::Live, false, true),
+        ("fenced", Known::Fenced, false, false),
+        ("edited", Known::Live, true, false),
+    ] {
+        let db = seeded_db();
+        if is_edited {
+            rename_seed_template(&db);
+        }
+        let deck = add_deck(&db, SEED_ALGORITHM_SIMPLE_ID, SEED_TEMPLATE_TYPE_ID, "German");
+        begin_import(&db, Uuid::now_v7(), SPACE).expect("claim records");
+        add_to_space(&db, &HashMap::from([(SEED_TEMPLATE_TYPE_ID.to_string(), known)])).expect("file joins");
+
+        let template = sole_id(&db, "templates");
+        assert_eq!(template == SEED_TEMPLATE_TYPE_ID, is_kept, "{name}");
+        assert_eq!(
+            column(&db, &format!("SELECT template_id FROM decks WHERE id = '{deck}'")),
+            [template.as_str()],
+            "{name}: the deck follows its template"
+        );
+    }
 }
 
 #[test]
