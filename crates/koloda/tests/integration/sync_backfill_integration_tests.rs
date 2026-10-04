@@ -5,14 +5,14 @@ use std::collections::HashMap;
 
 use koloda::app::db::Database;
 use koloda::domain::algorithms::{DeleteAlgorithmData, UpdateAlgorithmData, UpdateAlgorithmValues};
-use koloda::domain::cards::{UpdateCardData, UpdateCardProgress, UpdateCardValues};
+use koloda::domain::cards::{ResetCardProgressData, UpdateCardData, UpdateCardProgress, UpdateCardValues};
 use koloda::domain::decks::{DeleteDeckData, UpdateDeckData, UpdateDeckValues};
 use koloda::domain::lessons::LessonResultData;
 use koloda::domain::reviews::InsertReviewData;
 use koloda::domain::seed_ids::{SEED_ALGORITHM_SIMPLE_ID, SEED_TEMPLATE_TYPE_ID};
 use koloda::domain::settings::SettingsName;
 use koloda::repo::algorithms::{delete_algorithm, get_algorithm, update_algorithm};
-use koloda::repo::cards::{get_card, update_card};
+use koloda::repo::cards::{get_card, reset_card_progress, update_card};
 use koloda::repo::decks::{delete_deck, get_deck, update_deck};
 use koloda::repo::lessons::submit_lesson_result;
 use koloda::repo::settings::{get_settings, set_settings};
@@ -24,14 +24,21 @@ use rusqlite::types::Value;
 use serde_json::json;
 use uuid::Uuid;
 
-use crate::common::fixtures::{add_algorithm, add_card, add_deck, add_template};
+use crate::common::fixtures::{add_algorithm, add_card, add_deck, add_template, insert_review_row};
 use crate::common::sync::{
-    apply, count, enroll_as, hot_page, last_hlc, outbox, register, sealed, seeded_replica, stamp, FakeSpace,
+    apply, count, device, enroll_as, hot_page, last_hlc, outbox, register, sealed, seeded_replica, stamp, FakeSpace,
     OutboxEntry,
 };
 use crate::common::{card_content, fsrs_algorithm_content, seed_data, test_db};
 
-const SYNCED_TABLES: [&str; 5] = ["algorithms", "algorithm_revisions", "templates", "decks", "cards"];
+const SYNCED_TABLES: [&str; 6] = [
+    "algorithms",
+    "algorithm_revisions",
+    "templates",
+    "decks",
+    "cards",
+    "reviews",
+];
 
 struct Legacy {
     algorithm: String,
@@ -103,6 +110,7 @@ fn legacy_rows(db: &Database) -> Legacy {
         },
     )
     .expect("card updates");
+    grade(db, &card, 3);
     add_card(db, &deck, SEED_TEMPLATE_TYPE_ID, "adiós");
 
     set_learning(db, &algorithm, &template);
@@ -161,8 +169,12 @@ fn dump(db: &Database, table: &str) -> Vec<Vec<Value>> {
 }
 
 fn ids(db: &Database, table: &str) -> Vec<String> {
+    column(db, &format!("SELECT id FROM {table} ORDER BY id"))
+}
+
+fn column(db: &Database, sql: &str) -> Vec<String> {
     db.with_conn(|conn| {
-        let mut stmt = conn.prepare(&format!("SELECT id FROM {table} ORDER BY id"))?;
+        let mut stmt = conn.prepare(sql)?;
         let ids = stmt.query_map([], |row| row.get(0))?.collect::<Result<Vec<_>, _>>()?;
         Ok(ids)
     })
@@ -219,6 +231,10 @@ fn batches_enqueue_in_scan_order_and_never_split_an_entity() {
         }
     }
     expected.extend(std::iter::repeat_n((Kind::SettingsLearning, "learning".to_string()), 5));
+    let reviews = column(&creator, "SELECT id FROM reviews ORDER BY created_at, id");
+    assert!(!reviews.is_empty(), "the fixture holds a legacy review");
+    expected.extend(reviews.into_iter().map(|id| (Kind::Reviews, id)));
+    expected.extend(ids(&creator, "cards").into_iter().map(|id| (Kind::Cards, id)));
     assert_eq!(entries.iter().map(target).collect::<Vec<_>>(), expected);
 
     let mut commits: HashMap<[u8; 16], Vec<(Kind, String)>> = HashMap::new();
@@ -262,18 +278,18 @@ fn enrollment_reserves_increasing_backfill_stamps_below_every_later_write() {
         let hlc = i64::try_from(entry.envelope.header.stamp.hlc.raw()).unwrap();
         let is_later = entry.envelope.header.id == later
             || matches!(&entry.payload, Payload::AlgorithmRevision(revision) if revision.algorithm_id == later);
+        let phase_stamp = match &entry.payload {
+            Payload::Review(_) => review,
+            Payload::CardScheduling(_) => scheduling,
+            _ => create,
+        };
         if is_later {
             assert!(
                 hlc > scheduling,
                 "a write after enrollment sorts after every backfill phase"
             );
         } else {
-            assert_eq!(
-                hlc,
-                create,
-                "{:?} is backfilled at the create phase stamp",
-                target(entry)
-            );
+            assert_eq!(hlc, phase_stamp, "{:?} is backfilled at its phase stamp", target(entry));
         }
     }
 }
@@ -373,7 +389,7 @@ fn the_scan_keeps_registers_that_remote_writes_set_on_a_legacy_row() {
     }
 }
 
-fn grade(db: &Database, card: &str) {
+fn grade(db: &Database, card: &str, scheduled_days: i32) {
     submit_lesson_result(
         db,
         LessonResultData {
@@ -383,7 +399,7 @@ fn grade(db: &Database, card: &str) {
                 due_at: 1_900_000_000_000,
                 stability: 5.5,
                 difficulty: 4.25,
-                scheduled_days: 7,
+                scheduled_days,
                 learning_steps: 0,
                 reps: 1,
                 lapses: 0,
@@ -396,7 +412,7 @@ fn grade(db: &Database, card: &str) {
                 due_at: 1_900_000_000_000,
                 stability: 5.5,
                 difficulty: 4.25,
-                scheduled_days: 7,
+                scheduled_days,
                 learning_steps: 0,
                 time: 12,
                 is_ignored: false,
@@ -461,7 +477,7 @@ fn an_edit_or_grade_of_a_legacy_card_backfills_the_card_before_the_write() {
         let (creator, legacy) = legacy_creator();
 
         if is_grade {
-            grade(&creator, &legacy.card);
+            grade(&creator, &legacy.card, 7);
         } else {
             update_card(
                 &creator,
@@ -570,4 +586,135 @@ fn a_joiners_edit_of_a_stamp_zero_seed_algorithm_enqueues_only_the_edit() {
         writes(&outbox(&joiner)),
         [(Kind::Algorithms, Some(Group::Title), seed.id)]
     );
+}
+
+fn reviews_of(db: &Database, card: &str) -> Vec<String> {
+    db.with_conn(|conn| {
+        let mut stmt = conn.prepare("SELECT id FROM reviews WHERE card_id = ?1 ORDER BY id")?;
+        let ids = stmt
+            .query_map([card], |row| row.get(0))?
+            .collect::<Result<Vec<_>, _>>()?;
+        Ok(ids)
+    })
+    .expect("reviews read")
+}
+
+fn snapshots(entries: &[OutboxEntry]) -> Vec<String> {
+    entries
+        .iter()
+        .filter(|entry| matches!(entry.payload, Payload::CardScheduling(_)))
+        .map(|entry| entry.envelope.header.id.clone())
+        .collect()
+}
+
+#[test]
+fn a_pre_sync_review_survives_when_it_shares_its_cards_timestamp() {
+    // Covers PROTOCOL.md conformance: Pre-sync card and review with equal timestamps.
+    let creator = seeded_db();
+    let legacy = legacy_rows(&creator);
+    let created_at = get_card(&creator, &legacy.card).unwrap().unwrap().created_at;
+    insert_review_row(&creator, &legacy.card, 2, 0, created_at);
+    enroll_as(&creator, SpaceRole::Creator);
+    let joiner = joiner();
+    let mut space = FakeSpace::default();
+
+    space.drain_backfill(&creator, 100);
+    space.pull(&joiner);
+
+    assert_eq!(reviews_of(&joiner, &legacy.card), reviews_of(&creator, &legacy.card));
+    assert_eq!(reviews_of(&joiner, &legacy.card).len(), 2);
+}
+
+#[test]
+fn a_card_reset_before_sync_reaches_a_joiner_with_its_surviving_review_and_final_scheduling() {
+    // Covers PROTOCOL.md conformance: a pre-sync reset card whose surviving reviews predate its scheduling.
+    let creator = seeded_db();
+    let legacy = legacy_rows(&creator);
+    reset_card_progress(
+        &creator,
+        ResetCardProgressData {
+            id: legacy.card.clone(),
+        },
+    )
+    .unwrap();
+    grade(&creator, &legacy.card, 11);
+    enroll_as(&creator, SpaceRole::Creator);
+    let joiner = joiner();
+    let mut space = FakeSpace::default();
+
+    space.drain_backfill(&creator, 100);
+    space.pull(&joiner);
+
+    assert_eq!(reviews_of(&joiner, &legacy.card), reviews_of(&creator, &legacy.card));
+    assert_eq!(
+        reviews_of(&joiner, &legacy.card).len(),
+        1,
+        "the reset removed the earlier review"
+    );
+    assert_eq!(get_card(&joiner, &legacy.card).unwrap().unwrap().scheduled_days, 11);
+}
+
+#[test]
+fn a_reset_after_backfill_cuts_off_every_backfilled_review_on_the_joiner() {
+    let (creator, legacy) = legacy_creator();
+    let joiner = joiner();
+    let mut space = FakeSpace::default();
+    space.drain_backfill(&creator, 100);
+    space.pull(&joiner);
+    assert!(
+        !reviews_of(&joiner, &legacy.card).is_empty(),
+        "the legacy review reached the joiner"
+    );
+
+    reset_card_progress(
+        &creator,
+        ResetCardProgressData {
+            id: legacy.card.clone(),
+        },
+    )
+    .unwrap();
+    space.push(&creator);
+    space.pull(&joiner);
+
+    assert!(reviews_of(&joiner, &legacy.card).is_empty());
+}
+
+#[test]
+fn a_card_graded_remotely_before_phase_three_keeps_that_grade_and_gets_no_snapshot() {
+    let (creator, legacy) = legacy_creator();
+    let joiner = joiner();
+    let mut space = FakeSpace::default();
+    // WHY: one large batch stops at the end of phase 1, so the joiner can grade before the snapshots run.
+    assert_eq!(backfill_batch(&creator, 1000).unwrap(), Backfill::Pending);
+    space.push(&creator);
+    space.pull(&joiner);
+
+    grade(&joiner, &legacy.card, 13);
+    let joiner_device = device(&joiner);
+    space.push(&joiner);
+    space.pull(&creator);
+    let entries = drain(&creator, 1000);
+
+    assert!(
+        !snapshots(&entries).contains(&legacy.card),
+        "the graded card got a snapshot"
+    );
+    let scheduling = register(&creator, "cards", &legacy.card, "scheduling").unwrap();
+    assert_eq!(scheduling.sender, joiner_device, "the joiner's grade stays the head");
+    space.push(&creator);
+    space.pull(&joiner);
+    for db in [&creator, &joiner] {
+        assert_eq!(get_card(db, &legacy.card).unwrap().unwrap().scheduled_days, 13);
+    }
+}
+
+#[test]
+fn a_card_created_after_enrollment_gets_no_scheduling_snapshot() {
+    let (creator, legacy) = legacy_creator();
+
+    let card = add_card(&creator, &legacy.deck, &legacy.template, "nuevo");
+    let entries = drain(&creator, 1000);
+
+    assert!(!snapshots(&entries).is_empty(), "legacy cards get snapshots");
+    assert!(!snapshots(&entries).contains(&card));
 }

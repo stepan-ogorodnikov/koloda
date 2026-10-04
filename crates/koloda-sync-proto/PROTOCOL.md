@@ -640,7 +640,9 @@ Each batch is one commit and cohort at its phase's stamp.
 Pre-sync resets leave no record, and none is needed.
 A product reset already deleted the reviews it cut off, so every surviving review is newer than any reset.
 A legacy card's reset register is only the synthetic floor from its create, which never cuts off a review.
-Every legacy card gets a phase-3 scheduling snapshot, so its final scheduling sorts after its reviews.
+A legacy card gets a phase-3 snapshot while its scheduling register is still the synthetic floor of its phase-1 create.
+Its final scheduling therefore sorts after its reviews.
+A card graded or reset since, on this device or another, already holds newer scheduling and gets none.
 Allocation never exceeds the absolute server-time cap.
 The enrollment transaction moves the device's last HLC to the last reserved stamp.
 Every later capture therefore sorts after every phase.

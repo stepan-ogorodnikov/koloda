@@ -142,7 +142,7 @@ Out:
   Commit: Backfill unstamped referents when capture touches them
   Depends on: 2
 
-- [ ] 4. Backfill reviews and scheduling snapshots
+- [x] 4. Backfill reviews and scheduling snapshots
   Goal: phase 2 enqueues reviews without an origin at the phase-2 stamp, ordered by `(created_at, id)`.
   Phase 3 enqueues a scheduling snapshot at the phase-3 stamp for each card whose scheduling register is still the synthetic one its phase-1 create wrote.
   A card graded or reset since, locally or remotely, keeps its newer scheduling and gets no snapshot.
