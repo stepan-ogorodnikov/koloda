@@ -106,7 +106,7 @@ Out:
   Commit: Repair pointers whose referent a remote delete killed
   Depends on: 6
 
-- [ ] 8. Run the collision table through the fake space
+- [x] 8. Run the collision table through the fake space
   Goal: one test per row of `PROTOCOL.md` §Collision outcomes, except the attachment row, which needs transport, in `crates/koloda/tests/integration/sync_collision_integration_tests.rs`; two replicas exchange in both orders and must end with the same rows and the outcome the row names.
   Add the §Conformance cases that need no server: reset applied after its reviews, reset against lower and higher scheduling heads, algorithm edited after a dependent deck create, rename on one device with notes or parameters on another, and an algorithm deleted while another device changes its parameters.
   Constraints: a case already covered in an earlier item's tests is not repeated here (`agents/TESTING.md`, one home per behavior); this file covers the cross-replica outcome only.
