@@ -189,8 +189,9 @@ impl FakeSpace {
         self.push(replica);
     }
 
-    /// Fails unless every logged envelope's parent and algorithm or template ref, and the entity an update names,
-    /// was created or deleted earlier in the log, across both lanes. The `learning` document is never created.
+    /// Fails unless every logged envelope's algorithm or template ref, the parent of every write, and the entity an
+    /// update names was created or deleted earlier in the log, across both lanes. A delete needs no parent: the server
+    /// accepts a tombstone for an id it does not hold as a fence. The `learning` document is never created.
     pub fn assert_referents_first(&self) {
         let mut entries: Vec<&LogEntry> = self.hot.iter().chain(&self.cold).collect();
         entries.sort_by_key(|entry| entry.order);
@@ -205,7 +206,8 @@ impl FakeSpace {
                 .map(|spec| spec.class);
 
             let mut needed = Vec::new();
-            if let (Some(parent), Some(parent_kind)) = (&header.parent, header.kind.spec().parent) {
+            let parent = header.parent.as_ref().filter(|_| header.op != Op::Delete);
+            if let (Some(parent), Some(parent_kind)) = (parent, header.kind.spec().parent) {
                 needed.push((parent_kind, parent.clone()));
             }
             if let Some(algorithm_id) = &header.refs.algorithm_id {

@@ -5,14 +5,16 @@ use std::collections::HashMap;
 
 use koloda::app::db::Database;
 use koloda::domain::algorithms::{DeleteAlgorithmData, UpdateAlgorithmData, UpdateAlgorithmValues};
-use koloda::domain::cards::{ResetCardProgressData, UpdateCardData, UpdateCardProgress, UpdateCardValues};
+use koloda::domain::cards::{
+    DeleteCardData, ResetCardProgressData, UpdateCardData, UpdateCardProgress, UpdateCardValues,
+};
 use koloda::domain::decks::{DeleteDeckData, UpdateDeckData, UpdateDeckValues};
 use koloda::domain::lessons::LessonResultData;
 use koloda::domain::reviews::InsertReviewData;
 use koloda::domain::seed_ids::{SEED_ALGORITHM_SIMPLE_ID, SEED_TEMPLATE_TYPE_ID};
 use koloda::domain::settings::SettingsName;
 use koloda::repo::algorithms::{delete_algorithm, get_algorithm, update_algorithm};
-use koloda::repo::cards::{get_card, reset_card_progress, update_card};
+use koloda::repo::cards::{delete_card, get_card, reset_card_progress, update_card};
 use koloda::repo::decks::{delete_deck, get_deck, update_deck};
 use koloda::repo::lessons::submit_lesson_result;
 use koloda::repo::settings::{get_settings, set_settings};
@@ -215,6 +217,8 @@ fn a_joiner_converges_on_every_row_and_learning_setting_the_creator_held_before_
 #[test]
 fn batches_enqueue_in_scan_order_and_never_split_an_entity() {
     let (creator, legacy) = legacy_creator();
+    assert_eq!(backfill_batch(&creator, 0).unwrap(), Backfill::Pending);
+    assert!(outbox(&creator).is_empty(), "a zero budget enqueues nothing");
 
     let entries = drain(&creator, 2);
 
@@ -561,6 +565,26 @@ fn deleting_a_legacy_deck_enqueues_only_its_tombstone_and_the_scan_finds_none_of
                 || entry.envelope.header.group.is_none()),
         "nothing of the deleted deck is backfilled"
     );
+}
+
+#[test]
+fn deleting_a_legacy_card_enqueues_only_its_tombstone_under_its_deck() {
+    let (creator, legacy) = legacy_creator();
+    let mut space = FakeSpace::default();
+
+    delete_card(
+        &creator,
+        DeleteCardData {
+            id: legacy.card.clone(),
+        },
+    )
+    .unwrap();
+
+    assert_eq!(writes(&outbox(&creator)), [(Kind::Cards, None, legacy.card.clone())]);
+    space.drain_backfill(&creator, 100);
+    // WHY: the tombstone names a deck the log does not hold yet; a delete of an id the server does not hold is a
+    // fence and needs no parent.
+    space.assert_referents_first();
 }
 
 #[test]

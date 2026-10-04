@@ -881,7 +881,7 @@ On the device that creates the space it then covers the `learning` document.
 Reviews and scheduling snapshots follow (§Existing rows at enable time).
 It tops the outbox up in bounded batches and advances its watermark in the same transaction.
 A batch never splits one entity's envelopes.
-It skips a row that already has an origin, and a group that already has a register.
+It skips a row that already has an origin, and a group whose register holds a write, not a synthetic floor.
 Both were written since enrollment and hold a newer head.
 
 Capture that touches an unstamped entity backfills, in the same transaction and order:
