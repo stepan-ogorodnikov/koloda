@@ -176,20 +176,29 @@ pub(crate) fn insert_template(
         params![id, title, content, now],
     )?;
 
-    Capture::begin(conn)?.write(
-        &id,
-        None,
-        &Payload::TemplateCreate(wire::DocumentCreate {
-            title,
-            notes: None,
-            content,
-            created_at: now,
-            initial_product_ts: InitialProductTs::new(),
-            legacy_product_ts_floor: None,
-        }),
-    )?;
+    Capture::begin(conn)?.write(&id, None, &create_payload(conn, &id)?)?;
 
     Ok(id)
+}
+
+// INVARIANT: a create carries the stored row's current values. A legacy `updated_at` cannot be attributed to a
+// group, so it travels only as the create's floor (crates/koloda-sync-proto/PROTOCOL.md, `updated_at`).
+pub(crate) fn create_payload(conn: &Connection, id: &str) -> Result<Payload, AppError> {
+    conn.query_row(
+        "SELECT title, notes, content, created_at, updated_at FROM templates WHERE id = ?1",
+        params![id],
+        |row| {
+            Ok(Payload::TemplateCreate(wire::DocumentCreate {
+                title: row.get(0)?,
+                notes: row.get(1)?,
+                content: row.get(2)?,
+                created_at: row.get(3)?,
+                initial_product_ts: InitialProductTs::new(),
+                legacy_product_ts_floor: row.get(4)?,
+            }))
+        },
+    )
+    .map_err(AppError::from)
 }
 
 struct StoredTemplate {

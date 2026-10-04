@@ -55,7 +55,7 @@ Out:
 
 ## Plan
 
-- [ ] 1. Build sync create payloads from stored rows
+- [x] 1. Build sync create payloads from stored rows
   Goal: one builder per kind turns a stored row into its sync payloads.
   - The algorithm, template, and card builders return the create payload.
   - The deck builder returns the create plus both pointer groups.

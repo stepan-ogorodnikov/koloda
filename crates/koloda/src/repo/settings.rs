@@ -107,7 +107,7 @@ pub fn set_settings(db: &Database, name: SettingsName, content: Value) -> Result
             upsert_settings(tx, name, &content, now)?;
             // WHY: an unreadable previous document counts as absent, so every key is captured.
             let previous = previous.and_then(|text| serde_json::from_str::<Value>(&text).ok());
-            capture_learning(tx, previous.as_ref(), &content)
+            capture_learning(&mut Capture::begin(tx)?, previous.as_ref(), &content)
         })?;
 
         get_settings(db, name)?.ok_or_else(|| AppError::new(error_codes::DB_UPDATE, None))
@@ -136,8 +136,11 @@ pub(crate) fn upsert_settings(
 
 // INVARIANT: each learning key is its own sync group; only keys whose value changed are captured
 // (crates/koloda-sync-proto/PROTOCOL.md, Field groups and merge). Other settings slices do not sync.
-fn capture_learning(conn: &Connection, previous: Option<&Value>, next: &Value) -> Result<(), AppError> {
-    let mut capture = Capture::begin(conn)?;
+pub(crate) fn capture_learning(
+    capture: &mut Capture<'_>,
+    previous: Option<&Value>,
+    next: &Value,
+) -> Result<(), AppError> {
     let changed = |pointer: &str| previous.and_then(|value| value.pointer(pointer)) != next.pointer(pointer);
 
     if changed("/defaults/algorithm") {

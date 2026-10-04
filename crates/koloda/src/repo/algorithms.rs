@@ -114,21 +114,46 @@ pub(crate) fn insert_algorithm(
     let revision = insert_algorithm_revision(conn, &id, &content, now)?;
 
     let mut capture = Capture::begin(conn)?;
-    capture.write(
-        &id,
-        None,
-        &Payload::AlgorithmCreate(wire::DocumentCreate {
-            title,
-            notes: None,
-            content,
-            created_at: now,
-            initial_product_ts: InitialProductTs::new(),
-            legacy_product_ts_floor: None,
-        }),
-    )?;
+    capture.write(&id, None, &create_payload(conn, &id)?)?;
     capture.write(&revision.id, None, &Payload::AlgorithmRevision(revision.payload))?;
 
     Ok(id)
+}
+
+// INVARIANT: a create carries the stored row's current values. A legacy `updated_at` cannot be attributed to a
+// group, so it travels only as the create's floor (crates/koloda-sync-proto/PROTOCOL.md, `updated_at`).
+pub(crate) fn create_payload(conn: &Connection, id: &str) -> Result<Payload, AppError> {
+    conn.query_row(
+        "SELECT title, notes, content, created_at, updated_at FROM algorithms WHERE id = ?1",
+        params![id],
+        |row| {
+            Ok(Payload::AlgorithmCreate(wire::DocumentCreate {
+                title: row.get(0)?,
+                notes: row.get(1)?,
+                content: row.get(2)?,
+                created_at: row.get(3)?,
+                initial_product_ts: InitialProductTs::new(),
+                legacy_product_ts_floor: row.get(4)?,
+            }))
+        },
+    )
+    .map_err(AppError::from)
+}
+
+pub(crate) fn revision_payload(conn: &Connection, id: &str) -> Result<wire::AlgorithmRevision, AppError> {
+    conn.query_row(
+        "SELECT algorithm_id, content, actor, created_at FROM algorithm_revisions WHERE id = ?1",
+        params![id],
+        |row| {
+            Ok(wire::AlgorithmRevision {
+                algorithm_id: row.get(0)?,
+                content: row.get(1)?,
+                actor: row.get(2)?,
+                created_at: row.get(3)?,
+            })
+        },
+    )
+    .map_err(AppError::from)
 }
 
 struct InsertedRevision {
@@ -152,15 +177,8 @@ fn insert_algorithm_revision(
         params![id, algorithm_id, content, actor, now],
     )?;
 
-    Ok(InsertedRevision {
-        id,
-        payload: wire::AlgorithmRevision {
-            algorithm_id: algorithm_id.to_string(),
-            content: content.to_string(),
-            actor,
-            created_at: now,
-        },
-    })
+    let payload = revision_payload(conn, &id)?;
+    Ok(InsertedRevision { id, payload })
 }
 
 pub fn update_algorithm(db: &Database, data: UpdateAlgorithmData) -> Result<Algorithm, AppError> {

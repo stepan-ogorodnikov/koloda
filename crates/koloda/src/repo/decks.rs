@@ -93,6 +93,31 @@ fn select_deck(conn: &Connection, id: &str) -> Result<Option<Deck>, AppError> {
     .map_err(AppError::from)
 }
 
+// INVARIANT: a deck create carries no pointers; its algorithm and template travel as same-commit update groups
+// (crates/koloda-sync-proto/PROTOCOL.md, Existence and order). A legacy `updated_at` cannot be attributed to a
+// group, so it travels only as the create's floor.
+pub(crate) fn create_payloads(conn: &Connection, id: &str) -> Result<[Payload; 3], AppError> {
+    let deck = select_deck(conn, id)?.ok_or_else(|| AppError::new(error_codes::DB_GET, None))?;
+
+    Ok([
+        Payload::DeckCreate(wire::DeckCreate {
+            title: deck.title,
+            notes: deck.notes,
+            created_at: deck.created_at,
+            initial_product_ts: InitialProductTs::new(),
+            legacy_product_ts_floor: deck.updated_at,
+        }),
+        Payload::DeckAlgorithm(wire::DeckAlgorithm {
+            algorithm_id: deck.algorithm_id,
+            updated_at: None,
+        }),
+        Payload::DeckTemplate(wire::DeckTemplate {
+            template_id: deck.template_id,
+            updated_at: None,
+        }),
+    ])
+}
+
 pub fn add_deck(db: &Database, data: InsertDeckData) -> Result<Deck, AppError> {
     throw_known_error(error_codes::DB_ADD, || {
         data.validate()?;
@@ -123,37 +148,10 @@ pub fn add_deck(db: &Database, data: InsertDeckData) -> Result<Deck, AppError> {
                 params![id, title, data.algorithm_id, data.template_id, now],
             )?;
 
-            // INVARIANT: a deck create carries no pointers; its algorithm and template travel as same-commit
-            // update groups (crates/koloda-sync-proto/PROTOCOL.md, Existence and order).
-            let deck = select_deck(tx, &id)?.ok_or_else(|| AppError::new(error_codes::DB_ADD, None))?;
             let mut capture = Capture::begin(tx)?;
-            capture.write(
-                &id,
-                None,
-                &Payload::DeckCreate(wire::DeckCreate {
-                    title: deck.title.clone(),
-                    notes: deck.notes.clone(),
-                    created_at: deck.created_at,
-                    initial_product_ts: InitialProductTs::new(),
-                    legacy_product_ts_floor: None,
-                }),
-            )?;
-            capture.write(
-                &id,
-                None,
-                &Payload::DeckAlgorithm(wire::DeckAlgorithm {
-                    algorithm_id: deck.algorithm_id.clone(),
-                    updated_at: deck.updated_at,
-                }),
-            )?;
-            capture.write(
-                &id,
-                None,
-                &Payload::DeckTemplate(wire::DeckTemplate {
-                    template_id: deck.template_id.clone(),
-                    updated_at: deck.updated_at,
-                }),
-            )?;
+            for payload in create_payloads(tx, &id)? {
+                capture.write(&id, None, &payload)?;
+            }
 
             Ok(id)
         })?;

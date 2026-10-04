@@ -122,6 +122,24 @@ pub(crate) fn scheduling_payload(card: &Card) -> wire::CardScheduling {
     }
 }
 
+// INVARIANT: a create carries the stored row's current values, with `content` as the stored JSON text. A legacy
+// `updated_at` cannot be attributed to a group, so it travels only as the create's floor
+// (crates/koloda-sync-proto/PROTOCOL.md, `updated_at`).
+pub(crate) fn create_payload(conn: &Connection, id: &str) -> Result<Payload, AppError> {
+    let card = select_card(conn, id)?.ok_or_else(|| AppError::new(error_codes::DB_GET, None))?;
+    let content: String = conn.query_row("SELECT content FROM cards WHERE id = ?1", params![id], |row| row.get(0))?;
+
+    Ok(Payload::CardCreate(wire::CardCreate {
+        scheduling: scheduling_payload(&card),
+        deck_id: card.deck_id,
+        template_id: card.template_id,
+        content,
+        created_at: card.created_at,
+        initial_product_ts: InitialProductTs::new(),
+        legacy_product_ts_floor: card.updated_at,
+    }))
+}
+
 fn capture_card_delete(capture: &mut Capture<'_>, conn: &Connection, id: &str) -> Result<(), AppError> {
     let deck_id: Option<String> = conn
         .query_row("SELECT deck_id FROM cards WHERE id = ?1", params![id], |row| row.get(0))
@@ -245,20 +263,7 @@ fn insert_card_data(db: &Database, data: &InsertCardData, template: &Template) -
             ],
         )?;
 
-        let card = select_card(tx, &id)?.ok_or_else(|| AppError::new(error_codes::DB_ADD, None))?;
-        Capture::begin(tx)?.write(
-            &id,
-            None,
-            &Payload::CardCreate(wire::CardCreate {
-                deck_id: card.deck_id.clone(),
-                template_id: card.template_id.clone(),
-                content: content.clone(),
-                scheduling: scheduling_payload(&card),
-                created_at: card.created_at,
-                initial_product_ts: InitialProductTs::new(),
-                legacy_product_ts_floor: None,
-            }),
-        )?;
+        Capture::begin(tx)?.write(&id, None, &create_payload(tx, &id)?)?;
 
         Ok(id)
     })?;
