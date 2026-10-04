@@ -1,6 +1,6 @@
 # Sync apply
 
-Status: draft
+Status: ready
 
 ## Intent
 
