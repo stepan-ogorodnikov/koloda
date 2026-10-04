@@ -5,7 +5,7 @@ use koloda::domain::seed_ids::SEED_ALGORITHM_SIMPLE_ID;
 use koloda::repo::algorithms::{get_algorithm, update_algorithm};
 use koloda::repo::cards::get_card;
 use koloda::repo::decks::get_deck;
-use koloda::repo::sync::apply::{apply_page, Page};
+use koloda::repo::sync::apply::Page;
 use koloda::repo::templates::get_template;
 use koloda_sync_proto::payload::{
     CardCreate, CardScheduling, DeckCreate, DocumentCreate, InitialProductTs, Payload, Review,
@@ -15,7 +15,7 @@ use uuid::Uuid;
 
 use crate::common::fixtures::{add_algorithm, add_card, add_deck, add_template};
 use crate::common::sync::{
-    count, cursor, device, enroll, hot_page, last_hlc, origin, register, replica, sealed, stamp, FakeSpace,
+    apply, count, cursor, device, enroll, hot_page, last_hlc, origin, register, replica, sealed, stamp, FakeSpace,
 };
 use crate::common::{fsrs_algorithm_content, seed_data, test_db};
 
@@ -141,7 +141,7 @@ fn a_create_for_an_id_already_held_is_dropped() {
         )],
         1,
     );
-    let changed = apply_page(&b, &page).unwrap();
+    let changed = apply(&b, &page).unwrap();
 
     assert!(changed.is_empty(), "a dropped create changes nothing");
     assert_eq!(get_algorithm(&b, &id).unwrap().unwrap().title, "Local");
@@ -180,7 +180,7 @@ fn only_an_untouched_seed_row_is_overlaid_by_a_remote_seed_create() {
             )],
             1,
         );
-        apply_page(&b, &page).unwrap();
+        apply(&b, &page).unwrap();
 
         let seed = get_algorithm(&b, SEED_ALGORITHM_SIMPLE_ID).unwrap().unwrap();
         if is_touched {
@@ -211,7 +211,7 @@ fn a_deck_create_without_its_pointers_sits_on_the_lowest_live_ids() {
         vec![sealed(DECK, None, stamp(remote, WALL_MS), &deck_create())],
         1,
     );
-    apply_page(&b, &page).unwrap();
+    apply(&b, &page).unwrap();
 
     let deck = get_deck(&b, DECK).unwrap().expect("the deck is inserted");
     assert_eq!(Some(&deck.algorithm_id), algorithms.iter().min());
@@ -247,7 +247,7 @@ fn a_create_derives_updated_at_from_its_initial_product_timestamps_and_floor() {
             )],
             1,
         );
-        apply_page(&b, &page).unwrap();
+        apply(&b, &page).unwrap();
 
         let algorithm = get_algorithm(&b, ALGORITHM).unwrap().unwrap();
         assert_eq!(algorithm.updated_at, expected, "initial {initial:?}, floor {floor:?}");
@@ -282,7 +282,7 @@ fn a_create_naming_a_missing_parent_or_template_is_dropped() {
             )],
             1,
         );
-        let changed = apply_page(&b, &page).unwrap();
+        let changed = apply(&b, &page).unwrap();
 
         assert_eq!(
             get_card(&b, &card).unwrap().is_some(),
@@ -309,7 +309,7 @@ fn the_clock_moves_past_every_applied_stamp() {
         )],
         1,
     );
-    apply_page(&b, &page).unwrap();
+    apply(&b, &page).unwrap();
     assert_eq!(last_hlc(&b), ahead.hlc);
 
     let template = add_template(&b, "Local");
@@ -339,16 +339,12 @@ fn a_failed_page_applies_nothing_and_keeps_the_cursor() {
             "a cold-lane kind in a hot page",
             sealed("r1", Some(CARD), stamp(remote, WALL_MS), &review),
         ),
-        (
-            "a deck create with no live template",
-            sealed(DECK, None, stamp(remote, WALL_MS), &deck_create()),
-        ),
     ];
 
     for (case, bad) in bad_entries {
         let b = replica();
         add_algorithm(&b, "Local");
-        apply_page(&b, &hot_page(remote, Vec::new(), 5)).unwrap();
+        apply(&b, &hot_page(remote, Vec::new(), 5)).unwrap();
 
         let valid = sealed(
             ALGORITHM,
@@ -356,7 +352,7 @@ fn a_failed_page_applies_nothing_and_keeps_the_cursor() {
             stamp(remote, WALL_MS),
             &algorithm_create("Remote", InitialProductTs::new(), None),
         );
-        let error = apply_page(&b, &hot_page(remote, vec![valid, bad], 9)).unwrap_err();
+        let error = apply(&b, &hot_page(remote, vec![valid, bad], 9)).unwrap_err();
 
         assert_eq!(error.code, "db.update", "{case}");
         assert_eq!(cursor(&b, Lane::Hot), 5, "{case}");
@@ -379,7 +375,7 @@ fn apply_needs_an_enrolled_database() {
         1,
     );
 
-    let error = apply_page(&db, &page).unwrap_err();
+    let error = apply(&db, &page).unwrap_err();
     assert_eq!(error.code, "db.update");
     assert_eq!(count(&db, "SELECT COUNT(*) FROM algorithms"), 0);
 }
@@ -389,8 +385,8 @@ fn the_cursor_moves_to_scanned_through_even_for_an_empty_page() {
     let b = replica();
     let remote = Uuid::now_v7();
 
-    apply_page(&b, &hot_page(remote, Vec::new(), 12)).unwrap();
-    apply_page(
+    apply(&b, &hot_page(remote, Vec::new(), 12)).unwrap();
+    apply(
         &b,
         &Page {
             lane: Lane::Cold,

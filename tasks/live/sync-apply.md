@@ -96,7 +96,7 @@ Out:
   Commit: Apply remote tombstones with their cascades
   Depends on: 5
 
-- [ ] 7. Repair pointers to dead referents
+- [x] 7. Repair pointers to dead referents
   Goal: `crates/koloda/src/repo/sync/repair.rs`: a template or algorithm tombstone sweeps decks and learning defaults pointing at it to the kind's repair target: the live `successor`, else the live row with the lowest id, else a new default row from the starter input (an algorithm with its revision); it then drops cards on a dead template with their reviews, and only then deletes the referent.
   `apply_page` takes the starter algorithm and template (`InsertAlgorithmData`, `InsertTemplateData`, as in `SeedData`); deck placeholders use the same target, so an empty kind gets a new default row instead of failing the page.
   A pointer or card create that arrives naming a tombstoned referent is repaired or dropped (`PROTOCOL.md` §Deletes, Arrivals).

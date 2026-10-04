@@ -4,14 +4,14 @@ use koloda::domain::lessons::LessonResultData;
 use koloda::domain::reviews::InsertReviewData;
 use koloda::repo::cards::get_card;
 use koloda::repo::lessons::submit_lesson_result;
-use koloda::repo::sync::apply::apply_page;
+
 use koloda_sync_proto::hlc::Stamp;
 use koloda_sync_proto::payload::{CardCreate, CardReset, CardScheduling, InitialProductTs, Payload, Review};
 use koloda_sync_proto::registry::Lane;
 use uuid::Uuid;
 
 use crate::common::fixtures::{add_algorithm, add_card, add_deck, add_template};
-use crate::common::sync::{count, hot_page, page, register, replica, sealed, stamp};
+use crate::common::sync::{apply, count, hot_page, page, register, replica, sealed, stamp};
 
 const NEW_MS: u64 = 4_000_000_000_000;
 
@@ -81,11 +81,11 @@ fn reset() -> Payload {
 }
 
 fn apply_hot(db: &Database, sender: Uuid, envelopes: Vec<Vec<u8>>) -> Vec<koloda_sync_proto::registry::Kind> {
-    apply_page(db, &hot_page(sender, envelopes, 1)).expect("hot page applies")
+    apply(db, &hot_page(sender, envelopes, 1)).expect("hot page applies")
 }
 
 fn apply_cold(db: &Database, sender: Uuid, envelopes: Vec<Vec<u8>>) {
-    apply_page(db, &page(Lane::Cold, sender, envelopes, 1)).expect("cold page applies");
+    apply(db, &page(Lane::Cold, sender, envelopes, 1)).expect("cold page applies");
 }
 
 fn apply_grade(fixture: &Fixture, at: Stamp, review_id: &str) {

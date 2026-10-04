@@ -5,6 +5,7 @@
 
 pub mod apply;
 pub mod capture;
+pub mod repair;
 
 use koloda_sync_proto::hlc::{DeviceId, Stamp};
 use koloda_sync_proto::payload::Payload;
@@ -46,6 +47,18 @@ fn select_enrolled_device(conn: &Connection) -> Result<Option<Uuid>, AppError> {
     device
         .map(|bytes| Uuid::from_slice(&bytes).map_err(protocol_error))
         .transpose()
+}
+
+/// The kinds whose product rows an apply changed, in first-changed order, for the host's UI events.
+#[derive(Default)]
+struct Changed(Vec<Kind>);
+
+impl Changed {
+    fn mark(&mut self, kind: Kind) {
+        if !self.0.contains(&kind) {
+            self.0.push(kind);
+        }
+    }
 }
 
 /// The stamp and sender metadata one envelope writes into registers, origins, and tombstones.

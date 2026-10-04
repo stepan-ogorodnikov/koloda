@@ -2,19 +2,20 @@
 //! (`crates/koloda-sync-proto/PROTOCOL.md` §Field groups and merge, Apply rule).
 //!
 //! Apply writes product rows with its own SQL and never calls repo write paths: those capture, and a remote
-//! write must not re-enter the outbox.
+//! write must not re-enter the outbox. Repairs of dead pointers (`repair`) are the exception and publish.
 
 use koloda_sync_proto::envelope::{Envelope, Header};
-use koloda_sync_proto::hlc::{DeviceId, Hlc, HlcClock, Stamp};
+use koloda_sync_proto::hlc::{DeviceId, Hlc, Stamp};
 use koloda_sync_proto::payload::{
     AlgorithmRevision, CardCreate, CardScheduling, DeckCreate, DocumentCreate, Payload, Review,
 };
-use koloda_sync_proto::registry::{allow, check_lane, Class, Kind, Lane};
+use koloda_sync_proto::registry::{allow, check_lane, Class, Group, Kind, Lane};
 use rusqlite::{params, Connection, OptionalExtension, ToSql};
 use serde_json::{Map, Value};
 use uuid::Uuid;
 
-use super::{delete_empty_cohort, forget_entity, protocol_error, StampValues, ROW_GROUP};
+use super::repair::{self, tombstone_successor, Starter};
+use super::{delete_empty_cohort, forget_entity, protocol_error, Changed, StampValues, ROW_GROUP};
 use crate::app::db::Database;
 use crate::app::error::{error_codes, throw_known_error, AppError};
 use crate::domain::cards::CardState;
@@ -44,19 +45,8 @@ struct Entry {
     values: StampValues,
 }
 
-#[derive(Default)]
-struct Changed(Vec<Kind>);
-
-impl Changed {
-    fn mark(&mut self, kind: Kind) {
-        if !self.0.contains(&kind) {
-            self.0.push(kind);
-        }
-    }
-}
-
 /// Applies one page and returns the kinds whose product rows it changed.
-pub fn apply_page(db: &Database, page: &Page) -> Result<Vec<Kind>, AppError> {
+pub fn apply_page(db: &Database, page: &Page, starter: &Starter) -> Result<Vec<Kind>, AppError> {
     throw_known_error(error_codes::DB_UPDATE, || {
         // INVARIANT: decode the whole page before writing. An entry that does not decode fails the page, so the
         // cursor never moves past an envelope that was not applied.
@@ -67,21 +57,20 @@ pub fn apply_page(db: &Database, page: &Page) -> Result<Vec<Kind>, AppError> {
             .collect::<Result<Vec<_>, _>>()?;
 
         db.with_transaction(|tx| {
-            let mut clock = read_clock(tx)?;
+            require_enrolled(tx)?;
             let mut changed = Changed::default();
             for entry in &entries {
-                clock.observe(entry.header.stamp.hlc);
-                apply_entry(tx, entry, &mut changed)?;
+                observe(tx, entry.header.stamp.hlc)?;
+                apply_entry(tx, entry, starter, &mut changed)?;
             }
 
             let cursor = match page.lane {
                 Lane::Hot => "cursor_hot",
                 Lane::Cold => "cursor_cold",
             };
-            let last_hlc = i64::try_from(clock.last.raw()).map_err(protocol_error)?;
             tx.execute(
-                &format!("UPDATE sync_state SET last_hlc = ?1, {cursor} = ?2 WHERE id = 1"),
-                params![last_hlc, page.scanned_through],
+                &format!("UPDATE sync_state SET {cursor} = ?1 WHERE id = 1"),
+                params![page.scanned_through],
             )?;
 
             Ok(changed.0)
@@ -106,20 +95,37 @@ fn decode(lane: Lane, entry: &PageEntry) -> Result<Entry, AppError> {
     })
 }
 
-fn read_clock(conn: &Connection) -> Result<HlcClock, AppError> {
-    let last_hlc: i64 = conn
-        .query_row("SELECT last_hlc FROM sync_state WHERE id = 1", [], |row| row.get(0))
-        .optional()?
-        .ok_or_else(|| protocol_error("only an enrolled database applies sync envelopes"))?;
-
-    Ok(HlcClock {
-        last: Hlc::from_raw(u64::try_from(last_hlc).map_err(protocol_error)?),
-    })
+fn require_enrolled(conn: &Connection) -> Result<(), AppError> {
+    let is_enrolled: bool = conn.query_row("SELECT EXISTS (SELECT 1 FROM sync_state WHERE id = 1)", [], |row| {
+        row.get(0)
+    })?;
+    if is_enrolled {
+        Ok(())
+    } else {
+        Err(protocol_error("only an enrolled database applies sync envelopes"))
+    }
 }
 
-fn apply_entry(conn: &Connection, entry: &Entry, changed: &mut Changed) -> Result<(), AppError> {
+// INVARIANT: the clock adopts each stamp before its entry applies, never after the page, so a repair that the entry
+// triggers captures a stamp above it (PROTOCOL.md, Hybrid logical clock).
+fn observe(conn: &Connection, hlc: Hlc) -> Result<(), AppError> {
+    let raw = i64::try_from(hlc.raw()).map_err(protocol_error)?;
+    conn.execute(
+        "UPDATE sync_state SET last_hlc = MAX(last_hlc, ?1) WHERE id = 1",
+        params![raw],
+    )?;
+    Ok(())
+}
+
+fn apply_entry(conn: &Connection, entry: &Entry, starter: &Starter, changed: &mut Changed) -> Result<(), AppError> {
     let header = &entry.header;
-    if is_dead(conn, header)? || !has_referents(conn, header)? {
+    if is_dead(conn, header)? {
+        return Ok(());
+    }
+    if let Some((kind, successor)) = dead_referent(conn, header)? {
+        return apply_on_dead_referent(conn, entry, kind, successor.as_deref(), starter, changed);
+    }
+    if !has_referents(conn, header)? {
         return Ok(());
     }
 
@@ -127,11 +133,61 @@ fn apply_entry(conn: &Connection, entry: &Entry, changed: &mut Changed) -> Resul
         .map_err(protocol_error)?
         .map(|spec| spec.class);
     match class {
-        Some(Class::Create) => apply_create(conn, entry, changed),
+        Some(Class::Create) => apply_create(conn, entry, starter, changed),
         Some(Class::Update) => apply_update(conn, entry, changed),
         Some(Class::Immutable) => apply_immutable(conn, entry, changed),
-        None => apply_delete(conn, entry, changed),
+        None => apply_delete(conn, entry, starter, changed),
     }
+}
+
+/// The first hard ref that names a tombstoned algorithm or template, with that tombstone's `successor`.
+fn dead_referent(conn: &Connection, header: &Header) -> Result<Option<(Kind, Option<String>)>, AppError> {
+    let refs = [
+        header.refs.algorithm_id.as_deref().map(|id| (Kind::Algorithms, id)),
+        header.refs.template_id.as_deref().map(|id| (Kind::Templates, id)),
+    ];
+    for (kind, id) in refs.into_iter().flatten() {
+        let is_fenced: bool = conn.query_row(
+            "SELECT EXISTS (SELECT 1 FROM sync_tombstones WHERE kind = ?1 AND id = ?2)",
+            params![kind.as_wire(), id],
+            |row| row.get(0),
+        )?;
+        if is_fenced {
+            return Ok(Some((kind, tombstone_successor(conn, kind, id)?)));
+        }
+    }
+    Ok(None)
+}
+
+// INVARIANT: an envelope that names a tombstoned referent never writes it (PROTOCOL.md, Arrivals). A pointer that
+// would win its register is repaired to the referent's repair target instead; a card create under a dead template
+// is dropped, as the server already fenced it.
+fn apply_on_dead_referent(
+    conn: &Connection,
+    entry: &Entry,
+    kind: Kind,
+    successor: Option<&str>,
+    starter: &Starter,
+    changed: &mut Changed,
+) -> Result<(), AppError> {
+    let header = &entry.header;
+    let Some(group) = header
+        .group
+        .filter(|group| {
+            matches!(
+                group,
+                Group::Algorithm | Group::Template | Group::DefaultsAlgorithm | Group::DefaultsTemplate
+            )
+        })
+        .map(|group| group.as_wire())
+    else {
+        return Ok(());
+    };
+    if is_present(conn, header.kind, &header.id)? && beats_register(conn, header.kind, &header.id, group, header.stamp)?
+    {
+        repair::repoint(conn, header.kind, &header.id, kind, successor, starter, changed)?;
+    }
+    Ok(())
 }
 
 // INVARIANT: a tombstone is terminal. No envelope for a fenced entity, or for a child of a fenced parent, applies
@@ -167,7 +223,7 @@ fn has_referents(conn: &Connection, header: &Header) -> Result<bool, AppError> {
     Ok(true)
 }
 
-fn apply_create(conn: &Connection, entry: &Entry, changed: &mut Changed) -> Result<(), AppError> {
+fn apply_create(conn: &Connection, entry: &Entry, starter: &Starter, changed: &mut Changed) -> Result<(), AppError> {
     let kind = entry.header.kind;
     let id = entry.header.id.as_str();
     if is_present(conn, kind, id)? && !is_stamp_zero_seed(conn, kind, id)? {
@@ -176,7 +232,7 @@ fn apply_create(conn: &Connection, entry: &Entry, changed: &mut Changed) -> Resu
 
     match &entry.payload {
         Payload::CardCreate(create) => insert_card(conn, id, create)?,
-        Payload::DeckCreate(create) => insert_deck(conn, id, create)?,
+        Payload::DeckCreate(create) => insert_deck(conn, id, create, starter, changed)?,
         Payload::TemplateCreate(create) => upsert_document(conn, Kind::Templates, id, create)?,
         Payload::AlgorithmCreate(create) => upsert_document(conn, Kind::Algorithms, id, create)?,
         _ => return Err(protocol_error("a create group carries a create payload")),
@@ -238,13 +294,18 @@ fn insert_card(conn: &Connection, id: &str, create: &CardCreate) -> Result<(), A
     Ok(())
 }
 
-// INVARIANT: a deck create carries no pointers, but the local foreign keys need real rows. The placeholders
-// hold until the same-commit pointer groups overwrite them (PROTOCOL.md, Existence and order).
-fn insert_deck(conn: &Connection, id: &str, create: &DeckCreate) -> Result<(), AppError> {
-    let algorithm_id = lowest_live_id(conn, Kind::Algorithms)?
-        .ok_or_else(|| protocol_error("a deck create needs a live algorithm for its placeholder"))?;
-    let template_id = lowest_live_id(conn, Kind::Templates)?
-        .ok_or_else(|| protocol_error("a deck create needs a live template for its placeholder"))?;
+// INVARIANT: a deck create carries no pointers, but the local foreign keys need real rows. The placeholders are
+// each kind's repair target and hold until the same-commit pointer groups overwrite them (PROTOCOL.md, Existence and
+// order). They are never captured; a new default row the target creates is.
+fn insert_deck(
+    conn: &Connection,
+    id: &str,
+    create: &DeckCreate,
+    starter: &Starter,
+    changed: &mut Changed,
+) -> Result<(), AppError> {
+    let algorithm_id = repair::repair_target(conn, Kind::Algorithms, None, None, starter, changed)?;
+    let template_id = repair::repair_target(conn, Kind::Templates, None, None, starter, changed)?;
     conn.execute(
         r#"
         INSERT INTO decks (id, title, notes, algorithm_id, template_id, created_at, updated_at)
@@ -474,7 +535,7 @@ const LEARN_AHEAD_LIMIT_PATH: &[&str] = &["learnAheadLimit"];
 
 // INVARIANT: each learning key is its own register, so a remote group replaces only its key and leaves the
 // rest of the stored document as this device holds it.
-fn patch_learning(conn: &Connection, id: &str, payload: &Payload) -> Result<(), AppError> {
+pub(super) fn patch_learning(conn: &Connection, id: &str, payload: &Payload) -> Result<(), AppError> {
     let (path, value): (&[&str], Value) = match payload {
         Payload::LearningDefaultAlgorithm(group) => (DEFAULT_ALGORITHM_PATH, Value::from(group.algorithm_id.as_str())),
         Payload::LearningDefaultTemplate(group) => (DEFAULT_TEMPLATE_PATH, Value::from(group.template_id.as_str())),
@@ -552,7 +613,7 @@ fn apply_immutable(conn: &Connection, entry: &Entry, changed: &mut Changed) -> R
 
 // INVARIANT: a remote tombstone fences its id even when this device never held the entity, so a create that
 // arrives later is dropped (apply rule steps 1 and 4).
-fn apply_delete(conn: &Connection, entry: &Entry, changed: &mut Changed) -> Result<(), AppError> {
+fn apply_delete(conn: &Connection, entry: &Entry, starter: &Starter, changed: &mut Changed) -> Result<(), AppError> {
     let kind = entry.header.kind;
     let id = entry.header.id.as_str();
     let Payload::Delete { delete, .. } = &entry.payload else {
@@ -563,6 +624,23 @@ fn apply_delete(conn: &Connection, entry: &Entry, changed: &mut Changed) -> Resu
         .write_tombstone(conn, kind, id, delete.successor.as_deref())?;
     if !is_present(conn, kind, id)? {
         return Ok(());
+    }
+
+    // INVARIANT: a referent dies only after every pointer to it is repaired and every card on a dead template is
+    // dropped; the local foreign keys refuse the delete otherwise (PROTOCOL.md, Referents are not parents).
+    if matches!(kind, Kind::Templates | Kind::Algorithms) {
+        repair::sweep_pointers(conn, kind, id, delete.successor.as_deref(), starter, changed)?;
+    }
+    if kind == Kind::Templates {
+        let cards: Vec<String> = conn
+            .prepare("SELECT id FROM cards WHERE template_id = ?1")?
+            .query_map(params![id], |row| row.get(0))?
+            .collect::<Result<_, _>>()?;
+        for card in cards {
+            drop_pending_subtree(conn, Kind::Cards, &card)?;
+            forget_entity(conn, Kind::Cards, &card)?;
+            delete_subtree(conn, Kind::Cards, &card, changed)?;
+        }
     }
 
     drop_pending_subtree(conn, kind, id)?;
@@ -697,16 +775,7 @@ fn refresh_updated_at(conn: &Connection, kind: Kind, id: &str) -> Result<(), App
     Ok(())
 }
 
-fn lowest_live_id(conn: &Connection, kind: Kind) -> Result<Option<String>, AppError> {
-    let (table, _) = table(kind);
-    conn.query_row(&format!("SELECT id FROM {table} ORDER BY id LIMIT 1"), [], |row| {
-        row.get(0)
-    })
-    .optional()
-    .map_err(AppError::from)
-}
-
-fn is_present(conn: &Connection, kind: Kind, id: &str) -> Result<bool, AppError> {
+pub(super) fn is_present(conn: &Connection, kind: Kind, id: &str) -> Result<bool, AppError> {
     let (table, key) = table(kind);
     let row = conn
         .query_row(&format!("SELECT 1 FROM {table} WHERE {key} = ?1"), params![id], |_| {
@@ -717,7 +786,7 @@ fn is_present(conn: &Connection, kind: Kind, id: &str) -> Result<bool, AppError>
 }
 
 /// The product table and key column that hold each kind's rows; the learning document is a settings row.
-fn table(kind: Kind) -> (&'static str, &'static str) {
+pub(super) fn table(kind: Kind) -> (&'static str, &'static str) {
     match kind {
         Kind::Cards => ("cards", "id"),
         Kind::Reviews => ("reviews", "id"),

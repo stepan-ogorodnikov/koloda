@@ -10,7 +10,7 @@ use koloda::repo::algorithms::{get_algorithm, update_algorithm};
 use koloda::repo::cards::{get_card, update_card};
 use koloda::repo::decks::{get_deck, update_deck};
 use koloda::repo::settings::{get_settings, set_settings};
-use koloda::repo::sync::apply::apply_page;
+
 use koloda::repo::templates::{get_template, update_template};
 use koloda_sync_proto::payload::{
     DeckCreate, DefaultAlgorithm, InitialProductTs, JsonContent, Payload, SettingValue, Title,
@@ -20,7 +20,7 @@ use uuid::Uuid;
 
 use crate::common::fixtures::{add_algorithm, add_card, add_deck, add_template};
 use crate::common::sync::{
-    count, hot_page, mark_in_flight, register, replica, sealed, seeded_replica, stamp, FakeSpace,
+    apply, count, hot_page, mark_in_flight, register, replica, sealed, seeded_replica, stamp, FakeSpace,
 };
 use crate::common::{card_content, fsrs_algorithm_content, learning_settings, simple_template_content};
 
@@ -211,7 +211,7 @@ fn a_remote_update_and_a_pending_local_edit_settle_by_stamp() {
             vec![sealed(&deck, None, stamp(remote, remote_ms), &title("Remote", Some(1)))],
             1,
         );
-        apply_page(&b, &page).unwrap();
+        apply(&b, &page).unwrap();
 
         let case = format!("remote at {remote_ms}, in flight: {is_in_flight}");
         assert_eq!(deck_title(&b, &deck), expected, "{case}");
@@ -248,7 +248,7 @@ fn an_equal_stamp_wins_only_over_a_synthetic_register() {
         ],
         3,
     );
-    apply_page(&b, &page).unwrap();
+    apply(&b, &page).unwrap();
 
     assert_eq!(deck_title(&b, DECK), "Same commit");
     assert!(!register(&b, "decks", DECK, "title").unwrap().is_synthetic);
@@ -273,7 +273,7 @@ fn a_tied_hlc_goes_to_the_higher_stamp_device() {
                 vec![sealed(&deck, None, stamp(device, NEW_MS), &title(name, None))],
                 1,
             );
-            apply_page(&b, &page).unwrap();
+            apply(&b, &page).unwrap();
         }
 
         assert_eq!(deck_title(&b, &deck), "High", "order {order:?}");
@@ -301,7 +301,7 @@ fn updated_at_follows_the_winning_register_even_when_it_is_earlier() {
         )],
         1,
     );
-    apply_page(&b, &page).unwrap();
+    apply(&b, &page).unwrap();
 
     assert_eq!(
         get_deck(&b, &deck).unwrap().unwrap().updated_at,
@@ -322,7 +322,7 @@ fn a_remote_parameter_change_records_no_revision() {
         content,
         updated_at: Some(1),
     });
-    apply_page(
+    apply(
         &b,
         &hot_page(
             remote,
@@ -366,7 +366,7 @@ fn a_remote_learning_key_replaces_only_that_key() {
         ],
         2,
     );
-    apply_page(&b, &page).unwrap();
+    apply(&b, &page).unwrap();
 
     let after = learning(&b);
     assert_eq!(after["dailyLimits"], limits);
@@ -397,7 +397,7 @@ fn an_update_for_an_absent_row_is_dropped() {
         2,
     );
 
-    assert!(apply_page(&b, &page).unwrap().is_empty());
+    assert!(apply(&b, &page).unwrap().is_empty());
     assert!(get_deck(&b, DECK).unwrap().is_none());
     assert!(get_settings(&b, SettingsName::Learning).unwrap().is_none());
 }

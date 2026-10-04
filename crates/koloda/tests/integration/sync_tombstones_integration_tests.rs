@@ -6,14 +6,14 @@ use koloda::domain::reviews::InsertReviewData;
 use koloda::repo::cards::{delete_card, get_card, update_card};
 use koloda::repo::decks::{delete_deck, get_deck};
 use koloda::repo::lessons::submit_lesson_result;
-use koloda::repo::sync::apply::apply_page;
+
 use koloda_sync_proto::payload::{DeckCreate, Delete, InitialProductTs, Payload, Title};
 use koloda_sync_proto::registry::Kind;
 use uuid::Uuid;
 
 use crate::common::card_content;
 use crate::common::fixtures::{add_algorithm, add_card, add_deck, add_template};
-use crate::common::sync::{count, hot_page, mark_in_flight, replica, sealed, stamp, FakeSpace};
+use crate::common::sync::{apply, count, hot_page, mark_in_flight, replica, sealed, stamp, FakeSpace};
 
 const NEW_MS: u64 = 4_000_000_000_000;
 const DECK: &str = "01920000-0000-7000-8000-0000000000d1";
@@ -168,7 +168,7 @@ fn a_tombstone_for_an_unknown_id_fences_its_later_writes() {
         updated_at: None,
     });
 
-    apply_page(
+    apply(
         &b,
         &hot_page(
             remote,
@@ -177,7 +177,7 @@ fn a_tombstone_for_an_unknown_id_fences_its_later_writes() {
         ),
     )
     .unwrap();
-    let changed = apply_page(
+    let changed = apply(
         &b,
         &hot_page(
             remote,
@@ -215,7 +215,7 @@ fn a_remote_tombstone_drops_pending_local_writes_under_it_but_not_in_flight_ones
         assert!(before_under > 0 && before_others > 0);
 
         let remote = Uuid::now_v7();
-        apply_page(
+        apply(
             &b,
             &hot_page(
                 remote,

@@ -2,8 +2,10 @@
 //! through a fake space.
 
 use koloda::app::db::Database;
+use koloda::app::error::AppError;
 use koloda::repo::sync;
 use koloda::repo::sync::apply::{apply_page, Page, PageEntry};
+use koloda::repo::sync::repair::{repair_dangling_defaults, Starter};
 use koloda_sync_proto::envelope::Envelope;
 use koloda_sync_proto::hlc::{DeviceId, Hlc, Stamp};
 use koloda_sync_proto::payload::{seal, Payload, Seal};
@@ -163,7 +165,8 @@ impl FakeSpace {
             .expect("outbox clears");
     }
 
-    /// Applies everything other senders pushed past the replica's cursors: `hot` first, then `cold`.
+    /// Applies everything other senders pushed past the replica's cursors, `hot` first, then `cold`, and then
+    /// repairs dangling learning defaults as the engine does after catch-up.
     pub fn pull(&self, replica: &Database) -> Vec<Kind> {
         let own = device(replica);
         let mut changed = Vec::new();
@@ -182,10 +185,24 @@ impl FakeSpace {
                     .collect(),
                 scanned_through: log.last().map_or(after, |entry| entry.seq),
             };
-            changed.extend(apply_page(replica, &page).expect("page applies"));
+            changed.extend(apply(replica, &page).expect("page applies"));
         }
+        changed.extend(repair_dangling_defaults(replica, &starter()).expect("defaults repair"));
         changed
     }
+}
+
+/// The first-run content a repair creates when a kind has no live row left.
+pub fn starter() -> Starter {
+    let seed = super::seed_data("Starter algorithm", "Starter template");
+    Starter {
+        algorithm: seed.algorithm,
+        template: seed.template,
+    }
+}
+
+pub fn apply(db: &Database, page: &Page) -> Result<Vec<Kind>, AppError> {
+    apply_page(db, page, &starter())
 }
 
 pub fn device(db: &Database) -> Uuid {
