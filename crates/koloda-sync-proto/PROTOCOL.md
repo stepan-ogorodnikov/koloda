@@ -24,7 +24,8 @@ The web host does not sync.
 A server stores one compacted log of **envelopes** per **space**.
 An envelope is one write to one **field group** of one entity, stamped with a hybrid logical clock (HLC).
 The server reads the envelope header and never the payload.
-Merge is per field group, last-writer-wins (LWW) by HLC, with delete-wins tombstones and a deterministic repair pass.
+Merge is per field group, last-writer-wins (LWW) by HLC, with delete-wins tombstones and a repair pass for pointers
+whose referent dies.
 Card content, card scheduling, and card reset are separate groups.
 An edit, a grade, and a reset therefore never share a register.
 Every referenced kind opens with an immutable `create` envelope.
@@ -215,13 +216,16 @@ with fixed field ids.
 This document calls them **the seed algorithm** and **the seed template**.
 The other seed constants are web-demo only.
 
-Both seed rows are **undeletable** on every device and on the server: a delete for either id is rejected.
-They are the repair target when a pointer's referent dies.
-They keep both kinds non-empty when two devices delete different custom rows at once.
+Seed rows follow the same deletion rules as every other row.
+Repair never depends on them: a dead pointer moves to its kind's repair target (§Deletes).
 
 Two devices that set up independently hold the same starter rows under the same ids.
 An unmodified seed row on a joining device carries stamp zero and is never pushed.
 The joiner therefore cannot overwrite the space's copy; the space's `create` **overlays** it on apply.
+
+Seed ids are the one exception to ids being minted once: every first run mints them again.
+A space may have deleted, and so fenced, a seed id that a joiner still holds.
+A joiner therefore keeps a seed id only while the space holds it live (§Joining).
 
 ## Field groups and merge
 
@@ -314,11 +318,19 @@ After that, equal stamps do not beat.
 
 Deck create carries no algorithm or template.
 Local SQLite still stores real foreign keys.
-On remote insert they are filled with the seed algorithm and seed template as placeholders.
+On remote insert they are filled with placeholders: each kind's repair target (§Deletes).
 The same-commit pointer groups then overwrite them.
 A later delete of the deck's birth algorithm therefore cannot make a fresh bootstrap drop the deck.
-If a pull page splits a deck's create from its pointers, the deck is briefly on seed.
+If a pull page splits a deck's create from its pointers, the deck briefly sits on its placeholders.
+A placeholder pointer is local only; it is never captured.
 Repair must not publish until catch-up (§Transport).
+
+A device normally holds a live algorithm and template whenever a deck create arrives.
+During bootstrap, both kinds stream before decks (§Transport).
+After that, product rules keep at least one of each on the device, and repair recreates one if concurrent deletes
+kill the last.
+The exception is bootstrapping a space that concurrent deletes have emptied of a kind.
+The placeholder is then a new default row, which is captured like any repair.
 
 ### Registers
 
@@ -373,32 +385,31 @@ For every incoming envelope, in order:
 3. If `parent` or `refs` name a tombstoned referent, follow §Deletes (Arrivals) before writing.
    If they name a missing (not tombstoned) entity, drop.
    Do not invent a row; do not repair-publish.
-4. A delete of a seed row: drop.
-5. Delete: record the tombstone and fence the id.
+4. Delete: record the tombstone and fence the id.
    For a template or algorithm, sweep pointers first (§Deletes).
    Then enqueue a resumable delete job, and delete stamps and origins under it.
    Done.
-6. Immutable: a review is compared with `cards.reset` only when that register is non-synthetic.
+5. Immutable: a review is compared with `cards.reset` only when that register is non-synthetic.
    If it does not strictly beat it, drop.
    Otherwise insert if absent and the parent is live, and write `sync_origins`.
    Done.
-7. Create: insert if absent, else drop, except a stamp-zero seed row, which is overlaid.
+6. Create: insert if absent, else drop, except a stamp-zero seed row, which is overlaid.
    On insert or overlay, stamp every update group (synthetic) and write `sync_origins`.
    Done.
-8. Update for an absent row: drop.
-9. Compare with the register.
+7. Update for an absent row: drop.
+8. Compare with the register.
    Less: drop.
    Equal and not synthetic: drop.
    Equal and synthetic, or greater: apply.
-10. Apply the payload and `product_ts`, recompute `updated_at`, and write the register with `synthetic = 0`.
-    Delete any **not-in-flight** pending outbox row for the same group.
-    An in-flight row stays until its outcome arrives; the server returns it as `stale`.
-    A winning `cards.reset` also blanks `cards.scheduling` at its stamp unless scheduling already beats it.
-    It hides and schedules deletion of reviews that do not strictly beat it.
-    A winning `cards.content` enqueues fetches for attachments it links that are not local (§Attachments).
+9. Apply the payload and `product_ts`, recompute `updated_at`, and write the register with `synthetic = 0`.
+   Delete any **not-in-flight** pending outbox row for the same group.
+   An in-flight row stays until its outcome arrives; the server returns it as `stale`.
+   A winning `cards.reset` also blanks `cards.scheduling` at its stamp unless scheduling already beats it.
+   It hides and schedules deletion of reviews that do not strictly beat it.
+   A winning `cards.content` enqueues fetches for attachments it links that are not local (§Attachments).
 
-Step 10 discards a pending local write because pushing it would republish remote content under a losing stamp.
-If the local stamp wins in step 9, the pending row stays and pushes as normal.
+Step 9 discards a pending local write because pushing it would republish remote content under a losing stamp.
+If the local stamp wins in step 8, the pending row stays and pushes as normal.
 
 The server runs the same comparison on headers, so losers never reach other devices.
 The client runs it because it must be correct against any server, and it alone sees pending local writes.
@@ -420,7 +431,8 @@ The client runs it because it must be correct against any server, and it alone s
 | Algorithm successor on A vs deck still pointing at the old algorithm on B | Only `decks.algorithm` is repaired or LWW'd |
 | Two devices edit template structure concurrently | Last writer wins on `structure`; orphan keys in card content are ignored by the renderer |
 | Two devices add the same image | Same attachment id; one upload is enough |
-| Two devices each delete one of two custom algorithms | The seed algorithm remains; repair points at it |
+| Two devices each delete a different algorithm while others remain | Both deletes win; pointers repair to the `successor`, else the lowest live id |
+| Two devices each delete one of the last two algorithms | Both deletes win; every device creates a default algorithm when its last one dies; decks and learning defaults converge by LWW, and unused defaults stay as ordinary rows |
 
 The template structure row is the only accepted lossy case, bounded by what one offline session can edit.
 The engine reserves a per-kind **merge hook** for a group that has both a pending local and an incoming remote
@@ -469,7 +481,8 @@ The server checks hard refs and parents on push:
   The id goes into `deleted_ids`, and a later create of it is `fenced`.
   Ids are unique, so fencing an unknown one blocks nothing legitimate.
   A heal re-push of a tombstone therefore cannot lose a race with another device's re-push of the create.
-- A delete of a seed id: rejected.
+  Seed ids are the exception to uniqueness; a fenced one blocks only a joiner's local starter row, which joining
+  deletes or remints (§Joining).
 - An envelope whose `parent` disagrees with the entity's `create`: `existence`.
 - An envelope whose hard `refs` name an absent id that is not known dead: `existence`.
   The sender must already have pushed the referent; this is a client bug, not a repair case.
@@ -514,16 +527,32 @@ Reset stays O(1) on the wire for a card with thousands of reviews.
 Templates and algorithms are referenced, not owned.
 Applying a template or algorithm tombstone sweeps **tombstoned** pointers, never missing ones:
 
-- decks and learning defaults pointing at a dead algorithm are repaired to the tombstone's `successor` hint, else
-  the seed algorithm;
-- decks and learning defaults pointing at a dead template are repaired to the seed template;
+- decks and learning defaults pointing at a dead algorithm or template are repaired to that kind's repair target;
 - cards pointing at a dead template are dropped with their reviews (the server has already fenced them);
 - only then is the referent row deleted.
 
+A kind's **repair target** is the first of:
+
+1. the tombstone's `successor` hint, if it names a live algorithm;
+2. the live row of that kind with the lowest id;
+3. a new default row: the starter content first run writes, under a fresh id, captured as a local create (an
+   algorithm with its revision).
+
+The lowest id is a fixed pick, not an order (ruling 2): devices that hold the same live rows pick the same target.
+Step 3 runs only when no live row of the kind is left.
+Product rules keep at least one algorithm and one template on each device.
+Two devices that each delete one of the last two rows still kill both.
+Every device then creates its own default when its last row dies, so the space can end with several.
+They are ordinary rows.
+
 Repair writes one group and does not rewrite the sibling pointer.
-Repair is deterministic, touches only a dead pointer, and publishes like any other write.
+Repair touches only a dead pointer and publishes like any other write.
 A pointer that is already live, because another device's reassignment arrived first, is left alone.
 The deleting client normally publishes its explicit reassignments before the tombstone.
+
+After catch-up, a learning default that names no live row is repaired to its kind's target as well.
+That covers a joiner's stamp-zero defaults naming a seed id the space does not hold.
+After catch-up, a missing referent cannot still be in flight: its create sits below every pointer to it.
 
 ### Arrivals
 
@@ -614,6 +643,10 @@ The device's last HLC moves past the final range before ordinary capture.
 Unmodified seed rows on a joining device get stamp zero and are skipped.
 So are the seed algorithm's revisions, which a join deletes (§Joining).
 
+The device that creates the space also backfills the `learning` document's groups in phase 1.
+Every joiner's stamp-zero copy is then overlaid by the creator's values, not left on the first-run defaults.
+A joining device never backfills them (§Joining).
+
 ## Devices
 
 | Field | Notes |
@@ -698,13 +731,13 @@ Unknown `kind`, `group`, or `op`, and lane mismatches, are rejected at a header 
 | `GET /v1/spaces/{space}/receipts` | Stored outcomes for any sender's seqs; usable while `rebase_required` |
 | `GET /v1/spaces/{space}/pull?lane&after&max_seq&limit` | Envelopes with `after < seq <= max_seq`, own sender excluded, minus anything under a committed deletion scope; each entry carries `(seq, sender, sender_seq)`; returns `scanned_through`, `has_more`, heads, epoch |
 | `POST /v1/spaces/{space}/bootstrap` | Opens a snapshot lease at live heads; returns `snapshot_id`, page token, counts, byte estimate, TTL, absolute expiry |
-| `GET /v1/spaces/{space}/bootstrap/{snapshot}` | Streams the pinned snapshot with the same per-entry metadata as pull; hot in `seq` order; cold newest-first by `(hlc, stamp_device, seq)`; own sender included |
+| `GET /v1/spaces/{space}/bootstrap/{snapshot}` | Streams the pinned snapshot with the same per-entry metadata as pull; hot by kind, referents first, then `seq`; cold newest-first by `(hlc, stamp_device, seq)`; own sender included |
 | `POST /v1/spaces/{space}/bootstrap/{snapshot}/heartbeat` | Extends TTL up to the absolute expiry |
 | `DELETE /v1/spaces/{space}/bootstrap/{snapshot}` | Releases the lease |
 | `GET /v1/spaces/{space}/events` | WebSocket; `{ head_hot, head_cold }` on change |
 | `GET/DELETE /v1/spaces/{space}/devices[/{id}]` | Device list and revocation; `DELETE` of self is detach |
 | `POST /v1/spaces/{space}/devices/fork` | Current token in, new device id and token out (§Devices) |
-| `POST /v1/spaces/{space}/ids/known` | Id chunk in, the ones live or fenced in the space out (§Joining) |
+| `POST /v1/spaces/{space}/ids/known` | Id chunk in, the ones live or fenced in the space out, each marked which (§Joining) |
 | `HEAD/PUT/GET /v1/spaces/{space}/attachments/{id}` | Attachment bytes and metadata (§Attachments) |
 
 Every response carries server time, both lane heads, both GC horizons, the epoch, `write_schema` per kind, and
@@ -765,7 +798,7 @@ What remains is a decoder bug in the receiving app version, or storage damage.
 The client cannot tell which, so it never guesses a value:
 
 - **Delete**: apply from the header.
-  Unreadable hints mean the seed fallback.
+  Unreadable hints mean no `successor`.
   The cursor advances.
 - **Reset**: apply from the header.
   Display time comes from the HLC wall part.
@@ -839,6 +872,7 @@ Those pending members are dropped in the same transaction.
 
 Enabling sync with existing data does not materialize the whole database into the outbox.
 A resumable scan walks algorithms (with revisions), templates, decks, cards, and reviews by id.
+On the device that creates the space it then covers the `learning` document.
 It tops the outbox up in bounded batches and advances its watermark in the same transaction.
 
 Capture that touches an unstamped entity backfills, in the same transaction and order:
@@ -870,7 +904,13 @@ Space-wide caps limit concurrent leases and pinned bytes.
 Revoke, restore, and absolute expiry cancel a lease.
 The client preflights free disk against the byte estimate.
 
-`hot` streams in `seq` order, so every page applies without buffering.
+`hot` streams referents first: algorithms, algorithm revisions, templates, decks, cards, then the `learning`
+document, each kind in `seq` order.
+Every page therefore applies without buffering.
+A deck create also finds every live algorithm and template already local for its placeholders (§Field groups and
+merge).
+A `seq` order across kinds would not: compaction can leave a deck's create below the create of every live
+algorithm, once its birth algorithm is deleted.
 Repair **must not publish** until the snapshot is applied.
 A follow-up pull must also have reached a head observed after the lease was taken.
 
@@ -987,7 +1027,7 @@ Joining looks at the local file:
 | File | Mode |
 | --- | --- |
 | Blank | Join; skip the product seed; seed device-local settings and the `learning` document at stamp zero |
-| Only the untouched first-run seed | Join; seed rows and `learning` stay at stamp zero and are overlaid by the space; the seed algorithm's local revisions are deleted, and the space's history arrives |
+| Only the untouched first-run seed | Join; probe the two seed ids; seed rows the space holds live stay at stamp zero and are overlaid, the others are deleted; the seed algorithm's local revisions are deleted, and the space's history arrives; `learning` stays at stamp zero and is overlaid |
 | Used, never synced, or from another space | Probe, then the user picks **Add** or **Replace** |
 | Was in this space | Re-attach |
 
@@ -1001,26 +1041,31 @@ A local id that the space already holds means this file is a copy of data alread
 with it.
 
 After claim, a used file sits in local phase `import_pending`: no push, no pull.
-It sends its hot-lane ids, except seed ids, to `POST .../ids/known` in chunks.
-The server answers which are live or fenced in the space.
+It sends its hot-lane ids, seed ids included, to `POST .../ids/known` in chunks.
+The server answers which are live and which are fenced in the space.
 Reviews are not sent: a review can only collide if its card does.
 The user then picks **Add** or **Replace**; known ids mean a likely copy, for which Replace is the safer choice.
 
 **Add** is one local transaction:
 
 1. Clear every sync table.
-2. Remint each known entity and its dependents, rewriting every pointer, learning default, and revision
-   `algorithm_id` that names it:
+2. Remint each known entity other than a seed row, and its dependents, rewriting every pointer, learning default,
+   and revision `algorithm_id` that names it:
    - a deck with its cards and their reviews;
    - a card with its reviews;
    - an algorithm with its revisions;
    - a template alone.
-3. Seed rows:
+3. Seed rows the space holds live:
    - the seed algorithm keeps its id if unmodified; its local revisions are deleted and the space's history
      arrives;
    - the seed template keeps its id if unmodified **and** no local card uses it;
    - an edited seed, or a seed template with local cards, is reminted like any other row.
      The space can then hold two starter templates.
+
+   Seed rows the space does not hold live, because it deleted them or never had them:
+   - an unmodified seed row that no local deck or card uses is deleted;
+   - any other is reminted like any other row.
+     A joiner never pushes a seed id the space does not hold, so two joiners cannot collide on it.
 4. Keep `settings.learning` at stamp zero, so the space's learning settings win.
 5. Start the backfill scan and enter the normal cycle.
 
@@ -1047,9 +1092,12 @@ Otherwise it re-bootstraps only if `cursor_too_old`.
 ### First-run seed
 
 Setup offers starting fresh or joining an existing space.
-Joining skips the seed algorithm and template; the space's creates insert them.
+Joining skips the seed algorithm and template; the space's creates insert whichever the space holds.
 Starting fresh and then joining, with seeds untouched, is the second row of the modes table.
-Seed rows cannot have been deleted in the space; they are undeletable.
+The space may have deleted either seed row; every joining mode keeps a seed id only while the space holds it live.
+
+Accepted edge: a seed deleted between the probe and the bootstrap lease stays on the joiner as a local-only row.
+That needs another device to delete it while this one joins; the user can delete the row again.
 
 ### Setup hint
 
@@ -1192,7 +1240,9 @@ Change one only by a new decision, not by editing rules in passing.
 4. Envelope `parent`, `cards.deck_id`, and `cards.template_id` are immutable (`docs/decisions/FIXED-CARD-PARENTS.md`).
 5. A card whose deck or template is tombstoned is dropped rather than rescued.
 6. Reviews have no tombstones; they die with their card or under `cards.reset`.
-7. The seed algorithm and seed template are undeletable.
+7. Seed rows follow ordinary deletion rules.
+   A dead pointer repairs to the `successor`, else the lowest live id, else a new default row.
+   A joiner keeps a seed id only while the space holds it live.
 8. The clock always adopts what it applies; the 5-minute guard is an absolute cap against server now.
 9. Capture round-trips every envelope before commit.
    Corrupt deletes and resets apply from the header.
@@ -1238,6 +1288,11 @@ Every implementation of the engine and the server must pass these.
 - Algorithm deleted while another device changes its parameters (revisions from both survive).
 - Re-bootstrap with local writes during absence cleanup.
 - Start-fresh-then-Join overlays seeds; Add keeps an unmodified seed algorithm and remints a used seed template.
+- Start-fresh-then-Join into a space that deleted the seed template (the local seed row is deleted, never pushed).
+- Add with decks on an unmodified seed algorithm the space deleted (reminted, decks follow); an unused one is
+  deleted.
+- Space created after its device deleted the seed algorithm (the learning backfill carries the real default; a
+  blank joiner's defaults never stay on the seed id).
 - Add of an unrelated database remints nothing; Add of a copy remints exactly the known entities and dependents.
 - Replace leaves no local product rows.
 - Start-fresh-then-Join does not push a second initial seed revision.
@@ -1269,7 +1324,11 @@ Every implementation of the engine and the server must pass these.
 - A corrupt review holds `cold` only; a corrupt card create holds both lanes.
 - An encoder that loses a field fails the local write and enqueues nothing.
 - Partial push and lost acknowledgement for every consuming outcome.
-- Card create before referent backfill; concurrent delete of two custom algorithms.
+- Card create before referent backfill; concurrent delete of two algorithms while others remain.
+- Concurrent delete of the last two algorithms, and of the last two templates (each device creates a default;
+  pointers converge).
+- Fresh bootstrap of a space whose oldest deck predates every live algorithm (algorithms stream first; no default is
+  created).
 - Algorithm repair racing a template edit on the same deck; template tombstone racing a card created under it.
 - Review pushed during the `hot` pull; snapshot opened mid-delete.
 - Client and server running out of disk during a 20M-review deck delete.
