@@ -18,6 +18,7 @@ This file only tells you where to start.
 | A product write path (sync capture) | `src/repo/sync/capture.rs::Capture` + `crates/koloda-sync-proto/PROTOCOL.md` (§Field groups and merge) |
 | Applying remote sync envelopes | `src/repo/sync/apply.rs::apply_page` + `crates/koloda-sync-proto/PROTOCOL.md` (§Field groups and merge, Apply rule) |
 | Enabling sync on a database that already holds rows | `src/repo/sync/backfill.rs::backfill_batch` + `crates/koloda-sync-proto/PROTOCOL.md` (§Existing rows at enable time, Backfill) |
+| Joining an existing space | `src/repo/sync/join.rs` + `crates/koloda-sync-proto/PROTOCOL.md` (§Joining) |
 | Schema / migrations | `agents/DB.md` |
 | AI provider enum / secrets redaction | `agents/ADD-AI-PROVIDER.md` |
 | Hotkeys settings | `agents/ADD-HOTKEY.md` |
@@ -86,6 +87,12 @@ so card-progress and review namespaces stay distinct.
 - Each kind's create payload comes from its stored row (`create_payload` in its repo), shared with the create paths.
 - A joiner skips seed rows, the seed algorithm's revisions, and `learning`; only the space's creator backfills them.
 - Backfill tests drain into `FakeSpace` and call `assert_referents_first`.
+
+**Join** — `join_mode` tells a file's mode from its rows and sync state.
+`begin_import` records a claim: it clears every `sync_*` table and leaves the file `import_pending`.
+
+- While pending, `Capture` records nothing, and `backfill_batch` and `apply_page` refuse.
+- The space id is stored at enrollment; only an `active` file in the same space re-attaches.
 
 **Review writes** — `insert_review` in `src/repo/reviews.rs` is the single write path (`pub(crate)`).
 

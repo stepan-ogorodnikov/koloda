@@ -14,6 +14,9 @@ use koloda_sync_proto::registry::{allow, Class, Kind, Lane, Op};
 use std::collections::HashSet;
 use uuid::Uuid;
 
+/// The space every test replica enrolls in.
+pub const SPACE: Uuid = Uuid::from_u128(0x0192_0000_0000_7000_8000_0000_0000_05ac);
+
 pub struct OutboxEntry {
     pub sender_seq: i64,
     pub in_flight: bool,
@@ -46,7 +49,7 @@ pub fn enroll(db: &Database) -> Uuid {
 
 pub fn enroll_as(db: &Database, role: SpaceRole) -> Uuid {
     let device = Uuid::now_v7();
-    sync::enroll_device(db, device, role).expect("test database enrolls");
+    sync::enroll_device(db, device, SPACE, role).expect("test database enrolls");
     device
 }
 

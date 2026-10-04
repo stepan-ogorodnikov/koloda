@@ -37,11 +37,13 @@ struct Commit {
 
 impl<'c> Capture<'c> {
     pub fn begin(conn: &'c Connection) -> Result<Capture<'c>, AppError> {
+        // INVARIANT: a pending import captures nothing. Add backfills every row written meanwhile, and Replace
+        // deletes it (PROTOCOL.md, Joining).
         let row: Option<(Vec<u8>, i64, i64, String, bool)> = conn
             .query_row(
                 r#"
                 SELECT device_id, last_hlc, next_sender_seq, role, backfill_step IS NOT NULL
-                FROM sync_state WHERE id = 1
+                FROM sync_state WHERE id = 1 AND join_phase = 'active'
                 "#,
                 [],
                 |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?, row.get(4)?)),

@@ -96,13 +96,17 @@ fn decode(lane: Lane, entry: &PageEntry) -> Result<Entry, AppError> {
 }
 
 fn require_enrolled(conn: &Connection) -> Result<(), AppError> {
-    let is_enrolled: bool = conn.query_row("SELECT EXISTS (SELECT 1 FROM sync_state WHERE id = 1)", [], |row| {
-        row.get(0)
-    })?;
+    let is_enrolled: bool = conn.query_row(
+        "SELECT EXISTS (SELECT 1 FROM sync_state WHERE id = 1 AND join_phase = 'active')",
+        [],
+        |row| row.get(0),
+    )?;
     if is_enrolled {
         Ok(())
     } else {
-        Err(protocol_error("only an enrolled database applies sync envelopes"))
+        Err(protocol_error(
+            "only an active enrolled database applies sync envelopes",
+        ))
     }
 }
 

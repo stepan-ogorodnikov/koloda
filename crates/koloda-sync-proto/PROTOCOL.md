@@ -1045,6 +1045,13 @@ Joining looks at the local file:
 | Used, never synced, or from another space | Probe, then the user picks **Add** or **Replace** |
 | Was in this space | Re-attach |
 
+A file is blank until its first-run seed writes settings.
+It holds only the untouched first-run seed when its rows are the seed algorithm with its one revision and the seed
+template, both unmodified, and it has no deck or card; `learning` does not count.
+A seed row is unmodified while its `updated_at` is NULL.
+Every save sets it, even one that changes nothing.
+A file was in this space when its sync state is active there; a file still in `import_pending` is judged by its rows.
+
 Every mode claims the code, receives an active token, and runs the normal cycle with a union bootstrap.
 There is no server-side provisional state; a used file only waits locally for the user's choice.
 
@@ -1054,7 +1061,10 @@ Independently minted UUIDv7 ids never collide.
 A local id that the space already holds means this file is a copy of data already synced, or shares an ancestor
 with it.
 
-After claim, a used file sits in local phase `import_pending`: no push, no pull.
+Recording the claim clears every sync table and puts the file in local phase `import_pending`.
+Nothing recorded for an earlier space can then be pushed or applied under the new device id.
+While pending, the file pushes, pulls, captures, and backfills nothing.
+Add backfills any row written meanwhile, and Replace deletes it.
 It sends its hot-lane ids, seed ids included, to `POST .../ids/known` in chunks.
 The server answers which are live and which are fenced in the space.
 Reviews are not sent: a review can only collide if its card does.
@@ -1062,14 +1072,13 @@ The user then picks **Add** or **Replace**; known ids mean a likely copy, for wh
 
 **Add** is one local transaction:
 
-1. Clear every sync table.
-2. Remint each known entity other than a seed row, and its dependents, rewriting every pointer, learning default,
+1. Remint each known entity other than a seed row, and its dependents, rewriting every pointer, learning default,
    and revision `algorithm_id` that names it:
    - a deck with its cards and their reviews;
    - a card with its reviews;
    - an algorithm with its revisions;
    - a template alone.
-3. Seed rows the space holds live:
+2. Seed rows the space holds live:
    - the seed algorithm keeps its id if unmodified; its local revisions are deleted and the space's history
      arrives;
    - the seed template keeps its id if unmodified **and** no local card uses it;
@@ -1080,8 +1089,8 @@ The user then picks **Add** or **Replace**; known ids mean a likely copy, for wh
    - an unmodified seed row that no local deck or card uses is deleted;
    - any other is reminted like any other row.
      A joiner never pushes a seed id the space does not hold, so two joiners cannot collide on it.
-4. Keep `settings.learning` at stamp zero, so the space's learning settings win.
-5. Start the backfill scan and enter the normal cycle.
+3. Keep `settings.learning` at stamp zero, so the space's learning settings win.
+4. Start the backfill scan and enter the normal cycle.
 
 Attachments never remint (content-addressed).
 Template field ids never remint (scoped by their template).

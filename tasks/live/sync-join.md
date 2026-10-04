@@ -54,7 +54,7 @@ Out:
 
 ## Plan
 
-- [ ] 1. Record the space and import phase for a joining file
+- [x] 1. Record the space and import phase for a joining file
   Goal: migration `V8__sync_join.sql` adds `space_id` and `join_phase` to `sync_state`. `join_phase` is `import_pending` or `active` and defaults to `active`.
   Refresh the embedded listings on both hosts and the schema inventory per `agents/DB.md`.
   `enroll_device(db, device_id, space_id, role)` stores the space id. The space's creator and a blank joiner enroll this way.

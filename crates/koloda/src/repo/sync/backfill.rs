@@ -251,7 +251,7 @@ fn read_state(conn: &Connection) -> Result<State, AppError> {
             r#"
             SELECT role, device_id, backfill_create_hlc, backfill_review_hlc, backfill_scheduling_hlc,
                    backfill_step, backfill_after_ts, backfill_after_id
-            FROM sync_state WHERE id = 1
+            FROM sync_state WHERE id = 1 AND join_phase = 'active'
             "#,
             [],
             |row| {
@@ -269,7 +269,7 @@ fn read_state(conn: &Connection) -> Result<State, AppError> {
         )
         .optional()?;
     let (role, device, create_hlc, review_hlc, scheduling_hlc, step, after_ts, after_id) =
-        row.ok_or_else(|| protocol_error("only an enrolled database backfills"))?;
+        row.ok_or_else(|| protocol_error("only an active enrolled database backfills"))?;
     let hlc = |raw: i64| u64::try_from(raw).map(Hlc::from_raw).map_err(protocol_error);
 
     Ok(State {

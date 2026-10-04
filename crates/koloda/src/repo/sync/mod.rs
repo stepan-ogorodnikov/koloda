@@ -1,12 +1,13 @@
-//! Sync bookkeeping SQL: device enrollment here, capture of product writes in `capture`, rows that predate
-//! enrollment in `backfill`, and remote envelopes in `apply` (`crates/koloda-sync-proto/PROTOCOL.md` §Field
-//! groups and merge, §Clocks and order, §Client state).
+//! Sync bookkeeping SQL: device enrollment here, joining an existing space in `join`, capture of product writes
+//! in `capture`, rows that predate enrollment in `backfill`, and remote envelopes in `apply`
+//! (`crates/koloda-sync-proto/PROTOCOL.md` §Field groups and merge, §Clocks and order, §Client state, §Joining).
 //!
 //! Only the desktop store writes the `sync_*` tables; the web host does not sync.
 
 pub mod apply;
 pub mod backfill;
 pub mod capture;
+pub mod join;
 pub mod repair;
 
 use koloda_sync_proto::hlc::{DeviceId, Stamp};
@@ -46,15 +47,19 @@ impl SpaceRole {
     }
 }
 
-pub fn enroll_device(db: &Database, device_id: Uuid, role: SpaceRole) -> Result<(), AppError> {
+pub fn enroll_device(db: &Database, device_id: Uuid, space_id: Uuid, role: SpaceRole) -> Result<(), AppError> {
     throw_known_error(error_codes::DB_ADD, || {
         db.with_transaction(|tx| {
             tx.execute(
                 r#"
-                INSERT INTO sync_state (id, device_id, last_hlc, next_sender_seq, role)
-                VALUES (1, ?1, 0, 1, ?2)
+                INSERT INTO sync_state (id, device_id, space_id, last_hlc, next_sender_seq, role)
+                VALUES (1, ?1, ?2, 0, 1, ?3)
                 "#,
-                params![device_id.as_bytes().as_slice(), role.as_sql()],
+                params![
+                    device_id.as_bytes().as_slice(),
+                    space_id.as_bytes().as_slice(),
+                    role.as_sql()
+                ],
             )?;
 
             // INVARIANT: the backfill stamps are reserved in the enrollment transaction, so every write captured

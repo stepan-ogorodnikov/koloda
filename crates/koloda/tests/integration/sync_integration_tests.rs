@@ -8,7 +8,7 @@ use koloda_sync_proto::registry::Kind;
 use uuid::Uuid;
 
 use crate::common::fixtures::{add_algorithm, add_card, add_deck, add_template, insert_review_row};
-use crate::common::sync::{count, enroll, outbox, register};
+use crate::common::sync::{count, enroll, outbox, register, SPACE};
 use crate::common::test_db;
 
 const DECK: &str = "01920000-0000-7000-8000-0000000000d1";
@@ -56,10 +56,10 @@ fn enrollment_records_one_device_and_refuses_a_second() {
     assert_eq!(sync::enrolled_device(&db).unwrap(), None);
 
     let device = Uuid::now_v7();
-    sync::enroll_device(&db, device, SpaceRole::Joiner).unwrap();
+    sync::enroll_device(&db, device, SPACE, SpaceRole::Joiner).unwrap();
     assert_eq!(sync::enrolled_device(&db).unwrap(), Some(device));
 
-    let second = sync::enroll_device(&db, Uuid::now_v7(), SpaceRole::Joiner);
+    let second = sync::enroll_device(&db, Uuid::now_v7(), SPACE, SpaceRole::Joiner);
     assert_eq!(second.unwrap_err().code, "db.add");
     assert_eq!(
         sync::enrolled_device(&db).unwrap(),
