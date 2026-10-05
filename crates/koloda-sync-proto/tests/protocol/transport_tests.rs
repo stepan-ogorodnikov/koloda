@@ -2,9 +2,9 @@ use std::collections::BTreeMap;
 
 use ciborium::Value;
 use koloda_sync_proto::transport::{
-    ClaimPairing, CreateSpace, DependencyAction, DeviceMeta, Empty, Enrollment, ErrorBody, ErrorCode, HeldReason,
-    IssuePairing, KnownId, KnownState, LogEntry, Meta, Outcome, Platform, PullPage, Push, PushItem, PushOutcome, Reply,
-    Snapshot, SnapshotPage,
+    ClaimPairing, CreateSpace, DependencyAction, DeviceInfo, DeviceMeta, Empty, Enrollment, ErrorBody, ErrorCode,
+    HeldReason, IssuePairing, KnownId, KnownState, LogEntry, Meta, Outcome, Platform, PullPage, Push, PushItem,
+    PushOutcome, Reply, Snapshot, SnapshotPage,
 };
 use serde::Serialize;
 
@@ -281,6 +281,33 @@ fn bodies_keep_their_wire_keys() {
                 done: true,
             }),
             vec!["entries", "next", "done"],
+        ),
+        (
+            "device record",
+            cbor(&DeviceInfo {
+                id: [1; 16],
+                name: "Phone".to_string(),
+                platform: Platform::Android,
+                created_at: 1,
+                last_seen: 2,
+                last_sender_seq: 3,
+                last_sender_digest: Some([4; 32]),
+                cursor_hot: 5,
+                cursor_cold: 6,
+                revoked_at: Some(7),
+            }),
+            vec![
+                "id",
+                "name",
+                "platform",
+                "created_at",
+                "last_seen",
+                "last_sender_seq",
+                "last_sender_digest",
+                "cursor_hot",
+                "cursor_cold",
+                "revoked_at",
+            ],
         ),
         ("empty", cbor(&Empty {}), vec![]),
     ];

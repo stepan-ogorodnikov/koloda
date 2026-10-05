@@ -51,7 +51,7 @@ koloda-server serve --data-dir ./data --listen 127.0.0.1:8080
 - `src/pull.rs` — pull pages per lane, cut by entry count and bytes, and the cursors they record.
 - `src/bootstrap.rs` — snapshot leases: open, stream pages, heartbeat, release, and expiry.
 - `src/known.rs` — the join probe: which ids the space holds live or fenced.
-- `src/devices.rs` — device records.
+- `src/devices.rs` — device records, revocation and detach, and fork.
 
 - `tests/server/` — one test binary; `common.rs` drives the router in-process on a manual clock.
 

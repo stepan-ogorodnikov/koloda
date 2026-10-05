@@ -106,7 +106,7 @@ fn list_spaces(server: &Server) -> Result<SpaceList, ApiError> {
     let conn = server.server_db()?;
     let mut statement = conn.prepare(
         "SELECT s.id, s.name, s.created_at, count(d.id)
-         FROM spaces s LEFT JOIN devices d ON d.space_id = s.id
+         FROM spaces s LEFT JOIN devices d ON d.space_id = s.id AND d.revoked_at IS NULL
          GROUP BY s.id ORDER BY s.created_at, s.id",
     )?;
     let spaces = statement

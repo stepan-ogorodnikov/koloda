@@ -341,7 +341,7 @@ Out:
   Commit: Bootstrap from snapshot leases that pin live heads
   Depends on: 6
 
-- [ ] 8. List, revoke, and fork devices
+- [x] 8. List, revoke, and fork devices
   Goal: `GET /v1/spaces/{space}/devices` lists the space's devices with the fields `PROTOCOL.md` §Devices lists.
   A device record gains its revocation time; `rebase_required` stays out until stale marking exists.
   Any device of the space can revoke another with `DELETE .../devices/{id}`; `DELETE` of itself is detach.

@@ -91,17 +91,17 @@ pub(crate) fn require_device(
 ) -> Result<DeviceAuth, ApiError> {
     let space_id = Uuid::parse_str(space).ok();
     let conn = server.server_db()?;
-    let device: Option<(Uuid, Uuid)> = match bearer(headers) {
+    let device: Option<(Uuid, Uuid, Option<u64>)> = match bearer(headers) {
         Some(token) => conn
             .query_row(
-                "SELECT id, space_id FROM devices WHERE token_hash = ?1",
+                "SELECT id, space_id, revoked_at FROM devices WHERE token_hash = ?1",
                 params![token_hash(token).to_vec()],
-                |row| Ok((row.get(0)?, row.get(1)?)),
+                |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
             )
             .optional()?,
         None => None,
     };
-    let Some((id, device_space)) = device else {
+    let Some((id, device_space, revoked_at)) = device else {
         if let Some(space_id) = space_id {
             if space_exists(&conn, space_id)? {
                 scope.space = Some(space_id);
@@ -115,6 +115,15 @@ pub(crate) fn require_device(
     };
     if space_id != Some(device_space) {
         return Err(ApiError::unknown_space());
+    }
+    if revoked_at.is_some() {
+        // WHY: a revoked device still learns the epoch, so it can tell revocation from a restore it predates.
+        scope.space = Some(device_space);
+        return Err(ApiError::new(
+            StatusCode::UNAUTHORIZED,
+            ErrorCode::Revoked,
+            "this device was revoked",
+        ));
     }
     conn.execute(
         "UPDATE devices SET last_seen = ?1 WHERE id = ?2",

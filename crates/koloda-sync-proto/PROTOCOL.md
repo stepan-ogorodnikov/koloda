@@ -678,6 +678,9 @@ Rules:
 
 - Any device can list and revoke devices.
   A revoked device gets `401 revoked`, detaches locally, keeps its data, and stops pinning GC.
+  It still learns the epoch, so it can tell revocation from a restore that predates it.
+  Revoking also ends the device's unclaimed pairing codes and its bootstrap lease.
+  A device that revokes itself detaches.
 - A device unseen for 90 days is **stale**: `rebase_required`, and it no longer pins GC.
 - The server refuses every push from a device that is `rebase_required` or whose cursor is below a GC horizon
   (`cursor_too_old`).
@@ -713,6 +716,8 @@ A file that is behind:
    Splitting a cohort here would let a reset's blank scheduling take a newer stamp than its reset.
    It could then beat a grade whose review the reset did not kill.
 3. Forks: `POST .../devices/fork` with its current token returns a fresh device id and token.
+   The new device keeps the old one's name and platform, records which device it forked from, and starts with no
+   consumed sequence.
    The old record keeps working for the other copy, if there is one.
    A forked-from record that makes no request for 24 hours is marked stale.
    A rolled-back file's old record then does not pin GC for 90 days; a live copy syncs far more often.
@@ -776,7 +781,10 @@ Names are 1 to 100 characters after trimming.
 | --- | --- | --- |
 | `POST /v1/spaces` | `name`, `device_name`, `platform`, `nonce` | `space_id`, `device_id`, `token`, `epoch` |
 | `GET /v1/spaces` | none | `spaces`, each with `id`, `name`, `created_at`, `device_count` |
-| `GET /v1/spaces/{space}/devices/{id}` | none | `id`, `name`, `platform`, `created_at`, `last_seen`, `last_sender_seq`, `last_sender_digest`, `cursor_hot`, `cursor_cold` |
+| `GET /v1/spaces/{space}/devices/{id}` | none | `id`, `name`, `platform`, `created_at`, `last_seen`, `last_sender_seq`, `last_sender_digest`, `cursor_hot`, `cursor_cold`, `revoked_at` |
+| `GET /v1/spaces/{space}/devices` | none | `devices`, each a device record as above |
+| `DELETE /v1/spaces/{space}/devices/{id}` | none | empty |
+| `POST /v1/spaces/{space}/devices/fork` | none | the new device's enrollment, as space creation returns it |
 | `POST /v1/spaces/{space}/pairings` | `hint`, optional bytes of at most 4 KiB | `code`, `expires_at` |
 | `POST /v1/pairings/preview` | `code` | `space_id`, `name`, `epoch`, `counts` per kind, `bytes` |
 | `POST /v1/pairings/claim` | `code`, `name`, `platform`, `nonce` | `enrollment` as space creation returns it, `hint` |
@@ -791,6 +799,7 @@ Names are 1 to 100 characters after trimming.
 
 Creating a space also enrolls its creator, so the first device needs no pairing code.
 The same `nonce` returns the same result, token included, for 10 minutes.
+A space's `device_count` counts the devices that are not revoked.
 The claim reply gains `restore_points` with server restore (§Recovery).
 An outcome is a map tagged by `status`, such as `{ status: applied }` or `{ status: held, reason: schema }`.
 A receipt range is `after < seq <= through`.
@@ -802,6 +811,7 @@ An endpoint that returns nothing answers `ok` with an empty map.
 | --- | --- | --- |
 | `bad_request` | 400 | A body or query that does not decode, or a value out of range |
 | `unauthorized` | 401 | A missing or wrong setup token |
+| `revoked` | 401 | A device token of a revoked device (§Devices) |
 | `unknown_device` | 401 | A device token that matches no device, as after a restore that predates the device |
 | `unknown_space` | 404 | A missing space, or a device token of another space; both answer alike |
 | `not_found` | 404 | A missing endpoint, or a record the caller cannot see |
@@ -813,7 +823,7 @@ An endpoint that returns nothing answers `ok` with an empty map.
 | `rate_limited` | 429 | Too many wrong pairing codes (§Pairing), or too many open bootstrap leases (§Bootstrap) |
 | `internal` | 500 | A server fault |
 
-The protocol also has `revoked` (401), `cursor_too_old`, `epoch_changed`, and `507`.
+The protocol also has `cursor_too_old`, `epoch_changed`, and `507`.
 Each gets its row with the server work that answers it.
 
 ### Push outcomes

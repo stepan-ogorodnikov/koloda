@@ -46,7 +46,12 @@ pub fn router(server: Arc<Server>) -> Router {
             "/v1/spaces/{space}/bootstrap/{snapshot}/heartbeat",
             post(bootstrap::heartbeat),
         )
-        .route("/v1/spaces/{space}/devices/{device}", get(devices::get))
+        .route("/v1/spaces/{space}/devices", get(devices::list))
+        .route("/v1/spaces/{space}/devices/fork", post(devices::fork))
+        .route(
+            "/v1/spaces/{space}/devices/{device}",
+            get(devices::get).delete(devices::revoke),
+        )
         .fallback(http::fallback)
         // WHY: `read_body` enforces the protocol's own body and zstd limits and answers with a reply body.
         .layer(DefaultBodyLimit::disable())

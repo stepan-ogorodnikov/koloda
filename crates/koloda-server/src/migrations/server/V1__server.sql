@@ -20,7 +20,9 @@ CREATE TABLE IF NOT EXISTS devices (
     created_at integer NOT NULL,
     last_seen integer NOT NULL,
     cursor_hot integer NOT NULL DEFAULT 0,
-    cursor_cold integer NOT NULL DEFAULT 0
+    cursor_cold integer NOT NULL DEFAULT 0,
+    revoked_at integer,
+    forked_from blob REFERENCES devices (id)
 );
 
 CREATE INDEX IF NOT EXISTS devices_space ON devices (space_id);
