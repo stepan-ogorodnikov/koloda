@@ -8,7 +8,11 @@
     "lint": {
       "executor": "nx:run-commands",
       "cache": true,
-      "inputs": ["rust", "{workspaceRoot}/apps/electron/src-rust/**/*"],
+      "inputs": [
+        "rust",
+        "{workspaceRoot}/crates/koloda-sync-proto/**/*",
+        "{workspaceRoot}/apps/electron/src-rust/**/*"
+      ],
       "options": {
         "command": "cargo clippy --workspace --all-targets -- -D warnings",
         "forwardAllArgs": false,
@@ -20,7 +24,7 @@
     "test": {
       "executor": "nx:run-commands",
       "cache": true,
-      "inputs": ["rust"],
+      "inputs": ["rust", "{workspaceRoot}/crates/koloda-sync-proto/**/*"],
       "options": {
         "command": "cargo test -p koloda",
         "forwardAllArgs": false,

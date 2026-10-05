@@ -16,6 +16,8 @@
     "rust": [
       "{workspaceRoot}/Cargo.toml",
       "{workspaceRoot}/Cargo.lock",
+      "{workspaceRoot}/rust-toolchain.toml",
+      "{workspaceRoot}/clippy.toml",
       "{projectRoot}/**/*"
     ]
   },
