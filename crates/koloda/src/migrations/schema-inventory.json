@@ -1121,6 +1121,13 @@
           "dflt_value": null
         },
         {
+          "name": "last_observed_server_seq",
+          "type": "INTEGER",
+          "notnull": 1,
+          "pk": 0,
+          "dflt_value": "0"
+        },
+        {
           "name": "next_sender_seq",
           "type": "INTEGER",
           "notnull": 1,

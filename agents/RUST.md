@@ -88,6 +88,8 @@ so card-progress and review namespaces stay distinct.
   `delete_entity` and `drop_entity`, so a settled delete matches an applied one.
 - `push_lost` fixes the batch's cohorts; `push_refused` returns first-time cohorts to `local`.
 - A row in flight when `push_batch` runs means an earlier push never settled; its cohort is fixed.
+- `settle_push` records the highest seq it saw consumed; `standing` compares it with the device record, and
+  `has_foreign_receipt` tells a seq this file dropped from one another copy pushed.
 
 **Backfill** — `enroll_device` reserves one stamp per backfill phase.
 `backfill_batch` scans rows written before enrollment into the outbox.

@@ -238,7 +238,7 @@ Out:
   Commit: Push the outbox and settle every outcome
   Depends on: 1
 
-- [ ] 3. Run the sync cycle over both lanes
+- [x] 3. Run the sync cycle over both lanes
   Goal: `Engine::sync_now` runs the cycle (`PROTOCOL.md` §Cycle).
   1. Read the own device record.
      The file is behind if any condition of §Devices holds.

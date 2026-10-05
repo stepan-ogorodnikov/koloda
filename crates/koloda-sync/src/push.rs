@@ -7,7 +7,7 @@ use koloda::repo::sync::outbox::{push_batch, push_lost, push_refused, settle_pus
 use koloda_sync_proto::registry::Kind;
 use koloda_sync_proto::transport::{Push, PushItem, PushReply};
 
-use crate::engine::{Session, Shared};
+use crate::engine::{merge, Session, Shared};
 use crate::error::SyncError;
 use crate::transport::Method;
 
@@ -48,7 +48,7 @@ impl Shared {
                 )
                 .await;
             let reply = match reply {
-                Ok(reply) => reply,
+                Ok(answer) => answer.ok,
                 Err(error) => {
                     let sent = Arc::clone(&batch);
                     // INVARIANT: only a missing reply can hide a consumed push. A refusal and a local failure to
@@ -69,11 +69,7 @@ impl Shared {
             let settled = self
                 .blocking(move |shared| settle_push(&shared.db, &batch, &reply.outcomes, &shared.starter))
                 .await?;
-            for kind in settled.changed {
-                if !changed.contains(&kind) {
-                    changed.push(kind);
-                }
-            }
+            merge(changed, settled.changed);
             if settled.is_behind {
                 return Err(SyncError::Behind);
             }

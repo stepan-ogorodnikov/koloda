@@ -589,7 +589,9 @@ The device persists its last HLC, never issues a smaller one, and advances past 
 
 - Every server response carries server time.
   The client updates its skew estimate before applying the response.
-- If skew exceeds 5 minutes the client pauses (no push, no apply), and re-stamps once the clock is corrected.
+- The skew estimate is server time minus local time when a reply arrives.
+- If skew exceeds 5 minutes either way the client pauses (no push, no apply), and re-stamps once the clock is
+  corrected.
 - The server rejects an envelope whose wall part is more than 5 minutes ahead of **server now**.
   The whole push then fails with `stamp_ahead` and consumes nothing, so its cohorts return to `local`.
   A space that already holds a far-ahead stamp waits for wall time to catch up.
@@ -705,11 +707,14 @@ The first cycle after launch reads the device record before pushing.
 The file is **behind** if any of:
 
 - `last_sender_seq >= next_sender_seq`;
-- a pending outbox seq is `<= last_sender_seq`;
-- `last_sender_seq` is above the server seq observed at the previous successful cycle, and the file has no outbox
-  rows or origins for the seqs in between.
+- a pending outbox row that is not in flight has a seq `<= last_sender_seq`;
+- `last_sender_seq` is above the highest seq this file saw consumed in a push reply, and the receipts between them
+  hold a seq that is not one of this file's rows in flight with the same digest.
 
 A `seq_reused` outcome mid-session means the same thing.
+A row in flight was sent before, so its seq proves nothing: its retry is a replay, or it comes back `seq_reused`.
+A file that is behind pushes and pulls nothing until recovery has run.
+Pulling would miss the other copy's writes, because pull excludes the device id both files share.
 
 A file that is behind:
 
@@ -949,6 +954,10 @@ Across lanes it holds because `cold` is pulled only up to a `max_seq` recorded b
 4. Pull `hot` to head, one transaction per page, advancing to `scanned_through`.
 5. Pull `cold` up to the recorded `head_cold`.
 6. Repeat until the outbox is empty and both cursors are at head.
+7. Repair learning defaults that name no live row (§Deletes); a repair goes out in the next round.
+
+The device records `head_cold` from the device record it read in step 1, before pulling `hot`.
+One call runs a bounded number of rounds; the next trigger picks up what is left.
 
 Triggers: every local commit (coalesced over ~300 ms), every nudge, app foreground, network regained, and a safety
 poll every few minutes when the socket is down.

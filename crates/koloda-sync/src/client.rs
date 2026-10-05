@@ -7,7 +7,7 @@ use std::sync::atomic::{AtomicI64, Ordering};
 
 use koloda::app::error::{error_codes, AppError};
 use koloda::app::utility::get_current_timestamp;
-use koloda_sync_proto::transport::{Reply, MAX_BODY_BYTES, MAX_EXPANSION_RATIO};
+use koloda_sync_proto::transport::{Meta, Reply, MAX_BODY_BYTES, MAX_EXPANSION_RATIO};
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use url::{Host, Url};
@@ -38,6 +38,12 @@ impl Skew {
     }
 }
 
+/// A successful reply: its `ok` body and its `meta`.
+pub(crate) struct Answer<T> {
+    pub(crate) ok: T,
+    pub(crate) meta: Meta,
+}
+
 pub(crate) struct Client<'a> {
     pub(crate) base: &'a str,
     pub(crate) transport: &'a dyn Transport,
@@ -52,7 +58,7 @@ impl Client<'_> {
         path: &str,
         token: Option<&str>,
         body: Option<&B>,
-    ) -> Result<T, SyncError> {
+    ) -> Result<Answer<T>, SyncError> {
         let (body, is_zstd) = match body {
             Some(body) => {
                 let (bytes, is_zstd) = encode(body)?;
@@ -81,13 +87,13 @@ impl Client<'_> {
         Err(SyncError::Transport(lost.0))
     }
 
-    fn read<T: DeserializeOwned>(&self, response: &Response) -> Result<Result<T, SyncError>, TransportError> {
+    fn read<T: DeserializeOwned>(&self, response: &Response) -> Result<Result<Answer<T>, SyncError>, TransportError> {
         let reply: Reply<T> = decode(response)?;
         self.skew
             .record(reply.meta.server_time_ms)
             .map_err(|error| TransportError(error.to_string()))?;
         match (reply.ok, reply.error) {
-            (Some(ok), None) if response.status == OK => Ok(Ok(ok)),
+            (Some(ok), None) if response.status == OK => Ok(Ok(Answer { ok, meta: reply.meta })),
             (None, Some(error)) if response.status != OK => Ok(Err(SyncError::Server {
                 status: response.status,
                 code: error.code,
@@ -168,6 +174,6 @@ fn decompress(encoded: &[u8]) -> Result<Vec<u8>, TransportError> {
     Ok(decoded)
 }
 
-fn local_error(error: impl std::fmt::Display) -> SyncError {
+pub(crate) fn local_error(error: impl std::fmt::Display) -> SyncError {
     SyncError::Local(AppError::new(error_codes::UNKNOWN, Some(error.to_string())))
 }

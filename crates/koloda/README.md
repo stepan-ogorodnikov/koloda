@@ -24,6 +24,7 @@ Rust is the source of truth for the AI provider enum and secrets redaction; `@ko
   It then remints known rows on Add, or deletes product rows on Replace; a blank joiner seeds with `seed_joiner_db`.
   `apply_page` in `apply.rs` applies envelopes other devices captured; `repair.rs` repoints pointers to dead rows.
   `outbox.rs` picks push batches of whole cohorts and settles each reply, lost reply, or refusal in one transaction.
+  It also tells whether the file is behind its own device record.
 - App runtime: `app/` — DB connection (`parse_json_column` for JSON TEXT columns), init/seed, keyring secrets, clock/UUID helpers.
 - Shared errors: `app::error` (`AppError` + `error_codes`) is the intentional crate-wide error type. Domain validation returns it so codes stay aligned with `@koloda/app`; domain must not import `rusqlite`.
 - Migrations: `migrations/` — owned Refinery SQL embedded via `embed_migrations!`.

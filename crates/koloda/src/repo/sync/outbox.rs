@@ -135,6 +135,7 @@ pub fn settle_push(
             let mut changed = Changed::default();
             let mut consumed = HashSet::new();
             let mut reached = 0;
+            let mut highest_consumed = 0;
             let mut is_behind = false;
             for (item, outcome) in batch.items.iter().zip(outcomes) {
                 if item.sender_seq != outcome.sender_seq {
@@ -147,7 +148,12 @@ pub fn settle_push(
                 let commit_id = settle_item(tx, item, outcome.outcome, own, starter, &mut changed)?;
                 consumed.insert(commit_id);
                 reached += 1;
+                highest_consumed = item.sender_seq;
             }
+            tx.execute(
+                "UPDATE sync_state SET last_observed_server_seq = MAX(last_observed_server_seq, ?1) WHERE id = 1",
+                params![highest_consumed],
+            )?;
 
             // WHY: an item the reply did not reach was not consumed. A first send leaves flight, so a later write may
             // still replace it; a fixed cohort's row keeps its bytes, which an earlier lost push may have consumed.
@@ -242,6 +248,78 @@ fn settle_item(
         | Outcome::SeqReused => {}
     }
     Ok(commit_id)
+}
+
+pub fn has_pending(db: &Database) -> Result<bool, AppError> {
+    throw_known_error(error_codes::DB_GET, || {
+        db.with_conn(|conn| {
+            let has_rows = conn.query_row("SELECT EXISTS (SELECT 1 FROM sync_outbox)", [], |row| row.get(0))?;
+            Ok(has_rows)
+        })
+    })
+}
+
+/// How the file stands against its own device record (`PROTOCOL.md` §Devices).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Standing {
+    Current,
+    Behind,
+    /// The record has consumed seqs after the last one this file saw consumed. Unless the server's receipts for
+    /// `after < seq <= last_sender_seq` are all this file's own rows in flight, another copy pushed them.
+    Unaccounted {
+        after: u64,
+    },
+}
+
+/// Compares the file with the `last_sender_seq` the caller read from its device record.
+///
+/// A row in flight is not a sign: it went out before, and its retry is a replay or comes back `seq_reused`.
+pub fn standing(db: &Database, last_sender_seq: u64) -> Result<Standing, AppError> {
+    throw_known_error(error_codes::DB_GET, || {
+        db.with_conn(|conn| {
+            let (is_behind, observed): (bool, u64) = conn.query_row(
+                r#"
+                SELECT ?1 >= s.next_sender_seq
+                    OR EXISTS (SELECT 1 FROM sync_outbox WHERE in_flight = 0 AND sender_seq <= ?1),
+                    s.last_observed_server_seq
+                FROM sync_state s WHERE s.id = 1
+                "#,
+                params![last_sender_seq],
+                |row| Ok((row.get(0)?, row.get(1)?)),
+            )?;
+            Ok(if is_behind {
+                Standing::Behind
+            } else if last_sender_seq > observed {
+                Standing::Unaccounted { after: observed }
+            } else {
+                Standing::Current
+            })
+        })
+    })
+}
+
+/// Whether any of these receipts of the file's own sender is not one of its rows in flight, by seq and digest.
+///
+/// WHY: a seq the file numbered and then dropped, as when a second save replaced an unsent row, has no receipt;
+/// a receipt that matches no row in flight was pushed by another copy of the file.
+pub fn has_foreign_receipt(db: &Database, receipts: &[(u64, [u8; 32])]) -> Result<bool, AppError> {
+    throw_known_error(error_codes::DB_GET, || {
+        db.with_conn(|conn| {
+            for (sender_seq, digest) in receipts {
+                let is_own: bool = conn.query_row(
+                    r#"
+                    SELECT EXISTS (SELECT 1 FROM sync_outbox WHERE sender_seq = ?1 AND digest = ?2 AND in_flight = 1)
+                    "#,
+                    params![sender_seq, digest.as_slice()],
+                    |row| row.get(0),
+                )?;
+                if !is_own {
+                    return Ok(true);
+                }
+            }
+            Ok(false)
+        })
+    })
 }
 
 /// Handles an error reply to a push, which consumed nothing (`PROTOCOL.md` §Push outcomes).

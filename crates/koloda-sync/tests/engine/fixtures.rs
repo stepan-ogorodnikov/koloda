@@ -2,20 +2,23 @@
 
 use std::collections::HashMap;
 
+use koloda::app::init::SeedSettings;
 use koloda::domain::algorithms::InsertAlgorithmData;
-use koloda::domain::cards::{CardContentField, InsertCardData};
+use koloda::domain::cards::{CardContentField, InsertCardData, UpdateCardProgress};
 use koloda::domain::decks::{Deck, InsertDeckData, UpdateDeckData, UpdateDeckValues};
+use koloda::domain::lessons::LessonResultData;
+use koloda::domain::reviews::InsertReviewData;
 use koloda::domain::templates::{
     InsertTemplateData, TemplateContent, TemplateField, TemplateLayoutItem, UpdateTemplateData, UpdateTemplateValues,
 };
 use koloda::repo::sync::repair::Starter;
-use koloda::repo::{algorithms, cards, decks, templates};
+use koloda::repo::{algorithms, cards, decks, lessons, templates};
 use serde_json::json;
 
-use crate::common::Device;
+use crate::common::{system_ms, Device};
 
-const FRONT: &str = "01900000-0000-7000-8000-000000000001";
-const BACK: &str = "01900000-0000-7000-8000-000000000002";
+pub const FRONT: &str = "01900000-0000-7000-8000-000000000001";
+pub const BACK: &str = "01900000-0000-7000-8000-000000000002";
 
 /// An algorithm, a template, a deck on both, and one card.
 pub struct Library {
@@ -29,6 +32,41 @@ pub fn starter() -> Starter {
     Starter {
         algorithm: algorithm_data("Starter"),
         template: template_data("Starter"),
+    }
+}
+
+/// First-run settings for a blank joiner; `seed_joiner_db` points the learning defaults at the seed ids.
+pub fn seed_settings() -> SeedSettings {
+    SeedSettings {
+        interface: json!({
+            "language": "en",
+            "scheme": "system",
+            "lightTheme": "github-light",
+            "darkTheme": "github-dark",
+            "motion": "system",
+        }),
+        learning: json!({
+            "defaults": { "algorithm": "unset", "template": "unset" },
+            "dailyLimits": {
+                "total": 100,
+                "untouched": { "value": 20, "counts": true },
+                "learn": { "value": 30, "counts": true },
+                "review": { "value": 50, "counts": true },
+            },
+            "dayStartsAt": "04:00",
+            "learnAheadLimit": [4, 0],
+        }),
+        hotkeys: json!({
+            "ui": { "focusNext": ["Alt+J"], "focusPrev": ["Alt+K"], "nextTab": ["J"], "prevTab": ["K"] },
+            "navigation": {
+                "dashboard": ["H"],
+                "decks": ["D"],
+                "algorithms": ["P"],
+                "templates": ["T"],
+                "settings": ["Mod+,"],
+            },
+            "grades": { "again": ["1"], "hard": ["2"], "normal": ["3"], "easy": ["4"] },
+        }),
     }
 }
 
@@ -188,6 +226,68 @@ impl Device {
             },
         )
         .expect("template is updated");
+    }
+
+    /// Grades a new card `Good`, as a lesson submits it: its scheduling and one review in one commit.
+    pub fn grade(&self, card: &str) {
+        let now = i64::try_from(system_ms()).expect("now fits");
+        let due_at = now + 600_000;
+        lessons::submit_lesson_result(
+            &self.db,
+            LessonResultData {
+                card: UpdateCardProgress {
+                    id: card.to_string(),
+                    state: 1,
+                    due_at,
+                    stability: 1.0,
+                    difficulty: 5.0,
+                    scheduled_days: 0,
+                    learning_steps: 1,
+                    reps: 1,
+                    lapses: 0,
+                    last_reviewed_at: Some(now),
+                },
+                review: InsertReviewData {
+                    card_id: card.to_string(),
+                    rating: 3,
+                    state: 1,
+                    due_at,
+                    stability: 1.0,
+                    difficulty: 5.0,
+                    scheduled_days: 0,
+                    learning_steps: 1,
+                    time: 10,
+                    is_ignored: false,
+                },
+            },
+        )
+        .expect("the grade is saved");
+    }
+
+    pub fn card_front(&self, card: &str) -> String {
+        self.text(&format!(
+            r#"SELECT json_extract(content, '$."{FRONT}".text') FROM cards WHERE id = '{card}'"#
+        ))
+    }
+
+    pub fn reviews(&self, card: &str) -> i64 {
+        self.count(&format!("SELECT COUNT(*) FROM reviews WHERE card_id = '{card}'"))
+    }
+
+    pub fn cursors(&self) -> (i64, i64) {
+        (
+            self.count("SELECT cursor_hot FROM sync_state"),
+            self.count("SELECT cursor_cold FROM sync_state"),
+        )
+    }
+
+    pub fn learning_defaults(&self) -> (String, String) {
+        let default = |key: &str| {
+            self.text(&format!(
+                "SELECT json_extract(content, '$.defaults.{key}') FROM settings WHERE name = 'learning'"
+            ))
+        };
+        (default("algorithm"), default("template"))
     }
 
     pub fn deck(&self, id: &str) -> Option<Deck> {

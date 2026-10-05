@@ -4,14 +4,16 @@
 use std::collections::{HashMap, VecDeque};
 use std::sync::atomic::{AtomicI64, AtomicU64, Ordering};
 use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use axum::body::{to_bytes, Body};
 use axum::http::header::{ACCEPT_ENCODING, AUTHORIZATION, CONTENT_ENCODING, CONTENT_TYPE};
 use axum::Router;
 use koloda::app::db::Database;
 use koloda::app::error::AppError;
+use koloda::app::init::seed_joiner_db;
 use koloda::app::secrets::SecretStore;
+use koloda::repo::sync::{enroll_device, SpaceRole};
 use koloda_server::clock::Clock;
 use koloda_server::server::Server;
 use koloda_server::{data_dir, router};
@@ -22,15 +24,17 @@ use koloda_sync_proto::hlc::{DeviceId, Hlc, Stamp};
 use koloda_sync_proto::payload::{seal, Payload, Seal};
 use koloda_sync_proto::registry::Lane;
 use koloda_sync_proto::transport::{
-    ClaimPairing, Enrollment, IssuePairing, Pairing, PairingClaim, Platform, PullPage, Push, PushItem, PushReply, Reply,
+    ClaimPairing, Empty, Enrollment, ErrorBody, ErrorCode, IssuePairing, Meta, Pairing, PairingClaim, Platform,
+    PullPage, Push, PushItem, PushReply, Reply,
 };
-use rusqlite::OptionalExtension;
+use rusqlite::backup::Backup;
+use rusqlite::{Connection, OptionalExtension};
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use tempfile::TempDir;
 use uuid::Uuid;
 
-use crate::fixtures::starter;
+use crate::fixtures::{seed_settings, starter};
 
 pub const SERVER_URL: &str = "https://sync.test";
 
@@ -76,8 +80,14 @@ impl TestServer {
 
     /// A blank file with its own engine and transport.
     pub fn device(&self) -> Device {
-        let db = Database::in_memory().expect("in-memory database");
-        let secrets = Arc::new(MemorySecrets::default());
+        self.device_on(
+            Database::in_memory().expect("in-memory database"),
+            MemorySecrets::default(),
+        )
+    }
+
+    fn device_on(&self, db: Database, secrets: MemorySecrets) -> Device {
+        let secrets = Arc::new(secrets);
         let transport = Arc::new(RouterTransport::new(self.router.clone()));
         let engine = Engine::start(
             db.clone(),
@@ -95,6 +105,44 @@ impl TestServer {
         }
     }
 
+    /// A second engine in the creator's space: a blank file seeded as a joiner and enrolled through a claim the test
+    /// makes, so it pulls from 0 with no bootstrap.
+    pub fn join(&self, creator: &Device) -> Device {
+        let enrollment = self.pair(creator);
+        let device_id = Uuid::from_bytes(enrollment.device_id);
+        let joiner = self.device();
+        joiner
+            .secrets
+            .set(&format!("sync.token.{device_id}"), &enrollment.token)
+            .expect("the token is stored");
+        seed_joiner_db(&joiner.db, seed_settings()).expect("the joiner seeds its settings");
+        enroll_device(
+            &joiner.db,
+            device_id,
+            Uuid::from_bytes(enrollment.space_id),
+            SpaceRole::Joiner,
+            Uuid::from_bytes(enrollment.epoch),
+            SERVER_URL,
+        )
+        .expect("the joiner enrolls");
+        joiner
+    }
+
+    /// A copy of the device's file with the same token, as a restored backup or a copied file holds.
+    pub fn copy(&self, device: &Device) -> Device {
+        let mut conn = Connection::open_in_memory().expect("in-memory database");
+        device
+            .db
+            .with_conn(|source| {
+                Backup::new(source, &mut conn)?.run_to_completion(64, Duration::ZERO, None)?;
+                Ok(())
+            })
+            .expect("the file copies");
+        conn.pragma_update(None, "foreign_keys", "ON")
+            .expect("foreign keys turn on");
+        self.device_on(Database::new(conn), device.secrets.copy())
+    }
+
     /// A call the engine does not make, for checking what the server holds.
     pub fn call<T: DeserializeOwned>(&self, method: Method, path: &str, token: &str) -> (u16, Reply<T>) {
         self.send(method, path, Some(token), None)
@@ -106,9 +154,7 @@ impl TestServer {
         token: Option<&str>,
         body: &B,
     ) -> (u16, Reply<T>) {
-        let mut bytes = Vec::new();
-        ciborium::into_writer(body, &mut bytes).expect("encode a test body");
-        self.send(Method::Post, path, token, Some(bytes))
+        self.send(Method::Post, path, token, Some(cbor(body)))
     }
 
     fn send<T: DeserializeOwned>(
@@ -118,13 +164,16 @@ impl TestServer {
         token: Option<&str>,
         body: Option<Vec<u8>>,
     ) -> (u16, Reply<T>) {
-        let request = Request {
+        self.request(Request {
             method,
             url: format!("{SERVER_URL}{path}"),
             token: token.map(str::to_string),
             body,
             is_zstd: false,
-        };
+        })
+    }
+
+    pub fn request<T: DeserializeOwned>(&self, request: Request) -> (u16, Reply<T>) {
         let response = tokio::runtime::Builder::new_current_thread()
             .build()
             .expect("test runtime")
@@ -194,30 +243,46 @@ impl Space {
 
     /// Seals and pushes one envelope from the raw client at its next seq.
     pub fn raw_push(&self, id: &str, parent: Option<&str>, stamp: Stamp, payload: &Payload) -> PushReply {
-        let envelope = seal(
-            Seal {
-                id: id.to_string(),
-                parent: parent.map(str::to_string),
-                stamp,
-                commit_id: *Uuid::new_v4().as_bytes(),
-            },
-            payload,
-        )
-        .expect("payload seals")
-        .bytes;
-        let push = Push {
-            items: vec![PushItem {
-                sender_seq: self.raw_seq.fetch_add(1, Ordering::SeqCst),
-                envelope,
-            }],
-        };
-        let (status, reply) = self.server.post::<_, PushReply>(
-            &format!("/v1/spaces/{}/push", self.space_id()),
-            Some(&self.raw.token),
-            &push,
-        );
+        let request = self.raw_request(vec![(
+            id.to_string(),
+            parent.map(str::to_string),
+            stamp,
+            payload.clone(),
+        )]);
+        let (status, reply) = self.server.request::<PushReply>(request);
         assert_eq!(status, 200, "the raw push is accepted: {:?}", reply.error);
         reply.ok.expect("a push reply")
+    }
+
+    /// A push of hand-sealed envelopes in one commit from the raw client at its next seqs, to send later.
+    pub fn raw_request(&self, items: Vec<(String, Option<String>, Stamp, Payload)>) -> Request {
+        let commit_id = *Uuid::new_v4().as_bytes();
+        let push = Push {
+            items: items
+                .into_iter()
+                .map(|(id, parent, stamp, payload)| PushItem {
+                    sender_seq: self.raw_seq.fetch_add(1, Ordering::SeqCst),
+                    envelope: seal(
+                        Seal {
+                            id,
+                            parent,
+                            stamp,
+                            commit_id,
+                        },
+                        &payload,
+                    )
+                    .expect("payload seals")
+                    .bytes,
+                })
+                .collect(),
+        };
+        Request {
+            method: Method::Post,
+            url: format!("{SERVER_URL}/v1/spaces/{}/push", self.space_id()),
+            token: Some(self.raw.token.clone()),
+            body: Some(cbor(&push)),
+            is_zstd: false,
+        }
     }
 
     /// What other senders pushed to a lane after `after`, as the raw client pulls it.
@@ -306,6 +371,12 @@ impl Device {
             .expect("count query runs")
     }
 
+    pub fn text(&self, sql: &str) -> String {
+        self.db
+            .with_conn(|conn| Ok(conn.query_row(sql, [], |row| row.get(0))?))
+            .expect("text query runs")
+    }
+
     /// Sets up a state that no sequence of product writes reaches.
     pub fn execute(&self, sql: &str) {
         self.db
@@ -338,18 +409,20 @@ impl Device {
     }
 }
 
-/// What the transport does with the next request instead of a plain round trip.
+/// What the transport does with a request instead of a plain round trip.
 pub enum Fault {
     /// The server handles the request, but its reply never arrives.
     LoseReply,
     /// The server never sees the request; this reply arrives instead.
     Reply(Response),
+    /// The server handles the request, then these other requests, and the first reply arrives.
+    After(Vec<Request>),
 }
 
-/// Calls the router in process. Faults queued with `fault` apply to the next requests, one each.
+/// Calls the router in process. Each queued fault applies once, to the next request whose URL contains its pattern.
 pub struct RouterTransport {
     router: Router,
-    faults: Mutex<VecDeque<Fault>>,
+    faults: Mutex<VecDeque<(String, Fault)>>,
     sent: Mutex<Vec<Request>>,
 }
 
@@ -363,7 +436,14 @@ impl RouterTransport {
     }
 
     pub fn fault(&self, fault: Fault) {
-        self.faults.lock().expect("faults lock").push_back(fault);
+        self.fault_on("", fault);
+    }
+
+    pub fn fault_on(&self, pattern: &str, fault: Fault) {
+        self.faults
+            .lock()
+            .expect("faults lock")
+            .push_back((pattern.to_string(), fault));
     }
 
     /// Every request the engine sent, faulted ones included.
@@ -376,12 +456,27 @@ impl Transport for RouterTransport {
     fn send(&self, request: Request) -> Sending<'_> {
         Box::pin(async move {
             self.sent.lock().expect("sent lock").push(request.clone());
-            let fault = self.faults.lock().expect("faults lock").pop_front();
+            let fault = {
+                let mut faults = self.faults.lock().expect("faults lock");
+                faults
+                    .iter()
+                    .position(|(pattern, _)| request.url.contains(pattern.as_str()))
+                    .and_then(|position| faults.remove(position))
+                    .map(|(_, fault)| fault)
+            };
             match fault {
                 Some(Fault::Reply(response)) => Ok(response),
                 Some(Fault::LoseReply) => {
                     forward(&self.router, request).await;
                     Err(TransportError("the reply was lost".to_string()))
+                }
+                Some(Fault::After(others)) => {
+                    let response = forward(&self.router, request).await;
+                    for other in others {
+                        let status = forward(&self.router, other).await.status;
+                        assert_eq!(status, 200, "a request between the engine's requests is accepted");
+                    }
+                    Ok(response)
                 }
                 None => Ok(forward(&self.router, request).await),
             }
@@ -435,10 +530,41 @@ fn decode<T: DeserializeOwned>(response: &Response) -> Reply<T> {
     ciborium::from_reader(bytes.as_slice()).expect("every response is a CBOR reply")
 }
 
+/// An error reply shaped as the server sends one, for a fault to answer with.
+pub fn error_reply(status: u16, code: ErrorCode) -> Response {
+    let reply: Reply<Empty> = Reply {
+        meta: Meta {
+            server_time_ms: system_ms(),
+            epoch: None,
+            device: None,
+        },
+        ok: None,
+        error: Some(ErrorBody {
+            code,
+            message: "injected by the test".to_string(),
+        }),
+    };
+    Response {
+        status,
+        body: cbor(&reply),
+        is_zstd: false,
+    }
+}
+
+fn cbor<B: Serialize>(body: &B) -> Vec<u8> {
+    let mut bytes = Vec::new();
+    ciborium::into_writer(body, &mut bytes).expect("encode a test body");
+    bytes
+}
+
 #[derive(Default)]
 pub struct MemorySecrets(Mutex<HashMap<String, String>>);
 
 impl MemorySecrets {
+    pub fn copy(&self) -> MemorySecrets {
+        MemorySecrets(Mutex::new(self.secrets().clone()))
+    }
+
     pub fn keys(&self) -> Vec<String> {
         self.secrets().keys().cloned().collect()
     }

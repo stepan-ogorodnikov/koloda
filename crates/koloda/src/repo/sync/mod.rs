@@ -85,23 +85,29 @@ pub struct SyncState {
     pub device_id: Uuid,
     pub space_id: Uuid,
     pub server_url: Option<String>,
+    pub cursor_hot: u64,
+    pub cursor_cold: u64,
 }
+
+type StateRow = (Vec<u8>, Vec<u8>, Option<String>, u64, u64);
 
 pub fn sync_state(db: &Database) -> Result<Option<SyncState>, AppError> {
     throw_known_error(error_codes::DB_GET, || {
         db.with_conn(|conn| {
-            let row: Option<(Vec<u8>, Vec<u8>, Option<String>)> = conn
+            let row: Option<StateRow> = conn
                 .query_row(
-                    "SELECT device_id, space_id, server_url FROM sync_state WHERE id = 1",
+                    "SELECT device_id, space_id, server_url, cursor_hot, cursor_cold FROM sync_state WHERE id = 1",
                     [],
-                    |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
+                    |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?, row.get(4)?)),
                 )
                 .optional()?;
-            row.map(|(device_id, space_id, server_url)| {
+            row.map(|(device_id, space_id, server_url, cursor_hot, cursor_cold)| {
                 Ok(SyncState {
                     device_id: Uuid::from_slice(&device_id).map_err(protocol_error)?,
                     space_id: Uuid::from_slice(&space_id).map_err(protocol_error)?,
                     server_url,
+                    cursor_hot,
+                    cursor_cold,
                 })
             })
             .transpose()

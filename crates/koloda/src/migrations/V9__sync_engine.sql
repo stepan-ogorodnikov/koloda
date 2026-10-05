@@ -15,3 +15,8 @@ CREATE TABLE IF NOT EXISTS sync_held (
 	envelope blob NOT NULL,
 	reason text NOT NULL
 );
+
+-- WHY: the highest seq of this device that a push reply showed consumed. A higher `last_sender_seq` on the device
+-- record with no row of this file in flight for the seqs between means another copy of the file pushed them
+-- (crates/koloda-sync-proto/PROTOCOL.md, Devices).
+ALTER TABLE sync_state ADD COLUMN last_observed_server_seq integer NOT NULL DEFAULT 0;

@@ -29,13 +29,14 @@ pub(crate) struct Shared {
     transport: Arc<dyn Transport>,
     platform: Platform,
     pub(crate) starter: Starter,
-    skew: Skew,
+    pub(crate) skew: Skew,
 }
 
 /// What every call to the enrolled space needs, read once per cycle.
 pub(crate) struct Session {
     pub(crate) base: String,
     pub(crate) space: Uuid,
+    pub(crate) device: Uuid,
     pub(crate) token: String,
 }
 
@@ -79,7 +80,7 @@ impl Engine {
             .block_on(shared.create_space(server_url, setup_token, space_name, device_name))
     }
 
-    /// Pushes the outbox, and returns the kinds whose product rows the outcomes changed.
+    /// Runs the sync cycle and returns the kinds whose product rows it changed.
     pub fn sync_now(&self) -> Result<Vec<Kind>, SyncError> {
         let shared = Arc::clone(&self.shared);
         self.runtime.block_on(shared.sync())
@@ -117,7 +118,7 @@ impl Shared {
     async fn sync(self: Arc<Self>) -> Result<Vec<Kind>, SyncError> {
         let session = self.session().await?;
         let mut changed = Vec::new();
-        self.push(&session, &mut changed).await?;
+        self.cycle(&session, &mut changed).await?;
         Ok(changed)
     }
 
@@ -130,6 +131,7 @@ impl Shared {
             Ok(state.server_url.zip(token).map(|(base, token)| Session {
                 base,
                 space: state.space_id,
+                device: state.device_id,
                 token,
             }))
         })
@@ -159,7 +161,8 @@ impl Shared {
         let enrollment: Enrollment = self
             .client(&base)
             .call(Method::Post, "/v1/spaces", Some(setup_token), Some(&request))
-            .await?;
+            .await?
+            .ok;
 
         self.blocking(move |shared| {
             let device = Uuid::from_bytes(enrollment.device_id);
@@ -174,6 +177,15 @@ impl Shared {
             )
         })
         .await
+    }
+}
+
+/// Adds kinds not already listed, keeping first-changed order.
+pub(crate) fn merge(changed: &mut Vec<Kind>, kinds: Vec<Kind>) {
+    for kind in kinds {
+        if !changed.contains(&kind) {
+            changed.push(kind);
+        }
     }
 }
 
