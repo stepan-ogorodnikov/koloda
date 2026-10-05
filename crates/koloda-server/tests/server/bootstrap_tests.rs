@@ -332,3 +332,30 @@ async fn ending_a_lease_sweeps_the_versions_only_it_kept() {
         (StatusCode::GONE, ErrorCode::LeaseExpired)
     );
 }
+
+#[tokio::test]
+async fn an_abandoned_lease_stops_pinning_once_its_ttl_ends() {
+    let harness = Harness::new();
+    let home = harness.create_space("Home").await;
+    let create = write(Kind::Decks, "deck", Group::Create, stamp(0, 0, 1));
+    let first_title = deck_title(1);
+    harness
+        .push(&home, vec![(1, create.clone()), (2, first_title.clone())])
+        .await
+        .ok();
+    open(&harness, &home).await.ok();
+    harness.push(&home, vec![(3, deck_title(2))]).await.ok();
+    let pinned = stored_bytes(&harness, &home).await;
+
+    // The device never heartbeats or releases; the next write after the TTL ends the lease.
+    harness.clock.advance(LEASE_TTL_MS + 1);
+    let notes = write(Kind::Decks, "deck", Group::Notes, stamp(LEASE_TTL_MS, 0, 1));
+    harness.push(&home, vec![(4, notes.clone())]).await.ok();
+
+    let len = |header: Header| u64::try_from(encode(header).len()).expect("small");
+    assert_eq!(
+        stored_bytes(&harness, &home).await,
+        pinned - len(first_title) + len(notes),
+        "the superseded title is swept with the lapsed lease"
+    );
+}
