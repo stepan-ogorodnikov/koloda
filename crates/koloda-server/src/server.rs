@@ -86,6 +86,16 @@ impl Server {
         Ok(())
     }
 
+    /// Sets the only schema the space accepts for `kind` (`PROTOCOL.md` §Schema versions).
+    pub fn set_write_schema(&self, space: Uuid, kind: Kind, schema: u32) -> Result<(), ApiError> {
+        let space = self.space(space)?.ok_or_else(ApiError::unknown_space)?;
+        lock(&space.writer)?.execute(
+            "UPDATE write_schema SET schema = ?1 WHERE kind = ?2",
+            params![schema, kind.as_wire()],
+        )?;
+        Ok(())
+    }
+
     pub(crate) fn space_epoch(&self, id: Uuid) -> Result<Uuid, ApiError> {
         let space = self.space(id)?.ok_or_else(ApiError::unknown_space)?;
         let epoch = lock(&space.reader)?.query_row("SELECT epoch FROM space WHERE id = 1", [], |row| row.get(0))?;

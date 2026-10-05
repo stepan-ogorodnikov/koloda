@@ -45,6 +45,7 @@ pub struct Harness {
     // WHY: dropping the TempDir deletes the data directory, so the harness holds it for its lifetime.
     _dir: TempDir,
     pub clock: Arc<ManualClock>,
+    pub server: Arc<Server>,
     pub router: Router,
     pub setup_token: String,
 }
@@ -71,9 +72,10 @@ impl Harness {
         let dir = tempfile::tempdir().expect("temporary data directory");
         let setup_token = data_dir::init(dir.path(), START_MS).expect("init a fresh data directory");
         let clock = Arc::new(ManualClock(AtomicU64::new(START_MS)));
-        let server = Server::open(dir.path(), clock.clone()).expect("open the initialized data directory");
+        let server = Arc::new(Server::open(dir.path(), clock.clone()).expect("open the initialized data directory"));
         Harness {
-            router: router(Arc::new(server)),
+            router: router(Arc::clone(&server)),
+            server,
             _dir: dir,
             clock,
             setup_token,

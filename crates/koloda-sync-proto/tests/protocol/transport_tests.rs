@@ -1,7 +1,9 @@
 use std::collections::BTreeMap;
 
 use ciborium::Value;
-use koloda_sync_proto::transport::{DeviceMeta, Enrollment, ErrorBody, ErrorCode, Meta, Outcome, Platform, Reply};
+use koloda_sync_proto::transport::{
+    DeviceMeta, Enrollment, ErrorBody, ErrorCode, HeldReason, Meta, Outcome, Platform, Reply,
+};
 use serde::Serialize;
 
 fn cbor<T: Serialize>(value: &T) -> Value {
@@ -125,6 +127,19 @@ fn outcomes_are_maps_tagged_by_status() {
     let cases = [
         (Outcome::Applied, vec![("status", "applied")]),
         (Outcome::Stale, vec![("status", "stale")]),
+        (Outcome::Existence, vec![("status", "existence")]),
+        (
+            Outcome::Held {
+                reason: HeldReason::Schema,
+            },
+            vec![("status", "held"), ("reason", "schema")],
+        ),
+        (
+            Outcome::Held {
+                reason: HeldReason::Dependency,
+            },
+            vec![("status", "held"), ("reason", "dependency")],
+        ),
         (Outcome::SeqReused, vec![("status", "seq_reused")]),
     ];
     for (outcome, expected) in cases {

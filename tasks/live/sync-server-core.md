@@ -235,7 +235,7 @@ Out:
   Commit: Accept pushed envelopes with sender sequences and receipts
   Depends on: 1
 
-- [ ] 4. Check parents, refs, and write schema on push
+- [x] 4. Check parents, refs, and write schema on push
   Goal: push checks existence as `PROTOCOL.md` §Cascades by ancestry and header refs states:
   - a create or immutable row whose `parent` has no create, and is not an earlier create in the same batch, is
     `existence`;

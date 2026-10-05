@@ -29,7 +29,7 @@ const ZSTD: &str = "zstd";
 const ZSTD_LEVEL: i32 = 3;
 
 #[derive(Debug)]
-pub(crate) struct ApiError {
+pub struct ApiError {
     status: StatusCode,
     code: ErrorCode,
     message: String,

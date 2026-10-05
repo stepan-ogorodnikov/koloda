@@ -56,7 +56,11 @@ async fn an_update_applies_only_when_its_stamp_beats_the_head() {
     harness
         .push(
             &home,
-            vec![(1, write(Kind::Decks, DECK, Group::Create, stamp(0, 0, 1)))],
+            vec![
+                (1, write(Kind::Templates, TEMPLATE, Group::Create, stamp(0, 0, 1))),
+                (2, write(Kind::Decks, DECK, Group::Create, stamp(0, 0, 1))),
+                (3, card_create(CARD, DECK, TEMPLATE, stamp(0, 0, 1))),
+            ],
         )
         .await
         .ok();
@@ -87,7 +91,7 @@ async fn an_update_applies_only_when_its_stamp_beats_the_head() {
             Outcome::Stale,
         ),
     ];
-    for (seq, (name, header, expected)) in (2..).zip(cases) {
+    for (seq, (name, header, expected)) in (4..).zip(cases) {
         let reply = harness.push(&home, vec![(seq, header)]).await;
 
         assert_eq!(outcomes(reply.ok()), vec![(seq, expected, false)], "{name}");

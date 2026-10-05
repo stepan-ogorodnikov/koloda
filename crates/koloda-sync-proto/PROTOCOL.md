@@ -778,7 +778,8 @@ Names are 1 to 100 characters after trimming.
 Creating a space also enrolls its creator, so the first device needs no pairing code.
 The same `nonce` returns the same result, token included, for 10 minutes.
 The claim reply gains `restore_points` with server restore (§Recovery).
-An outcome is a map tagged by `status`, such as `{ status: applied }`; a receipt range is `after < seq <= through`.
+An outcome is a map tagged by `status`, such as `{ status: applied }` or `{ status: held, reason: schema }`.
+A receipt range is `after < seq <= through`.
 
 ### Errors
 
@@ -791,11 +792,12 @@ An outcome is a map tagged by `status`, such as `{ status: applied }`; a receipt
 | `not_found` | 404 | A missing endpoint, or a record the caller cannot see |
 | `pairing_failed` | 404 | A used, expired, or wrong pairing code (§Pairing) |
 | `stamp_ahead` | 409 | A pushed stamp more than 5 minutes ahead of server now (§Skew guards) |
+| `schema_read_only` | 409 | A pushed schema above the kind's `write_schema` (§Schema versions) |
 | `too_large` | 413 | A body past its size or expansion cap |
 | `rate_limited` | 429 | Too many wrong pairing codes (§Pairing) |
 | `internal` | 500 | A server fault |
 
-The protocol also has `revoked` (401), `cursor_too_old`, `epoch_changed`, `schema_read_only`, and `507`.
+The protocol also has `revoked` (401), `cursor_too_old`, `epoch_changed`, and `507`.
 Each gets its row with the server work that answers it.
 
 ### Push outcomes
@@ -821,7 +823,9 @@ After a lost reply, the same-digest retry returns the same outcome.
 `held` reasons:
 
 - `schema`: the envelope's schema is not the kind's current `write_schema`.
-- `dependency`: it depends on an identity this sender has held.
+- `dependency`: it names, as its id, parent, or hard ref, an entity whose create this sender had held.
+  A create does not count its own id, so the regenerated create can land.
+  Any outcome of that create other than `held` releases the entity: its dependents then meet the ordinary rules.
 - `quota`: the space is over quota.
   Shrinking writes (tombstones) are still admitted, which is why holding consumes the seq.
 
@@ -1288,6 +1292,7 @@ A client reads every version of a kind up to its own, filling newer fields with 
 The server stores one `write_schema[kind]`, the only version accepted on push.
 A client that can write a newer version keeps emitting the current one until the operator raises it.
 Older writes come back `held { schema }`; newer ones are `schema_read_only`.
+`schema_read_only` fails the whole push and consumes nothing.
 Raise it after enrolled devices have advertised they can write the new version.
 
 A client that meets an unknown `schema` or `kind` holds that lane at that envelope.

@@ -27,6 +27,7 @@ CREATE TABLE IF NOT EXISTS versions (
     kind text NOT NULL,
     id text NOT NULL,
     grp text NOT NULL,
+    parent text,
     hlc integer NOT NULL,
     stamp_device blob NOT NULL,
     sender blob NOT NULL,
@@ -59,4 +60,12 @@ CREATE TABLE IF NOT EXISTS receipts (
     digest blob NOT NULL,
     outcome blob NOT NULL,
     PRIMARY KEY (sender, sender_seq)
+);
+
+-- Creates a sender had held: its later envelopes that name one of these entities are held too (held { dependency }).
+CREATE TABLE IF NOT EXISTS sender_holds (
+    sender blob NOT NULL,
+    kind text NOT NULL,
+    id text NOT NULL,
+    PRIMARY KEY (sender, kind, id)
 );

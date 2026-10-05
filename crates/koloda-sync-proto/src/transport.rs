@@ -67,6 +67,7 @@ pub enum ErrorCode {
     PairingFailed,
     RateLimited,
     StampAhead,
+    SchemaReadOnly,
     Internal,
 }
 
@@ -192,7 +193,16 @@ pub struct PushOutcome {
 pub enum Outcome {
     Applied,
     Stale,
+    Existence,
+    Held { reason: HeldReason },
     SeqReused,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum HeldReason {
+    Schema,
+    Dependency,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]

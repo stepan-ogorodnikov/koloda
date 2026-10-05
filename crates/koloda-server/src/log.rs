@@ -7,7 +7,7 @@ use std::collections::BTreeMap;
 
 use koloda_sync_proto::envelope::{Digest, Header};
 use koloda_sync_proto::hlc::{DeviceId, Hlc, Stamp};
-use koloda_sync_proto::registry::{allow, Class, Group};
+use koloda_sync_proto::registry::{allow, Class, Group, Kind};
 use koloda_sync_proto::transport::{Outcome, Receipt};
 use rusqlite::{params, Connection, OptionalExtension};
 use uuid::Uuid;
@@ -30,13 +30,20 @@ struct Head {
     stamp: Stamp,
 }
 
-/// Decides a new item by its group's class against the current head, and installs it when it wins.
-pub(crate) fn accept(tx: &Connection, entry: &Entry<'_>) -> Result<Outcome, ApiError> {
-    let header = entry.header;
-    let class = allow(header.kind, Some(entry.group), header.op)
+pub(crate) fn class(header: &Header, group: Group) -> Result<Class, ApiError> {
+    allow(header.kind, Some(group), header.op)
         .map_err(|error| ApiError::bad_request(error.to_string()))?
         .map(|spec| spec.class)
-        .ok_or_else(|| ApiError::internal("a write without a group spec"))?;
+        .ok_or_else(|| ApiError::internal("a write without a group spec"))
+}
+
+/// Decides a new item and installs it when it wins: existence first (`PROTOCOL.md` §Cascades by ancestry and
+/// header refs), then the group's class against the current head.
+pub(crate) fn accept(tx: &Connection, entry: &Entry<'_>, class: Class) -> Result<Outcome, ApiError> {
+    let header = entry.header;
+    if !exists(tx, header, class)? {
+        return Ok(Outcome::Existence);
+    }
     let current = head(tx, entry)?;
     let wins = match (class, &current) {
         (_, None) => true,
@@ -49,6 +56,42 @@ pub(crate) fn accept(tx: &Connection, entry: &Entry<'_>) -> Result<Outcome, ApiE
     }
     install(tx, entry, current)?;
     Ok(Outcome::Applied)
+}
+
+/// Whether this sender had a create held for an entity the envelope names as its id, parent, or hard ref.
+///
+/// A create does not name its own id here: the regenerated create of a held entity is what releases it.
+pub(crate) fn names_held(tx: &Connection, sender: Uuid, header: &Header, class: Class) -> Result<bool, ApiError> {
+    let skip = usize::from(class == Class::Create);
+    for (kind, id) in named(header).into_iter().skip(skip) {
+        let held = tx
+            .query_row(
+                "SELECT 1 FROM sender_holds WHERE sender = ?1 AND kind = ?2 AND id = ?3",
+                params![sender, kind.as_wire(), id],
+                |_| Ok(()),
+            )
+            .optional()?;
+        if held.is_some() {
+            return Ok(true);
+        }
+    }
+    Ok(false)
+}
+
+pub(crate) fn hold(tx: &Connection, sender: Uuid, header: &Header) -> Result<(), ApiError> {
+    tx.execute(
+        "INSERT OR IGNORE INTO sender_holds (sender, kind, id) VALUES (?1, ?2, ?3)",
+        params![sender, header.kind.as_wire(), header.id],
+    )?;
+    Ok(())
+}
+
+pub(crate) fn release(tx: &Connection, sender: Uuid, header: &Header) -> Result<(), ApiError> {
+    tx.execute(
+        "DELETE FROM sender_holds WHERE sender = ?1 AND kind = ?2 AND id = ?3",
+        params![sender, header.kind.as_wire(), header.id],
+    )?;
+    Ok(())
 }
 
 pub(crate) fn high_water(tx: &Connection, sender: Uuid) -> Result<u64, ApiError> {
@@ -149,6 +192,75 @@ pub(crate) fn size(conn: &Connection) -> Result<(BTreeMap<String, u64>, u64), Ap
     Ok((counts, bytes))
 }
 
+fn exists(tx: &Connection, header: &Header, class: Class) -> Result<bool, ApiError> {
+    let spec = header.kind.spec();
+    // WHY: the first version of an entity records its parent: the create of a kind that has one, else the
+    // immutable row itself. `settings.learning` has neither; sync never inserts it.
+    let first_group = if spec.groups.iter().any(|group| group.class == Class::Create) {
+        Some(Group::Create)
+    } else if class == Class::Immutable {
+        Some(Group::Row)
+    } else {
+        None
+    };
+    let first = match first_group {
+        Some(group) => first_version(tx, header.kind, &header.id, group)?,
+        None => None,
+    };
+    if class == Class::Update && first_group.is_some() && first.is_none() {
+        return Ok(false);
+    }
+    if class != Class::Update {
+        if let (Some(parent_kind), Some(parent)) = (spec.parent, &header.parent) {
+            if first_version(tx, parent_kind, parent, Group::Create)?.is_none() {
+                return Ok(false);
+            }
+        }
+    }
+    if first.is_some_and(|first_parent| first_parent != header.parent) {
+        return Ok(false);
+    }
+    for (kind, id) in hard_refs(header) {
+        if first_version(tx, kind, id, Group::Create)?.is_none() {
+            return Ok(false);
+        }
+    }
+    Ok(true)
+}
+
+/// The parent recorded by the head of `(kind, id, group)`, or `None` when there is no such head.
+fn first_version(tx: &Connection, kind: Kind, id: &str, group: Group) -> Result<Option<Option<String>>, ApiError> {
+    Ok(tx
+        .query_row(
+            "SELECT v.parent FROM heads h JOIN versions v ON v.lane = h.lane AND v.seq = h.seq
+             WHERE h.kind = ?1 AND h.id = ?2 AND h.grp = ?3",
+            params![kind.as_wire(), id, group.as_wire()],
+            |row| row.get(0),
+        )
+        .optional()?)
+}
+
+fn hard_refs(header: &Header) -> Vec<(Kind, &str)> {
+    let refs = &header.refs;
+    [
+        (Kind::Algorithms, refs.algorithm_id.as_deref()),
+        (Kind::Templates, refs.template_id.as_deref()),
+    ]
+    .into_iter()
+    .filter_map(|(kind, id)| id.map(|id| (kind, id)))
+    .collect()
+}
+
+// INVARIANT: the entity itself comes first; `names_held` skips it for creates.
+fn named(header: &Header) -> Vec<(Kind, &str)> {
+    let mut named = vec![(header.kind, header.id.as_str())];
+    if let (Some(parent_kind), Some(parent)) = (header.kind.spec().parent, &header.parent) {
+        named.push((parent_kind, parent.as_str()));
+    }
+    named.extend(hard_refs(header));
+    named
+}
+
 fn head(tx: &Connection, entry: &Entry<'_>) -> Result<Option<Head>, ApiError> {
     let header = entry.header;
     let row = tx
@@ -191,14 +303,15 @@ fn install(tx: &Connection, entry: &Entry<'_>, replaced: Option<Head>) -> Result
         |row| row.get(0),
     )?;
     tx.execute(
-        "INSERT INTO versions (lane, seq, kind, id, grp, hlc, stamp_device, sender, sender_seq, digest, bytes)
-         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)",
+        "INSERT INTO versions (lane, seq, kind, id, grp, parent, hlc, stamp_device, sender, sender_seq, digest, bytes)
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12)",
         params![
             lane,
             seq,
             header.kind.as_wire(),
             header.id,
             entry.group.as_wire(),
+            header.parent,
             header.stamp.hlc.raw(),
             header.stamp.device.0.to_vec(),
             entry.sender,

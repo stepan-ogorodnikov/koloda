@@ -2,6 +2,7 @@
 //!
 //! A push is atomic: one transaction under the space writer lock consumes every new item or none.
 
+use std::collections::HashMap;
 use std::sync::Arc;
 
 use axum::body::Body;
@@ -11,10 +12,11 @@ use axum::http::{HeaderMap, StatusCode};
 use axum::response::Response;
 use koloda_sync_proto::envelope::{digest, Envelope};
 use koloda_sync_proto::hlc::check_not_ahead_of_server;
-use koloda_sync_proto::registry::Op;
+use koloda_sync_proto::registry::{Class, Kind, Op};
 use koloda_sync_proto::transport::{
-    ErrorCode, Outcome, Push, PushOutcome, PushReply, Receipts, MAX_PUSH_ITEMS, MAX_RECEIPT_RANGE,
+    ErrorCode, HeldReason, Outcome, Push, PushOutcome, PushReply, Receipts, MAX_PUSH_ITEMS, MAX_RECEIPT_RANGE,
 };
+use rusqlite::Connection;
 use serde::Deserialize;
 use uuid::Uuid;
 
@@ -79,12 +81,32 @@ fn push_batch(server: &Server, caller: &DeviceAuth, request: Push) -> Result<Pus
     let mut conn = lock(&space.writer)?;
     let tx = conn.transaction()?;
     let mut high_water = log::high_water(&tx, caller.id)?;
+    let write_schema = write_schema(&tx)?;
+    let accepted_schema = |kind: Kind| {
+        write_schema
+            .get(kind.as_wire())
+            .copied()
+            .ok_or_else(|| ApiError::internal(format!("no write schema for `{}`", kind.as_wire())))
+    };
 
-    // INVARIANT: the guard fails the push before anything is consumed, so every cohort in it can return to `local`
-    // and be re-stamped. Replays were accepted under the guard once and are not checked again.
+    // INVARIANT: these checks fail the push before anything is consumed, so every cohort in it can return to
+    // `local`. Replays were accepted under them once and are not checked again.
     for item in items.iter().filter(|item| item.sender_seq > high_water) {
-        check_not_ahead_of_server(item.envelope.header.stamp.hlc, now)
+        let header = &item.envelope.header;
+        check_not_ahead_of_server(header.stamp.hlc, now)
             .map_err(|error| ApiError::new(StatusCode::CONFLICT, ErrorCode::StampAhead, error.to_string()))?;
+        let accepted = accepted_schema(header.kind)?;
+        if header.schema > accepted {
+            return Err(ApiError::new(
+                StatusCode::CONFLICT,
+                ErrorCode::SchemaReadOnly,
+                format!(
+                    "`{}` accepts writes at schema {accepted}, not {}",
+                    header.kind.as_wire(),
+                    header.schema
+                ),
+            ));
+        }
     }
 
     let mut outcomes = Vec::with_capacity(items.len());
@@ -122,7 +144,27 @@ fn push_batch(server: &Server, caller: &DeviceAuth, request: Push) -> Result<Pus
             digest,
             bytes: &item.bytes,
         };
-        let outcome = log::accept(&tx, &entry)?;
+        let class = log::class(header, group)?;
+        let outcome = if header.schema < accepted_schema(header.kind)? {
+            Outcome::Held {
+                reason: HeldReason::Schema,
+            }
+        } else if log::names_held(&tx, caller.id, header, class)? {
+            Outcome::Held {
+                reason: HeldReason::Dependency,
+            }
+        } else {
+            log::accept(&tx, &entry, class)?
+        };
+        if class == Class::Create {
+            if matches!(outcome, Outcome::Held { .. }) {
+                log::hold(&tx, caller.id, header)?;
+            } else {
+                // WHY: any consumed outcome of the sender's own create settles the entity, so its dependents
+                // stop waiting and meet the ordinary rules (`stale` means another device created it).
+                log::release(&tx, caller.id, header)?;
+            }
+        }
         log::record(&tx, &entry, outcome)?;
         high_water = item.sender_seq;
         outcomes.push(PushOutcome {
@@ -133,6 +175,14 @@ fn push_batch(server: &Server, caller: &DeviceAuth, request: Push) -> Result<Pus
     }
     tx.commit()?;
     Ok(PushReply { outcomes })
+}
+
+fn write_schema(tx: &Connection) -> Result<HashMap<String, u32>, ApiError> {
+    let mut statement = tx.prepare("SELECT kind, schema FROM write_schema")?;
+    let schemas = statement
+        .query_map([], |row| Ok((row.get(0)?, row.get(1)?)))?
+        .collect::<Result<HashMap<_, _>, _>>()?;
+    Ok(schemas)
 }
 
 fn decode_items(request: Push) -> Result<Vec<Item>, ApiError> {
