@@ -61,15 +61,17 @@ pub fn enroll_device(
         db.with_transaction(|tx| {
             tx.execute(
                 r#"
-                INSERT INTO sync_state (id, device_id, space_id, last_hlc, next_sender_seq, role, epoch, server_url)
-                VALUES (1, ?1, ?2, 0, 1, ?3, ?4, ?5)
+                INSERT INTO sync_state
+                    (id, device_id, space_id, last_hlc, next_sender_seq, role, epoch, server_url, is_bootstrapping)
+                VALUES (1, ?1, ?2, 0, 1, ?3, ?4, ?5, ?6)
                 "#,
                 params![
                     device_id.as_bytes().as_slice(),
                     space_id.as_bytes().as_slice(),
                     role.as_sql(),
                     epoch.as_bytes().as_slice(),
-                    server_url
+                    server_url,
+                    role == SpaceRole::Joiner
                 ],
             )?;
 
@@ -87,29 +89,45 @@ pub struct SyncState {
     pub server_url: Option<String>,
     pub cursor_hot: u64,
     pub cursor_cold: u64,
+    pub is_bootstrapping: bool,
 }
 
-type StateRow = (Vec<u8>, Vec<u8>, Option<String>, u64, u64);
+type StateRow = (Vec<u8>, Vec<u8>, Option<String>, u64, u64, bool);
 
 pub fn sync_state(db: &Database) -> Result<Option<SyncState>, AppError> {
     throw_known_error(error_codes::DB_GET, || {
         db.with_conn(|conn| {
             let row: Option<StateRow> = conn
                 .query_row(
-                    "SELECT device_id, space_id, server_url, cursor_hot, cursor_cold FROM sync_state WHERE id = 1",
+                    r#"
+                    SELECT device_id, space_id, server_url, cursor_hot, cursor_cold, is_bootstrapping
+                    FROM sync_state WHERE id = 1
+                    "#,
                     [],
-                    |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?, row.get(4)?)),
+                    |row| {
+                        Ok((
+                            row.get(0)?,
+                            row.get(1)?,
+                            row.get(2)?,
+                            row.get(3)?,
+                            row.get(4)?,
+                            row.get(5)?,
+                        ))
+                    },
                 )
                 .optional()?;
-            row.map(|(device_id, space_id, server_url, cursor_hot, cursor_cold)| {
-                Ok(SyncState {
-                    device_id: Uuid::from_slice(&device_id).map_err(protocol_error)?,
-                    space_id: Uuid::from_slice(&space_id).map_err(protocol_error)?,
-                    server_url,
-                    cursor_hot,
-                    cursor_cold,
-                })
-            })
+            row.map(
+                |(device_id, space_id, server_url, cursor_hot, cursor_cold, is_bootstrapping)| {
+                    Ok(SyncState {
+                        device_id: Uuid::from_slice(&device_id).map_err(protocol_error)?,
+                        space_id: Uuid::from_slice(&space_id).map_err(protocol_error)?,
+                        server_url,
+                        cursor_hot,
+                        cursor_cold,
+                        is_bootstrapping,
+                    })
+                },
+            )
             .transpose()
         })
     })

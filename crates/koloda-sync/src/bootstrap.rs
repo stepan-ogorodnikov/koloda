@@ -1,0 +1,168 @@
+//! Union bootstrap of a joining file from a snapshot lease (`crates/koloda-sync-proto/PROTOCOL.md` §Bootstrap).
+//!
+//! INVARIANT: nothing is pushed until the bootstrap ends. Repairs it captures wait in the outbox, because a referent
+//! may still be on its way until `hot` has caught up to a head read after the lease.
+
+use std::sync::Arc;
+
+use koloda::repo::sync::apply::{apply_snapshot_page, finish_bootstrap, PageEntry};
+use koloda::repo::sync::repair::repair_dangling_defaults;
+use koloda_sync_proto::registry::{Kind, Lane};
+use koloda_sync_proto::transport::{Empty, ErrorCode, Lease, Snapshot, SnapshotPage};
+use uuid::Uuid;
+
+use crate::client::local_error;
+use crate::engine::{merge, Session, Shared};
+use crate::error::SyncError;
+use crate::transport::Method;
+
+// WHY: a lapsed lease restarts the bootstrap, and union apply makes the repeat safe; a call gives up after this many
+// leases so that a server whose leases keep lapsing cannot hold it forever.
+const MAX_LEASES: usize = 3;
+
+/// A lease this device holds, and the server time of the last reply, which decides when to heartbeat.
+pub(crate) struct OpenLease {
+    id: Uuid,
+    ttl_ms: u64,
+    expires_at: u64,
+    pub(crate) server_ms: u64,
+}
+
+impl Shared {
+    /// Bootstraps the file and returns the cursors the incremental cycle starts from.
+    pub(crate) async fn bootstrap(
+        self: &Arc<Self>,
+        session: &Session,
+        changed: &mut Vec<Kind>,
+    ) -> Result<(u64, u64), SyncError> {
+        let mut leases = 1;
+        loop {
+            match self.bootstrap_once(session, changed).await {
+                Err(SyncError::Server {
+                    code: ErrorCode::LeaseExpired,
+                    ..
+                }) if leases < MAX_LEASES => leases += 1,
+                result => return result,
+            }
+        }
+    }
+
+    async fn bootstrap_once(
+        self: &Arc<Self>,
+        session: &Session,
+        changed: &mut Vec<Kind>,
+    ) -> Result<(u64, u64), SyncError> {
+        let opened = self
+            .client(&session.base)
+            .call::<(), Snapshot>(
+                Method::Post,
+                &format!("/v1/spaces/{}/bootstrap", session.space),
+                Some(&session.token),
+                None,
+            )
+            .await?;
+        self.check_skew()?;
+        let snapshot = opened.ok;
+        let mut lease = OpenLease {
+            id: Uuid::from_bytes(snapshot.snapshot_id),
+            ttl_ms: snapshot.ttl_ms,
+            expires_at: snapshot.expires_at,
+            server_ms: opened.meta.server_time_ms,
+        };
+
+        self.stream(session, &mut lease, Lane::Hot, changed).await?;
+        // INVARIANT: `hot` catches up to a head read after the lease opened, so a tombstone committed meanwhile
+        // removes what the snapshot still pinned.
+        let mut cursor_hot = snapshot.head_hot;
+        self.pull(session, Lane::Hot, None, &mut cursor_hot, Some(&mut lease), changed)
+            .await?;
+        self.stream(session, &mut lease, Lane::Cold, changed).await?;
+
+        // WHY: the flag clears before the release, so a failed release costs a lingering lease, not a second bootstrap.
+        let cursor_cold = snapshot.head_cold;
+        self.blocking(move |shared| finish_bootstrap(&shared.db, cursor_cold))
+            .await?;
+        self.client(&session.base)
+            .call::<(), Empty>(
+                Method::Delete,
+                &format!("/v1/spaces/{}/bootstrap/{}", session.space, lease.id),
+                Some(&session.token),
+                None,
+            )
+            .await?;
+        let repaired = self
+            .blocking(|shared| repair_dangling_defaults(&shared.db, &shared.starter))
+            .await?;
+        merge(changed, repaired);
+        Ok((cursor_hot, cursor_cold))
+    }
+
+    /// Streams one lane of the snapshot, one transaction per page.
+    async fn stream(
+        self: &Arc<Self>,
+        session: &Session,
+        lease: &mut OpenLease,
+        lane: Lane,
+        changed: &mut Vec<Kind>,
+    ) -> Result<(), SyncError> {
+        let mut after = 0;
+        loop {
+            self.keep_alive(session, lease).await?;
+            let answer = self
+                .client(&session.base)
+                .call::<(), SnapshotPage>(
+                    Method::Get,
+                    &format!(
+                        "/v1/spaces/{}/bootstrap/{}?lane={}&after={after}",
+                        session.space,
+                        lease.id,
+                        lane.as_wire()
+                    ),
+                    Some(&session.token),
+                    None,
+                )
+                .await?;
+            lease.server_ms = answer.meta.server_time_ms;
+            self.check_skew()?;
+            let entries = answer
+                .ok
+                .entries
+                .into_iter()
+                .map(|entry| {
+                    Ok(PageEntry {
+                        sender: Uuid::from_bytes(entry.sender),
+                        sender_seq: i64::try_from(entry.sender_seq).map_err(local_error)?,
+                        envelope: entry.envelope,
+                    })
+                })
+                .collect::<Result<Vec<_>, SyncError>>()?;
+            let applied = self
+                .blocking(move |shared| apply_snapshot_page(&shared.db, lane, &entries, &shared.starter))
+                .await?;
+            merge(changed, applied);
+            after = answer.ok.next;
+            if answer.ok.done {
+                return Ok(());
+            }
+        }
+    }
+
+    /// Extends the lease once the last reply's server time is within half a TTL of its expiry.
+    pub(crate) async fn keep_alive(&self, session: &Session, lease: &mut OpenLease) -> Result<(), SyncError> {
+        if lease.server_ms.saturating_add(lease.ttl_ms / 2) < lease.expires_at {
+            return Ok(());
+        }
+        let answer = self
+            .client(&session.base)
+            .call::<(), Lease>(
+                Method::Post,
+                &format!("/v1/spaces/{}/bootstrap/{}/heartbeat", session.space, lease.id),
+                Some(&session.token),
+                None,
+            )
+            .await?;
+        lease.expires_at = answer.ok.expires_at;
+        lease.server_ms = answer.meta.server_time_ms;
+        Ok(())
+    }
+}

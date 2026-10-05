@@ -1107,6 +1107,13 @@
           "dflt_value": null
         },
         {
+          "name": "is_bootstrapping",
+          "type": "INTEGER",
+          "notnull": 1,
+          "pk": 0,
+          "dflt_value": "0"
+        },
+        {
           "name": "join_phase",
           "type": "TEXT",
           "notnull": 1,

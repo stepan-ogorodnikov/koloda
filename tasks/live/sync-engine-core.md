@@ -290,7 +290,7 @@ Out:
   Commit: Drive backfill from the sync cycle
   Depends on: 3
 
-- [ ] 5. Bootstrap joining devices from snapshot leases
+- [x] 5. Bootstrap joining devices from snapshot leases
   Goal: `koloda` gains `apply_snapshot_page`, which applies a page's entries by the apply rule and leaves the cursors
   alone.
   A second call sets one lane's cursor once its snapshot and catch-up are applied.

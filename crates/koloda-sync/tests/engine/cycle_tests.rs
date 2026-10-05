@@ -5,12 +5,12 @@ use koloda::domain::decks::DeleteDeckData;
 use koloda::domain::seed_ids::{SEED_ALGORITHM_SIMPLE_ID, SEED_TEMPLATE_TYPE_ID};
 use koloda::repo::{cards, decks};
 use koloda_sync::error::SyncError;
-use koloda_sync_proto::payload::{CardCreate, CardScheduling, Payload, Review};
+use koloda_sync_proto::payload::{CardCreate, CardScheduling, Payload};
 use koloda_sync_proto::registry::{Kind, Lane};
 use uuid::Uuid;
 
 use crate::common::{system_ms, Device, Fault, Space};
-use crate::fixtures::{BACK, FRONT};
+use crate::fixtures::{review, BACK, FRONT};
 
 #[test]
 fn two_devices_converge_on_edits_grades_and_deletes() {
@@ -79,22 +79,6 @@ fn two_devices_converge_on_edits_grades_and_deletes() {
         changed.contains(&Kind::Decks) && changed.contains(&Kind::Cards),
         "{changed:?}"
     );
-}
-
-fn review(card: &str, now: i64) -> Payload {
-    Payload::Review(Review {
-        card_id: card.to_string(),
-        rating: 3,
-        state: 1,
-        due_at: now + 600_000,
-        stability: 1.0,
-        difficulty: 5.0,
-        scheduled_days: 0,
-        learning_steps: 1,
-        time: 10,
-        is_ignored: false,
-        created_at: now,
-    })
 }
 
 #[test]

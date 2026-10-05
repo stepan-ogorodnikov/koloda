@@ -47,13 +47,59 @@ struct Entry {
 
 /// Applies one page and returns the kinds whose product rows it changed.
 pub fn apply_page(db: &Database, page: &Page, starter: &Starter) -> Result<Vec<Kind>, AppError> {
+    apply_entries(db, page.lane, &page.entries, starter, |tx| {
+        let cursor = match page.lane {
+            Lane::Hot => "cursor_hot",
+            Lane::Cold => "cursor_cold",
+        };
+        tx.execute(
+            &format!("UPDATE sync_state SET {cursor} = ?1 WHERE id = 1"),
+            params![page.scanned_through],
+        )?;
+        Ok(())
+    })
+}
+
+/// Applies one page of a bootstrap snapshot by the apply rule and leaves both cursors alone: a snapshot page is a
+/// stream position, not a lane seq (`PROTOCOL.md` §Bootstrap).
+pub fn apply_snapshot_page(
+    db: &Database,
+    lane: Lane,
+    entries: &[PageEntry],
+    starter: &Starter,
+) -> Result<Vec<Kind>, AppError> {
+    apply_entries(db, lane, entries, starter, |_| Ok(()))
+}
+
+/// Ends a bootstrap: `cold` resumes from the lease's cold head, and the next cycle pulls incrementally.
+///
+/// INVARIANT: call it once both snapshots and the `hot` catch-up are applied; `hot`'s cursor is already the
+/// catch-up's `scanned_through`.
+pub fn finish_bootstrap(db: &Database, cursor_cold: u64) -> Result<(), AppError> {
+    throw_known_error(error_codes::DB_UPDATE, || {
+        db.with_conn(|conn| {
+            conn.execute(
+                "UPDATE sync_state SET cursor_cold = ?1, is_bootstrapping = 0 WHERE id = 1",
+                params![cursor_cold],
+            )?;
+            Ok(())
+        })
+    })
+}
+
+fn apply_entries(
+    db: &Database,
+    lane: Lane,
+    entries: &[PageEntry],
+    starter: &Starter,
+    after: impl FnOnce(&Connection) -> Result<(), AppError>,
+) -> Result<Vec<Kind>, AppError> {
     throw_known_error(error_codes::DB_UPDATE, || {
         // INVARIANT: decode the whole page before writing. An entry that does not decode fails the page, so the
         // cursor never moves past an envelope that was not applied.
-        let entries = page
-            .entries
+        let entries = entries
             .iter()
-            .map(|entry| decode(page.lane, entry))
+            .map(|entry| decode(lane, entry))
             .collect::<Result<Vec<_>, _>>()?;
 
         db.with_transaction(|tx| {
@@ -63,16 +109,7 @@ pub fn apply_page(db: &Database, page: &Page, starter: &Starter) -> Result<Vec<K
                 observe(tx, entry.header.stamp.hlc)?;
                 apply_entry(tx, entry, starter, &mut changed)?;
             }
-
-            let cursor = match page.lane {
-                Lane::Hot => "cursor_hot",
-                Lane::Cold => "cursor_cold",
-            };
-            tx.execute(
-                &format!("UPDATE sync_state SET {cursor} = ?1 WHERE id = 1"),
-                params![page.scanned_through],
-            )?;
-
+            after(tx)?;
             Ok(changed.0)
         })
     })

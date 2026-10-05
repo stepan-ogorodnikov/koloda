@@ -20,3 +20,8 @@ CREATE TABLE IF NOT EXISTS sync_held (
 -- record with no row of this file in flight for the seqs between means another copy of the file pushed them
 -- (crates/koloda-sync-proto/PROTOCOL.md, Devices).
 ALTER TABLE sync_state ADD COLUMN last_observed_server_seq integer NOT NULL DEFAULT 0;
+
+-- WHY: a joiner bootstraps from a snapshot lease before its first incremental pull. The flag outlives a relaunch, so
+-- a file that stopped mid-bootstrap bootstraps again instead of pulling from 0 (crates/koloda-sync-proto/PROTOCOL.md,
+-- Bootstrap).
+ALTER TABLE sync_state ADD COLUMN is_bootstrapping integer NOT NULL DEFAULT 0;

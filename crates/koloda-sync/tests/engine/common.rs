@@ -52,6 +52,10 @@ impl OffsetClock {
     pub fn set_offset(&self, offset_ms: i64) {
         self.0.store(offset_ms, Ordering::SeqCst);
     }
+
+    pub fn advance(&self, ms: i64) {
+        self.0.fetch_add(ms, Ordering::SeqCst);
+    }
 }
 
 pub struct TestServer {
@@ -126,6 +130,11 @@ impl TestServer {
         )
         .expect("the joiner enrolls");
         joiner
+    }
+
+    /// A new engine on the same file and token, as after the app restarts.
+    pub fn relaunch(&self, device: &Device) -> Device {
+        self.device_on(device.db.clone(), device.secrets.copy())
     }
 
     /// A copy of the device's file with the same token, as a restored backup or a copied file holds.

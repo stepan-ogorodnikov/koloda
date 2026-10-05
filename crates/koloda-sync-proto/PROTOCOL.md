@@ -1055,6 +1055,22 @@ Then switch to incremental pulls from `H`.
 Join bootstrap is **union**: it never deletes a local id because the snapshot lacks it.
 Absence cleanup belongs only to re-bootstrap (§Recovery).
 
+On a joining device, bootstrap runs in this order:
+
+1. Open a lease and record its `head_hot` and `head_cold`.
+2. Stream the `hot` snapshot; its pages leave the cursors alone.
+3. Pull `hot` incrementally from `head_hot` to a head read after the lease opened.
+4. Stream the `cold` snapshot and set the `cold` cursor to the lease's `head_cold`.
+5. Clear the bootstrap flag, release the lease, and repair learning defaults.
+
+The normal cycle then pulls `cold` from that head.
+Nothing is pushed until the bootstrap ends.
+Every path that makes a joiner active sets a persisted flag, so a relaunch bootstraps again instead of pulling from
+0.
+The device heartbeats once the last reply's server time is within half a TTL of the lease's expiry.
+A lapsed lease (`410 lease_expired`) restarts the bootstrap from step 1; union apply makes the repeat safe.
+`429 rate_limited` waits for the next cycle.
+
 ### Metered networks
 
 Incremental sync of a small outbox and pulls near head always run.

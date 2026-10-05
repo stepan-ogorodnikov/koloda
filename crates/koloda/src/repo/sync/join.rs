@@ -200,7 +200,7 @@ fn require_pending(conn: &Connection) -> Result<(), AppError> {
 // captured afterwards is stamped above them.
 fn activate(conn: &Connection) -> Result<(), AppError> {
     conn.execute(
-        "UPDATE sync_state SET join_phase = 'active', role = ?1 WHERE id = 1",
+        "UPDATE sync_state SET join_phase = 'active', role = ?1, is_bootstrapping = 1 WHERE id = 1",
         params![SpaceRole::Joiner.as_sql()],
     )?;
     backfill::reserve(conn)

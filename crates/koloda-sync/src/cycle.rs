@@ -11,6 +11,7 @@ use koloda_sync_proto::registry::{Kind, Lane};
 use koloda_sync_proto::transport::{DeviceInfo, DeviceMeta, PullPage, Receipts, MAX_RECEIPT_RANGE};
 use uuid::Uuid;
 
+use crate::bootstrap::OpenLease;
 use crate::client::local_error;
 use crate::engine::{merge, Session, Shared};
 use crate::error::SyncError;
@@ -20,13 +21,17 @@ use crate::transport::Method;
 const MAX_ROUNDS: usize = 8;
 
 impl Shared {
-    /// Runs rounds until the outbox is empty and both cursors are at head, then repairs dangling learning defaults.
+    /// Bootstraps a joining file first, then runs rounds until the outbox is empty and both cursors are at head, and
+    /// repairs dangling learning defaults.
     pub(crate) async fn cycle(self: &Arc<Self>, session: &Session, changed: &mut Vec<Kind>) -> Result<(), SyncError> {
-        let mut cursors = self
+        let state = self
             .blocking(|shared| koloda::repo::sync::sync_state(&shared.db))
             .await?
-            .map(|state| (state.cursor_hot, state.cursor_cold))
             .ok_or(SyncError::NotEnrolled)?;
+        let mut cursors = (state.cursor_hot, state.cursor_cold);
+        if state.is_bootstrapping {
+            cursors = self.bootstrap(session, changed).await?;
+        }
 
         for _ in 0..MAX_ROUNDS {
             let (record, heads) = self.device_record(session).await?;
@@ -40,17 +45,20 @@ impl Shared {
             self.push(session, changed).await?;
             // INVARIANT: `cold` stops at a head recorded before `hot` is pulled to head, so a review never arrives
             // before its card (PROTOCOL.md, Lanes).
-            let mut latest = heads;
-            if let Some(meta) = self.pull(session, Lane::Hot, None, &mut cursors.0, changed).await? {
-                latest = meta;
-            }
+            let mut latest = self
+                .pull(session, Lane::Hot, None, &mut cursors.0, None, changed)
+                .await?;
             if cursors.1 < heads.head_cold {
-                if let Some(meta) = self
-                    .pull(session, Lane::Cold, Some(heads.head_cold), &mut cursors.1, changed)
-                    .await?
-                {
-                    latest = meta;
-                }
+                latest = self
+                    .pull(
+                        session,
+                        Lane::Cold,
+                        Some(heads.head_cold),
+                        &mut cursors.1,
+                        None,
+                        changed,
+                    )
+                    .await?;
             }
 
             let is_caught_up = cursors.0 >= latest.head_hot && cursors.1 >= latest.head_cold;
@@ -125,32 +133,37 @@ impl Shared {
     }
 
     /// Pulls one lane page by page from `cursor`, one transaction per page, and returns the last reply's heads.
-    async fn pull(
+    /// During a bootstrap, `lease` is kept alive between pages.
+    pub(crate) async fn pull(
         self: &Arc<Self>,
         session: &Session,
         lane: Lane,
         max_seq: Option<u64>,
         cursor: &mut u64,
+        mut lease: Option<&mut OpenLease>,
         changed: &mut Vec<Kind>,
-    ) -> Result<Option<Heads>, SyncError> {
-        let lane_name = match lane {
-            Lane::Hot => "hot",
-            Lane::Cold => "cold",
-        };
+    ) -> Result<Heads, SyncError> {
         let bound = max_seq.map(|max_seq| format!("&max_seq={max_seq}")).unwrap_or_default();
         loop {
+            if let Some(lease) = lease.as_deref_mut() {
+                self.keep_alive(session, lease).await?;
+            }
             let answer = self
                 .client(&session.base)
                 .call::<(), PullPage>(
                     Method::Get,
                     &format!(
-                        "/v1/spaces/{}/pull?lane={lane_name}&after={cursor}{bound}",
-                        session.space
+                        "/v1/spaces/{}/pull?lane={}&after={cursor}{bound}",
+                        session.space,
+                        lane.as_wire()
                     ),
                     Some(&session.token),
                     None,
                 )
                 .await?;
+            if let Some(lease) = lease.as_deref_mut() {
+                lease.server_ms = answer.meta.server_time_ms;
+            }
             self.check_skew()?;
             let page = Page {
                 lane,
@@ -174,14 +187,14 @@ impl Shared {
             merge(changed, applied);
             *cursor = answer.ok.scanned_through;
             if !answer.ok.has_more {
-                return Heads::from_meta(answer.meta.device.as_ref()).map(Some);
+                return Heads::from_meta(answer.meta.device.as_ref());
             }
         }
     }
 
     // INVARIANT: push and apply pause while the clocks disagree by more than the tolerance; stamps from a wrong clock
     // would win or lose every register (PROTOCOL.md, Skew guards).
-    fn check_skew(&self) -> Result<(), SyncError> {
+    pub(crate) fn check_skew(&self) -> Result<(), SyncError> {
         let skew_ms = self.skew.get();
         if skew_ms.unsigned_abs() > SKEW_TOLERANCE_MS {
             return Err(SyncError::ClockSkew { skew_ms });
@@ -191,7 +204,7 @@ impl Shared {
 }
 
 #[derive(Clone, Copy)]
-struct Heads {
+pub(crate) struct Heads {
     head_hot: u64,
     head_cold: u64,
 }

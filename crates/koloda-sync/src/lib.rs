@@ -7,6 +7,7 @@ pub mod engine;
 pub mod error;
 pub mod transport;
 
+mod bootstrap;
 mod client;
 mod cycle;
 mod push;

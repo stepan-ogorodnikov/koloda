@@ -13,6 +13,7 @@ use koloda::domain::templates::{
 };
 use koloda::repo::sync::repair::Starter;
 use koloda::repo::{algorithms, cards, decks, lessons, templates};
+use koloda_sync_proto::payload::{Payload, Review};
 use serde_json::json;
 
 use crate::common::{system_ms, Device};
@@ -26,6 +27,23 @@ pub struct Library {
     pub template: String,
     pub deck: String,
     pub card: String,
+}
+
+/// A `Good` review of a new card, as another device's grade pushes it.
+pub fn review(card: &str, now: i64) -> Payload {
+    Payload::Review(Review {
+        card_id: card.to_string(),
+        rating: 3,
+        state: 1,
+        due_at: now + 600_000,
+        stability: 1.0,
+        difficulty: 5.0,
+        scheduled_days: 0,
+        learning_steps: 1,
+        time: 10,
+        is_ignored: false,
+        created_at: now,
+    })
 }
 
 pub fn starter() -> Starter {

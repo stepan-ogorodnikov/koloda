@@ -76,6 +76,8 @@ so card-progress and review namespaces stay distinct.
   Backfill itself writes through `write_envelope`, which skips that check.
 
 **Remote apply** — `apply_page` writes product rows with its own SQL, never through repo write paths that capture.
+`apply_snapshot_page` applies a bootstrap page by the same rule and leaves the cursors alone; `finish_bootstrap`
+sets `cold`'s and clears the joiner's bootstrap flag.
 
 - A remote write that went through one would re-enter the outbox.
 - Repairs of pointers to a dead referent are the exception.
