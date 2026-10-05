@@ -4,6 +4,7 @@ use std::sync::Arc;
 
 use koloda::app::db::Database;
 use koloda::app::error::{error_codes, AppError};
+use koloda::app::init::SeedSettings;
 use koloda::app::secrets::SecretStore;
 use koloda::repo::sync::repair::Starter;
 use koloda::repo::sync::{enroll_device, enrolled_device, sync_state, SpaceRole};
@@ -14,6 +15,7 @@ use uuid::Uuid;
 
 use crate::client::{server_url, Client, Skew};
 use crate::error::SyncError;
+use crate::pairing::{IssuedPairing, Joined, Preview};
 use crate::transport::{Method, Transport};
 
 const RUNTIME_THREAD: &str = "koloda-sync";
@@ -25,9 +27,9 @@ pub struct Engine {
 
 pub(crate) struct Shared {
     pub(crate) db: Database,
-    secrets: Arc<dyn SecretStore>,
+    pub(crate) secrets: Arc<dyn SecretStore>,
     transport: Arc<dyn Transport>,
-    platform: Platform,
+    pub(crate) platform: Platform,
     pub(crate) starter: Starter,
     pub(crate) skew: Skew,
 }
@@ -86,6 +88,31 @@ impl Engine {
         self.runtime.block_on(shared.sync())
     }
 
+    /// Issues a pairing code for this file's space; `hint` is opaque bytes the joining device receives.
+    pub fn issue_pairing(&self, hint: Option<Vec<u8>>) -> Result<IssuedPairing, SyncError> {
+        let shared = Arc::clone(&self.shared);
+        self.runtime.block_on(shared.issue_pairing(hint))
+    }
+
+    /// Shows what a code would join, without using it.
+    pub fn preview(&self, server_url: &str, code: &str) -> Result<Preview, SyncError> {
+        let shared = Arc::clone(&self.shared);
+        self.runtime.block_on(shared.preview(server_url, code))
+    }
+
+    /// Joins the space a code names; the next cycle bootstraps the file. `settings` seed a blank file.
+    pub fn join(
+        &self,
+        server_url: &str,
+        code: &str,
+        device_name: &str,
+        settings: SeedSettings,
+    ) -> Result<Joined, SyncError> {
+        let shared = Arc::clone(&self.shared);
+        self.runtime
+            .block_on(shared.join(server_url, code, device_name, settings))
+    }
+
     /// Server time minus local time when the last reply arrived, in milliseconds.
     pub fn skew_ms(&self) -> i64 {
         self.shared.skew.get()
@@ -122,7 +149,7 @@ impl Shared {
         Ok(changed)
     }
 
-    async fn session(self: &Arc<Self>) -> Result<Session, SyncError> {
+    pub(crate) async fn session(self: &Arc<Self>) -> Result<Session, SyncError> {
         self.blocking(|shared| {
             let Some(state) = sync_state(&shared.db)? else {
                 return Ok(None);
@@ -189,6 +216,6 @@ pub(crate) fn merge(changed: &mut Vec<Kind>, kinds: Vec<Kind>) {
     }
 }
 
-fn token_key(device: Uuid) -> String {
+pub(crate) fn token_key(device: Uuid) -> String {
     format!("sync.token.{device}")
 }

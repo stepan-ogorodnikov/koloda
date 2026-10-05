@@ -19,6 +19,7 @@ A device's bearer token lives in the host's secret store under `sync.token.<devi
 - `src/cycle.rs` — the cycle: the device record and the behind check, push, `hot` to head, `cold` to the recorded
   head, the skew pause, and repair after catch-up.
 - `src/push.rs` — pushing the outbox in batches and handing each reply, loss, or refusal to `koloda`.
+- `src/pairing.rs` — pairing codes, preview, and joining a space as a blank or seed-only file.
 - `src/bootstrap.rs` — a joiner's union bootstrap from a snapshot lease: streams, catch-up, heartbeats, restarts.
 - `src/client.rs` — CBOR and zstd bodies, the reply envelope, the skew estimate, retries, and the server URL rule.
 - `src/transport.rs` — `Transport`, one request and its raw reply; `HttpTransport` sends it with reqwest.

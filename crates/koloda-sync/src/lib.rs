@@ -5,6 +5,7 @@
 
 pub mod engine;
 pub mod error;
+pub mod pairing;
 pub mod transport;
 
 mod bootstrap;

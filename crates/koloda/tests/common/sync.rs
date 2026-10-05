@@ -288,7 +288,7 @@ impl FakeSpace {
 
     /// Claims a code, probes the space, and adds the file through Add, as the join wizard will.
     pub fn join_by_add(&self, replica: &Database) {
-        begin_import(replica, Uuid::now_v7(), SPACE).expect("claim records");
+        begin_import(replica, Uuid::now_v7(), SPACE, EPOCH, SERVER_URL).expect("claim records");
         let known = self.probe(replica);
         add_to_space(replica, &known).expect("file joins through Add");
     }

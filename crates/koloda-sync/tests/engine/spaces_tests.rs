@@ -50,7 +50,7 @@ fn a_file_with_sync_state_is_refused_before_any_request() {
     let enrolled = server.device();
     create(&server, &enrolled).expect("space is created");
     let pending = server.device();
-    begin_import(&pending.db, Uuid::new_v4(), Uuid::new_v4()).expect("a claim is recorded");
+    begin_import(&pending.db, Uuid::new_v4(), Uuid::new_v4(), Uuid::new_v4(), SERVER_URL).expect("a claim is recorded");
 
     for (name, device) in [("enrolled", &enrolled), ("import pending", &pending)] {
         let sent = device.transport.sent().len();

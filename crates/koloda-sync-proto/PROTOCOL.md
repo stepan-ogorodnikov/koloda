@@ -1193,6 +1193,7 @@ A file holding only the untouched first-run seed goes through the same claim, pr
 It joins without asking the user, and only Add's seed-row rules change it.
 
 Every mode claims the code, receives an active token, and runs the normal cycle with a union bootstrap.
+The claim records the server URL and the epoch with the new device id.
 There is no server-side provisional state; a used file only waits locally for the user's choice.
 
 ### Used database: probe, then Add or Replace
@@ -1288,6 +1289,10 @@ Nothing keeps syncing afterwards.
   The server stores only its hash.
 - **Claim**: a claim retried with the same nonce returns the same device and token until the code expires.
   A different nonce on a used code fails.
+  A device that gets no reply to its claim retries it with the same nonce.
+- **Preview first**: a joining device previews the code, then tells its mode for the previewed space, before it
+  claims.
+  A file that would re-attach is refused while its code is still unused.
 - **Failures**: a used, expired, or wrong code fails alike with `pairing_failed`, so a reply never says which.
   Wrong codes are limited per client address and server-wide, because a wrong code names no space.
   After 10 failures from one address, or 100 in all, previews and claims get `429 rate_limited` until the minute's

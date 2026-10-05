@@ -1,6 +1,7 @@
 use std::fmt;
 
 use koloda::app::error::AppError;
+use koloda::repo::sync::join::JoinMode;
 use koloda_sync_proto::transport::ErrorCode;
 
 #[derive(Debug)]
@@ -25,6 +26,8 @@ pub enum SyncError {
     ClockSkew {
         skew_ms: i64,
     },
+    /// The file cannot join the code's space in this mode; nothing was claimed.
+    CannotJoin(JoinMode),
     /// The server URL is neither `https` nor `http` to a loopback host; nothing was sent.
     InsecureServerUrl(String),
 }
@@ -49,6 +52,7 @@ impl fmt::Display for SyncError {
             SyncError::ClockSkew { skew_ms } => {
                 write!(f, "this device's clock is {skew_ms} ms off the sync server's")
             }
+            SyncError::CannotJoin(mode) => write!(f, "this file cannot join that space as {mode:?}"),
             SyncError::InsecureServerUrl(url) => {
                 write!(f, "{url} is not an https URL or an http URL to this machine")
             }

@@ -101,7 +101,8 @@ sets `cold`'s and clears the joiner's bootstrap flag.
 - Backfill tests drain into `FakeSpace` and call `assert_referents_first`.
 
 **Join** — `join_mode` tells a file's mode from its rows and sync state.
-`begin_import` records a claim: it clears every `sync_*` table and leaves the file `import_pending`.
+`begin_import` records a claim with its server URL and epoch: it clears every `sync_*` table and leaves the file
+`import_pending`.
 
 - While pending, `Capture` records nothing, and `backfill_batch` and `apply_page` refuse.
 - The space id is stored at enrollment; only an `active` file in the same space re-attaches.

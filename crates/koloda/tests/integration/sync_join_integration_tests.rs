@@ -225,7 +225,7 @@ fn join_mode_follows_the_files_rows_and_space() {
             "pending in this space",
             || {
                 let db = seeded_db();
-                begin_import(&db, Uuid::now_v7(), SPACE).expect("claim records");
+                begin_import(&db, Uuid::now_v7(), SPACE, EPOCH, SERVER_URL).expect("claim records");
                 db
             },
             JoinMode::UntouchedSeed,
@@ -264,7 +264,7 @@ fn a_claim_clears_what_the_file_recorded_for_another_space() {
     }
 
     let claimed = Uuid::now_v7();
-    begin_import(&db, claimed, SPACE).expect("claim records");
+    begin_import(&db, claimed, SPACE, EPOCH, SERVER_URL).expect("claim records");
 
     for table in RECORDED_TABLES {
         assert_eq!(count(&db, &format!("SELECT COUNT(*) FROM {table}")), 0, "{table}");
@@ -289,7 +289,7 @@ fn a_claim_clears_what_the_file_recorded_for_another_space() {
 #[test]
 fn a_pending_import_captures_backfills_and_applies_nothing() {
     let db = seeded_db();
-    begin_import(&db, Uuid::now_v7(), SPACE).expect("claim records");
+    begin_import(&db, Uuid::now_v7(), SPACE, EPOCH, SERVER_URL).expect("claim records");
 
     add_deck(&db, SEED_ALGORITHM_SIMPLE_ID, SEED_TEMPLATE_TYPE_ID, "Spanish");
     assert!(outbox(&db).is_empty(), "a write while pending enqueues nothing");
@@ -704,7 +704,7 @@ fn add_leaves_device_local_data_alone() {
     };
     let before = local(&db);
 
-    begin_import(&db, Uuid::now_v7(), SPACE).expect("claim records");
+    begin_import(&db, Uuid::now_v7(), SPACE, EPOCH, SERVER_URL).expect("claim records");
     add_to_space(&db, &HashMap::from([(card.clone(), Known::Live)])).expect("file joins through Add");
 
     assert!(!ids(&db, "cards").contains(&card), "the known card is reminted");
@@ -895,7 +895,7 @@ fn a_seed_template_that_only_decks_use_keeps_its_id_only_while_unmodified_and_li
             rename_seed_template(&db);
         }
         let deck = add_deck(&db, SEED_ALGORITHM_SIMPLE_ID, SEED_TEMPLATE_TYPE_ID, "German");
-        begin_import(&db, Uuid::now_v7(), SPACE).expect("claim records");
+        begin_import(&db, Uuid::now_v7(), SPACE, EPOCH, SERVER_URL).expect("claim records");
         add_to_space(&db, &HashMap::from([(SEED_TEMPLATE_TYPE_ID.to_string(), known)])).expect("file joins");
 
         let template = sole_id(&db, "templates");
@@ -967,7 +967,7 @@ fn replace_leaves_no_local_product_rows_and_keeps_device_local_data() {
     };
     let before = local(&joiner);
 
-    begin_import(&joiner, Uuid::now_v7(), SPACE).expect("claim records");
+    begin_import(&joiner, Uuid::now_v7(), SPACE, EPOCH, SERVER_URL).expect("claim records");
     replace_with_space(&joiner).expect("file joins through Replace");
 
     for table in SYNCED_TABLES {

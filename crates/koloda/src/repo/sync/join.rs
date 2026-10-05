@@ -93,7 +93,13 @@ fn holds_only_untouched_seed(conn: &Connection) -> Result<bool, AppError> {
     Ok(is_untouched)
 }
 
-pub fn begin_import(db: &Database, device_id: Uuid, space_id: Uuid) -> Result<(), AppError> {
+pub fn begin_import(
+    db: &Database,
+    device_id: Uuid,
+    space_id: Uuid,
+    epoch: Uuid,
+    server_url: &str,
+) -> Result<(), AppError> {
     throw_known_error(error_codes::DB_ADD, || {
         db.with_transaction(|tx| {
             // WHY: the claim replaces the device id, so nothing recorded for an earlier space may be pushed or
@@ -103,10 +109,15 @@ pub fn begin_import(db: &Database, device_id: Uuid, space_id: Uuid) -> Result<()
             }
             tx.execute(
                 r#"
-                INSERT INTO sync_state (id, device_id, space_id, last_hlc, next_sender_seq, join_phase)
-                VALUES (1, ?1, ?2, 0, 1, 'import_pending')
+                INSERT INTO sync_state (id, device_id, space_id, last_hlc, next_sender_seq, join_phase, epoch, server_url)
+                VALUES (1, ?1, ?2, 0, 1, 'import_pending', ?3, ?4)
                 "#,
-                params![device_id.as_bytes().as_slice(), space_id.as_bytes().as_slice()],
+                params![
+                    device_id.as_bytes().as_slice(),
+                    space_id.as_bytes().as_slice(),
+                    epoch.as_bytes().as_slice(),
+                    server_url
+                ],
             )?;
             Ok(())
         })

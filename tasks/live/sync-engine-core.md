@@ -327,7 +327,7 @@ Out:
   Commit: Bootstrap joining devices from snapshot leases
   Depends on: 3
 
-- [ ] 6. Pair devices and join blank or seed-only files
+- [x] 6. Pair devices and join blank or seed-only files
   Goal:
   - `issue_pairing(hint)` issues a code for the own space.
     It returns the code, its expiry, the server URL, and the space id.
