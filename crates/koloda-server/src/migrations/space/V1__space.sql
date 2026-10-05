@@ -21,6 +21,7 @@ CREATE TABLE IF NOT EXISTS lanes (
 INSERT OR IGNORE INTO lanes (lane, head) VALUES ('hot', 0), ('cold', 0);
 
 -- Accepted envelope bytes at their lane seq. A version stays only while a head references it (compaction on write).
+-- `parent` and `template_ref` come from the header; deletes cascade along them.
 CREATE TABLE IF NOT EXISTS versions (
     lane text NOT NULL,
     seq integer NOT NULL,
@@ -28,6 +29,7 @@ CREATE TABLE IF NOT EXISTS versions (
     id text NOT NULL,
     grp text NOT NULL,
     parent text,
+    template_ref text,
     hlc integer NOT NULL,
     stamp_device blob NOT NULL,
     sender blob NOT NULL,
@@ -37,6 +39,10 @@ CREATE TABLE IF NOT EXISTS versions (
     PRIMARY KEY (lane, seq)
 );
 
+CREATE INDEX IF NOT EXISTS versions_parent ON versions (kind, parent) WHERE parent IS NOT NULL;
+
+CREATE INDEX IF NOT EXISTS versions_template ON versions (template_ref) WHERE template_ref IS NOT NULL;
+
 -- One live version per (kind, id, group): the highest (hlc, stamp_device), which is also the highest seq.
 CREATE TABLE IF NOT EXISTS heads (
     kind text NOT NULL,
@@ -45,6 +51,14 @@ CREATE TABLE IF NOT EXISTS heads (
     lane text NOT NULL,
     seq integer NOT NULL,
     PRIMARY KEY (kind, id, grp)
+);
+
+-- INVARIANT: a fence is permanent. Every tombstoned entity and every card a cascade removed stays here, so no later
+-- create or update of them applies.
+CREATE TABLE IF NOT EXISTS deleted_ids (
+    kind text NOT NULL,
+    id text NOT NULL,
+    PRIMARY KEY (kind, id)
 );
 
 CREATE TABLE IF NOT EXISTS senders (

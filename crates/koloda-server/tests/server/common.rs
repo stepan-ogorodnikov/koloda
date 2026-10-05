@@ -341,3 +341,12 @@ impl Harness {
         .expect("a device call carries device meta")
     }
 }
+
+pub fn tombstone(kind: Kind, id: &str, parent: Option<&str>, stamp: Stamp) -> Header {
+    Header {
+        parent: parent.map(str::to_string),
+        group: None,
+        op: Op::Delete,
+        ..write(kind, id, Group::Create, stamp)
+    }
+}

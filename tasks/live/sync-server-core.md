@@ -261,7 +261,7 @@ Out:
   Commit: Check parents, refs, and write schema on push
   Depends on: 3
 
-- [ ] 5. Apply deletes as fences and answer which ids a space knows
+- [x] 5. Apply deletes as fences and answer which ids a space knows
   Goal: a delete records a tombstone and a `deleted_ids` fence, and appends the tombstone at the next hot `seq`.
   In the same transaction it removes the heads and versions of the entity and its descendants, and fences them:
   - a deck: its cards and their reviews;

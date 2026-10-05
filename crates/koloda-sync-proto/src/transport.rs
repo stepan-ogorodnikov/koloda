@@ -14,6 +14,7 @@ pub const MAX_NAME_CHARS: usize = 100;
 pub const MAX_HINT_BYTES: usize = 4 * 1024;
 pub const MAX_PUSH_ITEMS: usize = 5_000;
 pub const MAX_RECEIPT_RANGE: u64 = 5_000;
+pub const MAX_KNOWN_IDS: usize = 1_000;
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -193,9 +194,18 @@ pub struct PushOutcome {
 pub enum Outcome {
     Applied,
     Stale,
+    Fenced,
     Existence,
+    DependencyFenced { action: DependencyAction },
     Held { reason: HeldReason },
     SeqReused,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum DependencyAction {
+    DropEntity,
+    RepairPointer,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -218,6 +228,42 @@ pub struct Receipt {
     #[serde(with = "serde_bytes")]
     pub digest: [u8; 32],
     pub outcome: Outcome,
+}
+
+/// `kind` is the kind's wire string (`PROTOCOL.md` §Field groups and merge).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct EntityId {
+    pub kind: String,
+    pub id: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct KnownIds {
+    pub ids: Vec<EntityId>,
+}
+
+/// The asked ids the space holds, in the order asked; an id the space never held is left out.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Known {
+    pub ids: Vec<KnownId>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct KnownId {
+    pub kind: String,
+    pub id: String,
+    pub state: KnownState,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum KnownState {
+    Live,
+    Fenced,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]

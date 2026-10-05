@@ -1,7 +1,7 @@
 use axum::http::StatusCode;
 use koloda_sync_proto::envelope::{self, Header};
 use koloda_sync_proto::hlc::SKEW_TOLERANCE_MS;
-use koloda_sync_proto::registry::{Group, Kind, Op};
+use koloda_sync_proto::registry::{Group, Kind};
 use koloda_sync_proto::transport::{
     DeviceInfo, ErrorCode, IssuePairing, Outcome, Pairing, PairingPreview, PreviewPairing, Push, PushItem, PushReply,
     Receipts, MAX_PUSH_ITEMS, MAX_RECEIPT_RANGE,
@@ -208,11 +208,6 @@ async fn a_bad_batch_consumes_nothing() {
     let harness = Harness::new();
     let home = harness.create_space("Home").await;
     let create = || write(Kind::Decks, DECK, Group::Create, stamp(0, 0, 1));
-    let delete = Header {
-        group: None,
-        op: Op::Delete,
-        ..create()
-    };
     let too_many = Push {
         items: (1..=u64::try_from(MAX_PUSH_ITEMS + 1).expect("small"))
             .map(|seq| PushItem {
@@ -238,11 +233,6 @@ async fn a_bad_batch_consumes_nothing() {
             StatusCode::BAD_REQUEST,
         ),
         ("an envelope that does not decode", garbage, StatusCode::BAD_REQUEST),
-        (
-            "a delete before deletes exist",
-            batch(vec![(1, create()), (2, delete)]),
-            StatusCode::BAD_REQUEST,
-        ),
         ("more items than the cap", too_many, StatusCode::PAYLOAD_TOO_LARGE),
     ];
     for (name, push, status) in cases {

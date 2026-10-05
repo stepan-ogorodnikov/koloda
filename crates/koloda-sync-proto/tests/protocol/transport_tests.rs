@@ -2,7 +2,7 @@ use std::collections::BTreeMap;
 
 use ciborium::Value;
 use koloda_sync_proto::transport::{
-    DeviceMeta, Enrollment, ErrorBody, ErrorCode, HeldReason, Meta, Outcome, Platform, Reply,
+    DependencyAction, DeviceMeta, Enrollment, ErrorBody, ErrorCode, HeldReason, Meta, Outcome, Platform, Reply,
 };
 use serde::Serialize;
 
@@ -127,7 +127,20 @@ fn outcomes_are_maps_tagged_by_status() {
     let cases = [
         (Outcome::Applied, vec![("status", "applied")]),
         (Outcome::Stale, vec![("status", "stale")]),
+        (Outcome::Fenced, vec![("status", "fenced")]),
         (Outcome::Existence, vec![("status", "existence")]),
+        (
+            Outcome::DependencyFenced {
+                action: DependencyAction::DropEntity,
+            },
+            vec![("status", "dependency_fenced"), ("action", "drop_entity")],
+        ),
+        (
+            Outcome::DependencyFenced {
+                action: DependencyAction::RepairPointer,
+            },
+            vec![("status", "dependency_fenced"), ("action", "repair_pointer")],
+        ),
         (
             Outcome::Held {
                 reason: HeldReason::Schema,

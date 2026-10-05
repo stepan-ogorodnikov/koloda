@@ -1,5 +1,5 @@
-//! The envelope log of one space: versions at lane seqs, one head per `(kind, id, group)`, and per-sender receipts
-//! (`PROTOCOL.md` §Topology and server state).
+//! The envelope log of one space: versions at lane seqs, one head per `(kind, id, group)`, fences, and per-sender
+//! receipts (`PROTOCOL.md` §Topology and server state, §Deletes).
 //!
 //! Writers run inside the push transaction under the space writer lock; readers take any connection.
 
@@ -8,16 +8,19 @@ use std::collections::BTreeMap;
 use koloda_sync_proto::envelope::{Digest, Header};
 use koloda_sync_proto::hlc::{DeviceId, Hlc, Stamp};
 use koloda_sync_proto::registry::{allow, Class, Group, Kind};
-use koloda_sync_proto::transport::{Outcome, Receipt};
+use koloda_sync_proto::transport::{DependencyAction, KnownState, Outcome, Receipt};
 use rusqlite::{params, Connection, OptionalExtension};
 use uuid::Uuid;
 
 use crate::http::ApiError;
 
-/// One pushed envelope with what the server read from it.
+// WHY: a tombstone names no group; it is stored as the entity's head under this empty group name.
+const TOMBSTONE: &str = "";
+
+/// One pushed envelope with what the server read from it. `group` is `None` for a delete.
 pub(crate) struct Entry<'a> {
     pub(crate) header: &'a Header,
-    pub(crate) group: Group,
+    pub(crate) group: Option<Group>,
     pub(crate) sender: Uuid,
     pub(crate) sender_seq: u64,
     pub(crate) digest: Digest,
@@ -30,6 +33,12 @@ struct Head {
     stamp: Stamp,
 }
 
+impl Entry<'_> {
+    fn grp(&self) -> &'static str {
+        self.group.map_or(TOMBSTONE, Group::as_wire)
+    }
+}
+
 pub(crate) fn class(header: &Header, group: Group) -> Result<Class, ApiError> {
     allow(header.kind, Some(group), header.op)
         .map_err(|error| ApiError::bad_request(error.to_string()))?
@@ -37,12 +46,12 @@ pub(crate) fn class(header: &Header, group: Group) -> Result<Class, ApiError> {
         .ok_or_else(|| ApiError::internal("a write without a group spec"))
 }
 
-/// Decides a new item and installs it when it wins: existence first (`PROTOCOL.md` §Cascades by ancestry and
-/// header refs), then the group's class against the current head.
+/// Decides a new write and installs it when it wins: dead and missing entities first (`PROTOCOL.md` §Cascades by
+/// ancestry and header refs), then the group's class against the current head.
 pub(crate) fn accept(tx: &Connection, entry: &Entry<'_>, class: Class) -> Result<Outcome, ApiError> {
     let header = entry.header;
-    if !exists(tx, header, class)? {
-        return Ok(Outcome::Existence);
+    if let Some(refused) = refusal(tx, header, class)? {
+        return Ok(refused);
     }
     let current = head(tx, entry)?;
     let wins = match (class, &current) {
@@ -58,11 +67,53 @@ pub(crate) fn accept(tx: &Connection, entry: &Entry<'_>, class: Class) -> Result
     Ok(Outcome::Applied)
 }
 
+/// Tombstones an entity: fences it, removes it and its descendants, and appends the tombstone to the log.
+///
+/// INVARIANT: a delete of an id the server does not hold is applied as a fence, so a create of it pushed later by
+/// another device cannot resurrect it (`PROTOCOL.md` §Deletes).
+pub(crate) fn delete(tx: &Connection, entry: &Entry<'_>) -> Result<Outcome, ApiError> {
+    let header = entry.header;
+    if is_fenced(tx, header.kind, &header.id)? {
+        return Ok(Outcome::Stale);
+    }
+    let cards = match header.kind {
+        Kind::Decks => live_children(tx, "parent", &header.id)?,
+        Kind::Templates => live_children(tx, "template_ref", &header.id)?,
+        Kind::Cards => vec![header.id.clone()],
+        Kind::Algorithms | Kind::Reviews | Kind::AlgorithmRevisions | Kind::SettingsLearning => Vec::new(),
+    };
+    for card in &cards {
+        let mut statement = tx.prepare(
+            "SELECT v.id FROM versions v JOIN heads h ON h.lane = v.lane AND h.seq = v.seq
+             WHERE v.kind = 'reviews' AND v.grp = 'row' AND v.parent = ?1",
+        )?;
+        let reviews = statement
+            .query_map(params![card], |row| row.get::<_, String>(0))?
+            .collect::<Result<Vec<_>, _>>()?;
+        for review in reviews {
+            remove(tx, Kind::Reviews, &review)?;
+        }
+        remove(tx, Kind::Cards, card)?;
+        // WHY: cards get fences because their own updates and deletes name them; reviews need none, since a review
+        // of a fenced card is already refused by its parent.
+        fence(tx, Kind::Cards, card)?;
+    }
+    remove(tx, header.kind, &header.id)?;
+    fence(tx, header.kind, &header.id)?;
+    install(tx, entry, None)?;
+    Ok(Outcome::Applied)
+}
+
 /// Whether this sender had a create held for an entity the envelope names as its id, parent, or hard ref.
 ///
 /// A create does not name its own id here: the regenerated create of a held entity is what releases it.
-pub(crate) fn names_held(tx: &Connection, sender: Uuid, header: &Header, class: Class) -> Result<bool, ApiError> {
-    let skip = usize::from(class == Class::Create);
+pub(crate) fn names_held(
+    tx: &Connection,
+    sender: Uuid,
+    header: &Header,
+    class: Option<Class>,
+) -> Result<bool, ApiError> {
+    let skip = usize::from(class == Some(Class::Create));
     for (kind, id) in named(header).into_iter().skip(skip) {
         let held = tx
             .query_row(
@@ -182,9 +233,11 @@ pub(crate) fn receipts(conn: &Connection, sender: Uuid, after: u64, through: u64
 
 /// Live entities per kind and the bytes of every stored version, for the pairing preview.
 pub(crate) fn size(conn: &Connection) -> Result<(BTreeMap<String, u64>, u64), ApiError> {
-    let mut statement = conn.prepare("SELECT kind, count(DISTINCT id) FROM heads GROUP BY kind")?;
+    let mut statement = conn.prepare("SELECT kind, count(DISTINCT id) FROM heads WHERE grp <> ?1 GROUP BY kind")?;
     let counts = statement
-        .query_map([], |row| Ok((row.get::<_, String>(0)?, row.get::<_, u64>(1)?)))?
+        .query_map(params![TOMBSTONE], |row| {
+            Ok((row.get::<_, String>(0)?, row.get::<_, u64>(1)?))
+        })?
         .collect::<Result<BTreeMap<_, _>, _>>()?;
     let bytes = conn.query_row("SELECT coalesce(sum(length(bytes)), 0) FROM versions", [], |row| {
         row.get(0)
@@ -192,7 +245,26 @@ pub(crate) fn size(conn: &Connection) -> Result<(BTreeMap<String, u64>, u64), Ap
     Ok((counts, bytes))
 }
 
-fn exists(tx: &Connection, header: &Header, class: Class) -> Result<bool, ApiError> {
+/// Whether the space holds an entity live or fenced, for the join probe (`PROTOCOL.md` §Joining).
+pub(crate) fn known(conn: &Connection, kind: Kind, id: &str) -> Result<Option<KnownState>, ApiError> {
+    if is_fenced(conn, kind, id)? {
+        return Ok(Some(KnownState::Fenced));
+    }
+    let live = conn
+        .query_row(
+            "SELECT 1 FROM heads WHERE kind = ?1 AND id = ?2 AND grp <> ?3 LIMIT 1",
+            params![kind.as_wire(), id, TOMBSTONE],
+            |_| Ok(()),
+        )
+        .optional()?;
+    Ok(live.map(|()| KnownState::Live))
+}
+
+/// Why a write may not apply, checked in the order `PROTOCOL.md` §Cascades by ancestry and header refs lists.
+fn refusal(tx: &Connection, header: &Header, class: Class) -> Result<Option<Outcome>, ApiError> {
+    if is_fenced(tx, header.kind, &header.id)? {
+        return Ok(Some(Outcome::Fenced));
+    }
     let spec = header.kind.spec();
     // WHY: the first version of an entity records its parent: the create of a kind that has one, else the
     // immutable row itself. `settings.learning` has neither; sync never inserts it.
@@ -208,24 +280,82 @@ fn exists(tx: &Connection, header: &Header, class: Class) -> Result<bool, ApiErr
         None => None,
     };
     if class == Class::Update && first_group.is_some() && first.is_none() {
-        return Ok(false);
+        return Ok(Some(Outcome::Existence));
     }
     if class != Class::Update {
         if let (Some(parent_kind), Some(parent)) = (spec.parent, &header.parent) {
+            if is_fenced(tx, parent_kind, parent)? {
+                return Ok(Some(Outcome::DependencyFenced {
+                    action: DependencyAction::DropEntity,
+                }));
+            }
             if first_version(tx, parent_kind, parent, Group::Create)?.is_none() {
-                return Ok(false);
+                return Ok(Some(Outcome::Existence));
             }
         }
     }
     if first.is_some_and(|first_parent| first_parent != header.parent) {
-        return Ok(false);
+        return Ok(Some(Outcome::Existence));
     }
     for (kind, id) in hard_refs(header) {
+        if is_fenced(tx, kind, id)? {
+            // WHY: a card is born on its template and cannot move off it; a pointer group can be repaired.
+            let action = if class == Class::Create {
+                DependencyAction::DropEntity
+            } else {
+                DependencyAction::RepairPointer
+            };
+            return Ok(Some(Outcome::DependencyFenced { action }));
+        }
         if first_version(tx, kind, id, Group::Create)?.is_none() {
-            return Ok(false);
+            return Ok(Some(Outcome::Existence));
         }
     }
-    Ok(true)
+    Ok(None)
+}
+
+fn is_fenced(conn: &Connection, kind: Kind, id: &str) -> Result<bool, ApiError> {
+    Ok(conn
+        .query_row(
+            "SELECT 1 FROM deleted_ids WHERE kind = ?1 AND id = ?2",
+            params![kind.as_wire(), id],
+            |_| Ok(()),
+        )
+        .optional()?
+        .is_some())
+}
+
+fn fence(tx: &Connection, kind: Kind, id: &str) -> Result<(), ApiError> {
+    tx.execute(
+        "INSERT OR IGNORE INTO deleted_ids (kind, id) VALUES (?1, ?2)",
+        params![kind.as_wire(), id],
+    )?;
+    Ok(())
+}
+
+/// Live cards whose create names `id` in `column` (`parent` for their deck, `template_ref` for their template).
+fn live_children(tx: &Connection, column: &str, id: &str) -> Result<Vec<String>, ApiError> {
+    let mut statement = tx.prepare(&format!(
+        "SELECT v.id FROM versions v JOIN heads h ON h.lane = v.lane AND h.seq = v.seq
+         WHERE v.kind = 'cards' AND v.grp = 'create' AND v.{column} = ?1"
+    ))?;
+    let cards = statement
+        .query_map(params![id], |row| row.get::<_, String>(0))?
+        .collect::<Result<Vec<_>, _>>()?;
+    Ok(cards)
+}
+
+/// Removes every head of the entity and the versions they reference.
+fn remove(tx: &Connection, kind: Kind, id: &str) -> Result<(), ApiError> {
+    tx.execute(
+        "DELETE FROM versions WHERE (lane, seq) IN (SELECT lane, seq FROM heads WHERE kind = ?1 AND id = ?2)",
+        params![kind.as_wire(), id],
+    )?;
+    tx.execute(
+        "DELETE FROM heads WHERE kind = ?1 AND id = ?2",
+        params![kind.as_wire(), id],
+    )?;
+    Ok(())
 }
 
 /// The parent recorded by the head of `(kind, id, group)`, or `None` when there is no such head.
@@ -268,7 +398,7 @@ fn head(tx: &Connection, entry: &Entry<'_>) -> Result<Option<Head>, ApiError> {
             "SELECT h.lane, h.seq, v.hlc, v.stamp_device FROM heads h
              JOIN versions v ON v.lane = h.lane AND v.seq = h.seq
              WHERE h.kind = ?1 AND h.id = ?2 AND h.grp = ?3",
-            params![header.kind.as_wire(), header.id, entry.group.as_wire()],
+            params![header.kind.as_wire(), header.id, entry.grp()],
             |row| {
                 Ok((
                     row.get::<_, String>(0)?,
@@ -303,15 +433,17 @@ fn install(tx: &Connection, entry: &Entry<'_>, replaced: Option<Head>) -> Result
         |row| row.get(0),
     )?;
     tx.execute(
-        "INSERT INTO versions (lane, seq, kind, id, grp, parent, hlc, stamp_device, sender, sender_seq, digest, bytes)
-         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12)",
+        "INSERT INTO versions (
+             lane, seq, kind, id, grp, parent, template_ref, hlc, stamp_device, sender, sender_seq, digest, bytes
+         ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)",
         params![
             lane,
             seq,
             header.kind.as_wire(),
             header.id,
-            entry.group.as_wire(),
+            entry.grp(),
             header.parent,
+            header.refs.template_id,
             header.stamp.hlc.raw(),
             header.stamp.device.0.to_vec(),
             entry.sender,
@@ -323,7 +455,7 @@ fn install(tx: &Connection, entry: &Entry<'_>, replaced: Option<Head>) -> Result
     tx.execute(
         "INSERT INTO heads (kind, id, grp, lane, seq) VALUES (?1, ?2, ?3, ?4, ?5)
          ON CONFLICT (kind, id, grp) DO UPDATE SET lane = excluded.lane, seq = excluded.seq",
-        params![header.kind.as_wire(), header.id, entry.group.as_wire(), lane, seq],
+        params![header.kind.as_wire(), header.id, entry.grp(), lane, seq],
     )?;
     if let Some(replaced) = replaced {
         tx.execute(

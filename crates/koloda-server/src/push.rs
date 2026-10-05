@@ -12,7 +12,7 @@ use axum::http::{HeaderMap, StatusCode};
 use axum::response::Response;
 use koloda_sync_proto::envelope::{digest, Envelope};
 use koloda_sync_proto::hlc::check_not_ahead_of_server;
-use koloda_sync_proto::registry::{Class, Kind, Op};
+use koloda_sync_proto::registry::{Class, Kind};
 use koloda_sync_proto::transport::{
     ErrorCode, HeldReason, Outcome, Push, PushOutcome, PushReply, Receipts, MAX_PUSH_ITEMS, MAX_RECEIPT_RANGE,
 };
@@ -133,18 +133,15 @@ fn push_batch(server: &Server, caller: &DeviceAuth, request: Push) -> Result<Pus
             }
             continue;
         }
-        let group = header
-            .group
-            .ok_or_else(|| ApiError::internal("a write without a group passed decoding"))?;
         let entry = Entry {
             header,
-            group,
+            group: header.group,
             sender: caller.id,
             sender_seq: item.sender_seq,
             digest,
             bytes: &item.bytes,
         };
-        let class = log::class(header, group)?;
+        let class = header.group.map(|group| log::class(header, group)).transpose()?;
         let outcome = if header.schema < accepted_schema(header.kind)? {
             Outcome::Held {
                 reason: HeldReason::Schema,
@@ -154,9 +151,12 @@ fn push_batch(server: &Server, caller: &DeviceAuth, request: Push) -> Result<Pus
                 reason: HeldReason::Dependency,
             }
         } else {
-            log::accept(&tx, &entry, class)?
+            match class {
+                Some(class) => log::accept(&tx, &entry, class)?,
+                None => log::delete(&tx, &entry)?,
+            }
         };
-        if class == Class::Create {
+        if class == Some(Class::Create) {
             if matches!(outcome, Outcome::Held { .. }) {
                 log::hold(&tx, caller.id, header)?;
             } else {
@@ -203,11 +203,6 @@ fn decode_items(request: Push) -> Result<Vec<Item>, ApiError> {
         previous = item.sender_seq;
         let envelope = Envelope::decode(&item.envelope)
             .map_err(|error| ApiError::bad_request(format!("item {index}: {error}")))?;
-        if envelope.header.op == Op::Delete {
-            return Err(ApiError::bad_request(format!(
-                "item {index}: this server does not accept deletes yet"
-            )));
-        }
         items.push(Item {
             sender_seq: item.sender_seq,
             envelope,

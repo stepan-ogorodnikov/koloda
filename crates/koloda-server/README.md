@@ -46,7 +46,9 @@ koloda-server serve --data-dir ./data --listen 127.0.0.1:8080
 - `src/spaces.rs` — space creation, which enrolls the creator, and the list.
 - `src/pairing.rs` — pairing codes: issue, preview, claim, and the limits on wrong codes.
 - `src/push.rs` — push batches and receipts; one transaction under the space writer lock.
-- `src/log.rs` — a space's envelope log: versions at lane seqs, heads, compaction on write, and receipts.
+- `src/log.rs` — a space's envelope log: versions at lane seqs, heads, compaction on write, deletes that fence
+  and cascade, and receipts.
+- `src/known.rs` — the join probe: which ids the space holds live or fenced.
 - `src/devices.rs` — device records.
 
 - `tests/server/` — one test binary; `common.rs` drives the router in-process on a manual clock.

@@ -489,7 +489,9 @@ The server checks hard refs and parents on push:
   The sender must already have pushed the referent; this is a client bug, not a repair case.
 - Before installing a winning head, the server revalidates parent and refs under the space writer lock.
   A dead parent is `dependency_fenced { action: drop_entity }`.
-  A dead pointer is `dependency_fenced { action: repair_pointer }`.
+  A card create naming a dead template is `dependency_fenced { action: drop_entity }` too, because a card cannot
+  leave its template.
+  A dead pointer in an update group is `dependency_fenced { action: repair_pointer }`.
   No head is installed.
 
 Deleting a deck publishes **one** tombstone.
@@ -498,6 +500,8 @@ It then chunk-removes their heads and records their fences.
 Deleting a card does the same for its reviews.
 Deleting a template also drops and fences cards whose `refs.template_id` names it.
 Reviews never get tombstones of their own.
+Card ids are fenced; reviews need no fence, because their card's fence already refuses them.
+A tombstone for an id already fenced, by its own tombstone or a cascade, is `stale`.
 A 50k-card deck delete is a single envelope: the server removes it in chunks, and a device in one transaction.
 
 A card's `deck_id` and `template_id` are fixed at creation and never appear in an update group.
@@ -773,6 +777,7 @@ Names are 1 to 100 characters after trimming.
 | `POST /v1/pairings/preview` | `code` | `space_id`, `name`, `epoch`, `counts` per kind, `bytes` |
 | `POST /v1/pairings/claim` | `code`, `name`, `platform`, `nonce` | `enrollment` as space creation returns it, `hint` |
 | `POST /v1/spaces/{space}/push` | `items`, each `sender_seq` and `envelope` bytes; at most 5000 | `outcomes`, each `sender_seq`, `outcome`, `replayed` |
+| `POST /v1/spaces/{space}/ids/known` | `ids`, each `kind` and `id`; at most 1000 | `ids` the space holds, in the order asked, each `kind`, `id`, `state` (`live` or `fenced`) |
 | `GET /v1/spaces/{space}/receipts?sender&after&through` | `through - after` at most 5000 | `receipts`, each `sender_seq`, `digest`, `outcome` |
 
 Creating a space also enrolls its creator, so the first device needs no pairing code.
