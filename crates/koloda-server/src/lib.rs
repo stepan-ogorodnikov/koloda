@@ -14,6 +14,7 @@ mod http;
 mod known;
 mod log;
 mod pairing;
+mod pull;
 mod push;
 mod spaces;
 
@@ -34,6 +35,7 @@ pub fn router(server: Arc<Server>) -> Router {
         .route("/v1/spaces/{space}/push", post(push::push))
         .route("/v1/spaces/{space}/receipts", get(push::receipts))
         .route("/v1/spaces/{space}/ids/known", post(known::known))
+        .route("/v1/spaces/{space}/pull", get(pull::pull))
         .route("/v1/spaces/{space}/devices/{device}", get(devices::get))
         .fallback(http::fallback)
         // WHY: `read_body` enforces the protocol's own body and zstd limits and answers with a reply body.

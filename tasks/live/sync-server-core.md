@@ -293,7 +293,7 @@ Out:
   Commit: Apply deletes as fences and answer which ids a space knows
   Depends on: 4
 
-- [ ] 6. Serve pulls per lane
+- [x] 6. Serve pulls per lane
   Goal: `GET /v1/spaces/{space}/pull?lane&after&max_seq&limit` returns entries with `after < seq <= max_seq` in `seq`
   order, the caller's own entries excluded.
   Each entry carries `seq`, `sender`, `sender_seq`, and the envelope bytes.

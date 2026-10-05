@@ -15,6 +15,8 @@ pub const MAX_HINT_BYTES: usize = 4 * 1024;
 pub const MAX_PUSH_ITEMS: usize = 5_000;
 pub const MAX_RECEIPT_RANGE: u64 = 5_000;
 pub const MAX_KNOWN_IDS: usize = 1_000;
+pub const MAX_PAGE_ENTRIES: u64 = 5_000;
+pub const MAX_PAGE_BYTES: usize = 8 * 1024 * 1024;
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -230,6 +232,27 @@ pub struct Receipt {
     pub outcome: Outcome,
 }
 
+/// One entry of the log as pull and bootstrap return it: the envelope exactly as pushed, with server metadata.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct LogEntry {
+    pub seq: u64,
+    #[serde(with = "serde_bytes")]
+    pub sender: [u8; 16],
+    pub sender_seq: u64,
+    #[serde(with = "serde_bytes")]
+    pub envelope: Vec<u8>,
+}
+
+/// `scanned_through` counts every seq examined, the caller's own entries and compacted holes included.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct PullPage {
+    pub entries: Vec<LogEntry>,
+    pub scanned_through: u64,
+    pub has_more: bool,
+}
+
 /// `kind` is the kind's wire string (`PROTOCOL.md` §Field groups and merge).
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -294,6 +317,8 @@ pub struct DeviceInfo {
     pub last_sender_seq: u64,
     #[serde(default, with = "serde_bytes", skip_serializing_if = "Option::is_none")]
     pub last_sender_digest: Option<[u8; 32]>,
+    pub cursor_hot: u64,
+    pub cursor_cold: u64,
 }
 
 impl Platform {

@@ -19,7 +19,7 @@ use koloda_sync_proto::payload::SCHEMA;
 use koloda_sync_proto::registry::{Group, Kind, Op};
 use koloda_sync_proto::transport::{
     ClaimPairing, CreateSpace, DeviceInfo, DeviceMeta, Enrollment, ErrorCode, IssuePairing, Outcome, Pairing,
-    PairingClaim, Platform, Push, PushItem, PushReply, Reply,
+    PairingClaim, Platform, PullPage, Push, PushItem, PushReply, Reply,
 };
 use serde::de::DeserializeOwned;
 use serde::Serialize;
@@ -349,4 +349,19 @@ pub fn tombstone(kind: Kind, id: &str, parent: Option<&str>, stamp: Stamp) -> He
         op: Op::Delete,
         ..write(kind, id, Group::Create, stamp)
     }
+}
+
+impl Harness {
+    /// Pulls with `query` after `?`, such as `lane=hot&after=0`.
+    pub async fn pull(&self, device: &Enrollment, query: &str) -> Answer<PullPage> {
+        self.get(format!("/v1/spaces/{}/pull?{query}", uuid(device.space_id)))
+            .token(&device.token)
+            .send::<PullPage>()
+            .await
+    }
+}
+
+/// `(seq, sender_seq)` of each entry, for pages whose sender is known.
+pub fn seqs(page: &PullPage) -> Vec<(u64, u64)> {
+    page.entries.iter().map(|entry| (entry.seq, entry.sender_seq)).collect()
 }

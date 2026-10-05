@@ -628,6 +628,10 @@ No envelope is ever buffered waiting for another.
 
 Pull responses return `scanned_through`: the highest seq examined, including own-sender gaps and compacted holes.
 The client advances to `scanned_through`, so empty pages are safe.
+A page holds at most `limit` entries (1 to 5000, 5000 by default) and about 8 MiB of envelopes.
+It always holds the first entry due, so it makes progress.
+Pull reads live heads only, so a superseded version or a removed descendant never reaches a device.
+Each pull records the cursor it starts from, per lane, on the caller's device record, for GC later.
 
 ### Existing rows at enable time
 
@@ -772,12 +776,13 @@ Names are 1 to 100 characters after trimming.
 | --- | --- | --- |
 | `POST /v1/spaces` | `name`, `device_name`, `platform`, `nonce` | `space_id`, `device_id`, `token`, `epoch` |
 | `GET /v1/spaces` | none | `spaces`, each with `id`, `name`, `created_at`, `device_count` |
-| `GET /v1/spaces/{space}/devices/{id}` | none | `id`, `name`, `platform`, `created_at`, `last_seen`, `last_sender_seq`, `last_sender_digest` |
+| `GET /v1/spaces/{space}/devices/{id}` | none | `id`, `name`, `platform`, `created_at`, `last_seen`, `last_sender_seq`, `last_sender_digest`, `cursor_hot`, `cursor_cold` |
 | `POST /v1/spaces/{space}/pairings` | `hint`, optional bytes of at most 4 KiB | `code`, `expires_at` |
 | `POST /v1/pairings/preview` | `code` | `space_id`, `name`, `epoch`, `counts` per kind, `bytes` |
 | `POST /v1/pairings/claim` | `code`, `name`, `platform`, `nonce` | `enrollment` as space creation returns it, `hint` |
 | `POST /v1/spaces/{space}/push` | `items`, each `sender_seq` and `envelope` bytes; at most 5000 | `outcomes`, each `sender_seq`, `outcome`, `replayed` |
 | `POST /v1/spaces/{space}/ids/known` | `ids`, each `kind` and `id`; at most 1000 | `ids` the space holds, in the order asked, each `kind`, `id`, `state` (`live` or `fenced`) |
+| `GET /v1/spaces/{space}/pull?lane&after&max_seq&limit` | `lane` and `after`; `max_seq` defaults to the lane head | `entries`, each `seq`, `sender`, `sender_seq`, `envelope`; `scanned_through`, `has_more` |
 | `GET /v1/spaces/{space}/receipts?sender&after&through` | `through - after` at most 5000 | `receipts`, each `sender_seq`, `digest`, `outcome` |
 
 Creating a space also enrolls its creator, so the first device needs no pairing code.
