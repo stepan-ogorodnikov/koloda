@@ -788,7 +788,8 @@ It carries both lane heads, both GC horizons, `write_schema` per kind, and the c
 Bodies are CBOR maps that reject unknown keys; this crate's `transport.rs` defines them.
 Space, device, epoch, and nonce ids are 16 raw UUID bytes; paths carry them as hyphenated UUID text.
 A request body may be zstd (`Content-Encoding: zstd`); a reply is zstd when the request accepts it.
-A body is at most 16 MiB after decompression, and zstd may expand it at most 32 times its size.
+A body is at most 16 MiB after decompression, and zstd may expand a request body at most 32 times its size.
+A reply is limited by size only, since a push reply's repeated outcomes compress far past that ratio.
 Names are 1 to 100 characters after trimming.
 `platform` is one of `desktop-win`, `desktop-mac`, `desktop-linux`, `ios`, and `android`.
 
@@ -991,6 +992,9 @@ On the device that creates the space it then covers the `learning` document.
 Reviews and scheduling snapshots follow (§Existing rows at enable time).
 It tops the outbox up in bounded batches and advances its watermark in the same transaction.
 A batch never splits one entity's envelopes.
+The engine adds a batch before each push while the outbox holds less than one push batch, so the outbox never holds
+the whole database.
+A batch is at most 500 envelopes and ends with the entity that reaches 1 MiB, so its cohort always fits one push.
 It skips a row that already has an origin, and a group whose register holds a write, not a synthetic floor.
 Both were written since enrollment and hold a newer head.
 

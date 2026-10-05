@@ -1,6 +1,7 @@
 mod common;
 mod fixtures;
 
+mod backfill_tests;
 mod client_tests;
 mod cycle_tests;
 mod loopback_tests;

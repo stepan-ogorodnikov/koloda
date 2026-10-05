@@ -1,7 +1,8 @@
 use koloda_sync::error::SyncError;
 use koloda_sync::transport::Response;
+use koloda_sync_proto::transport::{Enrollment, Meta, Reply};
 
-use crate::common::{Fault, TestServer, SERVER_URL};
+use crate::common::{system_ms, Fault, TestServer, SERVER_URL};
 
 /// The first try and 3 retries.
 const ATTEMPTS: usize = 4;
@@ -78,4 +79,43 @@ fn the_skew_estimate_is_server_time_minus_local_time() {
         (119_000..=120_000).contains(&skew),
         "a server two minutes ahead reads as +120 s, less the reply's travel time: {skew}"
     );
+}
+
+#[test]
+fn a_zstd_reply_may_expand_past_the_request_ratio() {
+    let server = TestServer::new();
+    let device = server.device();
+    let reply = Reply {
+        meta: Meta {
+            server_time_ms: system_ms(),
+            epoch: None,
+            device: None,
+        },
+        ok: Some(Enrollment {
+            space_id: [1; 16],
+            device_id: [2; 16],
+            token: "t".repeat(64 * 1024),
+            epoch: [3; 16],
+        }),
+        error: None,
+    };
+    let mut body = Vec::new();
+    ciborium::into_writer(&reply, &mut body).expect("encode the reply");
+    let compressed = zstd::encode_all(body.as_slice(), 3).expect("compress the reply");
+    assert!(
+        compressed.len() * 32 < body.len(),
+        "the reply expands past 32 times its size"
+    );
+    device.transport.fault(Fault::Reply(Response {
+        status: 200,
+        body: compressed,
+        is_zstd: true,
+    }));
+
+    let result = device
+        .engine
+        .create_space(SERVER_URL, &server.setup_token, "Study", "Laptop");
+
+    let error = result.err();
+    assert!(error.is_none(), "a reply is limited by size only: {error:?}");
 }

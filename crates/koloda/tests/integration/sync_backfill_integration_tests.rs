@@ -177,7 +177,7 @@ fn column(db: &Database, sql: &str) -> Vec<String> {
 }
 
 fn drain(db: &Database, max_envelopes: usize) -> Vec<OutboxEntry> {
-    while backfill_batch(db, max_envelopes).expect("backfill batch runs") == Backfill::Pending {}
+    while backfill_batch(db, max_envelopes, usize::MAX).expect("backfill batch runs") == Backfill::Pending {}
     outbox(db)
 }
 
@@ -210,7 +210,7 @@ fn a_joiner_converges_on_every_row_and_learning_setting_the_creator_held_before_
 #[test]
 fn batches_enqueue_in_scan_order_and_never_split_an_entity() {
     let (creator, legacy) = legacy_creator();
-    assert_eq!(backfill_batch(&creator, 0).unwrap(), Backfill::Pending);
+    assert_eq!(backfill_batch(&creator, 0, usize::MAX).unwrap(), Backfill::Pending);
     assert!(outbox(&creator).is_empty(), "a zero budget enqueues nothing");
 
     let entries = drain(&creator, 2);
@@ -254,6 +254,28 @@ fn batches_enqueue_in_scan_order_and_never_split_an_entity() {
         .map(|entry| entry.envelope.header.commit_id)
         .collect::<std::collections::HashSet<_>>();
     assert_eq!(deck_commits.len(), 1, "a deck's create and pointers share one batch");
+}
+
+#[test]
+fn a_batch_ends_with_the_entity_that_reaches_its_byte_cap() {
+    let (creator, _) = legacy_creator();
+    assert_eq!(backfill_batch(&creator, 1000, 1).unwrap(), Backfill::Pending);
+    assert_eq!(
+        outbox(&creator).len(),
+        1,
+        "a cap below one entity still lets that entity go alone"
+    );
+    let first_bytes = count(&creator, "SELECT SUM(length(envelope)) FROM sync_outbox");
+
+    let (other, _) = legacy_creator();
+    let cap = usize::try_from(first_bytes).unwrap() + 1;
+    assert_eq!(backfill_batch(&other, 1000, cap).unwrap(), Backfill::Pending);
+
+    assert_eq!(
+        outbox(&other).len(),
+        2,
+        "the entity that passes the cap is the batch's last"
+    );
 }
 
 #[test]
@@ -701,7 +723,7 @@ fn a_card_graded_remotely_before_phase_three_keeps_that_grade_and_gets_no_snapsh
     let (creator, legacy) = legacy_creator();
     let mut space = FakeSpace::default();
     // WHY: one large batch stops at the end of phase 1, so the joiner can grade before the snapshots run.
-    assert_eq!(backfill_batch(&creator, 1000).unwrap(), Backfill::Pending);
+    assert_eq!(backfill_batch(&creator, 1000, usize::MAX).unwrap(), Backfill::Pending);
     space.push(&creator);
     let joiner = joiner(&space);
     space.pull(&joiner);

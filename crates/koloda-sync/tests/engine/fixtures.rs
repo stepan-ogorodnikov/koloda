@@ -2,7 +2,7 @@
 
 use std::collections::HashMap;
 
-use koloda::app::init::SeedSettings;
+use koloda::app::init::{SeedData, SeedSettings};
 use koloda::domain::algorithms::InsertAlgorithmData;
 use koloda::domain::cards::{CardContentField, InsertCardData, UpdateCardProgress};
 use koloda::domain::decks::{Deck, InsertDeckData, UpdateDeckData, UpdateDeckValues};
@@ -35,6 +35,18 @@ pub fn starter() -> Starter {
     }
 }
 
+/// First-run content for a file that starts fresh: the seed rows and settings with a daily total of `total`.
+pub fn seed_data(total: u32) -> SeedData {
+    SeedData {
+        algorithm: algorithm_data("Simple"),
+        template: template_data("Basic"),
+        settings: SeedSettings {
+            learning: learning(total),
+            ..seed_settings()
+        },
+    }
+}
+
 /// First-run settings for a blank joiner; `seed_joiner_db` points the learning defaults at the seed ids.
 pub fn seed_settings() -> SeedSettings {
     SeedSettings {
@@ -45,17 +57,7 @@ pub fn seed_settings() -> SeedSettings {
             "darkTheme": "github-dark",
             "motion": "system",
         }),
-        learning: json!({
-            "defaults": { "algorithm": "unset", "template": "unset" },
-            "dailyLimits": {
-                "total": 100,
-                "untouched": { "value": 20, "counts": true },
-                "learn": { "value": 30, "counts": true },
-                "review": { "value": 50, "counts": true },
-            },
-            "dayStartsAt": "04:00",
-            "learnAheadLimit": [4, 0],
-        }),
+        learning: learning(100),
         hotkeys: json!({
             "ui": { "focusNext": ["Alt+J"], "focusPrev": ["Alt+K"], "nextTab": ["J"], "prevTab": ["K"] },
             "navigation": {
@@ -68,6 +70,20 @@ pub fn seed_settings() -> SeedSettings {
             "grades": { "again": ["1"], "hard": ["2"], "normal": ["3"], "easy": ["4"] },
         }),
     }
+}
+
+fn learning(total: u32) -> serde_json::Value {
+    json!({
+        "defaults": { "algorithm": "unset", "template": "unset" },
+        "dailyLimits": {
+            "total": total,
+            "untouched": { "value": 20, "counts": true },
+            "learn": { "value": 30, "counts": true },
+            "review": { "value": 50, "counts": true },
+        },
+        "dayStartsAt": "04:00",
+        "learnAheadLimit": [4, 0],
+    })
 }
 
 pub fn algorithm_data(title: &str) -> InsertAlgorithmData {
@@ -182,6 +198,47 @@ impl Device {
         )
         .expect("card is created")
         .id
+    }
+
+    /// Adds `count` cards to a deck in one commit, as an import does.
+    pub fn add_cards(&self, deck: &str, template: &str, count: usize) {
+        let cards = (0..count)
+            .map(|index| InsertCardData {
+                deck_id: deck.to_string(),
+                template_id: template.to_string(),
+                content: HashMap::from([
+                    (
+                        FRONT.to_string(),
+                        CardContentField {
+                            text: format!("card {index}"),
+                        },
+                    ),
+                    (
+                        BACK.to_string(),
+                        CardContentField {
+                            text: "answer".to_string(),
+                        },
+                    ),
+                ]),
+                state: None,
+                due_at: None,
+                stability: None,
+                difficulty: None,
+                scheduled_days: None,
+                learning_steps: None,
+                reps: None,
+                lapses: None,
+                last_reviewed_at: None,
+            })
+            .collect();
+        cards::add_cards(&self.db, cards).expect("cards are added");
+    }
+
+    /// The table's ids in order, joined, to compare two files.
+    pub fn ids(&self, table: &str) -> String {
+        self.text(&format!(
+            "SELECT COALESCE(group_concat(id), '') FROM (SELECT id FROM {table} ORDER BY id)"
+        ))
     }
 
     pub fn library(&self) -> Library {

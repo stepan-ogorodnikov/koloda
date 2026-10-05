@@ -92,7 +92,7 @@ so card-progress and review namespaces stay distinct.
   `has_foreign_receipt` tells a seq this file dropped from one another copy pushed.
 
 **Backfill** — `enroll_device` reserves one stamp per backfill phase.
-`backfill_batch` scans rows written before enrollment into the outbox.
+`backfill_batch` scans rows written before enrollment into the outbox, capped by envelopes and by bytes.
 
 - Each kind's create payload comes from its stored row (`create_payload` in its repo), shared with the create paths.
 - A joiner skips seed rows, the seed algorithm's revisions, and `learning`; only the space's creator backfills them.

@@ -24,8 +24,8 @@ use koloda_sync_proto::hlc::{DeviceId, Hlc, Stamp};
 use koloda_sync_proto::payload::{seal, Payload, Seal};
 use koloda_sync_proto::registry::Lane;
 use koloda_sync_proto::transport::{
-    ClaimPairing, Empty, Enrollment, ErrorBody, ErrorCode, IssuePairing, Meta, Pairing, PairingClaim, Platform,
-    PullPage, Push, PushItem, PushReply, Reply,
+    ClaimPairing, Empty, Enrollment, ErrorBody, ErrorCode, IssuePairing, Meta, Outcome, Pairing, PairingClaim,
+    Platform, PullPage, Push, PushItem, PushReply, Receipts, Reply, MAX_RECEIPT_RANGE,
 };
 use rusqlite::backup::Backup;
 use rusqlite::{Connection, OptionalExtension};
@@ -214,8 +214,14 @@ pub struct Space {
 
 impl Space {
     pub fn new() -> Space {
+        Space::with(|_| {})
+    }
+
+    /// A space whose creator wrote rows with `before` first, so they predate enrollment.
+    pub fn with(before: impl FnOnce(&Device)) -> Space {
         let server = TestServer::new();
         let device = server.device();
+        before(&device);
         device
             .engine
             .create_space(SERVER_URL, &server.setup_token, "Study", "Laptop")
@@ -283,6 +289,37 @@ impl Space {
             body: Some(cbor(&push)),
             is_zstd: false,
         }
+    }
+
+    /// The outcome the server recorded for every seq the device has numbered.
+    pub fn outcomes(&self, device: &Device) -> Vec<Outcome> {
+        let state = device.state().expect("the device is enrolled");
+        let last =
+            u64::try_from(device.count("SELECT next_sender_seq - 1 FROM sync_state")).expect("seqs are positive");
+        let mut outcomes = Vec::new();
+        let mut after = 0;
+        while after < last {
+            let through = last.min(after + MAX_RECEIPT_RANGE);
+            let (status, reply) = self.server.call::<Receipts>(
+                Method::Get,
+                &format!(
+                    "/v1/spaces/{}/receipts?sender={}&after={after}&through={through}",
+                    state.space_id, state.device_id
+                ),
+                &device.token(),
+            );
+            assert_eq!(status, 200, "receipts read: {:?}", reply.error);
+            outcomes.extend(
+                reply
+                    .ok
+                    .expect("receipts")
+                    .receipts
+                    .into_iter()
+                    .map(|receipt| receipt.outcome),
+            );
+            after = through;
+        }
+        outcomes
     }
 
     /// What other senders pushed to a lane after `after`, as the raw client pulls it.
@@ -424,7 +461,11 @@ pub struct RouterTransport {
     router: Router,
     faults: Mutex<VecDeque<(String, Fault)>>,
     sent: Mutex<Vec<Request>>,
+    observer: Mutex<Option<Observer>>,
 }
+
+/// Runs before each request is handled, while the engine holds no database lock.
+type Observer = Box<dyn FnMut(&Request) + Send>;
 
 impl RouterTransport {
     pub fn new(router: Router) -> RouterTransport {
@@ -432,7 +473,12 @@ impl RouterTransport {
             router,
             faults: Mutex::new(VecDeque::new()),
             sent: Mutex::new(Vec::new()),
+            observer: Mutex::new(None),
         }
+    }
+
+    pub fn observe(&self, observer: impl FnMut(&Request) + Send + 'static) {
+        *self.observer.lock().expect("observer lock") = Some(Box::new(observer));
     }
 
     pub fn fault(&self, fault: Fault) {
@@ -456,6 +502,9 @@ impl Transport for RouterTransport {
     fn send(&self, request: Request) -> Sending<'_> {
         Box::pin(async move {
             self.sent.lock().expect("sent lock").push(request.clone());
+            if let Some(observer) = self.observer.lock().expect("observer lock").as_mut() {
+                observer(&request);
+            }
             let fault = {
                 let mut faults = self.faults.lock().expect("faults lock");
                 faults

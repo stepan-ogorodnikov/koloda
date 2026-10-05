@@ -89,14 +89,20 @@ impl<'c> Capture<'c> {
         {
             backfill::touch(self.conn, self, role, id, parent, payload)?;
         }
-        self.write_envelope(id, parent, payload)
+        self.write_envelope(id, parent, payload).map(|_bytes| ())
     }
 
     // INVARIANT: skips the referent check of `write`; only backfill calls it, after it has stamped every referent.
-    pub(super) fn write_envelope(&mut self, id: &str, parent: Option<&str>, payload: &Payload) -> Result<(), AppError> {
+    /// Returns the encoded envelope's size in bytes, or 0 when the database is not enrolled.
+    pub(super) fn write_envelope(
+        &mut self,
+        id: &str,
+        parent: Option<&str>,
+        payload: &Payload,
+    ) -> Result<usize, AppError> {
         let conn = self.conn;
         let Some(state) = self.device.as_mut() else {
-            return Ok(());
+            return Ok(0);
         };
 
         let commit = state.commit(conn)?;
@@ -134,7 +140,8 @@ impl<'c> Capture<'c> {
             delete_empty_cohort(conn, &replaced_commit)?;
         }
 
-        insert_outbox(conn, sender_seq, kind, id, Some(group_name), commit, &sealed)
+        insert_outbox(conn, sender_seq, kind, id, Some(group_name), commit, &sealed)?;
+        Ok(sealed.bytes.len())
     }
 
     // INVARIANT: call before a product reset deletes the card's reviews; their origins go with them.

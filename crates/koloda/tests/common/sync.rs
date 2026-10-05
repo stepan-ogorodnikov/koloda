@@ -192,7 +192,7 @@ impl FakeSpace {
 
     /// Runs backfill in batches of `max_envelopes`, pushing after each, until it finishes.
     pub fn drain_backfill(&mut self, replica: &Database, max_envelopes: usize) {
-        while backfill_batch(replica, max_envelopes).expect("backfill batch runs") == Backfill::Pending {
+        while backfill_batch(replica, max_envelopes, usize::MAX).expect("backfill batch runs") == Backfill::Pending {
             self.push(replica);
         }
         self.push(replica);

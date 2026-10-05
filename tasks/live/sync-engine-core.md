@@ -274,7 +274,7 @@ Out:
   Commit: Run the sync cycle over both lanes
   Depends on: 2
 
-- [ ] 4. Drive backfill from the cycle
+- [x] 4. Drive backfill from the cycle
   Goal: while backfill is pending, each round of the cycle runs `backfill_batch` before it pushes.
   It does so only while the outbox holds less than one push batch, so the outbox never holds the whole database.
   A backfill batch stays under the push cap, so its cohort always fits one push.

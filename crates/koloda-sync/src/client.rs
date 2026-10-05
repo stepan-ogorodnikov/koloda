@@ -7,7 +7,7 @@ use std::sync::atomic::{AtomicI64, Ordering};
 
 use koloda::app::error::{error_codes, AppError};
 use koloda::app::utility::get_current_timestamp;
-use koloda_sync_proto::transport::{Meta, Reply, MAX_BODY_BYTES, MAX_EXPANSION_RATIO};
+use koloda_sync_proto::transport::{Meta, Reply, MAX_BODY_BYTES};
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use url::{Host, Url};
@@ -159,8 +159,10 @@ fn decode<T: DeserializeOwned>(response: &Response) -> Result<Reply<T>, Transpor
     Ok(reply)
 }
 
+// WHY: only the size cap applies to a reply. The expansion ratio guards the server against request bombs, and a push
+// reply's repeated outcomes compress far past it.
 fn decompress(encoded: &[u8]) -> Result<Vec<u8>, TransportError> {
-    let cap = MAX_BODY_BYTES.min(encoded.len().saturating_mul(MAX_EXPANSION_RATIO));
+    let cap = MAX_BODY_BYTES;
     let decoder =
         zstd::stream::read::Decoder::new(encoded).map_err(|error| TransportError(format!("zstd: {error}")))?;
     let mut decoded = Vec::new();

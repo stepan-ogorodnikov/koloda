@@ -250,11 +250,11 @@ fn settle_item(
     Ok(commit_id)
 }
 
-pub fn has_pending(db: &Database) -> Result<bool, AppError> {
+pub fn pending_count(db: &Database) -> Result<usize, AppError> {
     throw_known_error(error_codes::DB_GET, || {
         db.with_conn(|conn| {
-            let has_rows = conn.query_row("SELECT EXISTS (SELECT 1 FROM sync_outbox)", [], |row| row.get(0))?;
-            Ok(has_rows)
+            let count = conn.query_row("SELECT COUNT(*) FROM sync_outbox", [], |row| row.get(0))?;
+            Ok(count)
         })
     })
 }

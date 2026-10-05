@@ -3,7 +3,8 @@
 
 use std::sync::Arc;
 
-use koloda::repo::sync::outbox::{push_batch, push_lost, push_refused, settle_push};
+use koloda::repo::sync::backfill::{backfill_batch, Backfill};
+use koloda::repo::sync::outbox::{pending_count, push_batch, push_lost, push_refused, settle_push};
 use koloda_sync_proto::registry::Kind;
 use koloda_sync_proto::transport::{Push, PushItem, PushReply};
 
@@ -16,10 +17,30 @@ use crate::transport::Method;
 const PUSH_ITEMS: usize = 2_000;
 const PUSH_BYTES: usize = 4 * 1024 * 1024;
 
+// WHY: a backfill batch stays well under both push caps, so its cohort always fits one push.
+const BACKFILL_ENVELOPES: usize = 500;
+const BACKFILL_BYTES: usize = 1024 * 1024;
+
 impl Shared {
-    /// Sends batches until the outbox is empty, a reply stops the push, or no reply consumes one.
+    // INVARIANT: backfill adds a batch only while the outbox holds less than one push batch, so the outbox never
+    // holds the whole database (PROTOCOL.md, Backfill).
+    async fn top_up(self: &Arc<Self>) -> Result<(), SyncError> {
+        while self.blocking(|shared| pending_count(&shared.db)).await? < PUSH_ITEMS {
+            let backfill = self
+                .blocking(|shared| backfill_batch(&shared.db, BACKFILL_ENVELOPES, BACKFILL_BYTES))
+                .await?;
+            if backfill == Backfill::Finished {
+                break;
+            }
+        }
+        Ok(())
+    }
+
+    /// Sends batches until the outbox is empty and backfill is done, a reply stops the push, or no reply consumes
+    /// one.
     pub(crate) async fn push(self: &Arc<Self>, session: &Session, changed: &mut Vec<Kind>) -> Result<(), SyncError> {
         loop {
+            self.top_up().await?;
             let batch = Arc::new(
                 self.blocking(|shared| push_batch(&shared.db, PUSH_ITEMS, PUSH_BYTES))
                     .await?,

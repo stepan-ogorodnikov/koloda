@@ -4,7 +4,7 @@
 use std::sync::Arc;
 
 use koloda::repo::sync::apply::{apply_page, Page, PageEntry};
-use koloda::repo::sync::outbox::{has_foreign_receipt, has_pending, standing, Standing};
+use koloda::repo::sync::outbox::{has_foreign_receipt, pending_count, standing, Standing};
 use koloda::repo::sync::repair::repair_dangling_defaults;
 use koloda_sync_proto::hlc::SKEW_TOLERANCE_MS;
 use koloda_sync_proto::registry::{Kind, Lane};
@@ -54,7 +54,7 @@ impl Shared {
             }
 
             let is_caught_up = cursors.0 >= latest.head_hot && cursors.1 >= latest.head_cold;
-            if !is_caught_up || self.blocking(|shared| has_pending(&shared.db)).await? {
+            if !is_caught_up || self.blocking(|shared| pending_count(&shared.db)).await? > 0 {
                 continue;
             }
             // WHY: before catch-up, a referent a default names may still be on its way; after it, a missing one
@@ -63,7 +63,7 @@ impl Shared {
                 .blocking(|shared| repair_dangling_defaults(&shared.db, &shared.starter))
                 .await?;
             merge(changed, repaired);
-            if !self.blocking(|shared| has_pending(&shared.db)).await? {
+            if self.blocking(|shared| pending_count(&shared.db)).await? == 0 {
                 return Ok(());
             }
         }

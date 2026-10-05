@@ -173,13 +173,14 @@ pub(super) fn reserve(conn: &Connection) -> Result<(), AppError> {
     Ok(())
 }
 
-pub fn backfill_batch(db: &Database, max_envelopes: usize) -> Result<Backfill, AppError> {
+/// Enqueues the next batch: at most `max_envelopes`, and it stops once it holds `max_bytes` of encoded envelopes.
+pub fn backfill_batch(db: &Database, max_envelopes: usize, max_bytes: usize) -> Result<Backfill, AppError> {
     throw_known_error(error_codes::DB_ADD, || {
-        db.with_transaction(|tx| run_batch(tx, max_envelopes))
+        db.with_transaction(|tx| run_batch(tx, max_envelopes, max_bytes))
     })
 }
 
-fn run_batch(conn: &Connection, max_envelopes: usize) -> Result<Backfill, AppError> {
+fn run_batch(conn: &Connection, max_envelopes: usize, max_bytes: usize) -> Result<Backfill, AppError> {
     let mut state = read_state(conn)?;
     let Some(mut step) = state.step else {
         return Ok(Backfill::Finished);
@@ -191,6 +192,7 @@ fn run_batch(conn: &Connection, max_envelopes: usize) -> Result<Backfill, AppErr
     let mut capture = Capture::begin_reserved(conn, state.stamp(step.phase()))?;
     let mut after = state.after.take();
     let mut budget = max_envelopes;
+    let mut bytes = 0;
     let mut has_written = false;
     loop {
         let marks = candidates(conn, &state, step, after.as_ref(), max_envelopes)?;
@@ -204,12 +206,13 @@ fn run_batch(conn: &Connection, max_envelopes: usize) -> Result<Backfill, AppErr
                 return Ok(Backfill::Pending);
             }
             for payload in &entity.payloads {
-                capture.write_envelope(&mark.id, entity.parent.as_deref(), payload)?;
+                bytes += capture.write_envelope(&mark.id, entity.parent.as_deref(), payload)?;
             }
             budget = budget.saturating_sub(entity.payloads.len());
             has_written |= !entity.payloads.is_empty();
             after = Some(mark);
-            if budget == 0 {
+            // WHY: the byte cap keeps a batch's cohort inside one push body; it may pass the cap by one entity.
+            if budget == 0 || bytes >= max_bytes {
                 save_watermark(conn, Some(step), after.as_ref())?;
                 return Ok(Backfill::Pending);
             }

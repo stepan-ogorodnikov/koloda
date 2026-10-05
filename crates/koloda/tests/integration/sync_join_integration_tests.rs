@@ -297,7 +297,7 @@ fn a_pending_import_captures_backfills_and_applies_nothing() {
         assert_eq!(count(&db, &format!("SELECT COUNT(*) FROM {table}")), 0, "{table}");
     }
 
-    assert_eq!(backfill_batch(&db, 10).unwrap_err().code, "db.add");
+    assert_eq!(backfill_batch(&db, 10, usize::MAX).unwrap_err().code, "db.add");
     assert_eq!(
         apply(&db, &hot_page(Uuid::now_v7(), vec![], 3)).unwrap_err().code,
         "db.update"
@@ -721,7 +721,7 @@ fn seeded_space() -> (Database, FakeSpace) {
 }
 
 fn drain(db: &Database) -> Vec<OutboxEntry> {
-    while backfill_batch(db, 100).expect("backfill batch runs") == Backfill::Pending {}
+    while backfill_batch(db, 100, usize::MAX).expect("backfill batch runs") == Backfill::Pending {}
     outbox(db)
 }
 
