@@ -1,6 +1,6 @@
 # Sync engine core
 
-Status: ready
+Status: done
 
 ## Intent
 
@@ -432,3 +432,64 @@ Out:
   Depends on: 1–8
 
 ## Outcome
+
+- `crates/koloda-sync` is a library crate that links `koloda` and `koloda-sync-proto`.
+  Its nx `lint` and `test` targets run in `check:commit`, `check:rust`, `check:rust-push`, and `test:rust`.
+- `Transport` sends one request; `HttpTransport` implements it on reqwest (rustls, no default features).
+  Tests call `koloda_server::router` in process, and one loopback test creates a space through real HTTP.
+  Bodies are CBOR, zstd above a small size.
+  A body that zstd would not shrink, or that would expand past the server's ratio, goes out uncompressed, because the
+  server refuses that encoding on every retry.
+  Every reply's `meta.server_time_ms` updates the skew estimate: server time minus local time on arrival.
+  A server URL is `https`, or `http` to a loopback host.
+  A transport failure retries at most 3 times with the same body.
+- `Engine` owns a tokio runtime on its own thread.
+  Host calls block until done, and database work runs on blocking threads.
+  `create_space` refuses a file that already has sync state, posts with a nonce its retries reuse, stores the token,
+  and enrolls the file as creator with its server URL and epoch.
+- `koloda` gains `repo/sync/outbox.rs`: `push_batch` sends in-flight rows first and never splits a cohort;
+  `settle_push` applies every outcome in one transaction; `push_refused` and `push_lost` fix cohorts as
+  `PROTOCOL.md` says.
+  `applied` and `stale` clear the row; `fenced` deletes the entity and fences its id; `existence` and
+  `repair_pointer` clear the row; `drop_entity` deletes without publishing; `held` moves the row to `sync_held`;
+  `seq_reused` stops with `behind`.
+- Migration `V9__sync_engine.sql` adds `server_url`, `epoch`, `sync_held`, `last_observed_server_seq`,
+  `is_bootstrapping`, and `detached_at`.
+- `sync_now` runs the cycle: the behind check, push, `hot` to head, `cold` up to the head recorded before `hot`,
+  then another round while the outbox or a cursor is behind, up to a bound.
+  While backfill is pending, a round runs `backfill_batch` before push, and only while the outbox holds less than
+  one push batch.
+  After catch-up it repairs dangling learning defaults and stores `last_observed_server_seq`.
+  A skew past 5 minutes either way stops the cycle with `clock_skew` before push and apply.
+- A joiner bootstraps before anything else: lease, `hot` snapshot, `hot` catch-up, `cold` snapshot to the lease's
+  cold head, release, then the normal cycle pulls `cold`.
+  Nothing is pushed while the flag is set.
+  A heartbeat goes out near expiry; `410 lease_expired` restarts; `429 rate_limited` waits for the next cycle.
+  A lease that lapses after its pages are applied is released without restarting a finished bootstrap.
+- Pairing issues a code, previews, and joins.
+  Blank files are seeded then enrolled; an untouched seed joins through Add without a choice; a used file returns
+  for `import` as Add or Replace.
+  A file that would re-attach is refused before its code is used.
+  A lost claim retries the same nonce.
+  While `import_pending`, the cycle does nothing.
+- `devices` lists the space and marks the caller.
+  `revoke_device` revokes another device.
+  `detach` revokes the own device, deletes the token, records `detached_at`, and sends nothing more; rows and sync
+  tables stay.
+  `401 revoked` detaches the same way.
+  `401 unknown_device` stops the engine.
+- A runner coalesces `notify_local_change` over 300 ms, accepts `nudge` and `sync_now`, and polls every 60 seconds.
+  One cycle runs at a time; a trigger during a cycle runs one more after it.
+  After an error it backs off, doubling up to the poll interval.
+  `status` reports the state, the stop reason, the last success, pending and held counts, lag per lane, and the skew.
+  Events are `Changed { kinds }`, `Status`, and `Error`.
+  `tick` spends a wall-time and byte budget on cycle requests only, checked before each request and each page apply;
+  host calls made during a tick are not limited by it.
+- `PROTOCOL.md` gained the device-side rules this task implements: push outcomes, cohorts, the cycle, skew, devices,
+  backfill pacing, bootstrap, pairing, and the poll interval.
+  `agents/INDEX.md` rows for engine work are still to be added by the human (question 6).
+- Deviations from the plan text:
+  - A request body that zstd would expand past the server's ratio, or would not shrink, is sent uncompressed.
+  - A tick's budget limits cycle requests only.
+  - Releasing a lease that already expired after the last page does not restart a finished bootstrap.
+- Manual verify: none — nothing user-visible until the NAPI commands and the desktop UI land.
