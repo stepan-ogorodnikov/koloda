@@ -315,7 +315,7 @@ fn a_refused_push_returns_its_cohorts_to_local() {
     assert!(
         matches!(
             result,
-            Err(SyncError::Server {
+            Err(SyncError::PushRefused {
                 status: 409,
                 code: ErrorCode::SchemaReadOnly,
                 ..

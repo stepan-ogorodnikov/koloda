@@ -401,7 +401,7 @@ Out:
   Commit: List, revoke, and detach devices
   Depends on: 3
 
-- [ ] 9. Run the engine in the background with status and events
+- [x] 9. Run the engine in the background with status and events
   Goal:
   - A runner on the engine's runtime runs the cycle on triggers:
     - `notify_local_change`, coalesced over 300 ms;

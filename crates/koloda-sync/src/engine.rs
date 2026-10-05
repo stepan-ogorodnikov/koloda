@@ -1,12 +1,14 @@
-//! The host's handle on sync. It owns a tokio runtime; every host call blocks on it until the work is done.
+//! The host's handle on sync. It owns a tokio runtime; every host call blocks on it until the work is done, and the
+//! background runner lives on it.
 
 use std::future::Future;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex, MutexGuard};
 
 use koloda::app::db::Database;
 use koloda::app::error::{error_codes, AppError};
 use koloda::app::init::SeedSettings;
 use koloda::app::secrets::SecretStore;
+use koloda::app::utility::get_current_timestamp;
 use koloda::repo::sync::repair::Starter;
 use koloda::repo::sync::{enroll_device, enrolled_device, sync_state, SpaceRole};
 use koloda_sync_proto::registry::Kind;
@@ -18,6 +20,8 @@ use crate::client::{server_url, Client, Skew};
 use crate::devices::DeviceSummary;
 use crate::error::SyncError;
 use crate::pairing::{ImportMode, IssuedPairing, Joined, Preview};
+use crate::runner::{Budget, Event, EventSink, Spending, Ticked, Timer, Triggers};
+use crate::status::{RunState, Status, Stop};
 use crate::transport::{Method, Transport};
 
 const RUNTIME_THREAD: &str = "koloda-sync";
@@ -34,6 +38,12 @@ pub(crate) struct Shared {
     pub(crate) platform: Platform,
     pub(crate) starter: Starter,
     pub(crate) skew: Skew,
+    // INVARIANT: one cycle runs at a time, whether the runner, `sync_now`, or `tick` started it.
+    cycle: tokio::sync::Mutex<()>,
+    pub(crate) triggers: Triggers,
+    run_state: Mutex<RunState>,
+    sink: Mutex<Option<Arc<dyn EventSink>>>,
+    spending: Mutex<Option<Spending>>,
 }
 
 /// What every call to the enrolled space needs, read once per cycle.
@@ -67,8 +77,31 @@ impl Engine {
                 platform,
                 starter,
                 skew: Skew::default(),
+                cycle: tokio::sync::Mutex::new(()),
+                triggers: Triggers::default(),
+                run_state: Mutex::new(RunState::default()),
+                sink: Mutex::new(None),
+                spending: Mutex::new(None),
             }),
         })
+    }
+
+    /// Starts the background runner: a cycle now, then one per trigger and per poll. Events go to `sink`.
+    pub fn start_runner(&self, sink: Arc<dyn EventSink>, timer: Arc<dyn Timer>) -> Result<(), SyncError> {
+        *self.shared.lock(&self.shared.sink)? = Some(sink);
+        let shared = Arc::clone(&self.shared);
+        self.runtime.spawn(shared.run_forever(timer));
+        Ok(())
+    }
+
+    /// A local commit happened; the runner syncs once the commits of the next 300 ms have joined it.
+    pub fn notify_local_change(&self) {
+        self.shared.triggers.fire(true);
+    }
+
+    /// The app came to the foreground or the network came back; the runner syncs now.
+    pub fn nudge(&self) {
+        self.shared.triggers.fire(false);
     }
 
     /// Creates a space on the server and enrolls this file as its creator.
@@ -84,7 +117,28 @@ impl Engine {
 
     /// Runs the sync cycle and returns the kinds whose product rows it changed.
     pub fn sync_now(&self) -> Result<Vec<Kind>, SyncError> {
-        self.run(|shared| shared.sync())
+        self.run(|shared| async move {
+            let (changed, result) = shared.run_cycle(None).await;
+            result.map(|()| changed)
+        })
+    }
+
+    /// Runs one cycle within `budget`; the next tick resumes from the cursors.
+    pub fn tick(&self, budget: Budget) -> Result<Ticked, SyncError> {
+        self.run(|shared| async move {
+            match shared.run_cycle(Some(budget)).await {
+                (changed, Ok(())) => Ok(Ticked { changed, is_done: true }),
+                (changed, Err(SyncError::BudgetSpent)) => Ok(Ticked {
+                    changed,
+                    is_done: false,
+                }),
+                (_, Err(error)) => Err(error),
+            }
+        })
+    }
+
+    pub fn status(&self) -> Result<Status, SyncError> {
+        self.run(|shared| async move { shared.status().await })
     }
 
     /// Issues a pairing code for this file's space; `hint` is opaque bytes the joining device receives.
@@ -132,31 +186,15 @@ impl Engine {
     pub fn skew_ms(&self) -> i64 {
         self.shared.skew.get()
     }
-}
 
-impl Engine {
-    // INVARIANT: a `401 revoked` reply to any call detaches the file, which then sends nothing more
-    // (PROTOCOL.md, Devices).
     fn run<T, F>(&self, work: impl FnOnce(Arc<Shared>) -> F) -> Result<T, SyncError>
     where
         F: Future<Output = Result<T, SyncError>>,
     {
         let shared = Arc::clone(&self.shared);
         self.runtime.block_on(async move {
-            match work(Arc::clone(&shared)).await {
-                Err(SyncError::Server {
-                    code: ErrorCode::Revoked,
-                    ..
-                }) => {
-                    shared.detach_locally().await?;
-                    Err(SyncError::Revoked)
-                }
-                Err(SyncError::Server {
-                    code: ErrorCode::UnknownDevice,
-                    ..
-                }) => Err(SyncError::UnknownDevice),
-                result => result,
-            }
+            let result = work(Arc::clone(&shared)).await;
+            shared.settle_device(result).await
         })
     }
 }
@@ -167,6 +205,7 @@ impl Shared {
             base,
             transport: self.transport.as_ref(),
             skew: &self.skew,
+            spending: &self.spending,
         }
     }
 
@@ -184,11 +223,121 @@ impl Shared {
             .map_err(SyncError::Local)
     }
 
-    async fn sync(self: Arc<Self>) -> Result<Vec<Kind>, SyncError> {
-        let session = self.session().await?;
+    // INVARIANT: a `401 revoked` reply to any call detaches the file, which then sends nothing more
+    // (PROTOCOL.md, Devices).
+    async fn settle_device<T>(self: &Arc<Self>, result: Result<T, SyncError>) -> Result<T, SyncError> {
+        match result {
+            Err(SyncError::Server {
+                code: ErrorCode::Revoked,
+                ..
+            }) => {
+                self.detach_locally().await?;
+                Err(SyncError::Revoked)
+            }
+            Err(SyncError::Server {
+                code: ErrorCode::UnknownDevice,
+                ..
+            }) => Err(SyncError::UnknownDevice),
+            result => result,
+        }
+    }
+
+    /// Runs one cycle under the cycle lock, records how it ended, and tells the host. The kinds changed before an
+    /// error still come back, since their rows changed all the same.
+    pub(crate) async fn run_cycle(self: &Arc<Self>, budget: Option<Budget>) -> (Vec<Kind>, Result<(), SyncError>) {
+        let _cycle = self.cycle.lock().await;
         let mut changed = Vec::new();
-        self.cycle(&session, &mut changed).await?;
-        Ok(changed)
+        let result = self.recorded_cycle(budget, &mut changed).await;
+        if !changed.is_empty() {
+            self.emit(Event::Changed { kinds: changed.clone() });
+        }
+        if let Err(error) = &result {
+            if !matches!(error, SyncError::BudgetSpent) {
+                self.emit(Event::Error(error.to_string()));
+            }
+        }
+        self.emit_status().await;
+        (changed, result)
+    }
+
+    async fn recorded_cycle(
+        self: &Arc<Self>,
+        budget: Option<Budget>,
+        changed: &mut Vec<Kind>,
+    ) -> Result<(), SyncError> {
+        *self.lock(&self.spending)? = budget.map(Spending::new);
+        self.lock(&self.run_state)?.is_syncing = true;
+        self.emit_status().await;
+
+        let synced = self.sync(changed).await;
+        let result = self.settle_device(synced).await;
+
+        *self.lock(&self.spending)? = None;
+        let mut run = self.lock(&self.run_state)?;
+        run.is_syncing = false;
+        match &result {
+            Ok(()) => {
+                run.stop = None;
+                run.last_success_ms = get_current_timestamp().ok();
+            }
+            // WHY: a spent budget is the host's limit, not a fault; the next tick picks up from the cursors.
+            Err(SyncError::BudgetSpent) => {}
+            Err(error) => run.stop = Some(Stop::of(error)),
+        }
+        result
+    }
+
+    async fn sync(self: &Arc<Self>, changed: &mut Vec<Kind>) -> Result<(), SyncError> {
+        let session = self.session().await?;
+        self.cycle(&session, changed).await
+    }
+
+    fn emit(&self, event: Event) {
+        if let Ok(sink) = self.lock(&self.sink) {
+            if let Some(sink) = sink.as_ref() {
+                sink.send(event);
+            }
+        }
+    }
+
+    async fn emit_status(self: &Arc<Self>) {
+        if self.lock(&self.sink).is_ok_and(|sink| sink.is_none()) {
+            return;
+        }
+        match self.status().await {
+            Ok(status) => self.emit(Event::Status(status)),
+            Err(error) => self.emit(Event::Error(error.to_string())),
+        }
+    }
+
+    pub(crate) fn run_state(&self) -> Result<RunState, SyncError> {
+        Ok(self.lock(&self.run_state)?.clone())
+    }
+
+    pub(crate) fn note_heads(&self, head_hot: u64, head_cold: u64) -> Result<(), SyncError> {
+        self.lock(&self.run_state)?.heads = Some((head_hot, head_cold));
+        Ok(())
+    }
+
+    /// Fails once a tick's wall time is spent; checked before each page apply.
+    pub(crate) fn check_time(&self) -> Result<(), SyncError> {
+        match self.lock(&self.spending)?.as_ref() {
+            Some(spending) => spending.check_time(),
+            None => Ok(()),
+        }
+    }
+
+    pub(crate) fn spend_page(&self, bytes: usize) -> Result<(), SyncError> {
+        if let Some(spending) = self.lock(&self.spending)?.as_mut() {
+            spending.spend(bytes);
+        }
+        Ok(())
+    }
+
+    pub(crate) fn lock<'a, T>(&self, mutex: &'a Mutex<T>) -> Result<MutexGuard<'a, T>, SyncError> {
+        mutex
+            .lock()
+            .map_err(|error| SyncError::Local(AppError::new(error_codes::UNKNOWN, Some(error.to_string()))))
     }
 
     pub(crate) async fn session(self: &Arc<Self>) -> Result<Session, SyncError> {

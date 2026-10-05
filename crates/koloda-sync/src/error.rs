@@ -28,6 +28,14 @@ pub enum SyncError {
     Detached,
     /// The server holds no device for this token, as after a restore that predates it; the engine stops.
     UnknownDevice,
+    /// The server answered a push with an error reply, which consumed nothing.
+    PushRefused {
+        status: u16,
+        code: ErrorCode,
+        message: String,
+    },
+    /// A tick spent its budget; the next one resumes from the cursors.
+    BudgetSpent,
     /// Server and local time differ by more than 5 minutes, so push and apply pause (`PROTOCOL.md` §Skew guards).
     ClockSkew {
         skew_ms: i64,
@@ -58,6 +66,10 @@ impl fmt::Display for SyncError {
             SyncError::Revoked => write!(f, "this device was revoked, so the file detached from its space"),
             SyncError::Detached => write!(f, "this file is detached from its space"),
             SyncError::UnknownDevice => write!(f, "the sync server does not know this device"),
+            SyncError::PushRefused { status, code, message } => {
+                write!(f, "the sync server refused a push with {status} {code:?}: {message}")
+            }
+            SyncError::BudgetSpent => write!(f, "this tick spent its budget"),
             SyncError::ClockSkew { skew_ms } => {
                 write!(f, "this device's clock is {skew_ms} ms off the sync server's")
             }

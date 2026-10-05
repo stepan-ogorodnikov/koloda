@@ -10,6 +10,8 @@ A native host starts one `Engine` per database file.
 The contract is `crates/koloda-sync-proto/PROTOCOL.md`; endpoint bodies come from that crate's `transport.rs`.
 `koloda` owns every sync table and SQL statement; the engine only calls its sync functions.
 The engine owns a tokio runtime, so host calls block until done; database work runs on its blocking threads.
+The host starts the background runner with an event sink, tells it about local commits and nudges, reads `status`,
+and on mobile runs bounded `tick`s instead.
 A device's bearer token lives in the host's secret store under `sync.token.<device id>`, and nowhere else.
 
 ## Architectural Map
@@ -21,6 +23,8 @@ A device's bearer token lives in the host's secret store under `sync.token.<devi
 - `src/push.rs` — pushing the outbox in batches and handing each reply, loss, or refusal to `koloda`.
 - `src/pairing.rs` — pairing codes, preview, and joining a space: blank, seed-only, or a used file through Add
   or Replace.
+- `src/runner.rs` — the background runner: triggers, coalescing, the poll, backoff, events, and tick budgets.
+- `src/status.rs` — the state the host shows, why the last cycle stopped, and how far behind each lane is.
 - `src/devices.rs` — the device list, revoking another device, and detaching this file.
 - `src/bootstrap.rs` — a joiner's union bootstrap from a snapshot lease: streams, catch-up, heartbeats, restarts.
 - `src/client.rs` — CBOR and zstd bodies, the reply envelope, the skew estimate, retries, and the server URL rule.

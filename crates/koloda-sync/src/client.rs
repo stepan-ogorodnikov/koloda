@@ -4,6 +4,7 @@
 use std::borrow::Cow;
 use std::io::Read;
 use std::sync::atomic::{AtomicI64, Ordering};
+use std::sync::Mutex;
 
 use koloda::app::error::{error_codes, AppError};
 use koloda::app::utility::get_current_timestamp;
@@ -13,6 +14,7 @@ use serde::Serialize;
 use url::{Host, Url};
 
 use crate::error::SyncError;
+use crate::runner::Spending;
 use crate::transport::{Method, Request, Response, Transport, TransportError};
 
 /// Retries after the first attempt when no complete reply arrives.
@@ -38,16 +40,18 @@ impl Skew {
     }
 }
 
-/// A successful reply: its `ok` body and its `meta`.
+/// A successful reply: its `ok` body, its `meta`, and its body's size on the wire.
 pub(crate) struct Answer<T> {
     pub(crate) ok: T,
     pub(crate) meta: Meta,
+    pub(crate) bytes: usize,
 }
 
 pub(crate) struct Client<'a> {
     pub(crate) base: &'a str,
     pub(crate) transport: &'a dyn Transport,
     pub(crate) skew: &'a Skew,
+    pub(crate) spending: &'a Mutex<Option<Spending>>,
 }
 
 impl Client<'_> {
@@ -59,6 +63,15 @@ impl Client<'_> {
         token: Option<&str>,
         body: Option<&B>,
     ) -> Result<Answer<T>, SyncError> {
+        // INVARIANT: a tick's budget is checked before every request, so a spent tick sends nothing more.
+        if let Some(spending) = self
+            .spending
+            .lock()
+            .map_err(|error| local_error(error.to_string()))?
+            .as_ref()
+        {
+            spending.check()?;
+        }
         let (body, is_zstd) = match body {
             Some(body) => {
                 let (bytes, is_zstd) = encode(body)?;
@@ -93,7 +106,11 @@ impl Client<'_> {
             .record(reply.meta.server_time_ms)
             .map_err(|error| TransportError(error.to_string()))?;
         match (reply.ok, reply.error) {
-            (Some(ok), None) if response.status == OK => Ok(Ok(Answer { ok, meta: reply.meta })),
+            (Some(ok), None) if response.status == OK => Ok(Ok(Answer {
+                ok,
+                meta: reply.meta,
+                bytes: response.body.len(),
+            })),
             (None, Some(error)) if response.status != OK => Ok(Err(SyncError::Server {
                 status: response.status,
                 code: error.code,

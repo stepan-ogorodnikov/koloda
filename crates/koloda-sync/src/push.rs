@@ -6,7 +6,7 @@ use std::sync::Arc;
 use koloda::repo::sync::backfill::{backfill_batch, Backfill};
 use koloda::repo::sync::outbox::{pending_count, push_batch, push_lost, push_refused, settle_push};
 use koloda_sync_proto::registry::Kind;
-use koloda_sync_proto::transport::{Push, PushItem, PushReply};
+use koloda_sync_proto::transport::{ErrorCode, Push, PushItem, PushReply};
 
 use crate::engine::{merge, Session, Shared};
 use crate::error::SyncError;
@@ -83,7 +83,16 @@ impl Shared {
                         }
                     })
                     .await?;
-                    return Err(error);
+                    return Err(match error {
+                        // WHY: revocation and an unknown device keep their own codes; the engine handles them for
+                        // every call, not only a push.
+                        SyncError::Server { status, code, message }
+                            if !matches!(code, ErrorCode::Revoked | ErrorCode::UnknownDevice) =>
+                        {
+                            SyncError::PushRefused { status, code, message }
+                        }
+                        other => other,
+                    });
                 }
             };
 

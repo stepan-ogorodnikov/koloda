@@ -971,6 +971,9 @@ One call runs a bounded number of rounds; the next trigger picks up what is left
 Triggers: every local commit (coalesced over ~300 ms), every nudge, app foreground, network regained, and a safety
 poll every few minutes when the socket is down.
 A grade reaches another live device in about a second.
+Until the nudge socket exists, a device polls every 60 seconds instead, so a grade can take up to a minute.
+One cycle runs at a time; triggers during a cycle run one more after it, and errors back off up to the poll
+interval.
 
 Attachment transfers run under a maintenance budget even while the cycle is paused.
 

@@ -133,6 +133,7 @@ impl Shared {
             )
             .await?;
         let heads = Heads::from_meta(answer.meta.device.as_ref())?;
+        self.note_heads(heads.head_hot, heads.head_cold)?;
         Ok((answer.ok, heads))
     }
 
@@ -168,7 +169,9 @@ impl Shared {
             if let Some(lease) = lease.as_deref_mut() {
                 lease.server_ms = answer.meta.server_time_ms;
             }
+            self.spend_page(answer.bytes)?;
             self.check_skew()?;
+            self.check_time()?;
             let page = Page {
                 lane,
                 entries: answer
@@ -191,7 +194,9 @@ impl Shared {
             merge(changed, applied);
             *cursor = answer.ok.scanned_through;
             if !answer.ok.has_more {
-                return Heads::from_meta(answer.meta.device.as_ref());
+                let heads = Heads::from_meta(answer.meta.device.as_ref())?;
+                self.note_heads(heads.head_hot, heads.head_cold)?;
+                return Ok(heads);
             }
         }
     }

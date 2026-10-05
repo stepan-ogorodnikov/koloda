@@ -7,6 +7,8 @@ pub mod devices;
 pub mod engine;
 pub mod error;
 pub mod pairing;
+pub mod runner;
+pub mod status;
 pub mod transport;
 
 mod bootstrap;

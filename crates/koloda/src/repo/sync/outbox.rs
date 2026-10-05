@@ -259,6 +259,16 @@ pub fn pending_count(db: &Database) -> Result<usize, AppError> {
     })
 }
 
+/// Writes the server consumed as `held`, waiting for their reason to clear.
+pub fn held_count(db: &Database) -> Result<usize, AppError> {
+    throw_known_error(error_codes::DB_GET, || {
+        db.with_conn(|conn| {
+            let count = conn.query_row("SELECT COUNT(*) FROM sync_held", [], |row| row.get(0))?;
+            Ok(count)
+        })
+    })
+}
+
 /// How the file stands against its own device record (`PROTOCOL.md` §Devices).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Standing {
