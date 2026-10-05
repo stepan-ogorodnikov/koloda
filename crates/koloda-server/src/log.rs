@@ -15,7 +15,10 @@ use uuid::Uuid;
 use crate::http::ApiError;
 
 // WHY: a tombstone names no group; it is stored as the entity's head under this empty group name.
-const TOMBSTONE: &str = "";
+pub(crate) const TOMBSTONE: &str = "";
+
+// INVARIANT: compaction and deletes keep every version a bootstrap lease pins; `end_lease` removes it later.
+const UNPINNED: &str = "NOT EXISTS (SELECT 1 FROM lease_items i WHERE i.lane = versions.lane AND i.seq = versions.seq)";
 
 /// One pushed envelope with what the server read from it. `group` is `None` for a delete.
 pub(crate) struct Entry<'a> {
@@ -345,10 +348,13 @@ fn live_children(tx: &Connection, column: &str, id: &str) -> Result<Vec<String>,
     Ok(cards)
 }
 
-/// Removes every head of the entity and the versions they reference.
+/// Removes every head of the entity and the versions they reference, except versions a lease pins.
 fn remove(tx: &Connection, kind: Kind, id: &str) -> Result<(), ApiError> {
     tx.execute(
-        "DELETE FROM versions WHERE (lane, seq) IN (SELECT lane, seq FROM heads WHERE kind = ?1 AND id = ?2)",
+        &format!(
+            "DELETE FROM versions WHERE (lane, seq) IN (SELECT lane, seq FROM heads WHERE kind = ?1 AND id = ?2)
+             AND {UNPINNED}"
+        ),
         params![kind.as_wire(), id],
     )?;
     tx.execute(
@@ -459,10 +465,28 @@ fn install(tx: &Connection, entry: &Entry<'_>, replaced: Option<Head>) -> Result
     )?;
     if let Some(replaced) = replaced {
         tx.execute(
-            "DELETE FROM versions WHERE lane = ?1 AND seq = ?2",
+            &format!("DELETE FROM versions WHERE lane = ?1 AND seq = ?2 AND {UNPINNED}"),
             params![replaced.lane, replaced.seq],
         )?;
     }
+    Ok(())
+}
+
+/// Ends a lease and removes the versions only it kept: no head references them and no other lease pins them.
+pub(crate) fn end_lease(tx: &Connection, lease: Uuid) -> Result<(), ApiError> {
+    tx.execute(
+        "DELETE FROM versions
+         WHERE EXISTS (
+             SELECT 1 FROM lease_items i WHERE i.lease = ?1 AND i.lane = versions.lane AND i.seq = versions.seq
+         )
+         AND NOT EXISTS (SELECT 1 FROM heads h WHERE h.lane = versions.lane AND h.seq = versions.seq)
+         AND NOT EXISTS (
+             SELECT 1 FROM lease_items o WHERE o.lease <> ?1 AND o.lane = versions.lane AND o.seq = versions.seq
+         )",
+        params![lease],
+    )?;
+    tx.execute("DELETE FROM lease_items WHERE lease = ?1", params![lease])?;
+    tx.execute("DELETE FROM leases WHERE id = ?1", params![lease])?;
     Ok(())
 }
 

@@ -2,7 +2,9 @@ use std::collections::BTreeMap;
 
 use ciborium::Value;
 use koloda_sync_proto::transport::{
-    DependencyAction, DeviceMeta, Enrollment, ErrorBody, ErrorCode, HeldReason, Meta, Outcome, Platform, Reply,
+    ClaimPairing, CreateSpace, DependencyAction, DeviceMeta, Empty, Enrollment, ErrorBody, ErrorCode, HeldReason,
+    IssuePairing, KnownId, KnownState, LogEntry, Meta, Outcome, Platform, PullPage, Push, PushItem, PushOutcome, Reply,
+    Snapshot, SnapshotPage,
 };
 use serde::Serialize;
 
@@ -169,5 +171,120 @@ fn outcomes_are_maps_tagged_by_status() {
         ciborium::into_writer(&outcome, &mut bytes).expect("encode");
         let decoded: Outcome = ciborium::from_reader(bytes.as_slice()).expect("decode");
         assert_eq!(decoded, outcome);
+    }
+}
+
+#[test]
+fn bodies_keep_their_wire_keys() {
+    let entry = LogEntry {
+        seq: 1,
+        sender: [1; 16],
+        sender_seq: 2,
+        envelope: vec![3],
+    };
+    let cases = [
+        (
+            "create space",
+            cbor(&CreateSpace {
+                name: "Home".to_string(),
+                device_name: "Laptop".to_string(),
+                platform: Platform::DesktopLinux,
+                nonce: [1; 16],
+            }),
+            vec!["name", "device_name", "platform", "nonce"],
+        ),
+        (
+            "issue pairing",
+            cbor(&IssuePairing { hint: Some(vec![1]) }),
+            vec!["hint"],
+        ),
+        (
+            "claim pairing",
+            cbor(&ClaimPairing {
+                code: "0".to_string(),
+                name: "Phone".to_string(),
+                platform: Platform::Ios,
+                nonce: [1; 16],
+            }),
+            vec!["code", "name", "platform", "nonce"],
+        ),
+        (
+            "push",
+            cbor(&Push {
+                items: vec![PushItem {
+                    sender_seq: 1,
+                    envelope: vec![1],
+                }],
+            }),
+            vec!["items"],
+        ),
+        (
+            "push outcome",
+            cbor(&PushOutcome {
+                sender_seq: 1,
+                outcome: Outcome::Applied,
+                replayed: false,
+            }),
+            vec!["sender_seq", "outcome", "replayed"],
+        ),
+        (
+            "known id",
+            cbor(&KnownId {
+                kind: "decks".to_string(),
+                id: "deck".to_string(),
+                state: KnownState::Fenced,
+            }),
+            vec!["kind", "id", "state"],
+        ),
+        (
+            "log entry",
+            cbor(&entry),
+            vec!["seq", "sender", "sender_seq", "envelope"],
+        ),
+        (
+            "pull page",
+            cbor(&PullPage {
+                entries: vec![entry.clone()],
+                scanned_through: 1,
+                has_more: false,
+            }),
+            vec!["entries", "scanned_through", "has_more"],
+        ),
+        (
+            "snapshot",
+            cbor(&Snapshot {
+                snapshot_id: [1; 16],
+                counts: BTreeMap::new(),
+                bytes: 0,
+                head_hot: 0,
+                head_cold: 0,
+                ttl_ms: 0,
+                expires_at: 0,
+                absolute_expiry: 0,
+            }),
+            vec![
+                "snapshot_id",
+                "counts",
+                "bytes",
+                "head_hot",
+                "head_cold",
+                "ttl_ms",
+                "expires_at",
+                "absolute_expiry",
+            ],
+        ),
+        (
+            "snapshot page",
+            cbor(&SnapshotPage {
+                entries: vec![entry],
+                next: 1,
+                done: true,
+            }),
+            vec!["entries", "next", "done"],
+        ),
+        ("empty", cbor(&Empty {}), vec![]),
+    ];
+    for (name, encoded, expected) in cases {
+        assert_eq!(keys(&encoded), expected, "{name}");
     }
 }

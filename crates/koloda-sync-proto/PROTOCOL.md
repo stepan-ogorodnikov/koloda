@@ -783,6 +783,10 @@ Names are 1 to 100 characters after trimming.
 | `POST /v1/spaces/{space}/push` | `items`, each `sender_seq` and `envelope` bytes; at most 5000 | `outcomes`, each `sender_seq`, `outcome`, `replayed` |
 | `POST /v1/spaces/{space}/ids/known` | `ids`, each `kind` and `id`; at most 1000 | `ids` the space holds, in the order asked, each `kind`, `id`, `state` (`live` or `fenced`) |
 | `GET /v1/spaces/{space}/pull?lane&after&max_seq&limit` | `lane` and `after`; `max_seq` defaults to the lane head | `entries`, each `seq`, `sender`, `sender_seq`, `envelope`; `scanned_through`, `has_more` |
+| `POST /v1/spaces/{space}/bootstrap` | none | `snapshot_id`, `counts` per kind, `bytes`, `head_hot`, `head_cold`, `ttl_ms`, `expires_at`, `absolute_expiry` |
+| `GET /v1/spaces/{space}/bootstrap/{snapshot}?lane&after&limit` | `lane`; `after` is a stream position, 0 at the start | `entries` as pull returns them, `next` position, `done` |
+| `POST /v1/spaces/{space}/bootstrap/{snapshot}/heartbeat` | none | `expires_at`, `absolute_expiry` |
+| `DELETE /v1/spaces/{space}/bootstrap/{snapshot}` | none | empty |
 | `GET /v1/spaces/{space}/receipts?sender&after&through` | `through - after` at most 5000 | `receipts`, each `sender_seq`, `digest`, `outcome` |
 
 Creating a space also enrolls its creator, so the first device needs no pairing code.
@@ -790,6 +794,7 @@ The same `nonce` returns the same result, token included, for 10 minutes.
 The claim reply gains `restore_points` with server restore (§Recovery).
 An outcome is a map tagged by `status`, such as `{ status: applied }` or `{ status: held, reason: schema }`.
 A receipt range is `after < seq <= through`.
+An endpoint that returns nothing answers `ok` with an empty map.
 
 ### Errors
 
@@ -803,8 +808,9 @@ A receipt range is `after < seq <= through`.
 | `pairing_failed` | 404 | A used, expired, or wrong pairing code (§Pairing) |
 | `stamp_ahead` | 409 | A pushed stamp more than 5 minutes ahead of server now (§Skew guards) |
 | `schema_read_only` | 409 | A pushed schema above the kind's `write_schema` (§Schema versions) |
+| `lease_expired` | 410 | A bootstrap lease that expired, was released, or belongs to another device (§Bootstrap) |
 | `too_large` | 413 | A body past its size or expansion cap |
-| `rate_limited` | 429 | Too many wrong pairing codes (§Pairing) |
+| `rate_limited` | 429 | Too many wrong pairing codes (§Pairing), or too many open bootstrap leases (§Bootstrap) |
 | `internal` | 500 | A server fault |
 
 The protocol also has `revoked` (401), `cursor_too_old`, `epoch_changed`, and `507`.
@@ -971,11 +977,17 @@ Personal scale is tens of MB for both lanes, plus attachments if downloaded.
 
 Bootstrap opens a **snapshot lease**: materialized `snapshot_items` for the live heads and creates after every
 committed deletion scope.
+Tombstones are not in the snapshot; the catch-up pull delivers them.
 The lease pins those versions until release or expiry; compaction and chunk cleanup cannot remove them.
 A lease taken before a later tombstone keeps its selected versions, and catch-up delivers the tombstone.
 
 Admission: one lease per device, a heartbeat TTL, and an absolute lifetime.
 Space-wide caps limit concurrent leases and pinned bytes.
+Opening a second lease for a device releases its first.
+The TTL is 5 minutes, and a heartbeat extends it, never past the absolute lifetime of 24 hours.
+A space serves at most 4 open leases; a fifth gets `429 rate_limited`.
+The cap on pinned bytes comes with quotas (§Quotas).
+An expired or released lease answers `410 lease_expired`, and only the device that opened a lease may read it.
 Revoke, restore, and absolute expiry cancel a lease.
 The client preflights free disk against the byte estimate.
 

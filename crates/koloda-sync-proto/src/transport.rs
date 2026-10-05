@@ -71,6 +71,7 @@ pub enum ErrorCode {
     RateLimited,
     StampAhead,
     SchemaReadOnly,
+    LeaseExpired,
     Internal,
 }
 
@@ -252,6 +253,42 @@ pub struct PullPage {
     pub scanned_through: u64,
     pub has_more: bool,
 }
+
+/// A bootstrap lease over the live heads at open (`PROTOCOL.md` §Bootstrap). Pages start at position 0.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Snapshot {
+    #[serde(with = "serde_bytes")]
+    pub snapshot_id: [u8; 16],
+    pub counts: BTreeMap<String, u64>,
+    pub bytes: u64,
+    pub head_hot: u64,
+    pub head_cold: u64,
+    pub ttl_ms: u64,
+    pub expires_at: u64,
+    pub absolute_expiry: u64,
+}
+
+/// `next` is the position to ask for after this page; `done` once the lane has no entries left.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct SnapshotPage {
+    pub entries: Vec<LogEntry>,
+    pub next: u64,
+    pub done: bool,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Lease {
+    pub expires_at: u64,
+    pub absolute_expiry: u64,
+}
+
+/// The `ok` of an endpoint that returns nothing: an empty map, so a reply always carries `ok` or `error`.
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Empty {}
 
 /// `kind` is the kind's wire string (`PROTOCOL.md` §Field groups and merge).
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]

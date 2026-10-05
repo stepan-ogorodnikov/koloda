@@ -83,3 +83,22 @@ CREATE TABLE IF NOT EXISTS sender_holds (
     id text NOT NULL,
     PRIMARY KEY (sender, kind, id)
 );
+
+-- A bootstrap lease pins the versions it lists until release or expiry (crates/koloda-sync-proto/PROTOCOL.md,
+-- Bootstrap). `position` is the stream order within a lane, fixed when the lease opens.
+CREATE TABLE IF NOT EXISTS leases (
+    id blob PRIMARY KEY,
+    device blob NOT NULL UNIQUE,
+    expires_at integer NOT NULL,
+    absolute_expiry integer NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS lease_items (
+    lease blob NOT NULL,
+    lane text NOT NULL,
+    position integer NOT NULL,
+    seq integer NOT NULL,
+    PRIMARY KEY (lease, lane, position)
+);
+
+CREATE INDEX IF NOT EXISTS lease_items_version ON lease_items (lane, seq);

@@ -21,6 +21,7 @@ use serde::Deserialize;
 use uuid::Uuid;
 
 use crate::auth::{self, DeviceAuth};
+use crate::bootstrap;
 use crate::http::{query, read_body, respond, ApiError};
 use crate::log::{self, Entry};
 use crate::server::{lock, Server};
@@ -80,6 +81,8 @@ fn push_batch(server: &Server, caller: &DeviceAuth, request: Push) -> Result<Pus
     let now = server.now_ms();
     let mut conn = lock(&space.writer)?;
     let tx = conn.transaction()?;
+    // WHY: an abandoned lease must stop pinning versions once its TTL ends, not when the next bootstrap opens.
+    bootstrap::end_expired(&tx, now)?;
     let mut high_water = log::high_water(&tx, caller.id)?;
     let write_schema = write_schema(&tx)?;
     let accepted_schema = |kind: Kind| {

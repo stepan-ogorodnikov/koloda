@@ -312,7 +312,7 @@ Out:
   Commit: Serve pulls per lane with a scan cursor
   Depends on: 5
 
-- [ ] 7. Bootstrap from snapshot leases
+- [x] 7. Bootstrap from snapshot leases
   Goal: `POST /v1/spaces/{space}/bootstrap` opens a lease over every live head.
   It returns the snapshot id, page tokens per lane, counts per kind, a byte estimate, the TTL, the absolute expiry,
   and the pinned lane heads.

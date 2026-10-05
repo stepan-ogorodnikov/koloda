@@ -8,6 +8,7 @@ pub mod data_dir;
 pub mod server;
 
 mod auth;
+mod bootstrap;
 mod db;
 mod devices;
 mod http;
@@ -36,6 +37,15 @@ pub fn router(server: Arc<Server>) -> Router {
         .route("/v1/spaces/{space}/receipts", get(push::receipts))
         .route("/v1/spaces/{space}/ids/known", post(known::known))
         .route("/v1/spaces/{space}/pull", get(pull::pull))
+        .route("/v1/spaces/{space}/bootstrap", post(bootstrap::open))
+        .route(
+            "/v1/spaces/{space}/bootstrap/{snapshot}",
+            get(bootstrap::page).delete(bootstrap::release),
+        )
+        .route(
+            "/v1/spaces/{space}/bootstrap/{snapshot}/heartbeat",
+            post(bootstrap::heartbeat),
+        )
         .route("/v1/spaces/{space}/devices/{device}", get(devices::get))
         .fallback(http::fallback)
         // WHY: `read_body` enforces the protocol's own body and zstd limits and answers with a reply body.
