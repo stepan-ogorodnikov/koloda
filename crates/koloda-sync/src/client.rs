@@ -51,7 +51,7 @@ pub(crate) struct Client<'a> {
     pub(crate) base: &'a str,
     pub(crate) transport: &'a dyn Transport,
     pub(crate) skew: &'a Skew,
-    pub(crate) spending: &'a Mutex<Option<Spending>>,
+    pub(crate) spending: Option<&'a Mutex<Option<Spending>>>,
 }
 
 impl Client<'_> {
@@ -64,13 +64,14 @@ impl Client<'_> {
         body: Option<&B>,
     ) -> Result<Answer<T>, SyncError> {
         // INVARIANT: a tick's budget is checked before every request, so a spent tick sends nothing more.
-        if let Some(spending) = self
-            .spending
-            .lock()
-            .map_err(|error| local_error(error.to_string()))?
-            .as_ref()
-        {
-            spending.check()?;
+        if let Some(spending) = self.spending {
+            if let Some(spending) = spending
+                .lock()
+                .map_err(|error| local_error(error.to_string()))?
+                .as_ref()
+            {
+                spending.check()?;
+            }
         }
         let (body, is_zstd) = match body {
             Some(body) => {

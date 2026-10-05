@@ -5,6 +5,7 @@ use koloda::domain::algorithms::DeleteAlgorithmData;
 use koloda::domain::cards::{CardContentField, UpdateCardData, UpdateCardValues};
 use koloda::repo::{algorithms, cards};
 use koloda_sync::error::SyncError;
+use koloda_sync::transport::Method;
 use koloda_sync_proto::envelope::Envelope;
 use koloda_sync_proto::payload::{CardContent, Delete, Payload};
 use koloda_sync_proto::registry::{Group, Kind, Lane};
@@ -334,4 +335,30 @@ fn a_relaunch_mid_bootstrap_bootstraps_again() {
         "it never pulls hot from 0: {sent:?}"
     );
     assert!(relaunched.deck(&library.deck).is_some() && relaunched.has_card(&library.card));
+}
+
+#[test]
+fn a_lease_that_lapses_after_the_last_page_ends_the_bootstrap_all_the_same() {
+    let space = Space::new();
+    let library = space.device.library();
+    space.device.engine.sync_now().expect("A syncs");
+    let b = space.server.join(&space.device);
+    b.transport.fault_when(
+        Method::Delete,
+        "/bootstrap/",
+        Fault::Reply(error_reply(410, ErrorCode::LeaseExpired)),
+    );
+
+    b.engine.sync_now().expect("B bootstraps");
+
+    assert_eq!(
+        opens(&b),
+        1,
+        "a lease gone by its release is not a reason to bootstrap again"
+    );
+    assert_eq!(b.count("SELECT is_bootstrapping FROM sync_state"), 0);
+    assert!(
+        b.deck(&library.deck).is_some() && b.has_card(&library.card),
+        "B converges"
+    );
 }

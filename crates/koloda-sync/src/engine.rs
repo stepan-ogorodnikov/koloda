@@ -205,7 +205,16 @@ impl Shared {
             base,
             transport: self.transport.as_ref(),
             skew: &self.skew,
-            spending: &self.spending,
+            spending: None,
+        }
+    }
+
+    /// A client whose requests spend the running tick's budget; only the cycle uses it, so host calls made during a
+    /// tick are not limited by it.
+    pub(crate) fn cycle_client<'a>(&'a self, base: &'a str) -> Client<'a> {
+        Client {
+            spending: Some(&self.spending),
+            ..self.client(base)
         }
     }
 

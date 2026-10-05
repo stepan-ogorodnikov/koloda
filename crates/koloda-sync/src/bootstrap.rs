@@ -53,7 +53,7 @@ impl Shared {
         changed: &mut Vec<Kind>,
     ) -> Result<(u64, u64), SyncError> {
         let opened = self
-            .client(&session.base)
+            .cycle_client(&session.base)
             .call::<(), Snapshot>(
                 Method::Post,
                 &format!("/v1/spaces/{}/bootstrap", session.space),
@@ -82,14 +82,25 @@ impl Shared {
         let cursor_cold = snapshot.head_cold;
         self.blocking(move |shared| finish_bootstrap(&shared.db, cursor_cold))
             .await?;
-        self.client(&session.base)
+        let released = self
+            .cycle_client(&session.base)
             .call::<(), Empty>(
                 Method::Delete,
                 &format!("/v1/spaces/{}/bootstrap/{}", session.space, lease.id),
                 Some(&session.token),
                 None,
             )
-            .await?;
+            .await;
+        match released {
+            // WHY: a lease that lapsed after the last page is already gone; restarting would bootstrap a finished
+            // file again.
+            Ok(_)
+            | Err(SyncError::Server {
+                code: ErrorCode::LeaseExpired,
+                ..
+            }) => {}
+            Err(error) => return Err(error),
+        }
         let repaired = self
             .blocking(|shared| repair_dangling_defaults(&shared.db, &shared.starter))
             .await?;
@@ -109,7 +120,7 @@ impl Shared {
         loop {
             self.keep_alive(session, lease).await?;
             let answer = self
-                .client(&session.base)
+                .cycle_client(&session.base)
                 .call::<(), SnapshotPage>(
                     Method::Get,
                     &format!(
@@ -155,7 +166,7 @@ impl Shared {
             return Ok(());
         }
         let answer = self
-            .client(&session.base)
+            .cycle_client(&session.base)
             .call::<(), Lease>(
                 Method::Post,
                 &format!("/v1/spaces/{}/bootstrap/{}/heartbeat", session.space, lease.id),

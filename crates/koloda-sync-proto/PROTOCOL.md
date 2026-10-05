@@ -1080,6 +1080,7 @@ Every path that makes a joiner active sets a persisted flag, so a relaunch boots
 0.
 The device heartbeats once the last reply's server time is within half a TTL of the lease's expiry.
 A lapsed lease (`410 lease_expired`) restarts the bootstrap from step 1; union apply makes the repeat safe.
+A lease that lapses once its pages are applied is released all the same; it does not restart a finished bootstrap.
 `429 rate_limited` waits for the next cycle.
 
 ### Metered networks

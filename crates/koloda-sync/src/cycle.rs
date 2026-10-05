@@ -95,7 +95,7 @@ impl Shared {
         while from < last_sender_seq {
             let through = last_sender_seq.min(from + MAX_RECEIPT_RANGE);
             let receipts: Vec<(u64, [u8; 32])> = self
-                .client(&session.base)
+                .cycle_client(&session.base)
                 .call::<(), Receipts>(
                     Method::Get,
                     &format!(
@@ -124,7 +124,7 @@ impl Shared {
 
     async fn device_record(&self, session: &Session) -> Result<(DeviceInfo, Heads), SyncError> {
         let answer = self
-            .client(&session.base)
+            .cycle_client(&session.base)
             .call::<(), DeviceInfo>(
                 Method::Get,
                 &format!("/v1/spaces/{}/devices/{}", session.space, session.device),
@@ -154,7 +154,7 @@ impl Shared {
                 self.keep_alive(session, lease).await?;
             }
             let answer = self
-                .client(&session.base)
+                .cycle_client(&session.base)
                 .call::<(), PullPage>(
                     Method::Get,
                     &format!(

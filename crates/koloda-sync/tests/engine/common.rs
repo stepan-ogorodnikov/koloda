@@ -468,7 +468,7 @@ pub enum Fault {
 /// Calls the router in process. Each queued fault applies once, to the next request whose URL contains its pattern.
 pub struct RouterTransport {
     router: Router,
-    faults: Mutex<VecDeque<(String, Fault)>>,
+    faults: Mutex<VecDeque<(Option<Method>, String, Fault)>>,
     sent: Mutex<Vec<Request>>,
     observer: Mutex<Option<Observer>>,
 }
@@ -498,7 +498,15 @@ impl RouterTransport {
         self.faults
             .lock()
             .expect("faults lock")
-            .push_back((pattern.to_string(), fault));
+            .push_back((None, pattern.to_string(), fault));
+    }
+
+    /// Like `fault_on`, for the next request with this method only.
+    pub fn fault_when(&self, method: Method, pattern: &str, fault: Fault) {
+        self.faults
+            .lock()
+            .expect("faults lock")
+            .push_back((Some(method), pattern.to_string(), fault));
     }
 
     /// Every request the engine sent, faulted ones included.
@@ -518,9 +526,11 @@ impl Transport for RouterTransport {
                 let mut faults = self.faults.lock().expect("faults lock");
                 faults
                     .iter()
-                    .position(|(pattern, _)| request.url.contains(pattern.as_str()))
+                    .position(|(method, pattern, _)| {
+                        method.is_none_or(|method| method == request.method) && request.url.contains(pattern.as_str())
+                    })
                     .and_then(|position| faults.remove(position))
-                    .map(|(_, fault)| fault)
+                    .map(|(_, _, fault)| fault)
             };
             match fault {
                 Some(Fault::Reply(response)) => Ok(response),
