@@ -86,6 +86,7 @@ libs/
   ui/                     # Styles and UI primitives
 crates/
   koloda/                 # Desktop Rust backend (domain, repos, SQLite/Refinery, keyring)
+  koloda-server/          # Sync server (spaces, devices, envelope log)
 ```
 
 Agent routing starts at `agents/INDEX.md`.

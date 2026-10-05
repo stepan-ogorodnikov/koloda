@@ -1,0 +1,82 @@
+//! `koloda-server` command line: `init` creates a data directory, `serve` runs the server on one.
+
+use std::net::SocketAddr;
+use std::path::PathBuf;
+use std::process::ExitCode;
+use std::sync::Arc;
+
+use clap::{Parser, Subcommand};
+use koloda_server::clock::{Clock, SystemClock};
+use koloda_server::data_dir::{self, DataDirLock};
+use koloda_server::router;
+use koloda_server::server::Server;
+
+#[derive(Parser)]
+#[command(name = "koloda-server", version, about = "Koloda sync server")]
+struct Cli {
+    #[command(subcommand)]
+    command: Command,
+}
+
+#[derive(Subcommand)]
+enum Command {
+    /// Create a data directory and print its setup token.
+    Init {
+        #[arg(long)]
+        data_dir: PathBuf,
+    },
+    /// Serve plain HTTP; put a TLS reverse proxy in front of it.
+    Serve {
+        #[arg(long)]
+        data_dir: PathBuf,
+        #[arg(long, default_value = "127.0.0.1:8080")]
+        listen: SocketAddr,
+    },
+}
+
+fn main() -> ExitCode {
+    match run(Cli::parse()) {
+        Ok(()) => ExitCode::SUCCESS,
+        Err(message) => {
+            eprintln!("koloda-server: {message}");
+            ExitCode::FAILURE
+        }
+    }
+}
+
+fn run(cli: Cli) -> Result<(), String> {
+    match cli.command {
+        Command::Init { data_dir } => {
+            let token = data_dir::init(&data_dir, SystemClock.now_ms()).map_err(|error| error.to_string())?;
+            println!("Setup token: {token}");
+            println!("Store it now; it is not shown again.");
+            Ok(())
+        }
+        Command::Serve { data_dir, listen } => serve(data_dir, listen),
+    }
+}
+
+fn serve(data_dir: PathBuf, listen: SocketAddr) -> Result<(), String> {
+    let _lock = DataDirLock::acquire(&data_dir).map_err(|error| error.to_string())?;
+    let server = Server::open(&data_dir, Arc::new(SystemClock)).map_err(|error| error.to_string())?;
+    let runtime = tokio::runtime::Runtime::new().map_err(|error| error.to_string())?;
+    runtime.block_on(async move {
+        let listener = tokio::net::TcpListener::bind(listen)
+            .await
+            .map_err(|error| format!("cannot listen on {listen}: {error}"))?;
+        eprintln!("koloda-server: listening on {listen}");
+        axum::serve(
+            listener,
+            router(Arc::new(server)).into_make_service_with_connect_info::<SocketAddr>(),
+        )
+        .with_graceful_shutdown(shutdown())
+        .await
+        .map_err(|error| error.to_string())
+    })
+}
+
+async fn shutdown() {
+    if let Err(error) = tokio::signal::ctrl_c().await {
+        eprintln!("koloda-server: cannot listen for Ctrl+C, stopping: {error}");
+    }
+}

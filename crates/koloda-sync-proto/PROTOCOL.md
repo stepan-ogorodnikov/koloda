@@ -728,7 +728,7 @@ Unknown `kind`, `group`, or `op`, and lane mismatches, are rejected at a header 
 
 | Endpoint | Purpose |
 | --- | --- |
-| `POST /v1/spaces` | Create a space; setup token |
+| `POST /v1/spaces` | Create a space and enroll its creator; setup token |
 | `GET /v1/spaces` | List spaces; setup token |
 | `POST /v1/spaces/{space}/pairings` | Issue a pairing code; device token, or setup token for break-glass; revoking the issuer invalidates its codes |
 | `POST /v1/pairings/preview` | Body has `code`; space name, epoch, approximate counts and bytes; does not consume the code; rate-limited |
@@ -746,14 +746,45 @@ Unknown `kind`, `group`, or `op`, and lane mismatches, are rejected at a header 
 | `POST /v1/spaces/{space}/ids/known` | Id chunk in, the ones live or fenced in the space out, each marked which (§Joining) |
 | `HEAD/PUT/GET /v1/spaces/{space}/attachments/{id}` | Attachment bytes and metadata (§Attachments) |
 
-Every response carries server time, both lane heads, both GC horizons, the epoch, `write_schema` per kind, and
-the caller's `last_sender_seq`.
+Every response body is `{ meta, ok }` or `{ meta, error }`.
+`meta.server_time_ms` is always present.
+`meta.epoch` is present when the path names an existing space, unless the token belongs to another space.
+`meta.device` is present when a device token authenticated the request.
+It carries both lane heads, both GC horizons, `write_schema` per kind, and the caller's `last_sender_seq`.
+`error` is `{ code, message }`, with a code from §Errors.
 
-Errors:
+### Bodies
 
-- `401` with a reason, `revoked` or `unknown_device` (after a restore that predates this device), and the epoch;
-- `cursor_too_old`, `epoch_changed`, `seq_reused`, `schema_read_only`;
-- `413`, `429`, `507`.
+Bodies are CBOR maps that reject unknown keys; this crate's `transport.rs` defines them.
+Space, device, epoch, and nonce ids are 16 raw UUID bytes; paths carry them as hyphenated UUID text.
+A request body may be zstd (`Content-Encoding: zstd`); a reply is zstd when the request accepts it.
+A body is at most 16 MiB after decompression, and zstd may expand it at most 32 times its size.
+Names are 1 to 100 characters after trimming.
+`platform` is one of `desktop-win`, `desktop-mac`, `desktop-linux`, `ios`, and `android`.
+
+| Endpoint | Request | `ok` |
+| --- | --- | --- |
+| `POST /v1/spaces` | `name`, `device_name`, `platform`, `nonce` | `space_id`, `device_id`, `token`, `epoch` |
+| `GET /v1/spaces` | none | `spaces`, each with `id`, `name`, `created_at`, `device_count` |
+| `GET /v1/spaces/{space}/devices/{id}` | none | `id`, `name`, `platform`, `created_at`, `last_seen` |
+
+Creating a space also enrolls its creator, so the first device needs no pairing code.
+The same `nonce` returns the same result, token included, for 10 minutes.
+
+### Errors
+
+| Code | Status | When |
+| --- | --- | --- |
+| `bad_request` | 400 | A body or query that does not decode, or a value out of range |
+| `unauthorized` | 401 | A missing or wrong setup token |
+| `unknown_device` | 401 | A device token that matches no device, as after a restore that predates the device |
+| `unknown_space` | 404 | A missing space, or a device token of another space; both answer alike |
+| `not_found` | 404 | A missing endpoint, or a record the caller cannot see |
+| `too_large` | 413 | A body past its size or expansion cap |
+| `internal` | 500 | A server fault |
+
+The protocol also has `revoked` (401), `cursor_too_old`, `epoch_changed`, `schema_read_only`, `429`, and `507`.
+Each gets its row with the server work that answers it.
 
 ### Push outcomes
 

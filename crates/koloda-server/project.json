@@ -1,0 +1,33 @@
+{
+  "name": "koloda-server",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "crates/koloda-server/src",
+  "projectType": "application",
+  "tags": ["lang:rust"],
+  "targets": {
+    "lint": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "inputs": ["rust", "{workspaceRoot}/crates/koloda-sync-proto/**/*"],
+      "options": {
+        "command": "cargo clippy -p koloda-server --all-targets -- -D warnings",
+        "forwardAllArgs": false,
+        "env": {
+          "CARGO_TARGET_DIR": "dist/target/koloda"
+        }
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "inputs": ["rust", "{workspaceRoot}/crates/koloda-sync-proto/**/*"],
+      "options": {
+        "command": "cargo test -p koloda-server",
+        "forwardAllArgs": false,
+        "env": {
+          "CARGO_TARGET_DIR": "dist/target/koloda"
+        }
+      }
+    }
+  }
+}

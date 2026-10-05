@@ -93,7 +93,7 @@ Out:
 
 ## Plan
 
-- [ ] 1. Add the koloda-server crate with space creation
+- [x] 1. Add the koloda-server crate with space creation
   Goal: new crate `crates/koloda-server`: `src/lib.rs` holds the server, and `src/main.rs` is a thin CLI over it.
   Workspace member with `[lints] workspace = true`, `autotests = false`, and one test binary `tests/server/main.rs`.
   It depends on `koloda-sync-proto` and never on `koloda`.
@@ -126,7 +126,7 @@ Out:
     `write_schema` per kind, and the caller's `last_sender_seq`.
   - Server time comes from an injected clock.
   - A bearer extractor resolves a device token to its device and space.
-    An unmatched token is `401 unknown_device`, a revoked device `401 revoked`, both with the epoch when known.
+    An unmatched token is `401 unknown_device`, with the epoch when the path names an existing space.
     A token on another space's path is `404 unknown_space`, the same as a missing space.
 
   Endpoints, both with the setup token:
@@ -134,6 +134,11 @@ Out:
     It creates the space database, enrolls the creator, and returns space id, device id, token, and epoch.
     The same nonce returns the same result, token included.
   - `GET /v1/spaces`: id, name, creation time, and device count of each space.
+
+  `GET /v1/spaces/{space}/devices/{id}` takes a device token of that space and reads one device record: id, name,
+  platform, and created and last-seen times.
+  Later items add the fields they make true.
+  Every authenticated request updates `last_seen` from the injected clock.
 
   Endpoint bodies and the shared limits go in `crates/koloda-sync-proto/src/transport.rs`.
   `PROTOCOL.md` §Transport gains the response envelope, these bodies, and the rule that space creation enrolls the
@@ -151,7 +156,7 @@ Out:
   - a missing or wrong setup token (`401`), and the space list;
   - an unmatched device token (`401 unknown_device`), and a token on another space's path (`404 unknown_space`);
   - a body at the size cap and one byte past, and a zstd body past the expansion cap;
-  - `meta` on a device call;
+  - `meta` on a device call, a device reading its own record, and `last_seen` following the manual clock;
   - `bun run check:push` green, running the new crate's lint and tests.
   Commit: Add the koloda-server crate with space creation
   Depends on: none
@@ -337,14 +342,13 @@ Out:
   Depends on: 6
 
 - [ ] 8. List, revoke, and fork devices
-  Goal: `GET /v1/spaces/{space}/devices[/{id}]` returns the fields `PROTOCOL.md` §Devices lists.
-  `rebase_required` stays false until stale marking exists.
+  Goal: `GET /v1/spaces/{space}/devices` lists the space's devices with the fields `PROTOCOL.md` §Devices lists.
+  A device record gains its revocation time; `rebase_required` stays out until stale marking exists.
   Any device of the space can revoke another with `DELETE .../devices/{id}`; `DELETE` of itself is detach.
   A revoked device gets `401 revoked` on every call.
   Its unclaimed pairing codes stop working and its lease is released.
   `POST .../devices/fork` with a current token returns a new device id and token in the same space.
   The new record notes the device it forked from and starts with no sender progress; the old token keeps working.
-  Every authenticated request updates `last_seen` from the injected clock.
   Bodies go in the proto `transport` module; `PROTOCOL.md` gets the device and fork bodies.
   Constraints: the 24-hour staleness of a forked-from record is out (stale marking).
   Done when: tests cover:
@@ -353,7 +357,7 @@ Out:
   - a fork whose token works while the old one still does, whose `last_sender_seq` starts at zero, and whose
     pushes carry its own sender;
   - a device of another space unable to revoke;
-  - `last_seen` following the manual clock.
+  - the list showing every device of the space and no other.
   Commit: List, revoke, and fork devices
   Depends on: 2, 3
 
