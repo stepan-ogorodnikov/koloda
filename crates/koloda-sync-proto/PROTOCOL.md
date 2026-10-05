@@ -751,7 +751,7 @@ Unknown `kind`, `group`, or `op`, and lane mismatches, are rejected at a header 
 | `POST /v1/spaces/{space}/push` | Batch of envelopes; atomic, with per-seq outcomes |
 | `GET /v1/spaces/{space}/receipts` | Stored outcomes for any sender's seqs; usable while `rebase_required` |
 | `GET /v1/spaces/{space}/pull?lane&after&max_seq&limit` | Envelopes with `after < seq <= max_seq`, own sender excluded, minus anything under a committed deletion scope; each entry carries `(seq, sender, sender_seq)`; returns `scanned_through`, `has_more`, heads, epoch |
-| `POST /v1/spaces/{space}/bootstrap` | Opens a snapshot lease at live heads; returns `snapshot_id`, page token, counts, byte estimate, TTL, absolute expiry |
+| `POST /v1/spaces/{space}/bootstrap` | Opens a snapshot lease at live heads; returns `snapshot_id`, counts, byte estimate, TTL, absolute expiry; pages start at position 0 |
 | `GET /v1/spaces/{space}/bootstrap/{snapshot}` | Streams the pinned snapshot with the same per-entry metadata as pull; hot by kind, referents first, then `seq`; cold newest-first by `(hlc, stamp_device, seq)`; own sender included |
 | `POST /v1/spaces/{space}/bootstrap/{snapshot}/heartbeat` | Extends TTL up to the absolute expiry |
 | `DELETE /v1/spaces/{space}/bootstrap/{snapshot}` | Releases the lease |

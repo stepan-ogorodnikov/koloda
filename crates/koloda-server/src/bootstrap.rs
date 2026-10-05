@@ -48,6 +48,12 @@ struct LeaseRow {
     absolute_expiry: u64,
 }
 
+enum LeaseState {
+    Live(Uuid, LeaseRow),
+    Expired(Uuid),
+    Missing,
+}
+
 pub(crate) async fn open(State(server): State<Arc<Server>>, Path(space): Path<String>, headers: HeaderMap) -> Response {
     respond(server, headers, move |server, scope, headers| {
         let caller = auth::require_device(server, scope, headers, &space)?;
@@ -70,10 +76,29 @@ pub(crate) async fn page(
         if limit == 0 || limit > MAX_PAGE_ENTRIES {
             return Err(ApiError::bad_request(format!("limit must be 1 to {MAX_PAGE_ENTRIES}")));
         }
-        let lease = live_lease(server, &caller, &snapshot)?;
         let space = server.space(caller.space)?.ok_or_else(ApiError::unknown_space)?;
-        let conn = lock(&space.reader)?;
-        read_page(&conn, lease, lane, params.after, limit)
+        let lapsed = {
+            let mut conn = lock(&space.reader)?;
+            // INVARIANT: the lease check and the page read share one snapshot. A lease that ended in between
+            // would otherwise read as an empty, finished stream, and the device would apply a partial snapshot.
+            let tx = conn.transaction()?;
+            match lease_state(&tx, &caller, &snapshot, server.now_ms())? {
+                LeaseState::Live(lease, _) => {
+                    let page = read_page(&tx, lease, lane, params.after, limit)?;
+                    tx.commit()?;
+                    return Ok(page);
+                }
+                LeaseState::Expired(lease) => Some(lease),
+                LeaseState::Missing => None,
+            }
+        };
+        if let Some(lease) = lapsed {
+            let mut conn = lock(&space.writer)?;
+            let tx = conn.transaction()?;
+            log::end_lease(&tx, lease)?;
+            tx.commit()?;
+        }
+        Err(expired())
     })
     .await
 }
@@ -85,19 +110,30 @@ pub(crate) async fn heartbeat(
 ) -> Response {
     respond(server, headers, move |server, scope, headers| {
         let caller = auth::require_device(server, scope, headers, &space)?;
-        let lease = live_lease(server, &caller, &snapshot)?;
         let space = server.space(caller.space)?.ok_or_else(ApiError::unknown_space)?;
-        let conn = lock(&space.writer)?;
-        let row = lease_row(&conn, lease)?.ok_or_else(expired)?;
-        let expires_at = (server.now_ms() + LEASE_TTL_MS).min(row.absolute_expiry);
-        conn.execute(
-            "UPDATE leases SET expires_at = ?1 WHERE id = ?2",
-            params![expires_at, lease],
-        )?;
-        Ok(Lease {
-            expires_at,
-            absolute_expiry: row.absolute_expiry,
-        })
+        let now = server.now_ms();
+        let mut conn = lock(&space.writer)?;
+        let tx = conn.transaction()?;
+        match lease_state(&tx, &caller, &snapshot, now)? {
+            LeaseState::Live(lease, row) => {
+                let expires_at = (now + LEASE_TTL_MS).min(row.absolute_expiry);
+                tx.execute(
+                    "UPDATE leases SET expires_at = ?1 WHERE id = ?2",
+                    params![expires_at, lease],
+                )?;
+                tx.commit()?;
+                Ok(Lease {
+                    expires_at,
+                    absolute_expiry: row.absolute_expiry,
+                })
+            }
+            LeaseState::Expired(lease) => {
+                log::end_lease(&tx, lease)?;
+                tx.commit()?;
+                Err(expired())
+            }
+            LeaseState::Missing => Err(expired()),
+        }
     })
     .await
 }
@@ -199,20 +235,16 @@ fn open_lease(server: &Server, caller: &DeviceAuth) -> Result<Snapshot, ApiError
     })
 }
 
-/// The caller's lease if it is still live; an expired one is ended here and answers `lease_expired`.
-fn live_lease(server: &Server, caller: &DeviceAuth, snapshot: &str) -> Result<Uuid, ApiError> {
-    let space = server.space(caller.space)?.ok_or_else(ApiError::unknown_space)?;
-    let mut conn = lock(&space.writer)?;
-    let tx = conn.transaction()?;
-    let lease = owned_lease(&tx, caller, snapshot)?.ok_or_else(expired)?;
-    let row = lease_row(&tx, lease)?.ok_or_else(expired)?;
-    if server.now_ms() > row.expires_at {
-        log::end_lease(&tx, lease)?;
-        tx.commit()?;
-        return Err(expired());
-    }
-    tx.commit()?;
-    Ok(lease)
+/// The caller's lease as of `now`: a lease is live through its `expires_at` millisecond.
+fn lease_state(conn: &Connection, caller: &DeviceAuth, snapshot: &str, now: u64) -> Result<LeaseState, ApiError> {
+    let Some(lease) = owned_lease(conn, caller, snapshot)? else {
+        return Ok(LeaseState::Missing);
+    };
+    Ok(match lease_row(conn, lease)? {
+        Some(row) if now <= row.expires_at => LeaseState::Live(lease, row),
+        Some(_) => LeaseState::Expired(lease),
+        None => LeaseState::Missing,
+    })
 }
 
 fn owned_lease(conn: &Connection, caller: &DeviceAuth, snapshot: &str) -> Result<Option<Uuid>, ApiError> {
