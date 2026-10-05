@@ -119,3 +119,24 @@ fn a_zstd_reply_may_expand_past_the_request_ratio() {
     let error = result.err();
     assert!(error.is_none(), "a reply is limited by size only: {error:?}");
 }
+
+#[test]
+fn a_body_that_compresses_past_the_server_ratio_goes_out_uncompressed() {
+    let space = crate::common::Space::new();
+
+    let issued = space.device.engine.issue_pairing(Some(vec![0; 4096]));
+
+    let error = issued.err();
+    assert!(error.is_none(), "the server accepts the hint: {error:?}");
+    let pairing = space
+        .device
+        .transport
+        .sent()
+        .into_iter()
+        .find(|request| request.url.ends_with("/pairings"))
+        .expect("the pairing request was sent");
+    assert!(
+        !pairing.is_zstd,
+        "4 KiB of zeros would expand past 32 times its zstd size, which the server refuses"
+    );
+}

@@ -7,7 +7,7 @@ use std::sync::atomic::{AtomicI64, Ordering};
 
 use koloda::app::error::{error_codes, AppError};
 use koloda::app::utility::get_current_timestamp;
-use koloda_sync_proto::transport::{Meta, Reply, MAX_BODY_BYTES};
+use koloda_sync_proto::transport::{Meta, Reply, MAX_BODY_BYTES, MAX_EXPANSION_RATIO};
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use url::{Host, Url};
@@ -137,6 +137,11 @@ fn encode<B: Serialize>(body: &B) -> Result<(Vec<u8>, bool), SyncError> {
         return Ok((bytes, false));
     }
     let compressed = zstd::encode_all(bytes.as_slice(), ZSTD_LEVEL).map_err(local_error)?;
+    // WHY: the server refuses a request body that expands past the ratio, and refuses it again on every retry. A
+    // body that repetitive, or one zstd cannot shrink, goes out as it is; the size cap still bounds it.
+    if compressed.len() >= bytes.len() || bytes.len() > compressed.len().saturating_mul(MAX_EXPANSION_RATIO) {
+        return Ok((bytes, false));
+    }
     Ok((compressed, true))
 }
 

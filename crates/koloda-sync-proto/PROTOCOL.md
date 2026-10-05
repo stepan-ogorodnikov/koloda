@@ -796,6 +796,8 @@ Space, device, epoch, and nonce ids are 16 raw UUID bytes; paths carry them as h
 A request body may be zstd (`Content-Encoding: zstd`); a reply is zstd when the request accepts it.
 A body is at most 16 MiB after decompression, and zstd may expand a request body at most 32 times its size.
 A reply is limited by size only, since a push reply's repeated outcomes compress far past that ratio.
+A device sends a request body uncompressed when zstd would expand it past the ratio, which the server refuses on every
+retry.
 Names are 1 to 100 characters after trimming.
 `platform` is one of `desktop-win`, `desktop-mac`, `desktop-linux`, `ios`, and `android`.
 
