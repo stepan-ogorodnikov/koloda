@@ -25,7 +25,9 @@ use serde_json::json;
 use uuid::Uuid;
 
 use crate::common::fixtures::{add_algorithm, add_card, add_conversation, add_deck, add_template, insert_review_row};
-use crate::common::sync::{apply, copy_of, count, device, enroll_as, hot_page, outbox, FakeSpace, OutboxEntry, SPACE};
+use crate::common::sync::{
+    apply, copy_of, count, device, enroll_as, hot_page, outbox, FakeSpace, OutboxEntry, EPOCH, SERVER_URL, SPACE,
+};
 use crate::common::{seed_data, test_db};
 
 const SYNCED_TABLES: [&str; 6] = [
@@ -212,7 +214,8 @@ fn join_mode_follows_the_files_rows_and_space() {
             "active in another space",
             || {
                 let db = seeded_db();
-                enroll_device(&db, Uuid::now_v7(), OTHER_SPACE, SpaceRole::Joiner).expect("database enrolls");
+                enroll_device(&db, Uuid::now_v7(), OTHER_SPACE, SpaceRole::Joiner, EPOCH, SERVER_URL)
+                    .expect("database enrolls");
                 db
             },
             JoinMode::UntouchedSeed,
@@ -236,7 +239,7 @@ fn join_mode_follows_the_files_rows_and_space() {
 #[test]
 fn a_claim_clears_what_the_file_recorded_for_another_space() {
     let db = seeded_db();
-    enroll_device(&db, Uuid::now_v7(), OTHER_SPACE, SpaceRole::Creator).expect("database enrolls");
+    enroll_device(&db, Uuid::now_v7(), OTHER_SPACE, SpaceRole::Creator, EPOCH, SERVER_URL).expect("database enrolls");
     let deck = add_deck(&db, SEED_ALGORITHM_SIMPLE_ID, SEED_TEMPLATE_TYPE_ID, "Spanish");
     delete_deck(&db, DeleteDeckData { id: deck }).expect("deck deletes");
     apply(&db, &hot_page(Uuid::now_v7(), vec![], 7)).expect("empty page applies");
@@ -1014,7 +1017,7 @@ fn a_blank_joiner_holds_no_seed_rows_and_takes_the_spaces_real_defaults() {
         json!({ "algorithm": SEED_ALGORITHM_SIMPLE_ID, "template": SEED_TEMPLATE_TYPE_ID })
     );
 
-    enroll_device(&joiner, Uuid::now_v7(), SPACE, SpaceRole::Joiner).expect("blank joiner enrolls");
+    enroll_device(&joiner, Uuid::now_v7(), SPACE, SpaceRole::Joiner, EPOCH, SERVER_URL).expect("blank joiner enrolls");
     assert!(drain(&joiner).is_empty(), "a blank joiner backfills nothing");
     space.pull(&joiner);
 

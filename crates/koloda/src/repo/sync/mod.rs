@@ -47,18 +47,27 @@ impl SpaceRole {
     }
 }
 
-pub fn enroll_device(db: &Database, device_id: Uuid, space_id: Uuid, role: SpaceRole) -> Result<(), AppError> {
+pub fn enroll_device(
+    db: &Database,
+    device_id: Uuid,
+    space_id: Uuid,
+    role: SpaceRole,
+    epoch: Uuid,
+    server_url: &str,
+) -> Result<(), AppError> {
     throw_known_error(error_codes::DB_ADD, || {
         db.with_transaction(|tx| {
             tx.execute(
                 r#"
-                INSERT INTO sync_state (id, device_id, space_id, last_hlc, next_sender_seq, role)
-                VALUES (1, ?1, ?2, 0, 1, ?3)
+                INSERT INTO sync_state (id, device_id, space_id, last_hlc, next_sender_seq, role, epoch, server_url)
+                VALUES (1, ?1, ?2, 0, 1, ?3, ?4, ?5)
                 "#,
                 params![
                     device_id.as_bytes().as_slice(),
                     space_id.as_bytes().as_slice(),
-                    role.as_sql()
+                    role.as_sql(),
+                    epoch.as_bytes().as_slice(),
+                    server_url
                 ],
             )?;
 

@@ -1,0 +1,32 @@
+[package]
+name = "koloda-sync"
+version = "0.0.1"
+edition = "2021"
+# One explicit test binary (`engine`). Do not add `tests/*.rs` crate roots.
+autotests = false
+
+[lints]
+workspace = true
+
+[[test]]
+name = "engine"
+path = "tests/engine/main.rs"
+
+[dependencies]
+ciborium = "0.2"
+koloda = { path = "../koloda" }
+koloda-sync-proto = { path = "../koloda-sync-proto" }
+reqwest = { version = "0.13", default-features = false, features = ["rustls"] }
+serde = { version = "1.0", features = ["derive"] }
+tokio = { version = "1", features = ["rt-multi-thread"] }
+url = "2.5"
+uuid = { version = "1.0", features = ["v4"] }
+zstd = "0.14"
+
+[dev-dependencies]
+axum = "0.8"
+koloda-server = { path = "../koloda-server" }
+rusqlite = { version = "0.33", features = ["bundled"] }
+tempfile = "3"
+tokio = { version = "1", features = ["net", "rt-multi-thread"] }
+tower = { version = "0.5", features = ["util"] }

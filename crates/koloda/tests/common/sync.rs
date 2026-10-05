@@ -20,6 +20,8 @@ use uuid::Uuid;
 
 /// The space every test replica enrolls in.
 pub const SPACE: Uuid = Uuid::from_u128(0x0192_0000_0000_7000_8000_0000_0000_05ac);
+pub const EPOCH: Uuid = Uuid::from_u128(0x0192_0000_0000_7000_8000_0000_0000_e90c);
+pub const SERVER_URL: &str = "https://sync.test";
 
 pub struct OutboxEntry {
     pub sender_seq: i64,
@@ -53,7 +55,7 @@ pub fn enroll(db: &Database) -> Uuid {
 
 pub fn enroll_as(db: &Database, role: SpaceRole) -> Uuid {
     let device = Uuid::now_v7();
-    sync::enroll_device(db, device, SPACE, role).expect("test database enrolls");
+    sync::enroll_device(db, device, SPACE, role, EPOCH, SERVER_URL).expect("test database enrolls");
     device
 }
 

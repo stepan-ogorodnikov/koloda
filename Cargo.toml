@@ -3,6 +3,7 @@ members = [
     "crates/koloda",
     "crates/koloda-sync-proto",
     "crates/koloda-server",
+    "crates/koloda-sync",
     "apps/electron/src-rust",
 ]
 resolver = "2"

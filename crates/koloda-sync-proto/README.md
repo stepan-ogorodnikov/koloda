@@ -8,7 +8,7 @@ Not an npm package and not linked by the web host, which does not sync.
 
 The protocol contract is `PROTOCOL.md`.
 This crate is its executable half; change both in the same commit.
-The sync server (`crates/koloda-server`) links it, and so will the sync engine in the native hosts.
+The sync server (`crates/koloda-server`) and the sync engine (`crates/koloda-sync`) link it.
 The server links only this crate, never `koloda`, so nothing here may depend on `koloda`.
 
 ## Architectural Map
@@ -26,7 +26,7 @@ The server links only this crate, never `koloda`, so nothing here may depend on 
 ### Does NOT own (prevent scope creep)
 
 - Sync tables, capture, apply, and repair — the native persistence layer (`koloda`)
-- Sending requests, cursors, and the sync cycle — the sync engine
+- Sending requests, cursors, and the sync cycle — the sync engine (`koloda-sync`)
 - Server storage, compaction, and restore — the sync server
 - User-visible sync behavior — functional specs under `docs/specs/`
 

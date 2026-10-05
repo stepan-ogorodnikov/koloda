@@ -127,7 +127,7 @@ Out:
 
 ## Plan
 
-- [ ] 1. Add the koloda-sync crate with space creation
+- [x] 1. Add the koloda-sync crate with space creation
   Goal: new crate `crates/koloda-sync`, a library.
   It is a workspace member with `[lints] workspace = true`, `autotests = false`, and one test binary
   `tests/engine/main.rs`.

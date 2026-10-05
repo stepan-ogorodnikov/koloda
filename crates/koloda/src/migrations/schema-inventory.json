@@ -1037,6 +1037,13 @@
           "dflt_value": null
         },
         {
+          "name": "epoch",
+          "type": "BLOB",
+          "notnull": 0,
+          "pk": 0,
+          "dflt_value": null
+        },
+        {
           "name": "id",
           "type": "INTEGER",
           "notnull": 1,
@@ -1070,6 +1077,13 @@
           "notnull": 1,
           "pk": 0,
           "dflt_value": "'joiner'"
+        },
+        {
+          "name": "server_url",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0,
+          "dflt_value": null
         },
         {
           "name": "space_id",

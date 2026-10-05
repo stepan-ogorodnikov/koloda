@@ -735,6 +735,8 @@ Two live copies of one file end up as two devices.
 
 HTTPS REST with CBOR bodies and zstd, plus one WebSocket that carries only nudges.
 Pairing codes travel in request bodies, never in URLs.
+Every request carries a token or a pairing code, so a device accepts a server URL only if it is `https`, or `http`
+to a loopback host.
 Every request is limited by body size, zstd expansion ratio, CBOR depth, envelope count, and per-envelope payload
 size.
 Unknown `kind`, `group`, or `op`, and lane mismatches, are rejected at a header allowlist.
