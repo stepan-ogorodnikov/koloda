@@ -22,6 +22,12 @@ pub enum SyncError {
     /// The file is behind its own device record, as after a restore from backup or a copy; it stops syncing
     /// (`PROTOCOL.md` §Devices).
     Behind,
+    /// The server revoked this device, so the file detached: its token is gone and its rows stay.
+    Revoked,
+    /// The file is detached from its space and sends nothing until it re-attaches.
+    Detached,
+    /// The server holds no device for this token, as after a restore that predates it; the engine stops.
+    UnknownDevice,
     /// Server and local time differ by more than 5 minutes, so push and apply pause (`PROTOCOL.md` §Skew guards).
     ClockSkew {
         skew_ms: i64,
@@ -49,6 +55,9 @@ impl fmt::Display for SyncError {
             SyncError::AlreadyEnrolled => write!(f, "this file already syncs with a space"),
             SyncError::NotEnrolled => write!(f, "this file does not sync with a space"),
             SyncError::Behind => write!(f, "this file is behind its own record on the sync server"),
+            SyncError::Revoked => write!(f, "this device was revoked, so the file detached from its space"),
+            SyncError::Detached => write!(f, "this file is detached from its space"),
+            SyncError::UnknownDevice => write!(f, "the sync server does not know this device"),
             SyncError::ClockSkew { skew_ms } => {
                 write!(f, "this device's clock is {skew_ms} ms off the sync server's")
             }

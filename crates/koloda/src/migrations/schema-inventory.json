@@ -1086,6 +1086,13 @@
           "dflt_value": "0"
         },
         {
+          "name": "detached_at",
+          "type": "INTEGER",
+          "notnull": 0,
+          "pk": 0,
+          "dflt_value": null
+        },
+        {
           "name": "device_id",
           "type": "BLOB",
           "notnull": 1,

@@ -92,6 +92,8 @@ pub struct SyncState {
     pub is_bootstrapping: bool,
     /// A claim waits for the user to pick Add or Replace; nothing syncs meanwhile.
     pub is_import_pending: bool,
+    /// The device was revoked or detached itself; the file sends nothing until it re-attaches.
+    pub is_detached: bool,
 }
 
 pub fn sync_state(db: &Database) -> Result<Option<SyncState>, AppError> {
@@ -101,7 +103,7 @@ pub fn sync_state(db: &Database) -> Result<Option<SyncState>, AppError> {
                 .query_row(
                     r#"
                     SELECT device_id, space_id, server_url, cursor_hot, cursor_cold, is_bootstrapping,
-                           join_phase = 'import_pending'
+                           join_phase = 'import_pending', detached_at IS NOT NULL
                     FROM sync_state WHERE id = 1
                     "#,
                     [],
@@ -115,6 +117,7 @@ pub fn sync_state(db: &Database) -> Result<Option<SyncState>, AppError> {
                             cursor_cold: row.get(4)?,
                             is_bootstrapping: row.get(5)?,
                             is_import_pending: row.get(6)?,
+                            is_detached: row.get(7)?,
                         };
                         Ok((ids, state))
                     },
@@ -128,6 +131,16 @@ pub fn sync_state(db: &Database) -> Result<Option<SyncState>, AppError> {
                 })
             })
             .transpose()
+        })
+    })
+}
+
+/// Records that the file left its space at `now`; its rows and sync tables stay.
+pub fn detach(db: &Database, now: i64) -> Result<(), AppError> {
+    throw_known_error(error_codes::DB_UPDATE, || {
+        db.with_conn(|conn| {
+            conn.execute("UPDATE sync_state SET detached_at = ?1 WHERE id = 1", params![now])?;
+            Ok(())
         })
     })
 }

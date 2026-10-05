@@ -380,7 +380,7 @@ Out:
   Commit: Join with a used file through Add or Replace
   Depends on: 6
 
-- [ ] 8. List, revoke, and detach devices
+- [x] 8. List, revoke, and detach devices
   Goal:
   - `devices()` lists the space's devices, marking the caller.
   - `revoke_device(id)` revokes another device.

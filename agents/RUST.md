@@ -93,6 +93,9 @@ sets `cold`'s and clears the joiner's bootstrap flag.
 - `settle_push` records the highest seq it saw consumed; `standing` compares it with the device record, and
   `has_foreign_receipt` tells a seq this file dropped from one another copy pushed.
 
+**Detach** — `detach` records when the file left its space; the engine sends nothing for a detached file, and
+capture keeps recording for a later re-attach.
+
 **Backfill** — `enroll_device` reserves one stamp per backfill phase.
 `backfill_batch` scans rows written before enrollment into the outbox, capped by envelopes and by bytes.
 

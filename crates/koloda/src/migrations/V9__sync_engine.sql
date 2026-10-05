@@ -25,3 +25,7 @@ ALTER TABLE sync_state ADD COLUMN last_observed_server_seq integer NOT NULL DEFA
 -- a file that stopped mid-bootstrap bootstraps again instead of pulling from 0 (crates/koloda-sync-proto/PROTOCOL.md,
 -- Bootstrap).
 ALTER TABLE sync_state ADD COLUMN is_bootstrapping integer NOT NULL DEFAULT 0;
+
+-- WHY: a revoked or detached file keeps its rows and sync tables for a later re-attach, and sends nothing meanwhile
+-- (crates/koloda-sync-proto/PROTOCOL.md, Devices).
+ALTER TABLE sync_state ADD COLUMN detached_at integer;

@@ -697,6 +697,12 @@ Rules:
   Re-bootstrap runs first.
 - The space carries an `epoch`: an opaque generation UUID that changes on every server restore.
 
+Detaching on the device deletes the token and records when.
+Rows and sync tables stay, and capture keeps recording, for a later re-attach.
+A detached file sends no request.
+A `401 revoked` reply to any call detaches the file this way; `detach` revokes the own device first.
+`401 unknown_device` stops the engine until recovery lands.
+
 ### Behind its own record: rollback and copies
 
 A file restored from a backup, and a copied file still using the original's token, look the same to the server.
