@@ -28,6 +28,10 @@ impl Shared {
             .blocking(|shared| koloda::repo::sync::sync_state(&shared.db))
             .await?
             .ok_or(SyncError::NotEnrolled)?;
+        // INVARIANT: a used file waiting for Add or Replace pushes, pulls, and captures nothing (PROTOCOL.md, Joining).
+        if state.is_import_pending {
+            return Ok(());
+        }
         let mut cursors = (state.cursor_hot, state.cursor_cold);
         if state.is_bootstrapping {
             cursors = self.bootstrap(session, changed).await?;

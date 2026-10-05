@@ -360,7 +360,7 @@ Out:
   Commit: Pair devices and join blank or seed-only files
   Depends on: 5
 
-- [ ] 7. Join with a used file through Add or Replace
+- [x] 7. Join with a used file through Add or Replace
   Goal: for a used file, `join` claims, runs `begin_import`, probes, and returns that a choice is needed.
   With it comes how many local ids the space already holds; any known id means a likely copy, for which Replace is
   the safer choice.

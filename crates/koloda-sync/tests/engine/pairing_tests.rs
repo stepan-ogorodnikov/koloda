@@ -64,6 +64,7 @@ fn a_blank_file_joins_by_code_and_converges() {
         Joined {
             mode: JoinMode::Blank,
             hint: Some(b"interface settings".to_vec()),
+            known_ids: 0,
         }
     );
     assert_eq!(b.state().map(|state| state.role).as_deref(), Some("joiner"));

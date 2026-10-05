@@ -82,7 +82,7 @@ pub fn enroll_device(
     })
 }
 
-/// What the engine needs to reach the space: the server URL is unset only while a claim waits for Add or Replace.
+/// What the engine reads before a cycle: where the space is, where each lane resumes, and what the file waits for.
 pub struct SyncState {
     pub device_id: Uuid,
     pub space_id: Uuid,
@@ -90,44 +90,43 @@ pub struct SyncState {
     pub cursor_hot: u64,
     pub cursor_cold: u64,
     pub is_bootstrapping: bool,
+    /// A claim waits for the user to pick Add or Replace; nothing syncs meanwhile.
+    pub is_import_pending: bool,
 }
-
-type StateRow = (Vec<u8>, Vec<u8>, Option<String>, u64, u64, bool);
 
 pub fn sync_state(db: &Database) -> Result<Option<SyncState>, AppError> {
     throw_known_error(error_codes::DB_GET, || {
         db.with_conn(|conn| {
-            let row: Option<StateRow> = conn
+            let row = conn
                 .query_row(
                     r#"
-                    SELECT device_id, space_id, server_url, cursor_hot, cursor_cold, is_bootstrapping
+                    SELECT device_id, space_id, server_url, cursor_hot, cursor_cold, is_bootstrapping,
+                           join_phase = 'import_pending'
                     FROM sync_state WHERE id = 1
                     "#,
                     [],
                     |row| {
-                        Ok((
-                            row.get(0)?,
-                            row.get(1)?,
-                            row.get(2)?,
-                            row.get(3)?,
-                            row.get(4)?,
-                            row.get(5)?,
-                        ))
+                        let ids: (Vec<u8>, Vec<u8>) = (row.get(0)?, row.get(1)?);
+                        let state = SyncState {
+                            device_id: Uuid::nil(),
+                            space_id: Uuid::nil(),
+                            server_url: row.get(2)?,
+                            cursor_hot: row.get(3)?,
+                            cursor_cold: row.get(4)?,
+                            is_bootstrapping: row.get(5)?,
+                            is_import_pending: row.get(6)?,
+                        };
+                        Ok((ids, state))
                     },
                 )
                 .optional()?;
-            row.map(
-                |(device_id, space_id, server_url, cursor_hot, cursor_cold, is_bootstrapping)| {
-                    Ok(SyncState {
-                        device_id: Uuid::from_slice(&device_id).map_err(protocol_error)?,
-                        space_id: Uuid::from_slice(&space_id).map_err(protocol_error)?,
-                        server_url,
-                        cursor_hot,
-                        cursor_cold,
-                        is_bootstrapping,
-                    })
-                },
-            )
+            row.map(|((device_id, space_id), state)| {
+                Ok(SyncState {
+                    device_id: Uuid::from_slice(&device_id).map_err(protocol_error)?,
+                    space_id: Uuid::from_slice(&space_id).map_err(protocol_error)?,
+                    ..state
+                })
+            })
             .transpose()
         })
     })

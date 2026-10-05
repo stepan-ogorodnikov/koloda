@@ -15,7 +15,7 @@ use uuid::Uuid;
 
 use crate::client::{server_url, Client, Skew};
 use crate::error::SyncError;
-use crate::pairing::{IssuedPairing, Joined, Preview};
+use crate::pairing::{ImportMode, IssuedPairing, Joined, Preview};
 use crate::transport::{Method, Transport};
 
 const RUNTIME_THREAD: &str = "koloda-sync";
@@ -111,6 +111,12 @@ impl Engine {
         let shared = Arc::clone(&self.shared);
         self.runtime
             .block_on(shared.join(server_url, code, device_name, settings))
+    }
+
+    /// Finishes a used file's join by Add or Replace.
+    pub fn import(&self, mode: ImportMode) -> Result<(), SyncError> {
+        let shared = Arc::clone(&self.shared);
+        self.runtime.block_on(shared.import(mode))
     }
 
     /// Server time minus local time when the last reply arrived, in milliseconds.

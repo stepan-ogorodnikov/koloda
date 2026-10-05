@@ -6,7 +6,7 @@ use std::collections::{BTreeMap, HashMap};
 use std::sync::Arc;
 
 use koloda::app::init::{seed_joiner_db, SeedSettings};
-use koloda::repo::sync::join::{add_to_space, begin_import, join_mode, probe_ids, JoinMode, Known};
+use koloda::repo::sync::join::{add_to_space, begin_import, join_mode, probe_ids, replace_with_space, JoinMode, Known};
 use koloda::repo::sync::{enroll_device, SpaceRole};
 use koloda_sync_proto::registry::Kind;
 use koloda_sync_proto::transport::{
@@ -38,11 +38,23 @@ pub struct Preview {
     pub bytes: u64,
 }
 
-/// How the file joined, and the inviting device's setup hint.
+/// How the file joined, the inviting device's setup hint, and how many of the file's ids the space already holds.
+///
+/// A used file waits for `import`: any known id means a likely copy, for which Replace is the safer choice.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Joined {
     pub mode: JoinMode,
     pub hint: Option<Vec<u8>>,
+    pub known_ids: usize,
+}
+
+/// How a used file finishes its join (`PROTOCOL.md` §Joining).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ImportMode {
+    /// Keep the file's rows, reminting the ids the space already holds.
+    Add,
+    /// Delete the file's product rows and take the space's.
+    Replace,
 }
 
 impl Shared {
@@ -102,7 +114,7 @@ impl Shared {
         // re-attach is refused while its code can still be used by another device.
         let space = Uuid::from_bytes(self.preview_at(&base, code).await?.space_id);
         let mode = self.blocking(move |shared| join_mode(&shared.db, space)).await?;
-        if matches!(mode, JoinMode::Reattach | JoinMode::Used) {
+        if mode == JoinMode::Reattach {
             return Err(SyncError::CannotJoin(mode));
         }
 
@@ -135,22 +147,45 @@ impl Shared {
             .await?;
 
         let (space, base) = (session.space, session.base.clone());
-        match mode {
-            JoinMode::Blank => {
-                self.blocking(move |shared| {
-                    seed_joiner_db(&shared.db, settings)?;
-                    enroll_device(&shared.db, device, space, SpaceRole::Joiner, epoch, &base)
-                })
-                .await?;
-            }
-            _ => {
-                self.blocking(move |shared| begin_import(&shared.db, device, space, epoch, &base))
-                    .await?;
-                let known = self.probe(&session).await?;
-                self.blocking(move |shared| add_to_space(&shared.db, &known)).await?;
-            }
+        if mode == JoinMode::Blank {
+            self.blocking(move |shared| {
+                seed_joiner_db(&shared.db, settings)?;
+                enroll_device(&shared.db, device, space, SpaceRole::Joiner, epoch, &base)
+            })
+            .await?;
+            return Ok(Joined {
+                mode,
+                hint: claim.hint,
+                known_ids: 0,
+            });
         }
-        Ok(Joined { mode, hint: claim.hint })
+
+        self.blocking(move |shared| begin_import(&shared.db, device, space, epoch, &base))
+            .await?;
+        let known = self.probe(&session).await?;
+        let known_ids = known.len();
+        // WHY: only the untouched seed joins without asking; Add's seed rules are the only change it needs.
+        if mode == JoinMode::UntouchedSeed {
+            self.blocking(move |shared| add_to_space(&shared.db, &known)).await?;
+        }
+        Ok(Joined {
+            mode,
+            hint: claim.hint,
+            known_ids,
+        })
+    }
+
+    /// Finishes a used file's join; the next cycle bootstraps it.
+    pub(crate) async fn import(self: Arc<Self>, mode: ImportMode) -> Result<(), SyncError> {
+        match mode {
+            ImportMode::Add => {
+                // INVARIANT: no probe answer is stored; Add asks the space again, since it may have changed.
+                let session = self.session().await?;
+                let known = self.probe(&session).await?;
+                self.blocking(move |shared| add_to_space(&shared.db, &known)).await
+            }
+            ImportMode::Replace => self.blocking(|shared| replace_with_space(&shared.db)).await,
+        }
     }
 
     /// Asks the space which of the file's ids it holds, a chunk at a time (`PROTOCOL.md` §Joining).

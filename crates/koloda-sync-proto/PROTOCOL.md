@@ -1210,6 +1210,8 @@ It sends its hot-lane ids, seed ids included, to `POST .../ids/known` in chunks.
 The server answers which are live and which are fenced in the space.
 Reviews are not sent: a review can only collide if its card does.
 The user then picks **Add** or **Replace**; known ids mean a likely copy, for which Replace is the safer choice.
+No probe answer is stored: Add probes the space again when the user picks it, since the space may have changed.
+The choice survives a relaunch, because the file stays `import_pending` until it is made.
 
 **Add** is one local transaction:
 
