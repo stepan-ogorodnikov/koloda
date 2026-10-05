@@ -1,6 +1,6 @@
 # Sync engine core
 
-Status: draft
+Status: ready
 
 ## Intent
 
@@ -68,80 +68,62 @@ Out:
 
 ## Open questions
 
-- [ ] Area guides? — open.
-  Proposed: `agents/TASKS.md`, `agents/IMPLEMENTATION-PLAN.md`, `agents/MARKDOWN.md`, `agents/CODE-DOCUMENTATION.md`,
-  `agents/CODE-STYLE.md` (change discipline), `agents/TESTING.md`, `agents/RUST.md`, and `agents/DB.md` (the
-  `koloda` changes and the migration).
+- [x] Area guides? — `agents/TASKS.md`, `agents/IMPLEMENTATION-PLAN.md`, `agents/MARKDOWN.md`,
+  `agents/CODE-DOCUMENTATION.md`, `agents/CODE-STYLE.md` (change discipline), `agents/TESTING.md`, `agents/RUST.md`,
+  and `agents/DB.md` (the `koloda` changes and the migration).
   Also `crates/koloda/README.md`, `crates/koloda-sync-proto/PROTOCOL.md` and its README,
   `crates/koloda-server/README.md` (the test server), `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md` (desktop-only
   sync writes), and `agents/REVIEW.md` for self-review.
-- [ ] 1. What does this slice include? — open.
-  - a. Everything under Scope In.
-    Recovery waits for its own task: fork, re-stamp, re-bootstrap, and re-attach share one barrier and one re-stamp.
-  - b. Leave pairing, joining, and bootstrap to a second engine task; this one syncs a creator and test-enrolled
-    joiners.
-  - c. Scope In plus recovery: the fork, re-stamp, re-bootstrap, and re-attach.
-- [ ] 2. Transport and tests? — open.
-  - a. A `Transport` trait with one reqwest implementation (rustls, no default features).
-    Tests call `koloda_server::router` in process through that trait, with no sockets.
-    `koloda-server` is a dev dependency.
-    The server clock is system time plus an offset the test moves, because `koloda` stamps with system time.
-    One loopback test runs the real reqwest path.
-  - b. Every test serves the router on loopback and goes through reqwest.
-- [ ] 3. Runtime and host API shape? — open.
-  - a. The engine owns a tokio runtime on its own thread.
-    Host calls are blocking Rust functions.
-    The NAPI binding later runs them on its worker pool, as it runs every command today.
-    Database work runs on blocking threads, because `Database` serializes on one mutex.
-    Events go to a host sink trait.
-  - b. An async API; each binding supplies its runtime and spawns the runner.
-- [ ] 4. Migrations? — open.
-  - a. One `V9__sync_engine.sql` that items extend until the task lands, as the server task did with its `V1`.
-    Nothing outside this branch applies it before then.
-  - b. One migration per item that needs a column or table.
-- [ ] 5. Protocol gaps this task fills? — open.
-  Each one is written into `PROTOCOL.md` by the item that implements it.
-  - a. Accept all of these:
-    - `fenced`: the device deletes the entity and its descendants, as an applied tombstone would.
-      It fences the id with the rejected envelope's stamp; the tombstone, when pulled, meets that fence.
-    - `existence`: the device clears the row and drops the pending write; the local row keeps its value.
-      Capturing the missing referent waits for heal re-push, which re-encodes rows from their stored stamps.
-    - `dependency_fenced { drop_entity }`: the device deletes the entity and its descendants without publishing.
-      The dead parent's or template's tombstone arrives by pull.
-    - `dependency_fenced { repair_pointer }`: the device clears the row.
-      The referent's tombstone, when pulled, sweeps the pointer.
-    - `held`: the row moves to `sync_held` with its reason.
-      This app version regenerates nothing, because only a schema bump or quotas can clear a reason.
-    - `seq_reused`: push stops and the file reports `behind`; rows the reply did not reach go back out of flight.
-    - A push with no complete reply fixes every `uncertain` cohort it carried.
-      Its rows stay in flight, and the next push sends the same bytes first.
-    - An error reply to a push consumed nothing.
-      Its `uncertain` cohorts return to `local` and their rows leave flight; `fixed` cohorts keep theirs in flight.
-    - A file that is behind stops pushing and pulling until recovery lands.
-      Pulling would miss the original's writes, because pull excludes the device id both files share.
-    - The skew estimate is server time minus local time when a reply arrives.
-      Push and apply pause while it exceeds 5 minutes either way.
-    - Bootstrap on the device runs in this order:
-      - the `hot` snapshot;
-      - `hot` catch-up to a head read after the lease;
-      - the `cold` snapshot up to the lease's cold head;
-      - then incremental `cold` pulls.
-      Nothing is pushed until it ends.
-      A persisted flag makes a relaunch bootstrap again instead of pulling from 0, and a lapsed lease restarts it.
-    - Join previews before it claims, so a file that would re-attach is refused before its code is used.
-      A lost claim reply is retried with the same nonce.
-    - `401 revoked` detaches the file: the token is deleted, rows and sync tables stay, and the engine sends nothing
-      more.
-      `detach` revokes the own device first.
-    - A server URL is `https`, or `http` to a loopback host.
-    - With no nudge channel yet, the runner polls every 60 seconds.
-  - b. Go through them one at a time.
-- [ ] 6. Routing docs? — open.
-  - a. You add the `agents/INDEX.md` rows for engine work, since I do not open that file.
-    They would route to `crates/koloda-sync/README.md` and `PROTOCOL.md`.
-    I update `agents/RUST.md` for the new `koloda` entry points.
-    No `docs/decisions/APP-ROLES.md` row: the engine is a crate with no product surface until the desktop UI task.
-  - b. You let me open and edit `agents/INDEX.md` for this change.
+- [x] 1. What does this slice include? — everything under Scope In.
+  Recovery waits for its own task: fork, re-stamp, re-bootstrap, and re-attach share one barrier and one re-stamp.
+- [x] 2. Transport and tests? — a `Transport` trait with one reqwest implementation (rustls, no default features).
+  Tests call `koloda_server::router` in process through that trait, with no sockets; `koloda-server` is a dev
+  dependency.
+  The server clock is system time plus an offset the test moves, because `koloda` stamps with system time.
+  One loopback test runs the real reqwest path.
+- [x] 3. Runtime and host API shape? — the engine owns a tokio runtime on its own thread, and host calls are blocking
+  Rust functions.
+  The NAPI binding later runs them on its worker pool, as it runs every command today.
+  Database work runs on blocking threads, because `Database` serializes on one mutex.
+  Events go to a host sink trait.
+- [x] 4. Migrations? — one `V9__sync_engine.sql` that items extend until the task lands, as the server task did with
+  its `V1`; nothing outside this branch applies it before then.
+- [x] 5. Protocol gaps this task fills? — all of these, each written into `PROTOCOL.md` by the item that implements
+  it:
+  - `fenced`: the device deletes the entity and its descendants, as an applied tombstone would.
+    It fences the id with the rejected envelope's stamp; the tombstone, when pulled, meets that fence.
+  - `existence`: the device clears the row and drops the pending write; the local row keeps its value.
+    Capturing the missing referent waits for heal re-push, which re-encodes rows from their stored stamps.
+  - `dependency_fenced { drop_entity }`: the device deletes the entity and its descendants without publishing.
+    The dead parent's or template's tombstone arrives by pull.
+  - `dependency_fenced { repair_pointer }`: the device clears the row.
+    The referent's tombstone, when pulled, sweeps the pointer.
+  - `held`: the row moves to `sync_held` with its reason.
+    This app version regenerates nothing, because only a schema bump or quotas can clear a reason.
+  - `seq_reused`: push stops and the file reports `behind`; rows the reply did not reach go back out of flight.
+  - A push with no complete reply fixes every `uncertain` cohort it carried.
+    Its rows stay in flight, and the next push sends the same bytes first.
+  - An error reply to a push consumed nothing.
+    Its `uncertain` cohorts return to `local` and their rows leave flight; `fixed` cohorts keep theirs in flight.
+  - A file that is behind stops pushing and pulling until recovery lands.
+    Pulling would miss the original's writes, because pull excludes the device id both files share.
+  - The skew estimate is server time minus local time when a reply arrives.
+    Push and apply pause while it exceeds 5 minutes either way.
+  - Bootstrap on the device runs the `hot` snapshot, `hot` catch-up to a head read after the lease, the `cold`
+    snapshot up to the lease's cold head, then incremental `cold` pulls.
+    Nothing is pushed until it ends.
+    A persisted flag makes a relaunch bootstrap again instead of pulling from 0, and a lapsed lease restarts it.
+  - Join previews before it claims, so a file that would re-attach is refused before its code is used.
+    A lost claim reply is retried with the same nonce.
+  - `401 revoked` detaches the file: the token is deleted, rows and sync tables stay, and the engine sends nothing
+    more.
+    `detach` revokes the own device first.
+  - A server URL is `https`, or `http` to a loopback host.
+  - With no nudge channel yet, the runner polls every 60 seconds.
+- [x] 6. Routing docs? — the human adds the `agents/INDEX.md` rows for engine work, routing to
+  `crates/koloda-sync/README.md` and `PROTOCOL.md`; agents do not open that file.
+  The task updates `agents/RUST.md` for the new `koloda` entry points.
+  No `docs/decisions/APP-ROLES.md` row: the engine is a crate with no product surface until the desktop UI task.
 
 ## Plan
 
@@ -201,10 +183,7 @@ Out:
   - a reply body that is not CBOR reported as a transport error;
   - one loopback test serving the real router on `127.0.0.1` and creating a space through `HttpTransport`;
   - `bun run check:push` green, running the new crate's lint and tests.
-  Commit: <pick>
-  - a. Add the koloda-sync crate with space creation
-  - b. Start the sync engine with a server client and space creation
-  - c. Add the sync engine crate, its HTTP client, and space creation
+  Commit: Add the koloda-sync crate with space creation
   Depends on: none
 
 - [ ] 2. Push the outbox and settle every outcome
@@ -256,10 +235,7 @@ Out:
   - `stamp_ahead` with the server clock 10 minutes behind: nothing consumed, cohorts `local`, rows out of flight;
   - a cap that falls inside a cohort ending the batch before it, and a cohort larger than the cap going alone;
   - `bun run check:push` green.
-  Commit: <pick>
-  - a. Push the outbox and settle every outcome
-  - b. Push outbox batches and settle their outcomes locally
-  - c. Push whole cohorts and settle each outcome in one transaction
+  Commit: Push the outbox and settle every outcome
   Depends on: 1
 
 - [ ] 3. Run the sync cycle over both lanes
@@ -295,10 +271,7 @@ Out:
   - the skew pause in both directions: 6 minutes stops push and apply, and 4 minutes runs;
   - a dangling learning default repaired after catch-up and pushed;
   - `bun run check:push` green.
-  Commit: <pick>
-  - a. Run the sync cycle over both lanes
-  - b. Read the device record, push, then pull hot and cold
-  - c. Sync both ways and stop a file that is behind
+  Commit: Run the sync cycle over both lanes
   Depends on: 2
 
 - [ ] 4. Drive backfill from the cycle
@@ -314,9 +287,7 @@ Out:
   - a card created during the scan, before its template's batch, reaching the server with no `existence`;
   - the outbox never holding more than one batch past a push batch;
   - `bun run check:push` green.
-  Commit: <pick>
-  - a. Drive backfill from the sync cycle
-  - b. Backfill rows that predate enrollment as the cycle pushes
+  Commit: Drive backfill from the sync cycle
   Depends on: 3
 
 - [ ] 5. Bootstrap joining devices from snapshot leases
@@ -353,9 +324,7 @@ Out:
   - a default row created during bootstrap reaching the server only after catch-up;
   - a relaunch mid-bootstrap: a new engine on the same file bootstraps again and never pulls `hot` from 0;
   - `bun run check:push` green.
-  Commit: <pick>
-  - a. Bootstrap joining devices from snapshot leases
-  - b. Join through a union bootstrap with heartbeats and restarts
+  Commit: Bootstrap joining devices from snapshot leases
   Depends on: 3
 
 - [ ] 6. Pair devices and join blank or seed-only files
@@ -388,9 +357,7 @@ Out:
   - a re-attaching file refused, with its code still claimable;
   - a lost claim reply retried to the same device and token;
   - `bun run check:push` green.
-  Commit: <pick>
-  - a. Pair devices and join blank or seed-only files
-  - b. Issue, preview, and claim pairing codes from the engine
+  Commit: Pair devices and join blank or seed-only files
   Depends on: 5
 
 - [ ] 7. Join with a used file through Add or Replace
@@ -410,9 +377,7 @@ Out:
   - a probe of more than 1000 ids, spanning two calls;
   - a relaunch between `join` and `import`;
   - `bun run check:push` green.
-  Commit: <pick>
-  - a. Join with a used file through Add or Replace
-  - b. Probe the space and import a used file by Add or Replace
+  Commit: Join with a used file through Add or Replace
   Depends on: 6
 
 - [ ] 8. List, revoke, and detach devices
@@ -433,9 +398,7 @@ Out:
   - detach: the own record is revoked, and the file is detached;
   - an unknown device token stopping the engine with `unknown_device`;
   - `bun run check:push` green.
-  Commit: <pick>
-  - a. List, revoke, and detach devices
-  - b. Manage devices and detach on revocation
+  Commit: List, revoke, and detach devices
   Depends on: 3
 
 - [ ] 9. Run the engine in the background with status and events
@@ -465,9 +428,7 @@ Out:
   - status for each stop reason the earlier items report;
   - a tick with a small byte budget stopping between pages, and the next tick finishing from the cursor;
   - `bun run check:push` green.
-  Commit: <pick>
-  - a. Run the sync engine in the background with status and events
-  - b. Add the engine runner, status, events, and bounded ticks
+  Commit: Run the sync engine in the background with status and events
   Depends on: 1–8
 
 ## Outcome
