@@ -13,12 +13,14 @@ use crate::clock::Clock;
 use crate::data_dir::{self, DataDirError, SERVER_DB, SPACES};
 use crate::db::{self, DbError};
 use crate::http::ApiError;
+use crate::pairing::Guesses;
 
 pub struct Server {
     generation: PathBuf,
     server_db: Mutex<Connection>,
     spaces: Mutex<HashMap<Uuid, Arc<SpaceDb>>>,
     clock: Arc<dyn Clock>,
+    pub(crate) guesses: Mutex<Guesses>,
 }
 
 // INVARIANT: every write to a space goes through `writer`, which is that space's writer lock
@@ -37,6 +39,7 @@ impl Server {
             server_db: Mutex::new(server_db),
             spaces: Mutex::new(HashMap::new()),
             clock,
+            guesses: Mutex::new(Guesses::default()),
         })
     }
 
@@ -81,6 +84,12 @@ impl Server {
         drop(conn);
         lock(&self.spaces)?.insert(id, Arc::new(space));
         Ok(())
+    }
+
+    pub(crate) fn space_epoch(&self, id: Uuid) -> Result<Uuid, ApiError> {
+        let space = self.space(id)?.ok_or_else(ApiError::unknown_space)?;
+        let epoch = lock(&space.reader)?.query_row("SELECT epoch FROM space WHERE id = 1", [], |row| row.get(0))?;
+        Ok(epoch)
     }
 
     fn space_path(&self, id: Uuid) -> PathBuf {

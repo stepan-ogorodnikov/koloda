@@ -42,8 +42,14 @@ async fn a_device_reads_its_record_with_device_meta() {
 async fn device_tokens_answer_only_for_their_own_space() {
     let harness = Harness::new();
     let home = harness.create_space("Home").await;
+    let phone = harness.pair(&home, "Phone").await;
     let work = harness.create_space("Work").await;
 
+    let peer = harness
+        .get(device_path(home.space_id, phone.device_id))
+        .token(&home.token)
+        .send::<DeviceInfo>()
+        .await;
     let unknown = harness
         .get(device_path(home.space_id, home.device_id))
         .token(&"0".repeat(64))
@@ -65,6 +71,7 @@ async fn device_tokens_answer_only_for_their_own_space() {
         .send::<DeviceInfo>()
         .await;
 
+    assert_eq!(peer.ok().name, "Phone", "a device reads the records of its space");
     assert_eq!(unknown.error(), (StatusCode::UNAUTHORIZED, ErrorCode::UnknownDevice));
     assert_eq!(
         unknown.reply.meta.epoch,

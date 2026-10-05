@@ -11,6 +11,7 @@ use serde::{Deserialize, Serialize};
 pub const MAX_BODY_BYTES: usize = 16 * 1024 * 1024;
 pub const MAX_EXPANSION_RATIO: usize = 32;
 pub const MAX_NAME_CHARS: usize = 100;
+pub const MAX_HINT_BYTES: usize = 4 * 1024;
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -61,6 +62,8 @@ pub enum ErrorCode {
     UnknownDevice,
     UnknownSpace,
     NotFound,
+    PairingFailed,
+    RateLimited,
     Internal,
 }
 
@@ -97,6 +100,57 @@ pub struct Enrollment {
     pub token: String,
     #[serde(with = "serde_bytes")]
     pub epoch: [u8; 16],
+}
+
+/// The setup hint is opaque to the server: interface settings the inviting device attaches (`PROTOCOL.md` §Setup hint).
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct IssuePairing {
+    #[serde(default, with = "serde_bytes", skip_serializing_if = "Option::is_none")]
+    pub hint: Option<Vec<u8>>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Pairing {
+    pub code: String,
+    pub expires_at: u64,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct PreviewPairing {
+    pub code: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct PairingPreview {
+    #[serde(with = "serde_bytes")]
+    pub space_id: [u8; 16],
+    pub name: String,
+    #[serde(with = "serde_bytes")]
+    pub epoch: [u8; 16],
+    pub counts: BTreeMap<String, u64>,
+    pub bytes: u64,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ClaimPairing {
+    pub code: String,
+    pub name: String,
+    pub platform: Platform,
+    #[serde(with = "serde_bytes")]
+    pub nonce: [u8; 16],
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct PairingClaim {
+    pub enrollment: Enrollment,
+    #[serde(default, with = "serde_bytes", skip_serializing_if = "Option::is_none")]
+    pub hint: Option<Vec<u8>>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]

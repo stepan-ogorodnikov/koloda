@@ -1,9 +1,11 @@
 //! In-process harness: a fresh data directory, a manual clock, and the router called without sockets.
 
+use std::net::SocketAddr;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
 
 use axum::body::{to_bytes, Body};
+use axum::extract::ConnectInfo;
 use axum::http::header::{ACCEPT_ENCODING, AUTHORIZATION, CONTENT_ENCODING};
 use axum::http::{Method, Request, StatusCode};
 use axum::Router;
@@ -11,7 +13,9 @@ use koloda_server::clock::Clock;
 use koloda_server::data_dir;
 use koloda_server::router;
 use koloda_server::server::Server;
-use koloda_sync_proto::transport::{CreateSpace, Enrollment, ErrorCode, Platform, Reply};
+use koloda_sync_proto::transport::{
+    ClaimPairing, CreateSpace, Enrollment, ErrorCode, IssuePairing, Pairing, PairingClaim, Platform, Reply,
+};
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use tempfile::TempDir;
@@ -48,6 +52,7 @@ pub struct Call<'a> {
     body: Option<Vec<u8>>,
     content_encoding: Option<&'static str>,
     accept_zstd: bool,
+    peer: Option<SocketAddr>,
 }
 
 pub struct Answer<T> {
@@ -79,6 +84,7 @@ impl Harness {
             body: None,
             content_encoding: None,
             accept_zstd: false,
+            peer: None,
         }
     }
 
@@ -97,6 +103,23 @@ impl Harness {
             .send::<Enrollment>()
             .await
             .ok()
+    }
+
+    /// Enrolls a second device into `space` through a pairing code its creator issues.
+    pub async fn pair(&self, space: &Enrollment, name: &str) -> Enrollment {
+        let pairing = self
+            .post(format!("/v1/spaces/{}/pairings", uuid(space.space_id)))
+            .token(&space.token)
+            .body(&IssuePairing::default())
+            .send::<Pairing>()
+            .await
+            .ok();
+        self.post("/v1/pairings/claim")
+            .body(&claim_request(&pairing.code, name, nonce(name)))
+            .send::<PairingClaim>()
+            .await
+            .ok()
+            .enrollment
     }
 }
 
@@ -124,6 +147,12 @@ impl Call<'_> {
         self
     }
 
+    /// The client address `serve` would record for the connection.
+    pub fn peer(mut self, peer: SocketAddr) -> Self {
+        self.peer = Some(peer);
+        self
+    }
+
     pub async fn send<T: DeserializeOwned>(self) -> Answer<T> {
         let mut request = Request::builder().method(self.method).uri(self.path);
         if let Some(token) = &self.token {
@@ -135,9 +164,12 @@ impl Call<'_> {
         if self.accept_zstd {
             request = request.header(ACCEPT_ENCODING, "zstd");
         }
-        let request = request
+        let mut request = request
             .body(self.body.map_or_else(Body::empty, Body::from))
             .expect("build a test request");
+        if let Some(peer) = self.peer {
+            request.extensions_mut().insert(ConnectInfo(peer));
+        }
         let response = tower::ServiceExt::oneshot(self.harness.router.clone(), request)
             .await
             .expect("the router never fails");
@@ -180,6 +212,15 @@ pub fn create_request(name: &str, nonce: [u8; 16]) -> CreateSpace {
         name: name.to_string(),
         device_name: format!("{name} laptop"),
         platform: Platform::DesktopLinux,
+        nonce,
+    }
+}
+
+pub fn claim_request(code: &str, name: &str, nonce: [u8; 16]) -> ClaimPairing {
+    ClaimPairing {
+        code: code.to_string(),
+        name: name.to_string(),
+        platform: Platform::DesktopMac,
         nonce,
     }
 }

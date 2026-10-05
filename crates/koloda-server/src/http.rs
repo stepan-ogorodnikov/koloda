@@ -69,6 +69,10 @@ impl ApiError {
         ApiError::new(StatusCode::INTERNAL_SERVER_ERROR, ErrorCode::Internal, message)
     }
 
+    pub(crate) fn code(&self) -> ErrorCode {
+        self.code
+    }
+
     fn body(&self) -> ErrorBody {
         ErrorBody {
             code: self.code,

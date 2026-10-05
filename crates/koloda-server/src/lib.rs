@@ -11,6 +11,7 @@ mod auth;
 mod db;
 mod devices;
 mod http;
+mod pairing;
 mod spaces;
 
 use std::sync::Arc;
@@ -24,6 +25,9 @@ use crate::server::Server;
 pub fn router(server: Arc<Server>) -> Router {
     Router::new()
         .route("/v1/spaces", post(spaces::create).get(spaces::list))
+        .route("/v1/spaces/{space}/pairings", post(pairing::issue))
+        .route("/v1/pairings/preview", post(pairing::preview))
+        .route("/v1/pairings/claim", post(pairing::claim))
         .route("/v1/spaces/{space}/devices/{device}", get(devices::get))
         .fallback(http::fallback)
         // WHY: `read_body` enforces the protocol's own body and zstd limits and answers with a reply body.

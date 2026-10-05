@@ -161,7 +161,7 @@ Out:
   Commit: Add the koloda-server crate with space creation
   Depends on: none
 
-- [ ] 2. Pair devices with short-lived codes
+- [x] 2. Pair devices with short-lived codes
   Goal: `POST /v1/spaces/{space}/pairings` issues a code.
   It takes a device token of that space, or the setup token for break-glass, and an optional setup hint.
   The hint is opaque bytes with a size cap.

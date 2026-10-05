@@ -767,9 +767,13 @@ Names are 1 to 100 characters after trimming.
 | `POST /v1/spaces` | `name`, `device_name`, `platform`, `nonce` | `space_id`, `device_id`, `token`, `epoch` |
 | `GET /v1/spaces` | none | `spaces`, each with `id`, `name`, `created_at`, `device_count` |
 | `GET /v1/spaces/{space}/devices/{id}` | none | `id`, `name`, `platform`, `created_at`, `last_seen` |
+| `POST /v1/spaces/{space}/pairings` | `hint`, optional bytes of at most 4 KiB | `code`, `expires_at` |
+| `POST /v1/pairings/preview` | `code` | `space_id`, `name`, `epoch`, `counts` per kind, `bytes` |
+| `POST /v1/pairings/claim` | `code`, `name`, `platform`, `nonce` | `enrollment` as space creation returns it, `hint` |
 
 Creating a space also enrolls its creator, so the first device needs no pairing code.
 The same `nonce` returns the same result, token included, for 10 minutes.
+The claim reply gains `restore_points` with server restore (§Recovery).
 
 ### Errors
 
@@ -780,10 +784,12 @@ The same `nonce` returns the same result, token included, for 10 minutes.
 | `unknown_device` | 401 | A device token that matches no device, as after a restore that predates the device |
 | `unknown_space` | 404 | A missing space, or a device token of another space; both answer alike |
 | `not_found` | 404 | A missing endpoint, or a record the caller cannot see |
+| `pairing_failed` | 404 | A used, expired, or wrong pairing code (§Pairing) |
 | `too_large` | 413 | A body past its size or expansion cap |
+| `rate_limited` | 429 | Too many wrong pairing codes (§Pairing) |
 | `internal` | 500 | A server fault |
 
-The protocol also has `revoked` (401), `cursor_too_old`, `epoch_changed`, `schema_read_only`, `429`, and `507`.
+The protocol also has `revoked` (401), `cursor_too_old`, `epoch_changed`, `schema_read_only`, and `507`.
 Each gets its row with the server work that answers it.
 
 ### Push outcomes
@@ -1176,10 +1182,17 @@ Nothing keeps syncing afterwards.
 ### Pairing
 
 - **Setup token**: created with the server; required to create a space.
-- **Pairing code**: 8–10 characters from an unambiguous alphabet, single use, 10-minute TTL, issued by an enrolled
-  device.
+- **Pairing code**: 10 characters of Crockford base32 (digits and capitals without `I`, `L`, `O`, `U`), single use,
+  valid for 10 minutes from issue, issued by an enrolled device.
   It is shown as text and as a QR that also encodes the server URL and space id.
-  Guessing is rate-limited per IP and per space.
+  Case, spaces, and hyphens do not matter, and `O`, `I`, and `L` read as `0`, `1`, and `1`.
+  The server stores only its hash.
+- **Claim**: a claim retried with the same nonce returns the same device and token until the code expires.
+  A different nonce on a used code fails.
+- **Failures**: a used, expired, or wrong code fails alike with `pairing_failed`, so a reply never says which.
+  Wrong codes are limited per client address and server-wide, because a wrong code names no space.
+  After 10 failures from one address, or 100 in all, previews and claims get `429 rate_limited` until the minute's
+  window ends.
 - **Break-glass**: the setup token can issue a pairing code for an existing space.
 
 Transport security is TLS.

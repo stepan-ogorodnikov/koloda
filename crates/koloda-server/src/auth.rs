@@ -5,7 +5,7 @@
 use axum::http::header::AUTHORIZATION;
 use axum::http::{HeaderMap, StatusCode};
 use koloda_sync_proto::transport::ErrorCode;
-use rusqlite::{params, OptionalExtension};
+use rusqlite::{params, Connection, OptionalExtension};
 use sha2::{Digest, Sha256};
 use uuid::Uuid;
 
@@ -16,7 +16,14 @@ const TOKEN_BYTES: usize = 32;
 const BEARER: &str = "Bearer ";
 
 pub(crate) struct DeviceAuth {
+    pub(crate) id: Uuid,
     pub(crate) space: Uuid,
+}
+
+/// A caller that may act on a space with a device token of that space, or with the setup token for break-glass.
+pub(crate) struct SpaceAuth {
+    pub(crate) space: Uuid,
+    pub(crate) device: Option<Uuid>,
 }
 
 pub(crate) fn new_token() -> Result<String, getrandom::Error> {
@@ -43,14 +50,34 @@ pub(crate) fn require_setup(server: &Server, headers: &HeaderMap) -> Result<(), 
         )
     };
     let token = bearer(headers).ok_or_else(unauthorized)?;
-    let stored: Vec<u8> = server
-        .server_db()?
-        .query_row("SELECT token_hash FROM setup WHERE id = 1", [], |row| row.get(0))?;
-    if stored == token_hash(token) {
+    if is_setup_token(server, token)? {
         Ok(())
     } else {
         Err(unauthorized())
     }
+}
+
+pub(crate) fn require_device_or_setup(
+    server: &Server,
+    scope: &mut Scope,
+    headers: &HeaderMap,
+    space: &str,
+) -> Result<SpaceAuth, ApiError> {
+    if let Some(token) = bearer(headers) {
+        if is_setup_token(server, token)? {
+            let space = Uuid::parse_str(space).map_err(|_invalid| ApiError::unknown_space())?;
+            if !space_exists(&*server.server_db()?, space)? {
+                return Err(ApiError::unknown_space());
+            }
+            scope.space = Some(space);
+            return Ok(SpaceAuth { space, device: None });
+        }
+    }
+    let device = require_device(server, scope, headers, space)?;
+    Ok(SpaceAuth {
+        space: device.space,
+        device: Some(device.id),
+    })
 }
 
 /// Resolves a device token for a request on `/v1/spaces/{space}/...` and records the caller in `scope`.
@@ -76,11 +103,7 @@ pub(crate) fn require_device(
     };
     let Some((id, device_space)) = device else {
         if let Some(space_id) = space_id {
-            let exists = conn
-                .query_row("SELECT 1 FROM spaces WHERE id = ?1", params![space_id], |_| Ok(()))
-                .optional()?
-                .is_some();
-            if exists {
+            if space_exists(&conn, space_id)? {
                 scope.space = Some(space_id);
             }
         }
@@ -99,7 +122,24 @@ pub(crate) fn require_device(
     )?;
     scope.space = Some(device_space);
     scope.device = Some(id);
-    Ok(DeviceAuth { space: device_space })
+    Ok(DeviceAuth {
+        id,
+        space: device_space,
+    })
+}
+
+fn is_setup_token(server: &Server, token: &str) -> Result<bool, ApiError> {
+    let stored: Vec<u8> = server
+        .server_db()?
+        .query_row("SELECT token_hash FROM setup WHERE id = 1", [], |row| row.get(0))?;
+    Ok(stored == token_hash(token))
+}
+
+fn space_exists(conn: &Connection, space: Uuid) -> Result<bool, ApiError> {
+    Ok(conn
+        .query_row("SELECT 1 FROM spaces WHERE id = ?1", params![space], |_| Ok(()))
+        .optional()?
+        .is_some())
 }
 
 fn bearer(headers: &HeaderMap) -> Option<&str> {

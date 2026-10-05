@@ -33,3 +33,16 @@ CREATE TABLE IF NOT EXISTS space_creations (
     epoch blob NOT NULL,
     expires_at integer NOT NULL
 );
+
+-- WHY: the claim token is kept in clear until the code expires, so a claim retried with the same nonce after a lost
+-- reply gets the same device back.
+CREATE TABLE IF NOT EXISTS pairings (
+    code_hash blob PRIMARY KEY,
+    space_id blob NOT NULL REFERENCES spaces (id),
+    issuer blob REFERENCES devices (id),
+    expires_at integer NOT NULL,
+    hint blob,
+    claim_nonce blob,
+    claim_device blob,
+    claim_token text
+);
