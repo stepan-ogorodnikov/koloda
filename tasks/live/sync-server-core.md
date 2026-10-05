@@ -1,6 +1,6 @@
 # Sync server core
 
-Status: draft
+Status: ready
 
 ## Intent
 
@@ -53,57 +53,43 @@ Out:
 
 ## Open questions
 
-- [ ] Area guides? — open.
-  Proposed: `agents/TASKS.md`, `agents/IMPLEMENTATION-PLAN.md`, `agents/MARKDOWN.md`, `agents/CODE-DOCUMENTATION.md`,
-  `agents/CODE-STYLE.md` (change discipline), `agents/TESTING.md`, `crates/koloda-sync-proto/PROTOCOL.md` and its
-  README, plus `agents/REVIEW.md` for self-review.
+- [x] Area guides? — `agents/TASKS.md`, `agents/IMPLEMENTATION-PLAN.md`, `agents/MARKDOWN.md`,
+  `agents/CODE-DOCUMENTATION.md`, `agents/CODE-STYLE.md` (change discipline), `agents/TESTING.md`,
+  `crates/koloda-sync-proto/PROTOCOL.md` and its README, plus `agents/REVIEW.md` for self-review.
   `agents/RUST.md`, `agents/DB.md`, and `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md` do not apply: the server never
   links `koloda`, has its own migrations, and has no TypeScript twin.
-- [ ] 1. What does this slice include? — open.
-  - a. Everything under Scope In, bootstrap with snapshot leases included.
-    A join needs bootstrap: a pull from seq 0 in `seq` order can meet a deck before any live algorithm
-    (`PROTOCOL.md` §Bootstrap).
-  - b. Leave bootstrap and leases to a second server task, which must land before the engine's join.
-- [ ] 2. Where do the endpoint body types live? — open.
-  - a. A new `transport` module in `koloda-sync-proto`, with the shared limits; the engine reuses it.
-  - b. In the server crate; the engine defines its own copy.
-- [ ] 3. HTTP and storage stack? — open.
-  - a. axum on tokio; rusqlite (bundled) in WAL mode, one writer per space behind a mutex; refinery with one `V1`
-    per database that items extend until the task lands, since nothing outside this branch has applied it;
-    the `zstd` crate; clap.
-  - b. The same stack, with one migration file per item.
-  - c. hyper with hand-written routing instead of axum.
-- [ ] 4. TLS? — open.
-  - a. Not in this task: `serve` speaks plain HTTP behind a TLS reverse proxy.
-    Built-in rustls comes with the operator task, next to the Docker image.
-  - b. Built-in rustls now (`--tls-cert`, `--tls-key`).
-- [ ] 5. How does the first device enroll? — open.
-  - a. `POST /v1/spaces` creates the space and enrolls the creator in one call; the same nonce returns the same result.
-  - b. The creator creates the space, then claims a break-glass pairing code.
-- [ ] 6. Protocol gaps this task fills, each written into `PROTOCOL.md` by the item that implements it? — open.
-  - a. Accept all of these:
-    - every response body is `{ meta, ok }` or `{ meta, error }`, and `meta` carries what §Endpoints lists;
-    - a push is atomic: it consumes every new item or none; `seq_reused` can only follow replays, so stopping
-      there consumes nothing new;
-    - a seq at or below the sender's high-water with no receipt is `seq_reused`, like one with a different digest;
-    - a stamp more than 5 minutes ahead of server now fails the whole push with `stamp_ahead`; nothing is consumed,
-      so its cohorts return to `local`;
-    - `schema_read_only` also fails the whole push and consumes nothing;
-    - `held { dependency }`: the envelope names, as its id, parent, or hard ref, an entity whose create this sender
-      had held; it clears once this sender's create of that entity is applied;
-    - a card create naming a dead template is `dependency_fenced { drop_entity }`; a pointer group naming a dead
-      referent is `dependency_fenced { repair_pointer }`;
-    - wrong pairing codes are limited per client address and server-wide, because a wrong code names no space;
-    - an unmatched device token is `401 unknown_device`;
-    - a device token on another space's path gets `404 unknown_space`, the same as a missing space;
-    - pull records the caller's cursor per lane, for GC later.
-  - b. Go through them one at a time.
-- [ ] 7. Routing docs? — open.
-  - a. You add the `agents/INDEX.md` rows for server work, since I do not open that file.
-    They would route to `crates/koloda-server/README.md` and `PROTOCOL.md`.
-    No `docs/decisions/APP-ROLES.md` row: the server is a crate with no product surface, and its README says so.
-  - b. You let me open and edit `agents/INDEX.md` for this change; still no APP-ROLES row.
-  - c. As a or b, plus an APP-ROLES row with a new server role.
+- [x] 1. What does this slice include? — everything under Scope In, bootstrap with snapshot leases included.
+  A join needs bootstrap: a pull from seq 0 in `seq` order can meet a deck before any live algorithm
+  (`PROTOCOL.md` §Bootstrap).
+- [x] 2. Where do the endpoint body types live? — a new `transport` module in `koloda-sync-proto`, with the shared
+  limits; the engine reuses it.
+- [x] 3. HTTP and storage stack? — axum on tokio; rusqlite (bundled) in WAL mode, one writer per space behind a mutex;
+  refinery with one `V1` per database that items extend until the task lands, since nothing outside this branch has
+  applied it; the `zstd` crate; clap.
+- [x] 4. TLS? — not in this task: `serve` speaks plain HTTP behind a TLS reverse proxy.
+  Built-in rustls comes with the operator task, next to the Docker image.
+- [x] 5. How does the first device enroll? — `POST /v1/spaces` creates the space and enrolls the creator in one call;
+  the same nonce returns the same result.
+- [x] 6. Protocol gaps this task fills? — all of these, each written into `PROTOCOL.md` by the item that
+  implements it:
+  - every response body is `{ meta, ok }` or `{ meta, error }`, and `meta` carries what §Endpoints lists;
+  - a push is atomic: it consumes every new item or none; `seq_reused` can only follow replays, so stopping there
+    consumes nothing new;
+  - a seq at or below the sender's high-water with no receipt is `seq_reused`, like one with a different digest;
+  - a stamp more than 5 minutes ahead of server now fails the whole push with `stamp_ahead`; nothing is consumed, so
+    its cohorts return to `local`;
+  - `schema_read_only` also fails the whole push and consumes nothing;
+  - `held { dependency }`: the envelope names, as its id, parent, or hard ref, an entity whose create this sender had
+    held; it clears once this sender's create of that entity is applied;
+  - a card create naming a dead template is `dependency_fenced { drop_entity }`; a pointer group naming a dead
+    referent is `dependency_fenced { repair_pointer }`;
+  - wrong pairing codes are limited per client address and server-wide, because a wrong code names no space;
+  - an unmatched device token is `401 unknown_device`;
+  - a device token on another space's path gets `404 unknown_space`, the same as a missing space;
+  - pull records the caller's cursor per lane, for GC later.
+- [x] 7. Routing docs? — the human adds the `agents/INDEX.md` rows for server work, routing to
+  `crates/koloda-server/README.md` and `PROTOCOL.md`; agents do not open that file.
+  No `docs/decisions/APP-ROLES.md` row: the server is a crate with no product surface, and its README says so.
 
 ## Plan
 
@@ -167,10 +153,7 @@ Out:
   - a body at the size cap and one byte past, and a zstd body past the expansion cap;
   - `meta` on a device call;
   - `bun run check:push` green, running the new crate's lint and tests.
-  Commit: <pick>
-  - a. Add the koloda-server crate with space creation
-  - b. Start the sync server with a data directory and spaces
-  - c. Add the sync server binary, its data directory, and space creation
+  Commit: Add the koloda-server crate with space creation
   Depends on: none
 
 - [ ] 2. Pair devices with short-lived codes
@@ -203,9 +186,7 @@ Out:
   - a second nonce, a wrong code, and a code at its expiry and one millisecond past, all failing alike;
   - the address limit and the server-wide limit, each at the limit and one past;
   - the hint returned on claim.
-  Commit: <pick>
-  - a. Pair devices into a space with short-lived codes
-  - b. Issue, preview, and claim pairing codes
+  Commit: Pair devices into a space with short-lived codes
   Depends on: 1
 
 - [ ] 3. Accept pushed envelopes with sender sequences and receipts
@@ -246,9 +227,7 @@ Out:
   - a superseded version gone while its head stays;
   - out-of-order seqs, a bad header, and a batch past each cap, all consuming nothing;
   - receipts read by another device of the space.
-  Commit: <pick>
-  - a. Accept pushed envelopes with sender sequences and receipts
-  - b. Store pushed envelopes as compacted heads with idempotent receipts
+  Commit: Accept pushed envelopes with sender sequences and receipts
   Depends on: 1
 
 - [ ] 4. Check parents, refs, and write schema on push
@@ -274,9 +253,7 @@ Out:
   - `held { dependency }` for a child, an update, and a pointer naming a held create, and clearing once that create is
     applied;
   - a card naming an attachment the server never saw, `applied`.
-  Commit: <pick>
-  - a. Check parents, refs, and write schema on push
-  - b. Refuse pushes that name missing entities or the wrong schema
+  Commit: Check parents, refs, and write schema on push
   Depends on: 3
 
 - [ ] 5. Apply deletes as fences and answer which ids a space knows
@@ -308,9 +285,7 @@ Out:
   - a delete of an unknown id, then a create of it `fenced`, and the reverse order ending deleted too;
   - a second tombstone `stale`;
   - one `ids/known` table: live, tombstoned, a card under a deleted deck, and an unknown id; and a chunk past its cap.
-  Commit: <pick>
-  - a. Apply deletes as fences and answer which ids a space knows
-  - b. Fence deleted entities and cascade to their descendants
+  Commit: Apply deletes as fences and answer which ids a space knows
   Depends on: 4
 
 - [ ] 6. Serve pulls per lane
@@ -329,9 +304,7 @@ Out:
   - `max_seq` bounding a cold pull, and `limit` setting `has_more`;
   - a tombstone delivered while its removed descendants are not;
   - two devices exchanging a grade, with scheduling in `hot` and the review in `cold`.
-  Commit: <pick>
-  - a. Serve pulls per lane with a scan cursor
-  - b. Let devices pull other devices' envelopes by lane
+  Commit: Serve pulls per lane with a scan cursor
   Depends on: 5
 
 - [ ] 7. Bootstrap from snapshot leases
@@ -360,9 +333,7 @@ Out:
   - heartbeat not extending past the absolute expiry, and the TTL at its limit and one millisecond past;
   - a second lease for one device releasing the first, and the lease cap at its limit and one past;
   - release sweeping superseded versions it pinned.
-  Commit: <pick>
-  - a. Bootstrap from snapshot leases that pin live heads
-  - b. Serve bootstrap snapshots with referents first
+  Commit: Bootstrap from snapshot leases that pin live heads
   Depends on: 6
 
 - [ ] 8. List, revoke, and fork devices
@@ -383,9 +354,7 @@ Out:
     pushes carry its own sender;
   - a device of another space unable to revoke;
   - `last_seen` following the manual clock.
-  Commit: <pick>
-  - a. List, revoke, and fork devices
-  - b. Manage devices: list, revoke, detach, and fork
+  Commit: List, revoke, and fork devices
   Depends on: 2, 3
 
 ## Outcome
