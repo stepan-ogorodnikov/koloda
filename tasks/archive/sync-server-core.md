@@ -1,6 +1,6 @@
 # Sync server core
 
-Status: ready
+Status: done
 
 ## Intent
 
@@ -362,3 +362,41 @@ Out:
   Depends on: 2, 3
 
 ## Outcome
+
+- `crates/koloda-server` is a binary crate that links `koloda-sync-proto` only.
+  Its nx `lint` and `test` targets run in `check:commit`, `check:rust`, `check:rust-push`, and `test:rust`.
+- `koloda-server init` creates `CURRENT`, the first generation, and `server.db`, and prints the setup token once.
+  `koloda-server serve` holds a lock on the data directory and speaks plain HTTP behind a TLS reverse proxy.
+- Bodies are CBOR with optional zstd and are capped by size and expansion.
+  Every reply is `{ meta, ok }` or `{ meta, error }`.
+  Body types, limits, and error codes live in `crates/koloda-sync-proto/src/transport.rs`; a table test pins their
+  wire keys.
+- Endpoints:
+  - space creation, which enrolls the creator, and the space list;
+  - pairing issue, preview, and claim, with the setup hint and limits on wrong codes;
+  - push and receipts;
+  - `ids/known`, pull, and bootstrap with snapshot leases;
+  - device record, list, revoke and detach, and fork.
+- Push is atomic.
+  It decides each item by its class against the head, compacts on write, and checks existence, fences, and
+  `write_schema`, with `held { schema }` and `held { dependency }`.
+  The absolute clock guard (`stamp_ahead`) and `schema_read_only` fail a push before anything is consumed.
+- A delete fences the entity and removes it and its descendants in one transaction.
+  The descendants of a deck or template are its cards and their reviews.
+- `PROTOCOL.md` §Transport now gives every body, the reply envelope, and the error table.
+  It also gains each rule that question 6 accepted.
+- `agents/INDEX.md` rows for server work are still to be added by the human (question 7).
+- Deviations from the plan text:
+  - Item 1 serves `GET .../devices/{id}`, so its auth and `meta` tests have an endpoint; item 8 adds the list.
+    Each device field arrives with the item that makes it true.
+    The revoked check moved to item 8.
+  - The claim reply carries no `restore_points` yet; `PROTOCOL.md` says they arrive with server restore.
+  - A sender's held create is released by any outcome of its regenerated create other than `held`, not only
+    `applied`.
+    A create does not count its own id when its holds are checked, or a held create could never land.
+  - Bootstrap caps open leases per space (4) but not pinned bytes; that cap comes with quotas.
+  - Every push ends lapsed leases, so an abandoned lease stops pinning versions once its TTL ends.
+  - `Server::set_write_schema` is public, for tests now and the operator command later.
+  - Self-review made the lease check and the page read share one snapshot.
+    A lease ending between them would otherwise read as an empty, finished stream.
+- Manual verify: none — no app calls the server yet.
