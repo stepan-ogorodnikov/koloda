@@ -12,6 +12,8 @@ pub const MAX_BODY_BYTES: usize = 16 * 1024 * 1024;
 pub const MAX_EXPANSION_RATIO: usize = 32;
 pub const MAX_NAME_CHARS: usize = 100;
 pub const MAX_HINT_BYTES: usize = 4 * 1024;
+pub const MAX_PUSH_ITEMS: usize = 5_000;
+pub const MAX_RECEIPT_RANGE: u64 = 5_000;
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -64,6 +66,7 @@ pub enum ErrorCode {
     NotFound,
     PairingFailed,
     RateLimited,
+    StampAhead,
     Internal,
 }
 
@@ -153,6 +156,60 @@ pub struct PairingClaim {
     pub hint: Option<Vec<u8>>,
 }
 
+/// Items in strictly ascending `sender_seq`; `envelope` is the encoded envelope exactly as the outbox holds it.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Push {
+    pub items: Vec<PushItem>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct PushItem {
+    pub sender_seq: u64,
+    #[serde(with = "serde_bytes")]
+    pub envelope: Vec<u8>,
+}
+
+/// One outcome per item, in item order, ending early at `seq_reused`.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct PushReply {
+    pub outcomes: Vec<PushOutcome>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct PushOutcome {
+    pub sender_seq: u64,
+    pub outcome: Outcome,
+    pub replayed: bool,
+}
+
+/// Every outcome except `seq_reused` consumes its sequence (`PROTOCOL.md` §Push outcomes).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(tag = "status", rename_all = "snake_case")]
+pub enum Outcome {
+    Applied,
+    Stale,
+    SeqReused,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Receipts {
+    pub receipts: Vec<Receipt>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Receipt {
+    pub sender_seq: u64,
+    #[serde(with = "serde_bytes")]
+    pub digest: [u8; 32],
+    pub outcome: Outcome,
+}
+
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct SpaceList {
@@ -178,6 +235,9 @@ pub struct DeviceInfo {
     pub platform: Platform,
     pub created_at: u64,
     pub last_seen: u64,
+    pub last_sender_seq: u64,
+    #[serde(default, with = "serde_bytes", skip_serializing_if = "Option::is_none")]
+    pub last_sender_digest: Option<[u8; 32]>,
 }
 
 impl Platform {

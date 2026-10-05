@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 
 use ciborium::Value;
-use koloda_sync_proto::transport::{DeviceMeta, Enrollment, ErrorBody, ErrorCode, Meta, Platform, Reply};
+use koloda_sync_proto::transport::{DeviceMeta, Enrollment, ErrorBody, ErrorCode, Meta, Outcome, Platform, Reply};
 use serde::Serialize;
 
 fn cbor<T: Serialize>(value: &T) -> Value {
@@ -118,4 +118,28 @@ fn replies_carry_meta_and_exactly_one_of_ok_and_error() {
         field(field(&error, "error"), "code"),
         &Value::Text("unknown_space".to_string())
     );
+}
+
+#[test]
+fn outcomes_are_maps_tagged_by_status() {
+    let cases = [
+        (Outcome::Applied, vec![("status", "applied")]),
+        (Outcome::Stale, vec![("status", "stale")]),
+        (Outcome::SeqReused, vec![("status", "seq_reused")]),
+    ];
+    for (outcome, expected) in cases {
+        let encoded = cbor(&outcome);
+        let fields: Vec<_> = encoded
+            .as_map()
+            .expect("a CBOR map")
+            .iter()
+            .map(|(key, value)| (key.as_text().expect("text key"), value.as_text().expect("text value")))
+            .collect();
+
+        assert_eq!(fields, expected, "{outcome:?}");
+        let mut bytes = Vec::new();
+        ciborium::into_writer(&outcome, &mut bytes).expect("encode");
+        let decoded: Outcome = ciborium::from_reader(bytes.as_slice()).expect("decode");
+        assert_eq!(decoded, outcome);
+    }
 }

@@ -11,7 +11,8 @@ use uuid::Uuid;
 
 use crate::auth;
 use crate::http::{respond, ApiError};
-use crate::server::Server;
+use crate::log;
+use crate::server::{lock, Server};
 
 pub(crate) async fn get(
     State(server): State<Arc<Server>>,
@@ -43,14 +44,19 @@ fn read_device(server: &Server, space: Uuid, id: Uuid) -> Result<Option<DeviceIn
             },
         )
         .optional()?;
+    drop(conn);
     let Some((name, platform, created_at, last_seen)) = row else {
         return Ok(None);
     };
+    let space = server.space(space)?.ok_or_else(ApiError::unknown_space)?;
+    let progress = log::sender_progress(&*lock(&space.reader)?, id)?;
     Ok(Some(DeviceInfo {
         id: id.into_bytes(),
         name,
         platform: Platform::from_wire(&platform).map_err(|error| ApiError::internal(error.to_string()))?,
         created_at,
         last_seen,
+        last_sender_seq: progress.map_or(0, |(seq, _)| seq),
+        last_sender_digest: progress.map(|(_, digest)| digest),
     }))
 }

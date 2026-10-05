@@ -194,7 +194,7 @@ Out:
   Commit: Pair devices into a space with short-lived codes
   Depends on: 1
 
-- [ ] 3. Accept pushed envelopes with sender sequences and receipts
+- [x] 3. Accept pushed envelopes with sender sequences and receipts
   Goal: `POST /v1/spaces/{space}/push` takes items `{ sender_seq, envelope }` in strictly ascending `sender_seq`.
   The batch has an item cap and a byte cap.
   Each envelope goes through `Envelope::decode`, which checks limits and the header allowlist.

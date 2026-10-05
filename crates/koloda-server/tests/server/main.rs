@@ -5,4 +5,5 @@ mod data_dir_tests;
 mod devices_tests;
 mod http_tests;
 mod pairing_tests;
+mod push_tests;
 mod spaces_tests;

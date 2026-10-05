@@ -8,6 +8,8 @@ use std::io::Read;
 use std::sync::Arc;
 
 use axum::body::{to_bytes, Body};
+use axum::extract::rejection::QueryRejection;
+use axum::extract::Query;
 use axum::http::header::{ACCEPT_ENCODING, CONTENT_ENCODING, CONTENT_TYPE};
 use axum::http::{HeaderMap, HeaderValue, StatusCode};
 use axum::response::{IntoResponse, Response};
@@ -19,6 +21,7 @@ use serde::de::DeserializeOwned;
 use serde::Serialize;
 use uuid::Uuid;
 
+use crate::log;
 use crate::server::{lock, Server};
 
 const CBOR: &str = "application/cbor";
@@ -118,6 +121,12 @@ fn decompress(encoded: &[u8]) -> Result<Vec<u8>, ApiError> {
         )));
     }
     Ok(decoded)
+}
+
+pub(crate) fn query<T>(params: Result<Query<T>, QueryRejection>) -> Result<T, ApiError> {
+    params
+        .map(|Query(params)| params)
+        .map_err(|rejection| ApiError::bad_request(rejection.body_text()))
 }
 
 fn decode_cbor<T: DeserializeOwned>(bytes: &[u8]) -> Result<T, ApiError> {
@@ -228,18 +237,19 @@ fn meta(server: &Server, scope: &Scope) -> Result<Meta, ApiError> {
         .query_row("SELECT epoch FROM space WHERE id = 1", [], |row| row.get(0))
         .optional()?;
     meta.epoch = epoch.map(Uuid::into_bytes);
-    if scope.device.is_some() {
+    if let Some(device) = scope.device {
         let mut statement = conn.prepare("SELECT kind, schema FROM write_schema ORDER BY kind")?;
         let write_schema = statement
             .query_map([], |row| Ok((row.get::<_, String>(0)?, row.get::<_, u32>(1)?)))?
             .collect::<Result<BTreeMap<_, _>, _>>()?;
+        let (head_hot, head_cold) = log::lane_heads(&conn)?;
         meta.device = Some(DeviceMeta {
-            head_hot: 0,
-            head_cold: 0,
+            head_hot,
+            head_cold,
             gc_horizon_hot: 0,
             gc_horizon_cold: 0,
             write_schema,
-            last_sender_seq: 0,
+            last_sender_seq: log::sender_progress(&conn, device)?.map_or(0, |(seq, _)| seq),
         });
     }
     Ok(meta)

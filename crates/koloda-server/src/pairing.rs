@@ -3,7 +3,7 @@
 //! A code is 10 Crockford base32 characters, single use, valid for 10 minutes; only its hash is stored.
 //! Wrong codes are limited per client address and server-wide, because a wrong code names no space.
 
-use std::collections::{BTreeMap, HashMap};
+use std::collections::HashMap;
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 use std::sync::Arc;
 
@@ -22,6 +22,7 @@ use uuid::Uuid;
 
 use crate::auth::{self, SpaceAuth};
 use crate::http::{read_body, respond, ApiError};
+use crate::log;
 use crate::server::{lock, Server};
 use crate::spaces::checked_name;
 
@@ -119,12 +120,14 @@ fn preview_code(server: &Server, request: &PreviewPairing) -> Result<PairingPrev
         row.get(0)
     })?;
     drop(conn);
+    let space = server.space(code.space)?.ok_or_else(ApiError::unknown_space)?;
+    let (counts, bytes) = log::size(&*lock(&space.reader)?)?;
     Ok(PairingPreview {
         space_id: code.space.into_bytes(),
         name,
         epoch: server.space_epoch(code.space)?.into_bytes(),
-        counts: BTreeMap::new(),
-        bytes: 0,
+        counts,
+        bytes,
     })
 }
 

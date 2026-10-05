@@ -587,6 +587,7 @@ The device persists its last HLC, never issues a smaller one, and advances past 
   The client updates its skew estimate before applying the response.
 - If skew exceeds 5 minutes the client pauses (no push, no apply), and re-stamps once the clock is corrected.
 - The server rejects an envelope whose wall part is more than 5 minutes ahead of **server now**.
+  The whole push then fails with `stamp_ahead` and consumes nothing, so its cohorts return to `local`.
   A space that already holds a far-ahead stamp waits for wall time to catch up.
 
 ### Cohorts
@@ -594,7 +595,7 @@ The device persists its last HLC, never issues a smaller one, and advances past 
 A cohort is one commit's envelopes.
 The client records each cohort's state: `local`, `uncertain`, or `fixed`.
 Before any member is transmitted, the cohort becomes `uncertain`.
-Push requests never split a cohort, and the server commits a prefix only between complete cohorts.
+Push requests never split a cohort, and a push is atomic (§Push outcomes).
 A complete response proving no member was consumed returns it to `local`.
 Anything else fixes it to its original stamp.
 Re-stamp walks only `local` cohorts and gives every pending member of a cohort one new stamp in one transaction.
@@ -605,6 +606,7 @@ A reset and its blank scheduling can therefore never end up with different stamp
 Push idempotency is `(sender, sender_seq)`.
 `sender` is the bearer token's device; `sender_seq` strictly increases per device.
 For a consumed sequence, a different digest is `seq_reused`.
+So is a sequence at or below the sender's high-water that was never consumed: it cannot be this envelope.
 The same digest returns the stored outcome with `replayed = true`.
 
 ### Pull cursor
@@ -733,7 +735,7 @@ Unknown `kind`, `group`, or `op`, and lane mismatches, are rejected at a header 
 | `POST /v1/spaces/{space}/pairings` | Issue a pairing code; device token, or setup token for break-glass; revoking the issuer invalidates its codes |
 | `POST /v1/pairings/preview` | Body has `code`; space name, epoch, approximate counts and bytes; does not consume the code; rate-limited |
 | `POST /v1/pairings/claim` | Body has `code`, name, platform, nonce; returns device id, token, epoch, and restore points; the same nonce returns the same result |
-| `POST /v1/spaces/{space}/push` | Batch of envelopes; atomic, or a committed prefix ending between cohorts, with per-seq outcomes |
+| `POST /v1/spaces/{space}/push` | Batch of envelopes; atomic, with per-seq outcomes |
 | `GET /v1/spaces/{space}/receipts` | Stored outcomes for any sender's seqs; usable while `rebase_required` |
 | `GET /v1/spaces/{space}/pull?lane&after&max_seq&limit` | Envelopes with `after < seq <= max_seq`, own sender excluded, minus anything under a committed deletion scope; each entry carries `(seq, sender, sender_seq)`; returns `scanned_through`, `has_more`, heads, epoch |
 | `POST /v1/spaces/{space}/bootstrap` | Opens a snapshot lease at live heads; returns `snapshot_id`, page token, counts, byte estimate, TTL, absolute expiry |
@@ -766,14 +768,17 @@ Names are 1 to 100 characters after trimming.
 | --- | --- | --- |
 | `POST /v1/spaces` | `name`, `device_name`, `platform`, `nonce` | `space_id`, `device_id`, `token`, `epoch` |
 | `GET /v1/spaces` | none | `spaces`, each with `id`, `name`, `created_at`, `device_count` |
-| `GET /v1/spaces/{space}/devices/{id}` | none | `id`, `name`, `platform`, `created_at`, `last_seen` |
+| `GET /v1/spaces/{space}/devices/{id}` | none | `id`, `name`, `platform`, `created_at`, `last_seen`, `last_sender_seq`, `last_sender_digest` |
 | `POST /v1/spaces/{space}/pairings` | `hint`, optional bytes of at most 4 KiB | `code`, `expires_at` |
 | `POST /v1/pairings/preview` | `code` | `space_id`, `name`, `epoch`, `counts` per kind, `bytes` |
 | `POST /v1/pairings/claim` | `code`, `name`, `platform`, `nonce` | `enrollment` as space creation returns it, `hint` |
+| `POST /v1/spaces/{space}/push` | `items`, each `sender_seq` and `envelope` bytes; at most 5000 | `outcomes`, each `sender_seq`, `outcome`, `replayed` |
+| `GET /v1/spaces/{space}/receipts?sender&after&through` | `through - after` at most 5000 | `receipts`, each `sender_seq`, `digest`, `outcome` |
 
 Creating a space also enrolls its creator, so the first device needs no pairing code.
 The same `nonce` returns the same result, token included, for 10 minutes.
 The claim reply gains `restore_points` with server restore (§Recovery).
+An outcome is a map tagged by `status`, such as `{ status: applied }`; a receipt range is `after < seq <= through`.
 
 ### Errors
 
@@ -785,6 +790,7 @@ The claim reply gains `restore_points` with server restore (§Recovery).
 | `unknown_space` | 404 | A missing space, or a device token of another space; both answer alike |
 | `not_found` | 404 | A missing endpoint, or a record the caller cannot see |
 | `pairing_failed` | 404 | A used, expired, or wrong pairing code (§Pairing) |
+| `stamp_ahead` | 409 | A pushed stamp more than 5 minutes ahead of server now (§Skew guards) |
 | `too_large` | 413 | A body past its size or expansion cap |
 | `rate_limited` | 429 | Too many wrong pairing codes (§Pairing) |
 | `internal` | 500 | A server fault |
@@ -805,6 +811,10 @@ Each gets its row with the server work that answers it.
 | `seq_reused` | Stop | The file is behind (§Devices) |
 
 Every status except `seq_reused` consumes the sequence.
+A push is atomic: one transaction consumes every new item or none.
+Items arrive in strictly ascending `sender_seq`; an undecodable envelope or a misordered seq fails the push.
+`seq_reused` can only follow replays, because a new seq lifts the high-water above every later item's.
+The server stops at it and commits the replays, which consumes nothing new.
 The client applies an outcome in the same transaction that clears or moves its outbox row.
 After a lost reply, the same-digest retry returns the same outcome.
 

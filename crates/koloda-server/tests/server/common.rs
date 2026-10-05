@@ -13,8 +13,13 @@ use koloda_server::clock::Clock;
 use koloda_server::data_dir;
 use koloda_server::router;
 use koloda_server::server::Server;
+use koloda_sync_proto::envelope::{Envelope, Header, Refs};
+use koloda_sync_proto::hlc::{DeviceId, Hlc, Stamp};
+use koloda_sync_proto::payload::SCHEMA;
+use koloda_sync_proto::registry::{Group, Kind, Op};
 use koloda_sync_proto::transport::{
-    ClaimPairing, CreateSpace, Enrollment, ErrorCode, IssuePairing, Pairing, PairingClaim, Platform, Reply,
+    ClaimPairing, CreateSpace, DeviceInfo, DeviceMeta, Enrollment, ErrorCode, IssuePairing, Outcome, Pairing,
+    PairingClaim, Platform, Push, PushItem, PushReply, Reply,
 };
 use serde::de::DeserializeOwned;
 use serde::Serialize;
@@ -235,4 +240,102 @@ pub fn nonce(seed: &str) -> [u8; 16] {
 
 pub fn uuid(bytes: [u8; 16]) -> String {
     uuid::Uuid::from_bytes(bytes).to_string()
+}
+
+/// A stamp `offset_ms` after `START_MS`, minted by the device whose UUID bytes are all `device`.
+pub fn stamp(offset_ms: u64, counter: u16, device: u8) -> Stamp {
+    Stamp {
+        hlc: Hlc::new(START_MS + offset_ms, counter).expect("a test stamp fits in 48 bits"),
+        device: DeviceId([device; 16]),
+    }
+}
+
+pub fn write(kind: Kind, id: &str, group: Group, stamp: Stamp) -> Header {
+    Header {
+        kind,
+        id: id.to_string(),
+        parent: None,
+        refs: Refs::default(),
+        group: Some(group),
+        op: Op::Write,
+        stamp,
+        schema: SCHEMA,
+        commit_id: [0xc0; 16],
+    }
+}
+
+pub fn child(kind: Kind, id: &str, parent: &str, group: Group, stamp: Stamp) -> Header {
+    Header {
+        parent: Some(parent.to_string()),
+        ..write(kind, id, group, stamp)
+    }
+}
+
+pub fn card_create(id: &str, deck: &str, template: &str, stamp: Stamp) -> Header {
+    Header {
+        refs: Refs {
+            template_id: Some(template.to_string()),
+            ..Refs::default()
+        },
+        ..child(Kind::Cards, id, deck, Group::Create, stamp)
+    }
+}
+
+/// The server never decodes a payload, so test envelopes carry bytes that are not CBOR at all.
+pub fn encode(header: Header) -> Vec<u8> {
+    Envelope {
+        header,
+        payload: b"\xffopaque payload".to_vec(),
+    }
+    .encode()
+    .expect("encode a valid test header")
+}
+
+pub fn batch(items: Vec<(u64, Header)>) -> Push {
+    Push {
+        items: items
+            .into_iter()
+            .map(|(sender_seq, header)| PushItem {
+                sender_seq,
+                envelope: encode(header),
+            })
+            .collect(),
+    }
+}
+
+pub fn outcomes(reply: PushReply) -> Vec<(u64, Outcome, bool)> {
+    reply
+        .outcomes
+        .into_iter()
+        .map(|outcome| (outcome.sender_seq, outcome.outcome, outcome.replayed))
+        .collect()
+}
+
+impl Harness {
+    pub async fn push(&self, device: &Enrollment, items: Vec<(u64, Header)>) -> Answer<PushReply> {
+        self.push_body(device, &batch(items)).await
+    }
+
+    pub async fn push_body(&self, device: &Enrollment, push: &Push) -> Answer<PushReply> {
+        self.post(format!("/v1/spaces/{}/push", uuid(device.space_id)))
+            .token(&device.token)
+            .body(push)
+            .send::<PushReply>()
+            .await
+    }
+
+    pub async fn device_meta(&self, device: &Enrollment) -> DeviceMeta {
+        self.get(format!(
+            "/v1/spaces/{}/devices/{}",
+            uuid(device.space_id),
+            uuid(device.device_id)
+        ))
+        .token(&device.token)
+        .send::<DeviceInfo>()
+        .await
+        .reply
+        .meta
+        .device
+        .expect("a device call carries device meta")
+    }
 }
