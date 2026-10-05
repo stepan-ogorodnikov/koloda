@@ -2,7 +2,7 @@
 //! `RouterTransport` with no sockets, and engines over in-memory databases.
 
 use std::collections::{HashMap, VecDeque};
-use std::sync::atomic::{AtomicI64, Ordering};
+use std::sync::atomic::{AtomicI64, AtomicU64, Ordering};
 use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -17,11 +17,20 @@ use koloda_server::server::Server;
 use koloda_server::{data_dir, router};
 use koloda_sync::engine::Engine;
 use koloda_sync::transport::{Method, Request, Response, Sending, Transport, TransportError, CBOR, ZSTD};
-use koloda_sync_proto::transport::{Platform, Reply};
+use koloda_sync_proto::envelope::Envelope;
+use koloda_sync_proto::hlc::{DeviceId, Hlc, Stamp};
+use koloda_sync_proto::payload::{seal, Payload, Seal};
+use koloda_sync_proto::registry::Lane;
+use koloda_sync_proto::transport::{
+    ClaimPairing, Enrollment, IssuePairing, Pairing, PairingClaim, Platform, PullPage, Push, PushItem, PushReply, Reply,
+};
 use rusqlite::OptionalExtension;
 use serde::de::DeserializeOwned;
+use serde::Serialize;
 use tempfile::TempDir;
 use uuid::Uuid;
+
+use crate::fixtures::starter;
 
 pub const SERVER_URL: &str = "https://sync.test";
 
@@ -45,6 +54,7 @@ pub struct TestServer {
     // WHY: dropping the TempDir deletes the data directory, so the harness holds it for its lifetime.
     _dir: TempDir,
     pub clock: Arc<OffsetClock>,
+    pub server: Arc<Server>,
     pub router: Router,
     pub setup_token: String,
 }
@@ -56,7 +66,8 @@ impl TestServer {
         let clock = Arc::new(OffsetClock(AtomicI64::new(0)));
         let server = Arc::new(Server::open(dir.path(), clock.clone()).expect("open the initialized data directory"));
         TestServer {
-            router: router(server),
+            router: router(Arc::clone(&server)),
+            server,
             _dir: dir,
             clock,
             setup_token,
@@ -68,8 +79,14 @@ impl TestServer {
         let db = Database::in_memory().expect("in-memory database");
         let secrets = Arc::new(MemorySecrets::default());
         let transport = Arc::new(RouterTransport::new(self.router.clone()));
-        let engine = Engine::start(db.clone(), secrets.clone(), transport.clone(), Platform::DesktopLinux)
-            .expect("engine starts");
+        let engine = Engine::start(
+            db.clone(),
+            secrets.clone(),
+            transport.clone(),
+            Platform::DesktopLinux,
+            starter(),
+        )
+        .expect("engine starts");
         Device {
             db,
             secrets,
@@ -80,11 +97,32 @@ impl TestServer {
 
     /// A call the engine does not make, for checking what the server holds.
     pub fn call<T: DeserializeOwned>(&self, method: Method, path: &str, token: &str) -> (u16, Reply<T>) {
+        self.send(method, path, Some(token), None)
+    }
+
+    pub fn post<B: Serialize, T: DeserializeOwned>(
+        &self,
+        path: &str,
+        token: Option<&str>,
+        body: &B,
+    ) -> (u16, Reply<T>) {
+        let mut bytes = Vec::new();
+        ciborium::into_writer(body, &mut bytes).expect("encode a test body");
+        self.send(Method::Post, path, token, Some(bytes))
+    }
+
+    fn send<T: DeserializeOwned>(
+        &self,
+        method: Method,
+        path: &str,
+        token: Option<&str>,
+        body: Option<Vec<u8>>,
+    ) -> (u16, Reply<T>) {
         let request = Request {
             method,
             url: format!("{SERVER_URL}{path}"),
-            token: Some(token.to_string()),
-            body: None,
+            token: token.map(str::to_string),
+            body,
             is_zstd: false,
         };
         let response = tokio::runtime::Builder::new_current_thread()
@@ -92,6 +130,109 @@ impl TestServer {
             .expect("test runtime")
             .block_on(forward(&self.router, request));
         (response.status, decode(&response))
+    }
+
+    /// Enrolls a raw client in the device's space through a pairing code the device's token issues.
+    pub fn pair(&self, device: &Device) -> Enrollment {
+        let space = device.state().expect("the device is enrolled").space_id;
+        let (_, issued) = self.post::<_, Pairing>(
+            &format!("/v1/spaces/{space}/pairings"),
+            Some(&device.token()),
+            &IssuePairing::default(),
+        );
+        let code = issued.ok.expect("a pairing code").code;
+        let (_, claimed) = self.post::<_, PairingClaim>(
+            "/v1/pairings/claim",
+            None,
+            &ClaimPairing {
+                code,
+                name: "Raw client".to_string(),
+                platform: Platform::DesktopMac,
+                nonce: *Uuid::new_v4().as_bytes(),
+            },
+        );
+        claimed.ok.expect("the claim enrolls the raw client").enrollment
+    }
+}
+
+/// The engine's device in a space it created, and a raw client in the same space that pushes hand-sealed envelopes.
+pub struct Space {
+    pub server: TestServer,
+    pub device: Device,
+    pub raw: Enrollment,
+    raw_seq: AtomicU64,
+}
+
+impl Space {
+    pub fn new() -> Space {
+        let server = TestServer::new();
+        let device = server.device();
+        device
+            .engine
+            .create_space(SERVER_URL, &server.setup_token, "Study", "Laptop")
+            .expect("space is created");
+        let raw = server.pair(&device);
+        Space {
+            server,
+            device,
+            raw,
+            raw_seq: AtomicU64::new(1),
+        }
+    }
+
+    pub fn space_id(&self) -> Uuid {
+        Uuid::from_bytes(self.raw.space_id)
+    }
+
+    /// A stamp `ahead_ms` past system time, minted by the raw client.
+    pub fn raw_stamp(&self, ahead_ms: u64) -> Stamp {
+        Stamp {
+            hlc: Hlc::new(system_ms() + ahead_ms, 0).expect("wall time fits"),
+            device: DeviceId(self.raw.device_id),
+        }
+    }
+
+    /// Seals and pushes one envelope from the raw client at its next seq.
+    pub fn raw_push(&self, id: &str, parent: Option<&str>, stamp: Stamp, payload: &Payload) -> PushReply {
+        let envelope = seal(
+            Seal {
+                id: id.to_string(),
+                parent: parent.map(str::to_string),
+                stamp,
+                commit_id: *Uuid::new_v4().as_bytes(),
+            },
+            payload,
+        )
+        .expect("payload seals")
+        .bytes;
+        let push = Push {
+            items: vec![PushItem {
+                sender_seq: self.raw_seq.fetch_add(1, Ordering::SeqCst),
+                envelope,
+            }],
+        };
+        let (status, reply) = self.server.post::<_, PushReply>(
+            &format!("/v1/spaces/{}/push", self.space_id()),
+            Some(&self.raw.token),
+            &push,
+        );
+        assert_eq!(status, 200, "the raw push is accepted: {:?}", reply.error);
+        reply.ok.expect("a push reply")
+    }
+
+    /// What other senders pushed to a lane after `after`, as the raw client pulls it.
+    pub fn raw_pull(&self, lane: Lane, after: u64) -> PullPage {
+        let lane = match lane {
+            Lane::Hot => "hot",
+            Lane::Cold => "cold",
+        };
+        let (status, reply) = self.server.call::<PullPage>(
+            Method::Get,
+            &format!("/v1/spaces/{}/pull?lane={lane}&after={after}", self.space_id()),
+            &self.raw.token,
+        );
+        assert_eq!(status, 200, "the raw pull is accepted: {:?}", reply.error);
+        reply.ok.expect("a pull page")
     }
 }
 
@@ -113,7 +254,68 @@ pub struct State {
     pub epoch: Option<[u8; 16]>,
 }
 
+/// One outbox row as the engine left it.
+pub struct OutboxRow {
+    pub in_flight: bool,
+    pub envelope: Envelope,
+}
+
 impl Device {
+    pub fn token(&self) -> String {
+        let device = self.state().expect("the device is enrolled").device_id;
+        self.secrets
+            .get(&format!("sync.token.{device}"))
+            .expect("the secret store reads")
+            .expect("the device has a token")
+    }
+
+    pub fn outbox(&self) -> Vec<OutboxRow> {
+        let rows: Vec<(bool, Vec<u8>)> = self
+            .db
+            .with_conn(|conn| {
+                let rows = conn
+                    .prepare("SELECT in_flight, envelope FROM sync_outbox ORDER BY sender_seq")?
+                    .query_map([], |row| Ok((row.get(0)?, row.get(1)?)))?
+                    .collect::<Result<Vec<_>, _>>()?;
+                Ok(rows)
+            })
+            .expect("outbox reads");
+        rows.into_iter()
+            .map(|(in_flight, envelope)| OutboxRow {
+                in_flight,
+                envelope: Envelope::decode(&envelope).expect("outbox envelope decodes"),
+            })
+            .collect()
+    }
+
+    pub fn cohort_states(&self) -> Vec<String> {
+        self.db
+            .with_conn(|conn| {
+                let states = conn
+                    .prepare("SELECT state FROM sync_cohorts ORDER BY state")?
+                    .query_map([], |row| row.get(0))?
+                    .collect::<Result<Vec<_>, _>>()?;
+                Ok(states)
+            })
+            .expect("cohorts read")
+    }
+
+    pub fn count(&self, sql: &str) -> i64 {
+        self.db
+            .with_conn(|conn| Ok(conn.query_row(sql, [], |row| row.get(0))?))
+            .expect("count query runs")
+    }
+
+    /// Sets up a state that no sequence of product writes reaches.
+    pub fn execute(&self, sql: &str) {
+        self.db
+            .with_conn(|conn| {
+                conn.execute_batch(sql)?;
+                Ok(())
+            })
+            .expect("setup SQL runs");
+    }
+
     pub fn state(&self) -> Option<State> {
         self.db
             .with_conn(|conn| {

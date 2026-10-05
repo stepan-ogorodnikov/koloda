@@ -186,7 +186,7 @@ Out:
   Commit: Add the koloda-sync crate with space creation
   Depends on: none
 
-- [ ] 2. Push the outbox and settle every outcome
+- [x] 2. Push the outbox and settle every outcome
   Goal: `koloda` gains `repo/sync/outbox.rs`.
   - `push_batch(db, max_items, max_bytes)` picks rows still in flight first, so a lost reply's bytes go out again
     unchanged.

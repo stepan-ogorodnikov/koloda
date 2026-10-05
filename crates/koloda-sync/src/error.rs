@@ -16,6 +16,11 @@ pub enum SyncError {
     Local(AppError),
     /// The file already has sync state, so it cannot create a space; nothing was sent.
     AlreadyEnrolled,
+    /// The file has no space, server URL, or token to sync with.
+    NotEnrolled,
+    /// The file is behind its own device record, as after a restore from backup or a copy; it stops syncing
+    /// (`PROTOCOL.md` §Devices).
+    Behind,
     /// The server URL is neither `https` nor `http` to a loopback host; nothing was sent.
     InsecureServerUrl(String),
 }
@@ -35,6 +40,8 @@ impl fmt::Display for SyncError {
             }
             SyncError::Local(error) => write!(f, "{error}: {}", error.details.as_deref().unwrap_or("")),
             SyncError::AlreadyEnrolled => write!(f, "this file already syncs with a space"),
+            SyncError::NotEnrolled => write!(f, "this file does not sync with a space"),
+            SyncError::Behind => write!(f, "this file is behind its own record on the sync server"),
             SyncError::InsecureServerUrl(url) => {
                 write!(f, "{url} is not an https URL or an http URL to this machine")
             }

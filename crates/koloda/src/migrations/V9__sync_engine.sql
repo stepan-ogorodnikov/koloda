@@ -3,3 +3,15 @@
 ALTER TABLE sync_state ADD COLUMN server_url text;
 
 ALTER TABLE sync_state ADD COLUMN epoch blob;
+
+-- WHY: a `held` outcome consumed its seq, but the write still has to land. The bytes keep its stamp and commit id for
+-- when the reason clears (crates/koloda-sync-proto/PROTOCOL.md, Push outcomes).
+CREATE TABLE IF NOT EXISTS sync_held (
+	sender_seq integer PRIMARY KEY NOT NULL,
+	kind text NOT NULL,
+	id text NOT NULL,
+	group_name text,
+	commit_id blob NOT NULL,
+	envelope blob NOT NULL,
+	reason text NOT NULL
+);

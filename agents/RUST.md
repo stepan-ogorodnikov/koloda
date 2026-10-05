@@ -17,6 +17,7 @@ This file only tells you where to start.
 | Review row writes | `src/repo/reviews.rs::insert_review` |
 | A product write path (sync capture) | `src/repo/sync/capture.rs::Capture` + `crates/koloda-sync-proto/PROTOCOL.md` (§Field groups and merge) |
 | Applying remote sync envelopes | `src/repo/sync/apply.rs::apply_page` + `crates/koloda-sync-proto/PROTOCOL.md` (§Field groups and merge, Apply rule) |
+| Pushing the outbox and settling outcomes | `src/repo/sync/outbox.rs` + `crates/koloda-sync-proto/PROTOCOL.md` (§Cohorts, §Push outcomes) |
 | Enabling sync on a database that already holds rows | `src/repo/sync/backfill.rs::backfill_batch` + `crates/koloda-sync-proto/PROTOCOL.md` (§Existing rows at enable time, Backfill) |
 | Joining an existing space | `src/repo/sync/join.rs` + `crates/koloda-sync-proto/PROTOCOL.md` (§Joining) |
 | Schema / migrations | `agents/DB.md` |
@@ -80,6 +81,13 @@ so card-progress and review namespaces stay distinct.
 - Repairs of pointers to a dead referent are the exception.
   `repair.rs` publishes them through `Capture`, like local writes.
 - Two-replica tests exchange outboxes through `FakeSpace` in `tests/common/sync.rs`.
+
+**Push settlement** — `push_batch` marks whole cohorts in flight; the engine sends them and reports back.
+
+- `settle_push` applies every outcome in one transaction; `fenced` and `drop_entity` delete through apply's
+  `delete_entity` and `drop_entity`, so a settled delete matches an applied one.
+- `push_lost` fixes the batch's cohorts; `push_refused` returns first-time cohorts to `local`.
+- A row in flight when `push_batch` runs means an earlier push never settled; its cohort is fixed.
 
 **Backfill** — `enroll_device` reserves one stamp per backfill phase.
 `backfill_batch` scans rows written before enrollment into the outbox.

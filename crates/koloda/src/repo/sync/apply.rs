@@ -620,17 +620,35 @@ fn apply_immutable(conn: &Connection, entry: &Entry, changed: &mut Changed) -> R
     Ok(())
 }
 
-// INVARIANT: a remote tombstone fences its id even when this device never held the entity, so a create that
-// arrives later is dropped (apply rule steps 1 and 4).
 fn apply_delete(conn: &Connection, entry: &Entry, starter: &Starter, changed: &mut Changed) -> Result<(), AppError> {
-    let kind = entry.header.kind;
-    let id = entry.header.id.as_str();
     let Payload::Delete { delete, .. } = &entry.payload else {
         return Err(protocol_error("a delete carries a delete payload"));
     };
-    entry
-        .values
-        .write_tombstone(conn, kind, id, delete.successor.as_deref())?;
+    delete_entity(
+        conn,
+        entry.header.kind,
+        &entry.header.id,
+        delete.successor.as_deref(),
+        &entry.values,
+        starter,
+        changed,
+    )
+}
+
+/// Tombstones an entity at `values` and deletes it with its descendants, as an applied remote delete does.
+///
+/// INVARIANT: the tombstone fences its id even when this device never held the entity, so a create that arrives
+/// later is dropped (apply rule steps 1 and 4).
+pub(super) fn delete_entity(
+    conn: &Connection,
+    kind: Kind,
+    id: &str,
+    successor: Option<&str>,
+    values: &StampValues,
+    starter: &Starter,
+    changed: &mut Changed,
+) -> Result<(), AppError> {
+    values.write_tombstone(conn, kind, id, successor)?;
     if !is_present(conn, kind, id)? {
         return Ok(());
     }
@@ -638,7 +656,7 @@ fn apply_delete(conn: &Connection, entry: &Entry, starter: &Starter, changed: &m
     // INVARIANT: a referent dies only after every pointer to it is repaired and every card on a dead template is
     // dropped; the local foreign keys refuse the delete otherwise (PROTOCOL.md, Referents are not parents).
     if matches!(kind, Kind::Templates | Kind::Algorithms) {
-        repair::sweep_pointers(conn, kind, id, delete.successor.as_deref(), starter, changed)?;
+        repair::sweep_pointers(conn, kind, id, successor, starter, changed)?;
     }
     if kind == Kind::Templates {
         let cards: Vec<String> = conn
@@ -646,12 +664,15 @@ fn apply_delete(conn: &Connection, entry: &Entry, starter: &Starter, changed: &m
             .query_map(params![id], |row| row.get(0))?
             .collect::<Result<_, _>>()?;
         for card in cards {
-            drop_pending_subtree(conn, Kind::Cards, &card)?;
-            forget_entity(conn, Kind::Cards, &card)?;
-            delete_subtree(conn, Kind::Cards, &card, changed)?;
+            drop_entity(conn, Kind::Cards, &card, changed)?;
         }
     }
 
+    drop_entity(conn, kind, id, changed)
+}
+
+/// Deletes an entity and its descendants with their registers, origins, and pending rows, and records no tombstone.
+pub(super) fn drop_entity(conn: &Connection, kind: Kind, id: &str, changed: &mut Changed) -> Result<(), AppError> {
     drop_pending_subtree(conn, kind, id)?;
     forget_entity(conn, kind, id)?;
     delete_subtree(conn, kind, id, changed)

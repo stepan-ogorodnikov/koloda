@@ -27,6 +27,7 @@ zstd = "0.14"
 axum = "0.8"
 koloda-server = { path = "../koloda-server" }
 rusqlite = { version = "0.33", features = ["bundled"] }
+serde_json = "1.0"
 tempfile = "3"
 tokio = { version = "1", features = ["net", "rt-multi-thread"] }
 tower = { version = "0.5", features = ["util"] }

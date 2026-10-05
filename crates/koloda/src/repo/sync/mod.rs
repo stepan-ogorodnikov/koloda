@@ -1,6 +1,7 @@
 //! Sync bookkeeping SQL: device enrollment here, joining an existing space in `join`, capture of product writes
-//! in `capture`, rows that predate enrollment in `backfill`, and remote envelopes in `apply`
-//! (`crates/koloda-sync-proto/PROTOCOL.md` §Field groups and merge, §Clocks and order, §Client state, §Joining).
+//! in `capture`, rows that predate enrollment in `backfill`, push batches and their outcomes in `outbox`, and
+//! remote envelopes in `apply` (`crates/koloda-sync-proto/PROTOCOL.md` §Field groups and merge, §Clocks and order,
+//! §Client state, §Joining).
 //!
 //! Only the desktop store writes the `sync_*` tables; the web host does not sync.
 
@@ -8,6 +9,7 @@ pub mod apply;
 pub mod backfill;
 pub mod capture;
 pub mod join;
+pub mod outbox;
 pub mod repair;
 
 use koloda_sync_proto::hlc::{DeviceId, Stamp};
@@ -74,6 +76,35 @@ pub fn enroll_device(
             // INVARIANT: the backfill stamps are reserved in the enrollment transaction, so every write captured
             // after enrollment is stamped above them.
             backfill::reserve(tx)
+        })
+    })
+}
+
+/// What the engine needs to reach the space: the server URL is unset only while a claim waits for Add or Replace.
+pub struct SyncState {
+    pub device_id: Uuid,
+    pub space_id: Uuid,
+    pub server_url: Option<String>,
+}
+
+pub fn sync_state(db: &Database) -> Result<Option<SyncState>, AppError> {
+    throw_known_error(error_codes::DB_GET, || {
+        db.with_conn(|conn| {
+            let row: Option<(Vec<u8>, Vec<u8>, Option<String>)> = conn
+                .query_row(
+                    "SELECT device_id, space_id, server_url FROM sync_state WHERE id = 1",
+                    [],
+                    |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
+                )
+                .optional()?;
+            row.map(|(device_id, space_id, server_url)| {
+                Ok(SyncState {
+                    device_id: Uuid::from_slice(&device_id).map_err(protocol_error)?,
+                    space_id: Uuid::from_slice(&space_id).map_err(protocol_error)?,
+                    server_url,
+                })
+            })
+            .transpose()
         })
     })
 }

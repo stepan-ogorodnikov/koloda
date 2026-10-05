@@ -5,7 +5,9 @@ use std::sync::Arc;
 use koloda::app::db::Database;
 use koloda::app::error::{error_codes, AppError};
 use koloda::app::secrets::SecretStore;
-use koloda::repo::sync::{enroll_device, enrolled_device, SpaceRole};
+use koloda::repo::sync::repair::Starter;
+use koloda::repo::sync::{enroll_device, enrolled_device, sync_state, SpaceRole};
+use koloda_sync_proto::registry::Kind;
 use koloda_sync_proto::transport::{CreateSpace, Enrollment, Platform};
 use tokio::runtime::Runtime;
 use uuid::Uuid;
@@ -21,12 +23,20 @@ pub struct Engine {
     shared: Arc<Shared>,
 }
 
-struct Shared {
-    db: Database,
+pub(crate) struct Shared {
+    pub(crate) db: Database,
     secrets: Arc<dyn SecretStore>,
     transport: Arc<dyn Transport>,
     platform: Platform,
+    pub(crate) starter: Starter,
     skew: Skew,
+}
+
+/// What every call to the enrolled space needs, read once per cycle.
+pub(crate) struct Session {
+    pub(crate) base: String,
+    pub(crate) space: Uuid,
+    pub(crate) token: String,
 }
 
 impl Engine {
@@ -35,6 +45,7 @@ impl Engine {
         secrets: Arc<dyn SecretStore>,
         transport: Arc<dyn Transport>,
         platform: Platform,
+        starter: Starter,
     ) -> Result<Engine, SyncError> {
         let runtime = tokio::runtime::Builder::new_multi_thread()
             .worker_threads(1)
@@ -49,6 +60,7 @@ impl Engine {
                 secrets,
                 transport,
                 platform,
+                starter,
                 skew: Skew::default(),
             }),
         })
@@ -67,6 +79,12 @@ impl Engine {
             .block_on(shared.create_space(server_url, setup_token, space_name, device_name))
     }
 
+    /// Pushes the outbox, and returns the kinds whose product rows the outcomes changed.
+    pub fn sync_now(&self) -> Result<Vec<Kind>, SyncError> {
+        let shared = Arc::clone(&self.shared);
+        self.runtime.block_on(shared.sync())
+    }
+
     /// Server time minus local time when the last reply arrived, in milliseconds.
     pub fn skew_ms(&self) -> i64 {
         self.shared.skew.get()
@@ -74,7 +92,7 @@ impl Engine {
 }
 
 impl Shared {
-    fn client<'a>(&'a self, base: &'a str) -> Client<'a> {
+    pub(crate) fn client<'a>(&'a self, base: &'a str) -> Client<'a> {
         Client {
             base,
             transport: self.transport.as_ref(),
@@ -84,7 +102,7 @@ impl Shared {
 
     // INVARIANT: `Database` serializes every call on one mutex, so database and secret-store work runs on blocking
     // threads and never stalls the runtime's worker.
-    async fn blocking<T, F>(self: &Arc<Self>, work: F) -> Result<T, SyncError>
+    pub(crate) async fn blocking<T, F>(self: &Arc<Self>, work: F) -> Result<T, SyncError>
     where
         T: Send + 'static,
         F: FnOnce(&Shared) -> Result<T, AppError> + Send + 'static,
@@ -94,6 +112,29 @@ impl Shared {
             .await
             .map_err(|error| AppError::new(error_codes::UNKNOWN, Some(error.to_string())))?
             .map_err(SyncError::Local)
+    }
+
+    async fn sync(self: Arc<Self>) -> Result<Vec<Kind>, SyncError> {
+        let session = self.session().await?;
+        let mut changed = Vec::new();
+        self.push(&session, &mut changed).await?;
+        Ok(changed)
+    }
+
+    async fn session(self: &Arc<Self>) -> Result<Session, SyncError> {
+        self.blocking(|shared| {
+            let Some(state) = sync_state(&shared.db)? else {
+                return Ok(None);
+            };
+            let token = shared.secrets.get(&token_key(state.device_id))?;
+            Ok(state.server_url.zip(token).map(|(base, token)| Session {
+                base,
+                space: state.space_id,
+                token,
+            }))
+        })
+        .await?
+        .ok_or(SyncError::NotEnrolled)
     }
 
     async fn create_space(

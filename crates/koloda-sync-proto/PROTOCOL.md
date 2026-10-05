@@ -602,6 +602,14 @@ Before any member is transmitted, the cohort becomes `uncertain`.
 Push requests never split a cohort, and a push is atomic (§Push outcomes).
 A complete response proving no member was consumed returns it to `local`.
 Anything else fixes it to its original stamp.
+
+- A push with no complete reply fixes every `uncertain` cohort it carried.
+  Its rows stay in flight, and the next push sends the same bytes first.
+- A row still in flight when the next batch is picked means the same, as after the app stopped mid-push.
+- An error reply consumed nothing.
+  Its `uncertain` cohorts return to `local` and their rows leave flight; `fixed` cohorts keep theirs in flight.
+- Rows a reply did not reach, after `seq_reused`, leave flight the same way.
+
 Re-stamp walks only `local` cohorts and gives every pending member of a cohort one new stamp in one transaction.
 A reset and its blank scheduling can therefore never end up with different stamps.
 
@@ -835,8 +843,8 @@ Each gets its row with the server work that answers it.
 | `applied` | Clear | Keep |
 | `stale` | Clear | Keep; pull supplies the winner |
 | `fenced` | Clear after local delete | Delete and fence |
-| `existence` | Clear after local fix | Capture the missing referent and a new envelope at the tail, or drop |
-| `dependency_fenced` | Clear after the named action | Drop the entity, or repair the pointer |
+| `existence` | Clear | Keep |
+| `dependency_fenced` | Clear after the named action | Drop the entity, or keep it for its referent's tombstone |
 | `held { reason }` | Move to `sync_held` | Keep; regenerate at the tail with the **same stamp and `commit_id`** when the reason clears |
 | `seq_reused` | Stop | The file is behind (§Devices) |
 
@@ -847,6 +855,20 @@ Items arrive in strictly ascending `sender_seq`; an undecodable envelope or a mi
 The server stops at it and commits the replays, which consumes nothing new.
 The client applies an outcome in the same transaction that clears or moves its outbox row.
 After a lost reply, the same-digest retry returns the same outcome.
+
+What the device does for each:
+
+- `fenced`: it deletes the entity and its descendants, as an applied tombstone would.
+  It fences the id with the rejected envelope's stamp; the tombstone, when pulled, meets that fence.
+- `existence`: it drops the pending write, and the local row keeps its value.
+  Capturing the missing referent waits for heal re-push, which re-encodes rows from their stored stamps.
+- `dependency_fenced { drop_entity }`: it deletes the entity and its descendants without publishing.
+  The dead parent's or template's tombstone arrives by pull.
+- `dependency_fenced { repair_pointer }`: it drops the pending write.
+  The referent's tombstone, when pulled, sweeps the pointer.
+- `held`: the row moves to `sync_held` with its reason.
+  This app version regenerates nothing, because only a schema bump or quotas can clear a reason.
+- `seq_reused`: the push stops and the file reports that it is behind.
 
 `held` reasons:
 

@@ -745,6 +745,62 @@
       "foreign_keys": []
     },
     {
+      "name": "sync_held",
+      "columns": [
+        {
+          "name": "commit_id",
+          "type": "BLOB",
+          "notnull": 1,
+          "pk": 0,
+          "dflt_value": null
+        },
+        {
+          "name": "envelope",
+          "type": "BLOB",
+          "notnull": 1,
+          "pk": 0,
+          "dflt_value": null
+        },
+        {
+          "name": "group_name",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0,
+          "dflt_value": null
+        },
+        {
+          "name": "id",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0,
+          "dflt_value": null
+        },
+        {
+          "name": "kind",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0,
+          "dflt_value": null
+        },
+        {
+          "name": "reason",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0,
+          "dflt_value": null
+        },
+        {
+          "name": "sender_seq",
+          "type": "INTEGER",
+          "notnull": 1,
+          "pk": 1,
+          "dflt_value": null
+        }
+      ],
+      "indexes": [],
+      "foreign_keys": []
+    },
+    {
       "name": "sync_origins",
       "columns": [
         {

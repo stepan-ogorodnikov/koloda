@@ -6,6 +6,7 @@ use koloda_sync::transport::HttpTransport;
 use koloda_sync_proto::transport::Platform;
 
 use crate::common::{MemorySecrets, TestServer};
+use crate::fixtures::starter;
 
 #[test]
 fn a_space_is_created_over_http_on_loopback() {
@@ -23,6 +24,7 @@ fn a_space_is_created_over_http_on_loopback() {
         Arc::new(MemorySecrets::default()),
         Arc::new(HttpTransport::new().expect("HTTP client")),
         Platform::DesktopLinux,
+        starter(),
     )
     .expect("engine starts");
     engine

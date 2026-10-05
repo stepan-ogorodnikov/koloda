@@ -41,12 +41,13 @@ const SYNCED_TABLES: [&str; 6] = [
 
 const OTHER_SPACE: Uuid = Uuid::from_u128(0x0192_0000_0000_7000_8000_0000_0000_05ad);
 
-const RECORDED_TABLES: [&str; 5] = [
+const RECORDED_TABLES: [&str; 6] = [
     "sync_stamps",
     "sync_origins",
     "sync_outbox",
     "sync_cohorts",
     "sync_tombstones",
+    "sync_held",
 ];
 
 fn seeded_db() -> Database {
@@ -243,6 +244,18 @@ fn a_claim_clears_what_the_file_recorded_for_another_space() {
     let deck = add_deck(&db, SEED_ALGORITHM_SIMPLE_ID, SEED_TEMPLATE_TYPE_ID, "Spanish");
     delete_deck(&db, DeleteDeckData { id: deck }).expect("deck deletes");
     apply(&db, &hot_page(Uuid::now_v7(), vec![], 7)).expect("empty page applies");
+    // WHY: a held row comes from a push reply, which this test has no server for.
+    db.with_conn(|conn| {
+        conn.execute(
+            r#"
+            INSERT INTO sync_held (sender_seq, kind, id, group_name, commit_id, envelope, reason)
+            VALUES (1, 'decks', 'held-deck', 'title', x'00', x'00', 'schema')
+            "#,
+            [],
+        )?;
+        Ok(())
+    })
+    .expect("a held row inserts");
     for table in RECORDED_TABLES {
         assert!(
             count(&db, &format!("SELECT COUNT(*) FROM {table}")) > 0,
