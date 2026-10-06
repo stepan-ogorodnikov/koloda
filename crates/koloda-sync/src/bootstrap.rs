@@ -134,7 +134,7 @@ impl Shared {
                 )
                 .await?;
             lease.server_ms = answer.meta.server_time_ms;
-            self.spend_page(answer.bytes)?;
+            self.spend_bytes(answer.bytes)?;
             self.check_skew()?;
             self.check_time()?;
             let entries = answer

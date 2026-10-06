@@ -227,7 +227,7 @@ Out:
   Commit: Queue attachment uploads and fetches on the device
   Depends on: 2
 
-- [ ] 5. Transfer attachments in the sync cycle
+- [x] 5. Transfer attachments in the sync cycle
   Goal:
   - `Transport` gains `PUT`; `HttpTransport` sends it.
   - After its rounds, a cycle uploads and fetches due transfers one at a time.

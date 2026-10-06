@@ -298,10 +298,25 @@ impl Shared {
 
     async fn sync(self: &Arc<Self>, changed: &mut Vec<Kind>) -> Result<(), SyncError> {
         let session = self.session().await?;
-        self.cycle(&session, changed).await
+        let result = self.cycle(&session, changed).await;
+        // WHY: transfers carry no stamps, so they run while push and apply pause for the clock or a file that is
+        // behind (PROTOCOL.md, Cycle).
+        let transferred = match &result {
+            Ok(()) | Err(SyncError::ClockSkew { .. } | SyncError::Behind) => self.transfer(&session).await,
+            Err(_) => Ok(false),
+        };
+        match (result, transferred) {
+            (Err(error), _) | (Ok(()), Err(error)) => Err(error),
+            (Ok(()), Ok(is_pending)) => {
+                if is_pending {
+                    self.triggers.fire(false);
+                }
+                Ok(())
+            }
+        }
     }
 
-    fn emit(&self, event: Event) {
+    pub(crate) fn emit(&self, event: Event) {
         if let Ok(sink) = self.lock(&self.sink) {
             if let Some(sink) = sink.as_ref() {
                 sink.send(event);
@@ -336,7 +351,7 @@ impl Shared {
         }
     }
 
-    pub(crate) fn spend_page(&self, bytes: usize) -> Result<(), SyncError> {
+    pub(crate) fn spend_bytes(&self, bytes: usize) -> Result<(), SyncError> {
         if let Some(spending) = self.lock(&self.spending)?.as_mut() {
             spending.spend(bytes);
         }

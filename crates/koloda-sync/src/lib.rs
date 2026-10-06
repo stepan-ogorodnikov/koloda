@@ -11,6 +11,7 @@ pub mod runner;
 pub mod status;
 pub mod transport;
 
+mod attachments;
 mod bootstrap;
 mod client;
 mod cycle;

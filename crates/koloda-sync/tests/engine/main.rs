@@ -2,6 +2,7 @@ mod common;
 mod fixtures;
 mod runner_support;
 
+mod attachments_tests;
 mod backfill_tests;
 mod bootstrap_tests;
 mod client_tests;

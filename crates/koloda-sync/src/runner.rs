@@ -43,6 +43,10 @@ pub enum Event {
     },
     Status(Status),
     Error(String),
+    /// These images arrived from the server, so the host shows them where cards link them.
+    AttachmentsFetched {
+        ids: Vec<String>,
+    },
 }
 
 /// Receives events on the engine's runtime thread; it must not block.
@@ -50,11 +54,11 @@ pub trait EventSink: Send + Sync {
     fn send(&self, event: Event);
 }
 
-/// Limits on one `tick`: wall time, and bytes of envelope pages received.
+/// Limits on one `tick`: wall time, and bytes of envelope pages received and attachment bodies sent or received.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Budget {
     pub wall: Duration,
-    pub page_bytes: usize,
+    pub body_bytes: usize,
 }
 
 /// What a tick did; a tick that ran out of budget leaves the rest for the next one, which resumes from the cursors.
@@ -67,19 +71,19 @@ pub struct Ticked {
 /// What is left of a tick's budget.
 pub(crate) struct Spending {
     deadline: Instant,
-    page_bytes: usize,
+    body_bytes: usize,
 }
 
 impl Spending {
     pub(crate) fn new(budget: Budget) -> Spending {
         Spending {
             deadline: Instant::now() + budget.wall,
-            page_bytes: budget.page_bytes,
+            body_bytes: budget.body_bytes,
         }
     }
 
     pub(crate) fn check(&self) -> Result<(), SyncError> {
-        if self.page_bytes == 0 {
+        if self.body_bytes == 0 {
             return Err(SyncError::BudgetSpent);
         }
         self.check_time()
@@ -92,8 +96,8 @@ impl Spending {
         Ok(())
     }
 
-    pub(crate) fn spend(&mut self, page_bytes: usize) {
-        self.page_bytes = self.page_bytes.saturating_sub(page_bytes);
+    pub(crate) fn spend(&mut self, body_bytes: usize) {
+        self.body_bytes = self.body_bytes.saturating_sub(body_bytes);
     }
 }
 
@@ -107,6 +111,10 @@ pub(crate) struct Triggers {
 }
 
 impl Triggers {
+    pub(crate) fn generation(&self) -> u64 {
+        self.generation.load(Ordering::SeqCst)
+    }
+
     pub(crate) fn fire(&self, is_local: bool) {
         if is_local {
             self.is_local.store(true, Ordering::SeqCst);

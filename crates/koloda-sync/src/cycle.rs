@@ -169,7 +169,7 @@ impl Shared {
             if let Some(lease) = lease.as_deref_mut() {
                 lease.server_ms = answer.meta.server_time_ms;
             }
-            self.spend_page(answer.bytes)?;
+            self.spend_bytes(answer.bytes)?;
             self.check_skew()?;
             self.check_time()?;
             let page = Page {

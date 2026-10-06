@@ -980,7 +980,11 @@ Until the nudge socket exists, a device polls every 60 seconds instead, so a gra
 One cycle runs at a time; triggers during a cycle run one more after it, and errors back off up to the poll
 interval.
 
-Attachment transfers run under a maintenance budget even while the cycle is paused.
+Attachment transfers run after the rounds, one at a time, uploads and fetches alike.
+They carry no stamps, so they also run when the rounds stop for clock skew or a file that is behind.
+They stop early when a trigger arrives, so the rows a local change wrote go out first, and after 64 MiB of bodies.
+When transfers are still due, the next cycle starts at once instead of waiting for the poll.
+A bounded tick spends its byte budget on transfer bodies as on pull pages.
 
 ### Outbox
 

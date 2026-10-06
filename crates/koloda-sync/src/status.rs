@@ -2,6 +2,7 @@
 
 use std::sync::Arc;
 
+use koloda::repo::sync::attachments::transfer_counts;
 use koloda::repo::sync::outbox::{held_count, pending_count};
 use koloda::repo::sync::sync_state;
 use koloda_sync_proto::transport::ErrorCode;
@@ -16,6 +17,9 @@ pub struct Status {
     pub last_success_ms: Option<i64>,
     pub pending: usize,
     pub held: usize,
+    /// Images waiting to go up or come down.
+    pub uploads: usize,
+    pub fetches: usize,
     /// How far each lane's cursor is below the last head the server reported.
     pub lag_hot: Option<u64>,
     pub lag_cold: Option<u64>,
@@ -67,12 +71,13 @@ pub(crate) struct RunState {
 
 impl Shared {
     pub(crate) async fn status(self: &Arc<Self>) -> Result<Status, SyncError> {
-        let (state, pending, held) = self
+        let (state, pending, held, (uploads, fetches)) = self
             .blocking(|shared| {
                 Ok((
                     sync_state(&shared.db)?,
                     pending_count(&shared.db)?,
                     held_count(&shared.db)?,
+                    transfer_counts(&shared.db)?,
                 ))
             })
             .await?;
@@ -84,6 +89,8 @@ impl Shared {
                 last_success_ms: run.last_success_ms,
                 pending,
                 held,
+                uploads,
+                fetches,
                 lag_hot: None,
                 lag_cold: None,
                 skew_ms,
@@ -109,6 +116,8 @@ impl Shared {
             last_success_ms: run.last_success_ms,
             pending,
             held,
+            uploads,
+            fetches,
             lag_hot: run.heads.map(|(hot, _)| hot.saturating_sub(state.cursor_hot)),
             lag_cold: run.heads.map(|(_, cold)| cold.saturating_sub(state.cursor_cold)),
             skew_ms,

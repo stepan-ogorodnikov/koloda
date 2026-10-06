@@ -20,6 +20,7 @@ const REQUEST_TIMEOUT: Duration = Duration::from_secs(120);
 pub enum Method {
     Get,
     Post,
+    Put,
     Delete,
 }
 
@@ -73,6 +74,7 @@ impl Transport for HttpTransport {
             let method = match request.method {
                 Method::Get => reqwest::Method::GET,
                 Method::Post => reqwest::Method::POST,
+                Method::Put => reqwest::Method::PUT,
                 Method::Delete => reqwest::Method::DELETE,
             };
             let mut builder = self.client.request(method, &request.url).header(ACCEPT_ENCODING, ZSTD);

@@ -556,6 +556,7 @@ async fn forward(router: &Router, request: Request) -> Response {
     let method = match request.method {
         Method::Get => axum::http::Method::GET,
         Method::Post => axum::http::Method::POST,
+        Method::Put => axum::http::Method::PUT,
         Method::Delete => axum::http::Method::DELETE,
     };
     let mut builder = axum::http::Request::builder()

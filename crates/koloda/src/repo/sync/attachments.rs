@@ -170,6 +170,22 @@ pub fn defer_fetch(db: &Database, id: &str, now: i64) -> Result<(), AppError> {
     })
 }
 
+/// Queued uploads and fetches, for the host's status.
+pub fn transfer_counts(db: &Database) -> Result<(usize, usize), AppError> {
+    throw_known_error(error_codes::DB_GET, || {
+        db.with_conn(|conn| {
+            Ok(conn.query_row(
+                r#"
+                SELECT coalesce(SUM(direction = 'upload'), 0), coalesce(SUM(direction = 'fetch'), 0)
+                FROM sync_attachment_queue
+                "#,
+                [],
+                |row| Ok((row.get(0)?, row.get(1)?)),
+            )?)
+        })
+    })
+}
+
 // WHY: a hex id cannot be hidden by JSON escaping, so a substring match finds every card that links it, as the
 // startup sweep does.
 fn is_wanted(conn: &Connection, id: &str) -> Result<bool, AppError> {

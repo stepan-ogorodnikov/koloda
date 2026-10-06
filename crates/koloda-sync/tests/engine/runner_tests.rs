@@ -162,7 +162,7 @@ fn a_tick_stops_between_pages_once_its_bytes_are_spent() {
         .engine
         .tick(Budget {
             wall: Duration::from_secs(60),
-            page_bytes: 1,
+            body_bytes: 1,
         })
         .expect("the tick runs");
 
@@ -179,7 +179,7 @@ fn a_tick_stops_between_pages_once_its_bytes_are_spent() {
         .engine
         .tick(Budget {
             wall: Duration::from_secs(60),
-            page_bytes: usize::MAX,
+            body_bytes: usize::MAX,
         })
         .expect("the tick runs");
 
@@ -197,7 +197,7 @@ fn a_tick_without_time_sends_nothing() {
         .engine
         .tick(Budget {
             wall: Duration::ZERO,
-            page_bytes: usize::MAX,
+            body_bytes: usize::MAX,
         })
         .expect("the tick runs");
 
