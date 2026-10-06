@@ -14,6 +14,8 @@ use axum::body::Body;
 use axum::extract::{Path as UrlPath, State};
 use axum::http::HeaderMap;
 use axum::response::Response;
+use koloda_sync_proto::envelope::Header;
+use koloda_sync_proto::registry::{Group, Kind};
 use koloda_sync_proto::transport::{AttachmentBody, Empty, ATTACHMENT_MIMES, MAX_ATTACHMENT_BYTES};
 use rusqlite::{params, Connection, OptionalExtension};
 use sha2::{Digest, Sha256};
@@ -102,7 +104,9 @@ fn store(server: &Server, space_id: Uuid, id: &str, attachment: &AttachmentBody)
     fs::rename(&staged, dir.join(id)).map_err(io_error)?;
     File::open(&dir).and_then(|dir| dir.sync_all()).map_err(io_error)?;
     tx.execute(
-        "INSERT INTO attachments (id, mime, size, width, height, stored_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
+        "INSERT INTO attachments (id, mime, size, width, height, stored_at, unlinked_since)
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6, CASE WHEN EXISTS (SELECT 1 FROM attachment_refs WHERE attachment = ?1)
+                                              THEN NULL ELSE ?6 END)",
         params![
             id,
             attachment.mime,
@@ -145,6 +149,47 @@ fn load(server: &Server, space_id: Uuid, id: &str) -> Result<Option<AttachmentBo
         Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(None),
         Err(error) => Err(io_error(error)),
     }
+}
+
+/// Replaces the attachments `card` links with `ids`, and moves `unlinked_since` for every attachment that gained or
+/// lost its last ref.
+pub(crate) fn link(tx: &Connection, card: &str, ids: &[String], now_ms: u64) -> Result<(), ApiError> {
+    let mut statement = tx.prepare("SELECT attachment FROM attachment_refs WHERE card = ?1")?;
+    let previous = statement
+        .query_map(params![card], |row| row.get::<_, String>(0))?
+        .collect::<Result<Vec<_>, _>>()?;
+    tx.execute("DELETE FROM attachment_refs WHERE card = ?1", params![card])?;
+    for id in ids {
+        tx.execute(
+            "INSERT OR IGNORE INTO attachment_refs (card, attachment) VALUES (?1, ?2)",
+            params![card, id],
+        )?;
+    }
+    for id in previous.iter().chain(ids) {
+        tx.execute(
+            "UPDATE attachments SET unlinked_since =
+                 CASE WHEN EXISTS (SELECT 1 FROM attachment_refs WHERE attachment = ?1) THEN NULL
+                      ELSE coalesce(unlinked_since, ?2) END
+             WHERE id = ?1",
+            params![id, now_ms],
+        )?;
+    }
+    Ok(())
+}
+
+/// The ids a card `create` or `content` header links that the server holds no bytes for (`PROTOCOL.md` §Push
+/// outcomes).
+pub(crate) fn missing(conn: &Connection, header: &Header) -> Result<Vec<String>, ApiError> {
+    if header.kind != Kind::Cards || !matches!(header.group, Some(Group::Create | Group::Content)) {
+        return Ok(Vec::new());
+    }
+    let mut missing = Vec::new();
+    for id in &header.refs.attachment_ids {
+        if !is_stored(conn, id)? {
+            missing.push(id.clone());
+        }
+    }
+    Ok(missing)
 }
 
 fn is_stored(conn: &Connection, id: &str) -> Result<bool, ApiError> {

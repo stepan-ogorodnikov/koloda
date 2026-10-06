@@ -225,8 +225,19 @@ fn bodies_keep_their_wire_keys() {
                 sender_seq: 1,
                 outcome: Outcome::Applied,
                 replayed: false,
+                missing_attachments: Vec::new(),
             }),
             vec!["sender_seq", "outcome", "replayed"],
+        ),
+        (
+            "push outcome with missing attachments",
+            cbor(&PushOutcome {
+                sender_seq: 1,
+                outcome: Outcome::Stale,
+                replayed: true,
+                missing_attachments: vec!["a".repeat(64)],
+            }),
+            vec!["sender_seq", "outcome", "replayed", "missing_attachments"],
         ),
         (
             "known id",

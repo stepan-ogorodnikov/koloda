@@ -142,7 +142,7 @@ Out:
   Commit: Store and serve attachment bytes on the server
   Depends on: none
 
-- [ ] 2. Track card refs to attachments and report missing bytes
+- [x] 2. Track card refs to attachments and report missing bytes
   Goal:
   - `koloda-server` keeps `attachment_refs`: which attachment ids each live card links through its current content.
     That is the `cards.content` head, or the `create` while the card has none.

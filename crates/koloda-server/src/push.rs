@@ -20,6 +20,7 @@ use rusqlite::Connection;
 use serde::Deserialize;
 use uuid::Uuid;
 
+use crate::attachments;
 use crate::auth::{self, DeviceAuth};
 use crate::bootstrap;
 use crate::http::{query, read_body, respond, ApiError};
@@ -122,6 +123,7 @@ fn push_batch(server: &Server, caller: &DeviceAuth, request: Push) -> Result<Pus
                     sender_seq: item.sender_seq,
                     outcome,
                     replayed: true,
+                    missing_attachments: attachments::missing(&tx, header)?,
                 }),
                 // WHY: seqs strictly increase, so a seq at or below high-water that is not this exact envelope means
                 // the file is behind its own record. Only replays can precede it in the batch: nothing new is lost.
@@ -130,6 +132,7 @@ fn push_batch(server: &Server, caller: &DeviceAuth, request: Push) -> Result<Pus
                         sender_seq: item.sender_seq,
                         outcome: Outcome::SeqReused,
                         replayed: false,
+                        missing_attachments: Vec::new(),
                     });
                     break;
                 }
@@ -143,6 +146,7 @@ fn push_batch(server: &Server, caller: &DeviceAuth, request: Push) -> Result<Pus
             sender_seq: item.sender_seq,
             digest,
             bytes: &item.bytes,
+            now_ms: now,
         };
         let class = header.group.map(|group| log::class(header, group)).transpose()?;
         let outcome = if header.schema < accepted_schema(header.kind)? {
@@ -174,6 +178,7 @@ fn push_batch(server: &Server, caller: &DeviceAuth, request: Push) -> Result<Pus
             sender_seq: item.sender_seq,
             outcome,
             replayed: false,
+            missing_attachments: attachments::missing(&tx, header)?,
         });
     }
     tx.commit()?;

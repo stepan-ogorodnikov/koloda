@@ -812,7 +812,7 @@ Names are 1 to 100 characters after trimming.
 | `POST /v1/spaces/{space}/pairings` | `hint`, optional bytes of at most 4 KiB | `code`, `expires_at` |
 | `POST /v1/pairings/preview` | `code` | `space_id`, `name`, `epoch`, `counts` per kind, `bytes` |
 | `POST /v1/pairings/claim` | `code`, `name`, `platform`, `nonce` | `enrollment` as space creation returns it, `hint` |
-| `POST /v1/spaces/{space}/push` | `items`, each `sender_seq` and `envelope` bytes; at most 5000 | `outcomes`, each `sender_seq`, `outcome`, `replayed` |
+| `POST /v1/spaces/{space}/push` | `items`, each `sender_seq` and `envelope` bytes; at most 5000 | `outcomes`, each `sender_seq`, `outcome`, `replayed`, and `missing_attachments` when not empty |
 | `POST /v1/spaces/{space}/ids/known` | `ids`, each `kind` and `id`; at most 1000 | `ids` the space holds, in the order asked, each `kind`, `id`, `state` (`live` or `fenced`) |
 | `GET /v1/spaces/{space}/pull?lane&after&max_seq&limit` | `lane` and `after`; `max_seq` defaults to the lane head | `entries`, each `seq`, `sender`, `sender_seq`, `envelope`; `scanned_through`, `has_more` |
 | `POST /v1/spaces/{space}/bootstrap` | none | `snapshot_id`, `counts` per kind, `bytes`, `head_hot`, `head_cold`, `ttl_ms`, `expires_at`, `absolute_expiry` |
@@ -900,6 +900,9 @@ It changes only `sender_seq`, schema version, digest, and bytes.
 
 Every outcome for a `cards.create` or `cards.content` envelope, `stale` included, carries `missing_attachments`.
 Those are the ids the envelope links that the server holds no bytes for.
+The field sits next to the outcome, not in it, and is omitted when empty.
+The server computes it when it builds the reply and never stores it in the receipt.
+A replay after an upload therefore reports only what is still missing.
 After a heal restore, the device that wins the re-push race may lack the bytes while a `stale` one holds them.
 Both are told.
 
@@ -1370,8 +1373,10 @@ A swept attachment that a later card links again is fetched again.
 
 On the server, `attachment_refs` tracks which ids each live card links through its **current** content.
 That is the `cards.content` head, or the `create` if the card has none.
-It is updated whenever a card's content head moves or a deletion scope commits.
+It is updated whenever a card's content head moves or a delete removes the card.
 An image dropped by an edit therefore stops counting.
+Each stored attachment records when its last ref went, or when it was stored if nothing linked it then.
+A ref that returns clears that time.
 An attachment no card links becomes collectable after the stale-device window (90 days).
 An offline device's pending edit that re-links it still finds it.
 If it was collected anyway, that push reports it missing, and the device re-uploads it if it still has the bytes.

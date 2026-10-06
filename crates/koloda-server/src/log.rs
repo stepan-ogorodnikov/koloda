@@ -12,6 +12,7 @@ use koloda_sync_proto::transport::{DependencyAction, KnownState, Outcome, Receip
 use rusqlite::{params, Connection, OptionalExtension};
 use uuid::Uuid;
 
+use crate::attachments;
 use crate::http::ApiError;
 
 // WHY: a tombstone names no group; it is stored as the entity's head under this empty group name.
@@ -28,6 +29,7 @@ pub(crate) struct Entry<'a> {
     pub(crate) sender_seq: u64,
     pub(crate) digest: Digest,
     pub(crate) bytes: &'a [u8],
+    pub(crate) now_ms: u64,
 }
 
 struct Head {
@@ -94,14 +96,14 @@ pub(crate) fn delete(tx: &Connection, entry: &Entry<'_>) -> Result<Outcome, ApiE
             .query_map(params![card], |row| row.get::<_, String>(0))?
             .collect::<Result<Vec<_>, _>>()?;
         for review in reviews {
-            remove(tx, Kind::Reviews, &review)?;
+            remove(tx, Kind::Reviews, &review, entry.now_ms)?;
         }
-        remove(tx, Kind::Cards, card)?;
+        remove(tx, Kind::Cards, card, entry.now_ms)?;
         // WHY: cards get fences because their own updates and deletes name them; reviews need none, since a review
         // of a fenced card is already refused by its parent.
         fence(tx, Kind::Cards, card)?;
     }
-    remove(tx, header.kind, &header.id)?;
+    remove(tx, header.kind, &header.id, entry.now_ms)?;
     fence(tx, header.kind, &header.id)?;
     install(tx, entry, None)?;
     Ok(Outcome::Applied)
@@ -348,8 +350,12 @@ fn live_children(tx: &Connection, column: &str, id: &str) -> Result<Vec<String>,
     Ok(cards)
 }
 
-/// Removes every head of the entity and the versions they reference, except versions a lease pins.
-fn remove(tx: &Connection, kind: Kind, id: &str) -> Result<(), ApiError> {
+/// Removes every head of the entity and the versions they reference, except versions a lease pins, and a card's
+/// attachment refs.
+fn remove(tx: &Connection, kind: Kind, id: &str, now_ms: u64) -> Result<(), ApiError> {
+    if kind == Kind::Cards {
+        attachments::link(tx, id, &[], now_ms)?;
+    }
     tx.execute(
         &format!(
             "DELETE FROM versions WHERE (lane, seq) IN (SELECT lane, seq FROM heads WHERE kind = ?1 AND id = ?2)
@@ -463,6 +469,11 @@ fn install(tx: &Connection, entry: &Entry<'_>, replaced: Option<Head>) -> Result
          ON CONFLICT (kind, id, grp) DO UPDATE SET lane = excluded.lane, seq = excluded.seq",
         params![header.kind.as_wire(), header.id, entry.grp(), lane, seq],
     )?;
+    // INVARIANT: a card's create installs before any content head, so the create's refs count only until the first
+    // content head replaces them (`PROTOCOL.md` §Attachments).
+    if header.kind == Kind::Cards && matches!(entry.group, Some(Group::Create | Group::Content)) {
+        attachments::link(tx, &header.id, &header.refs.attachment_ids, entry.now_ms)?;
+    }
     if let Some(replaced) = replaced {
         tx.execute(
             &format!("DELETE FROM versions WHERE lane = ?1 AND seq = ?2 AND {UNPINNED}"),

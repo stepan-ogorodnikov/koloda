@@ -188,12 +188,17 @@ pub struct PushReply {
     pub outcomes: Vec<PushOutcome>,
 }
 
+/// `missing_attachments` names, for a card `create` or `content` envelope, the linked ids the server holds no bytes
+/// for. It is computed when the reply is built and never stored in the receipt, so a replay reports what is missing
+/// now.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct PushOutcome {
     pub sender_seq: u64,
     pub outcome: Outcome,
     pub replayed: bool,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub missing_attachments: Vec<String>,
 }
 
 /// Every outcome except `seq_reused` consumes its sequence (`PROTOCOL.md` §Push outcomes).

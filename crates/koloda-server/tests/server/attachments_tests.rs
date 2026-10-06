@@ -2,10 +2,17 @@ use std::num::NonZeroU32;
 
 use axum::http::{Method, StatusCode};
 use ciborium::Value;
-use koloda_sync_proto::transport::{AttachmentBody, Empty, Enrollment, ErrorCode, MAX_ATTACHMENT_BYTES};
+use koloda_server::clock::Clock;
+use koloda_sync_proto::envelope::{Header, Refs};
+use koloda_sync_proto::hlc::Stamp;
+use koloda_sync_proto::registry::{Group, Kind};
+use koloda_sync_proto::transport::{
+    AttachmentBody, Empty, Enrollment, ErrorCode, Outcome, PushOutcome, MAX_ATTACHMENT_BYTES,
+};
+use rusqlite::{params, Connection, OpenFlags, OptionalExtension};
 use sha2::{Digest, Sha256};
 
-use crate::common::{uuid, Answer, Harness};
+use crate::common::{card_create, child, stamp, tombstone, uuid, write, Answer, Harness, START_MS};
 
 /// Bytes the server stores as they are: it checks the hash, never the format.
 fn image(seed: u8, len: usize) -> (String, AttachmentBody) {
@@ -217,4 +224,154 @@ async fn attachments_answer_only_devices_of_their_space() {
 
     assert_eq!(foreign.error(), (StatusCode::NOT_FOUND, ErrorCode::UnknownSpace));
     assert_eq!(revoked.error(), (StatusCode::UNAUTHORIZED, ErrorCode::Revoked));
+}
+
+fn linking(header: Header, ids: &[&str]) -> Header {
+    let mut attachment_ids: Vec<String> = ids.iter().map(|id| (*id).to_string()).collect();
+    attachment_ids.sort();
+    Header {
+        refs: Refs {
+            attachment_ids,
+            ..header.refs.clone()
+        },
+        ..header
+    }
+}
+
+fn card(ids: &[&str]) -> Header {
+    linking(card_create("card", "deck", "template", stamp(1, 0, 1)), ids)
+}
+
+fn content(stamp: Stamp, ids: &[&str]) -> Header {
+    linking(child(Kind::Cards, "card", "deck", Group::Content, stamp), ids)
+}
+
+/// Pushes the deck and template the test card needs, as seqs 1 and 2.
+async fn push_parents(harness: &Harness, device: &Enrollment) {
+    harness
+        .push(
+            device,
+            vec![
+                (1, write(Kind::Templates, "template", Group::Create, stamp(0, 0, 1))),
+                (2, write(Kind::Decks, "deck", Group::Create, stamp(0, 1, 1))),
+            ],
+        )
+        .await
+        .ok();
+}
+
+async fn push_one(harness: &Harness, device: &Enrollment, seq: u64, header: Header) -> PushOutcome {
+    let mut reply = harness.push(device, vec![(seq, header)]).await.ok();
+    assert_eq!(reply.outcomes.len(), 1);
+    reply.outcomes.remove(0)
+}
+
+/// The space database as the server left it: `None` when no row, else the attachment's `unlinked_since`.
+fn unlinked_since(harness: &Harness, device: &Enrollment, id: &str) -> Option<Option<u64>> {
+    let path = harness
+        .generation_dir()
+        .join("spaces")
+        .join(format!("{}.db", uuid(device.space_id)));
+    let conn = Connection::open_with_flags(path, OpenFlags::SQLITE_OPEN_READ_ONLY).expect("open the space database");
+    conn.query_row(
+        "SELECT unlinked_since FROM attachments WHERE id = ?1",
+        params![id],
+        |row| row.get(0),
+    )
+    .optional()
+    .expect("read the attachment row")
+}
+
+#[tokio::test]
+async fn a_card_push_names_the_linked_attachments_the_server_lacks() {
+    let harness = Harness::new();
+    let home = harness.create_space("Home").await;
+    let (stored, stored_body) = image(10, 10);
+    let (absent, absent_body) = image(11, 10);
+    put(&harness, &home, &stored, &stored_body).await.ok();
+    push_parents(&harness, &home).await;
+
+    let created = push_one(&harness, &home, 3, card(&[&stored, &absent])).await;
+    put(&harness, &home, &absent, &absent_body).await.ok();
+    let replayed = push_one(&harness, &home, 3, card(&[&stored, &absent])).await;
+
+    assert_eq!(created.outcome, Outcome::Applied);
+    assert_eq!(created.missing_attachments, vec![absent]);
+    assert!(replayed.replayed);
+    assert_eq!(
+        replayed.missing_attachments,
+        Vec::<String>::new(),
+        "a replay reports what is missing now, not what the receipt saw"
+    );
+}
+
+#[tokio::test]
+async fn a_stale_content_envelope_still_names_what_is_missing() {
+    let harness = Harness::new();
+    let home = harness.create_space("Home").await;
+    let phone = harness.pair(&home, "Phone").await;
+    let (absent, _) = image(12, 10);
+    push_parents(&harness, &home).await;
+    push_one(&harness, &home, 3, card(&[])).await;
+    push_one(&harness, &home, 4, content(stamp(5, 0, 1), &[])).await;
+
+    let stale = push_one(&harness, &phone, 1, content(stamp(4, 0, 2), &[&absent])).await;
+
+    assert_eq!(stale.outcome, Outcome::Stale);
+    assert_eq!(stale.missing_attachments, vec![absent]);
+}
+
+#[tokio::test]
+async fn an_attachment_records_when_its_last_card_stopped_linking_it() {
+    let harness = Harness::new();
+    let home = harness.create_space("Home").await;
+    let (id, body) = image(13, 10);
+    let (unlinked, unlinked_body) = image(14, 10);
+    put(&harness, &home, &unlinked, &unlinked_body).await.ok();
+    push_parents(&harness, &home).await;
+    push_one(&harness, &home, 3, card(&[&id])).await;
+    harness.clock.advance(1_000);
+    put(&harness, &home, &id, &body).await.ok();
+    let linked_at_upload = unlinked_since(&harness, &home, &id);
+
+    harness.clock.advance(1_000);
+    let dropped_at = harness.clock.now_ms();
+    push_one(&harness, &home, 4, content(stamp(5, 0, 1), &[])).await;
+    let after_drop = unlinked_since(&harness, &home, &id);
+    harness.clock.advance(1_000);
+    push_one(&harness, &home, 5, content(stamp(6, 0, 1), &[])).await;
+    let after_second_edit = unlinked_since(&harness, &home, &id);
+    push_one(&harness, &home, 6, content(stamp(7, 0, 1), &[&id])).await;
+    let after_relink = unlinked_since(&harness, &home, &id);
+
+    assert_eq!(
+        unlinked_since(&harness, &home, &unlinked),
+        Some(Some(START_MS)),
+        "an attachment stored with no ref counts from when it was stored"
+    );
+    assert_eq!(linked_at_upload, Some(None), "an upload of a linked id starts linked");
+    assert_eq!(after_drop, Some(Some(dropped_at)));
+    assert_eq!(
+        after_second_edit,
+        Some(Some(dropped_at)),
+        "another edit keeps the first unlink time"
+    );
+    assert_eq!(after_relink, Some(None));
+}
+
+#[tokio::test]
+async fn deleting_a_deck_unlinks_the_attachments_of_its_cards() {
+    let harness = Harness::new();
+    let home = harness.create_space("Home").await;
+    let (id, body) = image(15, 10);
+    put(&harness, &home, &id, &body).await.ok();
+    push_parents(&harness, &home).await;
+    push_one(&harness, &home, 3, card(&[&id])).await;
+    let linked = unlinked_since(&harness, &home, &id);
+    harness.clock.advance(1_000);
+
+    push_one(&harness, &home, 4, tombstone(Kind::Decks, "deck", None, stamp(9, 0, 1))).await;
+
+    assert_eq!(linked, Some(None));
+    assert_eq!(unlinked_since(&harness, &home, &id), Some(Some(START_MS + 1_000)));
 }
