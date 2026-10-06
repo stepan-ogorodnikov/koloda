@@ -23,6 +23,7 @@ koloda-server serve --data-dir ./data --listen 127.0.0.1:8080
 
 `init` prints the setup token once; only its hash is stored.
 `serve` speaks plain HTTP, so put a TLS reverse proxy in front of it.
+It runs a garbage collection pass every hour; `Server::collect_garbage` runs one on demand.
 
 ## Data directory
 
@@ -53,7 +54,8 @@ koloda-server serve --data-dir ./data --listen 127.0.0.1:8080
 - `src/bootstrap.rs` — snapshot leases: open, stream pages, heartbeat, release, and expiry.
 - `src/known.rs` — the join probe: which ids the space holds live or fenced.
 - `src/devices.rs` — device records, revocation and detach, and fork.
-- `src/attachments.rs` — attachment bytes by content address: upload checked against the id, and download.
+- `src/attachments.rs` — attachment bytes by content address: upload checked against the id, download, card refs,
+  and collection of attachments unlinked for 90 days.
 
 - `tests/server/` — one test binary; `common.rs` drives the router in-process on a manual clock.
 

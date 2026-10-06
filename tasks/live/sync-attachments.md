@@ -170,7 +170,7 @@ Out:
   Commit: Track card refs to attachments and report missing bytes
   Depends on: 1
 
-- [ ] 3. Collect attachments no card has linked for 90 days
+- [x] 3. Collect attachments no card has linked for 90 days
   Goal:
   - `Server::collect_garbage` runs one collection pass.
     It removes every attachment whose last ref went more than 90 days ago, with its file, under the space writer

@@ -1,15 +1,19 @@
-//! `koloda-server` command line: `init` creates a data directory, `serve` runs the server on one.
+//! `koloda-server` command line: `init` creates a data directory, `serve` runs the server on one and collects
+//! garbage every hour.
 
 use std::net::SocketAddr;
 use std::path::PathBuf;
 use std::process::ExitCode;
 use std::sync::Arc;
+use std::time::Duration;
 
 use clap::{Parser, Subcommand};
 use koloda_server::clock::{Clock, SystemClock};
 use koloda_server::data_dir::{self, DataDirLock};
 use koloda_server::router;
 use koloda_server::server::Server;
+
+const COLLECT_EVERY: Duration = Duration::from_secs(60 * 60);
 
 #[derive(Parser)]
 #[command(name = "koloda-server", version, about = "Koloda sync server")]
@@ -65,14 +69,29 @@ fn serve(data_dir: PathBuf, listen: SocketAddr) -> Result<(), String> {
             .await
             .map_err(|error| format!("cannot listen on {listen}: {error}"))?;
         eprintln!("koloda-server: listening on {listen}");
+        let server = Arc::new(server);
+        tokio::spawn(collect_garbage(Arc::clone(&server)));
         axum::serve(
             listener,
-            router(Arc::new(server)).into_make_service_with_connect_info::<SocketAddr>(),
+            router(server).into_make_service_with_connect_info::<SocketAddr>(),
         )
         .with_graceful_shutdown(shutdown())
         .await
         .map_err(|error| error.to_string())
     })
+}
+
+async fn collect_garbage(server: Arc<Server>) {
+    let mut interval = tokio::time::interval(COLLECT_EVERY);
+    loop {
+        interval.tick().await;
+        let server = Arc::clone(&server);
+        match tokio::task::spawn_blocking(move || server.collect_garbage()).await {
+            Ok(Ok(())) => {}
+            Ok(Err(error)) => eprintln!("koloda-server: collection failed: {error:?}"),
+            Err(error) => eprintln!("koloda-server: collection failed: {error}"),
+        }
+    }
 }
 
 async fn shutdown() {

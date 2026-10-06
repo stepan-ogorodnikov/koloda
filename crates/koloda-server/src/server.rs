@@ -9,6 +9,7 @@ use koloda_sync_proto::registry::Kind;
 use rusqlite::{params, Connection};
 use uuid::Uuid;
 
+use crate::attachments;
 use crate::clock::Clock;
 use crate::data_dir::{self, DataDirError, ATTACHMENTS, SERVER_DB, SPACES};
 use crate::db::{self, DbError};
@@ -93,6 +94,22 @@ impl Server {
             "UPDATE write_schema SET schema = ?1 WHERE kind = ?2",
             params![schema, kind.as_wire()],
         )?;
+        Ok(())
+    }
+
+    /// Runs one collection pass over every space (`PROTOCOL.md` §Attachments); `serve` runs one every hour.
+    pub fn collect_garbage(&self) -> Result<(), ApiError> {
+        let spaces = {
+            let conn = self.server_db()?;
+            let mut statement = conn.prepare("SELECT id FROM spaces")?;
+            let spaces = statement
+                .query_map([], |row| row.get::<_, Uuid>(0))?
+                .collect::<Result<Vec<_>, _>>()?;
+            spaces
+        };
+        for space in spaces {
+            attachments::collect(self, space)?;
+        }
         Ok(())
     }
 

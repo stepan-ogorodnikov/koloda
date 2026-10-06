@@ -375,3 +375,93 @@ async fn deleting_a_deck_unlinks_the_attachments_of_its_cards() {
     assert_eq!(linked, Some(None));
     assert_eq!(unlinked_since(&harness, &home, &id), Some(Some(START_MS + 1_000)));
 }
+
+const DAY_MS: u64 = 24 * 60 * 60 * 1000;
+
+fn collect(harness: &Harness) {
+    harness.server.collect_garbage().expect("a collection pass");
+}
+
+#[tokio::test]
+async fn an_attachment_unlinked_for_more_than_90_days_is_collected() {
+    let harness = Harness::new();
+    let home = harness.create_space("Home").await;
+    let (kept, kept_body) = image(20, 10);
+    let (collected, collected_body) = image(21, 10);
+    put(&harness, &home, &collected, &collected_body).await.ok();
+    harness.clock.advance(2 * DAY_MS);
+    put(&harness, &home, &kept, &kept_body).await.ok();
+
+    harness.clock.advance(89 * DAY_MS);
+    collect(&harness);
+
+    assert_eq!(
+        get(&harness, &home, &kept).await.ok(),
+        kept_body,
+        "unlinked for 89 days"
+    );
+    assert_eq!(
+        get(&harness, &home, &collected).await.error(),
+        (StatusCode::NOT_FOUND, ErrorCode::NotFound),
+        "unlinked for 91 days"
+    );
+    assert_eq!(files(&harness, &home), vec![kept]);
+}
+
+#[tokio::test]
+async fn a_linked_attachment_is_kept_at_any_age() {
+    let harness = Harness::new();
+    let home = harness.create_space("Home").await;
+    let (id, body) = image(22, 10);
+    push_parents(&harness, &home).await;
+    push_one(&harness, &home, 3, card(&[&id])).await;
+    put(&harness, &home, &id, &body).await.ok();
+
+    harness.clock.advance(400 * DAY_MS);
+    collect(&harness);
+
+    assert_eq!(get(&harness, &home, &id).await.ok(), body);
+}
+
+#[tokio::test]
+async fn the_90_days_start_from_the_last_unlink() {
+    let harness = Harness::new();
+    let home = harness.create_space("Home").await;
+    let (id, body) = image(23, 10);
+    put(&harness, &home, &id, &body).await.ok();
+    push_parents(&harness, &home).await;
+    harness.clock.advance(60 * DAY_MS);
+    push_one(&harness, &home, 3, card(&[&id])).await;
+    harness.clock.advance(60 * DAY_MS);
+    push_one(&harness, &home, 4, content(stamp(5, 0, 1), &[])).await;
+
+    harness.clock.advance(89 * DAY_MS);
+    collect(&harness);
+    let after_89_days = get(&harness, &home, &id).await;
+    harness.clock.advance(2 * DAY_MS);
+    collect(&harness);
+
+    assert_eq!(after_89_days.ok(), body);
+    assert_eq!(
+        get(&harness, &home, &id).await.error(),
+        (StatusCode::NOT_FOUND, ErrorCode::NotFound)
+    );
+}
+
+#[tokio::test]
+async fn a_collected_attachment_linked_again_is_reported_and_stored_again() {
+    let harness = Harness::new();
+    let home = harness.create_space("Home").await;
+    let (id, body) = image(24, 10);
+    put(&harness, &home, &id, &body).await.ok();
+    harness.clock.advance(91 * DAY_MS);
+    collect(&harness);
+    push_parents(&harness, &home).await;
+
+    let linked = push_one(&harness, &home, 3, card(&[&id])).await;
+    put(&harness, &home, &id, &body).await.ok();
+
+    assert_eq!(linked.missing_attachments, vec![id.clone()]);
+    assert_eq!(get(&harness, &home, &id).await.ok(), body);
+    assert_eq!(files(&harness, &home), vec![id]);
+}

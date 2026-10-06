@@ -1379,6 +1379,8 @@ Each stored attachment records when its last ref went, or when it was stored if 
 A ref that returns clears that time.
 An attachment no card links becomes collectable after the stale-device window (90 days).
 An offline device's pending edit that re-links it still finds it.
+A collection pass removes every attachment unlinked for more than 90 days, with its bytes; `serve` runs one every
+hour.
 If it was collected anyway, that push reports it missing, and the device re-uploads it if it still has the bytes.
 Deleting the last reference is the delete; adding the same image later is an ordinary upload.
 
