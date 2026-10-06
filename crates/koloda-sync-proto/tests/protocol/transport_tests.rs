@@ -1,10 +1,11 @@
 use std::collections::BTreeMap;
+use std::num::NonZeroU32;
 
 use ciborium::Value;
 use koloda_sync_proto::transport::{
-    ClaimPairing, CreateSpace, DependencyAction, DeviceInfo, DeviceMeta, Empty, Enrollment, ErrorBody, ErrorCode,
-    HeldReason, IssuePairing, KnownId, KnownState, LogEntry, Meta, Outcome, Platform, PullPage, Push, PushItem,
-    PushOutcome, Reply, Snapshot, SnapshotPage,
+    AttachmentBody, ClaimPairing, CreateSpace, DependencyAction, DeviceInfo, DeviceMeta, Empty, Enrollment, ErrorBody,
+    ErrorCode, HeldReason, IssuePairing, KnownId, KnownState, LogEntry, Meta, Outcome, Platform, PullPage, Push,
+    PushItem, PushOutcome, Reply, Snapshot, SnapshotPage,
 };
 use serde::Serialize;
 
@@ -308,6 +309,16 @@ fn bodies_keep_their_wire_keys() {
                 "cursor_cold",
                 "revoked_at",
             ],
+        ),
+        (
+            "attachment",
+            cbor(&AttachmentBody {
+                mime: "image/png".to_string(),
+                width: NonZeroU32::new(1),
+                height: NonZeroU32::new(2),
+                bytes: vec![1],
+            }),
+            vec!["mime", "width", "height", "bytes"],
         ),
         ("empty", cbor(&Empty {}), vec![]),
     ];

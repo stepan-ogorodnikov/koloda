@@ -1,6 +1,7 @@
 //! In-process harness: a fresh data directory, a manual clock, and the router called without sockets.
 
 use std::net::SocketAddr;
+use std::path::PathBuf;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
 
@@ -101,6 +102,12 @@ impl Harness {
 
     pub fn post(&self, path: impl Into<String>) -> Call<'_> {
         self.call(Method::POST, path)
+    }
+
+    /// The active generation's directory, as `CURRENT` names it.
+    pub fn generation_dir(&self) -> PathBuf {
+        let current = std::fs::read_to_string(self._dir.path().join("CURRENT")).expect("read CURRENT");
+        self._dir.path().join("generations").join(current.trim())
     }
 
     pub async fn create_space(&self, name: &str) -> Enrollment {

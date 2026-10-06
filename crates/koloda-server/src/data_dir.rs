@@ -1,5 +1,5 @@
-//! Data directory: `CURRENT` names the active generation under `generations/`, which holds `server.db` and
-//! `spaces/<space>.db`; `lock` keeps a second `serve` off the same directory.
+//! Data directory: `CURRENT` names the active generation under `generations/`, which holds `server.db`,
+//! `spaces/<space>.db`, and `attachments/<space>/`; `lock` keeps a second `serve` off the same directory.
 //!
 //! WHY: a restore will write a new generation and swap `CURRENT`, so live files are never rewritten in place.
 
@@ -18,6 +18,7 @@ const CURRENT: &str = "CURRENT";
 const CURRENT_STAGED: &str = "CURRENT.tmp";
 const GENERATIONS: &str = "generations";
 const LOCK: &str = "lock";
+pub(crate) const ATTACHMENTS: &str = "attachments";
 pub(crate) const SERVER_DB: &str = "server.db";
 pub(crate) const SPACES: &str = "spaces";
 

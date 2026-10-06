@@ -107,7 +107,7 @@ Out:
 
 ## Plan
 
-- [ ] 1. Store and serve attachment bytes on the server
+- [x] 1. Store and serve attachment bytes on the server
   Goal:
   - `koloda-sync-proto` `transport.rs` gains:
     - `MAX_ATTACHMENT_BYTES` (5 MiB, equal to `koloda`'s `ATTACHMENT_MAX_BYTES`);

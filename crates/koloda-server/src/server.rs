@@ -10,7 +10,7 @@ use rusqlite::{params, Connection};
 use uuid::Uuid;
 
 use crate::clock::Clock;
-use crate::data_dir::{self, DataDirError, SERVER_DB, SPACES};
+use crate::data_dir::{self, DataDirError, ATTACHMENTS, SERVER_DB, SPACES};
 use crate::db::{self, DbError};
 use crate::http::ApiError;
 use crate::pairing::Guesses;
@@ -104,6 +104,10 @@ impl Server {
 
     fn space_path(&self, id: Uuid) -> PathBuf {
         self.generation.join(SPACES).join(format!("{id}.db"))
+    }
+
+    pub(crate) fn attachments_dir(&self, space: Uuid) -> PathBuf {
+        self.generation.join(ATTACHMENTS).join(space.to_string())
     }
 }
 

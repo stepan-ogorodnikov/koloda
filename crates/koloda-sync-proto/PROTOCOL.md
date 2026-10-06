@@ -780,7 +780,7 @@ Unknown `kind`, `group`, or `op`, and lane mismatches, are rejected at a header 
 | `GET/DELETE /v1/spaces/{space}/devices[/{id}]` | Device list and revocation; `DELETE` of self is detach |
 | `POST /v1/spaces/{space}/devices/fork` | Current token in, new device id and token out (§Devices) |
 | `POST /v1/spaces/{space}/ids/known` | Id chunk in, the ones live or fenced in the space out, each marked which (§Joining) |
-| `HEAD/PUT/GET /v1/spaces/{space}/attachments/{id}` | Attachment bytes and metadata (§Attachments) |
+| `PUT/GET /v1/spaces/{space}/attachments/{id}` | Attachment bytes and metadata (§Attachments) |
 
 Every response body is `{ meta, ok }` or `{ meta, error }`.
 `meta.server_time_ms` is always present.
@@ -820,6 +820,8 @@ Names are 1 to 100 characters after trimming.
 | `POST /v1/spaces/{space}/bootstrap/{snapshot}/heartbeat` | none | `expires_at`, `absolute_expiry` |
 | `DELETE /v1/spaces/{space}/bootstrap/{snapshot}` | none | empty |
 | `GET /v1/spaces/{space}/receipts?sender&after&through` | `through - after` at most 5000 | `receipts`, each `sender_seq`, `digest`, `outcome` |
+| `PUT /v1/spaces/{space}/attachments/{id}` | `mime`, optional `width` and `height`, `bytes` | empty |
+| `GET /v1/spaces/{space}/attachments/{id}` | none | `mime`, optional `width` and `height`, `bytes` |
 
 Creating a space also enrolls its creator, so the first device needs no pairing code.
 The same `nonce` returns the same result, token included, for 10 minutes.
@@ -1336,9 +1338,13 @@ Clients apply it whether or not the attachment is local.
 
 ### Upload
 
-`PUT /v1/spaces/{space}/attachments/{id}` carries the bytes and metadata (mime, width, height).
-The server verifies size limits and that the SHA-256 equals `id`.
-Upload is idempotent and resumable with `Content-Range`; `HEAD` returns the stored offset.
+`PUT /v1/spaces/{space}/attachments/{id}` carries the whole image: its bytes and metadata (mime, width, height).
+An image is at most 5 MiB, well inside the body cap, so a transfer is one ordinary CBOR request.
+The server checks that `id` is 64 lowercase hex characters, the size cap, and that `mime` is an accepted image type.
+Width and height are positive when present.
+Last, it checks that the SHA-256 of the bytes equals `id`.
+It never reads the bytes themselves, so ciphertext can replace them later.
+Upload is idempotent: a second `PUT` of a stored id answers `ok` and keeps the first upload's metadata.
 The device keeps a local upload queue: ids its own captures linked, plus every `missing_attachments` id a push
 outcome reported.
 Row sync never waits on an upload.
@@ -1348,9 +1354,10 @@ A device that lacks the bytes for a reported id drops it from the queue.
 
 Applying a card envelope that links an id with no local attachment row enqueues a fetch.
 Device policy decides when it runs: always, on unmetered networks, or on demand when a card is shown.
-`GET` supports `Range` and returns the metadata.
+`GET` returns the bytes and the metadata.
 The client verifies the hash before inserting the row and bytes.
-`404` means no device has uploaded the bytes yet: the fetch stays queued with backoff.
+`404 not_found` means no device has uploaded the bytes yet: the fetch stays queued with backoff.
+Resumable transfers (`Range`, `Content-Range`) may come back if larger media arrive.
 
 ### Lifetime
 

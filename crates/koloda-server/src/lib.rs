@@ -1,4 +1,4 @@
-//! The sync server: one envelope log per space, device enrollment, push, pull, and bootstrap.
+//! The sync server: one envelope log per space, device enrollment, push, pull, bootstrap, and attachments.
 //!
 //! Contract: `crates/koloda-sync-proto/PROTOCOL.md`. Layout and ownership: crate `README.md`.
 //! INVARIANT: the server reads envelope headers and never decodes a payload, so payloads can become ciphertext.
@@ -7,6 +7,7 @@ pub mod clock;
 pub mod data_dir;
 pub mod server;
 
+mod attachments;
 mod auth;
 mod bootstrap;
 mod db;
@@ -36,6 +37,10 @@ pub fn router(server: Arc<Server>) -> Router {
         .route("/v1/spaces/{space}/push", post(push::push))
         .route("/v1/spaces/{space}/receipts", get(push::receipts))
         .route("/v1/spaces/{space}/ids/known", post(known::known))
+        .route(
+            "/v1/spaces/{space}/attachments/{id}",
+            get(attachments::get).put(attachments::put),
+        )
         .route("/v1/spaces/{space}/pull", get(pull::pull))
         .route("/v1/spaces/{space}/bootstrap", post(bootstrap::open))
         .route(

@@ -5,6 +5,7 @@
 
 use std::collections::BTreeMap;
 use std::fmt;
+use std::num::NonZeroU32;
 
 use serde::{Deserialize, Serialize};
 
@@ -17,6 +18,9 @@ pub const MAX_RECEIPT_RANGE: u64 = 5_000;
 pub const MAX_KNOWN_IDS: usize = 1_000;
 pub const MAX_PAGE_ENTRIES: u64 = 5_000;
 pub const MAX_PAGE_BYTES: usize = 8 * 1024 * 1024;
+// INVARIANT: equal to `koloda`'s `ATTACHMENT_MAX_BYTES` and its accepted formats; a device stores no larger image.
+pub const MAX_ATTACHMENT_BYTES: usize = 5 * 1024 * 1024;
+pub const ATTACHMENT_MIMES: [&str; 5] = ["image/png", "image/jpeg", "image/gif", "image/webp", "image/avif"];
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -325,6 +329,20 @@ pub struct KnownId {
 pub enum KnownState {
     Live,
     Fenced,
+}
+
+/// An attachment's bytes and the metadata the uploading device recorded (`PROTOCOL.md` §Attachments).
+/// `PUT` sends it and `GET` returns it; the id is the lowercase hex SHA-256 of `bytes`, carried in the path.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct AttachmentBody {
+    pub mime: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub width: Option<NonZeroU32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub height: Option<NonZeroU32>,
+    #[serde(with = "serde_bytes")]
+    pub bytes: Vec<u8>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]

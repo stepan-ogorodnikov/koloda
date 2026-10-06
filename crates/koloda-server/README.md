@@ -1,6 +1,6 @@
 # koloda-server
 
-The self-hosted sync server: one envelope log per space, device enrollment, push, pull, and bootstrap.
+The self-hosted sync server: one envelope log per space, device enrollment, push, pull, bootstrap, and attachments.
 A crate with a binary, not an app: it has no product surface, so `docs/decisions/APP-ROLES.md` has no row for it.
 It links `koloda-sync-proto` only, never `koloda`.
 
@@ -30,7 +30,8 @@ koloda-server serve --data-dir ./data --listen 127.0.0.1:8080
 | --- | --- |
 | `CURRENT` | The active generation's id |
 | `generations/<id>/server.db` | Setup token hash, spaces, devices |
-| `generations/<id>/spaces/<space>.db` | One space: epoch, `write_schema`, and its envelope log |
+| `generations/<id>/spaces/<space>.db` | One space: epoch, `write_schema`, its envelope log, and attachment metadata |
+| `generations/<id>/attachments/<space>/<attachment>` | One attachment's bytes, named by their SHA-256 |
 | `lock` | Held by `serve` for its whole run |
 
 ## Architectural Map
@@ -52,6 +53,7 @@ koloda-server serve --data-dir ./data --listen 127.0.0.1:8080
 - `src/bootstrap.rs` — snapshot leases: open, stream pages, heartbeat, release, and expiry.
 - `src/known.rs` — the join probe: which ids the space holds live or fenced.
 - `src/devices.rs` — device records, revocation and detach, and fork.
+- `src/attachments.rs` — attachment bytes by content address: upload checked against the id, and download.
 
 - `tests/server/` — one test binary; `common.rs` drives the router in-process on a manual clock.
 

@@ -1,4 +1,7 @@
-use koloda::domain::attachments::{sniff_image_mime, AddAttachmentData, ATTACHMENT_MAX_BYTES};
+use koloda::domain::attachments::{
+    sniff_image_mime, AddAttachmentData, ATTACHMENT_MAX_BYTES, MIME_AVIF, MIME_GIF, MIME_JPEG, MIME_PNG, MIME_WEBP,
+};
+use koloda_sync_proto::transport::{ATTACHMENT_MIMES, MAX_ATTACHMENT_BYTES};
 
 const PNG_SIGNATURE: &[u8] = b"\x89PNG\r\n\x1a\n";
 
@@ -81,4 +84,12 @@ fn test_add_attachment_size_cap() {
 fn test_add_attachment_unknown_format_fails_with_format_code() {
     let error = add_data(b"<svg/>".to_vec()).validate().expect_err("svg must fail");
     assert_eq!(error.code, "validation.attachments.format");
+}
+
+// WHY: the sync server links only the protocol crate, so it holds its own copy of these limits; a device must never
+// store an image the server would refuse.
+#[test]
+fn test_sync_server_accepts_every_attachment_a_device_stores() {
+    assert_eq!(MAX_ATTACHMENT_BYTES, ATTACHMENT_MAX_BYTES);
+    assert_eq!(ATTACHMENT_MIMES, [MIME_PNG, MIME_JPEG, MIME_GIF, MIME_WEBP, MIME_AVIF]);
 }
