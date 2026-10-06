@@ -1,6 +1,6 @@
 # Sync attachments
 
-Status: draft
+Status: ready
 
 ## Intent
 
@@ -54,19 +54,19 @@ Out:
 
 ## Open questions
 
-- [ ] 1. Area guides? — open.
-  Proposed: `agents/TASKS.md`, `agents/IMPLEMENTATION-PLAN.md`, `agents/MARKDOWN.md`,
+- [x] 1. Area guides?
+  Answer: `agents/TASKS.md`, `agents/IMPLEMENTATION-PLAN.md`, `agents/MARKDOWN.md`,
   `agents/CODE-DOCUMENTATION.md`, `agents/CODE-STYLE.md`, `agents/TESTING.md`, `agents/RUST.md`, `agents/DB.md`,
   and `agents/REVIEW.md` for self-review.
   Also `crates/koloda/README.md`, `crates/koloda-sync/README.md`, `crates/koloda-server/README.md`,
   `crates/koloda-sync-proto/PROTOCOL.md` and its README, `docs/decisions/MEDIA-STORAGE.md`,
   `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md`, and `docs/specs/MEDIA.md`.
-- [ ] 2. One task, or the server work apart? — open.
-  Recommended: one task, server items first.
+- [x] 2. One task, or the server work apart?
+  Answer: one task, server items first.
   The engine cannot be tested without the server's half, and the earlier slices already settled the server's shape.
-- [ ] 3. What do the transfer requests look like? — open.
+- [x] 3. What do the transfer requests look like?
   `PROTOCOL.md` describes raw bytes with `HEAD`, `Content-Range` resumable uploads, and `Range` downloads.
-  Recommended: whole-body CBOR, like every other endpoint.
+  Answer: whole-body CBOR, like every other endpoint.
   - `PUT /v1/spaces/{space}/attachments/{id}` sends `mime`, `width`, `height`, and `bytes`, and returns an empty
     `ok`.
   - `GET` of the same path returns the same four fields, or `404 not_found` when no device has uploaded them.
@@ -76,18 +76,18 @@ Out:
   The `Transport` trait only gains `PUT`.
   Resumable transfers come back if audio or video arrive, which `docs/decisions/MEDIA-STORAGE.md` anticipates.
   The item that implements this amends §Attachments, §Endpoints, and §Bodies.
-- [ ] 4. What fills the upload queue? — open.
+- [x] 4. What fills the upload queue?
   `PROTOCOL.md` names two sources: ids the device's own captures linked, and `missing_attachments` from push
   outcomes.
-  Recommended: `missing_attachments` only.
+  Answer: `missing_attachments` only.
   Every captured card envelope is pushed and comes back with an outcome.
   That outcome names exactly the ids the server lacks.
   It also covers backfill, Add, and a later heal re-push, with no hook in capture.
   The cost: bytes go up right after the push that reported them, not before it.
   A device that pulls in that gap gets `404` once and fetches again after its backoff.
   The item that implements this amends §Upload.
-- [ ] 5. Where does the server keep the bytes? — open.
-  Recommended: files at `generations/<id>/attachments/<space>/<attachment id>`, as the accepted proposal's
+- [x] 5. Where does the server keep the bytes?
+  Answer: files at `generations/<id>/attachments/<space>/<attachment id>`, as the accepted proposal's
   §Server deployment says.
   Metadata (mime, size, width, height, when it was stored, when its last ref went) goes in a new table in the
   space database.
@@ -95,11 +95,11 @@ Out:
   A file is written to a temporary name, synced, and renamed into place under the space writer lock, together with
   its metadata row.
   Collection deletes both under the same lock.
-- [ ] 6. When does a fetch that got `404` try again? — open.
-  Recommended: after 1 minute, doubling up to 6 hours, and on no other signal.
+- [x] 6. When does a fetch that got `404` try again?
+  Answer: after 1 minute, doubling up to 6 hours, and on no other signal.
   An image whose only holder never uploads it stays queued and costs one small request per period.
-- [ ] 7. How does collection run? — open.
-  Recommended:
+- [x] 7. How does collection run?
+  Answer:
   - an attachment no live card links records when its last ref went;
   - a collection pass removes attachments unlinked for more than 90 days, with their files;
   - `Server::collect_garbage` runs one pass, so tests call it directly, and `serve` runs one every hour;
@@ -139,10 +139,7 @@ Out:
   - a `GET` of an id never uploaded: `404 not_found`;
   - another space's token: `404 unknown_space`; a revoked device: `401 revoked`;
   - `bun run check:push` green.
-  Commit:
-  a. Store and serve attachment bytes on the server
-  b. Upload and download attachments by content address
-  c. Keep attachment bytes on the server, checked against their id
+  Commit: Store and serve attachment bytes on the server
   Depends on: none
 
 - [ ] 2. Track card refs to attachments and report missing bytes
@@ -170,9 +167,7 @@ Out:
     clears it;
   - a deck delete cascading to a card: the card's images lose their refs;
   - `bun run check:push` green.
-  Commit:
-  a. Track card refs to attachments and report missing bytes
-  b. Report attachments the server lacks in push outcomes
+  Commit: Track card refs to attachments and report missing bytes
   Depends on: 1
 
 - [ ] 3. Collect attachments no card has linked for 90 days
@@ -190,9 +185,7 @@ Out:
   - after a collection, a push that links the image again reports it in `missing_attachments`, and a new `PUT`
     stores it;
   - `bun run check:push` green.
-  Commit:
-  a. Collect attachments no card has linked for 90 days
-  b. Collect unlinked attachments after the stale-device window
+  Commit: Collect attachments no card has linked for 90 days
   Depends on: 2
 
 - [ ] 4. Queue attachment uploads and fetches on the device
@@ -231,9 +224,7 @@ Out:
   - backoff at its first step, its doubling, and its cap;
   - a due fetch dropped once the card that linked the id is deleted;
   - `bun run check:push` green.
-  Commit:
-  a. Queue attachment uploads and fetches on the device
-  b. Queue attachment transfers from push outcomes and remote apply
+  Commit: Queue attachment uploads and fetches on the device
   Depends on: 2
 
 - [ ] 5. Transfer attachments in the sync cycle
@@ -268,9 +259,7 @@ Out:
   - a trigger during transfers ending them, and the next cycle finishing them;
   - a tick with a small byte budget stopping between transfers;
   - `bun run check:push` green.
-  Commit:
-  a. Transfer attachments in the sync cycle
-  b. Upload and fetch attachments between devices
+  Commit: Transfer attachments in the sync cycle
   Depends on: 1, 4
 
 ## Outcome
