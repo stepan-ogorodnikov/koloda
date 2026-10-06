@@ -1,6 +1,6 @@
 # Sync attachments
 
-Status: ready
+Status: done
 
 ## Intent
 
@@ -263,4 +263,48 @@ Out:
   Depends on: 1, 4
 
 ## Outcome
+
+- Card images travel between devices as whole-body CBOR.
+  `AttachmentBody` carries `mime`, optional `width` and `height`, and `bytes`, capped at `MAX_ATTACHMENT_BYTES` (5 MiB).
+  `Transport` gains `PUT`.
+  `PUT /v1/spaces/{space}/attachments/{id}` stores the body.
+  `GET` of the same path returns it, or `404 not_found`.
+- The server keeps bytes at `generations/<id>/attachments/<space>/<attachment id>` and metadata in the space database.
+  Space migration `V2__attachments.sql` adds `attachments` and `attachment_refs`.
+  `PUT` checks the id, the size, the mime, and that SHA-256 of the bytes equals the id, then writes the file and the
+  row under the space writer lock.
+  A second `PUT` of a stored id answers `ok` and writes nothing.
+  Installing a card head replaces that card's refs from `refs.attachment_ids`.
+  Removing a card removes them, and each stored attachment records when its last ref went.
+  A push outcome for a card `create` or `content` names the linked ids the server holds no bytes for, as
+  `missing_attachments`, computed when the reply is built.
+- `Server::collect_garbage` removes attachments unlinked for more than 90 days, and `serve` runs a pass every hour.
+  The pass deletes the metadata rows and commits them before it deletes the files.
+- Device migration `V10__sync_attachments.sql` adds `sync_attachment_queue`, keyed by `(id, direction)`.
+  Remote apply and snapshot apply enqueue a fetch for each linked id with no local row.
+  `settle_push` enqueues an upload for each `missing_attachments` id the file holds.
+  `store_fetched` checks the hash, validates like an add, and inserts through the helper `add_attachment` uses.
+  A fetch that got `404` waits 1 minute, doubling up to 6 hours.
+  `begin_import` clears the queue with the other `sync_*` tables.
+- After its rounds, a cycle uploads and fetches due transfers one at a time.
+  That includes rounds that stopped for clock skew or a file that is behind.
+  It skips them while detached, import pending, or not enrolled.
+  It stops when a trigger arrives or after 64 MiB, and the runner starts the next cycle at once while transfers remain.
+  An upload `ok` drops the row.
+  A fetch `ok` stores the bytes and emits `Event::AttachmentsFetched`.
+  A fetch `404` defers the row.
+  A transport failure leaves it.
+  Any other refusal drops it and emits `Error`.
+  `status()` reports `uploads` and `fetches`.
+  A tick's byte budget counts transfer bodies (`Budget::body_bytes`).
+- `PROTOCOL.md`, the server and engine READMEs, `agents/RUST.md`, and `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md`
+  describe the transfers.
+  `docs/specs/MEDIA.md` is unchanged.
+- Deviations from the plan text:
+  - Collection commits the row deletes before it removes the files, so a failed pass never claims bytes it no longer
+    has.
+  - `due_transfers` scans cards only for a fetch that has already been tried.
+    A first attempt whose card is already gone still downloads once.
+    The startup sweep removes those bytes.
+- Manual verify: none — nothing user-visible until the NAPI commands and the desktop UI land.
 
