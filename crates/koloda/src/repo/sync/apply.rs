@@ -14,6 +14,7 @@ use rusqlite::{params, Connection, OptionalExtension, ToSql};
 use serde_json::{Map, Value};
 use uuid::Uuid;
 
+use super::attachments;
 use super::repair::{self, tombstone_successor, Starter};
 use super::{delete_empty_cohort, forget_entity, protocol_error, Changed, StampValues, ROW_GROUP};
 use crate::app::db::Database;
@@ -280,6 +281,7 @@ fn apply_create(conn: &Connection, entry: &Entry, starter: &Starter, changed: &m
     }
     entry.values.write_create(conn, kind, id, &entry.payload)?;
     refresh_updated_at(conn, kind, id)?;
+    attachments::queue_fetches(conn, &entry.header.refs.attachment_ids)?;
 
     changed.mark(kind);
     Ok(())
@@ -402,6 +404,7 @@ fn apply_update(conn: &Connection, entry: &Entry, changed: &mut Changed) -> Resu
         .write_register(conn, kind, id, group, entry.payload.product_ts(), false)?;
     refresh_updated_at(conn, kind, id)?;
     discard_pending(conn, kind, id, group)?;
+    attachments::queue_fetches(conn, &entry.header.refs.attachment_ids)?;
     if let Payload::CardReset(_) = &entry.payload {
         cut_off_at_reset(conn, id, entry, changed)?;
     }

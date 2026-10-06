@@ -12,6 +12,7 @@ use koloda_sync_proto::transport::{DependencyAction, HeldReason, Outcome, PushOu
 use rusqlite::{params, Connection, OptionalExtension};
 
 use super::apply::{delete_entity, drop_entity};
+use super::attachments;
 use super::repair::Starter;
 use super::{protocol_error, Changed, StampValues};
 use crate::app::db::Database;
@@ -146,6 +147,7 @@ pub fn settle_push(
                     break;
                 }
                 let commit_id = settle_item(tx, item, outcome.outcome, own, starter, &mut changed)?;
+                attachments::queue_uploads(tx, &outcome.missing_attachments)?;
                 consumed.insert(commit_id);
                 reached += 1;
                 highest_consumed = item.sender_seq;

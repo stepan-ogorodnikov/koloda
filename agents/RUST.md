@@ -18,6 +18,7 @@ This file only tells you where to start.
 | A product write path (sync capture) | `src/repo/sync/capture.rs::Capture` + `crates/koloda-sync-proto/PROTOCOL.md` (§Field groups and merge) |
 | Applying remote sync envelopes | `src/repo/sync/apply.rs::apply_page` + `crates/koloda-sync-proto/PROTOCOL.md` (§Field groups and merge, Apply rule) |
 | Pushing the outbox and settling outcomes | `src/repo/sync/outbox.rs` + `crates/koloda-sync-proto/PROTOCOL.md` (§Cohorts, §Push outcomes) |
+| Image uploads and fetches between devices | `src/repo/sync/attachments.rs` + `crates/koloda-sync-proto/PROTOCOL.md` (§Attachments) |
 | Enabling sync on a database that already holds rows | `src/repo/sync/backfill.rs::backfill_batch` + `crates/koloda-sync-proto/PROTOCOL.md` (§Existing rows at enable time, Backfill) |
 | Joining an existing space | `src/repo/sync/join.rs` + `crates/koloda-sync-proto/PROTOCOL.md` (§Joining) |
 | Schema / migrations | `agents/DB.md` |
@@ -92,6 +93,14 @@ sets `cold`'s and clears the joiner's bootstrap flag.
 - A row in flight when `push_batch` runs means an earlier push never settled; its cohort is fixed.
 - `settle_push` records the highest seq it saw consumed; `standing` compares it with the device record, and
   `has_foreign_receipt` tells a seq this file dropped from one another copy pushed.
+
+**Attachment transfers** — `settle_push` queues an upload for each `missing_attachments` id the file holds;
+remote apply queues a fetch for each linked id the file lacks.
+
+- `due_transfers` drops a fetch nothing needs any more instead of listing it; the queue pins nothing, so the startup
+  sweep is unchanged.
+- `store_fetched` checks the hash and validates like an add, then writes through `insert_attachment`, the one insert
+  that `add_attachment` uses too; bytes still go through `attachment_bytes` only.
 
 **Detach** — `detach` records when the file left its space; the engine sends nothing for a detached file, and
 capture keeps recording for a later re-attach.

@@ -1348,18 +1348,25 @@ Width and height are positive when present.
 Last, it checks that the SHA-256 of the bytes equals `id`.
 It never reads the bytes themselves, so ciphertext can replace them later.
 Upload is idempotent: a second `PUT` of a stored id answers `ok` and keeps the first upload's metadata.
-The device keeps a local upload queue: ids its own captures linked, plus every `missing_attachments` id a push
-outcome reported.
-Row sync never waits on an upload.
-A device that lacks the bytes for a reported id drops it from the queue.
+The device's upload queue holds every `missing_attachments` id a push outcome reported, queued in the transaction
+that settles the outcome.
+Capture adds nothing: every card envelope it records is pushed, and its outcome names exactly what the server lacks.
+That covers backfill, Add, and a heal re-push the same way.
+Row sync never waits on an upload; the bytes go up after the push that reported them.
+A device that lacks the bytes for a reported id does not queue it, and an upload whose attachment was swept drops.
 
 ### Download
 
-Applying a card envelope that links an id with no local attachment row enqueues a fetch.
+Applying a card `create` or a winning `content` that links an id with no local attachment row enqueues a fetch.
+Snapshot apply does the same.
 Device policy decides when it runs: always, on unmetered networks, or on demand when a card is shown.
+Until device policy exists, every queued fetch runs.
+A fetch whose attachment arrived meanwhile, or that no local card links any more, drops before it runs.
 `GET` returns the bytes and the metadata.
-The client verifies the hash before inserting the row and bytes.
-`404 not_found` means no device has uploaded the bytes yet: the fetch stays queued with backoff.
+The client verifies the hash and validates the bytes as a local add would, before inserting the row and bytes.
+Bytes that fail either check are not stored, and the fetch drops.
+`404 not_found` means no device has uploaded the bytes yet: the fetch waits 1 minute, doubling up to 6 hours, and
+tries again.
 Resumable transfers (`Range`, `Content-Range`) may come back if larger media arrive.
 
 ### Lifetime

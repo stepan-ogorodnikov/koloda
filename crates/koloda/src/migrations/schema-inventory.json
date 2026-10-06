@@ -702,6 +702,50 @@
       "foreign_keys": []
     },
     {
+      "name": "sync_attachment_queue",
+      "columns": [
+        {
+          "name": "attempts",
+          "type": "INTEGER",
+          "notnull": 1,
+          "pk": 0,
+          "dflt_value": "0"
+        },
+        {
+          "name": "direction",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 2,
+          "dflt_value": null
+        },
+        {
+          "name": "id",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 1,
+          "dflt_value": null
+        },
+        {
+          "name": "next_attempt_at",
+          "type": "INTEGER",
+          "notnull": 1,
+          "pk": 0,
+          "dflt_value": "0"
+        }
+      ],
+      "indexes": [
+        {
+          "name": "sqlite_autoindex_sync_attachment_queue_1",
+          "unique": 1,
+          "columns": [
+            "id",
+            "direction"
+          ]
+        }
+      ],
+      "foreign_keys": []
+    },
+    {
       "name": "sync_cohorts",
       "columns": [
         {

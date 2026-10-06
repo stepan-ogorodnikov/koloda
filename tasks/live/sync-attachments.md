@@ -188,7 +188,7 @@ Out:
   Commit: Collect attachments no card has linked for 90 days
   Depends on: 2
 
-- [ ] 4. Queue attachment uploads and fetches on the device
+- [x] 4. Queue attachment uploads and fetches on the device
   Goal:
   - `koloda` migration `V10__sync_attachments.sql` adds `sync_attachment_queue`.
     It is keyed by `(id, direction)`, with `direction` `upload` or `fetch`, an attempt count, and the time of the

@@ -1,11 +1,12 @@
 //! Sync bookkeeping SQL: device enrollment here, joining an existing space in `join`, capture of product writes
 //! in `capture`, rows that predate enrollment in `backfill`, push batches and their outcomes in `outbox`, and
-//! remote envelopes in `apply` (`crates/koloda-sync-proto/PROTOCOL.md` §Field groups and merge, §Clocks and order,
-//! §Client state, §Joining).
+//! remote envelopes in `apply`, and image transfers in `attachments` (`crates/koloda-sync-proto/PROTOCOL.md` §Field
+//! groups and merge, §Clocks and order, §Client state, §Joining, §Attachments).
 //!
 //! Only the desktop store writes the `sync_*` tables; the web host does not sync.
 
 pub mod apply;
+pub mod attachments;
 pub mod backfill;
 pub mod capture;
 pub mod join;

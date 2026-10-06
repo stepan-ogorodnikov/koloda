@@ -22,7 +22,7 @@ fn get_attachment_row(row: &Row) -> Result<Attachment, rusqlite::Error> {
     })
 }
 
-fn select_attachment(conn: &Connection, id: &str) -> Result<Option<Attachment>, AppError> {
+pub(crate) fn select_attachment(conn: &Connection, id: &str) -> Result<Option<Attachment>, AppError> {
     conn.query_row(
         "SELECT id, mime, size, width, height, created_at FROM attachments WHERE id = ?1",
         params![id],
@@ -37,32 +37,43 @@ pub fn add_attachment(db: &Database, data: AddAttachmentData) -> Result<Attachme
         let mime = data.validate()?;
         // INVARIANT: the id is the lowercase hex SHA-256 of the bytes, so equal bytes share one row.
         let id = format!("{:x}", Sha256::digest(&data.bytes));
-        let now = get_current_timestamp()?;
 
         db.with_transaction(|tx| {
-            let inserted = tx.execute(
-                r#"
-                INSERT INTO attachments (id, mime, size, width, height, created_at)
-                VALUES (?1, ?2, ?3, ?4, ?5, ?6)
-                ON CONFLICT (id) DO NOTHING
-                "#,
-                params![
-                    id,
-                    mime,
-                    data.bytes.len() as i64,
-                    data.width.map(|width| width.get()),
-                    data.height.map(|height| height.get()),
-                    now
-                ],
-            )?;
-            // WHY: a re-add of the same bytes keeps the first row and its bytes unchanged.
-            if inserted > 0 {
-                attachment_bytes::put(tx, &id, &data.bytes)?;
-            }
+            insert_attachment(tx, &id, mime, &data)?;
             select_attachment(tx, &id)?
                 .ok_or_else(|| AppError::new(error_codes::UNKNOWN, Some("no row returned".to_string())))
         })
     })
+}
+
+/// Inserts validated bytes under `id`, which the caller has checked is their SHA-256. Sync stores fetched bytes
+/// through it too, so every attachment row is written one way.
+pub(crate) fn insert_attachment(
+    conn: &Connection,
+    id: &str,
+    mime: &str,
+    data: &AddAttachmentData,
+) -> Result<(), AppError> {
+    let inserted = conn.execute(
+        r#"
+        INSERT INTO attachments (id, mime, size, width, height, created_at)
+        VALUES (?1, ?2, ?3, ?4, ?5, ?6)
+        ON CONFLICT (id) DO NOTHING
+        "#,
+        params![
+            id,
+            mime,
+            data.bytes.len() as i64,
+            data.width.map(|width| width.get()),
+            data.height.map(|height| height.get()),
+            get_current_timestamp()?
+        ],
+    )?;
+    // WHY: a re-add of the same bytes keeps the first row and its bytes unchanged.
+    if inserted > 0 {
+        attachment_bytes::put(conn, id, &data.bytes)?;
+    }
+    Ok(())
 }
 
 pub fn get_attachment(db: &Database, id: &str) -> Result<Option<Attachment>, AppError> {
