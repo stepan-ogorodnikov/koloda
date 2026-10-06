@@ -1365,7 +1365,10 @@ Applying a card `create` or a winning `content` that links an id with no local a
 Snapshot apply does the same.
 Device policy decides when it runs: always, on unmetered networks, or on demand when a card is shown.
 Until device policy exists, every queued fetch runs.
-A fetch whose attachment arrived meanwhile, or that no local card links any more, drops before it runs.
+A fetch whose attachment arrived meanwhile drops before it runs.
+So does a retry after `404` that no local card links any more.
+A first attempt skips that check, because it scans every card; one whose card went first costs a download that the
+startup sweep later removes.
 `GET` returns the bytes and the metadata.
 The client verifies the hash and validates the bytes as a local add would, before inserting the row and bytes.
 Bytes that fail either check are not stored, and the fetch drops.

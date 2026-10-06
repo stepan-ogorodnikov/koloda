@@ -123,12 +123,10 @@ fn pulled_cards_queue_fetches_for_the_images_this_device_lacks() {
     let after_create = due_now(&db);
     pull_content(&db, &fixture, CARD, WALL_MS + 1_000, &[&held, &later]);
 
+    let mut after_edit = vec![fetch(&missing), fetch(&later)];
+    after_edit.sort_by(|left, right| left.id.cmp(&right.id));
     assert_eq!(after_create, vec![fetch(&missing)]);
-    assert_eq!(
-        due_now(&db),
-        vec![fetch(&later)],
-        "the edit queues its new image, and the image it dropped is no longer wanted"
-    );
+    assert_eq!(due_now(&db), after_edit, "the edit queues its new image");
 }
 
 #[test]
@@ -223,14 +221,18 @@ fn a_fetch_the_server_could_not_serve_waits_longer_each_time() {
 fn a_fetch_no_card_needs_any_more_is_dropped() {
     let db = test_db();
     let fixture = enrolled_deck(&db);
-    let (unlinked, arrived) = (png(11), png(12));
-    pull_card(&db, &fixture, CARD, &[&id_of(&unlinked)]);
+    let (unlinked, arrived, first_try) = (png(11), png(12), png(13));
+    pull_card(&db, &fixture, CARD, &[&id_of(&unlinked), &id_of(&first_try)]);
     pull_card(&db, &fixture, OTHER_CARD, &[&id_of(&arrived)]);
-    assert_eq!(due_now(&db).len(), 2);
+    defer_fetch(&db, &id_of(&unlinked), 0).unwrap();
 
     delete_card(&db, DeleteCardData { id: CARD.to_string() }).unwrap();
     add_attachment(&db, arrived).unwrap();
 
-    assert_eq!(due_now(&db), Vec::new());
-    assert_eq!(count(&db, "SELECT COUNT(*) FROM sync_attachment_queue"), 0);
+    assert_eq!(
+        due_now(&db),
+        vec![fetch(&id_of(&first_try))],
+        "a retry no card links drops, and so does an image that arrived; a first attempt runs regardless"
+    );
+    assert_eq!(count(&db, "SELECT COUNT(*) FROM sync_attachment_queue"), 1);
 }

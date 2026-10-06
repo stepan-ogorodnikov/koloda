@@ -66,24 +66,28 @@ pub(super) fn queue_uploads(conn: &Connection, ids: &[String]) -> Result<(), App
     Ok(())
 }
 
-/// Up to `limit` transfers due at `now`, oldest first. A fetch whose attachment arrived meanwhile, or that no local
-/// card links any more, is dropped instead of listed.
+/// Up to `limit` transfers due at `now`, oldest first. A fetch whose attachment arrived meanwhile is dropped instead of
+/// listed, and so is a retry that no local card links any more.
 pub fn due_transfers(db: &Database, now: i64, limit: usize) -> Result<Vec<Transfer>, AppError> {
     throw_known_error(error_codes::DB_GET, || {
         db.with_transaction(|tx| {
             let mut statement = tx.prepare(
                 r#"
-                SELECT id, direction FROM sync_attachment_queue
+                SELECT id, direction, attempts FROM sync_attachment_queue
                 WHERE next_attempt_at <= ?1 ORDER BY next_attempt_at, direction, id
                 "#,
             )?;
             let queued = statement
                 .query_map(params![now], |row| {
-                    Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?))
+                    Ok((
+                        row.get::<_, String>(0)?,
+                        row.get::<_, String>(1)?,
+                        row.get::<_, u32>(2)?,
+                    ))
                 })?
                 .collect::<Result<Vec<_>, _>>()?;
             let mut due = Vec::new();
-            for (id, direction) in queued {
+            for (id, direction, attempts) in queued {
                 if due.len() == limit {
                     break;
                 }
@@ -92,7 +96,7 @@ pub fn due_transfers(db: &Database, now: i64, limit: usize) -> Result<Vec<Transf
                     "fetch" => Direction::Fetch,
                     other => return Err(protocol_error(format!("unknown transfer direction {other}"))),
                 };
-                if direction == Direction::Fetch && !is_wanted(tx, &id)? {
+                if direction == Direction::Fetch && !is_wanted(tx, &id, attempts)? {
                     finish(tx, &id, direction)?;
                     continue;
                 }
@@ -186,14 +190,20 @@ pub fn transfer_counts(db: &Database) -> Result<(usize, usize), AppError> {
     })
 }
 
-// WHY: a hex id cannot be hidden by JSON escaping, so a substring match finds every card that links it, as the
-// startup sweep does.
-fn is_wanted(conn: &Connection, id: &str) -> Result<bool, AppError> {
+fn is_wanted(conn: &Connection, id: &str, attempts: u32) -> Result<bool, AppError> {
+    let is_held: bool = conn.query_row(
+        "SELECT EXISTS (SELECT 1 FROM attachments WHERE id = ?1)",
+        params![id],
+        |row| row.get(0),
+    )?;
+    // WHY: a substring match finds every card that links the id, as the startup sweep does, but it scans every card.
+    // A first attempt follows the apply that queued it, so only a retry, which may be hours old, pays for the scan.
+    // A fetch whose card went before its first attempt costs one download, which the sweep later removes.
+    if is_held || attempts == 0 {
+        return Ok(!is_held);
+    }
     Ok(conn.query_row(
-        r#"
-        SELECT NOT EXISTS (SELECT 1 FROM attachments WHERE id = ?1)
-           AND EXISTS (SELECT 1 FROM cards WHERE instr(cards.content, 'attachment:' || ?1) > 0)
-        "#,
+        "SELECT EXISTS (SELECT 1 FROM cards WHERE instr(cards.content, 'attachment:' || ?1) > 0)",
         params![id],
         |row| row.get(0),
     )?)

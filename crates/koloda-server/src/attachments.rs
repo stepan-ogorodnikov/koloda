@@ -194,19 +194,22 @@ pub(crate) fn missing(conn: &Connection, header: &Header) -> Result<Vec<String>,
     Ok(missing)
 }
 
-/// Removes every attachment of the space that no card has linked for more than 90 days, row and file together under
-/// the space writer lock, so a concurrent upload of the same id never loses its file.
+/// Removes every attachment of the space that no card has linked for more than 90 days, under the space writer lock,
+/// so a concurrent upload of the same id never loses its file.
+///
+/// INVARIANT: rows go before files. A file left behind by a failure is harmless; a row without its file would tell
+/// pushes the bytes are stored, and no device would upload them again.
 pub(crate) fn collect(server: &Server, space_id: Uuid) -> Result<(), ApiError> {
     let space = server.space(space_id)?.ok_or_else(ApiError::unknown_space)?;
     let cutoff = server.now_ms().saturating_sub(COLLECT_AFTER_MS);
     let dir = server.attachments_dir(space_id);
     let mut conn = lock(&space.writer)?;
     let tx = conn.transaction()?;
-    let mut statement = tx.prepare("DELETE FROM attachments WHERE unlinked_since < ?1 RETURNING id")?;
-    let collected = statement
+    let collected = tx
+        .prepare("DELETE FROM attachments WHERE unlinked_since < ?1 RETURNING id")?
         .query_map(params![cutoff], |row| row.get::<_, String>(0))?
         .collect::<Result<Vec<_>, _>>()?;
-    drop(statement);
+    tx.commit()?;
     for id in collected {
         match fs::remove_file(dir.join(id)) {
             Ok(()) => {}
@@ -214,7 +217,6 @@ pub(crate) fn collect(server: &Server, space_id: Uuid) -> Result<(), ApiError> {
             Err(error) => return Err(io_error(error)),
         }
     }
-    tx.commit()?;
     Ok(())
 }
 
