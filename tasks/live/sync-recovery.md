@@ -210,7 +210,7 @@ Out:
   Commit: Re-stamp pending cohorts as one unit
   Depends on: none
 
-- [ ] 2. Track a re-bootstrap with a barrier and clean up what the server deleted
+- [x] 2. Track a re-bootstrap with a barrier and clean up what the server deleted
   Goal:
   - `V11` adds `rebase_generation` and `is_rebasing` to `sync_state`, and `seen_generation` to `sync_origins`
     (question 4).

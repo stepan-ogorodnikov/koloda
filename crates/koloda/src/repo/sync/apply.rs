@@ -270,7 +270,7 @@ fn apply_create(conn: &Connection, entry: &Entry, starter: &Starter, changed: &m
     let kind = entry.header.kind;
     let id = entry.header.id.as_str();
     if is_present(conn, kind, id)? && !is_stamp_zero_seed(conn, kind, id)? {
-        return Ok(());
+        return mark_seen(conn, kind, id);
     }
 
     match &entry.payload {
@@ -281,10 +281,26 @@ fn apply_create(conn: &Connection, entry: &Entry, starter: &Starter, changed: &m
         _ => return Err(protocol_error("a create group carries a create payload")),
     }
     entry.values.write_create(conn, kind, id, &entry.payload)?;
+    mark_seen(conn, kind, id)?;
     refresh_updated_at(conn, kind, id)?;
     attachments::queue_fetches(conn, &entry.header.refs.attachment_ids)?;
 
     changed.mark(kind);
+    Ok(())
+}
+
+// INVARIANT: while a re-bootstrap's barrier is open, every create the server still holds marks its origin, the
+// duplicates the apply rule drops included. A create left unmarked is absent on the server (PROTOCOL.md,
+// Re-bootstrap).
+fn mark_seen(conn: &Connection, kind: Kind, id: &str) -> Result<(), AppError> {
+    conn.execute(
+        r#"
+        UPDATE sync_origins SET seen_generation = (SELECT rebase_generation FROM sync_state WHERE id = 1)
+        WHERE kind = ?1 AND id = ?2 AND group_name = 'create'
+          AND EXISTS (SELECT 1 FROM sync_state WHERE id = 1 AND is_rebasing = 1)
+        "#,
+        params![kind.as_wire(), id],
+    )?;
     Ok(())
 }
 
@@ -693,7 +709,18 @@ pub(super) fn delete_entity(
     if !is_present(conn, kind, id)? {
         return Ok(());
     }
+    remove_entity(conn, kind, id, successor, starter, changed)
+}
 
+/// Deletes a present entity as an applied tombstone does, without recording one.
+pub(super) fn remove_entity(
+    conn: &Connection,
+    kind: Kind,
+    id: &str,
+    successor: Option<&str>,
+    starter: &Starter,
+    changed: &mut Changed,
+) -> Result<(), AppError> {
     // INVARIANT: a referent dies only after every pointer to it is repaired and every card on a dead template is
     // dropped; the local foreign keys refuse the delete otherwise (PROTOCOL.md, Referents are not parents).
     if matches!(kind, Kind::Templates | Kind::Algorithms) {

@@ -20,6 +20,7 @@ This file only tells you where to start.
 | Pushing the outbox and settling outcomes | `src/repo/sync/outbox.rs` + `crates/koloda-sync-proto/PROTOCOL.md` (§Cohorts, §Push outcomes) |
 | Image uploads and fetches between devices | `src/repo/sync/attachments.rs` + `crates/koloda-sync-proto/PROTOCOL.md` (§Attachments) |
 | New stamps for pending writes | `src/repo/sync/restamp.rs` + `crates/koloda-sync-proto/PROTOCOL.md` (§Hybrid logical clock, §Cohorts) |
+| Re-bootstrap and absence cleanup | `src/repo/sync/rebase.rs` + `crates/koloda-sync-proto/PROTOCOL.md` (§Re-bootstrap) |
 | Enabling sync on a database that already holds rows | `src/repo/sync/backfill.rs::backfill_batch` + `crates/koloda-sync-proto/PROTOCOL.md` (§Existing rows at enable time, Backfill) |
 | Joining an existing space | `src/repo/sync/join.rs` + `crates/koloda-sync-proto/PROTOCOL.md` (§Joining) |
 | Schema / migrations | `agents/DB.md` |
@@ -108,6 +109,12 @@ remote apply queues a fetch for each linked id the file lacks.
 - Its floor is `stable_hlc`, which apply and `push_batch` raise, not `last_hlc`: a clock set ahead moved `last_hlc`
   with the stamps it gave local cohorts.
 - It moves exactly the registers, origins, and tombstones that still hold a member's old stamp.
+
+**Re-bootstrap** — `begin_rebase` opens the barrier; `apply_create` marks every create it meets while it is open,
+duplicates included; `finish_rebase` removes what stayed unmarked.
+
+- Removal goes through apply's `remove_entity`, the path an applied tombstone takes, minus the tombstone.
+- A create still in the outbox or in `sync_held` is unsent, not absent.
 
 **Detach** — `detach` records when the file left its space; the engine sends nothing for a detached file, and
 capture keeps recording for a later re-attach.

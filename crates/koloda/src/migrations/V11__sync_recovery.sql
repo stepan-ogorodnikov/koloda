@@ -2,3 +2,12 @@
 -- push. A re-stamp after a clock correction may issue below `last_hlc`, but never below this
 -- (crates/koloda-sync-proto/PROTOCOL.md, Hybrid logical clock, Cohorts).
 ALTER TABLE sync_state ADD COLUMN stable_hlc integer NOT NULL DEFAULT 0;
+
+-- WHY: a re-bootstrap marks every create its snapshot and catch-up deliver with the open generation. A create left
+-- unmarked when it ends is absent on the server, unless it is still waiting to be sent. Marks of an earlier generation
+-- protect nothing, so nothing has to clear them (crates/koloda-sync-proto/PROTOCOL.md, Re-bootstrap).
+ALTER TABLE sync_state ADD COLUMN rebase_generation integer NOT NULL DEFAULT 0;
+
+ALTER TABLE sync_state ADD COLUMN is_rebasing integer NOT NULL DEFAULT 0;
+
+ALTER TABLE sync_origins ADD COLUMN seen_generation integer NOT NULL DEFAULT 0;

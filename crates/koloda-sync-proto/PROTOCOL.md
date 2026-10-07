@@ -1124,25 +1124,39 @@ The engine reports the pause with the estimate, and the host can continue on dem
 Used for `cursor_too_old`, a stale device's return, and a file that is behind (§Devices).
 Not used for joining.
 
-Record a barrier: a rebase generation, `next_sender_seq`, the last HLC, and the set of entity ids already present.
-Every local create after the barrier stores that generation on its origin.
+The barrier is a rebase generation and an open flag, both persisted.
+Opening it raises the generation.
+Opening it while it is open changes nothing, so a relaunch or a lapsed lease resumes the same re-bootstrap.
 
-1. Open a snapshot lease.
+1. Open the barrier, then a snapshot lease.
    Do not push.
 2. Apply the snapshot, own sender included, through the apply rule.
-   Persist which ids it inserted.
-3. Catch up incrementally, both lanes, to a head observed after the lease.
-4. Classify atomically:
-   - post-barrier creates (not present at the barrier, origin carries this generation): keep, with their outbox;
-   - pre-barrier ids still absent: the server deleted them; delete them, including any post-barrier edits to
-     them, and drop their outbox;
-   - post-barrier ids the server fenced: drop.
-5. Push what remains.
-   Already-accepted envelopes replay; losers come back `stale`.
-6. Set both cursors to the catch-up `scanned_through`, advance the clock past the largest HLC seen, and release the
-   lease.
+   Every create it delivers marks its origin with the generation, whether the apply rule inserted the row or dropped
+   the create as a duplicate.
+3. Catch up incrementally to a head observed after the lease, marking the same way.
+   `cold` resumes from the lease's cold head, as in a join bootstrap.
+4. Clean up absence in one transaction.
+   An algorithm, template, deck, or card whose create origin has no mark of this generation is absent on the server.
+   The exception is a create still in the outbox, in flight or not, or held: the server never took it.
+   - Absent rows are deleted with their descendants, registers, origins, and pending writes, as an applied
+     tombstone deletes them, edits made after the barrier opened included.
+     No tombstone and no fence are recorded, because the server's reason for lacking the entity is not known to be
+     a delete.
+     Pointers to a deleted algorithm or template repair with no successor.
+   - Everything the stream delivered stays with its pending writes, and so does every create still waiting.
+     A pending write under a parent the server deleted dies with the parent.
+   - Reviews follow their card, or die under a pulled reset.
+     Revisions and settings have no tombstones, so absence never deletes them.
+   - The scan walks keyset batches and holds nothing in memory per entity.
 
-An expired lease restarts from step 1 with the same barrier.
+   It then sets the `cold` cursor and closes the barrier.
+5. Release the lease, then push what remains.
+   Already-accepted envelopes replay; losers come back `stale`; a create the server fenced comes back `fenced`.
+
+Marks carry the generation, so nothing clears the marks of an earlier re-bootstrap.
+The clock advances past every stamp the stream delivers, as apply always does.
+A create that came back `existence` earlier has an origin and no pending row, so cleanup deletes it.
+That loss is accepted: `existence` is a capture bug, and the heal re-push it waits for belongs to server restore.
 
 ### Server restore
 
@@ -1457,9 +1471,9 @@ Only native hosts write them; they are device-local runtime state, never synced.
 
 | Table | Key | Holds |
 | --- | --- | --- |
-| `sync_state` | Singleton | `device_id`, `space_id`, `epoch`, join phase, cursors, last HLC, stable high-water, `next_sender_seq`, last observed server seq, skew, role (creator or joiner), backfill phase stamps and watermark, rebase barrier |
+| `sync_state` | Singleton | `device_id`, `space_id`, `epoch`, join phase, cursors, last HLC, stable high-water, `next_sender_seq`, last observed server seq, skew, role (creator or joiner), backfill phase stamps and watermark, rebase generation and barrier flag |
 | `sync_stamps` | `(kind, id, group)` | LWW register (§Field groups and merge) |
-| `sync_origins` | `(kind, id, group)` | Stamp and sender of immutable rows; legacy timestamp floor for creates |
+| `sync_origins` | `(kind, id, group)` | Stamp and sender of immutable rows; legacy timestamp floor for creates; the re-bootstrap generation that last delivered a create |
 | `sync_outbox` | `sender_seq` | Encoded envelope, digest, `commit_id`, in-flight flag |
 | `sync_cohorts` | `commit_id` | Members, `local` / `uncertain` / `fixed`, original stamp |
 | `sync_tombstones` | `(kind, id)` | Stamp, sender, hints |
