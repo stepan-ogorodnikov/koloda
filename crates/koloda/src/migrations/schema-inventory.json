@@ -1212,6 +1212,13 @@
           "notnull": 0,
           "pk": 0,
           "dflt_value": null
+        },
+        {
+          "name": "stable_hlc",
+          "type": "INTEGER",
+          "notnull": 1,
+          "pk": 0,
+          "dflt_value": "0"
         }
       ],
       "indexes": [],

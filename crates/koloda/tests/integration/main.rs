@@ -28,6 +28,7 @@ mod sync_integration_tests;
 mod sync_join_integration_tests;
 mod sync_outbox_integration_tests;
 mod sync_repair_integration_tests;
+mod sync_restamp_integration_tests;
 mod sync_reviews_integration_tests;
 mod sync_tombstones_integration_tests;
 mod sync_updates_integration_tests;

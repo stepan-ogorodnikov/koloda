@@ -584,6 +584,9 @@ Ties break on `stamp_device`, compared as its 16 raw UUID bytes.
 One HLC per commit; every envelope of a local transaction shares it.
 On counter overflow the wall part advances one millisecond.
 The device persists its last HLC, never issues a smaller one, and advances past every stamp it applies.
+The one exception is a re-stamp (§Cohorts), which may set the last HLC below where a clock set ahead left it.
+It never issues below the **stable high-water**: the highest stamp the device applied or sent in a push.
+The clock therefore only goes back over stamps that `local` cohorts alone held.
 
 ### Skew guards
 
@@ -614,6 +617,20 @@ Anything else fixes it to its original stamp.
 
 Re-stamp walks only `local` cohorts and gives every pending member of a cohort one new stamp in one transaction.
 A reset and its blank scheduling can therefore never end up with different stamps.
+
+- The walk is one transaction over every `local` cohort, in old `(hlc, stamp_device)` order.
+  A capture between two cohorts would take a stamp below one still waiting.
+- New stamps come from the clock at the corrected time, starting above the stable high-water and the stamps
+  enrollment reserved for backfill, under the file's current device id.
+  A re-stamped write therefore still beats every stamp it could have read, including a remote one that it replaced
+  in its register.
+- A cohort at a reserved backfill stamp is not walked.
+  Later batches of the same phase write at that stamp, and moving one batch would break the order between phases.
+- Each member's envelope is decoded, given the new header stamp, and encoded again.
+  Its payload bytes, `commit_id`, and `sender_seq` stay; its digest is recomputed.
+  The register, origin, or tombstone the member wrote moves to the new stamp, a create's synthetic registers
+  included.
+- The last HLC rests on the last stamp issued.
 
 ### Sender sequence
 
@@ -1440,7 +1457,7 @@ Only native hosts write them; they are device-local runtime state, never synced.
 
 | Table | Key | Holds |
 | --- | --- | --- |
-| `sync_state` | Singleton | `device_id`, `space_id`, `epoch`, join phase, cursors, last HLC, `next_sender_seq`, last observed server seq, skew, role (creator or joiner), backfill phase stamps and watermark, rebase barrier |
+| `sync_state` | Singleton | `device_id`, `space_id`, `epoch`, join phase, cursors, last HLC, stable high-water, `next_sender_seq`, last observed server seq, skew, role (creator or joiner), backfill phase stamps and watermark, rebase barrier |
 | `sync_stamps` | `(kind, id, group)` | LWW register (§Field groups and merge) |
 | `sync_origins` | `(kind, id, group)` | Stamp and sender of immutable rows; legacy timestamp floor for creates |
 | `sync_outbox` | `sender_seq` | Encoded envelope, digest, `commit_id`, in-flight flag |

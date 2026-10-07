@@ -88,8 +88,8 @@ Out:
   Answer: yes, bounded by a persisted **stable high-water**.
   - `sync_state.stable_hlc` is the highest stamp that is no longer only local.
     Apply raises it to every stamp it observes, and `push_batch` raises it to each cohort it moves out of `local`.
-  - Re-stamp issues from `max(corrected now, stable_hlc, the stamps of unfinished backfill phases)`, one stamp per
-    cohort in old stamp order, and leaves `last_hlc` on the last one issued.
+  - Re-stamp issues from `max(corrected now, stable_hlc, the reserved backfill stamps)`, one stamp per cohort in old
+    stamp order, and leaves `last_hlc` on the last one issued.
   - So the clock only goes back over stamps that `local` cohorts alone held.
   The first attempt took the floor from the stamps still stored in registers.
   That misses a remote stamp that a later local write replaced in its register.
@@ -175,7 +175,7 @@ Out:
 
 ## Plan
 
-- [ ] 1. Re-stamp pending cohorts as one unit
+- [x] 1. Re-stamp pending cohorts as one unit
   Goal:
   - `V11__sync_recovery.sql` adds `stable_hlc` to `sync_state` (question 3).
     Apply raises it with `last_hlc` for every stamp it observes.

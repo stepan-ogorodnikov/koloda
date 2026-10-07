@@ -19,6 +19,7 @@ This file only tells you where to start.
 | Applying remote sync envelopes | `src/repo/sync/apply.rs::apply_page` + `crates/koloda-sync-proto/PROTOCOL.md` (§Field groups and merge, Apply rule) |
 | Pushing the outbox and settling outcomes | `src/repo/sync/outbox.rs` + `crates/koloda-sync-proto/PROTOCOL.md` (§Cohorts, §Push outcomes) |
 | Image uploads and fetches between devices | `src/repo/sync/attachments.rs` + `crates/koloda-sync-proto/PROTOCOL.md` (§Attachments) |
+| New stamps for pending writes | `src/repo/sync/restamp.rs` + `crates/koloda-sync-proto/PROTOCOL.md` (§Hybrid logical clock, §Cohorts) |
 | Enabling sync on a database that already holds rows | `src/repo/sync/backfill.rs::backfill_batch` + `crates/koloda-sync-proto/PROTOCOL.md` (§Existing rows at enable time, Backfill) |
 | Joining an existing space | `src/repo/sync/join.rs` + `crates/koloda-sync-proto/PROTOCOL.md` (§Joining) |
 | Schema / migrations | `agents/DB.md` |
@@ -101,6 +102,12 @@ remote apply queues a fetch for each linked id the file lacks.
   card scan. The queue pins nothing, so the startup sweep is unchanged.
 - `store_fetched` checks the hash and validates like an add, then writes through `insert_attachment`, the one insert
   that `add_attachment` uses too; bytes still go through `attachment_bytes` only.
+
+**Re-stamp** — `restamp_local_cohorts` walks the `local` cohorts in one transaction, one new stamp per cohort.
+
+- Its floor is `stable_hlc`, which apply and `push_batch` raise, not `last_hlc`: a clock set ahead moved `last_hlc`
+  with the stamps it gave local cohorts.
+- It moves exactly the registers, origins, and tombstones that still hold a member's old stamp.
 
 **Detach** — `detach` records when the file left its space; the engine sends nothing for a detached file, and
 capture keeps recording for a later re-attach.

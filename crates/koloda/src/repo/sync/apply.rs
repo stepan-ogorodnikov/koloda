@@ -149,11 +149,12 @@ fn require_enrolled(conn: &Connection) -> Result<(), AppError> {
 }
 
 // INVARIANT: the clock adopts each stamp before its entry applies, never after the page, so a repair that the entry
-// triggers captures a stamp above it (PROTOCOL.md, Hybrid logical clock).
+// triggers captures a stamp above it (PROTOCOL.md, Hybrid logical clock). The stable high-water keeps it even after
+// a local write replaces it in its register, so a re-stamp never lands below it.
 fn observe(conn: &Connection, hlc: Hlc) -> Result<(), AppError> {
     let raw = i64::try_from(hlc.raw()).map_err(protocol_error)?;
     conn.execute(
-        "UPDATE sync_state SET last_hlc = MAX(last_hlc, ?1) WHERE id = 1",
+        "UPDATE sync_state SET last_hlc = MAX(last_hlc, ?1), stable_hlc = MAX(stable_hlc, ?1) WHERE id = 1",
         params![raw],
     )?;
     Ok(())
