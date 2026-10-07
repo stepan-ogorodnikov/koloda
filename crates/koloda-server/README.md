@@ -25,6 +25,10 @@ koloda-server serve --data-dir ./data --listen 127.0.0.1:8080
 koloda-server backup --data-dir ./data ./backups/2026-10-07
 ```
 
+```bash
+koloda-server restore --data-dir ./data ./backups/2026-10-07 [--authoritative] [--rotate-tokens] [--yes]
+```
+
 `init` prints the setup token once; only its hash is stored.
 `serve` speaks plain HTTP, so put a TLS reverse proxy in front of it.
 It runs a garbage collection pass every hour, over tombstones every active device has passed and attachments no card
@@ -33,6 +37,11 @@ has linked for 90 days; `Server::collect_garbage` runs one on demand.
 Each database is copied in one read transaction, `server.db` last; the attachment bytes follow each space's copy.
 `manifest.json` is written last, with each file's SHA-256 and each space's epoch, lane heads, senders' last seqs,
 and attachment ids.
+`restore` needs `serve` stopped: it takes the directory lock, also on a machine with no server yet.
+It copies the backup into a new generation and checks every copied file against the manifest.
+Each space gets a fresh epoch and a restore point; the old generation's newer points and revocations carry forward.
+It lists the restored devices and asks before it moves `CURRENT`, unless `--yes`.
+The replaced generation stays on disk; delete old generations by hand.
 
 ## Data directory
 
@@ -40,17 +49,19 @@ and attachment ids.
 | --- | --- |
 | `CURRENT` | The active generation's id |
 | `generations/<id>/server.db` | Setup token hash, spaces, devices |
-| `generations/<id>/spaces/<space>.db` | One space: epoch, `write_schema`, its envelope log, and attachment metadata |
+| `generations/<id>/spaces/<space>.db` | One space: epoch, restore points, `write_schema`, its envelope log, and attachment metadata |
 | `generations/<id>/attachments/<space>/<attachment>` | One attachment's bytes, named by their SHA-256 |
 | `lock` | Held by `serve` for its whole run |
 
 ## Architectural Map
 
-- `src/main.rs` — command line: `init`, `serve`, and `backup`.
+- `src/main.rs` — command line: `init`, `serve`, `backup`, and `restore`.
 - `src/lib.rs` — the route table.
 - `src/clock.rs` — server time, injected so tests run on a manual clock.
 - `src/data_dir.rs` — layout, `init`, and the directory lock.
 - `src/backup.rs` — an online copy of the active generation and its manifest.
+- `src/restore.rs` — a backup staged as a new generation: epochs, restore points, carried-forward revocations, and
+  the swap of `CURRENT`.
 - `src/db.rs` — connections and the two migration series under `src/migrations/`.
 - `src/server.rs` — shared state: `server.db`, open space databases, and the clock.
 - `src/http.rs` — CBOR and zstd bodies, their limits, the reply envelope, and `meta`.

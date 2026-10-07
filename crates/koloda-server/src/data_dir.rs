@@ -1,7 +1,7 @@
 //! Data directory: `CURRENT` names the active generation under `generations/`, which holds `server.db`,
 //! `spaces/<space>.db`, and `attachments/<space>/`; `lock` keeps a second `serve` off the same directory.
 //!
-//! WHY: a restore will write a new generation and swap `CURRENT`, so live files are never rewritten in place.
+//! WHY: a restore writes a new generation and swaps `CURRENT`, so live files are never rewritten in place.
 
 use std::fmt;
 use std::fs::{self, File, TryLockError};
@@ -57,6 +57,20 @@ pub fn init(data_dir: &Path, now_ms: u64) -> Result<String, DataDirError> {
     Ok(token)
 }
 
+/// Makes `generation` the active one: `CURRENT` is replaced in one rename, so a crash leaves the old or the new.
+pub(crate) fn swap_current(data_dir: &Path, generation: &str) -> Result<(), DataDirError> {
+    let staged = data_dir.join(CURRENT_STAGED);
+    fs::write(&staged, format!("{generation}\n"))?;
+    File::open(&staged)?.sync_all()?;
+    fs::rename(staged, data_dir.join(CURRENT))?;
+    File::open(data_dir)?.sync_all()?;
+    Ok(())
+}
+
+pub(crate) fn generations_dir(data_dir: &Path) -> PathBuf {
+    data_dir.join(GENERATIONS)
+}
+
 pub(crate) fn active_generation(data_dir: &Path) -> Result<PathBuf, DataDirError> {
     match fs::read_to_string(data_dir.join(CURRENT)) {
         Ok(current) => Ok(data_dir.join(GENERATIONS).join(current.trim())),
@@ -75,6 +89,12 @@ pub struct DataDirLock {
 impl DataDirLock {
     pub fn acquire(data_dir: &Path) -> Result<DataDirLock, DataDirError> {
         active_generation(data_dir)?;
+        DataDirLock::acquire_any(data_dir)
+    }
+
+    /// Takes the lock on a directory whether or not it holds a server yet, as a restore onto a new machine must.
+    pub(crate) fn acquire_any(data_dir: &Path) -> Result<DataDirLock, DataDirError> {
+        fs::create_dir_all(data_dir)?;
         let file = File::options()
             .create(true)
             .truncate(false)

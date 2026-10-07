@@ -238,6 +238,30 @@ pub enum HeldReason {
     Dependency,
 }
 
+/// How a server restore treats what devices hold: heal re-pushes it, authoritative discards it (`PROTOCOL.md`
+/// §Server restore).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum RestoreMode {
+    Heal,
+    Authoritative,
+}
+
+impl RestoreMode {
+    pub fn as_wire(self) -> &'static str {
+        match self {
+            RestoreMode::Heal => "heal",
+            RestoreMode::Authoritative => "authoritative",
+        }
+    }
+
+    pub fn from_wire(value: &str) -> Option<RestoreMode> {
+        [RestoreMode::Heal, RestoreMode::Authoritative]
+            .into_iter()
+            .find(|mode| mode.as_wire() == value)
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Receipts {

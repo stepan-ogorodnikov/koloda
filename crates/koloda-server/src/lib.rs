@@ -6,6 +6,7 @@
 pub mod backup;
 pub mod clock;
 pub mod data_dir;
+pub mod restore;
 pub mod server;
 
 mod attachments;

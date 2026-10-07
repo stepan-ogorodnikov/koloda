@@ -248,7 +248,7 @@ Out:
   Commit: Back up a running server
   Depends on: none
 
-- [ ] 4. Restore a server from a backup
+- [x] 4. Restore a server from a backup
   Goal:
   - Space migration `V4__restore.sql` adds the restore points and their cutoffs (question 5).
   - `koloda_server::restore::prepare(data_dir, backup_dir, options, now_ms)` verifies the manifest and stages a new

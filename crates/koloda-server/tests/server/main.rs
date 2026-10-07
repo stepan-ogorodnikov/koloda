@@ -12,6 +12,7 @@ mod http_tests;
 mod pairing_tests;
 mod pull_tests;
 mod push_tests;
+mod restore_tests;
 mod spaces_tests;
 mod stale_tests;
 mod tombstone_gc_tests;

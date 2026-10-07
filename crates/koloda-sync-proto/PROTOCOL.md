@@ -1201,26 +1201,34 @@ That loss is accepted: `existence` is a capture bug, and the heal re-push it wai
 
 ### Server restore
 
-A server restore replaces every server database from one backup manifest.
+A server restore replaces every server database from one backup manifest, as a new generation of the data
+directory; the server is stopped meanwhile.
 It appends a restore point per space:
 
 - a fresh, never-issued `epoch`;
 - the mode, `heal` (default) or `authoritative`;
 - head `seq` per lane;
-- `last_sender_seq` per device, from the space database;
-- invalidated pairing codes and leases.
+- each sender's `last_sender_seq`, from the space database; a sender the point does not list counts as 0;
+- when it was made.
 
-Restore points accumulate: the new generation carries every earlier restore point forward.
+Restore points accumulate: the new generation holds the backup's points, then the replaced generation's points the
+backup lacks, when that data is still readable, then the new one.
 A device on an older epoch, perhaps offline across two restores, applies all points newer than its epoch as one.
 The combined mode is authoritative if any of them is.
 Each device's cutoff is the lowest among them.
+
+Restore also drops every pairing code, pending space creation, and bootstrap lease.
+It sets every restored device's `last_seen` to the restore time, so an old backup marks no device stale.
+It clamps each device's recorded cursors to the restored lane heads: a record copied after its space may be ahead,
+and GC must not collect a tombstone the device never pulled from this generation.
 
 Tokens survive a restore, so restored devices recover without pairing.
 A device revoked after the backup would come back with them, so restore guards that:
 
 - if the replaced data is still readable, revocations newer than the backup are carried forward;
 - the operator confirms the list of restored devices before the restore finishes;
-- the operator may rotate every token instead, and every device re-pairs.
+- the operator may rotate every token instead: every restored device is revoked, gets `401 revoked` with the new
+  epoch, and re-pairs.
 
 A device enrolled after the backup has no restored record.
 It gets `401 unknown_device` with the new epoch, re-attaches with a pairing code, then runs the restore path

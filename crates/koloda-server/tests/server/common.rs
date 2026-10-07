@@ -72,6 +72,11 @@ impl Harness {
     pub fn new() -> Harness {
         let dir = tempfile::tempdir().expect("temporary data directory");
         let setup_token = data_dir::init(dir.path(), START_MS).expect("init a fresh data directory");
+        Harness::open(dir, setup_token)
+    }
+
+    /// Serves a data directory that already holds a server, such as one a restore created.
+    pub fn open(dir: TempDir, setup_token: String) -> Harness {
         let clock = Arc::new(ManualClock(AtomicU64::new(START_MS)));
         let server = Arc::new(Server::open(dir.path(), clock.clone()).expect("open the initialized data directory"));
         Harness {
@@ -81,6 +86,12 @@ impl Harness {
             clock,
             setup_token,
         }
+    }
+
+    /// Opens the data directory again, as `serve` does when it starts after a restore moved `CURRENT`.
+    pub fn reopen(&mut self) {
+        self.server = Arc::new(Server::open(self._dir.path(), self.clock.clone()).expect("open the data directory"));
+        self.router = router(Arc::clone(&self.server));
     }
 
     pub fn call(&self, method: Method, path: impl Into<String>) -> Call<'_> {

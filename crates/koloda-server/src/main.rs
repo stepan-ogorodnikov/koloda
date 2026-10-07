@@ -1,8 +1,9 @@
 //! `koloda-server` command line: `init` creates a data directory, `serve` runs the server on one and collects
-//! garbage every hour, and `backup` copies a running server.
+//! garbage every hour, `backup` copies a running server, and `restore` puts a backup back as a new generation.
 
+use std::io::{self, Write};
 use std::net::SocketAddr;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 use std::sync::Arc;
 use std::time::Duration;
@@ -11,10 +12,13 @@ use clap::{Parser, Subcommand};
 use koloda_server::backup;
 use koloda_server::clock::{Clock, SystemClock};
 use koloda_server::data_dir::{self, DataDirLock};
+use koloda_server::restore::{self, RestoreOptions};
 use koloda_server::router;
 use koloda_server::server::Server;
+use koloda_sync_proto::transport::RestoreMode;
 
 const COLLECT_EVERY: Duration = Duration::from_secs(60 * 60);
+const DAY_MS: u64 = 24 * 60 * 60 * 1000;
 
 #[derive(Parser)]
 #[command(name = "koloda-server", version, about = "Koloda sync server")]
@@ -35,6 +39,21 @@ enum Command {
         #[arg(long)]
         data_dir: PathBuf,
         out: PathBuf,
+    },
+    /// Restore a backup as a new generation; stop `serve` first.
+    Restore {
+        #[arg(long)]
+        data_dir: PathBuf,
+        backup: PathBuf,
+        /// Devices discard local data and re-download the backup, instead of re-pushing what it lacks.
+        #[arg(long)]
+        authoritative: bool,
+        /// Revoke every restored device, so each pairs again.
+        #[arg(long)]
+        rotate_tokens: bool,
+        /// Restore without asking.
+        #[arg(long)]
+        yes: bool,
     },
     /// Serve plain HTTP; put a TLS reverse proxy in front of it.
     Serve {
@@ -73,8 +92,59 @@ fn run(cli: Cli) -> Result<(), String> {
             );
             Ok(())
         }
+        Command::Restore {
+            data_dir,
+            backup,
+            authoritative,
+            rotate_tokens,
+            yes,
+        } => {
+            let options = RestoreOptions {
+                mode: if authoritative {
+                    RestoreMode::Authoritative
+                } else {
+                    RestoreMode::Heal
+                },
+                is_rotating_tokens: rotate_tokens,
+            };
+            restore(&data_dir, &backup, options, yes)
+        }
         Command::Serve { data_dir, listen } => serve(data_dir, listen),
     }
+}
+
+fn restore(data_dir: &Path, backup: &Path, options: RestoreOptions, is_confirmed: bool) -> Result<(), String> {
+    let now = SystemClock.now_ms();
+    let prepared = restore::prepare(data_dir, backup, options, now).map_err(|error| error.to_string())?;
+    println!("Devices after the restore:");
+    for device in prepared.devices() {
+        let days = now.saturating_sub(device.last_seen) / DAY_MS;
+        let revoked = if device.is_revoked { ", revoked" } else { "" };
+        println!(
+            "  {} ({}) in {}: last seen {days} day(s) before the restore{revoked}",
+            device.name, device.platform, device.space_name
+        );
+    }
+    if !is_confirmed && !confirm("Restore this backup? [y/N] ")? {
+        prepared.abort().map_err(|error| error.to_string())?;
+        println!("Nothing was restored.");
+        return Ok(());
+    }
+    let epochs = prepared.epochs().to_vec();
+    let generation = prepared.commit().map_err(|error| error.to_string())?;
+    println!("Restored as generation {generation}.");
+    for (space, epoch) in epochs {
+        println!("  space {space}: epoch {epoch}");
+    }
+    Ok(())
+}
+
+fn confirm(question: &str) -> Result<bool, String> {
+    print!("{question}");
+    io::stdout().flush().map_err(|error| error.to_string())?;
+    let mut answer = String::new();
+    io::stdin().read_line(&mut answer).map_err(|error| error.to_string())?;
+    Ok(matches!(answer.trim().to_lowercase().as_str(), "y" | "yes"))
 }
 
 fn serve(data_dir: PathBuf, listen: SocketAddr) -> Result<(), String> {
