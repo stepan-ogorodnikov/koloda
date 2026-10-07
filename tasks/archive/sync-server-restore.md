@@ -1,6 +1,6 @@
 # Sync server restore
 
-Status: ready
+Status: done
 
 ## Intent
 
@@ -401,4 +401,60 @@ Out:
 
 ## Outcome
 
-Not yet.
+- `koloda-server backup` copies the active generation while `serve` runs: each space with `VACUUM INTO`, `server.db`
+  last (dropping spaces whose file the copy lacks), the attachment files each space copy lists, and `manifest.json`
+  last.
+  A row whose file a collection pass removed meanwhile is dropped from the copy.
+- `koloda-server restore` takes the directory lock, also on a directory with no server, stages a new generation from
+  the backup, and checks every staged file against the manifest.
+  Each space gets a fresh epoch and its restore points: the backup's, the replaced generation's it lacks, then a new
+  one with the backup's lane heads and each sender's `last_seq`.
+  Leases, pairing codes, and pending space creations go; device cursors are clamped to the restored heads and
+  `last_seen` set to the restore time; revocations newer than the backup carry forward; `--rotate-tokens` revokes
+  every device.
+  It lists the devices and asks before swapping `CURRENT`, unless `--yes`; the replaced generation stays on disk.
+  Space migration `V4__restore.sql` adds `restore_points` and `restore_cutoffs`.
+- Every device-token call carries `koloda-epoch`; one without it is `bad_request`, and one on another epoch is
+  refused with `409 epoch_changed` after the token check, carrying the combined `Restore` (`ErrorBody.restore`).
+  Points after the last one that issued the caller's epoch apply, or every point for an epoch none issued:
+  authoritative if any is, the lowest heads, the lowest cutoffs, a sender one point lacks left out.
+- `koloda` migration `V12__sync_restore.sql` adds `sync_heal_cutoffs`, the heal step and watermark, the held
+  authoritative restore, the image check flag, and `sync_tombstones.parent`.
+  - `heal.rs`: `begin_heal` stores the epoch, clamps cursors, and lowers the cutoffs (a running heal restarts);
+    a file waiting for Add or Replace only takes the epoch.
+    `heal_batch` scans algorithms, revisions, templates, decks, cards, `learning`, reviews, then tombstones, and
+    re-encodes every write above its sender's cutoff from the row with its stored stamp, into one `fixed` cohort
+    with `has_consumed` per batch.
+    The row the write lives in takes the re-push's sender and seq.
+    `finish_rebase` keeps a create above its sender's cutoff while the scan runs.
+  - `authoritative.rs`: `hold_authoritative` records the restore; `reset_for_authoritative` deletes product rows and
+    every sync table but `sync_state`, raises `next_sender_seq` and `last_observed_server_seq` past the server's,
+    and leaves the file to bootstrap.
+- The engine names its epoch on every device call, applies a reported restore and runs the cycle again (heal), or
+  holds it and stops with `Stop::AuthoritativeRestore` until `Engine::accept_restore`.
+  A `401 revoked` or `unknown_device` on another epoch detaches the file with `SyncError::PairAgain` and
+  `Stop::Restored`.
+  Re-attach applies a restore the space had since, then switches; a missing old record counts as no consumed seq,
+  and the switch records the URL the code came through.
+  After a restore the engine walks `GET .../attachments/missing` once and queues uploads of the ids it holds.
+- `koloda-server spaces` and `pair` run beside `serve` through `Server::spaces` and `Server::issue_pairing`.
+- `PROTOCOL.md`, the four crate docs, `agents/RUST.md`, and `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md` describe the
+  above.
+- Deviations from the plan text:
+  - A write of this device still waiting in the outbox is not encoded again: it moves to the tail with its whole
+    cohort, unless the cohort is already last.
+    Only a write in flight gets a second copy.
+    A duplicate pending row would break the one-pending-row-per-group rule, and a split cohort a reset's stamp.
+  - `sync_tombstones` gained `parent`, and `delete_entity` takes the header, because a card's delete names its deck
+    after the card row is gone.
+  - The update-group payloads are built in `heal.rs` rather than in each repo.
+  - A re-pushed reset takes its wall time from its stamp, since no column keeps it.
+  - `switch_device` takes the re-attach's `server_url`, so the URL is recorded in the switch transaction.
+  - `Stop::Restored` lives in memory; after a relaunch a detached file shows `Stop::Revoked`.
+  - The server test harness sends each space's current epoch by default; the engine harness's restore swaps the
+    router every device calls.
+  - The pairing test for refusing a re-attach to a restored space went with the refusal.
+- Follow-ups noticed, not fixed:
+  - `data_dir::init` still writes `CURRENT` with its own code instead of `swap_current`.
+- Manual verify: `koloda-server init`, `spaces`, `pair`, `backup`, and `restore` (declined, then with `--yes`) ran by
+  hand on a scratch directory; the device side waits for the NAPI commands and the desktop UI.
