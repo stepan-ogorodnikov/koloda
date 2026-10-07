@@ -152,6 +152,26 @@ impl TestServer {
         self.device_on(Database::new(conn), device.secrets.copy())
     }
 
+    /// Moves a device's `last_seen` back by `ms`, as if it had made no request for that long.
+    ///
+    /// WHY: moving the server clock instead would trip every engine's skew guard, since `koloda` stamps with system
+    /// time.
+    pub fn backdate(&self, device: Uuid, ms: u64) {
+        let current = std::fs::read_to_string(self._dir.path().join("CURRENT")).expect("read CURRENT");
+        let path = self
+            ._dir
+            .path()
+            .join("generations")
+            .join(current.trim())
+            .join("server.db");
+        let conn = Connection::open(path).expect("server.db opens");
+        conn.execute(
+            "UPDATE devices SET last_seen = last_seen - ?1 WHERE id = ?2",
+            rusqlite::params![ms, device.as_bytes().as_slice()],
+        )
+        .expect("the device is backdated");
+    }
+
     /// A call the engine does not make, for checking what the server holds.
     pub fn call<T: DeserializeOwned>(&self, method: Method, path: &str, token: &str) -> (u16, Reply<T>) {
         self.send(method, path, Some(token), None)

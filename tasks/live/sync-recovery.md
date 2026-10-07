@@ -282,7 +282,7 @@ Out:
   Commit: Collect tombstones every active device has passed
   Depends on: 3
 
-- [ ] 5. Re-bootstrap a device the server has left behind
+- [x] 5. Re-bootstrap a device the server has left behind
   Goal:
   - The cycle re-bootstraps before it pushes when the device record shows `rebase_required` or the file's own
     `cursor_hot` is below `meta.device.gc_horizon_hot`.
@@ -294,7 +294,8 @@ Out:
     `is_rebasing`.
   - `status` shows `Bootstrapping` meanwhile.
   - `PROTOCOL.md` §Cycle and §Re-bootstrap, and `crates/koloda-sync/README.md`, give the device's order.
-  Constraints: the joiner's bootstrap keeps its behavior; the harness moves the server clock to make a device stale.
+  Constraints: the joiner's bootstrap keeps its behavior; the harness backdates a device's `last_seen` to make it
+  stale, because moving the server clock would trip the engine's skew guard.
   Done when: tests in `crates/koloda-sync/tests/engine/` cover:
   - a device idle 91 days with pending edits and creates: it re-bootstraps, its creates and its edits to surviving
     entities reach the space, and an entity the space deleted meanwhile disappears locally;

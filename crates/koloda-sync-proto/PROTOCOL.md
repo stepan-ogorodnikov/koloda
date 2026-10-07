@@ -997,9 +997,12 @@ Across lanes it holds because `cold` is pulled only up to a `max_seq` recorded b
 
 1. Read the own device record.
    If the file is behind, follow §Devices.
-   If `rebase_required` or `cursor_too_old`, re-bootstrap; **do not push**.
+   If the record is `rebase_required`, or the file's own `hot` cursor is below the GC horizon in its reply,
+   re-bootstrap (§Re-bootstrap); **do not push**.
 2. Push the outbox in batches of a few thousand envelopes or a few MB, never splitting a cohort.
    Stop at `seq_reused`.
+   A push or pull answered `cursor_too_old` re-bootstraps the same way.
+   The server marked the device stale, or collected a tombstone above its cursor, after the round read its record.
 3. Record `head_cold`.
 4. Pull `hot` to head, one transaction per page, advancing to `scanned_through`.
 5. Pull `cold` up to the recorded `head_cold`.
@@ -1146,6 +1149,7 @@ Not used for joining.
 The barrier is a rebase generation and an open flag, both persisted.
 Opening it raises the generation.
 Opening it while it is open changes nothing, so a relaunch or a lapsed lease resumes the same re-bootstrap.
+A cycle that finds the barrier open resumes it before anything else, as a joiner's cycle resumes its bootstrap.
 
 1. Open the barrier, then a snapshot lease.
    Do not push.

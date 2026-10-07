@@ -1,4 +1,5 @@
-//! Union bootstrap of a joining file from a snapshot lease (`crates/koloda-sync-proto/PROTOCOL.md` §Bootstrap).
+//! Bootstrap from a snapshot lease: a joiner's union bootstrap, and a re-bootstrap that ends by removing what the
+//! server no longer holds (`crates/koloda-sync-proto/PROTOCOL.md` §Bootstrap, §Re-bootstrap).
 //!
 //! INVARIANT: nothing is pushed until the bootstrap ends. Repairs it captures wait in the outbox, because a referent
 //! may still be on its way until `hot` has caught up to a head read after the lease.
@@ -6,6 +7,7 @@
 use std::sync::Arc;
 
 use koloda::repo::sync::apply::{apply_snapshot_page, finish_bootstrap, PageEntry};
+use koloda::repo::sync::rebase::{begin_rebase, finish_rebase};
 use koloda::repo::sync::repair::repair_dangling_defaults;
 use koloda_sync_proto::registry::{Kind, Lane};
 use koloda_sync_proto::transport::{Empty, ErrorCode, Lease, Snapshot, SnapshotPage};
@@ -20,6 +22,13 @@ use crate::transport::Method;
 // leases so that a server whose leases keep lapsing cannot hold it forever.
 const MAX_LEASES: usize = 3;
 
+/// A joiner's union bootstrap, or a re-bootstrap whose barrier `begin_rebase` opened.
+#[derive(Clone, Copy)]
+pub(crate) enum Bootstrap {
+    Join,
+    Rebase,
+}
+
 /// A lease this device holds, and the server time of the last reply, which decides when to heartbeat.
 pub(crate) struct OpenLease {
     id: Uuid,
@@ -29,15 +38,26 @@ pub(crate) struct OpenLease {
 }
 
 impl Shared {
-    /// Bootstraps the file and returns the cursors the incremental cycle starts from.
-    pub(crate) async fn bootstrap(
+    /// Opens a re-bootstrap's barrier, or resumes the open one, and runs it.
+    pub(crate) async fn rebootstrap(
         self: &Arc<Self>,
         session: &Session,
         changed: &mut Vec<Kind>,
     ) -> Result<(u64, u64), SyncError> {
+        self.blocking(|shared| begin_rebase(&shared.db)).await?;
+        self.bootstrap(session, Bootstrap::Rebase, changed).await
+    }
+
+    /// Bootstraps the file and returns the cursors the incremental cycle starts from.
+    pub(crate) async fn bootstrap(
+        self: &Arc<Self>,
+        session: &Session,
+        kind: Bootstrap,
+        changed: &mut Vec<Kind>,
+    ) -> Result<(u64, u64), SyncError> {
         let mut leases = 1;
         loop {
-            match self.bootstrap_once(session, changed).await {
+            match self.bootstrap_once(session, kind, changed).await {
                 Err(SyncError::Server {
                     code: ErrorCode::LeaseExpired,
                     ..
@@ -50,6 +70,7 @@ impl Shared {
     async fn bootstrap_once(
         self: &Arc<Self>,
         session: &Session,
+        kind: Bootstrap,
         changed: &mut Vec<Kind>,
     ) -> Result<(u64, u64), SyncError> {
         let opened = self
@@ -79,9 +100,20 @@ impl Shared {
         self.stream(session, &mut lease, Lane::Cold, changed).await?;
 
         // WHY: the flag clears before the release, so a failed release costs a lingering lease, not a second bootstrap.
+        // A re-bootstrap's server flag clears only on release, so a failed release there costs a second one.
         let cursor_cold = snapshot.head_cold;
-        self.blocking(move |shared| finish_bootstrap(&shared.db, cursor_cold))
-            .await?;
+        match kind {
+            Bootstrap::Join => {
+                self.blocking(move |shared| finish_bootstrap(&shared.db, cursor_cold))
+                    .await?;
+            }
+            Bootstrap::Rebase => {
+                let removed = self
+                    .blocking(move |shared| finish_rebase(&shared.db, cursor_cold, &shared.starter))
+                    .await?;
+                merge(changed, removed);
+            }
+        }
         let released = self
             .cycle_client(&session.base)
             .call::<(), Empty>(

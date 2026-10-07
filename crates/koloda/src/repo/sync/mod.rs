@@ -94,6 +94,8 @@ pub struct SyncState {
     pub cursor_hot: u64,
     pub cursor_cold: u64,
     pub is_bootstrapping: bool,
+    /// A re-bootstrap's barrier is open; the next cycle resumes it before anything else.
+    pub is_rebasing: bool,
     /// A claim waits for the user to pick Add or Replace; nothing syncs meanwhile.
     pub is_import_pending: bool,
     /// The device was revoked or detached itself; the file sends nothing until it re-attaches.
@@ -107,7 +109,7 @@ pub fn sync_state(db: &Database) -> Result<Option<SyncState>, AppError> {
                 .query_row(
                     r#"
                     SELECT device_id, space_id, server_url, cursor_hot, cursor_cold, is_bootstrapping,
-                           join_phase = 'import_pending', detached_at IS NOT NULL
+                           join_phase = 'import_pending', detached_at IS NOT NULL, is_rebasing
                     FROM sync_state WHERE id = 1
                     "#,
                     [],
@@ -122,6 +124,7 @@ pub fn sync_state(db: &Database) -> Result<Option<SyncState>, AppError> {
                             is_bootstrapping: row.get(5)?,
                             is_import_pending: row.get(6)?,
                             is_detached: row.get(7)?,
+                            is_rebasing: row.get(8)?,
                         };
                         Ok((ids, state))
                     },

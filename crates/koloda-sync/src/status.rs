@@ -100,13 +100,13 @@ impl Shared {
             State::Stopped(Stop::Revoked)
         } else if state.is_import_pending {
             State::ImportPending
-        } else if run.is_syncing && state.is_bootstrapping {
+        } else if run.is_syncing && (state.is_bootstrapping || state.is_rebasing) {
             State::Bootstrapping
         } else if run.is_syncing {
             State::Syncing
         } else if let Some(stop) = run.stop.clone() {
             State::Stopped(stop)
-        } else if state.is_bootstrapping {
+        } else if state.is_bootstrapping || state.is_rebasing {
             State::Bootstrapping
         } else {
             State::Idle

@@ -16,6 +16,7 @@ use crate::fixtures::{seed_data, seed_settings, Library, BACK, FRONT};
 use crate::runner_support::{channel_sink, wait_for, ManualTimer};
 
 const ATTACHMENTS: &str = "/attachments/";
+const DAY_MS: u64 = 24 * 60 * 60 * 1000;
 
 /// A PNG of `len` bytes whose body zstd cannot shrink, so its size on the wire is its size.
 fn png(seed: u64, len: usize) -> AddAttachmentData {
@@ -113,6 +114,34 @@ fn an_image_in_a_card_written_before_enrollment_reaches_a_joiner() {
     b.engine.sync_now().expect("B bootstraps");
 
     assert_eq!(b.image(&images[0]), space.device.image(&images[0]));
+}
+
+#[test]
+fn a_re_bootstrap_fetches_the_images_of_the_cards_it_brings() {
+    let space = Space::new();
+    let a = &space.device;
+    a.engine.sync_now().expect("A syncs");
+    let b = space.server.join(a);
+    b.engine.sync_now().expect("B syncs");
+    let a_id = a.state().expect("A is enrolled").device_id;
+    space.server.backdate(a_id, 91 * DAY_MS);
+    let images = card_with_images(&b, 1, 2_000).images;
+    b.engine.sync_now().expect("B pushes the card and uploads its image");
+
+    a.engine.sync_now().expect("A re-bootstraps");
+
+    let opened = a
+        .transport
+        .sent()
+        .iter()
+        .any(|request| request.url.ends_with("/bootstrap"));
+    assert!(opened, "A came back through a re-bootstrap");
+    assert_eq!(
+        a.image(&images[0]),
+        b.image(&images[0]),
+        "the snapshot queued the fetch"
+    );
+    assert_eq!(a.queued(), (0, 0));
 }
 
 #[test]

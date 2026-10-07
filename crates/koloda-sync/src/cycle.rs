@@ -1,5 +1,5 @@
 //! The sync cycle: the own device record, push, `hot` to head, then `cold` up to a head recorded before `hot` was
-//! pulled (`crates/koloda-sync-proto/PROTOCOL.md` §Cycle, §Lanes, §Skew guards, §Devices).
+//! pulled (`crates/koloda-sync-proto/PROTOCOL.md` §Cycle, §Lanes, §Skew guards, §Devices, §Re-bootstrap).
 
 use std::sync::Arc;
 
@@ -8,10 +8,10 @@ use koloda::repo::sync::outbox::{has_foreign_receipt, pending_count, standing, S
 use koloda::repo::sync::repair::repair_dangling_defaults;
 use koloda_sync_proto::hlc::SKEW_TOLERANCE_MS;
 use koloda_sync_proto::registry::{Kind, Lane};
-use koloda_sync_proto::transport::{DeviceInfo, DeviceMeta, PullPage, Receipts, MAX_RECEIPT_RANGE};
+use koloda_sync_proto::transport::{DeviceInfo, DeviceMeta, ErrorCode, PullPage, Receipts, MAX_RECEIPT_RANGE};
 use uuid::Uuid;
 
-use crate::bootstrap::OpenLease;
+use crate::bootstrap::{Bootstrap, OpenLease};
 use crate::client::local_error;
 use crate::engine::{merge, Session, Shared};
 use crate::error::SyncError;
@@ -21,8 +21,8 @@ use crate::transport::Method;
 const MAX_ROUNDS: usize = 8;
 
 impl Shared {
-    /// Bootstraps a joining file first, then runs rounds until the outbox is empty and both cursors are at head, and
-    /// repairs dangling learning defaults.
+    /// Bootstraps a joining file, or resumes a re-bootstrap, first. Then runs rounds until the outbox is empty and both
+    /// cursors are at head, and repairs dangling learning defaults.
     pub(crate) async fn cycle(self: &Arc<Self>, session: &Session, changed: &mut Vec<Kind>) -> Result<(), SyncError> {
         let state = self
             .blocking(|shared| koloda::repo::sync::sync_state(&shared.db))
@@ -34,7 +34,9 @@ impl Shared {
         }
         let mut cursors = (state.cursor_hot, state.cursor_cold);
         if state.is_bootstrapping {
-            cursors = self.bootstrap(session, changed).await?;
+            cursors = self.bootstrap(session, Bootstrap::Join, changed).await?;
+        } else if state.is_rebasing {
+            cursors = self.rebootstrap(session, changed).await?;
         }
 
         for _ in 0..MAX_ROUNDS {
@@ -45,13 +47,27 @@ impl Shared {
             if self.is_behind(session, record.last_sender_seq).await? {
                 return Err(SyncError::Behind);
             }
+            // INVARIANT: a file the server left behind re-bootstraps before it pushes. A collected tombstone it never
+            // pulled would otherwise leave its entity alive here forever (PROTOCOL.md, Cycle).
+            if record.rebase_required || cursors.0 < heads.gc_horizon_hot {
+                cursors = self.rebootstrap(session, changed).await?;
+                continue;
+            }
 
-            self.push(session, changed).await?;
+            let pushed = self.push(session, changed).await;
+            if is_left_behind(&pushed) {
+                cursors = self.rebootstrap(session, changed).await?;
+                continue;
+            }
+            pushed?;
             // INVARIANT: `cold` stops at a head recorded before `hot` is pulled to head, so a review never arrives
             // before its card (PROTOCOL.md, Lanes).
-            let mut latest = self
-                .pull(session, Lane::Hot, None, &mut cursors.0, None, changed)
-                .await?;
+            let pulled = self.pull(session, Lane::Hot, None, &mut cursors.0, None, changed).await;
+            if is_left_behind(&pulled) {
+                cursors = self.rebootstrap(session, changed).await?;
+                continue;
+            }
+            let mut latest = pulled?;
             if cursors.1 < heads.head_cold {
                 latest = self
                     .pull(
@@ -212,10 +228,26 @@ impl Shared {
     }
 }
 
+/// Whether the server answered that this device must re-bootstrap: it was marked stale after the round read its
+/// record, or a GC pass collected a tombstone above its cursor.
+fn is_left_behind<T>(result: &Result<T, SyncError>) -> bool {
+    matches!(
+        result,
+        Err(SyncError::Server {
+            code: ErrorCode::CursorTooOld,
+            ..
+        } | SyncError::PushRefused {
+            code: ErrorCode::CursorTooOld,
+            ..
+        })
+    )
+}
+
 #[derive(Clone, Copy)]
 pub(crate) struct Heads {
     head_hot: u64,
     head_cold: u64,
+    gc_horizon_hot: u64,
 }
 
 impl Heads {
@@ -225,6 +257,7 @@ impl Heads {
         Ok(Heads {
             head_hot: meta.head_hot,
             head_cold: meta.head_cold,
+            gc_horizon_hot: meta.gc_horizon_hot,
         })
     }
 }
