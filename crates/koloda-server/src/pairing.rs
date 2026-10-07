@@ -86,6 +86,16 @@ pub(crate) async fn claim(State(server): State<Arc<Server>>, peer: Peer, headers
     .await
 }
 
+impl Server {
+    /// A break-glass pairing code for `space`, as the setup token issues one; `koloda-server pair` prints it.
+    pub fn issue_pairing(&self, space: Uuid) -> Result<Pairing, ApiError> {
+        if !auth::space_exists(&*self.server_db()?, space)? {
+            return Err(ApiError::unknown_space());
+        }
+        issue_code(self, &SpaceAuth { space, device: None }, IssuePairing::default())
+    }
+}
+
 fn issue_code(server: &Server, caller: &SpaceAuth, request: IssuePairing) -> Result<Pairing, ApiError> {
     if let Some(hint) = &request.hint {
         if hint.len() > MAX_HINT_BYTES {

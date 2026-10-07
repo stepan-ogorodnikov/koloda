@@ -1,5 +1,6 @@
 //! `koloda-server` command line: `init` creates a data directory, `serve` runs the server on one and collects
-//! garbage every hour, `backup` copies a running server, and `restore` puts a backup back as a new generation.
+//! garbage every hour, `backup` copies a running server, `restore` puts a backup back as a new generation, and
+//! `spaces` and `pair` list spaces and issue a pairing code beside a running `serve`.
 
 use std::io::{self, Write};
 use std::net::SocketAddr;
@@ -16,6 +17,7 @@ use koloda_server::restore::{self, RestoreOptions};
 use koloda_server::router;
 use koloda_server::server::Server;
 use koloda_sync_proto::transport::RestoreMode;
+use uuid::Uuid;
 
 const COLLECT_EVERY: Duration = Duration::from_secs(60 * 60);
 const DAY_MS: u64 = 24 * 60 * 60 * 1000;
@@ -54,6 +56,17 @@ enum Command {
         /// Restore without asking.
         #[arg(long)]
         yes: bool,
+    },
+    /// List the spaces with their device counts.
+    Spaces {
+        #[arg(long)]
+        data_dir: PathBuf,
+    },
+    /// Print a pairing code for a space, as the setup token issues one.
+    Pair {
+        #[arg(long)]
+        data_dir: PathBuf,
+        space: Uuid,
     },
     /// Serve plain HTTP; put a TLS reverse proxy in front of it.
     Serve {
@@ -108,6 +121,27 @@ fn run(cli: Cli) -> Result<(), String> {
                 is_rotating_tokens: rotate_tokens,
             };
             restore(&data_dir, &backup, options, yes)
+        }
+        Command::Spaces { data_dir } => {
+            let server = Server::open(&data_dir, Arc::new(SystemClock)).map_err(|error| error.to_string())?;
+            let spaces = server.spaces().map_err(|error| error.to_string())?;
+            for space in spaces.spaces {
+                println!(
+                    "{}  {}  {} device(s)",
+                    Uuid::from_bytes(space.id),
+                    space.name,
+                    space.device_count
+                );
+            }
+            Ok(())
+        }
+        Command::Pair { data_dir, space } => {
+            let server = Server::open(&data_dir, Arc::new(SystemClock)).map_err(|error| error.to_string())?;
+            let pairing = server.issue_pairing(space).map_err(|error| error.to_string())?;
+            let minutes = pairing.expires_at.saturating_sub(SystemClock.now_ms()) / 60_000;
+            println!("Pairing code: {}", pairing.code);
+            println!("It works once, for {minutes} minutes.");
+            Ok(())
         }
         Command::Serve { data_dir, listen } => serve(data_dir, listen),
     }

@@ -384,7 +384,7 @@ Out:
   Commit: Upload image bytes the restored server lacks
   Depends on: 6
 
-- [ ] 10. Add spaces and pair operator commands
+- [x] 10. Add spaces and pair operator commands
   Goal:
   - `koloda-server spaces --data-dir <dir>` lists each space's id, name, creation time, and device count.
   - `koloda-server pair --data-dir <dir> <space>` issues a pairing code by the break-glass rules and prints it with

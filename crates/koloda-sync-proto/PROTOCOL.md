@@ -1455,6 +1455,7 @@ Nothing keeps syncing afterwards.
   After 10 failures from one address, or 100 in all, previews and claims get `429 rate_limited` until the minute's
   window ends.
 - **Break-glass**: the setup token can issue a pairing code for an existing space.
+  An operator with the data directory can too, beside a running server (`koloda-server pair`).
 
 Transport security is TLS.
 

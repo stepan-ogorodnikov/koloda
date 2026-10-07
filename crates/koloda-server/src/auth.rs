@@ -207,7 +207,7 @@ fn is_setup_token(server: &Server, token: &str) -> Result<bool, ApiError> {
     Ok(stored == token_hash(token))
 }
 
-fn space_exists(conn: &Connection, space: Uuid) -> Result<bool, ApiError> {
+pub(crate) fn space_exists(conn: &Connection, space: Uuid) -> Result<bool, ApiError> {
     Ok(conn
         .query_row("SELECT 1 FROM spaces WHERE id = ?1", params![space], |_| Ok(()))
         .optional()?

@@ -5,6 +5,7 @@ use koloda_sync_proto::transport::{
     DeviceInfo, Enrollment, ErrorCode, IssuePairing, Pairing, PairingClaim, PairingPreview, PreviewPairing,
     MAX_HINT_BYTES,
 };
+use uuid::Uuid;
 
 use crate::common::{claim_request, nonce, uuid, Harness, START_MS};
 
@@ -236,5 +237,32 @@ async fn wrong_codes_are_limited_per_address_and_server_wide() {
         guess(peer(1)).await.error().1,
         ErrorCode::PairingFailed,
         "a new window forgets earlier guesses"
+    );
+}
+
+#[tokio::test]
+async fn an_operator_code_enrolls_a_device_over_http() {
+    let harness = Harness::new();
+    let home = harness.create_space("Home").await;
+
+    let pairing = harness
+        .server
+        .issue_pairing(Uuid::from_bytes(home.space_id))
+        .expect("the code is issued");
+    let claimed = harness
+        .post("/v1/pairings/claim")
+        .body(&claim_request(&pairing.code, "Phone", nonce("operator")))
+        .send::<PairingClaim>()
+        .await
+        .ok();
+
+    assert_eq!(claimed.enrollment.space_id, home.space_id);
+    assert_eq!(
+        harness
+            .server
+            .issue_pairing(Uuid::new_v4())
+            .expect_err("no such space")
+            .code(),
+        ErrorCode::UnknownSpace
     );
 }

@@ -113,3 +113,20 @@ async fn names_must_have_one_to_a_hundred_characters() {
         assert_eq!(status == StatusCode::BAD_REQUEST, is_rejected, "{name}: {status}");
     }
 }
+
+#[tokio::test]
+async fn the_operator_list_is_the_http_list() {
+    let harness = Harness::new();
+    harness.create_space("Home").await;
+    harness.create_space("Work").await;
+
+    let listed = harness
+        .get("/v1/spaces")
+        .token(&harness.setup_token)
+        .send::<SpaceList>()
+        .await
+        .ok();
+
+    assert_eq!(harness.server.spaces().expect("spaces list"), listed);
+    assert_eq!(listed.spaces.len(), 2);
+}

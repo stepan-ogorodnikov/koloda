@@ -37,6 +37,13 @@ has linked for 90 days; `Server::collect_garbage` runs one on demand.
 Each database is copied in one read transaction, `server.db` last; the attachment bytes follow each space's copy.
 `manifest.json` is written last, with each file's SHA-256 and each space's epoch, lane heads, senders' last seqs,
 and attachment ids.
+```bash
+koloda-server spaces --data-dir ./data
+koloda-server pair --data-dir ./data <space>
+```
+
+`spaces` lists each space with its device count, and `pair` prints a pairing code for a space, as the setup token
+issues one; both run beside `serve`, since access to the data directory is the authority.
 `restore` needs `serve` stopped: it takes the directory lock, also on a machine with no server yet.
 It copies the backup into a new generation and checks every copied file against the manifest.
 Each space gets a fresh epoch and a restore point; the old generation's newer points and revocations carry forward.
@@ -55,7 +62,7 @@ The replaced generation stays on disk; delete old generations by hand.
 
 ## Architectural Map
 
-- `src/main.rs` — command line: `init`, `serve`, `backup`, and `restore`.
+- `src/main.rs` — command line: `init`, `serve`, `backup`, `restore`, `spaces`, and `pair`.
 - `src/lib.rs` — the route table.
 - `src/clock.rs` — server time, injected so tests run on a manual clock.
 - `src/data_dir.rs` — layout, `init`, and the directory lock.

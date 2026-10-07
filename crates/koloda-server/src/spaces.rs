@@ -102,6 +102,13 @@ fn create_space(server: &Server, request: CreateSpace) -> Result<Enrollment, Api
     })
 }
 
+impl Server {
+    /// Every space, as `GET /v1/spaces` lists them; `koloda-server spaces` prints it.
+    pub fn spaces(&self) -> Result<SpaceList, ApiError> {
+        list_spaces(self)
+    }
+}
+
 fn list_spaces(server: &Server) -> Result<SpaceList, ApiError> {
     let conn = server.server_db()?;
     let mut statement = conn.prepare(

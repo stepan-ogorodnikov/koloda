@@ -4,6 +4,7 @@
 //! `meta` from what the work put in its `Scope`, so failures carry the same metadata as successes.
 
 use std::collections::BTreeMap;
+use std::fmt;
 use std::io::Read;
 use std::sync::Arc;
 
@@ -91,7 +92,7 @@ impl ApiError {
         ApiError::new(StatusCode::INTERNAL_SERVER_ERROR, ErrorCode::Internal, message)
     }
 
-    pub(crate) fn code(&self) -> ErrorCode {
+    pub fn code(&self) -> ErrorCode {
         self.code
     }
 
@@ -101,6 +102,12 @@ impl ApiError {
             message: self.message.clone(),
             restore: self.restore.clone(),
         }
+    }
+}
+
+impl fmt::Display for ApiError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{:?}: {}", self.code, self.message)
     }
 }
 
