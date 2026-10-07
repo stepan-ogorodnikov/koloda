@@ -754,7 +754,7 @@ The file is **behind** if any of:
 
 A `seq_reused` outcome mid-session means the same thing.
 A row in flight was sent before, so its seq proves nothing: its retry is a replay, or it comes back `seq_reused`.
-A file that is behind pushes and pulls nothing until recovery has run.
+A file that is behind pushes and pulls nothing until it has forked.
 Pulling would miss the other copy's writes, because pull excludes the device id both files share.
 
 A file that is behind:
@@ -772,6 +772,10 @@ A file that is behind:
    A cohort remembers when a push reply consumed one of its members, even after that member left the outbox.
    A cohort that a lost reply fixed, with no member known consumed, returns to `local` when no receipt shows one.
 3. Forks: `POST .../devices/fork` with its current token returns a fresh device id and token.
+   The request carries a nonce the file stores before it calls.
+   The same nonce from the same device returns the same new device with a fresh token.
+   A file that stopped before the switch therefore forks to the same record when it retries, and no orphan record
+   pins GC.
    The new device keeps the old one's name and platform, records which device it forked from, and starts with no
    consumed sequence.
    The old record keeps working for the other copy, if there is one.
@@ -850,7 +854,7 @@ Names are 1 to 100 characters after trimming.
 | `GET /v1/spaces/{space}/devices/{id}` | none | `id`, `name`, `platform`, `created_at`, `last_seen`, `last_sender_seq`, `last_sender_digest`, `cursor_hot`, `cursor_cold`, `revoked_at`, `rebase_required` |
 | `GET /v1/spaces/{space}/devices` | none | `devices`, each a device record as above |
 | `DELETE /v1/spaces/{space}/devices/{id}` | none | empty |
-| `POST /v1/spaces/{space}/devices/fork` | none | the new device's enrollment, as space creation returns it |
+| `POST /v1/spaces/{space}/devices/fork` | `nonce` | the new device's enrollment, as space creation returns it; the same nonce returns the same device with a fresh token |
 | `POST /v1/spaces/{space}/pairings` | `hint`, optional bytes of at most 4 KiB | `code`, `expires_at` |
 | `POST /v1/pairings/preview` | `code` | `space_id`, `name`, `epoch`, `counts` per kind, `bytes` |
 | `POST /v1/pairings/claim` | `code`, `name`, `platform`, `nonce` | `enrollment` as space creation returns it, `hint` |
@@ -905,7 +909,7 @@ Each gets its row with the server work that answers it.
 | `existence` | Clear | Keep |
 | `dependency_fenced` | Clear after the named action | Drop the entity, or keep it for its referent's tombstone |
 | `held { reason }` | Move to `sync_held` | Keep; regenerate at the tail with the **same stamp and `commit_id`** when the reason clears |
-| `seq_reused` | Stop | The file is behind (§Devices) |
+| `seq_reused` | Stop | The file is behind and forks (§Devices) |
 
 Every status except `seq_reused` consumes the sequence.
 A push is atomic: one transaction consumes every new item or none.
@@ -927,7 +931,7 @@ What the device does for each:
   The referent's tombstone, when pulled, sweeps the pointer.
 - `held`: the row moves to `sync_held` with its reason.
   This app version regenerates nothing, because only a schema bump or quotas can clear a reason.
-- `seq_reused`: the push stops and the file reports that it is behind.
+- `seq_reused`: the push stops, and the file forks to a new device id (§Devices).
 
 `held` reasons:
 

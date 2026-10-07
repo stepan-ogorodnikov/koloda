@@ -9,7 +9,7 @@ use koloda_sync_proto::payload::{CardCreate, CardScheduling, Payload};
 use koloda_sync_proto::registry::{Kind, Lane};
 use uuid::Uuid;
 
-use crate::common::{system_ms, Device, Fault, Space};
+use crate::common::{system_ms, Fault, Space};
 use crate::fixtures::{review, BACK, FRONT};
 
 #[test]
@@ -136,79 +136,6 @@ fn a_review_pushed_while_hot_is_pulled_waits_for_its_card() {
         1,
         "the review is pulled after its card, never dropped for a missing parent"
     );
-}
-
-/// Builds a space and returns a file that is behind its own device record.
-type BehindFile = fn(&Space) -> Device;
-
-#[test]
-fn a_file_behind_its_own_record_pushes_and_pulls_nothing() {
-    let cases: [(&str, BehindFile); 3] = [
-        ("the record has consumed the file's next seq", |space| {
-            let library = space.device.library();
-            space.device.engine.sync_now().expect("the library is pushed");
-            let copy = space.server.copy(&space.device);
-            space
-                .device
-                .update_deck(&library.deck, "Renamed", &library.algorithm, &library.template);
-            space.device.engine.sync_now().expect("the original pushes on");
-            copy
-        }),
-        ("a row not yet sent has a consumed seq", |space| {
-            let library = space.device.library();
-            space.device.engine.sync_now().expect("the library is pushed");
-            let copy = space.server.copy(&space.device);
-            space
-                .device
-                .update_deck(&library.deck, "Renamed", &library.algorithm, &library.template);
-            space.device.engine.sync_now().expect("the original pushes on");
-            copy.update_deck(&library.deck, "Copy", &library.algorithm, &library.template);
-            copy
-        }),
-        ("a seq the file never kept was consumed", |space| {
-            let library = space.device.library();
-            space.device.engine.sync_now().expect("the library is pushed");
-            let copy = space.server.copy(&space.device);
-            copy.update_deck(&library.deck, "Copy", &library.algorithm, &library.template);
-            copy.engine.sync_now().expect("the copy pushes first");
-            // WHY: a second save of the same group replaces the unsent row at a new seq, so the file keeps no row
-            // at the seq the copy used.
-            space
-                .device
-                .update_deck(&library.deck, "Renamed", &library.algorithm, &library.template);
-            space
-                .device
-                .update_deck(&library.deck, "Renamed again", &library.algorithm, &library.template);
-            space.server.copy(&space.device)
-        }),
-    ];
-
-    for (name, arrange) in cases {
-        let space = Space::new();
-        let file = arrange(&space);
-        let pending = file.outbox().len();
-        let cursors = file.cursors();
-        let sent = file.transport.sent().len();
-
-        let result = file.engine.sync_now();
-
-        assert!(matches!(result, Err(SyncError::Behind)), "{name}: {result:?}");
-        let requests: Vec<String> = file
-            .transport
-            .sent()
-            .into_iter()
-            .skip(sent)
-            .map(|request| request.url)
-            .collect();
-        assert!(
-            requests
-                .iter()
-                .all(|url| !url.contains("/push") && !url.contains("/pull")),
-            "{name}: no push and no pull: {requests:?}"
-        );
-        assert_eq!(file.outbox().len(), pending, "{name}: nothing is pushed");
-        assert_eq!(file.cursors(), cursors, "{name}: nothing is applied");
-    }
 }
 
 #[test]

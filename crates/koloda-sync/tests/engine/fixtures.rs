@@ -349,13 +349,6 @@ impl Device {
         self.count(&format!("SELECT COUNT(*) FROM reviews WHERE card_id = '{card}'"))
     }
 
-    pub fn cursors(&self) -> (i64, i64) {
-        (
-            self.count("SELECT cursor_hot FROM sync_state"),
-            self.count("SELECT cursor_cold FROM sync_state"),
-        )
-    }
-
     pub fn learning_defaults(&self) -> (String, String) {
         let default = |key: &str| {
             self.text(&format!(

@@ -3,7 +3,7 @@
 use axum::http::{Method, StatusCode};
 use koloda_sync_proto::registry::{Group, Kind};
 use koloda_sync_proto::transport::{
-    DeviceInfo, Empty, Enrollment, ErrorCode, Outcome, Receipts, Snapshot, SnapshotPage,
+    DeviceInfo, Empty, Enrollment, ErrorCode, ForkDevice, Outcome, Receipts, Snapshot, SnapshotPage,
 };
 
 use crate::common::{outcomes, stamp, uuid, write, Harness};
@@ -156,6 +156,7 @@ async fn a_record_another_was_forked_from_goes_stale_after_a_day() {
     harness
         .post(format!("/v1/spaces/{}/devices/fork", uuid(phone.space_id)))
         .token(&phone.token)
+        .body(&ForkDevice { nonce: [9; 16] })
         .send::<Enrollment>()
         .await
         .ok();

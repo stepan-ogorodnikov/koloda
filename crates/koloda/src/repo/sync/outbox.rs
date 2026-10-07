@@ -278,6 +278,13 @@ pub fn pending_count(db: &Database) -> Result<usize, AppError> {
     })
 }
 
+/// The lowest seq still in the outbox, where receipts for a switch to a new device id start.
+pub fn lowest_pending_seq(db: &Database) -> Result<Option<u64>, AppError> {
+    throw_known_error(error_codes::DB_GET, || {
+        db.with_conn(|conn| Ok(conn.query_row("SELECT MIN(sender_seq) FROM sync_outbox", [], |row| row.get(0))?))
+    })
+}
+
 /// Writes the server consumed as `held`, waiting for their reason to clear.
 pub fn held_count(db: &Database) -> Result<usize, AppError> {
     throw_known_error(error_codes::DB_GET, || {

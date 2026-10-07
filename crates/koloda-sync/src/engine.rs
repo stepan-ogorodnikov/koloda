@@ -297,12 +297,11 @@ impl Shared {
     }
 
     async fn sync(self: &Arc<Self>, changed: &mut Vec<Kind>) -> Result<(), SyncError> {
-        let session = self.session().await?;
-        let result = self.cycle(&session, changed).await;
-        // WHY: transfers carry no stamps, so they run while push and apply pause for the clock or a file that is
-        // behind (PROTOCOL.md, Cycle).
+        let mut session = self.session().await?;
+        let result = self.cycle(&mut session, changed).await;
+        // WHY: transfers carry no stamps, so they run while push and apply pause for the clock (PROTOCOL.md, Cycle).
         let transferred = match &result {
-            Ok(()) | Err(SyncError::ClockSkew { .. } | SyncError::Behind) => self.transfer(&session).await,
+            Ok(()) | Err(SyncError::ClockSkew { .. }) => self.transfer(&session).await,
             Err(_) => Ok(false),
         };
         match (result, transferred) {

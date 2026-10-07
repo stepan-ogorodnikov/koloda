@@ -338,7 +338,7 @@ Out:
   Commit: Renumber pending writes for a new sender
   Depends on: 1, 2
 
-- [ ] 7. Recover a file that is behind by forking
+- [x] 7. Recover a file that is behind by forking
   Goal:
   - `POST .../devices/fork` takes a `nonce`; the same nonce returns the same device and token (question 5).
   - When the cycle finds the file behind, or a push comes back `seq_reused`, the engine:

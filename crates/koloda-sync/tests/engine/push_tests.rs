@@ -1,6 +1,7 @@
 use std::collections::HashSet;
 
 use koloda_sync::error::SyncError;
+use koloda_sync::transport::Method;
 use koloda_sync_proto::envelope::Envelope;
 use koloda_sync_proto::payload::{Delete, Payload, Title};
 use koloda_sync_proto::registry::{Group, Kind, Lane};
@@ -275,9 +276,10 @@ fn deletes_a_push_settles_are_reported_as_changed() {
 }
 
 #[test]
-fn a_reused_seq_stops_the_push_as_behind() {
+fn a_reused_seq_forks_the_file_and_its_write_goes_out_under_the_new_id() {
     let space = Space::new();
     let library = synced_library(&space);
+    let old = space.device.state().expect("enrolled").device_id;
     space
         .device
         .update_deck(&library.deck, "Renamed", &library.algorithm, &library.template);
@@ -287,16 +289,16 @@ fn a_reused_seq_stops_the_push_as_behind() {
         .device
         .execute("UPDATE sync_outbox SET sender_seq = 1, in_flight = 1");
 
-    let result = space.device.engine.sync_now();
+    space.device.engine.sync_now().expect("the file forks and syncs");
 
-    assert!(matches!(result, Err(SyncError::Behind)), "{result:?}");
-    let outbox = space.device.outbox();
-    assert_eq!(outbox.len(), 1, "nothing was consumed");
-    assert!(
-        outbox.iter().all(|row| !row.in_flight),
-        "the unreached row leaves flight"
-    );
-    assert_eq!(space.device.cohort_states(), vec!["local"]);
+    let new = space.device.state().expect("enrolled").device_id;
+    assert_ne!(new, old, "the reused seq forked the file");
+    assert!(space.device.outbox().is_empty());
+    let renamed = space.raw_pull(Lane::Hot, 0).entries.into_iter().any(|entry| {
+        let header = Envelope::decode(&entry.envelope).expect("entry decodes").header;
+        header.group == Some(Group::Title) && entry.sender == *new.as_bytes()
+    });
+    assert!(renamed, "the rename was pushed by the new sender");
 }
 
 #[test]
@@ -360,20 +362,33 @@ fn a_cohort_cut_by_a_reused_seq_after_a_replay_keeps_its_stamp() {
         "#,
     );
 
-    let result = space.device.engine.sync_now();
+    let stamp = space.device.outbox()[1].envelope.header.stamp;
+    // WHY: the re-bootstrap after the fork fails, so the test sees the switched outbox before it is pushed.
+    space.device.transport.fault_when(
+        Method::Post,
+        "/bootstrap",
+        Fault::Reply(error_reply(500, ErrorCode::Internal)),
+    );
 
-    assert!(matches!(result, Err(SyncError::Behind)), "{result:?}");
+    assert!(
+        space.device.engine.sync_now().is_err(),
+        "the cycle stops at the re-bootstrap"
+    );
+
     let outbox = space.device.outbox();
     assert_eq!(outbox.len(), 1, "the replayed row is settled; the reused one stays");
-    assert!(
-        outbox.iter().all(|row| !row.in_flight),
-        "the reused row was not consumed, so it leaves flight"
-    );
+    assert!(!outbox[0].in_flight, "renumbered out of flight");
     assert_eq!(
-        space.device.cohort_states(),
-        vec!["fixed"],
-        "a member was consumed, so the cohort keeps its stamp"
+        outbox[0].envelope.header.stamp, stamp,
+        "a member was consumed, so the cut cohort keeps its stamp under the new sender"
     );
+    assert_eq!(space.device.cohort_states(), vec!["fixed"]);
+    space
+        .device
+        .engine
+        .sync_now()
+        .expect("the re-bootstrap resumes and the row goes out");
+    assert!(space.device.outbox().is_empty());
 }
 
 /// The bodies of the pushes the device sent after its first `skip` requests.

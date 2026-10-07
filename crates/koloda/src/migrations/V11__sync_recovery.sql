@@ -16,3 +16,8 @@ ALTER TABLE sync_origins ADD COLUMN seen_generation integer NOT NULL DEFAULT 0;
 -- its stamp when a file that is behind switches device id, and a consumed member that already left the outbox has no
 -- pending seq whose receipt could show it (crates/koloda-sync-proto/PROTOCOL.md, Behind its own record).
 ALTER TABLE sync_cohorts ADD COLUMN has_consumed integer NOT NULL DEFAULT 0;
+
+-- WHY: the fork request's nonce, stored before the call and cleared by the switch to the new id. A file that stopped in
+-- between forks again with it and gets the same record back (crates/koloda-sync-proto/PROTOCOL.md, Behind its own
+-- record).
+ALTER TABLE sync_state ADD COLUMN fork_nonce blob;

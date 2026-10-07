@@ -1165,6 +1165,13 @@
           "dflt_value": null
         },
         {
+          "name": "fork_nonce",
+          "type": "BLOB",
+          "notnull": 0,
+          "pk": 0,
+          "dflt_value": null
+        },
+        {
           "name": "id",
           "type": "INTEGER",
           "notnull": 1,

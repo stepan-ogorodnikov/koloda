@@ -79,17 +79,7 @@ type Expect = fn(&State) -> bool;
 
 #[test]
 fn status_names_why_the_last_cycle_stopped() {
-    let cases: [(&str, Arrange, Expect); 6] = [
-        (
-            "behind",
-            |space| {
-                let copy = space.server.copy(&space.device);
-                space.device.library();
-                space.device.engine.sync_now().expect("the original pushes");
-                copy
-            },
-            |state| *state == State::Stopped(Stop::Behind),
-        ),
+    let cases: [(&str, Arrange, Expect); 5] = [
         (
             "clock skew",
             |space| {

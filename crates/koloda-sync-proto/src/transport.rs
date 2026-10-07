@@ -159,6 +159,15 @@ pub struct ClaimPairing {
     pub nonce: [u8; 16],
 }
 
+/// A fork request. The same nonce from the same device returns the same new device, with a fresh token
+/// (`PROTOCOL.md` §Devices).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ForkDevice {
+    #[serde(with = "serde_bytes")]
+    pub nonce: [u8; 16],
+}
+
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct PairingClaim {

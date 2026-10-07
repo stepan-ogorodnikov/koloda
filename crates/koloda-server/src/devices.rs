@@ -4,16 +4,17 @@
 
 use std::sync::Arc;
 
+use axum::body::Body;
 use axum::extract::{Path, State};
 use axum::http::HeaderMap;
 use axum::response::Response;
-use koloda_sync_proto::transport::{DeviceInfo, DeviceList, Empty, Enrollment, Platform};
+use koloda_sync_proto::transport::{DeviceInfo, DeviceList, Empty, Enrollment, ForkDevice, Platform};
 use rusqlite::{params, Connection, OptionalExtension};
 use uuid::Uuid;
 
 use crate::auth::{self, DeviceAuth};
 use crate::bootstrap;
-use crate::http::{respond, ApiError};
+use crate::http::{read_body, respond, ApiError};
 use crate::log;
 use crate::server::{lock, Server};
 
@@ -88,10 +89,16 @@ pub(crate) async fn revoke(
     .await
 }
 
-pub(crate) async fn fork(State(server): State<Arc<Server>>, Path(space): Path<String>, headers: HeaderMap) -> Response {
+pub(crate) async fn fork(
+    State(server): State<Arc<Server>>,
+    Path(space): Path<String>,
+    headers: HeaderMap,
+    body: Body,
+) -> Response {
+    let request = read_body::<ForkDevice>(&headers, body).await;
     respond(server, headers, move |server, scope, headers| {
         let caller = auth::require_device(server, scope, headers, &space)?;
-        fork_device(server, &caller)
+        fork_device(server, &caller, request?.nonce)
     })
     .await
 }
@@ -121,15 +128,40 @@ fn revoke_device(server: &Server, caller: &DeviceAuth, id: Uuid) -> Result<(), A
     Ok(())
 }
 
-fn fork_device(server: &Server, caller: &DeviceAuth) -> Result<Enrollment, ApiError> {
+// INVARIANT: a fork is idempotent by nonce. A retry after a lost reply, or after the file stopped before it stored the
+// token, gets the same device with a fresh token: the first token was never kept, and one file never makes two records.
+fn fork_device(server: &Server, caller: &DeviceAuth, nonce: [u8; 16]) -> Result<Enrollment, ApiError> {
     let now = server.now_ms();
-    let device = Uuid::new_v4();
     let token = auth::new_token().map_err(|error| ApiError::internal(error.to_string()))?;
-    server.server_db()?.execute(
-        "INSERT INTO devices (id, space_id, token_hash, name, platform, created_at, last_seen, forked_from)
-         SELECT ?1, space_id, ?2, name, platform, ?3, ?3, id FROM devices WHERE id = ?4",
-        params![device, auth::token_hash(&token).to_vec(), now, caller.id],
-    )?;
+    let token_hash = auth::token_hash(&token).to_vec();
+    let conn = server.server_db()?;
+    let earlier: Option<Uuid> = conn
+        .query_row(
+            "SELECT id FROM devices WHERE forked_from = ?1 AND fork_nonce = ?2",
+            params![caller.id, nonce.as_slice()],
+            |row| row.get(0),
+        )
+        .optional()?;
+    let device = match earlier {
+        Some(device) => {
+            conn.execute(
+                "UPDATE devices SET token_hash = ?1 WHERE id = ?2",
+                params![token_hash, device],
+            )?;
+            device
+        }
+        None => {
+            let device = Uuid::new_v4();
+            conn.execute(
+                "INSERT INTO devices
+                     (id, space_id, token_hash, name, platform, created_at, last_seen, forked_from, fork_nonce)
+                 SELECT ?1, space_id, ?2, name, platform, ?3, ?3, id, ?5 FROM devices WHERE id = ?4",
+                params![device, token_hash, now, caller.id, nonce.as_slice()],
+            )?;
+            device
+        }
+    };
+    drop(conn);
     Ok(Enrollment {
         space_id: caller.space.into_bytes(),
         device_id: device.into_bytes(),

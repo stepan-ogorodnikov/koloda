@@ -19,8 +19,8 @@ pub enum SyncError {
     AlreadyEnrolled,
     /// The file has no space, server URL, or token to sync with.
     NotEnrolled,
-    /// The file is behind its own device record, as after a restore from backup or a copy; it stops syncing
-    /// (`PROTOCOL.md` §Devices).
+    /// A push came back `seq_reused`: the file is behind its own device record, as after a restore from backup or a
+    /// copy, and the cycle forks it (`PROTOCOL.md` §Devices).
     Behind,
     /// The server revoked this device, so the file detached: its token is gone and its rows stay.
     Revoked,

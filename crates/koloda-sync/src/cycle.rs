@@ -8,7 +8,7 @@ use koloda::repo::sync::outbox::{has_foreign_receipt, pending_count, standing, S
 use koloda::repo::sync::repair::repair_dangling_defaults;
 use koloda_sync_proto::hlc::SKEW_TOLERANCE_MS;
 use koloda_sync_proto::registry::{Kind, Lane};
-use koloda_sync_proto::transport::{DeviceInfo, DeviceMeta, ErrorCode, PullPage, Receipts, MAX_RECEIPT_RANGE};
+use koloda_sync_proto::transport::{DeviceInfo, DeviceMeta, ErrorCode, PullPage, MAX_RECEIPT_RANGE};
 use uuid::Uuid;
 
 use crate::bootstrap::{Bootstrap, OpenLease};
@@ -23,7 +23,11 @@ const MAX_ROUNDS: usize = 8;
 impl Shared {
     /// Bootstraps a joining file, or resumes a re-bootstrap, first. Then runs rounds until the outbox is empty and both
     /// cursors are at head, and repairs dangling learning defaults.
-    pub(crate) async fn cycle(self: &Arc<Self>, session: &Session, changed: &mut Vec<Kind>) -> Result<(), SyncError> {
+    pub(crate) async fn cycle(
+        self: &Arc<Self>,
+        session: &mut Session,
+        changed: &mut Vec<Kind>,
+    ) -> Result<(), SyncError> {
         let state = self
             .blocking(|shared| koloda::repo::sync::sync_state(&shared.db))
             .await?
@@ -42,10 +46,13 @@ impl Shared {
         for _ in 0..MAX_ROUNDS {
             let (record, heads) = self.device_record(session).await?;
             self.check_skew()?;
-            // INVARIANT: a file behind its own record pushes and pulls nothing. Pull excludes the device id both
-            // copies share, so it would never see the other copy's writes (PROTOCOL.md, Devices).
+            // INVARIANT: a file behind its own record pushes and pulls nothing until it has forked. Pull excludes the
+            // device id both copies share, so it would never see the other copy's writes (PROTOCOL.md, Devices).
+            // The record only moves on, so a fork that stopped before the switch is found and finished the same way.
             if self.is_behind(session, record.last_sender_seq).await? {
-                return Err(SyncError::Behind);
+                self.fork(session, record.last_sender_seq, changed).await?;
+                cursors = self.rebootstrap(session, changed).await?;
+                continue;
             }
             // INVARIANT: a file the server left behind re-bootstraps before it pushes. A collected tombstone it never
             // pulled would otherwise leave its entity alive here forever (PROTOCOL.md, Cycle).
@@ -56,6 +63,13 @@ impl Shared {
 
             let pushed = self.push(session, changed).await;
             if is_left_behind(&pushed) {
+                cursors = self.rebootstrap(session, changed).await?;
+                continue;
+            }
+            // WHY: a reused seq means another copy of the file pushed under this id; the reply cut the batch there.
+            if matches!(pushed, Err(SyncError::Behind)) {
+                let (record, _) = self.device_record(session).await?;
+                self.fork(session, record.last_sender_seq, changed).await?;
                 cursors = self.rebootstrap(session, changed).await?;
                 continue;
             }
@@ -111,19 +125,8 @@ impl Shared {
         while from < last_sender_seq {
             let through = last_sender_seq.min(from + MAX_RECEIPT_RANGE);
             let receipts: Vec<(u64, [u8; 32])> = self
-                .cycle_client(&session.base)
-                .call::<(), Receipts>(
-                    Method::Get,
-                    &format!(
-                        "/v1/spaces/{}/receipts?sender={}&after={from}&through={through}",
-                        session.space, session.device
-                    ),
-                    Some(&session.token),
-                    None,
-                )
+                .receipts(session, session.device, from, through)
                 .await?
-                .ok
-                .receipts
                 .into_iter()
                 .map(|receipt| (receipt.sender_seq, receipt.digest))
                 .collect();

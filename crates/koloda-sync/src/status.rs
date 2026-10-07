@@ -39,7 +39,6 @@ pub enum State {
 /// Why the last cycle stopped; the next trigger tries again.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Stop {
-    Behind,
     ClockSkew,
     Revoked,
     UnknownDevice,
@@ -50,7 +49,6 @@ pub enum Stop {
 impl Stop {
     pub(crate) fn of(error: &SyncError) -> Stop {
         match error {
-            SyncError::Behind => Stop::Behind,
             SyncError::ClockSkew { .. } => Stop::ClockSkew,
             SyncError::Revoked | SyncError::Detached => Stop::Revoked,
             SyncError::UnknownDevice => Stop::UnknownDevice,
