@@ -10,20 +10,40 @@ use super::{protocol_error, CREATE_GROUP, ROW_GROUP};
 use crate::app::db::Database;
 use crate::app::error::{error_codes, throw_known_error, AppError};
 
-/// Re-stamps every `local` cohort from `now_ms`, under the file's current device id.
+/// Re-stamps every `local` cohort from `now_ms`, under the file's current device id, and ends a clock pause.
 pub fn restamp_local_cohorts(db: &Database, now_ms: u64) -> Result<(), AppError> {
-    throw_known_error(error_codes::DB_UPDATE, || db.with_transaction(|tx| restamp(tx, now_ms)))
+    throw_known_error(error_codes::DB_UPDATE, || {
+        db.with_transaction(|tx| {
+            restamp(tx, now_ms)?;
+            tx.execute("UPDATE sync_state SET is_clock_paused = 0 WHERE id = 1", [])?;
+            Ok(())
+        })
+    })
+}
+
+/// Records that a cycle stopped for clock skew; the first cycle on a corrected clock re-stamps before anything else.
+pub fn pause_clock(db: &Database) -> Result<(), AppError> {
+    throw_known_error(error_codes::DB_UPDATE, || {
+        db.with_conn(|conn| {
+            conn.execute("UPDATE sync_state SET is_clock_paused = 1 WHERE id = 1", [])?;
+            Ok(())
+        })
+    })
 }
 
 // INVARIANT: one transaction for the whole walk. A capture between two cohorts would take a stamp below one still
 // waiting, and their order would flip.
 pub(super) fn restamp(conn: &Connection, now_ms: u64) -> Result<(), AppError> {
-    // WHY: the floor is the stable high-water, not `last_hlc`. A clock that was set ahead moved `last_hlc` with the
-    // stamps it gave local cohorts; issuing above it would keep them ahead. The reserved backfill stamps count too,
-    // so a re-stamped write never sorts before a backfill phase.
+    // WHY: the floor is not `last_hlc`. A clock that was set ahead moved `last_hlc` with the stamps it gave local
+    // cohorts; issuing above it would keep them ahead. The floor is every stamp that is no longer only local: the
+    // stable high-water (applied and consumed stamps), the cohorts that went out and may yet be consumed, and the
+    // reserved backfill stamps, so a re-stamped write never sorts before a backfill phase.
     let (device, floor): (Vec<u8>, i64) = conn.query_row(
         r#"
-        SELECT device_id, MAX(stable_hlc, backfill_create_hlc, backfill_review_hlc, backfill_scheduling_hlc)
+        SELECT device_id, MAX(
+            stable_hlc, backfill_create_hlc, backfill_review_hlc, backfill_scheduling_hlc,
+            COALESCE((SELECT MAX(hlc) FROM sync_cohorts WHERE state <> 'local'), 0)
+        )
         FROM sync_state WHERE id = 1
         "#,
         [],

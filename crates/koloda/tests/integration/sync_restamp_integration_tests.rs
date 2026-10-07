@@ -272,7 +272,7 @@ fn re_stamp_leaves_uncertain_and_fixed_cohorts_alone() {
     );
     assert!(
         restamped.hlc > before[1].hlc,
-        "a cohort that went out raised the stable high-water, so the re-stamp stays above it"
+        "the re-stamp stays above a cohort that went out"
     );
 }
 

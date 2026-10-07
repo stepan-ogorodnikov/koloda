@@ -98,6 +98,8 @@ pub struct SyncState {
     pub is_bootstrapping: bool,
     /// A re-bootstrap's barrier is open; the next cycle resumes it before anything else.
     pub is_rebasing: bool,
+    /// A cycle stopped for clock skew; the writes captured since take new stamps once the clock is corrected.
+    pub is_clock_paused: bool,
     /// A claim waits for the user to pick Add or Replace; nothing syncs meanwhile.
     pub is_import_pending: bool,
     /// The device was revoked or detached itself; the file sends nothing until it re-attaches.
@@ -111,7 +113,8 @@ pub fn sync_state(db: &Database) -> Result<Option<SyncState>, AppError> {
                 .query_row(
                     r#"
                     SELECT device_id, space_id, server_url, cursor_hot, cursor_cold, is_bootstrapping,
-                           join_phase = 'import_pending', detached_at IS NOT NULL, is_rebasing
+                           join_phase = 'import_pending', detached_at IS NOT NULL, is_rebasing,
+                           is_clock_paused
                     FROM sync_state WHERE id = 1
                     "#,
                     [],
@@ -127,6 +130,7 @@ pub fn sync_state(db: &Database) -> Result<Option<SyncState>, AppError> {
                             is_import_pending: row.get(6)?,
                             is_detached: row.get(7)?,
                             is_rebasing: row.get(8)?,
+                            is_clock_paused: row.get(9)?,
                         };
                         Ok((ids, state))
                     },

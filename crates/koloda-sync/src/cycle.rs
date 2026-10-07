@@ -3,9 +3,11 @@
 
 use std::sync::Arc;
 
+use koloda::app::utility::get_current_timestamp;
 use koloda::repo::sync::apply::{apply_page, Page, PageEntry};
 use koloda::repo::sync::outbox::{has_foreign_receipt, pending_count, standing, Standing};
 use koloda::repo::sync::repair::repair_dangling_defaults;
+use koloda::repo::sync::restamp::restamp_local_cohorts;
 use koloda_sync_proto::hlc::SKEW_TOLERANCE_MS;
 use koloda_sync_proto::registry::{Kind, Lane};
 use koloda_sync_proto::transport::{DeviceInfo, DeviceMeta, ErrorCode, PullPage, MAX_RECEIPT_RANGE};
@@ -37,12 +39,21 @@ impl Shared {
             return Ok(());
         }
         let mut cursors = (state.cursor_hot, state.cursor_cold);
+        // INVARIANT: the writes captured during a clock pause take new stamps before anything is pushed or applied,
+        // so they beat what they read and keep their order (PROTOCOL.md, Skew guards). A reply must first show
+        // the clock is back inside the tolerance.
+        if state.is_clock_paused {
+            self.device_record(session).await?;
+            self.check_skew()?;
+            self.restamp().await?;
+        }
         if state.is_bootstrapping {
             cursors = self.bootstrap(session, Bootstrap::Join, changed).await?;
         } else if state.is_rebasing {
             cursors = self.rebootstrap(session, changed).await?;
         }
 
+        let mut has_restamped_ahead = false;
         for _ in 0..MAX_ROUNDS {
             let (record, heads) = self.device_record(session).await?;
             self.check_skew()?;
@@ -64,6 +75,13 @@ impl Shared {
             let pushed = self.push(session, changed).await;
             if is_left_behind(&pushed) {
                 cursors = self.rebootstrap(session, changed).await?;
+                continue;
+            }
+            // WHY: a stamp ahead of server time was captured on a clock set ahead and refused whole; its cohorts are
+            // `local` again. One re-stamp per cycle: if the space still refuses, only wall time helps.
+            if is_stamp_ahead(&pushed) && !has_restamped_ahead {
+                has_restamped_ahead = true;
+                self.restamp().await?;
                 continue;
             }
             // WHY: a reused seq means another copy of the file pushed under this id; the reply cut the batch there.
@@ -220,6 +238,12 @@ impl Shared {
         }
     }
 
+    async fn restamp(self: &Arc<Self>) -> Result<(), SyncError> {
+        let now_ms = u64::try_from(get_current_timestamp()?).map_err(local_error)?;
+        self.blocking(move |shared| restamp_local_cohorts(&shared.db, now_ms))
+            .await
+    }
+
     // INVARIANT: push and apply pause while the clocks disagree by more than the tolerance; stamps from a wrong clock
     // would win or lose every register (PROTOCOL.md, Skew guards).
     pub(crate) fn check_skew(&self) -> Result<(), SyncError> {
@@ -229,6 +253,16 @@ impl Shared {
         }
         Ok(())
     }
+}
+
+fn is_stamp_ahead<T>(result: &Result<T, SyncError>) -> bool {
+    matches!(
+        result,
+        Err(SyncError::PushRefused {
+            code: ErrorCode::StampAhead,
+            ..
+        })
+    )
 }
 
 /// Whether the server answered that this device must re-bootstrap: it was marked stale after the round read its

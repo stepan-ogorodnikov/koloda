@@ -87,9 +87,11 @@ Out:
   A clock set to a year ahead would never sync again.
   Answer: yes, bounded by a persisted **stable high-water**.
   - `sync_state.stable_hlc` is the highest stamp that is no longer only local.
-    Apply raises it to every stamp it observes, and `push_batch` raises it to each cohort it moves out of `local`.
-  - Re-stamp issues from `max(corrected now, stable_hlc, the reserved backfill stamps)`, one stamp per cohort in old
-    stamp order, and leaves `last_hlc` on the last one issued.
+    Apply raises it to every stamp it observes, and push settlement to each cohort a push consumed.
+  - Re-stamp issues from `max(corrected now, stable_hlc, every cohort that is not local, the reserved backfill
+    stamps)`, one stamp per cohort in old stamp order, and leaves `last_hlc` on the last one issued.
+  - A push refused with `stamp_ahead` consumed nothing, so it raises nothing: its cohorts can come down.
+    (Item 8 found that raising the floor when a push went out kept a refused far-ahead stamp in it.)
   - So the clock only goes back over stamps that `local` cohorts alone held.
   The first attempt took the floor from the stamps still stored in registers.
   That misses a remote stamp that a later local write replaced in its register.
@@ -179,7 +181,7 @@ Out:
   Goal:
   - `V11__sync_recovery.sql` adds `stable_hlc` to `sync_state` (question 3).
     Apply raises it with `last_hlc` for every stamp it observes.
-    `push_batch` raises it to the stamp of each cohort it moves from `local` to `uncertain`.
+    Push settlement raises it to the stamp of each cohort a push consumed (item 8 moved this from `push_batch`).
   - `koloda` gains `repo/sync/restamp.rs` with `restamp_local_cohorts(db, now_ms)`, one transaction that:
     - walks the `local` cohorts in old `(hlc, stamp_device)` order, skipping a cohort at a reserved backfill stamp;
     - gives each one the clock's next stamp, starting from the floor in question 3, with the file's current device
@@ -364,7 +366,7 @@ Out:
   Commit: Recover a file that is behind by forking
   Depends on: 1, 3, 5, 6
 
-- [ ] 8. Re-stamp paused cohorts when the clock is corrected
+- [x] 8. Re-stamp paused cohorts when the clock is corrected
   Goal:
   - `V11` adds `is_clock_paused` to `sync_state`; a cycle that stops for clock skew sets it, so a relaunch keeps it.
   - The first cycle that reads a skew inside the tolerance with the flag set re-stamps every `local` cohort

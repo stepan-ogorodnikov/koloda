@@ -10,6 +10,7 @@ use koloda::app::init::SeedSettings;
 use koloda::app::secrets::SecretStore;
 use koloda::app::utility::get_current_timestamp;
 use koloda::repo::sync::repair::Starter;
+use koloda::repo::sync::restamp::pause_clock;
 use koloda::repo::sync::{enroll_device, enrolled_device, sync_state, SpaceRole};
 use koloda_sync_proto::registry::Kind;
 use koloda_sync_proto::transport::{CreateSpace, Enrollment, ErrorCode, Platform};
@@ -299,6 +300,11 @@ impl Shared {
     async fn sync(self: &Arc<Self>, changed: &mut Vec<Kind>) -> Result<(), SyncError> {
         let mut session = self.session().await?;
         let result = self.cycle(&mut session, changed).await;
+        // INVARIANT: the pause outlives a relaunch, so the writes captured on a wrong clock take new stamps before the
+        // next cycle pushes or applies anything (PROTOCOL.md, Skew guards).
+        if matches!(result, Err(SyncError::ClockSkew { .. })) {
+            self.blocking(|shared| pause_clock(&shared.db)).await?;
+        }
         // WHY: transfers carry no stamps, so they run while push and apply pause for the clock (PROTOCOL.md, Cycle).
         let transferred = match &result {
             Ok(()) | Err(SyncError::ClockSkew { .. }) => self.transfer(&session).await,

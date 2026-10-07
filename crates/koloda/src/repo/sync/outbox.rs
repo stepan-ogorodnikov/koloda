@@ -83,15 +83,6 @@ pub fn push_batch(db: &Database, max_items: usize, max_bytes: usize) -> Result<B
                 batch.push(BatchItem { sender_seq, envelope });
             }
             for cohort in &picked {
-                // INVARIANT: a cohort that goes out may be consumed, so its stamp is no longer only local; a later
-                // re-stamp issues above it (PROTOCOL.md, Cohorts).
-                tx.execute(
-                    r#"
-                    UPDATE sync_state SET stable_hlc = MAX(stable_hlc, (SELECT hlc FROM sync_cohorts WHERE commit_id = ?1))
-                    WHERE id = 1
-                    "#,
-                    params![cohort.commit_id],
-                )?;
                 tx.execute(
                     "UPDATE sync_cohorts SET state = 'uncertain' WHERE commit_id = ?1 AND state = 'local'",
                     params![cohort.commit_id],
@@ -180,10 +171,7 @@ pub fn settle_push(
             }
             for commit_id in &commits {
                 let state = if consumed.contains(commit_id) {
-                    tx.execute(
-                        "UPDATE sync_cohorts SET has_consumed = 1 WHERE commit_id = ?1",
-                        params![commit_id],
-                    )?;
+                    mark_consumed(tx, commit_id)?;
                     "fixed"
                 } else {
                     "local"
@@ -197,6 +185,23 @@ pub fn settle_push(
             })
         })
     })
+}
+
+// INVARIANT: a consumed cohort's stamp is no longer only local, and its cohort row goes once its last member settles.
+// The stable high-water keeps the stamp, so a later re-stamp issues above it (PROTOCOL.md, Cohorts).
+pub(super) fn mark_consumed(conn: &Connection, commit_id: &[u8]) -> Result<(), AppError> {
+    conn.execute(
+        "UPDATE sync_cohorts SET has_consumed = 1 WHERE commit_id = ?1",
+        params![commit_id],
+    )?;
+    conn.execute(
+        r#"
+        UPDATE sync_state SET stable_hlc = MAX(stable_hlc, (SELECT hlc FROM sync_cohorts WHERE commit_id = ?1))
+        WHERE id = 1 AND EXISTS (SELECT 1 FROM sync_cohorts WHERE commit_id = ?1)
+        "#,
+        params![commit_id],
+    )?;
+    Ok(())
 }
 
 /// Applies one consumed outcome in the transaction that clears or moves its row, and returns the row's cohort.

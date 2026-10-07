@@ -107,8 +107,9 @@ remote apply queues a fetch for each linked id the file lacks.
 
 **Re-stamp** — `restamp_local_cohorts` walks the `local` cohorts in one transaction, one new stamp per cohort.
 
-- Its floor is `stable_hlc`, which apply and `push_batch` raise, not `last_hlc`: a clock set ahead moved `last_hlc`
-  with the stamps it gave local cohorts.
+- Its floor is not `last_hlc`: a clock set ahead moved `last_hlc` with the stamps it gave local cohorts.
+  It is `stable_hlc`, which apply and push settlement (`mark_consumed`) raise, and every cohort that is not `local`.
+- A cycle that stops for skew calls `pause_clock`; `restamp_local_cohorts` clears the pause.
 - It moves exactly the registers, origins, and tombstones that still hold a member's old stamp.
 
 **Re-bootstrap** — `begin_rebase` opens the barrier; `apply_create` marks every create it meets while it is open,

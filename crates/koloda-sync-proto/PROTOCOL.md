@@ -585,7 +585,8 @@ One HLC per commit; every envelope of a local transaction shares it.
 On counter overflow the wall part advances one millisecond.
 The device persists its last HLC, never issues a smaller one, and advances past every stamp it applies.
 The one exception is a re-stamp (§Cohorts), which may set the last HLC below where a clock set ahead left it.
-It never issues below the **stable high-water**: the highest stamp the device applied or sent in a push.
+It never issues below the **stable high-water**: the highest stamp the device applied or had consumed by a push.
+Nor does it issue below a cohort that went out and may yet be consumed.
 The clock therefore only goes back over stamps that `local` cohorts alone held.
 
 ### Skew guards
@@ -595,8 +596,12 @@ The clock therefore only goes back over stamps that `local` cohorts alone held.
 - The skew estimate is server time minus local time when a reply arrives.
 - If skew exceeds 5 minutes either way the client pauses (no push, no apply), and re-stamps once the clock is
   corrected.
+  The pause is recorded where the cycle stops, and the record outlives a relaunch.
+  The first cycle whose reply shows a skew inside the tolerance re-stamps every `local` cohort (§Cohorts) before it
+  pushes or applies anything, and clears the record.
 - The server rejects an envelope whose wall part is more than 5 minutes ahead of **server now**.
   The whole push then fails with `stamp_ahead` and consumes nothing, so its cohorts return to `local`.
+  The client re-stamps them once and pushes again; a second `stamp_ahead` in the same cycle stops it.
   A space that already holds a far-ahead stamp waits for wall time to catch up.
 
 ### Cohorts
@@ -620,8 +625,9 @@ A reset and its blank scheduling can therefore never end up with different stamp
 
 - The walk is one transaction over every `local` cohort, in old `(hlc, stamp_device)` order.
   A capture between two cohorts would take a stamp below one still waiting.
-- New stamps come from the clock at the corrected time, starting above the stable high-water and the stamps
-  enrollment reserved for backfill, under the file's current device id.
+- New stamps come from the clock at the corrected time, under the file's current device id.
+  They start above the stable high-water, every cohort that is not `local`, and the stamps enrollment reserved for
+  backfill.
   A re-stamped write therefore still beats every stamp it could have read, including a remote one that it replaced
   in its register.
 - A cohort at a reserved backfill stamp is not walked.

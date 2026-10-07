@@ -12,7 +12,7 @@ use koloda_sync_proto::transport::Receipt;
 use rusqlite::{params, Connection, OptionalExtension};
 use uuid::Uuid;
 
-use super::outbox::{settle_item, BatchItem};
+use super::outbox::{mark_consumed, settle_item, BatchItem};
 use super::rebase::open_barrier;
 use super::repair::Starter;
 use super::restamp::restamp;
@@ -117,10 +117,7 @@ fn settle_accepted(
 // good; splitting it would let a reset's blank scheduling take a newer stamp than its reset.
 fn classify(conn: &Connection, accepted: &HashSet<Vec<u8>>) -> Result<(), AppError> {
     for commit_id in accepted {
-        conn.execute(
-            "UPDATE sync_cohorts SET has_consumed = 1 WHERE commit_id = ?1",
-            params![commit_id],
-        )?;
+        mark_consumed(conn, commit_id)?;
     }
     conn.execute(
         "DELETE FROM sync_cohorts WHERE commit_id NOT IN (SELECT commit_id FROM sync_outbox)",

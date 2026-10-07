@@ -1186,6 +1186,13 @@
           "dflt_value": "0"
         },
         {
+          "name": "is_clock_paused",
+          "type": "INTEGER",
+          "notnull": 1,
+          "pk": 0,
+          "dflt_value": "0"
+        },
+        {
           "name": "is_rebasing",
           "type": "INTEGER",
           "notnull": 1,

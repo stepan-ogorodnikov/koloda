@@ -6,6 +6,7 @@ mod attachments_tests;
 mod backfill_tests;
 mod bootstrap_tests;
 mod client_tests;
+mod clock_tests;
 mod cycle_tests;
 mod devices_tests;
 mod fork_tests;

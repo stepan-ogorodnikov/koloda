@@ -1,5 +1,5 @@
--- WHY: the highest stamp that is no longer only local: every stamp apply observed, and every cohort that went out in a
--- push. A re-stamp after a clock correction may issue below `last_hlc`, but never below this
+-- WHY: the highest stamp that is no longer only local: every stamp apply observed, and every cohort a push consumed.
+-- A re-stamp after a clock correction may issue below `last_hlc`, but never below this
 -- (crates/koloda-sync-proto/PROTOCOL.md, Hybrid logical clock, Cohorts).
 ALTER TABLE sync_state ADD COLUMN stable_hlc integer NOT NULL DEFAULT 0;
 
@@ -21,3 +21,7 @@ ALTER TABLE sync_cohorts ADD COLUMN has_consumed integer NOT NULL DEFAULT 0;
 -- between forks again with it and gets the same record back (crates/koloda-sync-proto/PROTOCOL.md, Behind its own
 -- record).
 ALTER TABLE sync_state ADD COLUMN fork_nonce blob;
+
+-- WHY: a cycle that stops for clock skew records it here, so a relaunch still re-stamps the writes captured meanwhile
+-- once the clock is corrected (crates/koloda-sync-proto/PROTOCOL.md, Skew guards).
+ALTER TABLE sync_state ADD COLUMN is_clock_paused integer NOT NULL DEFAULT 0;
