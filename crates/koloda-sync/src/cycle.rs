@@ -71,6 +71,16 @@ impl Shared {
                 cursors = self.rebootstrap(session, changed).await?;
                 continue;
             }
+            // WHY: a record a re-attach just claimed has no cursor yet, so the server would refuse the push as below
+            // the horizon though this file is past it. A pull first records the cursor (PROTOCOL.md, Re-attach).
+            if record.cursor_hot < heads.gc_horizon_hot {
+                let pulled = self.pull(session, Lane::Hot, None, &mut cursors.0, None, changed).await;
+                if is_left_behind(&pulled) {
+                    cursors = self.rebootstrap(session, changed).await?;
+                    continue;
+                }
+                pulled?;
+            }
 
             let pushed = self.push(session, changed).await;
             if is_left_behind(&pushed) {

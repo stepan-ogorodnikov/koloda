@@ -93,6 +93,8 @@ pub struct SyncState {
     pub device_id: Uuid,
     pub space_id: Uuid,
     pub server_url: Option<String>,
+    /// The space's epoch the file last saw; a re-attach refuses a space restored since.
+    pub epoch: Option<Uuid>,
     pub cursor_hot: u64,
     pub cursor_cold: u64,
     pub is_bootstrapping: bool,
@@ -114,16 +116,17 @@ pub fn sync_state(db: &Database) -> Result<Option<SyncState>, AppError> {
                     r#"
                     SELECT device_id, space_id, server_url, cursor_hot, cursor_cold, is_bootstrapping,
                            join_phase = 'import_pending', detached_at IS NOT NULL, is_rebasing,
-                           is_clock_paused
+                           is_clock_paused, epoch
                     FROM sync_state WHERE id = 1
                     "#,
                     [],
                     |row| {
-                        let ids: (Vec<u8>, Vec<u8>) = (row.get(0)?, row.get(1)?);
+                        let ids: (Vec<u8>, Vec<u8>, Option<Vec<u8>>) = (row.get(0)?, row.get(1)?, row.get(10)?);
                         let state = SyncState {
                             device_id: Uuid::nil(),
                             space_id: Uuid::nil(),
                             server_url: row.get(2)?,
+                            epoch: None,
                             cursor_hot: row.get(3)?,
                             cursor_cold: row.get(4)?,
                             is_bootstrapping: row.get(5)?,
@@ -136,10 +139,13 @@ pub fn sync_state(db: &Database) -> Result<Option<SyncState>, AppError> {
                     },
                 )
                 .optional()?;
-            row.map(|((device_id, space_id), state)| {
+            row.map(|((device_id, space_id, epoch), state)| {
                 Ok(SyncState {
                     device_id: Uuid::from_slice(&device_id).map_err(protocol_error)?,
                     space_id: Uuid::from_slice(&space_id).map_err(protocol_error)?,
+                    epoch: epoch
+                        .map(|epoch| Uuid::from_slice(&epoch).map_err(protocol_error))
+                        .transpose()?,
                     ..state
                 })
             })

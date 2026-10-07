@@ -386,7 +386,7 @@ Out:
   Commit: Re-stamp paused cohorts when the clock is corrected
   Depends on: 1
 
-- [ ] 9. Re-attach a detached or revoked file
+- [x] 9. Re-attach a detached or revoked file
   Goal:
   - `join` stops refusing `JoinMode::Reattach` for a detached file.
     It previews the code and refuses before it claims if the file is attached, or if the previewed epoch differs

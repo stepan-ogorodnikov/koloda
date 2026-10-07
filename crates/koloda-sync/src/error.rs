@@ -42,6 +42,9 @@ pub enum SyncError {
     },
     /// The file cannot join the code's space in this mode; nothing was claimed.
     CannotJoin(JoinMode),
+    /// The code's space was restored since this file last synced with it, so the file cannot re-attach until server
+    /// restore lands; nothing was claimed.
+    EpochChanged,
     /// The server URL is neither `https` nor `http` to a loopback host; nothing was sent.
     InsecureServerUrl(String),
 }
@@ -74,6 +77,7 @@ impl fmt::Display for SyncError {
                 write!(f, "this device's clock is {skew_ms} ms off the sync server's")
             }
             SyncError::CannotJoin(mode) => write!(f, "this file cannot join that space as {mode:?}"),
+            SyncError::EpochChanged => write!(f, "that space was restored since this file last synced with it"),
             SyncError::InsecureServerUrl(url) => {
                 write!(f, "{url} is not an https URL or an http URL to this machine")
             }

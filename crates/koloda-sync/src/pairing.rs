@@ -6,16 +6,18 @@ use std::collections::{BTreeMap, HashMap};
 use std::sync::Arc;
 
 use koloda::app::init::{seed_joiner_db, SeedSettings};
+use koloda::app::utility::get_current_timestamp;
 use koloda::repo::sync::join::{add_to_space, begin_import, join_mode, probe_ids, replace_with_space, JoinMode, Known};
-use koloda::repo::sync::{enroll_device, SpaceRole};
+use koloda::repo::sync::switch::switch_device;
+use koloda::repo::sync::{enroll_device, sync_state, SpaceRole};
 use koloda_sync_proto::registry::Kind;
 use koloda_sync_proto::transport::{
-    ClaimPairing, EntityId, IssuePairing, KnownIds, KnownState, Pairing, PairingClaim, PairingPreview, PreviewPairing,
-    MAX_KNOWN_IDS,
+    ClaimPairing, DeviceInfo, EntityId, IssuePairing, KnownIds, KnownState, Pairing, PairingClaim, PairingPreview,
+    PreviewPairing, MAX_KNOWN_IDS,
 };
 use uuid::Uuid;
 
-use crate::client::server_url;
+use crate::client::{local_error, server_url};
 use crate::engine::{token_key, Session, Shared};
 use crate::error::SyncError;
 use crate::transport::Method;
@@ -89,6 +91,81 @@ impl Shared {
         })
     }
 
+    // INVARIANT: retries inside `call` resend the same nonce, so a lost reply still claims one device.
+    async fn claim(&self, base: &str, code: &str, device_name: &str) -> Result<PairingClaim, SyncError> {
+        Ok(self
+            .client(base)
+            .call(
+                Method::Post,
+                "/v1/pairings/claim",
+                None,
+                Some(&ClaimPairing {
+                    code: code.to_string(),
+                    name: device_name.to_string(),
+                    platform: self.platform,
+                    nonce: Uuid::new_v4().into_bytes(),
+                }),
+            )
+            .await?
+            .ok)
+    }
+
+    /// Re-attaches a detached file to the space it was in: a new device id that keeps the file's rows, stamps,
+    /// cursors, and pending writes (`PROTOCOL.md` §Re-attach).
+    async fn reattach(
+        self: Arc<Self>,
+        base: String,
+        code: &str,
+        device_name: &str,
+        preview: PairingPreview,
+    ) -> Result<Joined, SyncError> {
+        let state = self
+            .blocking(|shared| sync_state(&shared.db))
+            .await?
+            .ok_or(SyncError::NotEnrolled)?;
+        // INVARIANT: both refusals come before the claim, so the code stays usable by another device. An attached
+        // file has nothing to re-attach to; a space restored since needs the restore's path first.
+        if !state.is_detached {
+            return Err(SyncError::CannotJoin(JoinMode::Reattach));
+        }
+        if state.epoch != Some(Uuid::from_bytes(preview.epoch)) {
+            return Err(SyncError::EpochChanged);
+        }
+
+        let claim = self.claim(&base, code, device_name).await?;
+        let device = Uuid::from_bytes(claim.enrollment.device_id);
+        let token = claim.enrollment.token;
+        let stored = token.clone();
+        self.blocking(move |shared| shared.secrets.set(&token_key(device), &stored))
+            .await?;
+        let session = Session {
+            base,
+            space: state.space_id,
+            device,
+            token,
+        };
+        let old = state.device_id;
+        let record: DeviceInfo = self
+            .client(&session.base)
+            .call::<(), _>(
+                Method::Get,
+                &format!("/v1/spaces/{}/devices/{old}", session.space),
+                Some(&session.token),
+                None,
+            )
+            .await?
+            .ok;
+        let receipts = self.pending_receipts(&session, old, record.last_sender_seq).await?;
+        let now_ms = u64::try_from(get_current_timestamp()?).map_err(local_error)?;
+        self.blocking(move |shared| switch_device(&shared.db, device, &receipts, &shared.starter, now_ms, false))
+            .await?;
+        Ok(Joined {
+            mode: JoinMode::Reattach,
+            hint: claim.hint,
+            known_ids: 0,
+        })
+    }
+
     async fn preview_at(&self, base: &str, code: &str) -> Result<PairingPreview, SyncError> {
         Ok(self
             .client(base)
@@ -110,30 +187,16 @@ impl Shared {
         settings: SeedSettings,
     ) -> Result<Joined, SyncError> {
         let base = server_url(server_url_text)?;
-        // INVARIANT: the mode is read for the previewed space before the code is claimed, so a file that would
+        // INVARIANT: the mode is read for the previewed space before the code is claimed, so a file that cannot
         // re-attach is refused while its code can still be used by another device.
-        let space = Uuid::from_bytes(self.preview_at(&base, code).await?.space_id);
+        let preview = self.preview_at(&base, code).await?;
+        let space = Uuid::from_bytes(preview.space_id);
         let mode = self.blocking(move |shared| join_mode(&shared.db, space)).await?;
         if mode == JoinMode::Reattach {
-            return Err(SyncError::CannotJoin(mode));
+            return self.reattach(base, code, device_name, preview).await;
         }
 
-        // INVARIANT: retries inside `call` resend the same nonce, so a lost reply still claims one device.
-        let claim: PairingClaim = self
-            .client(&base)
-            .call(
-                Method::Post,
-                "/v1/pairings/claim",
-                None,
-                Some(&ClaimPairing {
-                    code: code.to_string(),
-                    name: device_name.to_string(),
-                    platform: self.platform,
-                    nonce: Uuid::new_v4().into_bytes(),
-                }),
-            )
-            .await?
-            .ok;
+        let claim = self.claim(&base, code, device_name).await?;
         let enrollment = claim.enrollment;
         let session = Session {
             base,

@@ -14,6 +14,7 @@ mod import_tests;
 mod loopback_tests;
 mod pairing_tests;
 mod push_tests;
+mod reattach_tests;
 mod rebootstrap_tests;
 mod runner_tests;
 mod spaces_tests;

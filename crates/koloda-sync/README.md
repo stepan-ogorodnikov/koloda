@@ -23,8 +23,8 @@ A device's bearer token lives in the host's secret store under `sync.token.<devi
 - `src/push.rs` — pushing the outbox in batches and handing each reply, loss, or refusal to `koloda`.
 - `src/fork.rs` — a file behind its own record forks to a new device id: the stored nonce, the new token, receipts,
   and the switch.
-- `src/pairing.rs` — pairing codes, preview, and joining a space: blank, seed-only, or a used file through Add
-  or Replace.
+- `src/pairing.rs` — pairing codes, preview, and joining a space: blank, seed-only, a used file through Add or
+  Replace, or a detached file re-attaching under a new device id.
 - `src/runner.rs` — the background runner: triggers, coalescing, the poll, backoff, events, and tick budgets.
 - `src/status.rs` — the state the host shows, why the last cycle stopped, and how far behind each lane is.
 - `src/devices.rs` — the device list, revoking another device, and detaching this file.
