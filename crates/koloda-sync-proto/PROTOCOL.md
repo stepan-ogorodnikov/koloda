@@ -742,7 +742,7 @@ Detaching on the device deletes the token and records when.
 Rows and sync tables stay, and capture keeps recording, for a later re-attach.
 A detached file sends no request.
 A `401 revoked` reply to any call detaches the file this way; `detach` revokes the own device first.
-`401 unknown_device` stops the engine until recovery lands.
+`401 unknown_device` stops the engine until server restore lands (§Recovery).
 
 ### Behind its own record: rollback and copies
 
@@ -1521,7 +1521,7 @@ Only native hosts write them; they are device-local runtime state, never synced.
 
 | Table | Key | Holds |
 | --- | --- | --- |
-| `sync_state` | Singleton | `device_id`, `space_id`, `epoch`, join phase, cursors, last HLC, stable high-water, `next_sender_seq`, last observed server seq, skew, role (creator or joiner), backfill phase stamps and watermark, rebase generation and barrier flag |
+| `sync_state` | Singleton | `device_id`, `space_id`, `epoch`, join phase, cursors, last HLC, stable high-water, `next_sender_seq`, last observed server seq, skew, role (creator or joiner), backfill phase stamps and watermark, rebase generation and barrier flag, fork nonce, clock pause |
 | `sync_stamps` | `(kind, id, group)` | LWW register (§Field groups and merge) |
 | `sync_origins` | `(kind, id, group)` | Stamp and sender of immutable rows; legacy timestamp floor for creates; the re-bootstrap generation that last delivered a create |
 | `sync_outbox` | `sender_seq` | Encoded envelope, digest, `commit_id`, in-flight flag |
