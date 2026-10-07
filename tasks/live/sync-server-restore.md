@@ -1,6 +1,6 @@
 # Sync server restore
 
-Status: draft
+Status: ready
 
 ## Intent
 
@@ -64,20 +64,20 @@ Out:
 
 ## Open questions
 
-- [ ] 1. Area guides? — open.
-  Recommended: `agents/TASKS.md`, `agents/IMPLEMENTATION-PLAN.md`, `agents/MARKDOWN.md`,
+- [x] 1. Area guides?
+  Answer: `agents/TASKS.md`, `agents/IMPLEMENTATION-PLAN.md`, `agents/MARKDOWN.md`,
   `agents/CODE-DOCUMENTATION.md`, `agents/CODE-STYLE.md`, `agents/TESTING.md`, `agents/RUST.md`, `agents/DB.md`,
   and `agents/REVIEW.md` for self-review.
   Also `crates/koloda/README.md`, `crates/koloda-sync/README.md`, `crates/koloda-server/README.md`,
   `crates/koloda-sync-proto/PROTOCOL.md` and its README, and `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md`.
-- [ ] 2. One task, or the server work apart? — open.
-  Recommended: one task, server items before the engine items that need them.
+- [x] 2. One task, or the server work apart?
+  Answer: one task, server items before the engine items that need them.
   Engine tests need a real restore to run against, and the `koloda` heal scan is the riskiest part, so it goes
   first.
-- [ ] 3. Does `backup` run while the server serves, and how does it get a consistent copy? — open.
+- [x] 3. Does `backup` run while the server serves, and how does it get a consistent copy?
   The proposal says backup "holds the writer barrier", but `serve` holds the data directory lock, and the writer
   locks live inside that process.
-  Recommended: an online backup that takes no lock and never writes the data directory.
+  Answer: an online backup that takes no lock and never writes the data directory.
   - Each space database is copied with `VACUUM INTO`, a read transaction, so the copy is one committed state of that
     space; `server.db` is copied last.
   - A space copy is all heal needs to be consistent: its cutoffs come from the `senders` table in the same file.
@@ -91,11 +91,11 @@ Out:
     SHA-256 and size, and per space its epoch, lane heads, each sender's `last_seq`, and its attachment ids.
     Restore refuses a set whose files do not match it.
   The alternative is an offline backup that takes the directory lock, so the server must be stopped.
-- [ ] 4. How does a device learn of a restore, and what stops it pushing or pulling on the old epoch? — open.
+- [x] 4. How does a device learn of a restore, and what stops it pushing or pulling on the old epoch?
   The server cannot answer `epoch_changed` without knowing the caller's epoch.
   A device on the old epoch must not pull: its cursor may be past the restored head, so it would skip the new
   generation's first writes.
-  Recommended:
+  Answer:
   - every device-token call carries `Koloda-Epoch: <uuid>`; a device call without it is `bad_request`;
   - `require_device` answers a different epoch with `409 epoch_changed`, after the `revoked` check and before any
     work, so nothing is consumed and no cursor is recorded;
@@ -103,8 +103,8 @@ Out:
   - the claim reply stays as it is: a re-attaching file gets the same error from its first call made with the epoch
     it stored, so `PROTOCOL.md`'s "the claim reply gains `restore_points`" line is replaced.
   The alternative is an optional header: fewer test changes, but a client that forgets it pulls past writes silently.
-- [ ] 5. What does a restore point hold, and how are several combined? — open.
-  Recommended:
+- [x] 5. What does a restore point hold, and how are several combined?
+  Answer:
   - a point holds its epoch, its mode, each lane's head, each sender's `last_seq` from the backup's `senders` table,
     and when it was made;
   - points accumulate in order; restore carries forward the replaced generation's points for that space when they
@@ -115,15 +115,15 @@ Out:
     point does not list counts as 0, so it is omitted;
   - restore also refreshes every restored device's `last_seen` to the restore time (so an old backup marks no one
     stale), clamps its cursors to the restored heads, and drops leases, pairing codes, and pending space creations.
-- [ ] 6. What does `--rotate-tokens` do, and how does a device answer `401` after a restore? — open.
-  Recommended:
+- [x] 6. What does `--rotate-tokens` do, and how does a device answer `401` after a restore?
+  Answer:
   - `--rotate-tokens` revokes every restored device: they get `401 revoked` with the new epoch, stop pinning GC, and
     stay in the device list;
   - a `401 revoked` or `401 unknown_device` whose `meta.epoch` differs from the stored epoch detaches the file and
     stops with a new `Stop::Restored`, so the host can say "pair this device again" rather than "revoked";
   - a `401 unknown_device` on the stored epoch keeps today's behavior.
-- [ ] 7. How does heal re-push what the backup lacks? — open.
-  Recommended: a resumable scan in `koloda`, like backfill.
+- [x] 7. How does heal re-push what the backup lacks?
+  Answer: a resumable scan in `koloda`, like backfill.
   - The restore's cutoffs are stored locally; the scan walks algorithms, revisions, templates, decks, cards,
     `learning`, reviews, then tombstones, creates before update groups.
   - It enqueues every create, non-synthetic register, immutable row, and tombstone whose `(sender, sender_seq)` is
@@ -141,9 +141,9 @@ Out:
   - A second restore during the scan lowers the cutoffs and restarts it; an authoritative one replaces it.
   - While the scan runs, a re-bootstrap's absence cleanup keeps an entity whose create is above its sender's cutoff,
     as it keeps a create still waiting in the outbox.
-- [ ] 8. Does an authoritative restore wait for the host? — open.
+- [x] 8. Does an authoritative restore wait for the host?
   `PROTOCOL.md` says the host warns before it starts.
-  Recommended: yes.
+  Answer: yes.
   - The engine records the restore and stops with `Stop::AuthoritativeRestore`; nothing is pushed or pulled.
   - A new host call, `Engine::accept_restore()`, then deletes the product rows and every sync table but
     `sync_state`, keeps settings, conversations, and attachments, and bootstraps as a blank joiner under the same
@@ -151,23 +151,23 @@ Out:
   - `next_sender_seq` moves above both its local value and the server's `last_sender_seq` for the device.
   - The recorded restore survives a relaunch.
   The alternative is proceeding at once, with the host told only afterwards.
-- [ ] 9. Who re-uploads image bytes the backup lacks? — open.
+- [x] 9. Who re-uploads image bytes the backup lacks?
   A card pushed before the backup whose image was uploaded after it is in the restored log, but its bytes are not.
   No push reports it missing, because no device re-pushes that card, so other devices get `404` for it forever.
-  Recommended: `GET /v1/spaces/{space}/attachments/missing?after&limit` lists the ids live cards link that have no
+  Answer: `GET /v1/spaces/{space}/attachments/missing?after&limit` lists the ids live cards link that have no
   stored bytes.
   After applying a restore, the engine walks it once and queues an upload for every id it holds.
   The alternative is leaving it to a later task.
-- [ ] 10. Fold in the re-attach URL follow-up? — open.
+- [x] 10. Fold in the re-attach URL follow-up?
   Recovery noted that re-attach keeps the stored server URL even when the code was redeemed through another one.
   A restore onto a new machine is when that happens.
-  Recommended: yes; re-attach records the URL the claim went through.
-- [ ] 11. How do `spaces` and `pair` reach the data? — open.
-  Recommended: both work on `--data-dir` directly, while `serve` runs, through SQLite's own locking.
+  Answer: yes; re-attach records the URL the claim went through.
+- [x] 11. How do `spaces` and `pair` reach the data?
+  Answer: both work on `--data-dir` directly, while `serve` runs, through SQLite's own locking.
   Access to the data directory is the authority, so neither needs the setup token.
   `pair <space>` issues a code by the break-glass rules and prints it with its expiry.
-- [ ] 12. Migrations? — open.
-  Recommended: `V12__sync_restore.sql` in `koloda` and `V4__restore.sql` in the space series; `server.db` needs none.
+- [x] 12. Migrations?
+  Answer: `V12__sync_restore.sql` in `koloda` and `V4__restore.sql` in the space series; `server.db` needs none.
   Items extend them until the task lands, as `V11` and the server's `V2` were.
 
 ## Plan
@@ -204,9 +204,7 @@ Out:
   - `restamp_local_cohorts` leaving heal cohorts alone, and `switch_device` keeping them `fixed` with their stamps;
   - `finish_rebase` keeping a create the scan has not reached;
   - `bun run check:push` green.
-  Commit:
-  a. Re-push the writes a restored server lost
-  b. Scan for writes above a restore's cutoffs
+  Commit: Re-push the writes a restored server lost
   Depends on: none
 
 - [ ] 2. Reset a file for an authoritative restore
@@ -230,9 +228,7 @@ Out:
   - a snapshot of another space then applying as for a blank joiner, with seeds inserted and `learning` overlaid;
   - a recorded restore surviving a reopen, and cleared by the reset;
   - `bun run check:push` green.
-  Commit:
-  a. Reset a file for an authoritative restore
-  b. Discard local data when the server restores authoritatively
+  Commit: Reset a file for an authoritative restore
   Depends on: 1
 
 - [ ] 3. Back up a running server
@@ -249,9 +245,7 @@ Out:
   - an attachment whose file a collection pass removed before the copy: its row is gone from the copy;
   - an `out` that is not empty refused;
   - `bun run check:push` green.
-  Commit:
-  a. Back up a running server
-  b. Add koloda-server backup
+  Commit: Back up a running server
   Depends on: none
 
 - [ ] 4. Restore a server from a backup
@@ -283,9 +277,7 @@ Out:
   - a tampered file refused with `CURRENT` unchanged, a restore into an empty directory, and a restore refused while
     `serve` holds the lock;
   - `bun run check:push` green.
-  Commit:
-  a. Restore a server from a backup
-  b. Add koloda-server restore with heal and authoritative modes
+  Commit: Restore a server from a backup
   Depends on: 3
 
 - [ ] 5. Refuse device calls from an older epoch
@@ -307,9 +299,7 @@ Out:
   - a missing header refused, and the current epoch answered as before;
   - existing engine tests passing with the header;
   - `bun run check:push` green.
-  Commit:
-  a. Refuse device calls from an older epoch
-  b. Tell a device on an older epoch which restore to apply
+  Commit: Refuse device calls from an older epoch
   Depends on: 4
 
 - [ ] 6. Heal a device after a server restore
@@ -335,9 +325,7 @@ Out:
   - a device offline across two heal restores, applying the lower cutoffs;
   - an edit pending at the restore reaching the space;
   - `bun run check:push` green.
-  Commit:
-  a. Heal a device after a server restore
-  b. Re-push what a restored server lost
+  Commit: Heal a device after a server restore
   Depends on: 1, 5
 
 - [ ] 7. Re-download the backup after an authoritative restore
@@ -355,9 +343,7 @@ Out:
   - a device offline across an authoritative then a heal restore converging on the authoritative backup;
   - a relaunch before accepting still held, with nothing deleted;
   - `bun run check:push` green.
-  Commit:
-  a. Re-download the backup after an authoritative restore
-  b. Discard local data once the host accepts an authoritative restore
+  Commit: Re-download the backup after an authoritative restore
   Depends on: 2, 6
 
 - [ ] 8. Re-attach a device the restore forgot
@@ -378,9 +364,7 @@ Out:
   - a re-attach after an authoritative restore: held, accepted, converged;
   - a re-attach through a different server URL recording it;
   - `bun run check:push` green.
-  Commit:
-  a. Re-attach a device the restore forgot
-  b. Rejoin a restored space with a pairing code
+  Commit: Re-attach a device the restore forgot
   Depends on: 6, 7
 
 - [ ] 9. Upload image bytes the restored server lacks
@@ -397,9 +381,7 @@ Out:
   - the endpoint's paging and its omission of unlinked attachments;
   - a relaunch mid-walk finishing it;
   - `bun run check:push` green.
-  Commit:
-  a. Upload image bytes the restored server lacks
-  b. Re-upload attachments missing after a restore
+  Commit: Upload image bytes the restored server lacks
   Depends on: 6
 
 - [ ] 10. Add spaces and pair operator commands
@@ -414,9 +396,7 @@ Out:
   - the list matching `GET /v1/spaces`;
   - a code from `pair` claimed over HTTP, and an unknown space refused;
   - `bun run check:push` green.
-  Commit:
-  a. Add spaces and pair operator commands
-  b. List spaces and issue pairing codes from the command line
+  Commit: Add spaces and pair operator commands
   Depends on: none
 
 ## Outcome
