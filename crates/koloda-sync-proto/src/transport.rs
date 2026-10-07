@@ -76,6 +76,7 @@ pub enum ErrorCode {
     RateLimited,
     StampAhead,
     SchemaReadOnly,
+    CursorTooOld,
     LeaseExpired,
     Internal,
 }
@@ -382,6 +383,7 @@ pub struct DeviceInfo {
     pub cursor_cold: u64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub revoked_at: Option<u64>,
+    pub rebase_required: bool,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]

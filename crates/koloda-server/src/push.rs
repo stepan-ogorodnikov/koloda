@@ -50,6 +50,13 @@ pub(crate) async fn push(
     let request = read_body::<Push>(&headers, body).await;
     respond(server, headers, move |server, scope, headers| {
         let caller = auth::require_device(server, scope, headers, &space)?;
+        // INVARIANT: a device the server left behind re-bootstraps before anything it pushes is consumed; the refusal
+        // consumes nothing, replays included (PROTOCOL.md, Devices).
+        if caller.is_rebase_required {
+            return Err(ApiError::cursor_too_old(
+                "this device must re-bootstrap before it pushes",
+            ));
+        }
         push_batch(server, &caller, request?)
     })
     .await

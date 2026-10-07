@@ -307,6 +307,7 @@ fn bodies_keep_their_wire_keys() {
                 cursor_hot: 5,
                 cursor_cold: 6,
                 revoked_at: Some(7),
+                rebase_required: true,
             }),
             vec![
                 "id",
@@ -319,6 +320,7 @@ fn bodies_keep_their_wire_keys() {
                 "cursor_hot",
                 "cursor_cold",
                 "revoked_at",
+                "rebase_required",
             ],
         ),
         (

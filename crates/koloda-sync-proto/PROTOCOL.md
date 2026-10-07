@@ -708,10 +708,17 @@ Rules:
   It still learns the epoch, so it can tell revocation from a restore that predates it.
   Revoking also ends the device's unclaimed pairing codes and its bootstrap lease.
   A device that revokes itself detaches.
-- A device unseen for 90 days is **stale**: `rebase_required`, and it no longer pins GC.
+- A device unseen for 90 days is **stale**, and so is a record another was forked from that has made no request for
+  24 hours.
+  A stale device is `rebase_required`, and it no longer pins GC.
+- A request marks its device stale when the stored `last_seen` is past that window.
+  It reads `last_seen` before the request refreshes it, and the flag persists.
 - The server refuses every push from a device that is `rebase_required` or whose cursor is below a GC horizon
   (`cursor_too_old`).
-  Re-bootstrap runs first.
+  The refusal consumes nothing, replays included.
+  Receipts, pull, the device calls, and bootstrap still answer, so the device can re-bootstrap first.
+- Releasing a snapshot lease clears `rebase_required`, because a device releases only once its snapshot and catch-up
+  are applied.
 - The space carries an `epoch`: an opaque generation UUID that changes on every server restore.
 
 Detaching on the device deletes the token and records when.
@@ -822,7 +829,7 @@ Names are 1 to 100 characters after trimming.
 | --- | --- | --- |
 | `POST /v1/spaces` | `name`, `device_name`, `platform`, `nonce` | `space_id`, `device_id`, `token`, `epoch` |
 | `GET /v1/spaces` | none | `spaces`, each with `id`, `name`, `created_at`, `device_count` |
-| `GET /v1/spaces/{space}/devices/{id}` | none | `id`, `name`, `platform`, `created_at`, `last_seen`, `last_sender_seq`, `last_sender_digest`, `cursor_hot`, `cursor_cold`, `revoked_at` |
+| `GET /v1/spaces/{space}/devices/{id}` | none | `id`, `name`, `platform`, `created_at`, `last_seen`, `last_sender_seq`, `last_sender_digest`, `cursor_hot`, `cursor_cold`, `revoked_at`, `rebase_required` |
 | `GET /v1/spaces/{space}/devices` | none | `devices`, each a device record as above |
 | `DELETE /v1/spaces/{space}/devices/{id}` | none | empty |
 | `POST /v1/spaces/{space}/devices/fork` | none | the new device's enrollment, as space creation returns it |
@@ -861,12 +868,13 @@ An endpoint that returns nothing answers `ok` with an empty map.
 | `pairing_failed` | 404 | A used, expired, or wrong pairing code (§Pairing) |
 | `stamp_ahead` | 409 | A pushed stamp more than 5 minutes ahead of server now (§Skew guards) |
 | `schema_read_only` | 409 | A pushed schema above the kind's `write_schema` (§Schema versions) |
+| `cursor_too_old` | 409 | A push from a device that must re-bootstrap first (§Devices) |
 | `lease_expired` | 410 | A bootstrap lease that expired, was released, or belongs to another device (§Bootstrap) |
 | `too_large` | 413 | A body past its size or expansion cap |
 | `rate_limited` | 429 | Too many wrong pairing codes (§Pairing), or too many open bootstrap leases (§Bootstrap) |
 | `internal` | 500 | A server fault |
 
-The protocol also has `cursor_too_old`, `epoch_changed`, and `507`.
+The protocol also has `epoch_changed` and `507`.
 Each gets its row with the server work that answers it.
 
 ### Push outcomes

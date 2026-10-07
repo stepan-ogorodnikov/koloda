@@ -44,7 +44,7 @@ It runs a garbage collection pass every hour; `Server::collect_garbage` runs one
 - `src/db.rs` — connections and the two migration series under `src/migrations/`.
 - `src/server.rs` — shared state: `server.db`, open space databases, and the clock.
 - `src/http.rs` — CBOR and zstd bodies, their limits, the reply envelope, and `meta`.
-- `src/auth.rs` — setup and device tokens.
+- `src/auth.rs` — setup and device tokens, and marking a device stale when it calls after a long absence.
 - `src/spaces.rs` — space creation, which enrolls the creator, and the list.
 - `src/pairing.rs` — pairing codes: issue, preview, claim, and the limits on wrong codes.
 - `src/push.rs` — push batches and receipts; one transaction under the space writer lock.

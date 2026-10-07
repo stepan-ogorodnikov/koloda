@@ -454,7 +454,10 @@ async fn a_collected_attachment_linked_again_is_reported_and_stored_again() {
     let home = harness.create_space("Home").await;
     let (id, body) = image(24, 10);
     put(&harness, &home, &id, &body).await.ok();
-    harness.clock.advance(91 * DAY_MS);
+    // WHY: the device calls midway, so it is not stale when it pushes after the collection.
+    harness.clock.advance(45 * DAY_MS);
+    harness.device_meta(&home).await;
+    harness.clock.advance(46 * DAY_MS);
     collect(&harness);
     push_parents(&harness, &home).await;
 

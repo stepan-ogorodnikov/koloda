@@ -146,12 +146,20 @@ pub(crate) async fn release(
     respond(server, headers, move |server, scope, headers| {
         let caller = auth::require_device(server, scope, headers, &space)?;
         let space = server.space(caller.space)?.ok_or_else(ApiError::unknown_space)?;
-        let mut conn = lock(&space.writer)?;
-        let tx = conn.transaction()?;
-        if let Some(lease) = owned_lease(&tx, &caller, &snapshot)? {
-            log::end_lease(&tx, lease)?;
+        {
+            let mut conn = lock(&space.writer)?;
+            let tx = conn.transaction()?;
+            if let Some(lease) = owned_lease(&tx, &caller, &snapshot)? {
+                log::end_lease(&tx, lease)?;
+            }
+            tx.commit()?;
         }
-        tx.commit()?;
+        // WHY: a device releases only once its snapshot and catch-up are applied, so a re-bootstrap has ended. A lease
+        // that lapsed after its last page counts too: the device restarts on a lapse mid-stream instead of releasing.
+        server.server_db()?.execute(
+            "UPDATE devices SET rebase_required = 0 WHERE id = ?1",
+            params![caller.id],
+        )?;
         Ok(Empty {})
     })
     .await

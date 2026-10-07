@@ -17,7 +17,14 @@ use crate::http::{respond, ApiError};
 use crate::log;
 use crate::server::{lock, Server};
 
-const DEVICE_COLUMNS: &str = "id, name, platform, created_at, last_seen, cursor_hot, cursor_cold, revoked_at";
+const DEVICE_COLUMNS: &str =
+    "id, name, platform, created_at, last_seen, cursor_hot, cursor_cold, revoked_at, rebase_required";
+
+const DAY_MS: u64 = 24 * 60 * 60 * 1000;
+/// A device unseen this long is stale: it must re-bootstrap, and it stops pinning GC (`PROTOCOL.md` §Devices).
+pub(crate) const STALE_AFTER_MS: u64 = 90 * DAY_MS;
+/// A record another was forked from goes stale sooner, so a rolled-back file's old record does not pin GC for long.
+pub(crate) const FORKED_STALE_AFTER_MS: u64 = DAY_MS;
 
 struct DeviceRow {
     id: Uuid,
@@ -28,6 +35,7 @@ struct DeviceRow {
     cursor_hot: u64,
     cursor_cold: u64,
     revoked_at: Option<u64>,
+    rebase_required: bool,
 }
 
 pub(crate) async fn list(State(server): State<Arc<Server>>, Path(space): Path<String>, headers: HeaderMap) -> Response {
@@ -150,6 +158,7 @@ fn device_row(row: &rusqlite::Row<'_>) -> rusqlite::Result<DeviceRow> {
         cursor_hot: row.get(5)?,
         cursor_cold: row.get(6)?,
         revoked_at: row.get(7)?,
+        rebase_required: row.get(8)?,
     })
 }
 
@@ -167,7 +176,17 @@ fn device_info(server: &Server, space: Uuid, row: DeviceRow) -> Result<DeviceInf
         cursor_hot: row.cursor_hot,
         cursor_cold: row.cursor_cold,
         revoked_at: row.revoked_at,
+        rebase_required: row.rebase_required,
     })
+}
+
+pub(crate) fn is_stale(last_seen: u64, is_forked_from: bool, now: u64) -> bool {
+    let window = if is_forked_from {
+        FORKED_STALE_AFTER_MS
+    } else {
+        STALE_AFTER_MS
+    };
+    now.saturating_sub(last_seen) > window
 }
 
 fn not_found() -> ApiError {

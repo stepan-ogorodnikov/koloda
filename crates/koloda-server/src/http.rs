@@ -64,6 +64,10 @@ impl ApiError {
         ApiError::new(StatusCode::NOT_FOUND, ErrorCode::NotFound, message)
     }
 
+    pub(crate) fn cursor_too_old(message: impl Into<String>) -> ApiError {
+        ApiError::new(StatusCode::CONFLICT, ErrorCode::CursorTooOld, message)
+    }
+
     pub(crate) fn unknown_space() -> ApiError {
         ApiError::new(StatusCode::NOT_FOUND, ErrorCode::UnknownSpace, "no such space")
     }

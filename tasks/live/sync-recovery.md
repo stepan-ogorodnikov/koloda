@@ -239,7 +239,7 @@ Out:
   Commit: Track a re-bootstrap with a barrier and clean up what the server deleted
   Depends on: none
 
-- [ ] 3. Mark stale devices and refuse their pushes
+- [x] 3. Mark stale devices and refuse their pushes
   Goal:
   - Server migration `V2__recovery.sql` adds `rebase_required` to `devices`.
   - `auth::require_device` marks a device stale as question 6 says, before it refreshes `last_seen`.

@@ -9,6 +9,7 @@ use rusqlite::{params, Connection, OptionalExtension};
 use sha2::{Digest, Sha256};
 use uuid::Uuid;
 
+use crate::devices;
 use crate::http::{ApiError, Scope};
 use crate::server::Server;
 
@@ -18,6 +19,7 @@ const BEARER: &str = "Bearer ";
 pub(crate) struct DeviceAuth {
     pub(crate) id: Uuid,
     pub(crate) space: Uuid,
+    pub(crate) is_rebase_required: bool,
 }
 
 /// A caller that may act on a space with a device token of that space, or with the setup token for break-glass.
@@ -91,17 +93,28 @@ pub(crate) fn require_device(
 ) -> Result<DeviceAuth, ApiError> {
     let space_id = Uuid::parse_str(space).ok();
     let conn = server.server_db()?;
-    let device: Option<(Uuid, Uuid, Option<u64>)> = match bearer(headers) {
+    let device: Option<(Uuid, Uuid, Option<u64>, u64, bool, bool)> = match bearer(headers) {
         Some(token) => conn
             .query_row(
-                "SELECT id, space_id, revoked_at FROM devices WHERE token_hash = ?1",
+                "SELECT d.id, d.space_id, d.revoked_at, d.last_seen, d.rebase_required,
+                        EXISTS (SELECT 1 FROM devices f WHERE f.forked_from = d.id)
+                 FROM devices d WHERE d.token_hash = ?1",
                 params![token_hash(token).to_vec()],
-                |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
+                |row| {
+                    Ok((
+                        row.get(0)?,
+                        row.get(1)?,
+                        row.get(2)?,
+                        row.get(3)?,
+                        row.get(4)?,
+                        row.get(5)?,
+                    ))
+                },
             )
             .optional()?,
         None => None,
     };
-    let Some((id, device_space, revoked_at)) = device else {
+    let Some((id, device_space, revoked_at, last_seen, is_flagged, is_forked_from)) = device else {
         if let Some(space_id) = space_id {
             if space_exists(&conn, space_id)? {
                 scope.space = Some(space_id);
@@ -125,15 +138,20 @@ pub(crate) fn require_device(
             "this device was revoked",
         ));
     }
+    // INVARIANT: staleness reads `last_seen` before this request refreshes it, and the flag outlives the refresh, so
+    // a device back from a long absence re-bootstraps before it pushes (PROTOCOL.md, Devices).
+    let now = server.now_ms();
+    let is_rebase_required = is_flagged || devices::is_stale(last_seen, is_forked_from, now);
     conn.execute(
-        "UPDATE devices SET last_seen = ?1 WHERE id = ?2",
-        params![server.now_ms(), id],
+        "UPDATE devices SET last_seen = ?1, rebase_required = ?2 WHERE id = ?3",
+        params![now, is_rebase_required, id],
     )?;
     scope.space = Some(device_space);
     scope.device = Some(id);
     Ok(DeviceAuth {
         id,
         space: device_space,
+        is_rebase_required,
     })
 }
 
