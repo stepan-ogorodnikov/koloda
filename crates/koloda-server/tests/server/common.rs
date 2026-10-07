@@ -20,11 +20,12 @@ use koloda_sync_proto::payload::SCHEMA;
 use koloda_sync_proto::registry::{Group, Kind, Op};
 use koloda_sync_proto::transport::{
     ClaimPairing, CreateSpace, DeviceInfo, DeviceMeta, Enrollment, ErrorCode, IssuePairing, Outcome, Pairing,
-    PairingClaim, Platform, PullPage, Push, PushItem, PushReply, Reply,
+    PairingClaim, Platform, PullPage, Push, PushItem, PushReply, Reply, EPOCH_HEADER,
 };
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use tempfile::TempDir;
+use uuid::Uuid;
 
 pub const START_MS: u64 = 1_727_000_000_000;
 
@@ -60,6 +61,15 @@ pub struct Call<'a> {
     content_encoding: Option<&'static str>,
     accept_zstd: bool,
     peer: Option<SocketAddr>,
+    epoch: Epoch,
+}
+
+/// The `koloda-epoch` header a call sends.
+enum Epoch {
+    /// The space's current epoch, read from its database, on a call with a token to a space path.
+    Current,
+    Named(Uuid),
+    Missing,
 }
 
 pub struct Answer<T> {
@@ -104,6 +114,7 @@ impl Harness {
             content_encoding: None,
             accept_zstd: false,
             peer: None,
+            epoch: Epoch::Current,
         }
     }
 
@@ -117,6 +128,22 @@ impl Harness {
 
     pub fn data_dir(&self) -> &std::path::Path {
         self._dir.path()
+    }
+
+    /// The current epoch of the space a `/v1/spaces/{space}/...` path names, if it exists.
+    fn current_epoch(&self, path: &str) -> Option<Uuid> {
+        let space = path.strip_prefix("/v1/spaces/")?.split(['/', '?']).next()?;
+        let file = self
+            .generation_dir()
+            .join("spaces")
+            .join(format!("{}.db", Uuid::parse_str(space).ok()?));
+        if !file.exists() {
+            return None;
+        }
+        rusqlite::Connection::open(file)
+            .ok()?
+            .query_row("SELECT epoch FROM space WHERE id = 1", [], |row| row.get(0))
+            .ok()
     }
 
     /// The active generation's directory, as `CURRENT` names it.
@@ -182,10 +209,29 @@ impl Call<'_> {
         self
     }
 
+    /// Sends `epoch` as the epoch this device last saw, instead of the space's current one.
+    pub fn epoch(mut self, epoch: Uuid) -> Self {
+        self.epoch = Epoch::Named(epoch);
+        self
+    }
+
+    pub fn without_epoch(mut self) -> Self {
+        self.epoch = Epoch::Missing;
+        self
+    }
+
     pub async fn send<T: DeserializeOwned>(self) -> Answer<T> {
+        let epoch = match self.epoch {
+            Epoch::Named(epoch) => Some(epoch),
+            Epoch::Missing => None,
+            Epoch::Current => self.token.as_ref().and_then(|_| self.harness.current_epoch(&self.path)),
+        };
         let mut request = Request::builder().method(self.method).uri(self.path);
         if let Some(token) = &self.token {
             request = request.header(AUTHORIZATION, format!("Bearer {token}"));
+        }
+        if let Some(epoch) = epoch {
+            request = request.header(EPOCH_HEADER, epoch.to_string());
         }
         if let Some(encoding) = self.content_encoding {
             request = request.header(CONTENT_ENCODING, encoding);

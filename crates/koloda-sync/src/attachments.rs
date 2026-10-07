@@ -75,7 +75,7 @@ impl Shared {
         };
         let size = body.bytes.len();
         let sent = self
-            .cycle_client(&session.base)
+            .cycle_client(session)
             .call::<_, Empty>(
                 Method::Put,
                 &path(session, &transfer.id),
@@ -100,7 +100,7 @@ impl Shared {
         fetched: &mut Vec<String>,
     ) -> Result<usize, SyncError> {
         let answer = self
-            .cycle_client(&session.base)
+            .cycle_client(session)
             .call::<(), AttachmentBody>(Method::Get, &path(session, &transfer.id), Some(&session.token), None)
             .await;
         let answer = match answer {

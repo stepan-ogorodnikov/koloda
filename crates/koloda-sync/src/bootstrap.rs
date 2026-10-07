@@ -74,7 +74,7 @@ impl Shared {
         changed: &mut Vec<Kind>,
     ) -> Result<(u64, u64), SyncError> {
         let opened = self
-            .cycle_client(&session.base)
+            .cycle_client(session)
             .call::<(), Snapshot>(
                 Method::Post,
                 &format!("/v1/spaces/{}/bootstrap", session.space),
@@ -115,7 +115,7 @@ impl Shared {
             }
         }
         let released = self
-            .cycle_client(&session.base)
+            .cycle_client(session)
             .call::<(), Empty>(
                 Method::Delete,
                 &format!("/v1/spaces/{}/bootstrap/{}", session.space, lease.id),
@@ -152,7 +152,7 @@ impl Shared {
         loop {
             self.keep_alive(session, lease).await?;
             let answer = self
-                .cycle_client(&session.base)
+                .cycle_client(session)
                 .call::<(), SnapshotPage>(
                     Method::Get,
                     &format!(
@@ -198,7 +198,7 @@ impl Shared {
             return Ok(());
         }
         let answer = self
-            .cycle_client(&session.base)
+            .cycle_client(session)
             .call::<(), Lease>(
                 Method::Post,
                 &format!("/v1/spaces/{}/bootstrap/{}/heartbeat", session.space, lease.id),

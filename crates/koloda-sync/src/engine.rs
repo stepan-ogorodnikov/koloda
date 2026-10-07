@@ -53,6 +53,8 @@ pub(crate) struct Session {
     pub(crate) space: Uuid,
     pub(crate) device: Uuid,
     pub(crate) token: String,
+    /// The space's epoch the file last saw; every device call names it.
+    pub(crate) epoch: Uuid,
 }
 
 impl Engine {
@@ -207,15 +209,24 @@ impl Shared {
             transport: self.transport.as_ref(),
             skew: &self.skew,
             spending: None,
+            epoch: None,
         }
     }
 
-    /// A client whose requests spend the running tick's budget; only the cycle uses it, so host calls made during a
-    /// tick are not limited by it.
-    pub(crate) fn cycle_client<'a>(&'a self, base: &'a str) -> Client<'a> {
+    /// A client for calls made with the session's device token, which name the epoch the file last saw.
+    pub(crate) fn device_client<'a>(&'a self, session: &'a Session) -> Client<'a> {
+        Client {
+            epoch: Some(session.epoch),
+            ..self.client(&session.base)
+        }
+    }
+
+    /// A device client whose requests spend the running tick's budget; only the cycle uses it, so host calls made
+    /// during a tick are not limited by it.
+    pub(crate) fn cycle_client<'a>(&'a self, session: &'a Session) -> Client<'a> {
         Client {
             spending: Some(&self.spending),
-            ..self.client(base)
+            ..self.device_client(session)
         }
     }
 
@@ -383,7 +394,7 @@ impl Shared {
         if state.is_detached {
             return Err(SyncError::Detached);
         }
-        let (Some(base), Some(token)) = (state.server_url, token) else {
+        let (Some(base), Some(token), Some(epoch)) = (state.server_url, token, state.epoch) else {
             return Err(SyncError::NotEnrolled);
         };
         Ok(Session {
@@ -391,6 +402,7 @@ impl Shared {
             space: state.space_id,
             device: state.device_id,
             token,
+            epoch,
         })
     }
 

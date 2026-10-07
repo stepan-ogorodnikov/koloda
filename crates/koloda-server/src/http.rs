@@ -14,7 +14,7 @@ use axum::http::header::{ACCEPT_ENCODING, CONTENT_ENCODING, CONTENT_TYPE};
 use axum::http::{HeaderMap, HeaderValue, StatusCode};
 use axum::response::{IntoResponse, Response};
 use koloda_sync_proto::transport::{
-    DeviceMeta, ErrorBody, ErrorCode, Meta, Reply, MAX_BODY_BYTES, MAX_EXPANSION_RATIO,
+    DeviceMeta, ErrorBody, ErrorCode, Meta, Reply, Restore, MAX_BODY_BYTES, MAX_EXPANSION_RATIO,
 };
 use rusqlite::OptionalExtension;
 use serde::de::DeserializeOwned;
@@ -33,6 +33,7 @@ pub struct ApiError {
     status: StatusCode,
     code: ErrorCode,
     message: String,
+    restore: Option<Restore>,
 }
 
 /// What a request revealed about its caller, for `meta`: the space whose epoch it may learn, and the authenticated
@@ -49,6 +50,20 @@ impl ApiError {
             status,
             code,
             message: message.into(),
+            restore: None,
+        }
+    }
+
+    /// The caller's epoch is not the space's: it must apply `restore` before anything else (`PROTOCOL.md` §Server
+    /// restore).
+    pub(crate) fn epoch_changed(restore: Restore) -> ApiError {
+        ApiError {
+            restore: Some(restore),
+            ..ApiError::new(
+                StatusCode::CONFLICT,
+                ErrorCode::EpochChanged,
+                "this space was restored since this device last synced",
+            )
         }
     }
 
@@ -84,6 +99,7 @@ impl ApiError {
         ErrorBody {
             code: self.code,
             message: self.message.clone(),
+            restore: self.restore.clone(),
         }
     }
 }

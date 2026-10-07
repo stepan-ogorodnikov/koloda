@@ -3,9 +3,9 @@ use std::num::NonZeroU32;
 
 use ciborium::Value;
 use koloda_sync_proto::transport::{
-    AttachmentBody, ClaimPairing, CreateSpace, DependencyAction, DeviceInfo, DeviceMeta, Empty, Enrollment, ErrorBody,
-    ErrorCode, HeldReason, IssuePairing, KnownId, KnownState, LogEntry, Meta, Outcome, Platform, PullPage, Push,
-    PushItem, PushOutcome, Reply, Snapshot, SnapshotPage,
+    AttachmentBody, ClaimPairing, CreateSpace, Cutoff, DependencyAction, DeviceInfo, DeviceMeta, Empty, Enrollment,
+    ErrorBody, ErrorCode, HeldReason, IssuePairing, KnownId, KnownState, LogEntry, Meta, Outcome, Platform, PullPage,
+    Push, PushItem, PushOutcome, Reply, Restore, RestoreMode, Snapshot, SnapshotPage,
 };
 use serde::Serialize;
 
@@ -88,6 +88,7 @@ fn replies_carry_meta_and_exactly_one_of_ok_and_error() {
         error: Some(ErrorBody {
             code: ErrorCode::UnknownSpace,
             message: "no such space".to_string(),
+            restore: None,
         }),
     };
 
@@ -120,9 +121,50 @@ fn replies_carry_meta_and_exactly_one_of_ok_and_error() {
         ]
     );
     assert_eq!(
+        keys(field(&error, "error")),
+        ["code", "message"],
+        "an absent restore is omitted"
+    );
+    assert_eq!(
         field(field(&error, "error"), "code"),
         &Value::Text("unknown_space".to_string())
     );
+}
+
+#[test]
+fn an_epoch_changed_error_carries_the_restore_to_apply() {
+    let error = Reply::<Enrollment> {
+        meta: meta(Some([5; 16]), None),
+        ok: None,
+        error: Some(ErrorBody {
+            code: ErrorCode::EpochChanged,
+            message: "this space was restored".to_string(),
+            restore: Some(Restore {
+                epoch: [5; 16],
+                mode: RestoreMode::Authoritative,
+                head_hot: 40,
+                head_cold: 9,
+                cutoffs: vec![Cutoff {
+                    sender: [6; 16],
+                    last_seq: 12,
+                }],
+            }),
+        }),
+    };
+
+    let error = cbor(&error);
+    let body = field(&error, "error");
+
+    assert_eq!(field(body, "code"), &Value::Text("epoch_changed".to_string()));
+    let restore = field(body, "restore");
+    assert_eq!(keys(restore), ["epoch", "mode", "head_hot", "head_cold", "cutoffs"]);
+    assert_eq!(field(restore, "epoch"), &Value::Bytes(vec![5; 16]));
+    assert_eq!(field(restore, "mode"), &Value::Text("authoritative".to_string()));
+    let Value::Array(cutoffs) = field(restore, "cutoffs") else {
+        panic!("cutoffs are an array");
+    };
+    assert_eq!(keys(&cutoffs[0]), ["sender", "last_seq"]);
+    assert_eq!(field(&cutoffs[0], "sender"), &Value::Bytes(vec![6; 16]));
 }
 
 #[test]

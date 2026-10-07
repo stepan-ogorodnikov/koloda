@@ -280,7 +280,7 @@ Out:
   Commit: Restore a server from a backup
   Depends on: 3
 
-- [ ] 5. Refuse device calls from an older epoch
+- [x] 5. Refuse device calls from an older epoch
   Goal:
   - `transport.rs` gains `EPOCH_HEADER`, `ErrorCode::EpochChanged` (409), and `Restore` as question 5 combines it.
     `ErrorBody` gains an optional `restore`.

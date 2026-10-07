@@ -25,7 +25,7 @@ use koloda_sync_proto::payload::{seal, Payload, Seal};
 use koloda_sync_proto::registry::Lane;
 use koloda_sync_proto::transport::{
     ClaimPairing, Empty, Enrollment, ErrorBody, ErrorCode, IssuePairing, Meta, Outcome, Pairing, PairingClaim,
-    Platform, PullPage, Push, PushItem, PushReply, Receipts, Reply, MAX_RECEIPT_RANGE,
+    Platform, PullPage, Push, PushItem, PushReply, Receipts, Reply, EPOCH_HEADER, MAX_RECEIPT_RANGE,
 };
 use rusqlite::backup::Backup;
 use rusqlite::{Connection, OptionalExtension};
@@ -157,13 +157,7 @@ impl TestServer {
     /// WHY: moving the server clock instead would trip every engine's skew guard, since `koloda` stamps with system
     /// time.
     pub fn backdate(&self, device: Uuid, ms: u64) {
-        let current = std::fs::read_to_string(self._dir.path().join("CURRENT")).expect("read CURRENT");
-        let path = self
-            ._dir
-            .path()
-            .join("generations")
-            .join(current.trim())
-            .join("server.db");
+        let path = self.generation_dir().join("server.db");
         let conn = Connection::open(path).expect("server.db opens");
         conn.execute(
             "UPDATE devices SET last_seen = last_seen - ?1 WHERE id = ?2",
@@ -197,9 +191,32 @@ impl TestServer {
             method,
             url: format!("{SERVER_URL}{path}"),
             token: token.map(str::to_string),
+            epoch: token.and_then(|_| self.current_epoch(path)),
             body,
             is_zstd: false,
         })
+    }
+
+    /// The current epoch of the space a `/v1/spaces/{space}/...` path names, if it exists.
+    pub fn current_epoch(&self, path: &str) -> Option<Uuid> {
+        let space = path.strip_prefix("/v1/spaces/")?.split(['/', '?']).next()?;
+        let file = self
+            .generation_dir()
+            .join("spaces")
+            .join(format!("{}.db", Uuid::parse_str(space).ok()?));
+        if !file.exists() {
+            return None;
+        }
+        Connection::open(file)
+            .ok()?
+            .query_row("SELECT epoch FROM space WHERE id = 1", [], |row| row.get(0))
+            .ok()
+    }
+
+    /// The active generation's directory, as `CURRENT` names it.
+    pub fn generation_dir(&self) -> std::path::PathBuf {
+        let current = std::fs::read_to_string(self._dir.path().join("CURRENT")).expect("read CURRENT");
+        self._dir.path().join("generations").join(current.trim())
     }
 
     pub fn request<T: DeserializeOwned>(&self, request: Request) -> (u16, Reply<T>) {
@@ -311,10 +328,12 @@ impl Space {
                 })
                 .collect(),
         };
+        let path = format!("/v1/spaces/{}/push", self.space_id());
         Request {
             method: Method::Post,
-            url: format!("{SERVER_URL}/v1/spaces/{}/push", self.space_id()),
+            url: format!("{SERVER_URL}{path}"),
             token: Some(self.raw.token.clone()),
+            epoch: self.server.current_epoch(&path),
             body: Some(cbor(&push)),
             is_zstd: false,
         }
@@ -586,6 +605,9 @@ async fn forward(router: &Router, request: Request) -> Response {
     if let Some(token) = &request.token {
         builder = builder.header(AUTHORIZATION, format!("Bearer {token}"));
     }
+    if let Some(epoch) = request.epoch {
+        builder = builder.header(EPOCH_HEADER, epoch.to_string());
+    }
     if request.body.is_some() {
         builder = builder.header(CONTENT_TYPE, CBOR);
     }
@@ -629,6 +651,7 @@ pub fn error_reply(status: u16, code: ErrorCode) -> Response {
         },
         ok: None,
         error: Some(ErrorBody {
+            restore: None,
             code,
             message: "injected by the test".to_string(),
         }),

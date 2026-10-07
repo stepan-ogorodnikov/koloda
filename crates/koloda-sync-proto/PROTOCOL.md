@@ -820,7 +820,7 @@ Unknown `kind`, `group`, or `op`, and lane mismatches, are rejected at a header 
 | `GET /v1/spaces` | List spaces; setup token |
 | `POST /v1/spaces/{space}/pairings` | Issue a pairing code; device token, or setup token for break-glass; revoking the issuer invalidates its codes |
 | `POST /v1/pairings/preview` | Body has `code`; space name, epoch, approximate counts and bytes; does not consume the code; rate-limited |
-| `POST /v1/pairings/claim` | Body has `code`, name, platform, nonce; returns device id, token, epoch, and restore points; the same nonce returns the same result |
+| `POST /v1/pairings/claim` | Body has `code`, name, platform, nonce; returns device id, token, and epoch; the same nonce returns the same result |
 | `POST /v1/spaces/{space}/push` | Batch of envelopes; atomic, with per-seq outcomes |
 | `GET /v1/spaces/{space}/receipts` | Stored outcomes for any sender's seqs; usable while `rebase_required` |
 | `GET /v1/spaces/{space}/pull?lane&after&max_seq&limit` | Envelopes with `after < seq <= max_seq`, own sender excluded, minus anything under a committed deletion scope; each entry carries `(seq, sender, sender_seq)`; returns `scanned_through`, `has_more`, heads, epoch |
@@ -833,6 +833,14 @@ Unknown `kind`, `group`, or `op`, and lane mismatches, are rejected at a header 
 | `POST /v1/spaces/{space}/devices/fork` | Current token in, new device id and token out (§Devices) |
 | `POST /v1/spaces/{space}/ids/known` | Id chunk in, the ones live or fenced in the space out, each marked which (§Joining) |
 | `PUT/GET /v1/spaces/{space}/attachments/{id}` | Attachment bytes and metadata (§Attachments) |
+
+Every call made with a device token carries the header `koloda-epoch`: the epoch the device last saw, as hyphenated
+UUID text.
+A device call without it is `bad_request`.
+A device call that names another epoch is refused with `409 epoch_changed` after the token is checked and before
+anything else, so it consumes nothing and records no cursor.
+Its cursor may be past the restored head, so a pull on the old epoch would skip the new generation's first writes.
+The error carries the restore the device must apply (§Server restore).
 
 Every response body is `{ meta, ok }` or `{ meta, error }`.
 `meta.server_time_ms` is always present.
@@ -878,7 +886,9 @@ Names are 1 to 100 characters after trimming.
 Creating a space also enrolls its creator, so the first device needs no pairing code.
 The same `nonce` returns the same result, token included, for 10 minutes.
 A space's `device_count` counts the devices that are not revoked.
-The claim reply gains `restore_points` with server restore (§Recovery).
+An `epoch_changed` error carries `restore`: `epoch` (the space's), `mode`, `head_hot`, `head_cold`, and `cutoffs`,
+each a `sender` and its `last_seq`; a sender `cutoffs` does not list counts as 0.
+A re-attaching file learns a restore the same way: from its first call made with the epoch it stored.
 An outcome is a map tagged by `status`, such as `{ status: applied }` or `{ status: held, reason: schema }`.
 A receipt range is `after < seq <= through`.
 An endpoint that returns nothing answers `ok` with an empty map.
@@ -897,13 +907,13 @@ An endpoint that returns nothing answers `ok` with an empty map.
 | `stamp_ahead` | 409 | A pushed stamp more than 5 minutes ahead of server now (§Skew guards) |
 | `schema_read_only` | 409 | A pushed schema above the kind's `write_schema` (§Schema versions) |
 | `cursor_too_old` | 409 | A push from a device that must re-bootstrap first, or a pull from below a GC horizon (§Devices, §Pull cursor) |
+| `epoch_changed` | 409 | A device call that names an epoch other than the space's (§Server restore) |
 | `lease_expired` | 410 | A bootstrap lease that expired, was released, or belongs to another device (§Bootstrap) |
 | `too_large` | 413 | A body past its size or expansion cap |
 | `rate_limited` | 429 | Too many wrong pairing codes (§Pairing), or too many open bootstrap leases (§Bootstrap) |
 | `internal` | 500 | A server fault |
 
-The protocol also has `epoch_changed` and `507`.
-Each gets its row with the server work that answers it.
+The protocol also has `507`, which gets its row with the server work that answers it.
 
 ### Push outcomes
 
@@ -1214,8 +1224,10 @@ It appends a restore point per space:
 Restore points accumulate: the new generation holds the backup's points, then the replaced generation's points the
 backup lacks, when that data is still readable, then the new one.
 A device on an older epoch, perhaps offline across two restores, applies all points newer than its epoch as one.
+Those are the points after the last one that issued its epoch.
+An epoch no point issued, possible only when the replaced data was lost as well, takes every point.
 The combined mode is authoritative if any of them is.
-Each device's cutoff is the lowest among them.
+Each head and each sender's cutoff is the lowest among them; a sender one of them does not list counts as 0.
 
 Restore also drops every pairing code, pending space creation, and bootstrap lease.
 It sets every restored device's `last_seen` to the restore time, so an old backup marks no device stale.
@@ -1235,7 +1247,7 @@ It gets `401 unknown_device` with the new epoch, re-attaches with a pairing code
 (§Joining).
 
 **Heal** puts the space behind its devices, which then fill it back in.
-A client on the old epoch gets `epoch_changed` with the restore points, then:
+A client on the old epoch gets `epoch_changed` with the combined restore, then:
 
 1. Stores the new epoch, sets each cursor to `min(cursor, restore seq)`, and stores each sender's cutoff: its
    restore `last_sender_seq`, or 0 for a sender the restore does not list.

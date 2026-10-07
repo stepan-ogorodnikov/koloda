@@ -9,13 +9,15 @@ use std::fs;
 use std::io;
 use std::path::{Path, PathBuf};
 
-use koloda_sync_proto::transport::RestoreMode;
+use koloda_sync_proto::transport::{Cutoff, Restore, RestoreMode};
 use rusqlite::{params, Connection};
 use uuid::Uuid;
 
 use crate::backup::{self, Manifest, MANIFEST, MANIFEST_FORMAT};
 use crate::data_dir::{self, DataDirError, DataDirLock, ATTACHMENTS, SERVER_DB, SPACES};
 use crate::db::{self, DbError};
+use crate::http::ApiError;
+use crate::log;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct RestoreOptions {
@@ -124,6 +126,95 @@ impl Prepared {
         fs::remove_dir_all(&self.staged)?;
         Ok(())
     }
+}
+
+/// The restore a device on `epoch` must apply to reach the space's `current` epoch: every point after the last one
+/// that issued `epoch`, or every point when none did, combined as one (`PROTOCOL.md` §Server restore).
+///
+/// INVARIANT: combined, the mode is authoritative if any point is, each head is the lowest, and each sender's cutoff
+/// is the lowest; a sender a point does not list had nothing in that backup, so it is left out (cutoff 0).
+pub(crate) fn combined(conn: &Connection, epoch: Uuid, current: Uuid) -> Result<Restore, ApiError> {
+    let points: Vec<(i64, Uuid, String, u64, u64)> = conn
+        .prepare("SELECT position, epoch, mode, head_hot, head_cold FROM restore_points ORDER BY position")?
+        .query_map([], |row| {
+            Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?, row.get(4)?))
+        })?
+        .collect::<Result<_, _>>()?;
+    let after = points
+        .iter()
+        .rposition(|(_, issued, ..)| *issued == epoch)
+        .map_or(0, |index| index + 1);
+    let applied = points.get(after..).unwrap_or_default();
+
+    // WHY: an epoch no point follows has nothing to apply; it is sent back to the current epoch with every sender's
+    // cutoff at its high-water, so it re-pushes nothing the space already took.
+    if applied.is_empty() {
+        let (head_hot, head_cold) = log::lane_heads(conn)?;
+        let cutoffs = conn
+            .prepare("SELECT sender, last_seq FROM senders ORDER BY sender")?
+            .query_map([], |row| {
+                Ok(Cutoff {
+                    sender: row.get::<_, Uuid>(0)?.into_bytes(),
+                    last_seq: row.get(1)?,
+                })
+            })?
+            .collect::<Result<_, _>>()?;
+        return Ok(Restore {
+            epoch: current.into_bytes(),
+            mode: RestoreMode::Heal,
+            head_hot,
+            head_cold,
+            cutoffs,
+        });
+    }
+
+    let mut cutoffs: Option<Vec<Cutoff>> = None;
+    for (position, ..) in applied {
+        let point: Vec<Cutoff> = conn
+            .prepare("SELECT sender, last_seq FROM restore_cutoffs WHERE position = ?1 ORDER BY sender")?
+            .query_map(params![position], |row| {
+                Ok(Cutoff {
+                    sender: row.get::<_, Uuid>(0)?.into_bytes(),
+                    last_seq: row.get(1)?,
+                })
+            })?
+            .collect::<Result<_, _>>()?;
+        cutoffs = Some(match cutoffs {
+            None => point,
+            Some(lowest) => lowest
+                .into_iter()
+                .filter_map(|cutoff| {
+                    let other = point.iter().find(|other| other.sender == cutoff.sender)?;
+                    Some(Cutoff {
+                        sender: cutoff.sender,
+                        last_seq: cutoff.last_seq.min(other.last_seq),
+                    })
+                })
+                .collect(),
+        });
+    }
+    let is_authoritative = applied
+        .iter()
+        .any(|(_, _, mode, ..)| mode == RestoreMode::Authoritative.as_wire());
+    Ok(Restore {
+        epoch: current.into_bytes(),
+        mode: if is_authoritative {
+            RestoreMode::Authoritative
+        } else {
+            RestoreMode::Heal
+        },
+        head_hot: applied
+            .iter()
+            .map(|(_, _, _, head_hot, _)| *head_hot)
+            .min()
+            .unwrap_or_default(),
+        head_cold: applied
+            .iter()
+            .map(|(_, _, _, _, head_cold)| *head_cold)
+            .min()
+            .unwrap_or_default(),
+        cutoffs: cutoffs.unwrap_or_default(),
+    })
 }
 
 type Staged = (Vec<RestoredDevice>, Vec<(Uuid, Uuid)>);

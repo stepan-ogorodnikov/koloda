@@ -61,11 +61,12 @@ The replaced generation stays on disk; delete old generations by hand.
 - `src/data_dir.rs` — layout, `init`, and the directory lock.
 - `src/backup.rs` — an online copy of the active generation and its manifest.
 - `src/restore.rs` — a backup staged as a new generation: epochs, restore points, carried-forward revocations, and
-  the swap of `CURRENT`.
+  the swap of `CURRENT`; and the restore points after a device's epoch, combined as one.
 - `src/db.rs` — connections and the two migration series under `src/migrations/`.
 - `src/server.rs` — shared state: `server.db`, open space databases, and the clock.
 - `src/http.rs` — CBOR and zstd bodies, their limits, the reply envelope, and `meta`.
-- `src/auth.rs` — setup and device tokens, and marking a device stale when it calls after a long absence.
+- `src/auth.rs` — setup and device tokens, marking a device stale when it calls after a long absence, and refusing a
+  device call on another epoch with the restore it must apply.
 - `src/spaces.rs` — space creation, which enrolls the creator, and the list.
 - `src/pairing.rs` — pairing codes: issue, preview, claim, and the limits on wrong codes.
 - `src/push.rs` — push batches and receipts; one transaction under the space writer lock.
@@ -78,7 +79,8 @@ The replaced generation stays on disk; delete old generations by hand.
 - `src/attachments.rs` — attachment bytes by content address: upload checked against the id, download, card refs,
   and collection of attachments unlinked for 90 days.
 
-- `tests/server/` — one test binary; `common.rs` drives the router in-process on a manual clock.
+- `tests/server/` — one test binary; `common.rs` drives the router in-process on a manual clock, and sends each
+  device call with its space's current epoch unless a test names another.
 
 ### Does NOT own (prevent scope creep)
 

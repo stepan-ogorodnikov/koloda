@@ -12,6 +12,7 @@ use koloda_sync_proto::transport::{Meta, Reply, MAX_BODY_BYTES, MAX_EXPANSION_RA
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use url::{Host, Url};
+use uuid::Uuid;
 
 use crate::error::SyncError;
 use crate::runner::Spending;
@@ -52,6 +53,8 @@ pub(crate) struct Client<'a> {
     pub(crate) transport: &'a dyn Transport,
     pub(crate) skew: &'a Skew,
     pub(crate) spending: Option<&'a Mutex<Option<Spending>>>,
+    /// The session's epoch for device calls; `None` for calls made with a pairing code or the setup token.
+    pub(crate) epoch: Option<Uuid>,
 }
 
 impl Client<'_> {
@@ -84,6 +87,7 @@ impl Client<'_> {
             method,
             url: format!("{}{path}", self.base),
             token: token.map(str::to_string),
+            epoch: self.epoch,
             body,
             is_zstd,
         };

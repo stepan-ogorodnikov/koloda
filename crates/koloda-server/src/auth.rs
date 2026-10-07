@@ -4,14 +4,15 @@
 
 use axum::http::header::AUTHORIZATION;
 use axum::http::{HeaderMap, StatusCode};
-use koloda_sync_proto::transport::ErrorCode;
+use koloda_sync_proto::transport::{ErrorCode, EPOCH_HEADER};
 use rusqlite::{params, Connection, OptionalExtension};
 use sha2::{Digest, Sha256};
 use uuid::Uuid;
 
 use crate::devices;
 use crate::http::{ApiError, Scope};
-use crate::server::Server;
+use crate::restore;
+use crate::server::{lock, Server};
 
 const TOKEN_BYTES: usize = 32;
 const BEARER: &str = "Bearer ";
@@ -168,14 +169,35 @@ pub(crate) fn require_device(
         "UPDATE devices SET last_seen = ?1, rebase_required = ?2 WHERE id = ?3",
         params![now, is_rebase_required, id],
     )?;
+    drop(conn);
     scope.space = Some(device_space);
     scope.device = Some(id);
+    // INVARIANT: a device on another epoch does nothing until it has applied the restore. Its cursor may be past the
+    // restored head, so a pull would skip the new generation's first writes (PROTOCOL.md, Server restore).
+    let epoch = requested_epoch(headers)?;
+    let space = server.space(device_space)?.ok_or_else(ApiError::unknown_space)?;
+    let reader = lock(&space.reader)?;
+    let current: Uuid = reader.query_row("SELECT epoch FROM space WHERE id = 1", [], |row| row.get(0))?;
+    if epoch != current {
+        return Err(ApiError::epoch_changed(restore::combined(&reader, epoch, current)?));
+    }
     Ok(DeviceAuth {
         id,
         space: device_space,
         is_rebase_required,
         cursor_hot,
     })
+}
+
+fn requested_epoch(headers: &HeaderMap) -> Result<Uuid, ApiError> {
+    let value = headers
+        .get(EPOCH_HEADER)
+        .ok_or_else(|| ApiError::bad_request(format!("a device call carries `{EPOCH_HEADER}`")))?;
+    value
+        .to_str()
+        .ok()
+        .and_then(|text| Uuid::parse_str(text).ok())
+        .ok_or_else(|| ApiError::bad_request(format!("`{EPOCH_HEADER}` is not a UUID")))
 }
 
 fn is_setup_token(server: &Server, token: &str) -> Result<bool, ApiError> {

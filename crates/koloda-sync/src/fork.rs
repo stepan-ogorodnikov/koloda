@@ -27,7 +27,7 @@ impl Shared {
         // record when it retries, and no orphan record pins GC.
         let nonce = self.blocking(|shared| fork_nonce(&shared.db)).await?;
         let enrollment: Enrollment = self
-            .cycle_client(&session.base)
+            .cycle_client(session)
             .call(
                 Method::Post,
                 &format!("/v1/spaces/{}/devices/fork", session.space),
@@ -90,7 +90,7 @@ impl Shared {
         through: u64,
     ) -> Result<Vec<Receipt>, SyncError> {
         Ok(self
-            .cycle_client(&session.base)
+            .cycle_client(session)
             .call::<(), Receipts>(
                 Method::Get,
                 &format!(

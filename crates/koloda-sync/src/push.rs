@@ -60,7 +60,7 @@ impl Shared {
             };
 
             let reply = self
-                .cycle_client(&session.base)
+                .cycle_client(session)
                 .call::<_, PushReply>(
                     Method::Post,
                     &format!("/v1/spaces/{}/push", session.space),

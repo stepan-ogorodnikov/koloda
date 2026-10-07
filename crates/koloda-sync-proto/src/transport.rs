@@ -21,6 +21,8 @@ pub const MAX_PAGE_BYTES: usize = 8 * 1024 * 1024;
 // INVARIANT: equal to `koloda`'s `ATTACHMENT_MAX_BYTES` and its accepted formats; a device stores no larger image.
 pub const MAX_ATTACHMENT_BYTES: usize = 5 * 1024 * 1024;
 pub const ATTACHMENT_MIMES: [&str; 5] = ["image/png", "image/jpeg", "image/gif", "image/webp", "image/avif"];
+/// The request header that names the epoch a device last saw, as hyphenated UUID text, on every device-token call.
+pub const EPOCH_HEADER: &str = "koloda-epoch";
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -60,6 +62,30 @@ pub struct DeviceMeta {
 pub struct ErrorBody {
     pub code: ErrorCode,
     pub message: String,
+    /// With `epoch_changed`: the restore the caller must apply before anything else.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub restore: Option<Restore>,
+}
+
+/// Every restore point newer than the caller's epoch, applied as one (`PROTOCOL.md` §Server restore).
+/// A sender `cutoffs` does not list counts as cutoff 0.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Restore {
+    #[serde(with = "serde_bytes")]
+    pub epoch: [u8; 16],
+    pub mode: RestoreMode,
+    pub head_hot: u64,
+    pub head_cold: u64,
+    pub cutoffs: Vec<Cutoff>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Cutoff {
+    #[serde(with = "serde_bytes")]
+    pub sender: [u8; 16],
+    pub last_seq: u64,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -77,6 +103,7 @@ pub enum ErrorCode {
     StampAhead,
     SchemaReadOnly,
     CursorTooOld,
+    EpochChanged,
     LeaseExpired,
     Internal,
 }

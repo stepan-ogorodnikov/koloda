@@ -32,7 +32,8 @@ A device's bearer token lives in the host's secret store under `sync.token.<devi
   heartbeats, restarts, and the re-bootstrap's absence cleanup at the end.
 - `src/attachments.rs` — image uploads and fetches after the cycle's rounds: retries, early stops, and the event
   that tells the host which images arrived.
-- `src/client.rs` — CBOR and zstd bodies, the reply envelope, the skew estimate, retries, and the server URL rule.
+- `src/client.rs` — CBOR and zstd bodies, the reply envelope, the skew estimate, retries, the server URL rule, and the
+  epoch every device call names.
 - `src/transport.rs` — `Transport`, one request and its raw reply; `HttpTransport` sends it with reqwest.
 - `src/error.rs` — `SyncError`.
 

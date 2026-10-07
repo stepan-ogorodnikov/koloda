@@ -28,7 +28,7 @@ impl Shared {
     pub(crate) async fn devices(self: &Arc<Self>) -> Result<Vec<DeviceSummary>, SyncError> {
         let session = self.session().await?;
         let list: DeviceList = self
-            .client(&session.base)
+            .device_client(&session)
             .call::<(), _>(
                 Method::Get,
                 &format!("/v1/spaces/{}/devices", session.space),
@@ -54,7 +54,7 @@ impl Shared {
 
     pub(crate) async fn revoke_device(self: &Arc<Self>, device: Uuid) -> Result<(), SyncError> {
         let session = self.session().await?;
-        self.client(&session.base)
+        self.device_client(&session)
             .call::<(), Empty>(
                 Method::Delete,
                 &format!("/v1/spaces/{}/devices/{device}", session.space),
@@ -69,7 +69,7 @@ impl Shared {
     pub(crate) async fn detach(self: &Arc<Self>) -> Result<(), SyncError> {
         let session = self.session().await?;
         let revoked = self
-            .client(&session.base)
+            .device_client(&session)
             .call::<(), Empty>(
                 Method::Delete,
                 &format!("/v1/spaces/{}/devices/{}", session.space, session.device),

@@ -171,7 +171,7 @@ impl Shared {
 
     async fn device_record(&self, session: &Session) -> Result<(DeviceInfo, Heads), SyncError> {
         let answer = self
-            .cycle_client(&session.base)
+            .cycle_client(session)
             .call::<(), DeviceInfo>(
                 Method::Get,
                 &format!("/v1/spaces/{}/devices/{}", session.space, session.device),
@@ -201,7 +201,7 @@ impl Shared {
                 self.keep_alive(session, lease).await?;
             }
             let answer = self
-                .cycle_client(&session.base)
+                .cycle_client(session)
                 .call::<(), PullPage>(
                     Method::Get,
                     &format!(

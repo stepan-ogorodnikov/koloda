@@ -63,7 +63,7 @@ impl Shared {
     pub(crate) async fn issue_pairing(self: Arc<Self>, hint: Option<Vec<u8>>) -> Result<IssuedPairing, SyncError> {
         let session = self.session().await?;
         let pairing: Pairing = self
-            .client(&session.base)
+            .device_client(&session)
             .call(
                 Method::Post,
                 &format!("/v1/spaces/{}/pairings", session.space),
@@ -143,10 +143,11 @@ impl Shared {
             space: state.space_id,
             device,
             token,
+            epoch: Uuid::from_bytes(preview.epoch),
         };
         let old = state.device_id;
         let record: DeviceInfo = self
-            .client(&session.base)
+            .device_client(&session)
             .call::<(), _>(
                 Method::Get,
                 &format!("/v1/spaces/{}/devices/{old}", session.space),
@@ -203,6 +204,7 @@ impl Shared {
             space: Uuid::from_bytes(enrollment.space_id),
             device: Uuid::from_bytes(enrollment.device_id),
             token: enrollment.token,
+            epoch: Uuid::from_bytes(enrollment.epoch),
         };
         let epoch = Uuid::from_bytes(enrollment.epoch);
         let (device, token) = (session.device, session.token.clone());
@@ -273,7 +275,7 @@ impl Shared {
                     .collect(),
             };
             let answer: koloda_sync_proto::transport::Known = self
-                .client(&session.base)
+                .device_client(session)
                 .call(
                     Method::Post,
                     &format!("/v1/spaces/{}/ids/known", session.space),
