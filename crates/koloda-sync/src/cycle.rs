@@ -38,6 +38,10 @@ impl Shared {
         if state.is_import_pending {
             return Ok(());
         }
+        // INVARIANT: a file holding an authoritative restore sends nothing until its host accepts it.
+        if state.is_restore_held {
+            return Err(SyncError::RestoreHeld);
+        }
         let mut cursors = (state.cursor_hot, state.cursor_cold);
         // INVARIANT: the writes captured during a clock pause take new stamps before anything is pushed or applied,
         // so they beat what they read and keep their order (PROTOCOL.md, Skew guards). A reply must first show

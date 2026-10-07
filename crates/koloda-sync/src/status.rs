@@ -42,6 +42,8 @@ pub enum Stop {
     ClockSkew,
     Revoked,
     UnknownDevice,
+    /// An authoritative server restore waits for the host to accept it (`Engine::accept_restore`).
+    AuthoritativeRestore,
     PushRefused(ErrorCode),
     Error(String),
 }
@@ -52,6 +54,7 @@ impl Stop {
             SyncError::ClockSkew { .. } => Stop::ClockSkew,
             SyncError::Revoked | SyncError::Detached => Stop::Revoked,
             SyncError::UnknownDevice => Stop::UnknownDevice,
+            SyncError::RestoreHeld => Stop::AuthoritativeRestore,
             SyncError::PushRefused { code, .. } => Stop::PushRefused(*code),
             other => Stop::Error(other.to_string()),
         }
@@ -96,6 +99,8 @@ impl Shared {
         };
         let shown = if state.is_detached {
             State::Stopped(Stop::Revoked)
+        } else if state.is_restore_held {
+            State::Stopped(Stop::AuthoritativeRestore)
         } else if state.is_import_pending {
             State::ImportPending
         } else if run.is_syncing && (state.is_bootstrapping || state.is_rebasing) {

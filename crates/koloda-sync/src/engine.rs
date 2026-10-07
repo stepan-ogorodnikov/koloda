@@ -183,6 +183,12 @@ impl Engine {
         self.run(|shared| async move { shared.revoke_device(device).await })
     }
 
+    /// Accepts a held authoritative restore: the file discards its product rows and sync tables, keeps its settings,
+    /// conversations, and images, and bootstraps from the restored space.
+    pub fn accept_restore(&self) -> Result<(), SyncError> {
+        self.run(|shared| shared.accept_restore())
+    }
+
     /// Revokes this file's own device and detaches the file.
     pub fn detach(&self) -> Result<(), SyncError> {
         self.run(|shared| async move { shared.detach().await })
@@ -251,9 +257,15 @@ impl Shared {
     // (PROTOCOL.md, Devices). A restore a host call ran into is applied, so the next call names the new epoch.
     async fn settle_device<T>(self: &Arc<Self>, result: Result<T, SyncError>) -> Result<T, SyncError> {
         match result {
-            Err(SyncError::Restored(restore)) => {
-                self.apply_restore(restore.clone()).await?;
-                Err(SyncError::Restored(restore))
+            Err(SyncError::Restored {
+                restore,
+                last_sender_seq,
+            }) => {
+                self.apply_restore(restore.clone(), last_sender_seq).await?;
+                Err(SyncError::Restored {
+                    restore,
+                    last_sender_seq,
+                })
             }
             Err(SyncError::Server {
                 code: ErrorCode::Revoked,
@@ -321,10 +333,14 @@ impl Shared {
         // INVARIANT: a restore is applied before the file sends anything else on the new epoch; the cycle then starts
         // again. A second restore while it runs is applied the same way (PROTOCOL.md, Server restore).
         for _ in 0..MAX_RESTORES {
-            let Err(SyncError::Restored(restore)) = result else {
+            let Err(SyncError::Restored {
+                restore,
+                last_sender_seq,
+            }) = result
+            else {
                 break;
             };
-            session.epoch = self.apply_restore(restore).await?;
+            session.epoch = self.apply_restore(restore, last_sender_seq).await?;
             result = self.cycle(&mut session, changed).await;
         }
         // INVARIANT: the pause outlives a relaunch, so the writes captured on a wrong clock take new stamps before the

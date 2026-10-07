@@ -29,8 +29,13 @@ pub enum SyncError {
     /// The server holds no device for this token, as after a restore that predates it; the engine stops.
     UnknownDevice,
     /// The space was restored since this file last synced; the file applies this restore before anything else
-    /// (`PROTOCOL.md` §Server restore).
-    Restored(Restore),
+    /// (`PROTOCOL.md` §Server restore). `last_sender_seq` is the server's for this device.
+    Restored {
+        restore: Restore,
+        last_sender_seq: u64,
+    },
+    /// An authoritative restore waits for the host to accept it; the file sends nothing meanwhile.
+    RestoreHeld,
     /// The server answered a push with an error reply, which consumed nothing.
     PushRefused {
         status: u16,
@@ -72,7 +77,8 @@ impl fmt::Display for SyncError {
             SyncError::Revoked => write!(f, "this device was revoked, so the file detached from its space"),
             SyncError::Detached => write!(f, "this file is detached from its space"),
             SyncError::UnknownDevice => write!(f, "the sync server does not know this device"),
-            SyncError::Restored(restore) => write!(f, "the sync server was restored ({:?})", restore.mode),
+            SyncError::Restored { restore, .. } => write!(f, "the sync server was restored ({:?})", restore.mode),
+            SyncError::RestoreHeld => write!(f, "an authoritative server restore waits to be accepted"),
             SyncError::PushRefused { status, code, message } => {
                 write!(f, "the sync server refused a push with {status} {code:?}: {message}")
             }

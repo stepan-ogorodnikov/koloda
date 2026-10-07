@@ -23,13 +23,15 @@ A device's bearer token lives in the host's secret store under `sync.token.<devi
   behind, push, `hot` to head, `cold` to the recorded head, the skew pause, and repair after catch-up.
 - `src/push.rs` — pushing the outbox in batches and handing each reply, loss, or refusal to `koloda`; heal and
   backfill top the outbox up before each batch.
-- `src/restore.rs` — a server restore the server reported: heal starts the re-push scan.
+- `src/restore.rs` — a server restore the server reported: heal starts the re-push scan; an authoritative restore is
+  held until the host calls `accept_restore`, which discards local data so the next cycle bootstraps.
 - `src/fork.rs` — a file behind its own record forks to a new device id: the stored nonce, the new token, receipts,
   and the switch.
 - `src/pairing.rs` — pairing codes, preview, and joining a space: blank, seed-only, a used file through Add or
   Replace, or a detached file re-attaching under a new device id.
 - `src/runner.rs` — the background runner: triggers, coalescing, the poll, backoff, events, and tick budgets.
-- `src/status.rs` — the state the host shows, why the last cycle stopped, and how far behind each lane is.
+- `src/status.rs` — the state the host shows, why the last cycle stopped (an authoritative restore waiting for the
+  host among the reasons), and how far behind each lane is.
 - `src/devices.rs` — the device list, revoking another device, and detaching this file.
 - `src/bootstrap.rs` — a joiner's union bootstrap and a re-bootstrap from a snapshot lease: streams, catch-up,
   heartbeats, restarts, and the re-bootstrap's absence cleanup at the end.

@@ -117,7 +117,10 @@ impl Client<'_> {
                 bytes: response.body.len(),
             })),
             (None, Some(error)) if response.status != OK => Ok(Err(match (error.code, error.restore) {
-                (ErrorCode::EpochChanged, Some(restore)) => SyncError::Restored(restore),
+                (ErrorCode::EpochChanged, Some(restore)) => SyncError::Restored {
+                    restore,
+                    last_sender_seq: reply.meta.device.map_or(0, |device| device.last_sender_seq),
+                },
                 (code, _) => SyncError::Server {
                     status: response.status,
                     code,

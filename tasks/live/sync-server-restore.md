@@ -328,7 +328,7 @@ Out:
   Commit: Heal a device after a server restore
   Depends on: 1, 5
 
-- [ ] 7. Re-download the backup after an authoritative restore
+- [x] 7. Re-download the backup after an authoritative restore
   Goal:
   - On `epoch_changed` with an authoritative restore, the engine runs `hold_authoritative` (item 2) and stops with
     `Stop::AuthoritativeRestore`; a held file pushes and pulls nothing.
