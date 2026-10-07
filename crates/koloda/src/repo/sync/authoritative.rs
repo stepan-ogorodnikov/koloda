@@ -59,7 +59,7 @@ pub fn reset_for_authoritative(db: &Database) -> Result<(), AppError> {
                     cursor_hot = 0, cursor_cold = 0, is_bootstrapping = 1,
                     is_rebasing = 0, heal_step = NULL, heal_after_id = NULL,
                     backfill_step = NULL, backfill_after_ts = NULL, backfill_after_id = NULL,
-                    fork_nonce = NULL, is_clock_paused = 0,
+                    fork_nonce = NULL, is_clock_paused = 0, is_checking_attachments = 1,
                     authoritative_epoch = NULL, authoritative_last_seq = NULL
                 WHERE id = 1
                 "#,

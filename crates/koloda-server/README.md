@@ -76,7 +76,8 @@ The replaced generation stays on disk; delete old generations by hand.
 - `src/bootstrap.rs` — snapshot leases: open, stream pages, heartbeat, release, and expiry.
 - `src/known.rs` — the join probe: which ids the space holds live or fenced.
 - `src/devices.rs` — device records, revocation and detach, and fork.
-- `src/attachments.rs` — attachment bytes by content address: upload checked against the id, download, card refs,
+- `src/attachments.rs` — attachment bytes by content address: upload checked against the id, download, the ids
+  cards link that no device uploaded, card refs,
   and collection of attachments unlinked for 90 days.
 
 - `tests/server/` — one test binary; `common.rs` drives the router in-process on a manual clock, and sends each

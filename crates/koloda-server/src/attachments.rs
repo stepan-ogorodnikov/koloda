@@ -11,18 +11,22 @@ use std::path::Path;
 use std::sync::Arc;
 
 use axum::body::Body;
-use axum::extract::{Path as UrlPath, State};
+use axum::extract::rejection::QueryRejection;
+use axum::extract::{Path as UrlPath, Query, State};
 use axum::http::HeaderMap;
 use axum::response::Response;
 use koloda_sync_proto::envelope::Header;
 use koloda_sync_proto::registry::{Group, Kind};
-use koloda_sync_proto::transport::{AttachmentBody, Empty, ATTACHMENT_MIMES, MAX_ATTACHMENT_BYTES};
+use koloda_sync_proto::transport::{
+    AttachmentBody, Empty, MissingAttachments, ATTACHMENT_MIMES, MAX_ATTACHMENT_BYTES, MAX_MISSING_IDS,
+};
 use rusqlite::{params, Connection, OptionalExtension};
+use serde::Deserialize;
 use sha2::{Digest, Sha256};
 use uuid::Uuid;
 
 use crate::auth;
-use crate::http::{read_body, respond, ApiError};
+use crate::http::{query, read_body, respond, ApiError};
 use crate::server::{lock, Server};
 
 const ID_LEN: usize = 64;
@@ -56,6 +60,45 @@ pub(crate) async fn get(
         let caller = auth::require_device(server, scope, headers, &space)?;
         check_id(&id)?;
         load(server, caller.space, &id)?.ok_or_else(|| ApiError::not_found("no device has uploaded this attachment"))
+    })
+    .await
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(crate) struct MissingQuery {
+    after: Option<String>,
+    limit: Option<usize>,
+}
+
+/// Ids that live cards link and no device has uploaded: after a restore, the bytes a backup lacks for cards it holds,
+/// which no push reports because no device re-pushes those cards (`PROTOCOL.md` §Server restore).
+pub(crate) async fn list_missing(
+    State(server): State<Arc<Server>>,
+    UrlPath(space): UrlPath<String>,
+    params: Result<Query<MissingQuery>, QueryRejection>,
+    headers: HeaderMap,
+) -> Response {
+    respond(server, headers, move |server, scope, headers| {
+        let caller = auth::require_device(server, scope, headers, &space)?;
+        let params = query(params)?;
+        let limit = params.limit.unwrap_or(MAX_MISSING_IDS).clamp(1, MAX_MISSING_IDS);
+        let space = server.space(caller.space)?.ok_or_else(ApiError::unknown_space)?;
+        let ids = lock(&space.reader)?
+            .prepare(
+                r#"
+                SELECT DISTINCT r.attachment FROM attachment_refs r
+                WHERE (?1 IS NULL OR r.attachment > ?1)
+                  AND NOT EXISTS (SELECT 1 FROM attachments a WHERE a.id = r.attachment)
+                ORDER BY r.attachment
+                LIMIT ?2
+                "#,
+            )?
+            .query_map(params![params.after, i64::try_from(limit).unwrap_or(i64::MAX)], |row| {
+                row.get(0)
+            })?
+            .collect::<Result<Vec<String>, _>>()?;
+        Ok(MissingAttachments { ids })
     })
     .await
 }

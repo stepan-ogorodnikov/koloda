@@ -102,6 +102,8 @@ sets `cold`'s and clears the joiner's bootstrap flag.
 **Attachment transfers** — `settle_push` queues an upload for each `missing_attachments` id the file holds;
 remote apply queues a fetch for each linked id the file lacks.
 
+- After a restore, `queue_missing_uploads` queues what the server's missing list names and the file holds, and
+  `finish_attachment_check` ends the one check (`sync_state.is_checking_attachments`).
 - `due_transfers` drops a fetch whose image arrived, and a retry no card links any more; only retries pay for the
   card scan. The queue pins nothing, so the startup sweep is unchanged.
 - `store_fetched` checks the hash and validates like an add, then writes through `insert_attachment`, the one insert

@@ -7,9 +7,11 @@ use std::sync::Arc;
 use koloda::app::utility::get_current_timestamp;
 use koloda::domain::attachments::AddAttachmentData;
 use koloda::repo::sync::attachments::{
-    defer_fetch, due_transfers, finish_transfer, store_fetched, upload_source, Direction, Transfer,
+    defer_fetch, due_transfers, finish_attachment_check, finish_transfer, queue_missing_uploads, store_fetched,
+    upload_source, Direction, Transfer,
 };
-use koloda_sync_proto::transport::{AttachmentBody, Empty, ErrorCode};
+use koloda::repo::sync::sync_state;
+use koloda_sync_proto::transport::{AttachmentBody, Empty, ErrorCode, MissingAttachments, MAX_MISSING_IDS};
 
 use crate::engine::{Session, Shared};
 use crate::error::SyncError;
@@ -21,6 +23,47 @@ const DUE_BATCH: usize = 16;
 const CYCLE_BYTES: usize = 64 * 1024 * 1024;
 
 impl Shared {
+    /// After a restore, asks the server once which linked images it lacks and queues an upload of each one this file
+    /// holds: a backup can hold a card whose image went up after it was taken, and no push reports those bytes
+    /// (`PROTOCOL.md` §Server restore). A check that stops part way runs again from the start.
+    pub(crate) async fn check_missing_attachments(self: &Arc<Self>, session: &Session) -> Result<(), SyncError> {
+        let is_due = self
+            .blocking(|shared| sync_state(&shared.db))
+            .await?
+            .is_some_and(|state| state.is_checking_attachments);
+        if !is_due {
+            return Ok(());
+        }
+        let mut after = String::new();
+        loop {
+            let from = if after.is_empty() {
+                String::new()
+            } else {
+                format!("&after={after}")
+            };
+            let page: MissingAttachments = self
+                .cycle_client(session)
+                .call::<(), _>(
+                    Method::Get,
+                    &format!(
+                        "/v1/spaces/{}/attachments/missing?limit={MAX_MISSING_IDS}{from}",
+                        session.space
+                    ),
+                    Some(&session.token),
+                    None,
+                )
+                .await?
+                .ok;
+            let is_last = page.ids.len() < MAX_MISSING_IDS;
+            after = page.ids.last().cloned().unwrap_or_default();
+            self.blocking(move |shared| queue_missing_uploads(&shared.db, &page.ids))
+                .await?;
+            if is_last {
+                return self.blocking(|shared| finish_attachment_check(&shared.db)).await;
+            }
+        }
+    }
+
     /// Runs due transfers one at a time and returns whether any are still due. It stops early once a trigger arrives,
     /// so the rows a local change wrote go out before more images move.
     pub(crate) async fn transfer(self: &Arc<Self>, session: &Session) -> Result<bool, SyncError> {

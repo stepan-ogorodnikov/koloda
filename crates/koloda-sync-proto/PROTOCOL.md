@@ -836,6 +836,7 @@ Unknown `kind`, `group`, or `op`, and lane mismatches, are rejected at a header 
 | `POST /v1/spaces/{space}/devices/fork` | Current token in, new device id and token out (§Devices) |
 | `POST /v1/spaces/{space}/ids/known` | Id chunk in, the ones live or fenced in the space out, each marked which (§Joining) |
 | `PUT/GET /v1/spaces/{space}/attachments/{id}` | Attachment bytes and metadata (§Attachments) |
+| `GET /v1/spaces/{space}/attachments/missing?after&limit` | Ids that live cards link and the space holds no bytes for (§Attachments) |
 
 Every call made with a device token carries the header `koloda-epoch`: the epoch the device last saw, as hyphenated
 UUID text.
@@ -885,6 +886,7 @@ Names are 1 to 100 characters after trimming.
 | `GET /v1/spaces/{space}/receipts?sender&after&through` | `through - after` at most 5000 | `receipts`, each `sender_seq`, `digest`, `outcome` |
 | `PUT /v1/spaces/{space}/attachments/{id}` | `mime`, optional `width` and `height`, `bytes` | empty |
 | `GET /v1/spaces/{space}/attachments/{id}` | none | `mime`, optional `width` and `height`, `bytes` |
+| `GET /v1/spaces/{space}/attachments/missing?after&limit` | `after` an id, optional; `limit` at most 1000, the default | `ids`, in id order |
 
 Creating a space also enrolls its creator, so the first device needs no pairing code.
 The same `nonce` returns the same result, token included, for 10 minutes.
@@ -1508,6 +1510,12 @@ Bytes that fail either check are not stored, and the fetch drops.
 tries again.
 Resumable transfers (`Range`, `Content-Range`) may come back if larger media arrive.
 
+After a server restore, the backup may hold a card whose image was uploaded after the backup was taken.
+No device re-pushes that card, so no push reports the bytes missing.
+A device that applied a restore therefore lists, once, the ids that live cards link and the space holds no bytes for,
+and queues an upload of each one it holds.
+A list that stops part way runs again from the start on the next cycle.
+
 ### Lifetime
 
 Locally, the attachment sweep is unchanged: it removes attachments that no local card links and that are older than
@@ -1572,7 +1580,7 @@ Only native hosts write them; they are device-local runtime state, never synced.
 
 | Table | Key | Holds |
 | --- | --- | --- |
-| `sync_state` | Singleton | `device_id`, `space_id`, `epoch`, join phase, cursors, last HLC, stable high-water, `next_sender_seq`, last observed server seq, skew, role (creator or joiner), backfill phase stamps and watermark, rebase generation and barrier flag, fork nonce, clock pause, heal scan step and watermark, an authoritative restore waiting for the host |
+| `sync_state` | Singleton | `device_id`, `space_id`, `epoch`, join phase, cursors, last HLC, stable high-water, `next_sender_seq`, last observed server seq, skew, role (creator or joiner), backfill phase stamps and watermark, rebase generation and barrier flag, fork nonce, clock pause, heal scan step and watermark, an authoritative restore waiting for the host, the image check a restore asks for |
 | `sync_stamps` | `(kind, id, group)` | LWW register (§Field groups and merge) |
 | `sync_origins` | `(kind, id, group)` | Stamp and sender of immutable rows; legacy timestamp floor for creates; the re-bootstrap generation that last delivered a create |
 | `sync_outbox` | `sender_seq` | Encoded envelope, digest, `commit_id`, in-flight flag |

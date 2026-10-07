@@ -16,6 +16,7 @@ pub const MAX_HINT_BYTES: usize = 4 * 1024;
 pub const MAX_PUSH_ITEMS: usize = 5_000;
 pub const MAX_RECEIPT_RANGE: u64 = 5_000;
 pub const MAX_KNOWN_IDS: usize = 1_000;
+pub const MAX_MISSING_IDS: usize = 1_000;
 pub const MAX_PAGE_ENTRIES: u64 = 5_000;
 pub const MAX_PAGE_BYTES: usize = 8 * 1024 * 1024;
 // INVARIANT: equal to `koloda`'s `ATTACHMENT_MAX_BYTES` and its accepted formats; a device stores no larger image.
@@ -263,6 +264,13 @@ pub enum DependencyAction {
 pub enum HeldReason {
     Schema,
     Dependency,
+}
+
+/// Attachment ids that live cards link and the space holds no bytes for, in id order (`PROTOCOL.md` §Attachments).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct MissingAttachments {
+    pub ids: Vec<String>,
 }
 
 /// How a server restore treats what devices hold: heal re-pushes it, authoritative discards it (`PROTOCOL.md`

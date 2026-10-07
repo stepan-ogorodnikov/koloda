@@ -140,7 +140,7 @@ pub fn begin_heal(
                 r#"
                 UPDATE sync_state
                 SET epoch = ?1, cursor_hot = MIN(cursor_hot, ?2), cursor_cold = MIN(cursor_cold, ?3),
-                    heal_step = ?4, heal_after_id = NULL
+                    heal_step = ?4, heal_after_id = NULL, is_checking_attachments = 1
                 WHERE id = 1
                 "#,
                 params![

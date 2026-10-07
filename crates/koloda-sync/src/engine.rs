@@ -360,6 +360,10 @@ impl Shared {
             self.blocking(|shared| pause_clock(&shared.db)).await?;
         }
         // WHY: transfers carry no stamps, so they run while push and apply pause for the clock (PROTOCOL.md, Cycle).
+        let result = match result {
+            Ok(()) => self.check_missing_attachments(&session).await,
+            other => other,
+        };
         let transferred = match &result {
             Ok(()) | Err(SyncError::ClockSkew { .. }) => self.transfer(&session).await,
             Err(_) => Ok(false),

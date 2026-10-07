@@ -7,7 +7,7 @@ use koloda_sync_proto::envelope::{Header, Refs};
 use koloda_sync_proto::hlc::Stamp;
 use koloda_sync_proto::registry::{Group, Kind};
 use koloda_sync_proto::transport::{
-    AttachmentBody, Empty, Enrollment, ErrorCode, Outcome, PushOutcome, MAX_ATTACHMENT_BYTES,
+    AttachmentBody, Empty, Enrollment, ErrorCode, MissingAttachments, Outcome, PushOutcome, MAX_ATTACHMENT_BYTES,
 };
 use rusqlite::{params, Connection, OpenFlags, OptionalExtension};
 use sha2::{Digest, Sha256};
@@ -467,4 +467,42 @@ async fn a_collected_attachment_linked_again_is_reported_and_stored_again() {
     assert_eq!(linked.missing_attachments, vec![id.clone()]);
     assert_eq!(get(&harness, &home, &id).await.ok(), body);
     assert_eq!(files(&harness, &home), vec![id]);
+}
+
+async fn missing(harness: &Harness, device: &Enrollment, query: &str) -> Vec<String> {
+    harness
+        .get(format!(
+            "/v1/spaces/{}/attachments/missing{query}",
+            uuid(device.space_id)
+        ))
+        .token(&device.token)
+        .send::<MissingAttachments>()
+        .await
+        .ok()
+        .ids
+}
+
+#[tokio::test]
+async fn the_missing_list_names_linked_ids_without_bytes_in_id_order() {
+    let harness = Harness::new();
+    let home = harness.create_space("Home").await;
+    let (stored, stored_body) = image(20, 10);
+    let (unlinked, unlinked_body) = image(21, 10);
+    let mut absent = vec![image(22, 10).0, image(23, 10).0];
+    absent.sort();
+    put(&harness, &home, &stored, &stored_body).await.ok();
+    put(&harness, &home, &unlinked, &unlinked_body).await.ok();
+    push_parents(&harness, &home).await;
+    push_one(&harness, &home, 3, card(&[&stored, &absent[0], &absent[1]])).await;
+
+    assert_eq!(
+        missing(&harness, &home, "").await,
+        absent,
+        "stored and unlinked ids are left out"
+    );
+    assert_eq!(missing(&harness, &home, "?limit=1").await, vec![absent[0].clone()]);
+    assert_eq!(
+        missing(&harness, &home, &format!("?after={}", absent[0])).await,
+        vec![absent[1].clone()]
+    );
 }

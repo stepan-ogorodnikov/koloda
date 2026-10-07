@@ -66,6 +66,21 @@ pub(super) fn queue_uploads(conn: &Connection, ids: &[String]) -> Result<(), App
     Ok(())
 }
 
+/// Queues an upload of each id a restored server lacks that this device holds, as a push outcome would.
+pub fn queue_missing_uploads(db: &Database, ids: &[String]) -> Result<(), AppError> {
+    throw_known_error(error_codes::DB_ADD, || db.with_transaction(|tx| queue_uploads(tx, ids)))
+}
+
+/// Ends the one check of the images a restored server lacks.
+pub fn finish_attachment_check(db: &Database) -> Result<(), AppError> {
+    throw_known_error(error_codes::DB_UPDATE, || {
+        db.with_conn(|conn| {
+            conn.execute("UPDATE sync_state SET is_checking_attachments = 0 WHERE id = 1", [])?;
+            Ok(())
+        })
+    })
+}
+
 /// Up to `limit` transfers due at `now`, oldest first. A fetch whose attachment arrived meanwhile is dropped instead of
 /// listed, and so is a retry that no local card links any more.
 pub fn due_transfers(db: &Database, now: i64, limit: usize) -> Result<Vec<Transfer>, AppError> {

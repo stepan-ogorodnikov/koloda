@@ -367,7 +367,7 @@ Out:
   Commit: Re-attach a device the restore forgot
   Depends on: 6, 7
 
-- [ ] 9. Upload image bytes the restored server lacks
+- [x] 9. Upload image bytes the restored server lacks
   Goal:
   - `GET /v1/spaces/{space}/attachments/missing?after&limit` returns, in id order, at most 1000 ids that live cards
     link and the space holds no bytes for (question 9).

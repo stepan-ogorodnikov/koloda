@@ -568,3 +568,52 @@ fn a_re_attach_records_the_url_its_code_came_through() {
         Some("https://moved.test")
     );
 }
+
+#[test]
+fn an_image_uploaded_after_the_backup_goes_up_again_even_when_the_first_check_fails() {
+    let pair = pair();
+    let a = pair.a();
+    let mut bytes = b"\x89PNG\r\n\x1a\n".to_vec();
+    bytes.extend((64..128_u8).collect::<Vec<_>>());
+    let image = add_attachment(
+        &a.db,
+        AddAttachmentData {
+            bytes,
+            width: None,
+            height: None,
+        },
+    )
+    .expect("the image is stored")
+    .id;
+    // The card reaches the space before the backup; its image goes up only after it.
+    a.transport.fault_when(
+        Method::Put,
+        "/attachments/",
+        Fault::Reply(error_reply(500, ErrorCode::Internal)),
+    );
+    let card = a.add_card(
+        &pair.library.deck,
+        &pair.library.template,
+        &format!("![x](attachment:{image})"),
+    );
+    a.engine.sync_now().expect_err("the upload fails");
+    let backup = pair.space.server.backup();
+    a.execute("UPDATE sync_attachment_queue SET next_attempt_at = 0");
+    a.sync();
+
+    pair.space.server.restore(&backup, RestoreMode::Heal);
+    a.transport.fault_on(
+        "/attachments/missing",
+        Fault::Reply(error_reply(500, ErrorCode::Internal)),
+    );
+    a.engine.sync_now().expect_err("the first check fails");
+    a.sync();
+
+    let witness = pair.witness();
+    assert!(witness.has_card(&card));
+    assert!(
+        get_attachment_bytes(&witness.db, &image).expect("bytes read").is_some(),
+        "A re-uploaded the bytes the backup lacked"
+    );
+    assert_eq!(a.count("SELECT is_checking_attachments FROM sync_state"), 0);
+}

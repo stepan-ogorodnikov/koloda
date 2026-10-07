@@ -39,6 +39,7 @@ pub fn router(server: Arc<Server>) -> Router {
         .route("/v1/spaces/{space}/push", post(push::push))
         .route("/v1/spaces/{space}/receipts", get(push::receipts))
         .route("/v1/spaces/{space}/ids/known", post(known::known))
+        .route("/v1/spaces/{space}/attachments/missing", get(attachments::list_missing))
         .route(
             "/v1/spaces/{space}/attachments/{id}",
             get(attachments::get).put(attachments::put),

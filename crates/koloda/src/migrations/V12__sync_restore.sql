@@ -19,3 +19,8 @@ ALTER TABLE sync_tombstones ADD COLUMN parent text;
 ALTER TABLE sync_state ADD COLUMN authoritative_epoch blob;
 
 ALTER TABLE sync_state ADD COLUMN authoritative_last_seq integer;
+
+-- WHY: a backup can hold a card whose image was uploaded after the backup was taken. No device re-pushes that card,
+-- so no push reports the bytes missing; after a restore the device asks the server once which linked images it lacks
+-- (crates/koloda-sync-proto/PROTOCOL.md, Server restore).
+ALTER TABLE sync_state ADD COLUMN is_checking_attachments integer NOT NULL DEFAULT 0;

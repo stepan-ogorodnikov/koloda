@@ -35,7 +35,8 @@ A device's bearer token lives in the host's secret store under `sync.token.<devi
 - `src/devices.rs` — the device list, revoking another device, and detaching this file.
 - `src/bootstrap.rs` — a joiner's union bootstrap and a re-bootstrap from a snapshot lease: streams, catch-up,
   heartbeats, restarts, and the re-bootstrap's absence cleanup at the end.
-- `src/attachments.rs` — image uploads and fetches after the cycle's rounds: retries, early stops, and the event
+- `src/attachments.rs` — image uploads and fetches after the cycle's rounds: the one check after a restore of the
+  images the server lacks, retries, early stops, and the event
   that tells the host which images arrived.
 - `src/client.rs` — CBOR and zstd bodies, the reply envelope, the skew estimate, retries, the server URL rule, and the
   epoch every device call names.
