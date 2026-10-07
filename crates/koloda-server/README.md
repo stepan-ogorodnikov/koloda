@@ -23,7 +23,8 @@ koloda-server serve --data-dir ./data --listen 127.0.0.1:8080
 
 `init` prints the setup token once; only its hash is stored.
 `serve` speaks plain HTTP, so put a TLS reverse proxy in front of it.
-It runs a garbage collection pass every hour; `Server::collect_garbage` runs one on demand.
+It runs a garbage collection pass every hour, over tombstones every active device has passed and attachments no card
+has linked for 90 days; `Server::collect_garbage` runs one on demand.
 
 ## Data directory
 
@@ -49,7 +50,7 @@ It runs a garbage collection pass every hour; `Server::collect_garbage` runs one
 - `src/pairing.rs` — pairing codes: issue, preview, claim, and the limits on wrong codes.
 - `src/push.rs` — push batches and receipts; one transaction under the space writer lock.
 - `src/log.rs` — a space's envelope log: versions at lane seqs, heads, compaction on write, deletes that fence
-  and cascade, and receipts.
+  and cascade, tombstone collection and the GC horizon, and receipts.
 - `src/pull.rs` — pull pages per lane, cut by entry count and bytes, and the cursors they record.
 - `src/bootstrap.rs` — snapshot leases: open, stream pages, heartbeat, release, and expiry.
 - `src/known.rs` — the join probe: which ids the space holds live or fenced.

@@ -197,9 +197,10 @@ fn open_lease(server: &Server, caller: &DeviceAuth) -> Result<Snapshot, ApiError
     let lease = Uuid::new_v4();
     let expires_at = now + LEASE_TTL_MS;
     let absolute_expiry = now + LEASE_LIFETIME_MS;
+    let (head_hot, head_cold) = log::lane_heads(&tx)?;
     tx.execute(
-        "INSERT INTO leases (id, device, expires_at, absolute_expiry) VALUES (?1, ?2, ?3, ?4)",
-        params![lease, caller.id, expires_at, absolute_expiry],
+        "INSERT INTO leases (id, device, expires_at, absolute_expiry, head_hot) VALUES (?1, ?2, ?3, ?4, ?5)",
+        params![lease, caller.id, expires_at, absolute_expiry, head_hot],
     )?;
     for (lane, order) in [(Lane::Hot, HOT_ORDER), (Lane::Cold, COLD_ORDER)] {
         tx.execute(
@@ -229,7 +230,6 @@ fn open_lease(server: &Server, caller: &DeviceAuth) -> Result<Snapshot, ApiError
         bytes += kind_bytes;
     }
     drop(statement);
-    let (head_hot, head_cold) = log::lane_heads(&tx)?;
     tx.commit()?;
     Ok(Snapshot {
         snapshot_id: lease.into_bytes(),

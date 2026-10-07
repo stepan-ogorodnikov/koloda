@@ -658,7 +658,18 @@ The client advances to `scanned_through`, so empty pages are safe.
 A page holds at most `limit` entries (1 to 5000, 5000 by default) and about 8 MiB of envelopes.
 It always holds the first entry due, so it makes progress.
 Pull reads live heads only, so a superseded version or a removed descendant never reaches a device.
-Each pull records the cursor it starts from, per lane, on the caller's device record, for GC later.
+Each pull records the cursor it starts from, per lane, on the caller's device record, for GC.
+
+A GC pass removes the tombstones at or below the lowest `hot` cursor of the active devices, and at or below the `hot`
+head of every live bootstrap lease, which catches up from it.
+An active device is not revoked, not `rebase_required`, and not stale by `last_seen`.
+A pass reads staleness itself, without waiting for the device's next call.
+The highest seq a pass removed is the lane's **GC horizon**, and it never falls.
+`cold` holds no tombstones, so its horizon stays 0.
+`deleted_ids` keeps every fence, so a late create of a collected id is still `fenced`.
+A pull whose `after` is below its lane's horizon may have missed a collected tombstone.
+It is answered `cursor_too_old`, and the device re-bootstraps.
+`serve` runs a pass every hour.
 
 ### Existing rows at enable time
 
@@ -868,7 +879,7 @@ An endpoint that returns nothing answers `ok` with an empty map.
 | `pairing_failed` | 404 | A used, expired, or wrong pairing code (§Pairing) |
 | `stamp_ahead` | 409 | A pushed stamp more than 5 minutes ahead of server now (§Skew guards) |
 | `schema_read_only` | 409 | A pushed schema above the kind's `write_schema` (§Schema versions) |
-| `cursor_too_old` | 409 | A push from a device that must re-bootstrap first (§Devices) |
+| `cursor_too_old` | 409 | A push from a device that must re-bootstrap first, or a pull from below a GC horizon (§Devices, §Pull cursor) |
 | `lease_expired` | 410 | A bootstrap lease that expired, was released, or belongs to another device (§Bootstrap) |
 | `too_large` | 413 | A body past its size or expansion cap |
 | `rate_limited` | 429 | Too many wrong pairing codes (§Pairing), or too many open bootstrap leases (§Bootstrap) |

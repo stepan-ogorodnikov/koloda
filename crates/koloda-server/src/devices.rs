@@ -180,6 +180,25 @@ fn device_info(server: &Server, space: Uuid, row: DeviceRow) -> Result<DeviceInf
     })
 }
 
+/// The lowest `hot` cursor among the space's active devices: not revoked, not flagged, and not stale by `last_seen`,
+/// so a device that never calls again stops pinning GC without being marked. `None` when no device is active.
+pub(crate) fn lowest_active_cursor(conn: &Connection, space: Uuid, now: u64) -> Result<Option<u64>, ApiError> {
+    let mut statement = conn.prepare(
+        "SELECT d.cursor_hot, d.last_seen, EXISTS (SELECT 1 FROM devices f WHERE f.forked_from = d.id)
+         FROM devices d WHERE d.space_id = ?1 AND d.revoked_at IS NULL AND d.rebase_required = 0",
+    )?;
+    let rows = statement
+        .query_map(params![space], |row| {
+            Ok((row.get::<_, u64>(0)?, row.get::<_, u64>(1)?, row.get::<_, bool>(2)?))
+        })?
+        .collect::<Result<Vec<_>, _>>()?;
+    Ok(rows
+        .into_iter()
+        .filter(|(_, last_seen, is_forked_from)| !is_stale(*last_seen, *is_forked_from, now))
+        .map(|(cursor_hot, _, _)| cursor_hot)
+        .min())
+}
+
 pub(crate) fn is_stale(last_seen: u64, is_forked_from: bool, now: u64) -> bool {
     let window = if is_forked_from {
         FORKED_STALE_AFTER_MS

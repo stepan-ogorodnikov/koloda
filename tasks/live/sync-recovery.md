@@ -260,7 +260,7 @@ Out:
   Commit: Mark stale devices and refuse their pushes
   Depends on: none
 
-- [ ] 4. Collect tombstones every active device has passed
+- [x] 4. Collect tombstones every active device has passed
   Goal:
   - Space migration `V3__recovery.sql` stores the `hot` GC horizon and the `hot` head each lease saw when it opened.
   - `Server::collect_garbage` collects tombstones in each space as question 7 says, then attachments as before.

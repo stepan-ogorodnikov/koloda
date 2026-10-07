@@ -67,10 +67,19 @@ fn read_page(
     limit: u64,
 ) -> Result<PullPage, ApiError> {
     let (head_hot, head_cold) = log::lane_heads(conn)?;
-    let head = match lane {
-        Lane::Hot => head_hot,
-        Lane::Cold => head_cold,
+    let (horizon_hot, horizon_cold) = log::gc_horizons(conn)?;
+    let (head, horizon) = match lane {
+        Lane::Hot => (head_hot, horizon_hot),
+        Lane::Cold => (head_cold, horizon_cold),
     };
+    // INVARIANT: a collected tombstone is gone from the log, so a cursor below the horizon may have missed it; the
+    // device re-bootstraps instead of resurrecting what the tombstone deleted (PROTOCOL.md, Pull cursor).
+    if after < horizon {
+        return Err(ApiError::cursor_too_old(format!(
+            "the {} lane collected tombstones up to {horizon}; re-bootstrap",
+            lane.as_wire()
+        )));
+    }
     let bound = max_seq.map_or(head, |max_seq| max_seq.min(head));
     let mut statement = conn.prepare(
         "SELECT v.seq, v.sender, v.sender_seq, v.bytes FROM versions v

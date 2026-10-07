@@ -91,6 +91,15 @@ fn push_batch(server: &Server, caller: &DeviceAuth, request: Push) -> Result<Pus
     let tx = conn.transaction()?;
     // WHY: an abandoned lease must stop pinning versions once its TTL ends, not when the next bootstrap opens.
     bootstrap::end_expired(&tx, now)?;
+    // INVARIANT: a device whose recorded cursor is below the horizon may hold rows whose tombstones were collected;
+    // it re-bootstraps before anything it pushes is consumed (PROTOCOL.md, Devices).
+    let (horizon_hot, _) = log::gc_horizons(&tx)?;
+    if caller.cursor_hot < horizon_hot {
+        return Err(ApiError::cursor_too_old(format!(
+            "this device last pulled from {}, below the collected tombstones up to {horizon_hot}; re-bootstrap",
+            caller.cursor_hot
+        )));
+    }
     let mut high_water = log::high_water(&tx, caller.id)?;
     let write_schema = write_schema(&tx)?;
     let accepted_schema = |kind: Kind| {

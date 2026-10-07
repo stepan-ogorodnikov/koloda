@@ -247,11 +247,12 @@ fn meta(server: &Server, scope: &Scope) -> Result<Meta, ApiError> {
             .query_map([], |row| Ok((row.get::<_, String>(0)?, row.get::<_, u32>(1)?)))?
             .collect::<Result<BTreeMap<_, _>, _>>()?;
         let (head_hot, head_cold) = log::lane_heads(&conn)?;
+        let (gc_horizon_hot, gc_horizon_cold) = log::gc_horizons(&conn)?;
         meta.device = Some(DeviceMeta {
             head_hot,
             head_cold,
-            gc_horizon_hot: 0,
-            gc_horizon_cold: 0,
+            gc_horizon_hot,
+            gc_horizon_cold,
             write_schema,
             last_sender_seq: log::sender_progress(&conn, device)?.map_or(0, |(seq, _)| seq),
         });

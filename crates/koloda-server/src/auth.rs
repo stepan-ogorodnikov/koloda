@@ -20,6 +20,18 @@ pub(crate) struct DeviceAuth {
     pub(crate) id: Uuid,
     pub(crate) space: Uuid,
     pub(crate) is_rebase_required: bool,
+    /// The `hot` cursor of the device's last pull, as the server recorded it.
+    pub(crate) cursor_hot: u64,
+}
+
+struct TokenRow {
+    id: Uuid,
+    space: Uuid,
+    revoked_at: Option<u64>,
+    last_seen: u64,
+    is_flagged: bool,
+    cursor_hot: u64,
+    is_forked_from: bool,
 }
 
 /// A caller that may act on a space with a device token of that space, or with the setup token for break-glass.
@@ -93,28 +105,38 @@ pub(crate) fn require_device(
 ) -> Result<DeviceAuth, ApiError> {
     let space_id = Uuid::parse_str(space).ok();
     let conn = server.server_db()?;
-    let device: Option<(Uuid, Uuid, Option<u64>, u64, bool, bool)> = match bearer(headers) {
+    let device: Option<TokenRow> = match bearer(headers) {
         Some(token) => conn
             .query_row(
-                "SELECT d.id, d.space_id, d.revoked_at, d.last_seen, d.rebase_required,
+                "SELECT d.id, d.space_id, d.revoked_at, d.last_seen, d.rebase_required, d.cursor_hot,
                         EXISTS (SELECT 1 FROM devices f WHERE f.forked_from = d.id)
                  FROM devices d WHERE d.token_hash = ?1",
                 params![token_hash(token).to_vec()],
                 |row| {
-                    Ok((
-                        row.get(0)?,
-                        row.get(1)?,
-                        row.get(2)?,
-                        row.get(3)?,
-                        row.get(4)?,
-                        row.get(5)?,
-                    ))
+                    Ok(TokenRow {
+                        id: row.get(0)?,
+                        space: row.get(1)?,
+                        revoked_at: row.get(2)?,
+                        last_seen: row.get(3)?,
+                        is_flagged: row.get(4)?,
+                        cursor_hot: row.get(5)?,
+                        is_forked_from: row.get(6)?,
+                    })
                 },
             )
             .optional()?,
         None => None,
     };
-    let Some((id, device_space, revoked_at, last_seen, is_flagged, is_forked_from)) = device else {
+    let Some(TokenRow {
+        id,
+        space: device_space,
+        revoked_at,
+        last_seen,
+        is_flagged,
+        cursor_hot,
+        is_forked_from,
+    }) = device
+    else {
         if let Some(space_id) = space_id {
             if space_exists(&conn, space_id)? {
                 scope.space = Some(space_id);
@@ -152,6 +174,7 @@ pub(crate) fn require_device(
         id,
         space: device_space,
         is_rebase_required,
+        cursor_hot,
     })
 }
 

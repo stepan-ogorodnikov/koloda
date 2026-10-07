@@ -13,3 +13,4 @@ mod pull_tests;
 mod push_tests;
 mod spaces_tests;
 mod stale_tests;
+mod tombstone_gc_tests;

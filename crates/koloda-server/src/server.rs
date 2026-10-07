@@ -10,10 +10,13 @@ use rusqlite::{params, Connection};
 use uuid::Uuid;
 
 use crate::attachments;
+use crate::bootstrap;
 use crate::clock::Clock;
 use crate::data_dir::{self, DataDirError, ATTACHMENTS, SERVER_DB, SPACES};
 use crate::db::{self, DbError};
+use crate::devices;
 use crate::http::ApiError;
+use crate::log;
 use crate::pairing::Guesses;
 
 pub struct Server {
@@ -97,7 +100,8 @@ impl Server {
         Ok(())
     }
 
-    /// Runs one collection pass over every space (`PROTOCOL.md` §Attachments); `serve` runs one every hour.
+    /// Runs one collection pass over every space: tombstones every active device has passed, then attachments no
+    /// card has linked for 90 days (`PROTOCOL.md` §Pull cursor, §Attachments); `serve` runs one every hour.
     pub fn collect_garbage(&self) -> Result<(), ApiError> {
         let spaces = {
             let conn = self.server_db()?;
@@ -108,8 +112,23 @@ impl Server {
             spaces
         };
         for space in spaces {
+            self.collect_tombstones(space)?;
             attachments::collect(self, space)?;
         }
+        Ok(())
+    }
+
+    // INVARIANT: device cursors are read before the space lock. Cursors only rise, so an earlier read keeps more; a
+    // device enrolled meanwhile bootstraps from a snapshot and catches up from its lease's head.
+    fn collect_tombstones(&self, id: Uuid) -> Result<(), ApiError> {
+        let now = self.now_ms();
+        let device_floor = devices::lowest_active_cursor(&*self.server_db()?, id, now)?;
+        let space = self.space(id)?.ok_or_else(ApiError::unknown_space)?;
+        let mut conn = lock(&space.writer)?;
+        let tx = conn.transaction()?;
+        bootstrap::end_expired(&tx, now)?;
+        log::collect_tombstones(&tx, device_floor)?;
+        tx.commit()?;
         Ok(())
     }
 

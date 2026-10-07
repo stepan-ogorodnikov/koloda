@@ -200,6 +200,52 @@ pub(crate) fn lane_heads(conn: &Connection) -> Result<(u64, u64), ApiError> {
     Ok((head("hot")?, head("cold")?))
 }
 
+/// The highest seq a collection pass removed from each lane; a cursor below it may have missed a delete.
+pub(crate) fn gc_horizons(conn: &Connection) -> Result<(u64, u64), ApiError> {
+    let horizon = |lane: &str| -> Result<u64, ApiError> {
+        Ok(
+            conn.query_row("SELECT gc_horizon FROM lanes WHERE lane = ?1", params![lane], |row| {
+                row.get(0)
+            })?,
+        )
+    };
+    Ok((horizon("hot")?, horizon("cold")?))
+}
+
+/// Removes the tombstones at or below `device_floor`, the lowest `hot` cursor of the active devices, and below the
+/// `hot` head of every live lease. `deleted_ids` keeps their fences.
+///
+/// INVARIANT: only `hot` holds tombstones (reviews have none), so `cold`'s horizon stays 0.
+pub(crate) fn collect_tombstones(tx: &Connection, device_floor: Option<u64>) -> Result<(), ApiError> {
+    let lease_floor: Option<u64> = tx.query_row("SELECT min(head_hot) FROM leases", [], |row| row.get(0))?;
+    let (head_hot, _) = lane_heads(tx)?;
+    let bound = device_floor.into_iter().chain(lease_floor).min().unwrap_or(head_hot);
+    let removed: Option<u64> = tx.query_row(
+        "SELECT max(seq) FROM heads WHERE lane = 'hot' AND grp = ?1 AND seq <= ?2",
+        params![TOMBSTONE, bound],
+        |row| row.get(0),
+    )?;
+    let Some(removed) = removed else {
+        return Ok(());
+    };
+    tx.execute(
+        &format!(
+            "DELETE FROM versions WHERE lane = 'hot'
+             AND seq IN (SELECT seq FROM heads WHERE lane = 'hot' AND grp = ?1 AND seq <= ?2) AND {UNPINNED}"
+        ),
+        params![TOMBSTONE, bound],
+    )?;
+    tx.execute(
+        "DELETE FROM heads WHERE lane = 'hot' AND grp = ?1 AND seq <= ?2",
+        params![TOMBSTONE, bound],
+    )?;
+    tx.execute(
+        "UPDATE lanes SET gc_horizon = max(gc_horizon, ?1) WHERE lane = 'hot'",
+        params![removed],
+    )?;
+    Ok(())
+}
+
 pub(crate) fn sender_progress(conn: &Connection, sender: Uuid) -> Result<Option<(u64, [u8; 32])>, ApiError> {
     let row = conn
         .query_row(
