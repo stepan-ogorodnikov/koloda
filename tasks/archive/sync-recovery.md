@@ -1,6 +1,6 @@
 # Sync recovery
 
-Status: ready
+Status: done
 
 ## Intent
 
@@ -414,4 +414,56 @@ Out:
 
 ## Outcome
 
-Not yet.
+- The server marks a device stale on its next request when `last_seen` is past 90 days, or 24 hours for a record
+  another was forked from.
+  Server migration `V2__recovery.sql` adds `rebase_required` and `fork_nonce` to `devices`.
+  A push from a flagged device is refused whole with `cursor_too_old` (409); receipts, pull, device calls, and
+  bootstrap still answer.
+  Releasing a snapshot lease clears the flag.
+- `Server::collect_garbage` collects tombstones before attachments.
+  It removes tombstone heads and versions at or below the lowest `hot` cursor of the active devices and the lowest
+  `hot` head of a live lease.
+  Space migration `V3__recovery.sql` adds the lanes' `gc_horizon` and the leases' `head_hot`.
+  `meta.device` reports both horizons.
+  A pull below the horizon, and a push from a device whose recorded cursor is below it, get `cursor_too_old`.
+  `deleted_ids` keeps every fence.
+- Fork takes `ForkDevice { nonce }`; the same nonce from the same device returns the same new device with a fresh
+  token.
+- Device migration `V11__sync_recovery.sql` adds `stable_hlc`, `rebase_generation`, `is_rebasing`, `fork_nonce`, and
+  `is_clock_paused` to `sync_state`, `seen_generation` to `sync_origins`, and `has_consumed` to `sync_cohorts`.
+- `restamp.rs` re-stamps `local` cohorts in one transaction, one stamp per cohort in old order.
+  It skips cohorts at reserved backfill stamps and moves the registers, origins, and tombstones that still hold a
+  member's old stamp.
+  The floor is the stable high-water (apply and consumed pushes raise it), every cohort that is not `local`, and the
+  reserved backfill stamps, so the clock only falls back over stamps local cohorts alone held.
+- `rebase.rs` opens the barrier; apply marks every create it meets while it is open, duplicates included.
+  `finish_rebase` deletes the algorithms, templates, decks, and cards left unmarked whose create is not in the outbox
+  or held, through apply's `remove_entity`, without a tombstone.
+- `switch.rs` moves a file to a new device id in one transaction.
+  It settles rows the old sender's receipts show accepted, keeps cohorts with a consumed member `fixed`, renumbers the
+  rest from 1 with their registers, origins, and tombstones, and re-stamps the `local` cohorts under the new id.
+- The engine re-bootstraps on `rebase_required`, on its own cursor below the horizon, and on `cursor_too_old`.
+  It resumes an open barrier after a relaunch or a lapsed lease.
+  A file found behind, or answered `seq_reused`, forks, switches, and re-bootstraps; `Stop::Behind` is gone.
+  A cycle that stops for clock skew records the pause; the first cycle on a corrected clock re-stamps before it pushes
+  or applies.
+  A `stamp_ahead` refusal gets one re-stamp and retry per cycle.
+- `join` re-attaches a detached or revoked file whose space has the stored epoch, through the same switch, and
+  refuses an attached file (`CannotJoin`) or another epoch (`EpochChanged`) before claiming.
+  The cycle pulls `hot` before pushing while only the record's cursor is below the horizon.
+- `PROTOCOL.md`, the three READMEs, `agents/RUST.md`, and `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md` describe the
+  above.
+- Deviations from the plan text:
+  - The stable high-water rises when a push is consumed, not when it goes out, and re-stamp also stays above every
+    cohort that is not `local`.
+    Raising it at push time kept a `stamp_ahead`-refused stamp in the floor, so the retry was refused again.
+  - A retried fork rotates the forked device's token instead of the server keeping tokens in clear.
+  - No "fork in progress" flag: the device record only moves on, so a file whose fork stopped is found behind again
+    and forks with the stored nonce.
+  - Engine tests make a device stale by backdating `last_seen`, since moving the server clock trips the skew guard.
+- Follow-ups noticed, not fixed:
+  - Re-attach keeps the file's stored server URL; a code redeemed through another URL for the same server is not
+    recorded.
+  - A `fixed` cohort whose stamp is more than 5 minutes ahead is resent and refused with `stamp_ahead` every cycle.
+  - Re-bootstrap does not pause on metered networks yet (transport task).
+- Manual verify: none — nothing user-visible until the NAPI commands and the desktop UI land.
