@@ -15,8 +15,9 @@ use koloda::app::init::seed_joiner_db;
 use koloda::app::secrets::SecretStore;
 use koloda::repo::sync::{enroll_device, SpaceRole};
 use koloda_server::clock::Clock;
+use koloda_server::restore::{self, RestoreOptions};
 use koloda_server::server::Server;
-use koloda_server::{data_dir, router};
+use koloda_server::{backup, data_dir, router};
 use koloda_sync::engine::Engine;
 use koloda_sync::transport::{Method, Request, Response, Sending, Transport, TransportError, CBOR, ZSTD};
 use koloda_sync_proto::envelope::Envelope;
@@ -25,7 +26,7 @@ use koloda_sync_proto::payload::{seal, Payload, Seal};
 use koloda_sync_proto::registry::Lane;
 use koloda_sync_proto::transport::{
     ClaimPairing, Empty, Enrollment, ErrorBody, ErrorCode, IssuePairing, Meta, Outcome, Pairing, PairingClaim,
-    Platform, PullPage, Push, PushItem, PushReply, Receipts, Reply, EPOCH_HEADER, MAX_RECEIPT_RANGE,
+    Platform, PullPage, Push, PushItem, PushReply, Receipts, Reply, RestoreMode, EPOCH_HEADER, MAX_RECEIPT_RANGE,
 };
 use rusqlite::backup::Backup;
 use rusqlite::{Connection, OptionalExtension};
@@ -58,12 +59,15 @@ impl OffsetClock {
     }
 }
 
+/// The router every transport of a test server calls; a restore swaps it for the new generation's.
+type Routes = Arc<Mutex<Router>>;
+
 pub struct TestServer {
     // WHY: dropping the TempDir deletes the data directory, so the harness holds it for its lifetime.
     _dir: TempDir,
     pub clock: Arc<OffsetClock>,
-    pub server: Arc<Server>,
-    pub router: Router,
+    server: Mutex<Arc<Server>>,
+    routes: Routes,
     pub setup_token: String,
 }
 
@@ -74,12 +78,48 @@ impl TestServer {
         let clock = Arc::new(OffsetClock(AtomicI64::new(0)));
         let server = Arc::new(Server::open(dir.path(), clock.clone()).expect("open the initialized data directory"));
         TestServer {
-            router: router(Arc::clone(&server)),
-            server,
+            routes: Arc::new(Mutex::new(router(Arc::clone(&server)))),
+            server: Mutex::new(server),
             _dir: dir,
             clock,
             setup_token,
         }
+    }
+
+    pub fn server(&self) -> Arc<Server> {
+        Arc::clone(&self.server.lock().expect("server lock"))
+    }
+
+    pub fn router(&self) -> Router {
+        self.routes.lock().expect("routes lock").clone()
+    }
+
+    /// Copies the running server, as `koloda-server backup` does.
+    pub fn backup(&self) -> TempDir {
+        let out = tempfile::tempdir().expect("backup directory");
+        backup::backup(self._dir.path(), out.path(), system_ms()).expect("backup runs");
+        out
+    }
+
+    /// Restores `out` as `koloda-server restore --yes` does, then serves the new generation to every device.
+    pub fn restore(&self, out: &TempDir, mode: RestoreMode) {
+        self.restore_with(
+            out,
+            RestoreOptions {
+                mode,
+                is_rotating_tokens: false,
+            },
+        );
+    }
+
+    pub fn restore_with(&self, out: &TempDir, options: RestoreOptions) {
+        restore::prepare(self._dir.path(), out.path(), options, system_ms())
+            .expect("restore prepares")
+            .commit()
+            .expect("restore commits");
+        let server = Arc::new(Server::open(self._dir.path(), self.clock.clone()).expect("open the restored directory"));
+        *self.routes.lock().expect("routes lock") = router(Arc::clone(&server));
+        *self.server.lock().expect("server lock") = server;
     }
 
     /// A blank file with its own engine and transport.
@@ -92,7 +132,7 @@ impl TestServer {
 
     fn device_on(&self, db: Database, secrets: MemorySecrets) -> Device {
         let secrets = Arc::new(secrets);
-        let transport = Arc::new(RouterTransport::new(self.router.clone()));
+        let transport = Arc::new(RouterTransport::new(Arc::clone(&self.routes)));
         let engine = Engine::start(
             db.clone(),
             secrets.clone(),
@@ -223,7 +263,7 @@ impl TestServer {
         let response = tokio::runtime::Builder::new_current_thread()
             .build()
             .expect("test runtime")
-            .block_on(forward(&self.router, request));
+            .block_on(forward(&self.routes, request));
         (response.status, decode(&response))
     }
 
@@ -506,7 +546,7 @@ pub enum Fault {
 
 /// Calls the router in process. Each queued fault applies once, to the next request whose URL contains its pattern.
 pub struct RouterTransport {
-    router: Router,
+    routes: Routes,
     faults: Mutex<VecDeque<(Option<Method>, String, Fault)>>,
     sent: Mutex<Vec<Request>>,
     observer: Mutex<Option<Observer>>,
@@ -516,9 +556,9 @@ pub struct RouterTransport {
 type Observer = Box<dyn FnMut(&Request) + Send>;
 
 impl RouterTransport {
-    pub fn new(router: Router) -> RouterTransport {
+    fn new(routes: Routes) -> RouterTransport {
         RouterTransport {
-            router,
+            routes,
             faults: Mutex::new(VecDeque::new()),
             sent: Mutex::new(Vec::new()),
             observer: Mutex::new(None),
@@ -574,24 +614,25 @@ impl Transport for RouterTransport {
             match fault {
                 Some(Fault::Reply(response)) => Ok(response),
                 Some(Fault::LoseReply) => {
-                    forward(&self.router, request).await;
+                    forward(&self.routes, request).await;
                     Err(TransportError("the reply was lost".to_string()))
                 }
                 Some(Fault::After(others)) => {
-                    let response = forward(&self.router, request).await;
+                    let response = forward(&self.routes, request).await;
                     for other in others {
-                        let status = forward(&self.router, other).await.status;
+                        let status = forward(&self.routes, other).await.status;
                         assert_eq!(status, 200, "a request between the engine's requests is accepted");
                     }
                     Ok(response)
                 }
-                None => Ok(forward(&self.router, request).await),
+                None => Ok(forward(&self.routes, request).await),
             }
         })
     }
 }
 
-async fn forward(router: &Router, request: Request) -> Response {
+async fn forward(routes: &Routes, request: Request) -> Response {
+    let router = routes.lock().expect("routes lock").clone();
     let method = match request.method {
         Method::Get => axum::http::Method::GET,
         Method::Post => axum::http::Method::POST,
@@ -617,7 +658,7 @@ async fn forward(router: &Router, request: Request) -> Response {
     let http_request = builder
         .body(request.body.map_or_else(Body::empty, Body::from))
         .expect("build a request");
-    let response = tower::ServiceExt::oneshot(router.clone(), http_request)
+    let response = tower::ServiceExt::oneshot(router, http_request)
         .await
         .expect("the router never fails");
     let status = response.status().as_u16();

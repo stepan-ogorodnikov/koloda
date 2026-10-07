@@ -96,10 +96,20 @@ pub fn begin_heal(
 ) -> Result<(), AppError> {
     throw_known_error(error_codes::DB_UPDATE, || {
         db.with_transaction(|tx| {
-            let is_healing: bool =
-                tx.query_row("SELECT heal_step IS NOT NULL FROM sync_state WHERE id = 1", [], |row| {
-                    row.get(0)
-                })?;
+            let (is_healing, is_import_pending): (bool, bool) = tx.query_row(
+                "SELECT heal_step IS NOT NULL, join_phase = 'import_pending' FROM sync_state WHERE id = 1",
+                [],
+                |row| Ok((row.get(0)?, row.get(1)?)),
+            )?;
+            // WHY: a file waiting for Add or Replace holds no sync state to re-push; the claim cleared it, and Add
+            // backfills from the rows.
+            if is_import_pending {
+                tx.execute(
+                    "UPDATE sync_state SET epoch = ?1 WHERE id = 1",
+                    params![epoch.as_bytes().as_slice()],
+                )?;
+                return Ok(());
+            }
             if !is_healing {
                 tx.execute("DELETE FROM sync_heal_cutoffs", [])?;
                 for (sender, last_seq) in cutoffs {

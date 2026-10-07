@@ -8,7 +8,7 @@ use std::sync::Mutex;
 
 use koloda::app::error::{error_codes, AppError};
 use koloda::app::utility::get_current_timestamp;
-use koloda_sync_proto::transport::{Meta, Reply, MAX_BODY_BYTES, MAX_EXPANSION_RATIO};
+use koloda_sync_proto::transport::{ErrorCode, Meta, Reply, MAX_BODY_BYTES, MAX_EXPANSION_RATIO};
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use url::{Host, Url};
@@ -116,10 +116,13 @@ impl Client<'_> {
                 meta: reply.meta,
                 bytes: response.body.len(),
             })),
-            (None, Some(error)) if response.status != OK => Ok(Err(SyncError::Server {
-                status: response.status,
-                code: error.code,
-                message: error.message,
+            (None, Some(error)) if response.status != OK => Ok(Err(match (error.code, error.restore) {
+                (ErrorCode::EpochChanged, Some(restore)) => SyncError::Restored(restore),
+                (code, _) => SyncError::Server {
+                    status: response.status,
+                    code,
+                    message: error.message,
+                },
             })),
             _ => Err(TransportError(format!(
                 "a {} reply carries neither one `ok` nor one `error`",

@@ -2,7 +2,7 @@ use std::fmt;
 
 use koloda::app::error::AppError;
 use koloda::repo::sync::join::JoinMode;
-use koloda_sync_proto::transport::ErrorCode;
+use koloda_sync_proto::transport::{ErrorCode, Restore};
 
 #[derive(Debug)]
 pub enum SyncError {
@@ -28,6 +28,9 @@ pub enum SyncError {
     Detached,
     /// The server holds no device for this token, as after a restore that predates it; the engine stops.
     UnknownDevice,
+    /// The space was restored since this file last synced; the file applies this restore before anything else
+    /// (`PROTOCOL.md` §Server restore).
+    Restored(Restore),
     /// The server answered a push with an error reply, which consumed nothing.
     PushRefused {
         status: u16,
@@ -69,6 +72,7 @@ impl fmt::Display for SyncError {
             SyncError::Revoked => write!(f, "this device was revoked, so the file detached from its space"),
             SyncError::Detached => write!(f, "this file is detached from its space"),
             SyncError::UnknownDevice => write!(f, "the sync server does not know this device"),
+            SyncError::Restored(restore) => write!(f, "the sync server was restored ({:?})", restore.mode),
             SyncError::PushRefused { status, code, message } => {
                 write!(f, "the sync server refused a push with {status} {code:?}: {message}")
             }

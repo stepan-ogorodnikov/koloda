@@ -257,7 +257,7 @@ fn a_rolled_back_files_old_record_stops_holding_collection_back() {
         .server
         .backdate(Uuid::from_bytes(space.raw.device_id), 91 * DAY_MS);
 
-    space.server.server.collect_garbage().expect("a collection pass");
+    space.server.server().collect_garbage().expect("a collection pass");
 
     let (status, _) = space.server.call::<PullPage>(
         Method::Get,

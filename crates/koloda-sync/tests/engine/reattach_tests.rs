@@ -77,7 +77,7 @@ fn delete_and_collect(pair: &Pair, passing: &[&Device]) {
     pair.space
         .server
         .backdate(Uuid::from_bytes(pair.space.raw.device_id), 91 * DAY_MS);
-    pair.space.server.server.collect_garbage().expect("a collection pass");
+    pair.space.server.server().collect_garbage().expect("a collection pass");
     let (status, _) = pair.space.server.call::<PullPage>(
         Method::Get,
         &format!("/v1/spaces/{}/pull?lane=hot&after=0", pair.space.space_id()),

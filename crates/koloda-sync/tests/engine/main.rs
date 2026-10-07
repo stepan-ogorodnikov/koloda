@@ -16,6 +16,7 @@ mod pairing_tests;
 mod push_tests;
 mod reattach_tests;
 mod rebootstrap_tests;
+mod restore_tests;
 mod runner_tests;
 mod spaces_tests;
 mod status_tests;

@@ -16,7 +16,8 @@ fn a_space_is_created_over_http_on_loopback() {
         .block_on(tokio::net::TcpListener::bind("127.0.0.1:0"))
         .expect("bind a loopback port");
     let address = listener.local_addr().expect("the bound address");
-    let serve = serving.spawn(async move { axum::serve(listener, server.router.clone()).await });
+    let routes = server.router();
+    let serve = serving.spawn(async move { axum::serve(listener, routes).await });
 
     let db = Database::in_memory().expect("in-memory database");
     let engine = Engine::start(

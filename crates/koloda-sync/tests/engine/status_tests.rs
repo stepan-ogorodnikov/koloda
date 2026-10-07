@@ -51,7 +51,7 @@ fn status_after_a_cycle_reports_success_and_what_is_left() {
     space.device.engine.sync_now().expect("the library is pushed");
     space
         .server
-        .server
+        .server()
         .set_write_schema(space.space_id(), Kind::Decks, 2)
         .expect("write schema is raised");
     space
@@ -115,7 +115,7 @@ fn status_names_why_the_last_cycle_stopped() {
             |space| {
                 space
                     .server
-                    .server
+                    .server()
                     .set_write_schema(space.space_id(), Kind::Algorithms, 0)
                     .expect("write schema is lowered");
                 space.device.add_algorithm("Unwritable");

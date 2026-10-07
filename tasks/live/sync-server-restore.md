@@ -302,7 +302,7 @@ Out:
   Commit: Refuse device calls from an older epoch
   Depends on: 4
 
-- [ ] 6. Heal a device after a server restore
+- [x] 6. Heal a device after a server restore
   Goal:
   - On `epoch_changed` with a heal restore, the engine runs `begin_heal` (item 1) and starts the round again.
     A file waiting for Add or Replace only stores the new epoch.

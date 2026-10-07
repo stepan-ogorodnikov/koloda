@@ -546,3 +546,29 @@ fn a_re_bootstrap_keeps_a_create_the_heal_has_not_reached() {
         "a create the backup holds and the snapshot lacks is gone, as before"
     );
 }
+
+#[test]
+fn a_file_waiting_for_add_or_replace_only_takes_the_new_epoch() {
+    let db = replica();
+    add_template(&db, "Basic");
+    koloda::repo::sync::join::begin_import(
+        &db,
+        Uuid::now_v7(),
+        crate::common::sync::SPACE,
+        crate::common::sync::EPOCH,
+        "https://sync.test",
+    )
+    .expect("claim records");
+
+    heal(&db, &[]);
+
+    assert_eq!(
+        count(&db, "SELECT heal_step IS NULL FROM sync_state"),
+        1,
+        "no scan starts"
+    );
+    assert_eq!(
+        count(&db, &format!("SELECT epoch = x'{}' FROM sync_state", RESTORED.simple())),
+        1
+    );
+}

@@ -156,7 +156,7 @@ fn held(space: &Space) -> Check {
     let library = synced_library(space);
     space
         .server
-        .server
+        .server()
         .set_write_schema(space.space_id(), Kind::Decks, 2)
         .expect("write schema is raised");
     space
@@ -306,7 +306,7 @@ fn a_refused_push_returns_its_cohorts_to_local() {
     let space = Space::new();
     space
         .server
-        .server
+        .server()
         .set_write_schema(space.space_id(), Kind::Algorithms, 0)
         .expect("write schema is lowered");
     space.device.library();

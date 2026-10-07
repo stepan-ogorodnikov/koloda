@@ -1037,6 +1037,12 @@ Across lanes it holds because `cold` is pulled only up to a `max_seq` recorded b
 6. Repeat until the outbox is empty and both cursors are at head.
 7. Repair learning defaults that name no live row (§Deletes); a repair goes out in the next round.
 
+Any call of the cycle may come back `epoch_changed`.
+The device then applies the restore (§Server restore) and starts the cycle again on the new epoch.
+A host call that comes back `epoch_changed` applies it the same way, and the host may retry.
+A file waiting for Add or Replace only takes the new epoch: the claim cleared its sync tables, and Add backfills from
+the rows.
+
 The device records `head_cold` from the device record it read in step 1, before pulling `hot`.
 One call runs a bounded number of rounds; the next trigger picks up what is left.
 

@@ -26,6 +26,9 @@ use crate::status::{RunState, Status, Stop};
 use crate::transport::{Method, Transport};
 
 const RUNTIME_THREAD: &str = "koloda-sync";
+// WHY: each restore the server reports is one more operator action; a cycle that keeps meeting new ones stops and
+// the next trigger resumes.
+const MAX_RESTORES: usize = 3;
 
 pub struct Engine {
     runtime: Runtime,
@@ -245,9 +248,13 @@ impl Shared {
     }
 
     // INVARIANT: a `401 revoked` reply to any call detaches the file, which then sends nothing more
-    // (PROTOCOL.md, Devices).
+    // (PROTOCOL.md, Devices). A restore a host call ran into is applied, so the next call names the new epoch.
     async fn settle_device<T>(self: &Arc<Self>, result: Result<T, SyncError>) -> Result<T, SyncError> {
         match result {
+            Err(SyncError::Restored(restore)) => {
+                self.apply_restore(restore.clone()).await?;
+                Err(SyncError::Restored(restore))
+            }
             Err(SyncError::Server {
                 code: ErrorCode::Revoked,
                 ..
@@ -310,7 +317,16 @@ impl Shared {
 
     async fn sync(self: &Arc<Self>, changed: &mut Vec<Kind>) -> Result<(), SyncError> {
         let mut session = self.session().await?;
-        let result = self.cycle(&mut session, changed).await;
+        let mut result = self.cycle(&mut session, changed).await;
+        // INVARIANT: a restore is applied before the file sends anything else on the new epoch; the cycle then starts
+        // again. A second restore while it runs is applied the same way (PROTOCOL.md, Server restore).
+        for _ in 0..MAX_RESTORES {
+            let Err(SyncError::Restored(restore)) = result else {
+                break;
+            };
+            session.epoch = self.apply_restore(restore).await?;
+            result = self.cycle(&mut session, changed).await;
+        }
         // INVARIANT: the pause outlives a relaunch, so the writes captured on a wrong clock take new stamps before the
         // next cycle pushes or applies anything (PROTOCOL.md, Skew guards).
         if matches!(result, Err(SyncError::ClockSkew { .. })) {

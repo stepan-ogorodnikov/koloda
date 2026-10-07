@@ -17,10 +17,13 @@ A device's bearer token lives in the host's secret store under `sync.token.<devi
 ## Architectural Map
 
 - `src/lib.rs` — crate root.
-- `src/engine.rs` — `Engine`: the runtime, host calls, space creation, and the session a cycle uses.
+- `src/engine.rs` — `Engine`: the runtime, host calls, space creation, the session a cycle uses, and running the
+  cycle again on a restored epoch.
 - `src/cycle.rs` — the cycle: the device record and the behind check, re-bootstrap when the server left the file
   behind, push, `hot` to head, `cold` to the recorded head, the skew pause, and repair after catch-up.
-- `src/push.rs` — pushing the outbox in batches and handing each reply, loss, or refusal to `koloda`.
+- `src/push.rs` — pushing the outbox in batches and handing each reply, loss, or refusal to `koloda`; heal and
+  backfill top the outbox up before each batch.
+- `src/restore.rs` — a server restore the server reported: heal starts the re-push scan.
 - `src/fork.rs` — a file behind its own record forks to a new device id: the stored nonce, the new token, receipts,
   and the switch.
 - `src/pairing.rs` — pairing codes, preview, and joining a space: blank, seed-only, a used file through Add or
@@ -38,7 +41,7 @@ A device's bearer token lives in the host's secret store under `sync.token.<devi
 - `src/error.rs` — `SyncError`.
 
 - `tests/engine/` — one test binary; `common.rs` calls `koloda-server`'s router in process through a `Transport`,
-  on a server clock offset from system time.
+  on a server clock offset from system time; its backup and restore swap the router every device calls.
 
 ### Does NOT own (prevent scope creep)
 
