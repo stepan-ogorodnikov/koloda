@@ -1,8 +1,8 @@
 //! Sync bookkeeping SQL: device enrollment here, joining an existing space in `join`, capture of product writes
 //! in `capture`, rows that predate enrollment in `backfill`, push batches and their outcomes in `outbox`,
 //! remote envelopes in `apply`, image transfers in `attachments`, new stamps for pending cohorts in `restamp`, the
-//! re-bootstrap barrier in `rebase`, moving a file to a new device id in `switch`, and re-pushing what a restored
-//! server lacks in `heal`
+//! re-bootstrap barrier in `rebase`, moving a file to a new device id in `switch`, re-pushing what a restored server
+//! lacks in `heal`, and discarding local data for an authoritative restore in `authoritative`
 //! (`crates/koloda-sync-proto/PROTOCOL.md` §Field groups and merge, §Clocks and order, §Devices, §Client state,
 //! §Joining, §Attachments, §Recovery).
 //!
@@ -10,6 +10,7 @@
 
 pub mod apply;
 pub mod attachments;
+pub mod authoritative;
 pub mod backfill;
 pub mod capture;
 pub mod heal;
@@ -108,6 +109,8 @@ pub struct SyncState {
     pub is_import_pending: bool,
     /// The device was revoked or detached itself; the file sends nothing until it re-attaches.
     pub is_detached: bool,
+    /// An authoritative restore waits for the host to accept it; the file sends nothing meanwhile.
+    pub is_restore_held: bool,
 }
 
 pub fn sync_state(db: &Database) -> Result<Option<SyncState>, AppError> {
@@ -118,7 +121,7 @@ pub fn sync_state(db: &Database) -> Result<Option<SyncState>, AppError> {
                     r#"
                     SELECT device_id, space_id, server_url, cursor_hot, cursor_cold, is_bootstrapping,
                            join_phase = 'import_pending', detached_at IS NOT NULL, is_rebasing,
-                           is_clock_paused, epoch
+                           is_clock_paused, epoch, authoritative_epoch IS NOT NULL
                     FROM sync_state WHERE id = 1
                     "#,
                     [],
@@ -136,6 +139,7 @@ pub fn sync_state(db: &Database) -> Result<Option<SyncState>, AppError> {
                             is_detached: row.get(7)?,
                             is_rebasing: row.get(8)?,
                             is_clock_paused: row.get(9)?,
+                            is_restore_held: row.get(11)?,
                         };
                         Ok((ids, state))
                     },

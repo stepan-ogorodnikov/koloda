@@ -22,6 +22,7 @@ mod settings_integration_tests;
 mod settings_sync_integration_tests;
 mod sync_apply_integration_tests;
 mod sync_attachments_integration_tests;
+mod sync_authoritative_integration_tests;
 mod sync_backfill_integration_tests;
 mod sync_collision_integration_tests;
 mod sync_heal_integration_tests;

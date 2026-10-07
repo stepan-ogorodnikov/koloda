@@ -12,3 +12,10 @@ ALTER TABLE sync_state ADD COLUMN heal_after_id text;
 
 -- WHY: a card's delete envelope names its deck, and heal re-encodes a tombstone after the card row is gone.
 ALTER TABLE sync_tombstones ADD COLUMN parent text;
+
+-- WHY: an authoritative restore discards local data only once the host accepts it. Until then the file records the
+-- restore's epoch and the server's last consumed seq for this device, and sends nothing; the record survives a
+-- relaunch (crates/koloda-sync-proto/PROTOCOL.md, Server restore).
+ALTER TABLE sync_state ADD COLUMN authoritative_epoch blob;
+
+ALTER TABLE sync_state ADD COLUMN authoritative_last_seq integer;

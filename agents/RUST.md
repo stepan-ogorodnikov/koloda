@@ -23,6 +23,7 @@ This file only tells you where to start.
 | Re-bootstrap and absence cleanup | `src/repo/sync/rebase.rs` + `crates/koloda-sync-proto/PROTOCOL.md` (§Re-bootstrap) |
 | A new device id for a forked or re-attached file | `src/repo/sync/switch.rs` + `crates/koloda-sync-proto/PROTOCOL.md` (§Behind its own record) |
 | Re-pushing what a restored server lacks | `src/repo/sync/heal.rs` + `crates/koloda-sync-proto/PROTOCOL.md` (§Server restore) |
+| Discarding local data for an authoritative restore | `src/repo/sync/authoritative.rs` + `crates/koloda-sync-proto/PROTOCOL.md` (§Server restore) |
 | Enabling sync on a database that already holds rows | `src/repo/sync/backfill.rs::backfill_batch` + `crates/koloda-sync-proto/PROTOCOL.md` (§Existing rows at enable time, Backfill) |
 | Joining an existing space | `src/repo/sync/join.rs` + `crates/koloda-sync-proto/PROTOCOL.md` (§Joining) |
 | Schema / migrations | `agents/DB.md` |
@@ -132,6 +133,14 @@ duplicates included; `finish_rebase` removes what stayed unmarked.
   encoded again.
 - The row a write lives in takes the re-push's sender and seq; each batch is a `fixed` cohort with `has_consumed`.
 - `finish_rebase` keeps a create above its sender's cutoff while the scan runs.
+
+**Authoritative restore** — `hold_authoritative` records the restore; `reset_for_authoritative` runs only once the
+host accepts it.
+
+- It deletes product rows through join's `delete_product_rows`, the list Replace uses, and empties every table in
+  join's `SYNC_TABLES` but `sync_state`.
+- `next_sender_seq` and `last_observed_server_seq` rise to the server's record, so the reset file is neither a seq
+  reuser nor read as behind.
 
 **Detach** — `detach` records when the file left its space; the engine sends nothing for a detached file, and
 capture keeps recording for a later re-attach.

@@ -1267,13 +1267,16 @@ Tombstones are terminal, so a re-pushed delete kills a restored live row whateve
 
 **Authoritative** makes the backup the truth, for when something bad already reached every device.
 Examples: a mass delete, a bad import, a device gone wrong.
-A client on the old epoch keeps its device-local settings and deletes every product row and sync table.
+A client on the old epoch first records the restore and sends nothing until its host accepts it.
+The host warns before it starts, and a relaunch keeps the record.
+Accepting deletes every product row and every sync table but the sync state.
+Settings, conversations, and attachments stay; `learning` stays at stamp zero for the space's document to overlay.
 It keeps `device_id`.
 It sets `next_sender_seq` above both its local value and the server's `last_sender_seq` for it, so it never reuses
-a consumed sequence.
+a consumed sequence, and raises the highest seq it saw consumed to the server's, so the record does not read as
+another copy's pushes (§Devices).
 It then joins as a blank file under its existing token (union bootstrap of the backup).
 Everything written after the backup is lost on purpose, including pending local writes.
-The host warns before it starts.
 A device that is offline at the time does the same when it next connects.
 A device that re-attaches after an authoritative restore learns the mode on claim and takes the same path.
 
@@ -1537,7 +1540,7 @@ Only native hosts write them; they are device-local runtime state, never synced.
 
 | Table | Key | Holds |
 | --- | --- | --- |
-| `sync_state` | Singleton | `device_id`, `space_id`, `epoch`, join phase, cursors, last HLC, stable high-water, `next_sender_seq`, last observed server seq, skew, role (creator or joiner), backfill phase stamps and watermark, rebase generation and barrier flag, fork nonce, clock pause, heal scan step and watermark |
+| `sync_state` | Singleton | `device_id`, `space_id`, `epoch`, join phase, cursors, last HLC, stable high-water, `next_sender_seq`, last observed server seq, skew, role (creator or joiner), backfill phase stamps and watermark, rebase generation and barrier flag, fork nonce, clock pause, heal scan step and watermark, an authoritative restore waiting for the host |
 | `sync_stamps` | `(kind, id, group)` | LWW register (§Field groups and merge) |
 | `sync_origins` | `(kind, id, group)` | Stamp and sender of immutable rows; legacy timestamp floor for creates; the re-bootstrap generation that last delivered a create |
 | `sync_outbox` | `sender_seq` | Encoded envelope, digest, `commit_id`, in-flight flag |

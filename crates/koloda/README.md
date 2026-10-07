@@ -34,6 +34,8 @@ Rust is the source of truth for the AI provider enum and secrets redaction; `@ko
   rest, and re-stamps the cohorts no receipt touched.
   `heal.rs` re-pushes, after a server restore, every write above its sender's cutoff, re-encoded from the row with its
   stored stamp.
+  `authoritative.rs` records an authoritative restore and, once the host accepts it, discards product rows and sync
+  tables so the file bootstraps from the backup.
 - App runtime: `app/` — DB connection (`parse_json_column` for JSON TEXT columns), init/seed, keyring secrets, clock/UUID helpers.
 - Shared errors: `app::error` (`AppError` + `error_codes`) is the intentional crate-wide error type. Domain validation returns it so codes stay aligned with `@koloda/app`; domain must not import `rusqlite`.
 - Migrations: `migrations/` — owned Refinery SQL embedded via `embed_migrations!`.

@@ -39,7 +39,7 @@ const PROBE_KINDS: [Kind; 5] = [
     Kind::Cards,
 ];
 
-const SYNC_TABLES: [&str; 9] = [
+pub(super) const SYNC_TABLES: [&str; 9] = [
     "sync_state",
     "sync_stamps",
     "sync_origins",
@@ -178,22 +178,27 @@ pub fn replace_with_space(db: &Database) -> Result<(), AppError> {
     throw_known_error(error_codes::DB_DELETE, || {
         db.with_transaction(|tx| {
             require_pending(tx)?;
-            // WHY: only product rows go. Settings stay at stamp zero for the space to overlay, and conversations are
-            // device-local. Attachments are content-addressed: cards from the space reuse their bytes, and the
-            // startup sweep removes the rest.
-            for table in [
-                "reviews",
-                "cards",
-                "decks",
-                "algorithm_revisions",
-                "algorithms",
-                "templates",
-            ] {
-                tx.execute(&format!("DELETE FROM {table}"), [])?;
-            }
+            delete_product_rows(tx)?;
             activate(tx)
         })
     })
+}
+
+// WHY: only product rows go. Settings stay at stamp zero for the space to overlay, and conversations are
+// device-local. Attachments are content-addressed: cards from the space reuse their bytes, and the startup sweep
+// removes the rest.
+pub(super) fn delete_product_rows(conn: &Connection) -> Result<(), AppError> {
+    for table in [
+        "reviews",
+        "cards",
+        "decks",
+        "algorithm_revisions",
+        "algorithms",
+        "templates",
+    ] {
+        conn.execute(&format!("DELETE FROM {table}"), [])?;
+    }
+    Ok(())
 }
 
 fn require_pending(conn: &Connection) -> Result<(), AppError> {

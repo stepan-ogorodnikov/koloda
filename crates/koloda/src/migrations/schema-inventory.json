@@ -1117,6 +1117,20 @@
       "name": "sync_state",
       "columns": [
         {
+          "name": "authoritative_epoch",
+          "type": "BLOB",
+          "notnull": 0,
+          "pk": 0,
+          "dflt_value": null
+        },
+        {
+          "name": "authoritative_last_seq",
+          "type": "INTEGER",
+          "notnull": 0,
+          "pk": 0,
+          "dflt_value": null
+        },
+        {
           "name": "backfill_after_id",
           "type": "TEXT",
           "notnull": 0,

@@ -207,7 +207,7 @@ Out:
   Commit: Re-push the writes a restored server lost
   Depends on: none
 
-- [ ] 2. Reset a file for an authoritative restore
+- [x] 2. Reset a file for an authoritative restore
   Goal:
   - `V12` adds the recorded authoritative restore to `sync_state`: its epoch and the server's `last_sender_seq` for
     the device (question 8).
