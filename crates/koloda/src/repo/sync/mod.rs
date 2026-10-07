@@ -1,7 +1,8 @@
 //! Sync bookkeeping SQL: device enrollment here, joining an existing space in `join`, capture of product writes
 //! in `capture`, rows that predate enrollment in `backfill`, push batches and their outcomes in `outbox`,
 //! remote envelopes in `apply`, image transfers in `attachments`, new stamps for pending cohorts in `restamp`, the
-//! re-bootstrap barrier in `rebase`, and moving a file to a new device id in `switch`
+//! re-bootstrap barrier in `rebase`, moving a file to a new device id in `switch`, and re-pushing what a restored
+//! server lacks in `heal`
 //! (`crates/koloda-sync-proto/PROTOCOL.md` §Field groups and merge, §Clocks and order, §Devices, §Client state,
 //! §Joining, §Attachments, §Recovery).
 //!
@@ -11,6 +12,7 @@ pub mod apply;
 pub mod attachments;
 pub mod backfill;
 pub mod capture;
+pub mod heal;
 pub mod join;
 pub mod outbox;
 pub mod rebase;
@@ -268,12 +270,14 @@ impl StampValues {
         conn: &Connection,
         kind: Kind,
         id: &str,
+        parent: Option<&str>,
         successor: Option<&str>,
     ) -> Result<(), AppError> {
         conn.execute(
             r#"
-            INSERT OR REPLACE INTO sync_tombstones (kind, id, hlc, stamp_device, sender, sender_seq, successor)
-            VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)
+            INSERT OR REPLACE INTO sync_tombstones
+                (kind, id, hlc, stamp_device, sender, sender_seq, successor, parent)
+            VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)
             "#,
             params![
                 kind.as_wire(),
@@ -282,7 +286,8 @@ impl StampValues {
                 self.stamp_device.as_slice(),
                 self.sender.as_slice(),
                 self.sender_seq,
-                successor
+                successor,
+                parent
             ],
         )?;
         Ok(())

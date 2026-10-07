@@ -172,7 +172,7 @@ Out:
 
 ## Plan
 
-- [ ] 1. Re-push the writes a restored server lost
+- [x] 1. Re-push the writes a restored server lost
   Goal:
   - `V12__sync_restore.sql` adds `sync_heal_cutoffs (sender, last_seq)`, and `heal_step`, `heal_after_ts`, and
     `heal_after_id` to `sync_state` (question 7).

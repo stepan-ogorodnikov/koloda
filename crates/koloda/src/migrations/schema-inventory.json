@@ -796,6 +796,35 @@
       "foreign_keys": []
     },
     {
+      "name": "sync_heal_cutoffs",
+      "columns": [
+        {
+          "name": "last_seq",
+          "type": "INTEGER",
+          "notnull": 1,
+          "pk": 0,
+          "dflt_value": null
+        },
+        {
+          "name": "sender",
+          "type": "BLOB",
+          "notnull": 1,
+          "pk": 1,
+          "dflt_value": null
+        }
+      ],
+      "indexes": [
+        {
+          "name": "sqlite_autoindex_sync_heal_cutoffs_1",
+          "unique": 1,
+          "columns": [
+            "sender"
+          ]
+        }
+      ],
+      "foreign_keys": []
+    },
+    {
       "name": "sync_held",
       "columns": [
         {
@@ -1172,6 +1201,20 @@
           "dflt_value": null
         },
         {
+          "name": "heal_after_id",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0,
+          "dflt_value": null
+        },
+        {
+          "name": "heal_step",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0,
+          "dflt_value": null
+        },
+        {
           "name": "id",
           "type": "INTEGER",
           "notnull": 1,
@@ -1288,6 +1331,13 @@
           "type": "TEXT",
           "notnull": 1,
           "pk": 1,
+          "dflt_value": null
+        },
+        {
+          "name": "parent",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0,
           "dflt_value": null
         },
         {

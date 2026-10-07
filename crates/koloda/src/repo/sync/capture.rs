@@ -177,7 +177,7 @@ impl<'c> Capture<'c> {
         let sender_seq = state.next_seq(conn)?;
         let stamp_values = StampValues::new(commit.stamp, state.device, sender_seq)?;
 
-        stamp_values.write_tombstone(conn, kind, id, successor)?;
+        stamp_values.write_tombstone(conn, kind, id, parent, successor)?;
         forget_entity(conn, kind, id)?;
 
         // WHY: a delete never replaces pending rows of its entity. Earlier creates still push first, so a pending

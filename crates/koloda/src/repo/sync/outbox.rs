@@ -250,7 +250,7 @@ pub(super) fn settle_item(
                 own,
                 i64::try_from(item.sender_seq).map_err(protocol_error)?,
             )?;
-            delete_entity(conn, header.kind, &header.id, None, &values, starter, changed)?;
+            delete_entity(conn, &header, None, &values, starter, changed)?;
         }
         // WHY: a dead parent or template takes the entity with it, and its tombstone arrives by pull; publishing a
         // delete of the entity would add nothing.

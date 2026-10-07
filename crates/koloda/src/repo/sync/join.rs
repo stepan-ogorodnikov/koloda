@@ -39,7 +39,7 @@ const PROBE_KINDS: [Kind; 5] = [
     Kind::Cards,
 ];
 
-const SYNC_TABLES: [&str; 8] = [
+const SYNC_TABLES: [&str; 9] = [
     "sync_state",
     "sync_stamps",
     "sync_origins",
@@ -48,6 +48,7 @@ const SYNC_TABLES: [&str; 8] = [
     "sync_tombstones",
     "sync_held",
     "sync_attachment_queue",
+    "sync_heal_cutoffs",
 ];
 
 pub fn join_mode(db: &Database, space_id: Uuid) -> Result<JoinMode, AppError> {

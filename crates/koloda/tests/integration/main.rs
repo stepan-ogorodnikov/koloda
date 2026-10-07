@@ -24,6 +24,7 @@ mod sync_apply_integration_tests;
 mod sync_attachments_integration_tests;
 mod sync_backfill_integration_tests;
 mod sync_collision_integration_tests;
+mod sync_heal_integration_tests;
 mod sync_integration_tests;
 mod sync_join_integration_tests;
 mod sync_outbox_integration_tests;

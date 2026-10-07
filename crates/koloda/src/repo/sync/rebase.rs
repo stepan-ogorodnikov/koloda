@@ -60,8 +60,8 @@ pub fn finish_rebase(db: &Database, cursor_cold: u64, starter: &Starter) -> Resu
 }
 
 // INVARIANT: absent means the server holds no create for it. A create still waiting in the outbox (in flight or not)
-// or held was never taken, so its entity stays whatever its age. Removal records no tombstone and no fence: the
-// server's reason for lacking the entity is not known to be a delete.
+// or held was never taken, so its entity stays whatever its age, and so does one a running heal has yet to re-push.
+// Removal records no tombstone and no fence: the server's reason for lacking the entity is not known to be a delete.
 fn absent_batch(conn: &Connection, kind: Kind, after: &str) -> Result<Option<Vec<String>>, AppError> {
     let ids: Vec<String> = conn
         .prepare(
@@ -74,6 +74,10 @@ fn absent_batch(conn: &Connection, kind: Kind, after: &str) -> Result<Option<Vec
               )
               AND NOT EXISTS (
                   SELECT 1 FROM sync_held h WHERE h.kind = o.kind AND h.id = o.id AND h.group_name = 'create'
+              )
+              AND NOT (
+                  s.heal_step IS NOT NULL
+                  AND o.sender_seq > COALESCE((SELECT c.last_seq FROM sync_heal_cutoffs c WHERE c.sender = o.sender), 0)
               )
             ORDER BY o.id
             LIMIT ?3

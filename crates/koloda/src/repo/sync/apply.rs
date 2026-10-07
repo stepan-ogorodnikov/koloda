@@ -683,8 +683,7 @@ fn apply_delete(conn: &Connection, entry: &Entry, starter: &Starter, changed: &m
     };
     delete_entity(
         conn,
-        entry.header.kind,
-        &entry.header.id,
+        &entry.header,
         delete.successor.as_deref(),
         &entry.values,
         starter,
@@ -692,20 +691,21 @@ fn apply_delete(conn: &Connection, entry: &Entry, starter: &Starter, changed: &m
     )
 }
 
-/// Tombstones an entity at `values` and deletes it with its descendants, as an applied remote delete does.
+/// Tombstones the entity `header` names at `values` and deletes it with its descendants, as an applied remote delete
+/// does.
 ///
 /// INVARIANT: the tombstone fences its id even when this device never held the entity, so a create that arrives
 /// later is dropped (apply rule steps 1 and 4).
 pub(super) fn delete_entity(
     conn: &Connection,
-    kind: Kind,
-    id: &str,
+    header: &Header,
     successor: Option<&str>,
     values: &StampValues,
     starter: &Starter,
     changed: &mut Changed,
 ) -> Result<(), AppError> {
-    values.write_tombstone(conn, kind, id, successor)?;
+    let (kind, id) = (header.kind, header.id.as_str());
+    values.write_tombstone(conn, kind, id, header.parent.as_deref(), successor)?;
     if !is_present(conn, kind, id)? {
         return Ok(());
     }

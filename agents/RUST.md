@@ -22,6 +22,7 @@ This file only tells you where to start.
 | New stamps for pending writes | `src/repo/sync/restamp.rs` + `crates/koloda-sync-proto/PROTOCOL.md` (§Hybrid logical clock, §Cohorts) |
 | Re-bootstrap and absence cleanup | `src/repo/sync/rebase.rs` + `crates/koloda-sync-proto/PROTOCOL.md` (§Re-bootstrap) |
 | A new device id for a forked or re-attached file | `src/repo/sync/switch.rs` + `crates/koloda-sync-proto/PROTOCOL.md` (§Behind its own record) |
+| Re-pushing what a restored server lacks | `src/repo/sync/heal.rs` + `crates/koloda-sync-proto/PROTOCOL.md` (§Server restore) |
 | Enabling sync on a database that already holds rows | `src/repo/sync/backfill.rs::backfill_batch` + `crates/koloda-sync-proto/PROTOCOL.md` (§Existing rows at enable time, Backfill) |
 | Joining an existing space | `src/repo/sync/join.rs` + `crates/koloda-sync-proto/PROTOCOL.md` (§Joining) |
 | Schema / migrations | `agents/DB.md` |
@@ -122,6 +123,15 @@ duplicates included; `finish_rebase` removes what stayed unmarked.
 
 - `settle_push` sets `sync_cohorts.has_consumed`; only such a cohort stays `fixed` across a switch.
 - The caller stores the new token before the call; the id swap, renumbering, and re-stamp are one transaction.
+
+**Heal** — `begin_heal` stores a restore's cutoffs and restarts the scan; `heal_batch` enqueues the next batch.
+
+- A write is re-encoded from the row with its stored stamp: creates through each repo's `create_payload`, update
+  groups from the row and the register's `product_ts`, tombstones from `sync_tombstones` (which keeps a card's deck).
+- A write of this device still waiting in the outbox moves to the tail with its cohort instead; one in flight is
+  encoded again.
+- The row a write lives in takes the re-push's sender and seq; each batch is a `fixed` cohort with `has_consumed`.
+- `finish_rebase` keeps a create above its sender's cutoff while the scan runs.
 
 **Detach** — `detach` records when the file left its space; the engine sends nothing for a detached file, and
 capture keeps recording for a later re-attach.

@@ -1229,17 +1229,33 @@ It gets `401 unknown_device` with the new epoch, re-attaches with a pairing code
 **Heal** puts the space behind its devices, which then fill it back in.
 A client on the old epoch gets `epoch_changed` with the restore points, then:
 
-1. Stores the new epoch and sets each cursor to `min(cursor, restore seq)`.
-2. Scans its registers, origins, and tombstones.
-   It enqueues every register, create, review, and tombstone whose origin `(sender, sender_seq)` is above that
-   sender's restore `last_sender_seq`, or whose sender is not in the restored roster.
+1. Stores the new epoch, sets each cursor to `min(cursor, restore seq)`, and stores each sender's cutoff: its
+   restore `last_sender_seq`, or 0 for a sender the restore does not list.
+2. Scans its registers, origins, and tombstones, in bounded batches that resume after a relaunch.
+   It enqueues every create, non-synthetic register, review, revision, and tombstone whose `(sender, sender_seq)` is
+   above that sender's cutoff.
    That includes other devices' writes, re-encoded from the row with their stored stamp (§Field groups and merge).
-   The scan walks in backfill order: algorithms with revisions, templates, decks, cards, reviews; creates before
-   update groups; tombstones last.
+   A create carries the row's current values, its registers' current product timestamps, and its stored legacy
+   floor; a reset carries its stamp's wall time, since no column keeps the reset's own.
+   The scan walks in backfill order: algorithms, revisions, templates, decks, cards, `learning`, reviews; creates
+   before update groups; tombstones last.
    A device that holds an entity therefore re-pushes its ancestors and referents first.
    It never gets `existence` for its own re-push.
-   Every re-pushed row goes into a `fixed` cohort; a clock-skew re-stamp never touches it.
-3. Resumes the normal cycle.
+   - A write of this device still waiting in the outbox is not encoded again.
+     It moves to the tail with the rest of its cohort, behind the rows the scan has enqueued so far.
+     Pushed first, an edit of an entity whose create the backup lacks would come back `existence`, and be lost
+     once the scan had passed that entity.
+   - A write in flight is encoded again; its earlier copy may have gone to the old server only.
+   - The register, origin, or tombstone takes the re-push's sender and seq and keeps its stamp.
+     A consumed seq then means the write, or a newer one, is in any later backup, so another restore's cutoff test
+     stays exact.
+   - Each batch is one `fixed` cohort marked consumed, so neither a clock-skew re-stamp nor a fork's switch gives a
+     re-pushed write a new stamp.
+   - A restore that arrives during the scan lowers each cutoff to the lower of the two, drops a sender the new
+     restore does not list to 0, and restarts the scan.
+   - While the scan runs, a re-bootstrap's absence cleanup keeps an entity whose create is above its sender's
+     cutoff, as it keeps a create still waiting in the outbox.
+3. Resumes the normal cycle, topping the outbox up from the scan before each push as backfill does.
    It does not bootstrap and deletes nothing.
 
 Several devices may re-push the same write; the server keeps one and returns the rest as `stale`.
@@ -1521,15 +1537,16 @@ Only native hosts write them; they are device-local runtime state, never synced.
 
 | Table | Key | Holds |
 | --- | --- | --- |
-| `sync_state` | Singleton | `device_id`, `space_id`, `epoch`, join phase, cursors, last HLC, stable high-water, `next_sender_seq`, last observed server seq, skew, role (creator or joiner), backfill phase stamps and watermark, rebase generation and barrier flag, fork nonce, clock pause |
+| `sync_state` | Singleton | `device_id`, `space_id`, `epoch`, join phase, cursors, last HLC, stable high-water, `next_sender_seq`, last observed server seq, skew, role (creator or joiner), backfill phase stamps and watermark, rebase generation and barrier flag, fork nonce, clock pause, heal scan step and watermark |
 | `sync_stamps` | `(kind, id, group)` | LWW register (§Field groups and merge) |
 | `sync_origins` | `(kind, id, group)` | Stamp and sender of immutable rows; legacy timestamp floor for creates; the re-bootstrap generation that last delivered a create |
 | `sync_outbox` | `sender_seq` | Encoded envelope, digest, `commit_id`, in-flight flag |
 | `sync_cohorts` | `commit_id` | Members, `local` / `uncertain` / `fixed`, original stamp, whether a member was consumed |
-| `sync_tombstones` | `(kind, id)` | Stamp, sender, hints |
+| `sync_tombstones` | `(kind, id)` | Stamp, sender, hints, parent (a card's deck) |
 | `sync_held` | `sender_seq` | Consumed `held` envelopes and their reason |
 | `sync_delete_jobs` | `(kind, id)` | Resumable local cascade for chunked deletes; not built while a delete cascades in one transaction (§Deletes) |
 | `sync_attachment_queue` | `(id, direction)` | Pending uploads and fetches |
+| `sync_heal_cutoffs` | `sender` | Each sender's cutoff while a heal runs (§Server restore) |
 
 They are the whole schema footprint of sync.
 
