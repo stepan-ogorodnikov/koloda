@@ -1,6 +1,6 @@
 # Sync recovery
 
-Status: draft
+Status: ready
 
 ## Intent
 
@@ -69,23 +69,23 @@ Out:
 
 ## Open questions
 
-- [ ] 1. Area guides? — open.
-  Recommended: `agents/TASKS.md`, `agents/IMPLEMENTATION-PLAN.md`, `agents/MARKDOWN.md`,
+- [x] 1. Area guides?
+  Answer: `agents/TASKS.md`, `agents/IMPLEMENTATION-PLAN.md`, `agents/MARKDOWN.md`,
   `agents/CODE-DOCUMENTATION.md`, `agents/CODE-STYLE.md`, `agents/TESTING.md`, `agents/RUST.md`, `agents/DB.md`,
   and `agents/REVIEW.md` for self-review.
   Also `crates/koloda/README.md`, `crates/koloda-sync/README.md`, `crates/koloda-server/README.md`,
   `crates/koloda-sync-proto/PROTOCOL.md` and its README, and `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md`.
-- [ ] 2. One task, or the server work apart? — open.
-  Recommended: one task, server items before the engine items that need them.
+- [x] 2. One task, or the server work apart?
+  Answer: one task, server items before the engine items that need them.
   The engine cannot be tested against `cursor_too_old` and `rebase_required` without the server's half, which is two
   small items.
-- [ ] 3. May a re-stamp move the clock backwards? — open.
+- [x] 3. May a re-stamp move the clock backwards?
   `PROTOCOL.md` §Hybrid logical clock says the device "never issues a smaller one".
   A clock set ahead stamps every write made meanwhile ahead, and moves `last_hlc` with them.
   If re-stamp ticks on from `last_hlc`, the new stamps are still ahead and the server keeps refusing them
   (`stamp_ahead`).
   A clock set to a year ahead would never sync again.
-  Recommended: yes, bounded by a persisted **stable high-water**.
+  Answer: yes, bounded by a persisted **stable high-water**.
   - `sync_state.stable_hlc` is the highest stamp that is no longer only local.
     Apply raises it to every stamp it observes, and `push_batch` raises it to each cohort it moves out of `local`.
   - Re-stamp issues from `max(corrected now, stable_hlc, the stamps of unfinished backfill phases)`, one stamp per
@@ -95,11 +95,11 @@ Out:
   That misses a remote stamp that a later local write replaced in its register.
   If that remote stamp was up to 5 minutes ahead, the re-stamped write could land below it and lose to it.
   Item 1 amends §Hybrid logical clock and §Cohorts.
-- [ ] 4. How does a re-bootstrap find what the server deleted? — open.
+- [x] 4. How does a re-bootstrap find what the server deleted?
   `PROTOCOL.md` §Re-bootstrap records `pre_barrier_ids`, persists the ids the snapshot inserted, and deletes every
   pre-barrier id still absent.
   That deletes a create made before the barrier that was never sent, and the id sets do not scale to 500k cards.
-  Recommended:
+  Answer:
   - a rebase generation in `sync_state` and a mark on `sync_origins`;
     snapshot and catch-up apply mark every create they meet with the open generation, including duplicates;
   - at the end, every algorithm, template, deck, and card that has a create origin but no mark of this generation is
@@ -114,19 +114,19 @@ Out:
   cleanup deletes it.
   Heal re-push, which `existence` waits for, belongs to server restore.
   Item 2 amends §Re-bootstrap and §Client state.
-- [ ] 5. How does a file that is behind tell its `fixed` cohorts apart, and survive a crash mid-fork? — open.
+- [x] 5. How does a file that is behind tell its `fixed` cohorts apart, and survive a crash mid-fork?
   A cohort is `fixed` when a member was consumed, and also when a reply was lost and nothing is known.
   Only the first kind keeps its stamp.
   A consumed member that has already left the outbox has no pending seq whose receipt could show it.
-  Recommended:
+  Answer:
   - `sync_cohorts.has_consumed`, set by push settlement and by receipts;
     a `fixed` cohort without it returns to `local` when no receipt shows a member consumed;
   - fork takes a nonce, like space creation and claim, and the same nonce returns the same device and token;
     the engine stores the nonce in `sync_state` before it calls;
     a crash anywhere then forks once, and no orphan record with cursor 0 pins GC for 90 days.
   Item 6 amends §Behind its own record; item 7 amends §Endpoints and §Bodies.
-- [ ] 6. When is a device stale, and what clears `rebase_required`? — open.
-  Recommended:
+- [x] 6. When is a device stale, and what clears `rebase_required`?
+  Answer:
   - a request marks its device stale when the stored `last_seen` is older than 90 days, or older than 24 hours for a
     record another was forked from;
     the check reads `last_seen` before the request refreshes it, and the flag persists;
@@ -135,8 +135,8 @@ Out:
     receipts, pull, the device calls, and bootstrap still answer;
   - releasing a snapshot lease clears the flag, because a device releases only after its snapshot and catch-up are
     applied.
-- [ ] 7. How does tombstone GC pick what to remove? — open.
-  Recommended:
+- [x] 7. How does tombstone GC pick what to remove?
+  Answer:
   - one pass per space, under the space writer lock, in `Server::collect_garbage` beside attachment collection;
   - it removes tombstone versions and heads at or below the lowest `cursor_hot` of the active devices (not revoked,
     not stale) and the lowest `hot` head of a live lease, which catches up from it, and never a pinned version;
@@ -145,12 +145,12 @@ Out:
   - `deleted_ids` is never touched, so a late create of a collected id is still `fenced`;
   - a pull whose `after` is below its lane's horizon, and a push from a device whose recorded `cursor_hot` is below
     it, get `cursor_too_old` (409), consuming nothing.
-- [ ] 8. How does a re-attached file avoid a needless re-bootstrap? — open.
+- [x] 8. How does a re-attached file avoid a needless re-bootstrap?
   A claim makes a new device record with cursor 0.
   Once the space has collected a tombstone, that record is below the horizon, so the file's first push is refused
   even when its own cursor is past the horizon.
   The first attempt read one page of `hot` right after the claim to record a cursor.
-  Recommended: a general cycle rule instead.
+  Answer: a general cycle rule instead.
   When the device record's `cursor_hot` is below `meta.device.gc_horizon_hot` and the file's own cursor is not, the
   round pulls `hot` before it pushes.
   That pull records the cursor; a file whose own cursor is below the horizon gets `cursor_too_old` from it and
@@ -158,17 +158,17 @@ Out:
   Only a freshly claimed record meets the condition: a forked record re-bootstraps anyway, and a stale one is
   `rebase_required`.
   The alternative is a server change: no push check until a record's first pull.
-- [ ] 9. What does recovery do to the attachment queue? — open.
+- [x] 9. What does recovery do to the attachment queue?
   `sync_attachment_queue` is keyed by attachment id, not by device or card, and it pins nothing.
-  Recommended: nothing changes.
+  Answer: nothing changes.
   - Fork and re-attach keep the queue as it is.
   - After absence cleanup, a retried fetch that no card links drops in `due_transfers`.
     An upload whose image the startup sweep removed drops too, and an image uploaded with no card linking it is
     collected after 90 days.
   - Snapshot apply already queues fetches for the cards a re-bootstrap brings back.
   Item 5 adds one engine test for that last point.
-- [ ] 10. Migrations? — open.
-  Recommended: one `V11__sync_recovery.sql` in `koloda`, `V2__recovery.sql` in the server series, and
+- [x] 10. Migrations?
+  Answer: one `V11__sync_recovery.sql` in `koloda`, `V2__recovery.sql` in the server series, and
   `V3__recovery.sql` in the space series.
   Items extend them until the task lands, as `V9` and the server's `V1` were; nothing outside this branch applies
   them before then.
@@ -207,9 +207,7 @@ Out:
   - a grade written on a clock set ahead, with a remote reset between the card's create and that grade: the
     re-stamped grade still beats the reset, so its review and scheduling survive;
   - `bun run check:push` green.
-  Commit:
-  a. Re-stamp pending cohorts as one unit
-  b. Re-stamp local cohorts above the stable high-water
+  Commit: Re-stamp pending cohorts as one unit
   Depends on: none
 
 - [ ] 2. Track a re-bootstrap with a barrier and clean up what the server deleted
@@ -238,9 +236,7 @@ Out:
   - repeated `begin_rebase` keeping one barrier, and marks of an earlier generation protecting nothing in the next;
   - a space that holds nothing: the four kinds emptied, revisions and settings kept;
   - `bun run check:push` green.
-  Commit:
-  a. Track a re-bootstrap with a barrier and clean up what the server deleted
-  b. Mark what a re-bootstrap streams and delete what it did not
+  Commit: Track a re-bootstrap with a barrier and clean up what the server deleted
   Depends on: none
 
 - [ ] 3. Mark stale devices and refuse their pushes
@@ -261,9 +257,7 @@ Out:
   - a record another was forked from: stale after 25 hours idle, not after 23; a record with no fork not stale at
     25 hours;
   - `bun run check:push` green.
-  Commit:
-  a. Mark stale devices and refuse their pushes
-  b. Require a re-bootstrap from devices unseen for 90 days
+  Commit: Mark stale devices and refuse their pushes
   Depends on: none
 
 - [ ] 4. Collect tombstones every active device has passed
@@ -285,9 +279,7 @@ Out:
   - a device that slept through a pass: its pull from the old cursor and its push both `cursor_too_old`;
   - the horizon in a reply's `meta.device`, and a pass that removes nothing leaving it where it was;
   - `bun run check:push` green.
-  Commit:
-  a. Collect tombstones every active device has passed
-  b. Garbage-collect tombstones below the slowest active cursor
+  Commit: Collect tombstones every active device has passed
   Depends on: 3
 
 - [ ] 5. Re-bootstrap a device the server has left behind
@@ -312,9 +304,7 @@ Out:
   - a lease that lapses mid-stream, and a relaunch mid-rebase, each finishing the same re-bootstrap;
   - a card the re-bootstrap brings back with an image the file lacks: its fetch is queued (question 9);
   - `bun run check:push` green.
-  Commit:
-  a. Re-bootstrap a device the server has left behind
-  b. Re-bootstrap on rebase_required and cursor_too_old
+  Commit: Re-bootstrap a device the server has left behind
   Depends on: 2, 3, 4
 
 - [ ] 6. Renumber pending writes for a new sender
@@ -344,9 +334,7 @@ Out:
   - an outbox contiguous from 1, with registers and origins agreeing, and held rows untouched;
   - a `fenced` receipt deleting the entity as a push outcome does;
   - `bun run check:push` green.
-  Commit:
-  a. Renumber pending writes for a new sender
-  b. Switch a file to a new device id by receipts
+  Commit: Renumber pending writes for a new sender
   Depends on: 1, 2
 
 - [ ] 7. Recover a file that is behind by forking
@@ -372,9 +360,7 @@ Out:
   - a crash after the fork reply and before the switch: the relaunch makes one fork record, not two;
   - the forked-from record going idle and no longer holding a GC pass back;
   - `bun run check:push` green.
-  Commit:
-  a. Recover a file that is behind by forking
-  b. Fork a copied or rolled-back file to a new device
+  Commit: Recover a file that is behind by forking
   Depends on: 1, 3, 5, 6
 
 - [ ] 8. Re-stamp paused cohorts when the clock is corrected
@@ -394,9 +380,7 @@ Out:
   - a space that keeps refusing: one retry per cycle, then the refusal is reported;
   - a cycle with no pause leaving the stamps it captured alone;
   - `bun run check:push` green.
-  Commit:
-  a. Re-stamp paused cohorts when the clock is corrected
-  b. Re-stamp writes made while the clock was wrong
+  Commit: Re-stamp paused cohorts when the clock is corrected
   Depends on: 1
 
 - [ ] 9. Re-attach a detached or revoked file
@@ -422,9 +406,7 @@ Out:
   - a file below the horizon re-attached: it re-bootstraps, loses what the space deleted, and keeps its own creates;
   - a code for a space with another epoch refused with the code still claimable, and an attached file refused;
   - `bun run check:push` green.
-  Commit:
-  a. Re-attach a detached or revoked file
-  b. Rejoin a space with a detached file's rows and pending writes
+  Commit: Re-attach a detached or revoked file
   Depends on: 5, 6
 
 ## Outcome
