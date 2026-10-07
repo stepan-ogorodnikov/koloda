@@ -41,7 +41,7 @@ fn receipt(db: &Database, seq: i64, is_same: bool, outcome: Outcome) -> Receipt 
 
 fn switch(db: &Database, receipts: &[Receipt]) -> Uuid {
     let new_device = Uuid::now_v7();
-    switch_device(db, new_device, receipts, &starter(), now_ms(), false).expect("the file switches");
+    switch_device(db, new_device, receipts, &starter(), now_ms(), false, None).expect("the file switches");
     new_device
 }
 

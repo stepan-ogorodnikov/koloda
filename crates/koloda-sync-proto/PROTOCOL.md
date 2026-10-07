@@ -742,7 +742,10 @@ Detaching on the device deletes the token and records when.
 Rows and sync tables stay, and capture keeps recording, for a later re-attach.
 A detached file sends no request.
 A `401 revoked` reply to any call detaches the file this way; `detach` revokes the own device first.
-`401 unknown_device` stops the engine until server restore lands (§Recovery).
+A `401 revoked` or `401 unknown_device` whose epoch is not the one the device sent means a restore predates the
+device, or rotated every token (§Server restore).
+The file detaches the same way, and its status asks for a new pairing rather than reporting a revocation.
+A `401 unknown_device` on the epoch the device sent stops the engine.
 
 ### Behind its own record: rollback and copies
 
@@ -1397,16 +1400,18 @@ Cards that arrive from the space reuse local attachment bytes; the startup sweep
 
 A file that was in this space claims a new code.
 That covers a detached or revoked file, one enrolled after the backup of a restored server, and rotated tokens.
-This app version re-attaches a detached file, revoked or detached by itself, whose space still has the epoch it last
-saw.
-An attached file is refused, and so is a space restored since; both refusals come before the claim, so the code stays
-usable.
+An attached file is refused before the claim, so the code stays usable.
 It keeps rows, stamps, origins, cursors, tombstones, and outbox bytes.
+When the previewed epoch is not the file's, the space was restored since.
+The file's first call after the claim names the epoch it stored, and the `epoch_changed` reply carries the restore.
+A heal is applied at once; an authoritative restore is held for the host, as on any device (§Server restore).
+Either way, the later calls name the new epoch.
 It then follows steps 1, 2, and 4 of the "behind" procedure (§Devices) with the old device id.
 It reads the old sender's receipts for its pending seqs, classifies by cohort, renumbers, and re-stamps the cohorts
 with no accepted member under the new id, in one local transaction.
-If the claim returns a newer epoch than the file's, it then runs that restore's path (§Recovery) before the cycle.
-Otherwise it re-bootstraps only if `cursor_too_old`.
+A restored space that has no record of the old device consumed none of its seqs.
+The same transaction records the server URL the code was redeemed through, which may differ from the stored one.
+It re-bootstraps only if `cursor_too_old`.
 The claimed record starts with no cursor, below any GC horizon, so its first push would be refused.
 The cycle therefore pulls `hot` before it pushes while the record's cursor is below the horizon and the file's own is
 not; that pull records the cursor (§Cycle).

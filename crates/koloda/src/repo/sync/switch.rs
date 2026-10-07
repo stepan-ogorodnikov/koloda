@@ -22,7 +22,8 @@ use crate::app::error::{error_codes, throw_known_error, AppError};
 
 /// Moves the file to `new_device` in one transaction, and returns the kinds whose product rows a settled receipt
 /// changed. `receipts` are the old sender's, for its pending seqs at or below its `last_sender_seq`. With
-/// `is_rebase`, the re-bootstrap barrier opens in the same transaction, so the new id never runs without it.
+/// `is_rebase`, the re-bootstrap barrier opens in the same transaction, so the new id never runs without it. A
+/// re-attach passes the `server_url` its code was redeemed through, which may differ from the stored one.
 ///
 /// INVARIANT: the caller stores the new token first, so a crash leaves the file as it was or fully switched.
 pub fn switch_device(
@@ -32,6 +33,7 @@ pub fn switch_device(
     starter: &Starter,
     now_ms: u64,
     is_rebase: bool,
+    server_url: Option<&str>,
 ) -> Result<Vec<Kind>, AppError> {
     throw_known_error(error_codes::DB_UPDATE, || {
         db.with_transaction(|tx| {
@@ -46,10 +48,10 @@ pub fn switch_device(
                 r#"
                 UPDATE sync_state
                 SET device_id = ?1, next_sender_seq = ?2, last_observed_server_seq = 0, detached_at = NULL,
-                    fork_nonce = NULL
+                    fork_nonce = NULL, server_url = COALESCE(?3, server_url)
                 WHERE id = 1
                 "#,
-                params![new_device.as_bytes().as_slice(), next_sender_seq],
+                params![new_device.as_bytes().as_slice(), next_sender_seq, server_url],
             )?;
             // INVARIANT: re-stamp runs after the id swap, so the cohorts no receipt touched carry the new device.
             // Two copies that adopted the same remote stamp would otherwise mint identical stamps next.

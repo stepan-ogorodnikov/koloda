@@ -45,7 +45,7 @@ impl Shared {
         let receipts = self.pending_receipts(session, session.device, last_sender_seq).await?;
         let now_ms = u64::try_from(get_current_timestamp()?).map_err(local_error)?;
         let settled = self
-            .blocking(move |shared| switch_device(&shared.db, device, &receipts, &shared.starter, now_ms, true))
+            .blocking(move |shared| switch_device(&shared.db, device, &receipts, &shared.starter, now_ms, true, None))
             .await?;
         merge(changed, settled);
 

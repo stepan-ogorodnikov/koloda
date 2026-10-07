@@ -12,8 +12,8 @@ use koloda::repo::sync::switch::switch_device;
 use koloda::repo::sync::{enroll_device, sync_state, SpaceRole};
 use koloda_sync_proto::registry::Kind;
 use koloda_sync_proto::transport::{
-    ClaimPairing, DeviceInfo, EntityId, IssuePairing, KnownIds, KnownState, Pairing, PairingClaim, PairingPreview,
-    PreviewPairing, MAX_KNOWN_IDS,
+    ClaimPairing, DeviceInfo, EntityId, ErrorCode, IssuePairing, KnownIds, KnownState, Pairing, PairingClaim,
+    PairingPreview, PreviewPairing, MAX_KNOWN_IDS,
 };
 use uuid::Uuid;
 
@@ -123,43 +123,89 @@ impl Shared {
             .blocking(|shared| sync_state(&shared.db))
             .await?
             .ok_or(SyncError::NotEnrolled)?;
-        // INVARIANT: both refusals come before the claim, so the code stays usable by another device. An attached
-        // file has nothing to re-attach to; a space restored since needs the restore's path first.
+        // INVARIANT: the refusal comes before the claim, so the code stays usable by another device. An attached file
+        // has nothing to re-attach to.
         if !state.is_detached {
             return Err(SyncError::CannotJoin(JoinMode::Reattach));
         }
-        if state.epoch != Some(Uuid::from_bytes(preview.epoch)) {
-            return Err(SyncError::EpochChanged);
-        }
+        let stored = state.epoch.ok_or(SyncError::NotEnrolled)?;
 
         let claim = self.claim(&base, code, device_name).await?;
         let device = Uuid::from_bytes(claim.enrollment.device_id);
         let token = claim.enrollment.token;
-        let stored = token.clone();
-        self.blocking(move |shared| shared.secrets.set(&token_key(device), &stored))
+        let saved = token.clone();
+        self.blocking(move |shared| shared.secrets.set(&token_key(device), &saved))
             .await?;
-        let session = Session {
+        let mut session = Session {
             base,
             space: state.space_id,
             device,
             token,
-            epoch: Uuid::from_bytes(preview.epoch),
+            epoch: stored,
         };
+        // INVARIANT: a space restored since the file last synced answers the first call made with the stored epoch;
+        // that restore is applied before the switch, so the old sender's receipts come from the restored space. An
+        // authoritative one is only held, and the switch still moves the file to the new id it will bootstrap under.
+        if Uuid::from_bytes(preview.epoch) != stored {
+            let own = self
+                .device_client(&session)
+                .call::<(), DeviceInfo>(
+                    Method::Get,
+                    &format!("/v1/spaces/{}/devices/{device}", session.space),
+                    Some(&session.token),
+                    None,
+                )
+                .await;
+            match own {
+                Err(SyncError::Restored {
+                    restore,
+                    last_sender_seq,
+                }) => {
+                    let epoch = Uuid::from_bytes(restore.epoch);
+                    match self.apply_restore(restore, last_sender_seq).await {
+                        Ok(_) | Err(SyncError::RestoreHeld) => session.epoch = epoch,
+                        Err(error) => return Err(error),
+                    }
+                }
+                Ok(_) => session.epoch = Uuid::from_bytes(preview.epoch),
+                Err(error) => return Err(error),
+            }
+        }
+
         let old = state.device_id;
-        let record: DeviceInfo = self
+        // WHY: a restore that predates the old device has no record of it, so none of its seqs were consumed there.
+        let last_sender_seq = match self
             .device_client(&session)
-            .call::<(), _>(
+            .call::<(), DeviceInfo>(
                 Method::Get,
                 &format!("/v1/spaces/{}/devices/{old}", session.space),
                 Some(&session.token),
                 None,
             )
-            .await?
-            .ok;
-        let receipts = self.pending_receipts(&session, old, record.last_sender_seq).await?;
+            .await
+        {
+            Ok(answer) => answer.ok.last_sender_seq,
+            Err(SyncError::Server {
+                code: ErrorCode::NotFound,
+                ..
+            }) => 0,
+            Err(error) => return Err(error),
+        };
+        let receipts = self.pending_receipts(&session, old, last_sender_seq).await?;
         let now_ms = u64::try_from(get_current_timestamp()?).map_err(local_error)?;
-        self.blocking(move |shared| switch_device(&shared.db, device, &receipts, &shared.starter, now_ms, false))
-            .await?;
+        let url = session.base.clone();
+        self.blocking(move |shared| {
+            switch_device(
+                &shared.db,
+                device,
+                &receipts,
+                &shared.starter,
+                now_ms,
+                false,
+                Some(&url),
+            )
+        })
+        .await?;
         Ok(Joined {
             mode: JoinMode::Reattach,
             hint: claim.hint,

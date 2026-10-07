@@ -274,6 +274,17 @@ impl Shared {
                 self.detach_locally().await?;
                 Err(SyncError::Revoked)
             }
+            // WHY: a cycle is settled once inside its host call and once more around it; the file detaches once.
+            Err(SyncError::PairAgain) => {
+                let is_detached = self
+                    .blocking(|shared| sync_state(&shared.db))
+                    .await?
+                    .is_some_and(|state| state.is_detached);
+                if !is_detached {
+                    self.detach_locally().await?;
+                }
+                Err(SyncError::PairAgain)
+            }
             Err(SyncError::Server {
                 code: ErrorCode::UnknownDevice,
                 ..

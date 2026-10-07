@@ -509,7 +509,7 @@ fn neither_a_re_stamp_nor_a_switch_changes_a_re_pushed_stamp() {
 
     restamp_local_cohorts(&db, 1_900_000_000_000).expect("re-stamp runs");
     let new_device = Uuid::now_v7();
-    switch_device(&db, new_device, &[], &starter(), 1_900_000_000_000, false).expect("switch runs");
+    switch_device(&db, new_device, &[], &starter(), 1_900_000_000_000, false, None).expect("switch runs");
 
     let rows = outbox(&db);
     let row = &rows[position(&rows, Kind::Templates, &template, Some(Group::Create))];

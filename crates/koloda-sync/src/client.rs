@@ -121,6 +121,16 @@ impl Client<'_> {
                     restore,
                     last_sender_seq: reply.meta.device.map_or(0, |device| device.last_sender_seq),
                 },
+                // WHY: a restore that predates this device, or rotated every token, answers `401` with an epoch the
+                // device never saw; that is a new pairing, not a revocation (PROTOCOL.md, Server restore).
+                (ErrorCode::Revoked | ErrorCode::UnknownDevice, _)
+                    if self
+                        .epoch
+                        .zip(reply.meta.epoch)
+                        .is_some_and(|(sent, answered)| *sent.as_bytes() != answered) =>
+                {
+                    SyncError::PairAgain
+                }
                 (code, _) => SyncError::Server {
                     status: response.status,
                     code,

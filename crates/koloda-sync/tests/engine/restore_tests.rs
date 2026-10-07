@@ -7,18 +7,21 @@ use koloda::domain::attachments::AddAttachmentData;
 use koloda::domain::cards::{CardContentField, DeleteCardData, UpdateCardData, UpdateCardValues};
 use koloda::domain::decks::DeleteDeckData;
 use koloda::repo::attachments::{add_attachment, get_attachment_bytes};
+use koloda::repo::sync::join::JoinMode;
 use koloda::repo::{cards, decks};
+use koloda_server::restore::RestoreOptions;
+use koloda_sync::error::SyncError;
 use koloda_sync::status::{State, Stop};
 use koloda_sync::transport::Method;
 use koloda_sync_proto::envelope::Envelope;
 use koloda_sync_proto::hlc::{DeviceId, Hlc, Stamp};
 use koloda_sync_proto::payload::{Delete, Payload, Title};
 use koloda_sync_proto::registry::{Group, Kind, Lane};
-use koloda_sync_proto::transport::{ErrorCode, Outcome, RestoreMode};
+use koloda_sync_proto::transport::{ErrorCode, IssuePairing, Outcome, Pairing, RestoreMode};
 use uuid::Uuid;
 
-use crate::common::{error_reply, system_ms, Device, Fault, Space};
-use crate::fixtures::{Library, BACK, FRONT};
+use crate::common::{error_reply, system_ms, Device, Fault, Space, SERVER_URL};
+use crate::fixtures::{seed_settings, Library, BACK, FRONT};
 
 const MINUTE_MS: i64 = 60 * 1000;
 
@@ -456,4 +459,112 @@ fn a_held_restore_survives_a_relaunch_and_deletes_nothing() {
     relaunched.engine.sync_now().expect_err("still waiting");
     assert!(relaunched.has_card(&waiting));
     assert_eq!(relaunched.count("SELECT COUNT(*) FROM sync_outbox"), 1);
+}
+
+/// A code for `device`'s space from the setup token, as `koloda-server pair` gives one when no device can.
+fn break_glass_code(space: &Space) -> String {
+    let (status, reply) = space.server.post::<_, Pairing>(
+        &format!("/v1/spaces/{}/pairings", space.space_id()),
+        Some(&space.server.setup_token),
+        &IssuePairing::default(),
+    );
+    assert_eq!(status, 200, "{:?}", reply.error);
+    reply.ok.expect("a pairing code").code
+}
+
+fn reattach(device: &Device, code: &str, url: &str) {
+    let joined = device
+        .engine
+        .join(url, code, "Again", seed_settings())
+        .expect("the file re-attaches");
+    assert_eq!(joined.mode, JoinMode::Reattach);
+}
+
+fn is_told_to_pair_again(device: &Device) -> bool {
+    matches!(device.engine.sync_now(), Err(SyncError::PairAgain))
+        && device.engine.status().expect("status reads").state == State::Stopped(Stop::Restored)
+}
+
+#[test]
+fn a_device_enrolled_after_the_backup_pairs_again_and_its_writes_reach_the_space() {
+    let pair = pair();
+    let a = pair.a();
+    let backup = pair.space.server.backup();
+    let late = pair.space.server.join(a);
+    late.sync();
+    let card = late.add_card(&pair.library.deck, &pair.library.template, "late");
+    late.sync();
+
+    pair.space.server.restore(&backup, RestoreMode::Heal);
+    a.sync();
+
+    assert!(is_told_to_pair_again(&late));
+    assert!(late.state().is_some() && late.count("SELECT detached_at IS NOT NULL FROM sync_state") == 1);
+    let code = a.engine.issue_pairing(None).expect("A issues a code").code;
+    reattach(&late, &code, SERVER_URL);
+    late.sync();
+    assert!(
+        pair.witness().has_card(&card),
+        "the late device's write reached the restored space"
+    );
+}
+
+#[test]
+fn rotated_tokens_make_every_device_pair_again_without_losing_a_write() {
+    let pair = pair();
+    let a = pair.a();
+    let backup = pair.space.server.backup();
+    let card = a.add_card(&pair.library.deck, &pair.library.template, "rotated");
+    a.sync();
+    pair.b.sync();
+
+    pair.space.server.restore_with(
+        &backup,
+        RestoreOptions {
+            mode: RestoreMode::Heal,
+            is_rotating_tokens: true,
+        },
+    );
+
+    for device in [a, &pair.b] {
+        assert!(is_told_to_pair_again(device));
+        reattach(device, &break_glass_code(&pair.space), SERVER_URL);
+        device.sync();
+    }
+    assert!(pair.witness().has_card(&card));
+}
+
+#[test]
+fn a_re_attach_after_an_authoritative_restore_holds_then_converges() {
+    let pair = pair();
+    let a = pair.a();
+    let backup = pair.space.server.backup();
+    let late = pair.space.server.join(a);
+    late.sync();
+    let lost = late.add_card(&pair.library.deck, &pair.library.template, "lost");
+    late.sync();
+
+    pair.space.server.restore(&backup, RestoreMode::Authoritative);
+    accept(a);
+    assert!(is_told_to_pair_again(&late));
+    let code = a.engine.issue_pairing(None).expect("A issues a code").code;
+    reattach(&late, &code, SERVER_URL);
+
+    accept(&late);
+    assert!(!late.has_card(&lost));
+    assert_eq!(late.ids("cards"), a.ids("cards"));
+}
+
+#[test]
+fn a_re_attach_records_the_url_its_code_came_through() {
+    let pair = pair();
+    pair.b.engine.detach().expect("B detaches");
+    let code = pair.a().engine.issue_pairing(None).expect("A issues a code").code;
+
+    reattach(&pair.b, &code, "https://moved.test");
+
+    assert_eq!(
+        pair.b.state().expect("B is enrolled").server_url.as_deref(),
+        Some("https://moved.test")
+    );
 }

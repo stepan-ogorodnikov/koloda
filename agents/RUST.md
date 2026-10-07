@@ -123,7 +123,8 @@ duplicates included; `finish_rebase` removes what stayed unmarked.
 **Device switch** — `switch_device` settles accepted rows through `settle_item`, the path a push reply takes.
 
 - `settle_push` sets `sync_cohorts.has_consumed`; only such a cohort stays `fixed` across a switch.
-- The caller stores the new token before the call; the id swap, renumbering, and re-stamp are one transaction.
+- The caller stores the new token before the call; the id swap, renumbering, re-stamp, and a re-attach's server URL
+  are one transaction.
 
 **Heal** — `begin_heal` stores a restore's cutoffs and restarts the scan; `heal_batch` enqueues the next batch.
 

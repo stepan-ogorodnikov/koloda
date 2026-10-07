@@ -346,7 +346,7 @@ Out:
   Commit: Re-download the backup after an authoritative restore
   Depends on: 2, 6
 
-- [ ] 8. Re-attach a device the restore forgot
+- [x] 8. Re-attach a device the restore forgot
   Goal:
   - A `401 revoked` or `401 unknown_device` on an epoch other than the stored one detaches the file and stops with
     `Stop::Restored` (question 6).

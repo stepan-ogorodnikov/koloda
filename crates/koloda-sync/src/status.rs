@@ -44,6 +44,9 @@ pub enum Stop {
     UnknownDevice,
     /// An authoritative server restore waits for the host to accept it (`Engine::accept_restore`).
     AuthoritativeRestore,
+    /// The server was restored and no longer takes this device's token; the file detached and re-attaches with a
+    /// pairing code.
+    Restored,
     PushRefused(ErrorCode),
     Error(String),
 }
@@ -55,6 +58,7 @@ impl Stop {
             SyncError::Revoked | SyncError::Detached => Stop::Revoked,
             SyncError::UnknownDevice => Stop::UnknownDevice,
             SyncError::RestoreHeld => Stop::AuthoritativeRestore,
+            SyncError::PairAgain => Stop::Restored,
             SyncError::PushRefused { code, .. } => Stop::PushRefused(*code),
             other => Stop::Error(other.to_string()),
         }
@@ -98,7 +102,10 @@ impl Shared {
             });
         };
         let shown = if state.is_detached {
-            State::Stopped(Stop::Revoked)
+            State::Stopped(match run.stop {
+                Some(Stop::Restored) => Stop::Restored,
+                _ => Stop::Revoked,
+            })
         } else if state.is_restore_held {
             State::Stopped(Stop::AuthoritativeRestore)
         } else if state.is_import_pending {

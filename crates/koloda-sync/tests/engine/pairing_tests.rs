@@ -186,25 +186,6 @@ fn an_attached_file_is_refused_before_its_code_is_claimed() {
 }
 
 #[test]
-fn a_detached_file_is_refused_for_a_space_with_another_epoch_before_its_code_is_claimed() {
-    let space = Space::new();
-    let b = space.server.join(&space.device);
-    space.device.engine.detach().expect("A detaches");
-    // WHY: no server restore exists yet to change the space's epoch, so the file's stored one changes instead.
-    space
-        .device
-        .execute("UPDATE sync_state SET epoch = x'00000000000000000000000000000001'");
-    let code = b.engine.issue_pairing(None).expect("B issues a code").code;
-
-    let result = join(&space.device, &code);
-
-    assert!(matches!(result, Err(SyncError::EpochChanged)), "{result:?}");
-    assert!(claims(&space.device).is_empty(), "nothing is claimed");
-    let c = space.server.device();
-    join(&c, &code).expect("the code is still unused");
-}
-
-#[test]
 fn a_lost_claim_reply_is_retried_to_the_same_device() {
     let space = Space::new();
     let issued = issue(&space, None);
