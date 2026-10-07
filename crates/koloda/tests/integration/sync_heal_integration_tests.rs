@@ -572,3 +572,41 @@ fn a_file_waiting_for_add_or_replace_only_takes_the_new_epoch() {
         1
     );
 }
+
+#[test]
+fn a_waiting_bulk_delete_moves_once_however_many_of_its_tombstones_the_scan_meets() {
+    let db = replica();
+    let own = device(&db);
+    let algorithm = add_algorithm(&db, "FSRS");
+    let template = add_template(&db, "Basic");
+    let deck = add_deck(&db, &algorithm, &template, "Spanish");
+    let doomed: Vec<String> = ["a", "b", "c"]
+        .into_iter()
+        .map(|front| add_card(&db, &deck, &template, front))
+        .collect();
+    FakeSpace::default().push(&db);
+    let cutoff = seq_of(&db, "templates", &template, "create");
+    // Three tombstones in one commit, never sent; the deck's create is one the backup lacks.
+    koloda::repo::cards::delete_cards(&db, koloda::domain::cards::DeleteCardsData { ids: doomed.clone() })
+        .expect("cards are deleted");
+    let before = count(&db, "SELECT next_sender_seq FROM sync_state");
+
+    heal(&db, &[(own, cutoff)]);
+    drain(&db, 100);
+
+    let rows = outbox(&db);
+    let tombstones: Vec<usize> = doomed
+        .iter()
+        .map(|card| position(&rows, Kind::Cards, card, None))
+        .collect();
+    assert!(
+        tombstones.iter().all(|at| *at >= rows.len() - 3),
+        "the bulk delete waits behind the re-push"
+    );
+    let re_pushed = i64::try_from(rows.len() - 3).expect("fits");
+    assert_eq!(
+        count(&db, "SELECT next_sender_seq FROM sync_state") - before,
+        re_pushed + 3,
+        "the bulk delete moved once"
+    );
+}

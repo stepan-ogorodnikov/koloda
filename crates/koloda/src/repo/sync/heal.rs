@@ -735,6 +735,22 @@ impl Writer<'_> {
     }
 
     fn move_cohort(&mut self, commit_id: &[u8]) -> Result<usize, AppError> {
+        // WHY: a cohort already behind every other row needs no move. Without this check, an import of N cards would
+        // move all N rows each time the scan met one of them.
+        let is_last: bool = self.conn.query_row(
+            r#"
+            SELECT NOT EXISTS (
+                SELECT 1 FROM sync_outbox
+                WHERE commit_id <> ?1
+                  AND sender_seq > (SELECT MIN(sender_seq) FROM sync_outbox WHERE commit_id = ?1 AND in_flight = 0)
+            )
+            "#,
+            params![commit_id],
+            |row| row.get(0),
+        )?;
+        if is_last {
+            return Ok(0);
+        }
         let rows: Vec<(i64, usize)> = self
             .conn
             .prepare(
