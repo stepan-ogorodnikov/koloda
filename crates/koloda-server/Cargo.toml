@@ -25,6 +25,7 @@ koloda-sync-proto = { path = "../koloda-sync-proto" }
 refinery = { version = "0.8", features = ["rusqlite"] }
 rusqlite = { version = "0.33", features = ["bundled", "uuid"] }
 serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
 sha2 = "0.10"
 tokio = { version = "1", features = ["macros", "net", "rt-multi-thread", "signal", "time"] }
 uuid = { version = "1.0", features = ["serde", "v4"] }

@@ -231,7 +231,7 @@ Out:
   Commit: Reset a file for an authoritative restore
   Depends on: 1
 
-- [ ] 3. Back up a running server
+- [x] 3. Back up a running server
   Goal:
   - `koloda_server::backup::backup(data_dir, out_dir, now_ms)` and `koloda-server backup --data-dir <dir> <out>`
     copy the active generation as question 3 says.

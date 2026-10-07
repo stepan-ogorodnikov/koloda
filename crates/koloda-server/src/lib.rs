@@ -3,6 +3,7 @@
 //! Contract: `crates/koloda-sync-proto/PROTOCOL.md`. Layout and ownership: crate `README.md`.
 //! INVARIANT: the server reads envelope headers and never decodes a payload, so payloads can become ciphertext.
 
+pub mod backup;
 pub mod clock;
 pub mod data_dir;
 pub mod server;

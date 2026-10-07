@@ -21,10 +21,18 @@ koloda-server init --data-dir ./data
 koloda-server serve --data-dir ./data --listen 127.0.0.1:8080
 ```
 
+```bash
+koloda-server backup --data-dir ./data ./backups/2026-10-07
+```
+
 `init` prints the setup token once; only its hash is stored.
 `serve` speaks plain HTTP, so put a TLS reverse proxy in front of it.
 It runs a garbage collection pass every hour, over tombstones every active device has passed and attachments no card
 has linked for 90 days; `Server::collect_garbage` runs one on demand.
+`backup` copies the active generation while `serve` runs, into a directory that is missing or empty.
+Each database is copied in one read transaction, `server.db` last; the attachment bytes follow each space's copy.
+`manifest.json` is written last, with each file's SHA-256 and each space's epoch, lane heads, senders' last seqs,
+and attachment ids.
 
 ## Data directory
 
@@ -38,10 +46,11 @@ has linked for 90 days; `Server::collect_garbage` runs one on demand.
 
 ## Architectural Map
 
-- `src/main.rs` — command line: `init` and `serve`.
+- `src/main.rs` — command line: `init`, `serve`, and `backup`.
 - `src/lib.rs` — the route table.
 - `src/clock.rs` — server time, injected so tests run on a manual clock.
 - `src/data_dir.rs` — layout, `init`, and the directory lock.
+- `src/backup.rs` — an online copy of the active generation and its manifest.
 - `src/db.rs` — connections and the two migration series under `src/migrations/`.
 - `src/server.rs` — shared state: `server.db`, open space databases, and the clock.
 - `src/http.rs` — CBOR and zstd bodies, their limits, the reply envelope, and `meta`.

@@ -1,5 +1,5 @@
 //! `koloda-server` command line: `init` creates a data directory, `serve` runs the server on one and collects
-//! garbage every hour.
+//! garbage every hour, and `backup` copies a running server.
 
 use std::net::SocketAddr;
 use std::path::PathBuf;
@@ -8,6 +8,7 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use clap::{Parser, Subcommand};
+use koloda_server::backup;
 use koloda_server::clock::{Clock, SystemClock};
 use koloda_server::data_dir::{self, DataDirLock};
 use koloda_server::router;
@@ -28,6 +29,12 @@ enum Command {
     Init {
         #[arg(long)]
         data_dir: PathBuf,
+    },
+    /// Copy the running server into an empty directory, with a manifest that `restore` checks.
+    Backup {
+        #[arg(long)]
+        data_dir: PathBuf,
+        out: PathBuf,
     },
     /// Serve plain HTTP; put a TLS reverse proxy in front of it.
     Serve {
@@ -54,6 +61,16 @@ fn run(cli: Cli) -> Result<(), String> {
             let token = data_dir::init(&data_dir, SystemClock.now_ms()).map_err(|error| error.to_string())?;
             println!("Setup token: {token}");
             println!("Store it now; it is not shown again.");
+            Ok(())
+        }
+        Command::Backup { data_dir, out } => {
+            let manifest = backup::backup(&data_dir, &out, SystemClock.now_ms()).map_err(|error| error.to_string())?;
+            println!(
+                "Backed up {} space(s) from generation {} to {}",
+                manifest.spaces.len(),
+                manifest.generation,
+                out.display()
+            );
             Ok(())
         }
         Command::Serve { data_dir, listen } => serve(data_dir, listen),

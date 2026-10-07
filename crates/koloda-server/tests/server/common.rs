@@ -104,6 +104,10 @@ impl Harness {
         self.call(Method::POST, path)
     }
 
+    pub fn data_dir(&self) -> &std::path::Path {
+        self._dir.path()
+    }
+
     /// The active generation's directory, as `CURRENT` names it.
     pub fn generation_dir(&self) -> PathBuf {
         let current = std::fs::read_to_string(self._dir.path().join("CURRENT")).expect("read CURRENT");
