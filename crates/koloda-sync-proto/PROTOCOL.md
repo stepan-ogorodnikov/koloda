@@ -769,6 +769,8 @@ A file that is behind:
    A cohort with no accepted member returns to `local`.
    Splitting a cohort here would let a reset's blank scheduling take a newer stamp than its reset.
    It could then beat a grade whose review the reset did not kill.
+   A cohort remembers when a push reply consumed one of its members, even after that member left the outbox.
+   A cohort that a lost reply fixed, with no member known consumed, returns to `local` when no receipt shows one.
 3. Forks: `POST .../devices/fork` with its current token returns a fresh device id and token.
    The new device keeps the old one's name and platform, records which device it forked from, and starts with no
    consumed sequence.
@@ -778,6 +780,11 @@ A file that is behind:
 4. Re-stamps every `local` cohort with the new device id and renumbers every pending row at the new sender's
    sequence.
    Re-stamping is required: two copies that adopted the same remote stamp mint identical HLCs next.
+   Renumbering starts at 1 in the old order and moves the sender and seq of the register, origin, or tombstone each
+   row wrote; rows in `sync_held` keep the seqs they were consumed at.
+   Steps 1, 2, and 4 and the swap of the device id are one local transaction, after the new token is stored, so a
+   crash leaves the file as it was or fully switched.
+   The re-bootstrap barrier opens in the same transaction, so the new id never runs without it.
 5. Re-bootstraps (§Recovery), own entries included, because writes under the old id were excluded from its pulls.
 
 No user action is needed.
@@ -1498,7 +1505,7 @@ Only native hosts write them; they are device-local runtime state, never synced.
 | `sync_stamps` | `(kind, id, group)` | LWW register (§Field groups and merge) |
 | `sync_origins` | `(kind, id, group)` | Stamp and sender of immutable rows; legacy timestamp floor for creates; the re-bootstrap generation that last delivered a create |
 | `sync_outbox` | `sender_seq` | Encoded envelope, digest, `commit_id`, in-flight flag |
-| `sync_cohorts` | `commit_id` | Members, `local` / `uncertain` / `fixed`, original stamp |
+| `sync_cohorts` | `commit_id` | Members, `local` / `uncertain` / `fixed`, original stamp, whether a member was consumed |
 | `sync_tombstones` | `(kind, id)` | Stamp, sender, hints |
 | `sync_held` | `sender_seq` | Consumed `held` envelopes and their reason |
 | `sync_delete_jobs` | `(kind, id)` | Resumable local cascade for chunked deletes; not built while a delete cascades in one transaction (§Deletes) |

@@ -756,6 +756,13 @@
           "dflt_value": null
         },
         {
+          "name": "has_consumed",
+          "type": "INTEGER",
+          "notnull": 1,
+          "pk": 0,
+          "dflt_value": "0"
+        },
+        {
           "name": "hlc",
           "type": "INTEGER",
           "notnull": 1,

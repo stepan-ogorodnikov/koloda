@@ -21,6 +21,7 @@ This file only tells you where to start.
 | Image uploads and fetches between devices | `src/repo/sync/attachments.rs` + `crates/koloda-sync-proto/PROTOCOL.md` (§Attachments) |
 | New stamps for pending writes | `src/repo/sync/restamp.rs` + `crates/koloda-sync-proto/PROTOCOL.md` (§Hybrid logical clock, §Cohorts) |
 | Re-bootstrap and absence cleanup | `src/repo/sync/rebase.rs` + `crates/koloda-sync-proto/PROTOCOL.md` (§Re-bootstrap) |
+| A new device id for a forked or re-attached file | `src/repo/sync/switch.rs` + `crates/koloda-sync-proto/PROTOCOL.md` (§Behind its own record) |
 | Enabling sync on a database that already holds rows | `src/repo/sync/backfill.rs::backfill_batch` + `crates/koloda-sync-proto/PROTOCOL.md` (§Existing rows at enable time, Backfill) |
 | Joining an existing space | `src/repo/sync/join.rs` + `crates/koloda-sync-proto/PROTOCOL.md` (§Joining) |
 | Schema / migrations | `agents/DB.md` |
@@ -115,6 +116,11 @@ duplicates included; `finish_rebase` removes what stayed unmarked.
 
 - Removal goes through apply's `remove_entity`, the path an applied tombstone takes, minus the tombstone.
 - A create still in the outbox or in `sync_held` is unsent, not absent.
+
+**Device switch** — `switch_device` settles accepted rows through `settle_item`, the path a push reply takes.
+
+- `settle_push` sets `sync_cohorts.has_consumed`; only such a cohort stays `fixed` across a switch.
+- The caller stores the new token before the call; the id swap, renumbering, and re-stamp are one transaction.
 
 **Detach** — `detach` records when the file left its space; the engine sends nothing for a detached file, and
 capture keeps recording for a later re-attach.

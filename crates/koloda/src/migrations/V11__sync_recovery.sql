@@ -11,3 +11,8 @@ ALTER TABLE sync_state ADD COLUMN rebase_generation integer NOT NULL DEFAULT 0;
 ALTER TABLE sync_state ADD COLUMN is_rebasing integer NOT NULL DEFAULT 0;
 
 ALTER TABLE sync_origins ADD COLUMN seen_generation integer NOT NULL DEFAULT 0;
+
+-- WHY: a cohort is `fixed` both when a member was consumed and when a lost reply left it unknown. Only the first keeps
+-- its stamp when a file that is behind switches device id, and a consumed member that already left the outbox has no
+-- pending seq whose receipt could show it (crates/koloda-sync-proto/PROTOCOL.md, Behind its own record).
+ALTER TABLE sync_cohorts ADD COLUMN has_consumed integer NOT NULL DEFAULT 0;

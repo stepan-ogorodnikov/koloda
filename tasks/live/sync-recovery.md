@@ -308,7 +308,7 @@ Out:
   Commit: Re-bootstrap a device the server has left behind
   Depends on: 2, 3, 4
 
-- [ ] 6. Renumber pending writes for a new sender
+- [x] 6. Renumber pending writes for a new sender
   Goal:
   - `V11` adds `has_consumed` to `sync_cohorts` (question 5); push settlement sets it on every cohort with a
     consumed member.

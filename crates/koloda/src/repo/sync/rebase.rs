@@ -21,18 +21,18 @@ const SCAN_BATCH: usize = 500;
 /// Opens the barrier under a new generation. Calling it while the barrier is open changes nothing, so a relaunch or
 /// a lapsed lease resumes the same re-bootstrap.
 pub fn begin_rebase(db: &Database) -> Result<(), AppError> {
-    throw_known_error(error_codes::DB_UPDATE, || {
-        db.with_conn(|conn| {
-            conn.execute(
-                r#"
-                UPDATE sync_state SET rebase_generation = rebase_generation + 1, is_rebasing = 1
-                WHERE id = 1 AND is_rebasing = 0
-                "#,
-                [],
-            )?;
-            Ok(())
-        })
-    })
+    throw_known_error(error_codes::DB_UPDATE, || db.with_conn(open_barrier))
+}
+
+pub(super) fn open_barrier(conn: &Connection) -> Result<(), AppError> {
+    conn.execute(
+        r#"
+        UPDATE sync_state SET rebase_generation = rebase_generation + 1, is_rebasing = 1
+        WHERE id = 1 AND is_rebasing = 0
+        "#,
+        [],
+    )?;
+    Ok(())
 }
 
 /// Ends a re-bootstrap once its snapshot and catch-up are applied: deletes what the server no longer holds, sets the

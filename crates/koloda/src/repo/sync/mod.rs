@@ -1,8 +1,9 @@
 //! Sync bookkeeping SQL: device enrollment here, joining an existing space in `join`, capture of product writes
 //! in `capture`, rows that predate enrollment in `backfill`, push batches and their outcomes in `outbox`,
-//! remote envelopes in `apply`, image transfers in `attachments`, new stamps for pending cohorts in `restamp`, and
-//! the re-bootstrap barrier in `rebase` (`crates/koloda-sync-proto/PROTOCOL.md` §Field groups and merge, §Clocks and
-//! order, §Client state, §Joining, §Attachments, §Recovery).
+//! remote envelopes in `apply`, image transfers in `attachments`, new stamps for pending cohorts in `restamp`, the
+//! re-bootstrap barrier in `rebase`, and moving a file to a new device id in `switch`
+//! (`crates/koloda-sync-proto/PROTOCOL.md` §Field groups and merge, §Clocks and order, §Devices, §Client state,
+//! §Joining, §Attachments, §Recovery).
 //!
 //! Only the desktop store writes the `sync_*` tables; the web host does not sync.
 
@@ -15,6 +16,7 @@ pub mod outbox;
 pub mod rebase;
 pub mod repair;
 pub mod restamp;
+pub mod switch;
 
 use koloda_sync_proto::hlc::{DeviceId, Stamp};
 use koloda_sync_proto::payload::Payload;

@@ -179,7 +179,15 @@ pub fn settle_push(
                 )?;
             }
             for commit_id in &commits {
-                let state = if consumed.contains(commit_id) { "fixed" } else { "local" };
+                let state = if consumed.contains(commit_id) {
+                    tx.execute(
+                        "UPDATE sync_cohorts SET has_consumed = 1 WHERE commit_id = ?1",
+                        params![commit_id],
+                    )?;
+                    "fixed"
+                } else {
+                    "local"
+                };
                 settle_cohort(tx, commit_id, state)?;
             }
 
@@ -192,7 +200,7 @@ pub fn settle_push(
 }
 
 /// Applies one consumed outcome in the transaction that clears or moves its row, and returns the row's cohort.
-fn settle_item(
+pub(super) fn settle_item(
     conn: &Connection,
     item: &BatchItem,
     outcome: Outcome,
