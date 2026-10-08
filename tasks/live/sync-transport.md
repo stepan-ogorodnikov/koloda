@@ -190,7 +190,7 @@ The owner took every recommendation on 2026-10-08.
   Commit: Serve HTTPS from certificate files, plain HTTP only on request
   Depends on: none
 
-- [ ] 4. Add a Docker image and a compose example
+- [x] 4. Add a Docker image and a compose example
   Goal: per question 5.
   - The image runs `koloda-server serve --data-dir /data --insecure-http --listen 0.0.0.0:8080`, for use behind the
     compose example's Caddy.

@@ -1,0 +1,8 @@
+# The server image builds from the Rust workspace alone, so the context lists what it keeps.
+# Cargo reads every workspace member's manifest, so the desktop member stays though the image never builds it.
+*
+!Cargo.toml
+!Cargo.lock
+!crates
+!apps/electron/src-rust
+**/target

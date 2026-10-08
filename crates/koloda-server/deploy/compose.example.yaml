@@ -1,0 +1,32 @@
+# The sync server behind Caddy, which obtains and renews a certificate for DOMAIN on its own.
+# DOMAIN must resolve to this machine, with ports 80 and 443 open to the internet.
+#
+#   export DOMAIN=sync.example.com
+#   docker compose -f compose.example.yaml run --rm koloda-server init --data-dir /data
+#   docker compose -f compose.example.yaml up -d
+#
+# Devices then use https://$DOMAIN as the server URL.
+services:
+  koloda-server:
+    build:
+      context: ../../..
+      dockerfile: crates/koloda-server/Dockerfile
+    image: koloda-server
+    restart: unless-stopped
+    volumes:
+      - koloda-data:/data
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    # Caddy passes WebSocket upgrades on, which the events socket needs.
+    command: caddy reverse-proxy --from ${DOMAIN:?set DOMAIN to the server's public name} --to koloda-server:8080
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - caddy-data:/data
+
+volumes:
+  koloda-data:
+  caddy-data:

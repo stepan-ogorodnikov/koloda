@@ -76,6 +76,38 @@ Each space gets a fresh epoch and a restore point; the old generation's newer po
 It lists the restored devices and asks before it moves `CURRENT`, unless `--yes`.
 The replaced generation stays on disk; delete old generations by hand.
 
+## Docker
+
+`Dockerfile` builds a static binary into a distroless image that runs as a user that is not root.
+Build it from the repository root, since Cargo reads every workspace member's manifest:
+
+```bash
+docker build -f crates/koloda-server/Dockerfile -t koloda-server .
+```
+
+The image serves plain HTTP on port 8080, with its data directory in the `/data` volume, for a TLS proxy in front.
+`deploy/compose.example.yaml` puts Caddy in front, which obtains and renews a certificate for `DOMAIN` on its own:
+
+```bash
+cd crates/koloda-server/deploy
+export DOMAIN=sync.example.com
+docker compose -f compose.example.yaml run --rm koloda-server init --data-dir /data
+docker compose -f compose.example.yaml up -d
+```
+
+The other commands run the same way, as `docker compose -f compose.example.yaml run --rm koloda-server <command>`.
+All but `restore` run beside the server; stop it first with `docker compose -f compose.example.yaml stop koloda-server`.
+A backup needs a directory the image's user can write, or runs as root:
+
+```bash
+docker compose -f compose.example.yaml run --rm --user root -v "$PWD/backups:/backups" koloda-server \
+  backup --data-dir /data /backups/2026-10-08
+```
+
+A bind mount in place of the volume must be writable by uid 65532, the image's user.
+The `Docker` workflow builds the image and checks that it serves, on branch pushes that touch the server.
+No image is published to a registry.
+
 ## Data directory
 
 | Path | Holds |
@@ -124,6 +156,7 @@ The replaced generation stays on disk; delete old generations by hand.
 
 - `tests/server/` — one test binary; `common.rs` drives the router in-process on a manual clock, and sends each
   device call with its space's current epoch and this crate's schemas unless a test names others.
+- `Dockerfile` — the server image; `deploy/compose.example.yaml` — the image behind Caddy.
 
 ### Does NOT own (prevent scope creep)
 

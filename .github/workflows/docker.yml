@@ -1,0 +1,54 @@
+name: Docker
+
+# Builds the sync server's image and checks that it starts. Not a required check:
+# the main ruleset requires only `checks` in ci.yml. Nothing is pushed to a registry.
+on:
+  push:
+    branches-ignore: [main]
+    paths:
+      - ".dockerignore"
+      - ".github/workflows/docker.yml"
+      - "Cargo.lock"
+      - "Cargo.toml"
+      - "crates/koloda-server/**"
+      - "crates/koloda-sync-proto/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: docker-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: crates/koloda-server/Dockerfile
+          tags: koloda-server:ci
+          load: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # Init and serve on a named volume, as the compose example does, so a volume the
+      # non-root user cannot write fails here.
+      - name: Smoke test
+        run: |
+          docker volume create koloda-data
+          docker run --rm -v koloda-data:/data koloda-server:ci init --data-dir /data
+          docker run -d --name koloda-server -p 8080:8080 -v koloda-data:/data koloda-server:ci
+          status=$(curl --silent --retry 10 --retry-connrefused --retry-delay 1 \
+            --output /dev/null --write-out '%{http_code}' http://127.0.0.1:8080/v1/spaces)
+          docker logs koloda-server
+          test "$status" = 401
