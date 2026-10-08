@@ -333,7 +333,7 @@ The owner took every recommendation on 2026-10-08.
   Commit: Raise a kind's write schema once every device can write it
   Depends on: 4
 
-- [ ] 7. Write the first CURRENT through swap_current
+- [x] 7. Write the first CURRENT through swap_current
   Goal: `data_dir::init` writes `CURRENT` with `swap_current` instead of its own code (question 15).
   Constraints: no change to the data directory layout.
   Done when: the `init` and `restore` tests pass unchanged; `bun run check:push` green.

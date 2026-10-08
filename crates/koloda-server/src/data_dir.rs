@@ -51,9 +51,7 @@ pub fn init(data_dir: &Path, now_ms: u64) -> Result<String, DataDirError> {
     drop(conn);
 
     // INVARIANT: `CURRENT` appears only once its generation is complete, so a crashed init leaves no server behind.
-    let staged = data_dir.join(CURRENT_STAGED);
-    fs::write(&staged, format!("{generation}\n"))?;
-    fs::rename(staged, data_dir.join(CURRENT))?;
+    swap_current(data_dir, &generation)?;
     Ok(token)
 }
 
