@@ -31,6 +31,7 @@ koloda-server restore --data-dir ./data ./backups/2026-10-07 [--authoritative] [
 
 `init` prints the setup token once; only its hash is stored.
 `serve` speaks plain HTTP, so put a TLS reverse proxy in front of it.
+The proxy must pass WebSocket upgrades on `/v1/spaces/{space}/events`, which tells devices when to sync.
 Below `--min-free-disk` free bytes (1 GiB by default) it holds growing writes as if every space were over its quota,
 and below `--reserve-disk` (64 MiB) it refuses every push; on a platform without `statvfs` both are off.
 It runs a garbage collection pass every hour, over tombstones every active device has passed and attachments no card
@@ -86,7 +87,8 @@ The replaced generation stays on disk; delete old generations by hand.
 - `src/restore.rs` — a backup staged as a new generation: epochs, restore points, carried-forward revocations, and
   the swap of `CURRENT`; and the restore points after a device's epoch, combined as one.
 - `src/db.rs` — connections and the two migration series under `src/migrations/`.
-- `src/server.rs` — shared state: `server.db`, open space databases, the clock, and the operator's write-schema raise.
+- `src/server.rs` — shared state: `server.db`, open space databases and their lane heads, the clock, and the
+  operator's write-schema raise.
 - `src/http.rs` — CBOR and zstd bodies, their limits, the reply envelope, and `meta`.
 - `src/auth.rs` — setup and device tokens, marking a device stale when it calls after a long absence, refusing a
   device call on another epoch with the restore it must apply, and storing the schemas a device advertises.
@@ -96,6 +98,8 @@ The replaced generation stays on disk; delete old generations by hand.
 - `src/quota.rs` — space quotas, the disk watermarks and the free space they read, and how much room a space has.
 - `src/log.rs` — a space's envelope log: versions at lane seqs, heads, compaction on write, deletes that fence
   and cascade, tombstone collection and the GC horizon, and receipts.
+- `src/events.rs` — the events socket: the lane heads to each device's one socket, which a newer socket of the
+  device or its revocation closes.
 - `src/pull.rs` — pull pages per lane, cut by entry count and bytes, and the cursors they record.
 - `src/bootstrap.rs` — snapshot leases: open, stream pages, heartbeat, release, and expiry.
 - `src/known.rs` — the join probe: which ids the space holds live or fenced.

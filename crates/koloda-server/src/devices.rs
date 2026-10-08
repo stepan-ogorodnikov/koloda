@@ -119,6 +119,7 @@ fn revoke_device(server: &Server, caller: &DeviceAuth, id: Uuid) -> Result<(), A
         )?;
         tx.commit()?;
     }
+    server.sockets()?.close(id);
     // INVARIANT: the revocation commits first; a revoked device then no longer pins versions with a lease.
     let space = server.space(caller.space)?.ok_or_else(ApiError::unknown_space)?;
     let mut conn = lock(&space.writer)?;

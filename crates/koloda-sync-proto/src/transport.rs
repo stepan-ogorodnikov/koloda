@@ -388,6 +388,14 @@ pub struct PullPage {
     pub has_more: bool,
 }
 
+/// One message on the events socket: the space's lane heads, as a binary CBOR frame (`PROTOCOL.md` §Events).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Heads {
+    pub head_hot: u64,
+    pub head_cold: u64,
+}
+
 /// A bootstrap lease over the live heads at open (`PROTOCOL.md` §Bootstrap). Pages start at position 0.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]

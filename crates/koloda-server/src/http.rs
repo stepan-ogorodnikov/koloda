@@ -174,10 +174,7 @@ where
     T: Serialize + Send + 'static,
     F: FnOnce(&Server, &mut Scope, &HeaderMap) -> Result<T, ApiError> + Send + 'static,
 {
-    let compress = headers
-        .get(ACCEPT_ENCODING)
-        .and_then(|value| value.to_str().ok())
-        .is_some_and(|value| value.split(',').any(|coding| coding.trim().starts_with(ZSTD)));
+    let compress = accepts_zstd(&headers);
     let encoded = tokio::task::spawn_blocking(move || {
         let mut scope = Scope::default();
         let result = work(&server, &mut scope, &headers);
@@ -186,9 +183,44 @@ where
     })
     .await;
     match encoded {
-        Ok(Ok((status, bytes))) => cbor_response(status, bytes, compress),
-        Ok(Err(error)) => (StatusCode::INTERNAL_SERVER_ERROR, error.message).into_response(),
+        Ok(encoded) => encoded_response(encoded, compress),
         Err(error) => (StatusCode::INTERNAL_SERVER_ERROR, error.to_string()).into_response(),
+    }
+}
+
+/// Runs `work` as `respond` does, but hands a success back to a handler that answers with something other than a
+/// reply, such as a WebSocket upgrade; a failure comes back as its error reply.
+pub(crate) async fn authorize<T, F>(server: Arc<Server>, headers: HeaderMap, work: F) -> Result<T, Box<Response>>
+where
+    T: Send + 'static,
+    F: FnOnce(&Server, &mut Scope, &HeaderMap) -> Result<T, ApiError> + Send + 'static,
+{
+    let compress = accepts_zstd(&headers);
+    let result = tokio::task::spawn_blocking(move || {
+        let mut scope = Scope::default();
+        work(&server, &mut scope, &headers).map_err(|error| encode_reply::<()>(meta(&server, &scope), Err(error)))
+    })
+    .await;
+    match result {
+        Ok(Ok(value)) => Ok(value),
+        Ok(Err(encoded)) => Err(Box::new(encoded_response(encoded, compress))),
+        Err(error) => Err(Box::new(
+            (StatusCode::INTERNAL_SERVER_ERROR, error.to_string()).into_response(),
+        )),
+    }
+}
+
+fn accepts_zstd(headers: &HeaderMap) -> bool {
+    headers
+        .get(ACCEPT_ENCODING)
+        .and_then(|value| value.to_str().ok())
+        .is_some_and(|value| value.split(',').any(|coding| coding.trim().starts_with(ZSTD)))
+}
+
+fn encoded_response(encoded: Result<(StatusCode, Vec<u8>), ApiError>, compress: bool) -> Response {
+    match encoded {
+        Ok((status, bytes)) => cbor_response(status, bytes, compress),
+        Err(error) => (StatusCode::INTERNAL_SERVER_ERROR, error.message).into_response(),
     }
 }
 

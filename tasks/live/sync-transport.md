@@ -113,7 +113,7 @@ The owner took every recommendation on 2026-10-08.
 
 ## Plan
 
-- [ ] 1. Serve the events WebSocket
+- [x] 1. Serve the events WebSocket
   Goal:
   - `GET /v1/spaces/{space}/events` upgrades to a WebSocket.
     The upgrade is a device call: the token, `koloda-epoch`, and `koloda-schemas` are checked as for any other, and a

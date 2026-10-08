@@ -16,6 +16,7 @@ mod auth;
 mod bootstrap;
 mod db;
 mod devices;
+mod events;
 mod http;
 mod known;
 mod log;
@@ -47,6 +48,7 @@ pub fn router(server: Arc<Server>) -> Router {
             get(attachments::get).put(attachments::put),
         )
         .route("/v1/spaces/{space}/pull", get(pull::pull))
+        .route("/v1/spaces/{space}/events", get(events::events))
         .route("/v1/spaces/{space}/bootstrap", post(bootstrap::open))
         .route(
             "/v1/spaces/{space}/bootstrap/{snapshot}",

@@ -17,7 +17,7 @@ name = "server"
 path = "tests/server/main.rs"
 
 [dependencies]
-axum = "0.8"
+axum = { version = "0.8", features = ["ws"] }
 ciborium = "0.2"
 clap = { version = "4", features = ["derive"] }
 getrandom = "0.2"
@@ -27,7 +27,7 @@ rusqlite = { version = "0.33", features = ["bundled", "uuid"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 sha2 = "0.10"
-tokio = { version = "1", features = ["macros", "net", "rt-multi-thread", "signal", "time"] }
+tokio = { version = "1", features = ["macros", "net", "rt-multi-thread", "signal", "sync", "time"] }
 uuid = { version = "1.0", features = ["serde", "v4"] }
 zstd = "0.14"
 
@@ -36,5 +36,7 @@ zstd = "0.14"
 rustix = { version = "1", features = ["fs"] }
 
 [dev-dependencies]
+futures-util = "0.3"
 tempfile = "3"
+tokio-tungstenite = "0.29"
 tower = { version = "0.5", features = ["util"] }

@@ -5,8 +5,9 @@ use ciborium::Value;
 use koloda_sync_proto::registry::Kind;
 use koloda_sync_proto::transport::{
     decode_schemas, encode_schemas, AttachmentBody, ClaimPairing, CreateSpace, Cutoff, DependencyAction, DeviceInfo,
-    DeviceMeta, Empty, Enrollment, ErrorBody, ErrorCode, HeldReason, IssuePairing, KnownId, KnownState, LogEntry, Meta,
-    Outcome, Platform, PullPage, Push, PushItem, PushOutcome, Reply, Restore, RestoreMode, Snapshot, SnapshotPage,
+    DeviceMeta, Empty, Enrollment, ErrorBody, ErrorCode, Heads, HeldReason, IssuePairing, KnownId, KnownState,
+    LogEntry, Meta, Outcome, Platform, PullPage, Push, PushItem, PushOutcome, Reply, Restore, RestoreMode, Snapshot,
+    SnapshotPage,
 };
 use serde::Serialize;
 
@@ -312,6 +313,14 @@ fn bodies_keep_their_wire_keys() {
                 has_more: false,
             }),
             vec!["entries", "scanned_through", "has_more"],
+        ),
+        (
+            "heads",
+            cbor(&Heads {
+                head_hot: 1,
+                head_cold: 2,
+            }),
+            vec!["head_hot", "head_cold"],
         ),
         (
             "snapshot",

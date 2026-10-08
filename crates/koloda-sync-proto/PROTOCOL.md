@@ -831,7 +831,7 @@ Unknown `kind`, `group`, or `op`, and lane mismatches, are rejected at a header 
 | `GET /v1/spaces/{space}/bootstrap/{snapshot}` | Streams the pinned snapshot with the same per-entry metadata as pull; hot by kind, referents first, then `seq`; cold newest-first by `(hlc, stamp_device, seq)`; own sender included |
 | `POST /v1/spaces/{space}/bootstrap/{snapshot}/heartbeat` | Extends TTL up to the absolute expiry |
 | `DELETE /v1/spaces/{space}/bootstrap/{snapshot}` | Releases the lease |
-| `GET /v1/spaces/{space}/events` | WebSocket; `{ head_hot, head_cold }` on change |
+| `GET /v1/spaces/{space}/events` | WebSocket; the lane heads on connect and on every change (§Events) |
 | `GET/DELETE /v1/spaces/{space}/devices[/{id}]` | Device list and revocation; `DELETE` of self is detach |
 | `POST /v1/spaces/{space}/devices/fork` | Current token in, new device id and token out (§Devices) |
 | `POST /v1/spaces/{space}/ids/known` | Id chunk in, the ones live or fenced in the space out, each marked which (§Joining) |
@@ -904,6 +904,18 @@ A re-attaching file learns a restore the same way: from its first call made with
 An outcome is a map tagged by `status`, such as `{ status: applied }` or `{ status: held, reason: schema }`.
 A receipt range is `after < seq <= through`.
 An endpoint that returns nothing answers `ok` with an empty map.
+
+### Events
+
+`GET /v1/spaces/{space}/events` upgrades to a WebSocket that carries only nudges.
+The upgrade is a device call: its token, `koloda-epoch`, and `koloda-schemas` are checked as for any other.
+A refusal is an ordinary reply, and a request that is not an upgrade is `bad_request`.
+Once upgraded, the server sends the lane heads as a binary frame holding the CBOR map `{ head_hot, head_cold }`.
+It sends them again whenever a push moves either head, to every socket of the space, the pusher's included.
+`drop-envelope` runs beside the server and moves heads without a nudge.
+Each device has at most one socket: a new one closes the device's older one, and revoking a device closes its socket.
+The server pings every 30 seconds and closes a socket that has answered nothing for 60 seconds.
+A device sends nothing but control frames; a socket that sends data is closed.
 
 ### Errors
 

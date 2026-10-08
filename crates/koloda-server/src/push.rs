@@ -214,6 +214,7 @@ fn push_batch(server: &Server, caller: &DeviceAuth, request: Push) -> Result<Pus
         });
     }
     tx.commit()?;
+    space.publish_heads(&conn)?;
     Ok(PushReply { outcomes })
 }
 

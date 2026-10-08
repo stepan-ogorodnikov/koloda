@@ -10,6 +10,7 @@ mod deletes_tests;
 mod devices_tests;
 mod drop_tests;
 mod epoch_tests;
+mod events_tests;
 mod http_tests;
 mod pairing_tests;
 mod pull_tests;

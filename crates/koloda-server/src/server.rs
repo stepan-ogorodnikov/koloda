@@ -6,8 +6,9 @@ use std::sync::{Arc, Mutex, MutexGuard};
 
 use koloda_sync_proto::payload::SCHEMA;
 use koloda_sync_proto::registry::Kind;
-use koloda_sync_proto::transport::decode_schemas;
+use koloda_sync_proto::transport::{decode_schemas, Heads};
 use rusqlite::{params, Connection};
+use tokio::sync::watch;
 use uuid::Uuid;
 
 use crate::attachments;
@@ -16,6 +17,7 @@ use crate::clock::Clock;
 use crate::data_dir::{self, DataDirError, ATTACHMENTS, SERVER_DB, SPACES};
 use crate::db::{self, DbError};
 use crate::devices;
+use crate::events::Sockets;
 use crate::http::ApiError;
 use crate::log;
 use crate::pairing::Guesses;
@@ -28,6 +30,7 @@ pub struct Server {
     clock: Arc<dyn Clock>,
     storage: Storage,
     pub(crate) guesses: Mutex<Guesses>,
+    sockets: Mutex<Sockets>,
 }
 
 // INVARIANT: every write to a space goes through `writer`, which is that space's writer lock
@@ -35,6 +38,8 @@ pub struct Server {
 pub(crate) struct SpaceDb {
     pub(crate) writer: Mutex<Connection>,
     pub(crate) reader: Mutex<Connection>,
+    /// The lane heads as of the last push this process committed; the events socket sends each change.
+    pub(crate) heads: watch::Sender<Heads>,
 }
 
 impl Server {
@@ -53,6 +58,7 @@ impl Server {
             clock,
             storage,
             guesses: Mutex::new(Guesses::default()),
+            sockets: Mutex::new(Sockets::default()),
         })
     }
 
@@ -70,6 +76,10 @@ impl Server {
 
     pub(crate) fn server_db(&self) -> Result<MutexGuard<'_, Connection>, ApiError> {
         lock(&self.server_db)
+    }
+
+    pub(crate) fn sockets(&self) -> Result<MutexGuard<'_, Sockets>, ApiError> {
+        lock(&self.sockets)
     }
 
     /// The space's databases, or `None` when no space has that id.
@@ -203,12 +213,26 @@ impl Server {
 }
 
 impl SpaceDb {
-    fn open(path: &Path) -> Result<SpaceDb, DbError> {
+    fn open(path: &Path) -> Result<SpaceDb, ApiError> {
         let writer = db::open_space(path)?;
+        let (head_hot, head_cold) = log::lane_heads(&writer)?;
         Ok(SpaceDb {
             writer: Mutex::new(writer),
             reader: Mutex::new(db::open_reader(path)?),
+            heads: watch::Sender::new(Heads { head_hot, head_cold }),
         })
+    }
+
+    /// Publishes the lane heads after a commit, on the connection that made it; an unchanged pair wakes no socket.
+    pub(crate) fn publish_heads(&self, conn: &Connection) -> Result<(), ApiError> {
+        let (head_hot, head_cold) = log::lane_heads(conn)?;
+        let heads = Heads { head_hot, head_cold };
+        self.heads.send_if_modified(|current| {
+            let is_moved = *current != heads;
+            *current = heads;
+            is_moved
+        });
+        Ok(())
     }
 }
 
