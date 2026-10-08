@@ -91,13 +91,15 @@ impl Shared {
             server_ms: opened.meta.server_time_ms,
         };
 
-        self.stream(session, &mut lease, Lane::Hot, changed).await?;
-        // INVARIANT: `hot` catches up to a head read after the lease opened, so a tombstone committed meanwhile
-        // removes what the snapshot still pinned.
-        let mut cursor_hot = snapshot.head_hot;
-        self.pull(session, Lane::Hot, None, &mut cursor_hot, Some(&mut lease), changed)
-            .await?;
-        self.stream(session, &mut lease, Lane::Cold, changed).await?;
+        let cursor_hot = match self.fill(session, &mut lease, snapshot.head_hot, changed).await {
+            // INVARIANT: a held bootstrap starts over from a new lease on the next trigger, so it gives this one back
+            // rather than pin versions until expiry. The status already shows the hold if the release fails.
+            Err(SyncError::Held(hold)) => {
+                self.release(session, &lease).await?;
+                return Err(SyncError::Held(hold));
+            }
+            filled => filled?,
+        };
 
         // WHY: the flag clears before the release, so a failed release costs a lingering lease, not a second bootstrap.
         // A re-bootstrap's server flag clears only on release, so a failed release there costs a second one.
@@ -114,6 +116,37 @@ impl Shared {
                 merge(changed, removed);
             }
         }
+        self.release(session, &lease).await?;
+        let repaired = self
+            .blocking(|shared| repair_dangling_defaults(&shared.db, &shared.starter))
+            .await?;
+        merge(changed, repaired);
+        Ok((cursor_hot, cursor_cold))
+    }
+
+    /// Streams the `hot` snapshot, catches `hot` up, and streams the `cold` snapshot; returns the `hot` cursor.
+    async fn fill(
+        self: &Arc<Self>,
+        session: &Session,
+        lease: &mut OpenLease,
+        head_hot: u64,
+        changed: &mut Vec<Kind>,
+    ) -> Result<u64, SyncError> {
+        self.stream(session, lease, Lane::Hot, changed).await?;
+        // INVARIANT: `hot` catches up to a head read after the lease opened, so a tombstone committed meanwhile
+        // removes what the snapshot still pinned.
+        let mut cursor_hot = head_hot;
+        let pulled = self
+            .pull(session, Lane::Hot, None, &mut cursor_hot, Some(lease), changed)
+            .await?;
+        if let Some(hold) = pulled.hold {
+            return Err(SyncError::Held(hold));
+        }
+        self.stream(session, lease, Lane::Cold, changed).await?;
+        Ok(cursor_hot)
+    }
+
+    async fn release(&self, session: &Session, lease: &OpenLease) -> Result<(), SyncError> {
         let released = self
             .cycle_client(session)
             .call::<(), Empty>(
@@ -130,14 +163,9 @@ impl Shared {
             | Err(SyncError::Server {
                 code: ErrorCode::LeaseExpired,
                 ..
-            }) => {}
-            Err(error) => return Err(error),
+            }) => Ok(()),
+            Err(error) => Err(error),
         }
-        let repaired = self
-            .blocking(|shared| repair_dangling_defaults(&shared.db, &shared.starter))
-            .await?;
-        merge(changed, repaired);
-        Ok((cursor_hot, cursor_cold))
     }
 
     /// Streams one lane of the snapshot, one transaction per page.
@@ -187,11 +215,8 @@ impl Shared {
                 .await?;
             merge(changed, applied.changed);
             if let Some(hold) = applied.hold {
-                return Err(local_error(format!(
-                    "{} seq {} does not decode",
-                    lane.as_wire(),
-                    hold.seq
-                )));
+                self.note_hold(lane, Some(hold))?;
+                return Err(SyncError::Held(hold));
             }
             after = answer.ok.next;
             if answer.ok.done {

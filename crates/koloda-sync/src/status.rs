@@ -2,6 +2,7 @@
 
 use std::sync::Arc;
 
+use koloda::repo::sync::apply::Hold;
 use koloda::repo::sync::attachments::transfer_counts;
 use koloda::repo::sync::outbox::{held_count, pending_count};
 use koloda::repo::sync::sync_state;
@@ -24,6 +25,8 @@ pub struct Status {
     pub lag_hot: Option<u64>,
     pub lag_cold: Option<u64>,
     pub skew_ms: i64,
+    /// The envelope a lane stopped at in the last pull; pushing and the other lane may still run.
+    pub hold: Option<Hold>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -72,6 +75,7 @@ pub(crate) struct RunState {
     pub(crate) stop: Option<Stop>,
     pub(crate) last_success_ms: Option<i64>,
     pub(crate) heads: Option<(u64, u64)>,
+    pub(crate) hold: Option<Hold>,
 }
 
 impl Shared {
@@ -99,6 +103,7 @@ impl Shared {
                 lag_hot: None,
                 lag_cold: None,
                 skew_ms,
+                hold: None,
             });
         };
         let shown = if state.is_detached {
@@ -131,6 +136,7 @@ impl Shared {
             lag_hot: run.heads.map(|(hot, _)| hot.saturating_sub(state.cursor_hot)),
             lag_cold: run.heads.map(|(_, cold)| cold.saturating_sub(state.cursor_cold)),
             skew_ms,
+            hold: run.hold,
         })
     }
 }

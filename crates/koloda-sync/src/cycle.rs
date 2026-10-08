@@ -4,7 +4,7 @@
 use std::sync::Arc;
 
 use koloda::app::utility::get_current_timestamp;
-use koloda::repo::sync::apply::{apply_page, Page, PageEntry};
+use koloda::repo::sync::apply::{apply_page, Hold, Page, PageEntry};
 use koloda::repo::sync::outbox::{has_foreign_receipt, pending_count, standing, Standing};
 use koloda::repo::sync::repair::repair_dangling_defaults;
 use koloda::repo::sync::restamp::restamp_local_cohorts;
@@ -107,15 +107,20 @@ impl Shared {
             }
             pushed?;
             // INVARIANT: `cold` stops at a head recorded before `hot` is pulled to head, so a review never arrives
-            // before its card (PROTOCOL.md, Lanes).
+            // before its card (PROTOCOL.md, Lanes). A `hot` hold therefore stops `cold` too; a `cold` hold leaves
+            // `hot` running.
             let pulled = self.pull(session, Lane::Hot, None, &mut cursors.0, None, changed).await;
             if is_left_behind(&pulled) {
                 cursors = self.rebootstrap(session, changed).await?;
                 continue;
             }
-            let mut latest = pulled?;
-            if cursors.1 < heads.head_cold {
-                latest = self
+            let Pulled {
+                heads: mut latest,
+                hold: hot_hold,
+            } = pulled?;
+            let mut is_cold_held = false;
+            if hot_hold.is_none() && cursors.1 < heads.head_cold {
+                let cold = self
                     .pull(
                         session,
                         Lane::Cold,
@@ -125,14 +130,23 @@ impl Shared {
                         changed,
                     )
                     .await?;
+                latest = cold.heads;
+                is_cold_held = cold.hold.is_some();
             }
 
-            let is_caught_up = cursors.0 >= latest.head_hot && cursors.1 >= latest.head_cold;
+            // WHY: a held lane goes no further until an upgrade or a drop, so it counts as at head for this call;
+            // otherwise every round would pull it again.
+            let is_hot_held = hot_hold.is_some();
+            let is_caught_up = (is_hot_held || cursors.0 >= latest.head_hot)
+                && (is_hot_held || is_cold_held || cursors.1 >= latest.head_cold);
             if !is_caught_up || self.blocking(|shared| pending_count(&shared.db)).await? > 0 {
                 continue;
             }
             // WHY: before catch-up, a referent a default names may still be on its way; after it, a missing one
-            // is dead or never existed (PROTOCOL.md, Referents are not parents).
+            // is dead or never existed (PROTOCOL.md, Referents are not parents). A `hot` hold is not catch-up.
+            if is_hot_held {
+                return Ok(());
+            }
             let repaired = self
                 .blocking(|shared| repair_dangling_defaults(&shared.db, &shared.starter))
                 .await?;
@@ -188,8 +202,9 @@ impl Shared {
         Ok((answer.ok, heads))
     }
 
-    /// Pulls one lane page by page from `cursor`, one transaction per page, and returns the last reply's heads.
-    /// During a bootstrap, `lease` is kept alive between pages.
+    /// Pulls one lane page by page from `cursor`, one transaction per page, and returns the last reply's heads with
+    /// the entry the lane stopped at, if this app cannot read one. During a bootstrap, `lease` is kept alive between
+    /// pages.
     pub(crate) async fn pull(
         self: &Arc<Self>,
         session: &Session,
@@ -198,7 +213,7 @@ impl Shared {
         cursor: &mut u64,
         mut lease: Option<&mut OpenLease>,
         changed: &mut Vec<Kind>,
-    ) -> Result<Heads, SyncError> {
+    ) -> Result<Pulled, SyncError> {
         let bound = max_seq.map(|max_seq| format!("&max_seq={max_seq}")).unwrap_or_default();
         loop {
             if let Some(lease) = lease.as_deref_mut() {
@@ -244,18 +259,18 @@ impl Shared {
                 .blocking(move |shared| apply_page(&shared.db, &page, &shared.starter))
                 .await?;
             merge(changed, applied.changed);
-            if let Some(hold) = applied.hold {
-                return Err(local_error(format!(
-                    "{} seq {} does not decode",
-                    lane.as_wire(),
-                    hold.seq
-                )));
-            }
-            *cursor = answer.ok.scanned_through;
-            if !answer.ok.has_more {
+            self.note_hold(lane, applied.hold)?;
+            *cursor = match applied.hold {
+                Some(hold) => u64::try_from(hold.seq - 1).map_err(local_error)?,
+                None => answer.ok.scanned_through,
+            };
+            if applied.hold.is_some() || !answer.ok.has_more {
                 let heads = Heads::from_meta(answer.meta.device.as_ref())?;
                 self.note_heads(heads.head_hot, heads.head_cold)?;
-                return Ok(heads);
+                return Ok(Pulled {
+                    heads,
+                    hold: applied.hold,
+                });
             }
         }
     }
@@ -300,6 +315,11 @@ fn is_left_behind<T>(result: &Result<T, SyncError>) -> bool {
             ..
         })
     )
+}
+
+pub(crate) struct Pulled {
+    pub(crate) heads: Heads,
+    pub(crate) hold: Option<Hold>,
 }
 
 #[derive(Clone, Copy)]

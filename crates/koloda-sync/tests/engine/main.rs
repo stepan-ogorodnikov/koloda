@@ -10,6 +10,7 @@ mod clock_tests;
 mod cycle_tests;
 mod devices_tests;
 mod fork_tests;
+mod holds_tests;
 mod import_tests;
 mod loopback_tests;
 mod pairing_tests;

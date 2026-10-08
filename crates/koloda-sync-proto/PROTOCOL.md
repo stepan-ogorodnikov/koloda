@@ -1009,6 +1009,12 @@ Any other envelope that does not decode, a lane mismatch, or a payload that does
 The page applies every entry before the held one in one transaction and sets the lane cursor to the held seq minus
 one.
 Nothing at or after it applies, so every later pull meets it again until an upgrade reads it or a drop removes it.
+The hold lives only in the running engine: the status shows the last one met, and a pull of that lane that passes it
+clears it.
+A held lane counts as caught up for the cycle, so the cycle does not pull it again in every round, and repair of
+learning defaults waits while `hot` is held.
+A bootstrap that meets an entry it cannot read stops and releases its lease, since a snapshot has no lane cursor to
+hold at; the next trigger opens a new lease, and union apply makes the repeat safe.
 
 An app upgrade that reads it releases the hold; that covers decoder bugs.
 For bytes that are really damaged, an operator drop removes the version from the log, and holding clients pass it.
@@ -1046,7 +1052,7 @@ Across lanes it holds because `cold` is pulled only up to a `max_seq` recorded b
    The server marked the device stale, or collected a tombstone above its cursor, after the round read its record.
 3. Record `head_cold`.
 4. Pull `hot` to head, one transaction per page, advancing to `scanned_through`.
-5. Pull `cold` up to the recorded `head_cold`.
+5. Pull `cold` up to the recorded `head_cold`, unless `hot` is held (§Corrupt envelopes).
 6. Repeat until the outbox is empty and both cursors are at head.
 7. Repair learning defaults that name no live row (§Deletes); a repair goes out in the next round.
 

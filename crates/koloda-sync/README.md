@@ -20,7 +20,8 @@ A device's bearer token lives in the host's secret store under `sync.token.<devi
 - `src/engine.rs` — `Engine`: the runtime, host calls, space creation, the session a cycle uses, and running the
   cycle again on a restored epoch.
 - `src/cycle.rs` — the cycle: the device record and the behind check, re-bootstrap when the server left the file
-  behind, push, `hot` to head, `cold` to the recorded head, the skew pause, and repair after catch-up.
+  behind, push, `hot` to head, `cold` to the recorded head, a lane held at an envelope this app cannot read, the skew
+  pause, and repair after catch-up.
 - `src/push.rs` — pushing the outbox in batches and handing each reply, loss, or refusal to `koloda`; heal and
   backfill top the outbox up before each batch.
 - `src/restore.rs` — a server restore the server reported: heal starts the re-push scan; an authoritative restore is
@@ -31,10 +32,11 @@ A device's bearer token lives in the host's secret store under `sync.token.<devi
   Replace, or a detached file re-attaching under a new device id, after applying a restore the space had since.
 - `src/runner.rs` — the background runner: triggers, coalescing, the poll, backoff, events, and tick budgets.
 - `src/status.rs` — the state the host shows, why the last cycle stopped (an authoritative restore waiting for the
-  host among the reasons), and how far behind each lane is.
+  host among the reasons), the lane held at an envelope this app cannot read, and how far behind each lane is.
 - `src/devices.rs` — the device list, revoking another device, and detaching this file.
 - `src/bootstrap.rs` — a joiner's union bootstrap and a re-bootstrap from a snapshot lease: streams, catch-up,
-  heartbeats, restarts, and the re-bootstrap's absence cleanup at the end.
+  heartbeats, restarts, a stop that gives the lease back at an envelope this app cannot read, and the re-bootstrap's
+  absence cleanup at the end.
 - `src/attachments.rs` — image uploads and fetches after the cycle's rounds: the one check after a restore of the
   images the server lacks, retries, early stops, and the event
   that tells the host which images arrived.

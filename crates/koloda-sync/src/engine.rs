@@ -9,10 +9,11 @@ use koloda::app::error::{error_codes, AppError};
 use koloda::app::init::SeedSettings;
 use koloda::app::secrets::SecretStore;
 use koloda::app::utility::get_current_timestamp;
+use koloda::repo::sync::apply::Hold;
 use koloda::repo::sync::repair::Starter;
 use koloda::repo::sync::restamp::pause_clock;
 use koloda::repo::sync::{enroll_device, enrolled_device, sync_state, SpaceRole};
-use koloda_sync_proto::registry::Kind;
+use koloda_sync_proto::registry::{Kind, Lane};
 use koloda_sync_proto::transport::{CreateSpace, Enrollment, ErrorCode, Platform};
 use tokio::runtime::Runtime;
 use uuid::Uuid;
@@ -333,6 +334,8 @@ impl Shared {
             }
             // WHY: a spent budget is the host's limit, not a fault; the next tick picks up from the cursors.
             Err(SyncError::BudgetSpent) => {}
+            // WHY: a held bootstrap is waiting, not stopped; the status shows the hold beside the bootstrap state.
+            Err(SyncError::Held(_)) => run.stop = None,
             Err(error) => run.stop = Some(Stop::of(error)),
         }
         result
@@ -403,6 +406,15 @@ impl Shared {
 
     pub(crate) fn note_heads(&self, head_hot: u64, head_cold: u64) -> Result<(), SyncError> {
         self.lock(&self.run_state)?.heads = Some((head_hot, head_cold));
+        Ok(())
+    }
+
+    /// Records the entry a lane stopped at, or clears that lane's hold once a pull of it passes the entry.
+    pub(crate) fn note_hold(&self, lane: Lane, hold: Option<Hold>) -> Result<(), SyncError> {
+        let mut run = self.lock(&self.run_state)?;
+        if hold.is_some() || run.hold.is_some_and(|held| held.lane == lane) {
+            run.hold = hold;
+        }
         Ok(())
     }
 

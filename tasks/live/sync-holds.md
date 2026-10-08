@@ -207,7 +207,7 @@ The owner took every recommendation on 2026-10-08.
   Commit: Stop a pull page at an envelope this app cannot read
   Depends on: none
 
-- [ ] 2. Hold a lane at an envelope this app cannot read
+- [x] 2. Hold a lane at an envelope this app cannot read
   Goal:
   - The cycle takes the hold that `apply_page` returns (question 4).
     A `hot` hold skips `cold` for the round; a `cold` hold leaves `hot` running.

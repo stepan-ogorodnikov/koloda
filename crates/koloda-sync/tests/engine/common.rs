@@ -206,6 +206,48 @@ impl TestServer {
         .expect("the device is backdated");
     }
 
+    /// The lane and seq of the stored version that holds a write: `group` is `""` for a tombstone.
+    pub fn version(&self, space: Uuid, kind: &str, id: &str, group: &str) -> (Lane, u64) {
+        let conn = Connection::open(self.space_path(space)).expect("the space database opens");
+        let (lane, seq): (String, u64) = conn
+            .query_row(
+                "SELECT lane, seq FROM versions WHERE kind = ?1 AND id = ?2 AND grp = ?3",
+                rusqlite::params![kind, id, group],
+                |row| Ok((row.get(0)?, row.get(1)?)),
+            )
+            .expect("the version is stored");
+        (Lane::from_wire(&lane).expect("a known lane"), seq)
+    }
+
+    /// Replaces the stored bytes of a version with what `damage` makes of them, as storage damage would, and returns
+    /// the bytes it held.
+    pub fn damage(&self, space: Uuid, (lane, seq): (Lane, u64), damage: impl FnOnce(&[u8]) -> Vec<u8>) -> Vec<u8> {
+        let conn = Connection::open(self.space_path(space)).expect("the space database opens");
+        let held: Vec<u8> = conn
+            .query_row(
+                "SELECT bytes FROM versions WHERE lane = ?1 AND seq = ?2",
+                rusqlite::params![lane.as_wire(), seq],
+                |row| row.get(0),
+            )
+            .expect("the version is stored");
+        conn.execute(
+            "UPDATE versions SET bytes = ?1 WHERE lane = ?2 AND seq = ?3",
+            rusqlite::params![damage(&held), lane.as_wire(), seq],
+        )
+        .expect("the version is replaced");
+        held
+    }
+
+    pub fn count_leases(&self, space: Uuid) -> i64 {
+        let conn = Connection::open(self.space_path(space)).expect("the space database opens");
+        conn.query_row("SELECT COUNT(*) FROM leases", [], |row| row.get(0))
+            .expect("leases count")
+    }
+
+    fn space_path(&self, space: Uuid) -> std::path::PathBuf {
+        self.generation_dir().join("spaces").join(format!("{space}.db"))
+    }
+
     /// A call the engine does not make, for checking what the server holds.
     pub fn call<T: DeserializeOwned>(&self, method: Method, path: &str, token: &str) -> (u16, Reply<T>) {
         self.send(method, path, Some(token), None)
