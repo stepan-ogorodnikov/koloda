@@ -1,6 +1,6 @@
 # Sync holds and quotas
 
-Status: draft
+Status: ready
 
 ## Intent
 
@@ -56,20 +56,22 @@ Out:
 
 ## Open questions
 
-- [ ] 1. Area guides? — open.
-  Recommended: `agents/TASKS.md`, `agents/IMPLEMENTATION-PLAN.md`, `agents/MARKDOWN.md`,
+The owner took every recommendation on 2026-10-08.
+
+- [x] 1. Area guides?
+  Answer: `agents/TASKS.md`, `agents/IMPLEMENTATION-PLAN.md`, `agents/MARKDOWN.md`,
   `agents/CODE-DOCUMENTATION.md`, `agents/CODE-STYLE.md`, `agents/TESTING.md`, `agents/RUST.md`, `agents/DB.md`,
   and `agents/REVIEW.md` for self-review.
   Also `crates/koloda/README.md`, `crates/koloda-sync/README.md`, `crates/koloda-server/README.md`,
   `crates/koloda-sync-proto/PROTOCOL.md` and its README, and `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md`.
-- [x] 2. One task, or two? — one.
+- [x] 2. One task, or two?
   Answer (owner, 2026-10-08): one task, in this order: pull holds, `drop-envelope`, quotas, regeneration, then the
   `write_schema` raise.
   Pull holds come first because they are the largest gap users can see, and they need no server change.
-- [ ] 3. Which envelopes are unreadable, and which need an app update? — open.
+- [x] 3. Which envelopes are unreadable, and which need an app update?
   The server checks every header on push, so a header that does not decode here means storage damage, or a server
   newer than this app.
-  Recommended:
+  Answer:
   - `update_required`: the header names a kind, group, or op this app's registry lacks (`RegistryError`), or a
     schema above this app's `SCHEMA` for its kind (`PayloadError::UnknownSchema`).
     A delete at an unknown schema holds too: an app that does not know a schema decodes nothing.
@@ -77,31 +79,31 @@ Out:
     That includes a header with a field this app does not know, which `deny_unknown_fields` refuses.
   - A delete whose header decodes and whose payload does not applies with no `successor`.
   - A `cards.reset` whose header decodes and whose payload does not applies with `wall_ms` from its HLC wall part.
-- [ ] 4. Where does a pull hold live? — open.
-  Recommended: in memory only, as the cycle's result; no column in `sync_state`.
+- [x] 4. Where does a pull hold live?
+  Answer: in memory only, as the cycle's result; no column in `sync_state`.
   - Apply commits the entries before the unreadable one and sets the lane cursor to its seq minus one.
     `PageEntry` gains the `seq` that `LogEntry` already carries.
   - Every later cycle pulls from that cursor and meets the entry again.
     It passes once an upgraded app reads it or a drop removed it, so the hold needs no release step and no migration.
   - The status shows the hold from the last cycle; after a relaunch the first cycle finds it again.
   The alternative is a stored hold, which shows before the first cycle but needs a release rule for both causes.
-- [ ] 5. How does a hold show in `sync_status()`? — open.
-  Recommended: `Status` gains `hold: Option<Hold>`, where `Hold` has `lane`, `seq`, and a reason of
+- [x] 5. How does a hold show in `sync_status()`?
+  Answer: `Status` gains `hold: Option<Hold>`, where `Hold` has `lane`, `seq`, and a reason of
   `corrupt_envelope` or `update_required`.
   The state stays `Idle` or `Syncing`, because pushing and the other lane go on; the host shows the hold beside it.
   The alternative is a new `Stop`, which reads as "sync stopped" while pushes still go out.
-- [ ] 6. What does a bootstrap do when it meets an unreadable entry? — open.
+- [x] 6. What does a bootstrap do when it meets an unreadable entry?
   A snapshot has no lane cursor to hold at, and `cold` streams newest first.
-  Recommended: the bootstrap stops, releases its lease, and reports the hold with the entry's lane and seq.
+  Answer: the bootstrap stops, releases its lease, and reports the hold with the entry's lane and seq.
   The next trigger opens a new lease; union apply makes the repeat safe.
   A join or re-bootstrap therefore waits for the upgrade or the drop.
-- [ ] 7. Which seq does `drop-envelope` name? — open.
+- [x] 7. Which seq does `drop-envelope` name?
   Seqs are per lane, so `PROTOCOL.md`'s `drop-envelope <space> <seq>` is ambiguous.
-  Recommended: `koloda-server drop-envelope --data-dir <dir> <space> <lane> <seq>`, matching the lane and seq the
+  Answer: `koloda-server drop-envelope --data-dir <dir> <space> <lane> <seq>`, matching the lane and seq the
   hold reports.
   It runs beside `serve`, as `spaces` and `pair` do, through SQLite's own locking.
-- [ ] 8. What does a drop do to each kind of entry? — open.
-  Recommended:
+- [x] 8. What does a drop do to each kind of entry?
+  Answer:
   - an update or a review: removes the version, the head that references it, and any lease items for it.
     Devices keep what they had.
   - a create: tombstones the entity with a server-authored delete (question 9) through the same path a pushed delete
@@ -112,10 +114,10 @@ Out:
     with it.
     It asks before it writes, unless `--yes`.
   - It is one space write transaction; nothing changes if the seq holds no version or the operator declines.
-- [ ] 9. Who authors the server's tombstone? — open.
+- [x] 9. Who authors the server's tombstone?
   `PROTOCOL.md` gives it the nil UUID as `stamp_device`, an HLC above both the dropped envelope's and server now, and
   a reserved server sender "which no restore roster contains".
-  Recommended:
+  Answer:
   - the sender is the nil UUID too, since a device id is never nil; `koloda-sync-proto` names it `SERVER_SENDER`;
   - its seqs come from a `senders` row like a device's, so a restore's cutoff covers the server tombstones the
     backup holds, and heal re-pushes only those it lacks;
@@ -124,16 +126,16 @@ Out:
   - devices apply it as any tombstone, and heal re-pushes it under the device's own seq, as for any foreign write.
   The alternative keeps the server out of the roster.
   Every device would then re-push every server tombstone after any restore; that is harmless (`stale`) but wasteful.
-- [ ] 10. What does a quota measure, and where is it set? — open.
-  Recommended:
+- [x] 10. What does a quota measure, and where is it set?
+  Answer:
   - usage is the space database's pages in use (`page_count - freelist_count`, times `page_size`) plus the sizes in
     its `attachments` table;
   - both are cheap to read, and a freeing delete lowers the first once its transaction commits;
   - each space's quota is a nullable `spaces.quota_bytes` in `server.db`; null means none, and new spaces get none;
   - `koloda-server quota --data-dir <dir> <space> <bytes|none>` sets it beside `serve`.
   The alternative is one server-wide `serve` flag, which is simpler but gives every space in a household one size.
-- [ ] 11. Are disk watermarks in this task, and how is free space read? — open.
-  Recommended: yes, as two `serve` flags.
+- [x] 11. Are disk watermarks in this task, and how is free space read?
+  Answer: yes, as two `serve` flags.
   - `--min-free-disk` (default 1 GiB): below it, growing writes are held as if the space were over quota.
   - `--reserve-disk` (default 64 MiB): below it, every push, tombstones included, is refused with `507` before
     anything is consumed or fenced.
@@ -141,13 +143,13 @@ Out:
     behind a trait the tests set.
     It is Unix only; on other targets the watermarks are off.
   The alternative is `fs4`, a new dependency that also covers Windows.
-- [ ] 12. How does a device learn that `held { quota }` has cleared? — open.
-  Recommended: `DeviceMeta` gains `is_over_quota`, which every device call returns, the soft disk watermark included.
+- [x] 12. How does a device learn that `held { quota }` has cleared?
+  Answer: `DeviceMeta` gains `is_over_quota`, which every device call returns, the soft disk watermark included.
   - A reply showing `false` while the file has `quota` rows in `sync_held` starts regeneration (question 13).
   - `Status` shows the flag from the last reply, so the host can say the server is full.
   The alternative is retrying held rows on a backoff, which consumes seqs while the space stays full.
-- [ ] 13. What does regeneration send, and in what order? — open.
-  Recommended:
+- [x] 13. What does regeneration send, and in what order?
+  Answer:
   - every `quota` row and every `dependency` row of `sync_held` moves back to the outbox tail in its original seq
     order, at new seqs, with each commit id's rows together;
   - bytes, stamps, and commit ids are unchanged, since no schema changes; each commit id is a `fixed` cohort marked
@@ -158,21 +160,21 @@ Out:
   - a row that comes back `held` again returns to `sync_held`;
   - `schema` rows stay: this app writes only schema 1 and cannot regenerate them at a newer one (Scope, Out).
   Original seq order is already topological, because capture enqueues referents and parents first.
-- [ ] 14. Should this task raise `write_schema` at all? — open.
+- [x] 14. Should this task raise `write_schema` at all?
   Every kind is at schema 1 and no app writes 2, so a raise has no client to serve yet.
-  Recommended: build the server half now, so the first schema bump only adds payloads.
+  Answer: build the server half now, so the first schema bump only adds payloads.
   - Every device call carries `koloda-schemas`: the highest schema this app writes, per kind.
     A device call without it is `bad_request`, as for `koloda-epoch`; the server stores it on the device record.
   - `koloda-server write-schema --data-dir <dir> <space> <kind> <schema>` raises a kind by one version.
     It refuses while an active device (neither stale nor revoked) of the space has not advertised that version.
   - Lowering is refused.
   The alternative is leaving the raise to the first schema-2 change, and dropping item 6.
-- [ ] 15. Fold in the `data_dir::init` follow-up? — open.
+- [x] 15. Fold in the `data_dir::init` follow-up?
   The restore task noted that `data_dir::init` writes `CURRENT` with its own code instead of `swap_current`.
-  Recommended: yes, as item 7; it is a one-function change in a crate this task already changes.
+  Answer: yes, as item 7; it is a one-function change in a crate this task already changes.
   The alternative is a separate change outside the task.
-- [ ] 16. Migrations? — open.
-  Recommended: `server.db` gains `V3__quotas.sql`, for `spaces.quota_bytes` and the device's advertised schemas.
+- [x] 16. Migrations?
+  Answer: `server.db` gains `V3__quotas.sql`, for `spaces.quota_bytes` and the device's advertised schemas.
   - The space series needs none; the server sender's seqs use `senders`.
   - `koloda` needs none: holds live in memory, and `sync_held.reason` is text, so `quota` fits.
   - Items extend `V3` until the task lands, as earlier tasks did.
@@ -202,9 +204,7 @@ Out:
   - a header that does not decode reported as `corrupt_envelope`;
   - a snapshot page with each of the above;
   - `bun run check:push` green.
-  Commit:
-  a. Stop a pull page at an envelope this app cannot read
-  b. Apply corrupt deletes and resets from their headers
+  Commit: Stop a pull page at an envelope this app cannot read
   Depends on: none
 
 - [ ] 2. Hold a lane at an envelope this app cannot read
@@ -227,9 +227,7 @@ Out:
   - a join bootstrap meeting a corrupt entry: stopped, its lease released, the hold reported, and finished once the
     bytes are put back;
   - `bun run check:push` green.
-  Commit:
-  a. Hold a lane at an envelope this app cannot read
-  b. Keep pushing while a pull lane is held
+  Commit: Hold a lane at an envelope this app cannot read
   Depends on: 1
 
 - [ ] 3. Drop an envelope from a space's log
@@ -261,9 +259,7 @@ Out:
   - a heal restore from a backup taken before the drop: a device re-pushes the server tombstone, and the entity stays
     deleted;
   - `bun run check:push` green.
-  Commit:
-  a. Drop an envelope from a space's log
-  b. Add a drop-envelope operator command
+  Commit: Drop an envelope from a space's log
   Depends on: 2
 
 - [ ] 4. Hold growing writes above a space quota
@@ -289,9 +285,7 @@ Out:
   - `is_over_quota` in meta, the soft watermark included;
   - the `quota` command setting and clearing a quota, and a space with none never over;
   - `bun run check:push` green.
-  Commit:
-  a. Hold growing writes above a space quota
-  b. Add space quotas and disk watermarks
+  Commit: Hold growing writes above a space quota
   Depends on: none
 
 - [ ] 5. Push held writes once the space has room
@@ -317,9 +311,7 @@ Out:
   - a held seq followed by a writable kind;
   - a relaunch between release and push losing nothing;
   - `bun run check:push` green.
-  Commit:
-  a. Push held writes once the space has room
-  b. Regenerate held writes when their reason clears
+  Commit: Push held writes once the space has room
   Depends on: 4
 
 - [ ] 6. Raise a kind's write schema
@@ -338,17 +330,14 @@ Out:
   - a v2 write before the raise answered `schema_read_only`, and a v1 write after it `held { schema }`;
   - a device call without the header refused;
   - `bun run check:push` green.
-  Commit:
-  a. Raise a kind's write schema once every device can write it
-  b. Add a write-schema operator command
+  Commit: Raise a kind's write schema once every device can write it
   Depends on: 4
 
 - [ ] 7. Write the first CURRENT through swap_current
   Goal: `data_dir::init` writes `CURRENT` with `swap_current` instead of its own code (question 15).
   Constraints: no change to the data directory layout.
   Done when: the `init` and `restore` tests pass unchanged; `bun run check:push` green.
-  Commit:
-  a. Write the first CURRENT through swap_current
+  Commit: Write the first CURRENT through swap_current
   Depends on: none
 
 ## Outcome
