@@ -31,6 +31,8 @@ koloda-server restore --data-dir ./data ./backups/2026-10-07 [--authoritative] [
 
 `init` prints the setup token once; only its hash is stored.
 `serve` speaks plain HTTP, so put a TLS reverse proxy in front of it.
+Below `--min-free-disk` free bytes (1 GiB by default) it holds growing writes as if every space were over its quota,
+and below `--reserve-disk` (64 MiB) it refuses every push; on a platform without `statvfs` both are off.
 It runs a garbage collection pass every hour, over tombstones every active device has passed and attachments no card
 has linked for 90 days; `Server::collect_garbage` runs one on demand.
 `backup` copies the active generation while `serve` runs, into a directory that is missing or empty.
@@ -43,11 +45,13 @@ koloda-server pair --data-dir ./data <space>
 ```
 
 ```bash
+koloda-server quota --data-dir ./data <space> <bytes|none>
 koloda-server drop-envelope --data-dir ./data <space> <lane> <seq> [--yes]
 ```
 
 `spaces` lists each space with its device count, and `pair` prints a pairing code for a space, as the setup token
 issues one; both run beside `serve`, since access to the data directory is the authority.
+`quota` sets a space's size quota beside `serve`; over it, devices' growing writes wait (`PROTOCOL.md` §Quotas).
 `drop-envelope` runs beside `serve` too: it removes one damaged envelope that devices hold at, as their status
 reports it, and asks first unless `--yes`.
 A dropped create or tombstone becomes a tombstone the server authors, so every device ends with the entity deleted.
@@ -62,14 +66,15 @@ The replaced generation stays on disk; delete old generations by hand.
 | Path | Holds |
 | --- | --- |
 | `CURRENT` | The active generation's id |
-| `generations/<id>/server.db` | Setup token hash, spaces, devices |
+| `generations/<id>/server.db` | Setup token hash, spaces and their quotas, devices |
 | `generations/<id>/spaces/<space>.db` | One space: epoch, restore points, `write_schema`, its envelope log, and attachment metadata |
 | `generations/<id>/attachments/<space>/<attachment>` | One attachment's bytes, named by their SHA-256 |
 | `lock` | Held by `serve` for its whole run |
 
 ## Architectural Map
 
-- `src/main.rs` — command line: `init`, `serve`, `backup`, `restore`, `spaces`, `pair`, and `drop-envelope`.
+- `src/main.rs` — command line: `init`, `serve`, `backup`, `restore`, `spaces`, `pair`, `quota`, and
+  `drop-envelope`.
 - `src/lib.rs` — the route table.
 - `src/clock.rs` — server time, injected so tests run on a manual clock.
 - `src/data_dir.rs` — layout, `init`, and the directory lock.
@@ -84,6 +89,7 @@ The replaced generation stays on disk; delete old generations by hand.
 - `src/spaces.rs` — space creation, which enrolls the creator, and the list.
 - `src/pairing.rs` — pairing codes: issue, preview, claim, and the limits on wrong codes.
 - `src/push.rs` — push batches and receipts; one transaction under the space writer lock.
+- `src/quota.rs` — space quotas, the disk watermarks and the free space they read, and how much room a space has.
 - `src/log.rs` — a space's envelope log: versions at lane seqs, heads, compaction on write, deletes that fence
   and cascade, tombstone collection and the GC horizon, and receipts.
 - `src/pull.rs` — pull pages per lane, cut by entry count and bytes, and the cursors they record.

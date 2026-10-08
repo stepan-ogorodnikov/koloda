@@ -13,12 +13,12 @@ use std::sync::Arc;
 use axum::body::Body;
 use axum::extract::rejection::QueryRejection;
 use axum::extract::{Path as UrlPath, Query, State};
-use axum::http::HeaderMap;
+use axum::http::{HeaderMap, StatusCode};
 use axum::response::Response;
 use koloda_sync_proto::envelope::Header;
 use koloda_sync_proto::registry::{Group, Kind};
 use koloda_sync_proto::transport::{
-    AttachmentBody, Empty, MissingAttachments, ATTACHMENT_MIMES, MAX_ATTACHMENT_BYTES, MAX_MISSING_IDS,
+    AttachmentBody, Empty, ErrorCode, MissingAttachments, ATTACHMENT_MIMES, MAX_ATTACHMENT_BYTES, MAX_MISSING_IDS,
 };
 use rusqlite::{params, Connection, OptionalExtension};
 use serde::Deserialize;
@@ -27,6 +27,7 @@ use uuid::Uuid;
 
 use crate::auth;
 use crate::http::{query, read_body, respond, ApiError};
+use crate::quota::Room;
 use crate::server::{lock, Server};
 
 const ID_LEN: usize = 64;
@@ -135,6 +136,14 @@ fn store(server: &Server, space_id: Uuid, id: &str, attachment: &AttachmentBody)
     let space = server.space(space_id)?.ok_or_else(ApiError::unknown_space)?;
     if is_stored(&*lock(&space.reader)?, id)? {
         return Ok(());
+    }
+    let quota = server.quota(space_id)?;
+    if server.room(&*lock(&space.reader)?, quota)? != Room::Free {
+        return Err(ApiError::new(
+            StatusCode::INSUFFICIENT_STORAGE,
+            ErrorCode::InsufficientStorage,
+            "this space is over its quota or the server is low on disk",
+        ));
     }
     let dir = server.attachments_dir(space_id);
     fs::create_dir_all(&dir).map_err(io_error)?;

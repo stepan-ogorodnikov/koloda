@@ -81,6 +81,7 @@ fn replies_carry_meta_and_exactly_one_of_ok_and_error() {
         gc_horizon_cold: 0,
         write_schema: BTreeMap::from([("cards".to_string(), 1)]),
         last_sender_seq: 9,
+        is_over_quota: false,
     };
     let error = Reply::<Enrollment> {
         meta: meta(Some([3; 16]), Some(device_meta)),
@@ -117,7 +118,8 @@ fn replies_carry_meta_and_exactly_one_of_ok_and_error() {
             "gc_horizon_hot",
             "gc_horizon_cold",
             "write_schema",
-            "last_sender_seq"
+            "last_sender_seq",
+            "is_over_quota"
         ]
     );
     assert_eq!(
@@ -197,6 +199,12 @@ fn outcomes_are_maps_tagged_by_status() {
                 reason: HeldReason::Dependency,
             },
             vec![("status", "held"), ("reason", "dependency")],
+        ),
+        (
+            Outcome::Held {
+                reason: HeldReason::Quota,
+            },
+            vec![("status", "held"), ("reason", "quota")],
         ),
         (Outcome::SeqReused, vec![("status", "seq_reused")]),
     ];

@@ -25,6 +25,7 @@ use crate::auth::{self, DeviceAuth};
 use crate::bootstrap;
 use crate::http::{query, read_body, respond, ApiError};
 use crate::log::{self, Entry};
+use crate::quota::Room;
 use crate::server::{lock, Server};
 
 #[derive(Deserialize)]
@@ -87,6 +88,7 @@ fn push_batch(server: &Server, caller: &DeviceAuth, request: Push) -> Result<Pus
     let items = decode_items(request)?;
     let space = server.space(caller.space)?.ok_or_else(ApiError::unknown_space)?;
     let now = server.now_ms();
+    let quota = server.quota(caller.space)?;
     let mut conn = lock(&space.writer)?;
     let tx = conn.transaction()?;
     // WHY: an abandoned lease must stop pinning versions once its TTL ends, not when the next bootstrap opens.
@@ -101,6 +103,15 @@ fn push_batch(server: &Server, caller: &DeviceAuth, request: Push) -> Result<Pus
         )));
     }
     let mut high_water = log::high_water(&tx, caller.id)?;
+    // WHY: read once per push, so a push may overshoot the quota by one batch; the quota is soft.
+    let room = server.room(&tx, quota)?;
+    if room == Room::Full && items.iter().any(|item| item.sender_seq > high_water) {
+        return Err(ApiError::new(
+            StatusCode::INSUFFICIENT_STORAGE,
+            ErrorCode::InsufficientStorage,
+            "the server is down to its disk reserve",
+        ));
+    }
     let write_schema = write_schema(&tx)?;
     let accepted_schema = |kind: Kind| {
         write_schema
@@ -168,6 +179,11 @@ fn push_batch(server: &Server, caller: &DeviceAuth, request: Push) -> Result<Pus
         let outcome = if header.schema < accepted_schema(header.kind)? {
             Outcome::Held {
                 reason: HeldReason::Schema,
+            }
+        } else if room == Room::Over && class.is_some() {
+            // INVARIANT: a tombstone only shrinks the space, so it applies over the quota (PROTOCOL.md, Quotas).
+            Outcome::Held {
+                reason: HeldReason::Quota,
             }
         } else if log::names_held(&tx, caller.id, header, class)? {
             Outcome::Held {

@@ -56,6 +56,8 @@ pub struct DeviceMeta {
     pub gc_horizon_cold: u64,
     pub write_schema: BTreeMap<String, u32>,
     pub last_sender_seq: u64,
+    /// The space is over its quota, or the server is low on disk: growing writes come back `held { quota }`.
+    pub is_over_quota: bool,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -106,6 +108,7 @@ pub enum ErrorCode {
     CursorTooOld,
     EpochChanged,
     LeaseExpired,
+    InsufficientStorage,
     Internal,
 }
 
@@ -268,6 +271,7 @@ pub enum DependencyAction {
 pub enum HeldReason {
     Schema,
     Dependency,
+    Quota,
 }
 
 /// Attachment ids that live cards link and the space holds no bytes for, in id order (`PROTOCOL.md` §Attachments).

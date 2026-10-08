@@ -31,6 +31,10 @@ tokio = { version = "1", features = ["macros", "net", "rt-multi-thread", "signal
 uuid = { version = "1.0", features = ["serde", "v4"] }
 zstd = "0.14"
 
+# WHY: free disk space is read with `statvfs`, which only Unix has; elsewhere the disk watermarks are off.
+[target.'cfg(unix)'.dependencies]
+rustix = { version = "1", features = ["fs"] }
+
 [dev-dependencies]
 tempfile = "3"
 tower = { version = "0.5", features = ["util"] }

@@ -23,6 +23,7 @@ use serde::Serialize;
 use uuid::Uuid;
 
 use crate::log;
+use crate::quota::Room;
 use crate::server::{lock, Server};
 
 const CBOR: &str = "application/cbor";
@@ -259,6 +260,10 @@ fn meta(server: &Server, scope: &Scope) -> Result<Meta, ApiError> {
     let Some(space) = server.space(space_id)? else {
         return Ok(meta);
     };
+    let quota = match scope.device {
+        Some(_) => server.quota(space_id)?,
+        None => None,
+    };
     let conn = lock(&space.reader)?;
     let epoch: Option<Uuid> = conn
         .query_row("SELECT epoch FROM space WHERE id = 1", [], |row| row.get(0))
@@ -278,6 +283,7 @@ fn meta(server: &Server, scope: &Scope) -> Result<Meta, ApiError> {
             gc_horizon_cold,
             write_schema,
             last_sender_seq: log::sender_progress(&conn, device)?.map_or(0, |(seq, _)| seq),
+            is_over_quota: server.room(&conn, quota)? != Room::Free,
         });
     }
     Ok(meta)

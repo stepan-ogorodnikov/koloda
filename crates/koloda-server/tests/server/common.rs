@@ -12,6 +12,7 @@ use axum::http::{Method, Request, StatusCode};
 use axum::Router;
 use koloda_server::clock::Clock;
 use koloda_server::data_dir;
+use koloda_server::quota::{FreeSpace, Storage};
 use koloda_server::router;
 use koloda_server::server::Server;
 use koloda_sync_proto::envelope::{Envelope, Header, Refs};
@@ -40,6 +41,15 @@ impl Clock for ManualClock {
 impl ManualClock {
     pub fn advance(&self, ms: u64) {
         self.0.fetch_add(ms, Ordering::SeqCst);
+    }
+}
+
+/// A volume whose free bytes the test sets.
+pub struct TestDisk(pub AtomicU64);
+
+impl FreeSpace for TestDisk {
+    fn free_bytes(&self, _path: &std::path::Path) -> Option<u64> {
+        Some(self.0.load(Ordering::SeqCst))
     }
 }
 
@@ -85,10 +95,28 @@ impl Harness {
         Harness::open(dir, setup_token)
     }
 
+    /// A fresh server whose disk watermarks read free space from `disk`.
+    pub fn with_disk(disk: Arc<TestDisk>, min_free_disk: u64, reserve_disk: u64) -> Harness {
+        let dir = tempfile::tempdir().expect("temporary data directory");
+        let setup_token = data_dir::init(dir.path(), START_MS).expect("init a fresh data directory");
+        let storage = Storage {
+            min_free_disk,
+            reserve_disk,
+            free_space: disk,
+        };
+        Harness::open_with(dir, setup_token, storage)
+    }
+
     /// Serves a data directory that already holds a server, such as one a restore created.
     pub fn open(dir: TempDir, setup_token: String) -> Harness {
+        Harness::open_with(dir, setup_token, Storage::default())
+    }
+
+    fn open_with(dir: TempDir, setup_token: String, storage: Storage) -> Harness {
         let clock = Arc::new(ManualClock(AtomicU64::new(START_MS)));
-        let server = Arc::new(Server::open(dir.path(), clock.clone()).expect("open the initialized data directory"));
+        let server = Arc::new(
+            Server::open_with(dir.path(), clock.clone(), storage).expect("open the initialized data directory"),
+        );
         Harness {
             router: router(Arc::clone(&server)),
             server,

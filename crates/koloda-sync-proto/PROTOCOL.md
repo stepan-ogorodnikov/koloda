@@ -850,7 +850,8 @@ Every response body is `{ meta, ok }` or `{ meta, error }`.
 `meta.server_time_ms` is always present.
 `meta.epoch` is present when the path names an existing space, unless the token belongs to another space.
 `meta.device` is present when a device token authenticated the request.
-It carries both lane heads, both GC horizons, `write_schema` per kind, and the caller's `last_sender_seq`.
+It carries both lane heads, both GC horizons, `write_schema` per kind, the caller's `last_sender_seq`, and
+`is_over_quota` (§Quotas).
 `error` is `{ code, message }`, with a code from §Errors.
 
 ### Bodies
@@ -915,10 +916,10 @@ An endpoint that returns nothing answers `ok` with an empty map.
 | `epoch_changed` | 409 | A device call that names an epoch other than the space's (§Server restore) |
 | `lease_expired` | 410 | A bootstrap lease that expired, was released, or belongs to another device (§Bootstrap) |
 | `too_large` | 413 | A body past its size or expansion cap |
+| `insufficient_storage` | 507 | A push below the disk reserve, or a bootstrap or upload while the space is over its quota (§Quotas) |
 | `rate_limited` | 429 | Too many wrong pairing codes (§Pairing), or too many open bootstrap leases (§Bootstrap) |
 | `internal` | 500 | A server fault |
 
-The protocol also has `507`, which gets its row with the server work that answers it.
 
 ### Push outcomes
 
@@ -960,7 +961,7 @@ What the device does for each:
 - `dependency`: it names, as its id, parent, or hard ref, an entity whose create this sender had held.
   A create does not count its own id, so the regenerated create can land.
   Any outcome of that create other than `held` releases the entity: its dependents then meet the ordinary rules.
-- `quota`: the space is over quota.
+- `quota`: the space is over quota (§Quotas).
   Shrinking writes (tombstones) are still admitted, which is why holding consumes the seq.
 
 Regeneration is topological: creates, then pointer groups, then children.
@@ -976,11 +977,25 @@ Both are told.
 
 ### Quotas
 
-Each space has a size quota, and the server has disk watermarks.
-Growing writes above them become `held { quota }`; bootstrap above them is `507`.
-Tombstones are admitted above the soft watermark.
-Emergency headroom is reserved for one bounded delete chunk.
-A tombstone is refused before fencing if even that cannot fit.
+Each space may have a size quota, and the server has two disk watermarks.
+A space is over when its usage reaches its quota, or when the data directory's volume has less free space than the
+soft watermark.
+Usage is the space database's pages in use plus the bytes of its stored attachments.
+Pages, not row bytes, so reading it costs no scan of the log; a delete lowers it once it frees whole pages.
+The operator sets a quota with `koloda-server quota <space> <bytes|none>`; a new space has none.
+`serve` takes the soft watermark (`--min-free-disk`, 1 GiB by default) and the reserve (`--reserve-disk`, 64 MiB).
+
+While a space is over:
+
+- every pushed write but a delete is `held { quota }`; tombstones only shrink the space, so they still apply;
+- opening a bootstrap lease is `507 insufficient_storage`, since a lease pins versions compaction would free;
+- an attachment upload is `507` too, unless the space already stores those bytes;
+- every device call's `meta.device.is_over_quota` is `true`.
+
+Usage is read once per push, so a push may overshoot the quota by one batch.
+Below the reserve, every push that holds a new seq is refused with `507` before anything is consumed or fenced.
+Deletes are refused too; they wait until the operator frees disk.
+A device learns that a space has room again from `is_over_quota` and pushes its held writes (§Push outcomes).
 
 ### Corrupt envelopes
 
@@ -1155,7 +1170,7 @@ Space-wide caps limit concurrent leases and pinned bytes.
 Opening a second lease for a device releases its first.
 The TTL is 5 minutes, and a heartbeat extends it, never past the absolute lifetime of 24 hours.
 A space serves at most 4 open leases; a fifth gets `429 rate_limited`.
-The cap on pinned bytes comes with quotas (§Quotas).
+A space over its quota opens no lease (§Quotas).
 An expired or released lease answers `410 lease_expired`, and only the device that opened a lease may read it.
 Revoke, restore, and absolute expiry cancel a lease.
 The client preflights free disk against the byte estimate.

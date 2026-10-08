@@ -1,7 +1,7 @@
 //! `koloda-server` command line: `init` creates a data directory, `serve` runs the server on one and collects
 //! garbage every hour, `backup` copies a running server, `restore` puts a backup back as a new generation, and
-//! `spaces` and `pair` list spaces and issue a pairing code beside a running `serve`, and `drop-envelope` removes one
-//! damaged envelope from a space's log.
+//! `spaces` and `pair` list spaces and issue a pairing code beside a running `serve`, `quota` sets a space's size
+//! quota, and `drop-envelope` removes one damaged envelope from a space's log.
 
 use std::io::{self, Write};
 use std::net::SocketAddr;
@@ -14,6 +14,7 @@ use clap::{Parser, Subcommand};
 use koloda_server::backup;
 use koloda_server::clock::{Clock, SystemClock};
 use koloda_server::data_dir::{self, DataDirLock};
+use koloda_server::quota::{Storage, DEFAULT_MIN_FREE_DISK, DEFAULT_RESERVE_DISK};
 use koloda_server::restore::{self, RestoreOptions};
 use koloda_server::router;
 use koloda_server::server::Server;
@@ -82,12 +83,25 @@ enum Command {
         #[arg(long)]
         yes: bool,
     },
+    /// Set a space's size quota in bytes, or `none`; over it, devices' growing writes wait.
+    Quota {
+        #[arg(long)]
+        data_dir: PathBuf,
+        space: Uuid,
+        bytes: String,
+    },
     /// Serve plain HTTP; put a TLS reverse proxy in front of it.
     Serve {
         #[arg(long)]
         data_dir: PathBuf,
         #[arg(long, default_value = "127.0.0.1:8080")]
         listen: SocketAddr,
+        /// Below this many free bytes on disk, growing writes wait as if every space were over its quota.
+        #[arg(long, default_value_t = DEFAULT_MIN_FREE_DISK)]
+        min_free_disk: u64,
+        /// Below this many free bytes on disk, every push is refused.
+        #[arg(long, default_value_t = DEFAULT_RESERVE_DISK)]
+        reserve_disk: u64,
     },
 }
 
@@ -167,7 +181,37 @@ fn run(cli: Cli) -> Result<(), String> {
             let lane = Lane::from_wire(&lane).map_err(|error| error.to_string())?;
             drop_envelope(&data_dir, space, lane, seq, yes)
         }
-        Command::Serve { data_dir, listen } => serve(data_dir, listen),
+        Command::Quota { data_dir, space, bytes } => {
+            let quota = match bytes.as_str() {
+                "none" => None,
+                bytes => Some(
+                    bytes
+                        .parse::<u64>()
+                        .map_err(|error| format!("`{bytes}` is not a byte count or `none`: {error}"))?,
+                ),
+            };
+            let server = Server::open(&data_dir, Arc::new(SystemClock)).map_err(|error| error.to_string())?;
+            server.set_quota(space, quota).map_err(|error| error.to_string())?;
+            match quota {
+                Some(bytes) => println!("Space {space} may hold {bytes} bytes."),
+                None => println!("Space {space} has no quota."),
+            }
+            Ok(())
+        }
+        Command::Serve {
+            data_dir,
+            listen,
+            min_free_disk,
+            reserve_disk,
+        } => serve(
+            data_dir,
+            listen,
+            Storage {
+                min_free_disk,
+                reserve_disk,
+                ..Storage::default()
+            },
+        ),
     }
 }
 
@@ -243,9 +287,9 @@ fn confirm(question: &str) -> Result<bool, String> {
     Ok(matches!(answer.trim().to_lowercase().as_str(), "y" | "yes"))
 }
 
-fn serve(data_dir: PathBuf, listen: SocketAddr) -> Result<(), String> {
+fn serve(data_dir: PathBuf, listen: SocketAddr, storage: Storage) -> Result<(), String> {
     let _lock = DataDirLock::acquire(&data_dir).map_err(|error| error.to_string())?;
-    let server = Server::open(&data_dir, Arc::new(SystemClock)).map_err(|error| error.to_string())?;
+    let server = Server::open_with(&data_dir, Arc::new(SystemClock), storage).map_err(|error| error.to_string())?;
     let runtime = tokio::runtime::Runtime::new().map_err(|error| error.to_string())?;
     runtime.block_on(async move {
         let listener = tokio::net::TcpListener::bind(listen)

@@ -21,6 +21,7 @@ use uuid::Uuid;
 use crate::auth::{self, DeviceAuth};
 use crate::http::{query, respond, ApiError};
 use crate::log::{self, TOMBSTONE};
+use crate::quota::Room;
 use crate::server::{lock, Server};
 
 pub(crate) const LEASE_TTL_MS: u64 = 5 * 60 * 1000;
@@ -181,10 +182,21 @@ pub(crate) fn release_device(tx: &Connection, device: Uuid) -> Result<(), ApiErr
 fn open_lease(server: &Server, caller: &DeviceAuth) -> Result<Snapshot, ApiError> {
     let space = server.space(caller.space)?.ok_or_else(ApiError::unknown_space)?;
     let now = server.now_ms();
+    let quota = server.quota(caller.space)?;
     let mut conn = lock(&space.writer)?;
     let tx = conn.transaction()?;
     end_expired(&tx, now)?;
     release_device(&tx, caller.id)?;
+    // WHY: a lease pins versions that compaction would free, so a space with no room opens none (PROTOCOL.md,
+    // Quotas). Releasing the caller's earlier lease above still counts.
+    if server.room(&tx, quota)? != Room::Free {
+        tx.commit()?;
+        return Err(ApiError::new(
+            StatusCode::INSUFFICIENT_STORAGE,
+            ErrorCode::InsufficientStorage,
+            "this space is over its quota or the server is low on disk; a bootstrap waits",
+        ));
+    }
     let open: u64 = tx.query_row("SELECT count(*) FROM leases", [], |row| row.get(0))?;
     if open >= MAX_LEASES {
         return Err(ApiError::new(

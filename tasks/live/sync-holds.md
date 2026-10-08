@@ -262,7 +262,7 @@ The owner took every recommendation on 2026-10-08.
   Commit: Drop an envelope from a space's log
   Depends on: 2
 
-- [ ] 4. Hold growing writes above a space quota
+- [x] 4. Hold growing writes above a space quota
   Goal:
   - `koloda-sync-proto` gains `HeldReason::Quota`, `ErrorCode::InsufficientStorage` (`507`), and
     `DeviceMeta.is_over_quota` (question 12).

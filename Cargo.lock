@@ -1418,6 +1418,7 @@ dependencies = [
  "koloda-sync-proto",
  "refinery",
  "rusqlite",
+ "rustix",
  "serde",
  "serde_json",
  "sha2",

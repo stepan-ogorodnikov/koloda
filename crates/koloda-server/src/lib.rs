@@ -7,6 +7,7 @@ pub mod backup;
 pub mod clock;
 pub mod data_dir;
 pub mod drop_envelope;
+pub mod quota;
 pub mod restore;
 pub mod server;
 

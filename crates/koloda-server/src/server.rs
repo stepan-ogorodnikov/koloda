@@ -18,12 +18,14 @@ use crate::devices;
 use crate::http::ApiError;
 use crate::log;
 use crate::pairing::Guesses;
+use crate::quota::Storage;
 
 pub struct Server {
     generation: PathBuf,
     server_db: Mutex<Connection>,
     spaces: Mutex<HashMap<Uuid, Arc<SpaceDb>>>,
     clock: Arc<dyn Clock>,
+    storage: Storage,
     pub(crate) guesses: Mutex<Guesses>,
 }
 
@@ -35,7 +37,12 @@ pub(crate) struct SpaceDb {
 }
 
 impl Server {
+    /// Opens the active generation with the disk watermarks off.
     pub fn open(data_dir: &Path, clock: Arc<dyn Clock>) -> Result<Server, DataDirError> {
+        Server::open_with(data_dir, clock, Storage::default())
+    }
+
+    pub fn open_with(data_dir: &Path, clock: Arc<dyn Clock>, storage: Storage) -> Result<Server, DataDirError> {
         let generation = data_dir::active_generation(data_dir)?;
         let server_db = db::open_server(&generation.join(SERVER_DB))?;
         Ok(Server {
@@ -43,12 +50,21 @@ impl Server {
             server_db: Mutex::new(server_db),
             spaces: Mutex::new(HashMap::new()),
             clock,
+            storage,
             guesses: Mutex::new(Guesses::default()),
         })
     }
 
     pub(crate) fn now_ms(&self) -> u64 {
         self.clock.now_ms()
+    }
+
+    pub(crate) fn storage(&self) -> &Storage {
+        &self.storage
+    }
+
+    pub(crate) fn generation(&self) -> &Path {
+        &self.generation
     }
 
     pub(crate) fn server_db(&self) -> Result<MutexGuard<'_, Connection>, ApiError> {

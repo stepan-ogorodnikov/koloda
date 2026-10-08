@@ -226,6 +226,7 @@ pub(super) fn settle_item(
         let reason = match reason {
             HeldReason::Schema => "schema",
             HeldReason::Dependency => "dependency",
+            HeldReason::Quota => "quota",
         };
         conn.execute(
             r#"
