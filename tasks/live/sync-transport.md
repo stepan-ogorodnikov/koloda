@@ -169,7 +169,7 @@ The owner took every recommendation on 2026-10-08.
   Commit: Sync on nudges from the events socket
   Depends on: 1
 
-- [ ] 3. Serve HTTPS from certificate files
+- [x] 3. Serve HTTPS from certificate files
   Goal:
   - `serve` takes `--tls-cert` and `--tls-key` (PEM), or `--insecure-http`; it refuses to start with neither or
     both.

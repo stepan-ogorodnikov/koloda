@@ -18,7 +18,11 @@ koloda-server init --data-dir ./data
 ```
 
 ```bash
-koloda-server serve --data-dir ./data --listen 127.0.0.1:8080
+koloda-server serve --data-dir ./data --tls-cert ./tls/fullchain.pem --tls-key ./tls/privkey.pem
+```
+
+```bash
+koloda-server serve --data-dir ./data --insecure-http
 ```
 
 ```bash
@@ -30,8 +34,14 @@ koloda-server restore --data-dir ./data ./backups/2026-10-07 [--authoritative] [
 ```
 
 `init` prints the setup token once; only its hash is stored.
-`serve` speaks plain HTTP, so put a TLS reverse proxy in front of it.
-The proxy must pass WebSocket upgrades on `/v1/spaces/{space}/events`, which tells devices when to sync.
+`serve` needs one of two transports, since devices accept plain HTTP only to their own machine.
+With `--tls-cert` and `--tls-key` it speaks HTTPS, on `0.0.0.0:8443` unless `--listen` says otherwise.
+It reads both files again every 10 minutes and presents a changed pair from the next connection on.
+A pair that does not load keeps the old one, so a certbot renewal needs no restart: point the flags at
+`/etc/letsencrypt/live/<domain>/fullchain.pem` and `privkey.pem`.
+With `--insecure-http` it speaks plain HTTP, on `127.0.0.1:8080` unless `--listen` names another address.
+That is for a TLS reverse proxy in front of it, or for `tailscale serve --bg 8080`.
+A proxy must pass WebSocket upgrades on `/v1/spaces/{space}/events`, which tells devices when to sync.
 Below `--min-free-disk` free bytes (1 GiB by default) it holds growing writes as if every space were over its quota,
 and below `--reserve-disk` (64 MiB) it refuses every push; on a platform without `statvfs` both are off.
 It runs a garbage collection pass every hour, over tombstones every active device has passed and attachments no card
@@ -78,8 +88,8 @@ The replaced generation stays on disk; delete old generations by hand.
 
 ## Architectural Map
 
-- `src/main.rs` — command line: `init`, `serve`, `backup`, `restore`, `spaces`, `pair`, `quota`, `drop-envelope`, and
-  `write-schema`.
+- `src/main.rs` — command line: `init`, `serve` over TLS or plain HTTP, `backup`, `restore`, `spaces`, `pair`,
+  `quota`, `drop-envelope`, and `write-schema`.
 - `src/lib.rs` — the route table.
 - `src/clock.rs` — server time, injected so tests run on a manual clock.
 - `src/data_dir.rs` — layout, `init`, and the directory lock.
@@ -89,6 +99,8 @@ The replaced generation stays on disk; delete old generations by hand.
 - `src/db.rs` — connections and the two migration series under `src/migrations/`.
 - `src/server.rs` — shared state: `server.db`, open space databases and their lane heads, the clock, and the
   operator's write-schema raise.
+- `src/tls.rs` — certificates read from PEM files and read again when they change, and a listener that runs each
+  TLS handshake off its accept loop.
 - `src/http.rs` — CBOR and zstd bodies, their limits, the reply envelope, and `meta`.
 - `src/auth.rs` — setup and device tokens, marking a device stale when it calls after a long absence, refusing a
   device call on another epoch with the restore it must apply, and storing the schemas a device advertises.

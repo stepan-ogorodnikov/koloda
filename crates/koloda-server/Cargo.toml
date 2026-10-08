@@ -24,10 +24,13 @@ getrandom = "0.2"
 koloda-sync-proto = { path = "../koloda-sync-proto" }
 refinery = { version = "0.8", features = ["rusqlite"] }
 rusqlite = { version = "0.33", features = ["bundled", "uuid"] }
+# WHY: ring rather than aws-lc-rs, so the static musl build in the Docker image needs no CMake toolchain.
+rustls = { version = "0.23", default-features = false, features = ["ring", "std", "tls12"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 sha2 = "0.10"
 tokio = { version = "1", features = ["macros", "net", "rt-multi-thread", "signal", "sync", "time"] }
+tokio-rustls = { version = "0.26", default-features = false, features = ["ring", "tls12"] }
 uuid = { version = "1.0", features = ["serde", "v4"] }
 zstd = "0.14"
 
@@ -37,6 +40,7 @@ rustix = { version = "1", features = ["fs"] }
 
 [dev-dependencies]
 futures-util = "0.3"
+rcgen = "0.14"
 tempfile = "3"
 tokio-tungstenite = "0.29"
 tower = { version = "0.5", features = ["util"] }

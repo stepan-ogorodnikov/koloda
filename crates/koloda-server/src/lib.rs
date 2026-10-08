@@ -10,6 +10,7 @@ pub mod drop_envelope;
 pub mod quota;
 pub mod restore;
 pub mod server;
+pub mod tls;
 
 mod attachments;
 mod auth;

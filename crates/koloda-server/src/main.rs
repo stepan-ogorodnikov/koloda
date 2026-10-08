@@ -1,5 +1,5 @@
-//! `koloda-server` command line: `init` creates a data directory, `serve` runs the server on one and collects
-//! garbage every hour, `backup` copies a running server, `restore` puts a backup back as a new generation, and
+//! `koloda-server` command line: `init` creates a data directory, `serve` runs the server on one over TLS or plain
+//! HTTP and collects garbage every hour, `backup` copies a running server, `restore` puts a backup back as a new generation, and
 //! `spaces` and `pair` list spaces and issue a pairing code beside a running `serve`, `quota` sets a space's size
 //! quota, `drop-envelope` removes one damaged envelope from a space's log, and `write-schema` raises a kind's write
 //! schema.
@@ -11,7 +11,8 @@ use std::process::ExitCode;
 use std::sync::Arc;
 use std::time::Duration;
 
-use clap::{Parser, Subcommand};
+use axum::serve::ListenerExt;
+use clap::{ArgGroup, Parser, Subcommand};
 use koloda_server::backup;
 use koloda_server::clock::{Clock, SystemClock};
 use koloda_server::data_dir::{self, DataDirLock};
@@ -19,11 +20,15 @@ use koloda_server::quota::{Storage, DEFAULT_MIN_FREE_DISK, DEFAULT_RESERVE_DISK}
 use koloda_server::restore::{self, RestoreOptions};
 use koloda_server::router;
 use koloda_server::server::Server;
+use koloda_server::tls::{Certificates, TlsListener};
 use koloda_sync_proto::registry::{Kind, Lane};
 use koloda_sync_proto::transport::RestoreMode;
 use uuid::Uuid;
 
 const COLLECT_EVERY: Duration = Duration::from_secs(60 * 60);
+const RELOAD_CERTIFICATES_EVERY: Duration = Duration::from_secs(10 * 60);
+const TLS_LISTEN: &str = "0.0.0.0:8443";
+const HTTP_LISTEN: &str = "127.0.0.1:8080";
 const DAY_MS: u64 = 24 * 60 * 60 * 1000;
 
 #[derive(Parser)]
@@ -99,12 +104,23 @@ enum Command {
         kind: String,
         schema: u32,
     },
-    /// Serve plain HTTP; put a TLS reverse proxy in front of it.
+    /// Serve HTTPS with `--tls-cert` and `--tls-key`, or plain HTTP behind a TLS proxy with `--insecure-http`.
+    #[command(group(ArgGroup::new("transport").required(true).args(["tls_cert", "insecure_http"])))]
     Serve {
         #[arg(long)]
         data_dir: PathBuf,
-        #[arg(long, default_value = "127.0.0.1:8080")]
-        listen: SocketAddr,
+        /// Defaults to `0.0.0.0:8443` with TLS, and to `127.0.0.1:8080` with `--insecure-http`.
+        #[arg(long)]
+        listen: Option<SocketAddr>,
+        /// The PEM certificate chain; read again every 10 minutes, so a renewal needs no restart.
+        #[arg(long, requires = "tls_key")]
+        tls_cert: Option<PathBuf>,
+        /// The PEM private key of `--tls-cert`.
+        #[arg(long, requires = "tls_cert")]
+        tls_key: Option<PathBuf>,
+        /// Serve plain HTTP, for a TLS proxy or `tailscale serve` in front of the server.
+        #[arg(long)]
+        insecure_http: bool,
         /// Below this many free bytes on disk, growing writes wait as if every space were over its quota.
         #[arg(long, default_value_t = DEFAULT_MIN_FREE_DISK)]
         min_free_disk: u64,
@@ -224,17 +240,39 @@ fn run(cli: Cli) -> Result<(), String> {
         Command::Serve {
             data_dir,
             listen,
+            tls_cert,
+            tls_key,
+            insecure_http: _,
             min_free_disk,
             reserve_disk,
-        } => serve(
-            data_dir,
-            listen,
-            Storage {
-                min_free_disk,
-                reserve_disk,
-                ..Storage::default()
-            },
-        ),
+        } => {
+            // INVARIANT: clap lets through exactly one of the pair and `--insecure-http`.
+            let certificates = match tls_cert.zip(tls_key) {
+                Some((cert, key)) => Some(Arc::new(
+                    Certificates::load(&cert, &key).map_err(|error| error.to_string())?,
+                )),
+                None => None,
+            };
+            let default = if certificates.is_some() {
+                TLS_LISTEN
+            } else {
+                HTTP_LISTEN
+            };
+            let listen = match listen {
+                Some(listen) => listen,
+                None => default.parse().map_err(|error| format!("{default}: {error}"))?,
+            };
+            serve(
+                data_dir,
+                listen,
+                certificates,
+                Storage {
+                    min_free_disk,
+                    reserve_disk,
+                    ..Storage::default()
+                },
+            )
+        }
     }
 }
 
@@ -310,7 +348,12 @@ fn confirm(question: &str) -> Result<bool, String> {
     Ok(matches!(answer.trim().to_lowercase().as_str(), "y" | "yes"))
 }
 
-fn serve(data_dir: PathBuf, listen: SocketAddr, storage: Storage) -> Result<(), String> {
+fn serve(
+    data_dir: PathBuf,
+    listen: SocketAddr,
+    certificates: Option<Arc<Certificates>>,
+    storage: Storage,
+) -> Result<(), String> {
     let _lock = DataDirLock::acquire(&data_dir).map_err(|error| error.to_string())?;
     let server = Server::open_with(&data_dir, Arc::new(SystemClock), storage).map_err(|error| error.to_string())?;
     let runtime = tokio::runtime::Runtime::new().map_err(|error| error.to_string())?;
@@ -318,17 +361,41 @@ fn serve(data_dir: PathBuf, listen: SocketAddr, storage: Storage) -> Result<(), 
         let listener = tokio::net::TcpListener::bind(listen)
             .await
             .map_err(|error| format!("cannot listen on {listen}: {error}"))?;
-        eprintln!("koloda-server: listening on {listen}");
         let server = Arc::new(server);
         tokio::spawn(collect_garbage(Arc::clone(&server)));
-        axum::serve(
-            listener,
-            router(server).into_make_service_with_connect_info::<SocketAddr>(),
-        )
-        .with_graceful_shutdown(shutdown())
-        .await
+        let routes = router(server).into_make_service_with_connect_info::<SocketAddr>();
+        match certificates {
+            Some(certificates) => {
+                eprintln!("koloda-server: listening on https://{listen}");
+                tokio::spawn(reload_certificates(Arc::clone(&certificates)));
+                // WORKAROUND: axum gives a listener of its own `ConnectInfo` only through `tap_io`, so the TLS
+                // listener goes through a tap that does nothing; pairing limits wrong codes per client address.
+                axum::serve(TlsListener::new(listener, certificates).tap_io(|_| {}), routes)
+                    .with_graceful_shutdown(shutdown())
+                    .await
+            }
+            None => {
+                eprintln!("koloda-server: listening on http://{listen}");
+                axum::serve(listener, routes).with_graceful_shutdown(shutdown()).await
+            }
+        }
         .map_err(|error| error.to_string())
     })
+}
+
+async fn reload_certificates(certificates: Arc<Certificates>) {
+    let mut interval = tokio::time::interval(RELOAD_CERTIFICATES_EVERY);
+    interval.tick().await;
+    loop {
+        interval.tick().await;
+        let certificates = Arc::clone(&certificates);
+        match tokio::task::spawn_blocking(move || certificates.reload()).await {
+            Ok(Ok(true)) => eprintln!("koloda-server: loaded the changed certificate files"),
+            Ok(Ok(false)) => {}
+            Ok(Err(error)) => eprintln!("koloda-server: keeping the old certificates: {error}"),
+            Err(error) => eprintln!("koloda-server: keeping the old certificates: {error}"),
+        }
+    }
 }
 
 async fn collect_garbage(server: Arc<Server>) {
