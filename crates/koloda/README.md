@@ -23,7 +23,8 @@ Rust is the source of truth for the AI provider enum and secrets redaction; `@ko
   `join.rs` tells a joining file's mode, records its claim, and lists the ids the space is probed for.
   It then remints known rows on Add, or deletes product rows on Replace; a blank joiner seeds with `seed_joiner_db`.
   `apply_page` in `apply.rs` applies envelopes other devices captured, and `apply_snapshot_page` a bootstrap
-  snapshot's; `repair.rs` repoints pointers to dead rows.
+  snapshot's; both stop at the first entry this app cannot read and return it as a `Hold`.
+  `repair.rs` repoints pointers to dead rows.
   `outbox.rs` picks push batches of whole cohorts and settles each reply, lost reply, or refusal in one transaction.
   It also tells whether the file is behind its own device record.
   `attachments.rs` queues image uploads that push outcomes ask for and fetches of images remote cards link, and

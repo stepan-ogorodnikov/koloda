@@ -7,9 +7,7 @@ use koloda::repo::cards::get_card;
 use koloda::repo::decks::get_deck;
 use koloda::repo::sync::apply::Page;
 use koloda::repo::templates::get_template;
-use koloda_sync_proto::payload::{
-    CardCreate, CardScheduling, DeckCreate, DocumentCreate, InitialProductTs, Payload, Review,
-};
+use koloda_sync_proto::payload::{CardCreate, CardScheduling, DeckCreate, DocumentCreate, InitialProductTs, Payload};
 use koloda_sync_proto::registry::{Kind, Lane};
 use uuid::Uuid;
 
@@ -22,7 +20,6 @@ use crate::common::{fsrs_algorithm_content, seed_data, test_db};
 const WALL_MS: u64 = 1_727_000_000_000;
 const ALGORITHM: &str = "01920000-0000-7000-8000-0000000000a1";
 const DECK: &str = "01920000-0000-7000-8000-0000000000d1";
-const CARD: &str = "01920000-0000-7000-8000-0000000000c1";
 
 fn algorithm_create(title: &str, initial_product_ts: InitialProductTs, floor: Option<i64>) -> Payload {
     Payload::AlgorithmCreate(DocumentCreate {
@@ -315,49 +312,6 @@ fn the_clock_moves_past_every_applied_stamp() {
     let template = add_template(&b, "Local");
     let local = origin(&b, "templates", &template, "create").expect("local create is stamped");
     assert!(local.hlc > ahead.hlc, "the next local write beats what it applied");
-}
-
-#[test]
-fn a_failed_page_applies_nothing_and_keeps_the_cursor() {
-    let remote = Uuid::now_v7();
-    let review = Payload::Review(Review {
-        card_id: CARD.to_string(),
-        rating: 3,
-        state: 2,
-        due_at: 1_727_000_000_000,
-        stability: 1.0,
-        difficulty: 5.0,
-        scheduled_days: 1,
-        learning_steps: 0,
-        time: 1_000,
-        is_ignored: false,
-        created_at: 1_727_000_000_000,
-    });
-    let bad_entries = [
-        ("undecodable bytes", vec![0xff, 0x00]),
-        (
-            "a cold-lane kind in a hot page",
-            sealed("r1", Some(CARD), stamp(remote, WALL_MS), &review),
-        ),
-    ];
-
-    for (case, bad) in bad_entries {
-        let b = replica();
-        add_algorithm(&b, "Local");
-        apply(&b, &hot_page(remote, Vec::new(), 5)).unwrap();
-
-        let valid = sealed(
-            ALGORITHM,
-            None,
-            stamp(remote, WALL_MS),
-            &algorithm_create("Remote", InitialProductTs::new(), None),
-        );
-        let error = apply(&b, &hot_page(remote, vec![valid, bad], 9)).unwrap_err();
-
-        assert_eq!(error.code, "db.update", "{case}");
-        assert_eq!(cursor(&b, Lane::Hot), 5, "{case}");
-        assert!(get_algorithm(&b, ALGORITHM).unwrap().is_none(), "{case}");
-    }
 }
 
 #[test]

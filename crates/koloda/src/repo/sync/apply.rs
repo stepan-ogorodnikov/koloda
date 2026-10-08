@@ -4,12 +4,13 @@
 //! Apply writes product rows with its own SQL and never calls repo write paths: those capture, and a remote
 //! write must not re-enter the outbox. Repairs of dead pointers (`repair`) are the exception and publish.
 
-use koloda_sync_proto::envelope::{Envelope, Header};
+use koloda_sync_proto::envelope::{Envelope, EnvelopeError, Header};
 use koloda_sync_proto::hlc::{DeviceId, Hlc, Stamp};
 use koloda_sync_proto::payload::{
-    AlgorithmRevision, CardCreate, CardScheduling, DeckCreate, DocumentCreate, Payload, Review,
+    AlgorithmRevision, CardCreate, CardReset, CardScheduling, DeckCreate, Delete, DocumentCreate, Payload,
+    PayloadError, Review, SCHEMA,
 };
-use koloda_sync_proto::registry::{allow, check_lane, Class, Group, Kind, Lane};
+use koloda_sync_proto::registry::{allow, check_lane, Class, Group, Kind, Lane, RegistryError};
 use rusqlite::{params, Connection, OptionalExtension, ToSql};
 use serde_json::{Map, Value};
 use uuid::Uuid;
@@ -32,9 +33,33 @@ pub struct Page {
 }
 
 pub struct PageEntry {
+    pub seq: i64,
     pub sender: Uuid,
     pub sender_seq: i64,
     pub envelope: Vec<u8>,
+}
+
+/// What a page applied, and the entry it stopped at when this app cannot read one.
+pub struct Applied {
+    pub changed: Vec<Kind>,
+    pub hold: Option<Hold>,
+}
+
+/// The entry a lane stops at until an app upgrade reads it or an operator drops it (`PROTOCOL.md` §Corrupt
+/// envelopes, §Schema versions).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Hold {
+    pub lane: Lane,
+    pub seq: i64,
+    pub reason: HoldReason,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum HoldReason {
+    /// The bytes do not decode as anything this app version could have written.
+    CorruptEnvelope,
+    /// The header names a kind, group, op, or schema newer than this app version.
+    UpdateRequired,
 }
 
 const SCHEDULING_GROUP: &str = "scheduling";
@@ -46,30 +71,33 @@ struct Entry {
     values: StampValues,
 }
 
-/// Applies one page and returns the kinds whose product rows it changed.
-pub fn apply_page(db: &Database, page: &Page, starter: &Starter) -> Result<Vec<Kind>, AppError> {
-    apply_entries(db, page.lane, &page.entries, starter, |tx| {
+/// Applies one page, up to the first entry this app cannot read.
+pub fn apply_page(db: &Database, page: &Page, starter: &Starter) -> Result<Applied, AppError> {
+    apply_entries(db, page.lane, &page.entries, starter, |tx, hold| {
         let cursor = match page.lane {
             Lane::Hot => "cursor_hot",
             Lane::Cold => "cursor_cold",
         };
+        // INVARIANT: a held page leaves the cursor just below the entry it could not read, so every later pull meets
+        // that entry again until an upgrade reads it or a drop removes it.
+        let through = hold.map_or(page.scanned_through, |hold| hold.seq - 1);
         tx.execute(
             &format!("UPDATE sync_state SET {cursor} = ?1 WHERE id = 1"),
-            params![page.scanned_through],
+            params![through],
         )?;
         Ok(())
     })
 }
 
-/// Applies one page of a bootstrap snapshot by the apply rule and leaves both cursors alone: a snapshot page is a
-/// stream position, not a lane seq (`PROTOCOL.md` §Bootstrap).
+/// Applies one page of a bootstrap snapshot by the apply rule, up to the first entry this app cannot read, and leaves
+/// both cursors alone: a snapshot page is a stream position, not a lane seq (`PROTOCOL.md` §Bootstrap).
 pub fn apply_snapshot_page(
     db: &Database,
     lane: Lane,
     entries: &[PageEntry],
     starter: &Starter,
-) -> Result<Vec<Kind>, AppError> {
-    apply_entries(db, lane, entries, starter, |_| Ok(()))
+) -> Result<Applied, AppError> {
+    apply_entries(db, lane, entries, starter, |_, _| Ok(()))
 }
 
 /// Ends a bootstrap: `cold` resumes from the lease's cold head, and the next cycle pulls incrementally.
@@ -93,44 +121,103 @@ fn apply_entries(
     lane: Lane,
     entries: &[PageEntry],
     starter: &Starter,
-    after: impl FnOnce(&Connection) -> Result<(), AppError>,
-) -> Result<Vec<Kind>, AppError> {
+    after: impl FnOnce(&Connection, Option<Hold>) -> Result<(), AppError>,
+) -> Result<Applied, AppError> {
     throw_known_error(error_codes::DB_UPDATE, || {
-        // INVARIANT: decode the whole page before writing. An entry that does not decode fails the page, so the
-        // cursor never moves past an envelope that was not applied.
-        let entries = entries
-            .iter()
-            .map(|entry| decode(lane, entry))
-            .collect::<Result<Vec<_>, _>>()?;
+        // INVARIANT: decode the page up to the first entry this app cannot read before writing. Nothing at or after
+        // that entry applies, so the cursor never moves past an envelope that was not applied.
+        let mut decoded = Vec::with_capacity(entries.len());
+        let mut hold = None;
+        for entry in entries {
+            match decode(lane, entry)? {
+                Ok(entry) => decoded.push(entry),
+                Err(reason) => {
+                    hold = Some(Hold {
+                        lane,
+                        seq: entry.seq,
+                        reason,
+                    });
+                    break;
+                }
+            }
+        }
 
         db.with_transaction(|tx| {
             require_enrolled(tx)?;
             let mut changed = Changed::default();
-            for entry in &entries {
+            for entry in &decoded {
                 observe(tx, entry.header.stamp.hlc)?;
                 apply_entry(tx, entry, starter, &mut changed)?;
             }
-            after(tx)?;
-            Ok(changed.0)
+            after(tx, hold)?;
+            Ok(Applied {
+                changed: changed.0,
+                hold,
+            })
         })
     })
 }
 
-fn decode(lane: Lane, entry: &PageEntry) -> Result<Entry, AppError> {
-    let envelope = Envelope::decode(&entry.envelope).map_err(protocol_error)?;
-    check_lane(envelope.header.kind, lane).map_err(protocol_error)?;
-    let payload = Payload::decode(&envelope.header, &envelope.payload).map_err(protocol_error)?;
+fn decode(lane: Lane, entry: &PageEntry) -> Result<Result<Entry, HoldReason>, AppError> {
+    let envelope = match Envelope::decode(&entry.envelope) {
+        Ok(envelope) => envelope,
+        Err(error) => return Ok(Err(unreadable(&error))),
+    };
+    if check_lane(envelope.header.kind, lane).is_err() {
+        return Ok(Err(HoldReason::CorruptEnvelope));
+    }
+    let payload = match Payload::decode(&envelope.header, &envelope.payload) {
+        Ok(payload) => payload,
+        Err(PayloadError::UnknownSchema { schema, .. }) if schema > SCHEMA => {
+            return Ok(Err(HoldReason::UpdateRequired));
+        }
+        Err(PayloadError::UnknownSchema { .. }) => return Ok(Err(HoldReason::CorruptEnvelope)),
+        Err(_) => match from_header(&envelope.header) {
+            Some(payload) => payload,
+            None => return Ok(Err(HoldReason::CorruptEnvelope)),
+        },
+    };
     let values = StampValues::new(
         envelope.header.stamp,
         DeviceId(*entry.sender.as_bytes()),
         entry.sender_seq,
     )?;
 
-    Ok(Entry {
+    Ok(Ok(Entry {
         header: envelope.header,
         payload,
         values,
-    })
+    }))
+}
+
+// WHY: only vocabulary this app lacks means a newer writer; every other decode failure is a decoder bug or damaged
+// bytes, and the server refuses a header it cannot read on push (PROTOCOL.md, Corrupt envelopes).
+fn unreadable(error: &EnvelopeError) -> HoldReason {
+    match error {
+        EnvelopeError::Registry(
+            RegistryError::UnknownKind(_)
+            | RegistryError::UnknownGroup(_)
+            | RegistryError::UnknownOp(_)
+            | RegistryError::GroupNotInKind { .. },
+        ) => HoldReason::UpdateRequired,
+        _ => HoldReason::CorruptEnvelope,
+    }
+}
+
+// INVARIANT: a delete and a reset apply from the header when their payload does not decode; no other value is ever
+// guessed. A delete's unreadable hints mean no `successor`, and a reset's display time is its HLC wall part
+// (PROTOCOL.md, Corrupt envelopes).
+fn from_header(header: &Header) -> Option<Payload> {
+    match (header.kind, header.group) {
+        (kind, None) => Some(Payload::Delete {
+            kind,
+            delete: Delete { successor: None },
+        }),
+        (Kind::Cards, Some(Group::Reset)) => Some(Payload::CardReset(CardReset {
+            wall_ms: i64::try_from(header.stamp.hlc.wall_ms()).ok()?,
+        })),
+        _ => None,
+    }
 }
 
 fn require_enrolled(conn: &Connection) -> Result<(), AppError> {

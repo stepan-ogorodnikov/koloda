@@ -175,6 +175,7 @@ impl Shared {
                 .into_iter()
                 .map(|entry| {
                     Ok(PageEntry {
+                        seq: i64::try_from(entry.seq).map_err(local_error)?,
                         sender: Uuid::from_bytes(entry.sender),
                         sender_seq: i64::try_from(entry.sender_seq).map_err(local_error)?,
                         envelope: entry.envelope,
@@ -184,7 +185,14 @@ impl Shared {
             let applied = self
                 .blocking(move |shared| apply_snapshot_page(&shared.db, lane, &entries, &shared.starter))
                 .await?;
-            merge(changed, applied);
+            merge(changed, applied.changed);
+            if let Some(hold) = applied.hold {
+                return Err(local_error(format!(
+                    "{} seq {} does not decode",
+                    lane.as_wire(),
+                    hold.seq
+                )));
+            }
             after = answer.ok.next;
             if answer.ok.done {
                 return Ok(());

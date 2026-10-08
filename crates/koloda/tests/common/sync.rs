@@ -107,6 +107,7 @@ pub fn page(lane: Lane, sender: Uuid, envelopes: Vec<Vec<u8>>, scanned_through: 
             .into_iter()
             .enumerate()
             .map(|(index, envelope)| PageEntry {
+                seq: i64::try_from(index).expect("index fits") + 1,
                 sender,
                 sender_seq: i64::try_from(index).expect("index fits") + 1,
                 envelope,
@@ -306,6 +307,7 @@ impl FakeSpace {
                     .iter()
                     .filter(|entry| entry.seq > after && entry.sender != own)
                     .map(|entry| PageEntry {
+                        seq: entry.seq,
                         sender: entry.sender,
                         sender_seq: entry.sender_seq,
                         envelope: entry.envelope.clone(),
@@ -343,7 +345,7 @@ pub fn starter() -> Starter {
 }
 
 pub fn apply(db: &Database, page: &Page) -> Result<Vec<Kind>, AppError> {
-    apply_page(db, page, &starter())
+    apply_page(db, page, &starter()).map(|applied| applied.changed)
 }
 
 pub fn device(db: &Database) -> Uuid {

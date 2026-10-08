@@ -181,7 +181,7 @@ The owner took every recommendation on 2026-10-08.
 
 ## Plan
 
-- [ ] 1. Stop a pull page at an envelope this app cannot read
+- [x] 1. Stop a pull page at an envelope this app cannot read
   Goal:
   - `PageEntry` gains `seq`; the engine fills it from `LogEntry.seq`.
   - `apply_page` and `apply_snapshot_page` decode entry by entry and sort each by question 3:

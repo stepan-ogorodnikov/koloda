@@ -85,6 +85,9 @@ so card-progress and review namespaces stay distinct.
 `apply_snapshot_page` applies a bootstrap page by the same rule and leaves the cursors alone; `finish_bootstrap`
 sets `cold`'s and clears the joiner's bootstrap flag.
 
+- A page stops at the first entry this app cannot read: what precedes it applies, the cursor stays just below it,
+  and the `Hold` says whether the bytes are corrupt or need an app update.
+  A delete or reset whose payload alone does not decode applies from its header.
 - A remote write that went through one would re-enter the outbox.
 - Repairs of pointers to a dead referent are the exception.
   `repair.rs` publishes them through `Capture`, like local writes.

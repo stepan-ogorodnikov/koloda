@@ -997,10 +997,18 @@ The client cannot tell which, so it never guesses a value:
 - **Reset**: apply from the header.
   Display time comes from the HLC wall part.
   The cursor advances.
-- **Anything else**: hold that lane at that seq and report `corrupt_envelope { seq }`.
+- **Anything else**: hold that lane at that seq and report `corrupt_envelope { lane, seq }`.
   A hold in `hot` also stops `cold`, because reviews must not arrive before their cards.
   A hold in `cold` leaves `hot` running.
   Pushing continues.
+
+Both header rules need a header that decodes.
+A header that names a kind, group, or op this app lacks, or a group outside its kind, needs an app update instead,
+and so does a schema above the app's own; that is `update_required { lane, seq }`.
+Any other envelope that does not decode, a lane mismatch, or a payload that does not decode is corrupt.
+The page applies every entry before the held one in one transaction and sets the lane cursor to the held seq minus
+one.
+Nothing at or after it applies, so every later pull meets it again until an upgrade reads it or a drop removes it.
 
 An app upgrade that reads it releases the hold; that covers decoder bugs.
 For bytes that are really damaged, an operator drop removes the version from the log, and holding clients pass it.

@@ -43,6 +43,7 @@ fn stream(db: &Database, envelopes: Vec<Vec<u8>>) {
         .into_iter()
         .enumerate()
         .map(|(index, envelope)| PageEntry {
+            seq: i64::try_from(index).expect("index fits") + 1,
             sender,
             sender_seq: i64::try_from(index).expect("index fits") + 1,
             envelope,
