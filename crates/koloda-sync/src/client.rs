@@ -86,13 +86,9 @@ impl Client<'_> {
             None => (None, false),
         };
         let request = Request {
-            method,
-            url: format!("{}{path}", self.base),
-            token: token.map(str::to_string),
-            epoch: self.epoch,
-            schemas: self.epoch.map(|_| encode_schemas(|_| SCHEMA)),
             body,
             is_zstd,
+            ..self.request(method, path, token)
         };
 
         let mut lost = TransportError(String::new());
@@ -106,6 +102,19 @@ impl Client<'_> {
             }
         }
         Err(SyncError::Transport(lost.0))
+    }
+
+    /// A request with no body, as `call` sends it before adding one.
+    pub(crate) fn request(&self, method: Method, path: &str, token: Option<&str>) -> Request {
+        Request {
+            method,
+            url: format!("{}{path}", self.base),
+            token: token.map(str::to_string),
+            epoch: self.epoch,
+            schemas: self.epoch.map(|_| encode_schemas(|_| SCHEMA)),
+            body: None,
+            is_zstd: false,
+        }
     }
 
     fn read<T: DeserializeOwned>(&self, response: &Response) -> Result<Result<Answer<T>, SyncError>, TransportError> {

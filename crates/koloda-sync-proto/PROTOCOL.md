@@ -917,6 +917,17 @@ Each device has at most one socket: a new one closes the device's older one, and
 The server pings every 30 seconds and closes a socket that has answered nothing for 60 seconds.
 A device sends nothing but control frames; a socket that sends data is closed.
 
+A device keeps one socket open while its runner runs and the file may send.
+It opens none while the file is detached, waits for Add or Replace, or holds an authoritative restore.
+A bounded tick opens none either, so a device that only ticks syncs by polling.
+Heads past the last ones a reply reported start a cycle (§Cycle).
+A nudge during a cycle waits for it to end: the cycle's own push moves the heads too.
+The heads its last reply reports tell whether another device moved them as well.
+A refused upgrade starts one cycle, which applies a restore or detaches as for any other call.
+The device reconnects after a close or an error, waiting 1 second and doubling up to 60.
+It reconnects at once when a cycle changes the file's device, token, or epoch.
+A socket that delivers nothing for 75 seconds counts as closed, and losing the socket starts a cycle.
+
 ### Errors
 
 | Code | Status | When |
@@ -1120,12 +1131,12 @@ the rows.
 The device records `head_cold` from the device record it read in step 1, before pulling `hot`.
 One call runs a bounded number of rounds; the next trigger picks up what is left.
 
-Triggers: every local commit (coalesced over ~300 ms), every nudge, app foreground, network regained, and a safety
-poll every few minutes when the socket is down.
+Triggers: every local commit (coalesced over ~300 ms), every nudge (§Events), app foreground, network regained, and
+a poll.
+A device polls every 5 minutes while its events socket is open, and every 60 seconds while it is not.
 A grade reaches another live device in about a second.
-Until the nudge socket exists, a device polls every 60 seconds instead, so a grade can take up to a minute.
-One cycle runs at a time; triggers during a cycle run one more after it, and errors back off up to the poll
-interval.
+Without the socket, as behind a proxy that passes no WebSocket upgrades, it takes up to a minute.
+One cycle runs at a time; triggers during a cycle run one more after it, and errors back off up to 60 seconds.
 
 Attachment transfers run after the rounds, one at a time, uploads and fetches alike.
 They carry no stamps, so they also run when the rounds stop for clock skew or a file that is behind.

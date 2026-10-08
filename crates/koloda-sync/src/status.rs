@@ -77,6 +77,8 @@ pub(crate) struct RunState {
     pub(crate) stop: Option<Stop>,
     pub(crate) last_success_ms: Option<i64>,
     pub(crate) heads: Option<(u64, u64)>,
+    /// The highest heads nudged during the running cycle, checked once it ends.
+    pub(crate) nudged: Option<(u64, u64)>,
     pub(crate) hold: Option<Hold>,
     pub(crate) is_over_quota: bool,
 }

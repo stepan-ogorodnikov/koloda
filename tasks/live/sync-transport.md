@@ -140,7 +140,7 @@ The owner took every recommendation on 2026-10-08.
   Commit: Serve the events WebSocket with each space's lane heads
   Depends on: none
 
-- [ ] 2. Sync on nudges from the events socket
+- [x] 2. Sync on nudges from the events socket
   Goal:
   - `Transport` gains an events call that opens the socket and yields `Heads` as they arrive.
     `HttpTransport` upgrades through reqwest, so the socket uses the same TLS and server URL rule as every call.

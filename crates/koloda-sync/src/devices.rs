@@ -90,6 +90,7 @@ impl Shared {
 
     /// Forgets the token and marks the file detached; rows and sync tables stay for a later re-attach.
     pub(crate) async fn detach_locally(self: &Arc<Self>) -> Result<(), SyncError> {
+        self.stop_listening();
         let session = self.session().await?;
         self.blocking(move |shared| {
             shared.secrets.remove(&token_key(session.device))?;

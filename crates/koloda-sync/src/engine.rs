@@ -2,6 +2,7 @@
 //! background runner lives on it.
 
 use std::future::Future;
+use std::sync::atomic::AtomicBool;
 use std::sync::{Arc, Mutex, MutexGuard};
 
 use koloda::app::db::Database;
@@ -14,13 +15,15 @@ use koloda::repo::sync::repair::Starter;
 use koloda::repo::sync::restamp::pause_clock;
 use koloda::repo::sync::{enroll_device, enrolled_device, sync_state, SpaceRole};
 use koloda_sync_proto::registry::{Kind, Lane};
-use koloda_sync_proto::transport::{CreateSpace, Enrollment, ErrorCode, Platform};
+use koloda_sync_proto::transport::{CreateSpace, Enrollment, ErrorCode, Heads, Platform};
 use tokio::runtime::Runtime;
+use tokio::sync::watch;
 use uuid::Uuid;
 
 use crate::client::{server_url, Client, Skew};
 use crate::devices::DeviceSummary;
 use crate::error::SyncError;
+use crate::events::is_past;
 use crate::pairing::{ImportMode, IssuedPairing, Joined, Preview};
 use crate::runner::{Budget, Event, EventSink, Spending, Ticked, Timer, Triggers};
 use crate::status::{RunState, Status, Stop};
@@ -39,7 +42,7 @@ pub struct Engine {
 pub(crate) struct Shared {
     pub(crate) db: Database,
     pub(crate) secrets: Arc<dyn SecretStore>,
-    transport: Arc<dyn Transport>,
+    pub(crate) transport: Arc<dyn Transport>,
     pub(crate) platform: Platform,
     pub(crate) starter: Starter,
     pub(crate) skew: Skew,
@@ -49,9 +52,13 @@ pub(crate) struct Shared {
     run_state: Mutex<RunState>,
     sink: Mutex<Option<Arc<dyn EventSink>>>,
     spending: Mutex<Option<Spending>>,
+    /// The session the events socket listens with; `None` while the file must send nothing.
+    pub(crate) listen_target: watch::Sender<Option<Session>>,
+    pub(crate) is_listening: AtomicBool,
 }
 
 /// What every call to the enrolled space needs, read once per cycle.
+#[derive(Clone, PartialEq, Eq)]
 pub(crate) struct Session {
     pub(crate) base: String,
     pub(crate) space: Uuid,
@@ -89,15 +96,19 @@ impl Engine {
                 run_state: Mutex::new(RunState::default()),
                 sink: Mutex::new(None),
                 spending: Mutex::new(None),
+                listen_target: watch::Sender::new(None),
+                is_listening: AtomicBool::new(false),
             }),
         })
     }
 
-    /// Starts the background runner: a cycle now, then one per trigger and per poll. Events go to `sink`.
+    /// Starts the background runner: a cycle now, then one per trigger and per poll, and the events socket whose
+    /// nudges are triggers. Events go to `sink`.
     pub fn start_runner(&self, sink: Arc<dyn EventSink>, timer: Arc<dyn Timer>) -> Result<(), SyncError> {
         *self.shared.lock(&self.shared.sink)? = Some(sink);
-        let shared = Arc::clone(&self.shared);
-        self.runtime.spawn(shared.run_forever(timer));
+        self.runtime
+            .spawn(Arc::clone(&self.shared).listen_forever(Arc::clone(&timer)));
+        self.runtime.spawn(Arc::clone(&self.shared).run_forever(timer));
         Ok(())
     }
 
@@ -300,6 +311,7 @@ impl Shared {
         let _cycle = self.cycle.lock().await;
         let mut changed = Vec::new();
         let result = self.recorded_cycle(budget, &mut changed).await;
+        self.retarget().await;
         if !changed.is_empty() {
             self.emit(Event::Changed { kinds: changed.clone() });
         }
@@ -327,6 +339,13 @@ impl Shared {
         *self.lock(&self.spending)? = None;
         let mut run = self.lock(&self.run_state)?;
         run.is_syncing = false;
+        if run
+            .nudged
+            .take()
+            .is_some_and(|(head_hot, head_cold)| is_past(Heads { head_hot, head_cold }, run.heads))
+        {
+            self.triggers.fire(false);
+        }
         match &result {
             Ok(()) => {
                 run.stop = None;
@@ -407,6 +426,20 @@ impl Shared {
     pub(crate) fn note_heads(&self, head_hot: u64, head_cold: u64) -> Result<(), SyncError> {
         self.lock(&self.run_state)?.heads = Some((head_hot, head_cold));
         Ok(())
+    }
+
+    /// Whether nudged heads call for a cycle now.
+    ///
+    /// INVARIANT: a nudge during a cycle waits for it to end. The cycle's own push moves the heads too, and only the
+    /// heads its last reply reports tell whether another device moved them as well.
+    pub(crate) fn note_nudge(&self, heads: Heads) -> Result<bool, SyncError> {
+        let mut run = self.lock(&self.run_state)?;
+        if !run.is_syncing {
+            return Ok(is_past(heads, run.heads));
+        }
+        let (hot, cold) = run.nudged.unwrap_or_default();
+        run.nudged = Some((hot.max(heads.head_hot), cold.max(heads.head_cold)));
+        Ok(false)
     }
 
     pub(crate) fn note_quota(&self, is_over_quota: bool) -> Result<(), SyncError> {

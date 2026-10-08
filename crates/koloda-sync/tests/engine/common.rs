@@ -2,13 +2,23 @@
 //! `RouterTransport` with no sockets, and engines over in-memory databases.
 
 use std::collections::{HashMap, VecDeque};
-use std::sync::atomic::{AtomicI64, AtomicU64, Ordering};
+use std::io;
+use std::pin::Pin;
+use std::sync::atomic::{AtomicBool, AtomicI64, AtomicU64, Ordering};
 use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
+use std::task::{Context, Poll};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use axum::body::{to_bytes, Body};
-use axum::http::header::{ACCEPT_ENCODING, AUTHORIZATION, CONTENT_ENCODING, CONTENT_TYPE};
+use axum::http::header::{
+    ACCEPT_ENCODING, AUTHORIZATION, CONNECTION, CONTENT_ENCODING, CONTENT_TYPE, HOST, SEC_WEBSOCKET_KEY,
+    SEC_WEBSOCKET_VERSION, UPGRADE,
+};
+use axum::http::{StatusCode, Uri};
 use axum::Router;
+use futures_util::task::AtomicWaker;
+use hyper_util::rt::TokioIo;
+use hyper_util::service::TowerToHyperService;
 use koloda::app::db::Database;
 use koloda::app::error::AppError;
 use koloda::app::init::seed_joiner_db;
@@ -19,7 +29,9 @@ use koloda_server::restore::{self, RestoreOptions};
 use koloda_server::server::Server;
 use koloda_server::{backup, data_dir, router};
 use koloda_sync::engine::Engine;
-use koloda_sync::transport::{Method, Request, Response, Sending, Transport, TransportError, CBOR, ZSTD};
+use koloda_sync::transport::{
+    Method, Opened, Opening, Request, Response, Sending, Transport, TransportError, WebSocketEvents, CBOR, ZSTD,
+};
 use koloda_sync_proto::envelope::Envelope;
 use koloda_sync_proto::hlc::{DeviceId, Hlc, Stamp};
 use koloda_sync_proto::payload::{seal, Payload, Seal, SCHEMA};
@@ -34,6 +46,8 @@ use rusqlite::{Connection, OptionalExtension};
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use tempfile::TempDir;
+use tokio::io::{AsyncRead, AsyncWrite, DuplexStream, ReadBuf};
+use tokio_tungstenite::tungstenite::handshake::client::generate_key;
 use uuid::Uuid;
 
 use crate::fixtures::{seed_settings, starter};
@@ -590,11 +604,16 @@ pub enum Fault {
 }
 
 /// Calls the router in process. Each queued fault applies once, to the next request whose URL contains its pattern.
+///
+/// Events sockets connect only once `serve_events` is called; until then the transport behaves like a proxy without
+/// WebSocket upgrades, so the runner polls as it does without the socket.
 pub struct RouterTransport {
     routes: Routes,
     faults: Mutex<VecDeque<(Option<Method>, String, Fault)>>,
     sent: Mutex<Vec<Request>>,
     observer: Mutex<Option<Observer>>,
+    is_serving_events: AtomicBool,
+    sockets: Mutex<Vec<Arc<Cut>>>,
 }
 
 /// Runs before each request is handled, while the engine holds no database lock.
@@ -607,6 +626,38 @@ impl RouterTransport {
             faults: Mutex::new(VecDeque::new()),
             sent: Mutex::new(Vec::new()),
             observer: Mutex::new(None),
+            is_serving_events: AtomicBool::new(false),
+            sockets: Mutex::new(Vec::new()),
+        }
+    }
+
+    /// Lets events sockets connect from now on.
+    pub fn serve_events(&self) {
+        self.is_serving_events.store(true, Ordering::SeqCst);
+    }
+
+    /// Ends every socket this transport opened, as a server that stops ends them.
+    pub fn drop_sockets(&self) {
+        for cut in self.sockets.lock().expect("sockets lock").drain(..) {
+            cut.cut();
+        }
+    }
+
+    fn take_fault(&self, request: &Request) -> Option<Fault> {
+        let mut faults = self.faults.lock().expect("faults lock");
+        faults
+            .iter()
+            .position(|(method, pattern, _)| {
+                method.is_none_or(|method| method == request.method) && request.url.contains(pattern.as_str())
+            })
+            .and_then(|position| faults.remove(position))
+            .map(|(_, _, fault)| fault)
+    }
+
+    fn record(&self, request: &Request) {
+        self.sent.lock().expect("sent lock").push(request.clone());
+        if let Some(observer) = self.observer.lock().expect("observer lock").as_mut() {
+            observer(request);
         }
     }
 
@@ -642,21 +693,8 @@ impl RouterTransport {
 impl Transport for RouterTransport {
     fn send(&self, request: Request) -> Sending<'_> {
         Box::pin(async move {
-            self.sent.lock().expect("sent lock").push(request.clone());
-            if let Some(observer) = self.observer.lock().expect("observer lock").as_mut() {
-                observer(&request);
-            }
-            let fault = {
-                let mut faults = self.faults.lock().expect("faults lock");
-                faults
-                    .iter()
-                    .position(|(method, pattern, _)| {
-                        method.is_none_or(|method| method == request.method) && request.url.contains(pattern.as_str())
-                    })
-                    .and_then(|position| faults.remove(position))
-                    .map(|(_, _, fault)| fault)
-            };
-            match fault {
+            self.record(&request);
+            match self.take_fault(&request) {
                 Some(Fault::Reply(response)) => Ok(response),
                 Some(Fault::LoseReply) => {
                     forward(&self.routes, request).await;
@@ -674,6 +712,124 @@ impl Transport for RouterTransport {
             }
         })
     }
+
+    // WHY: the router upgrades only a connection hyper serves, so the socket runs over an in-memory pipe that hyper
+    // serves on one end and the engine's own WebSocket reader uses on the other.
+    fn listen(&self, request: Request) -> Opening<'_> {
+        Box::pin(async move {
+            self.record(&request);
+            match self.take_fault(&request) {
+                Some(Fault::Reply(response)) => return Ok(Opened::Refused(response)),
+                Some(Fault::LoseReply | Fault::After(_)) => {
+                    return Err(TransportError("the upgrade was lost".to_string()))
+                }
+                None => {}
+            }
+            if !self.is_serving_events.load(Ordering::SeqCst) {
+                return Err(TransportError("this server passes no WebSocket upgrades".to_string()));
+            }
+            let (client, server) = tokio::io::duplex(64 * 1024);
+            let service = TowerToHyperService::new(self.routes.lock().expect("routes lock").clone());
+            tokio::spawn(
+                hyper::server::conn::http1::Builder::new()
+                    .serve_connection(TokioIo::new(server), service)
+                    .with_upgrades(),
+            );
+            let cut = Arc::new(Cut::default());
+            self.sockets.lock().expect("sockets lock").push(Arc::clone(&cut));
+            let (mut sender, connection) =
+                hyper::client::conn::http1::handshake(TokioIo::new(Cuttable { io: client, cut }))
+                    .await
+                    .map_err(|error| TransportError(error.to_string()))?;
+            tokio::spawn(connection.with_upgrades());
+
+            let uri: Uri = request.url.parse().expect("a request URL");
+            let path = uri.path_and_query().expect("a request path").to_string();
+            let builder = with_headers(
+                axum::http::Request::builder().method(axum::http::Method::GET).uri(path),
+                &request,
+            )
+            .header(HOST, uri.host().expect("a request host"))
+            .header(CONNECTION, "Upgrade")
+            .header(UPGRADE, "websocket")
+            .header(SEC_WEBSOCKET_VERSION, "13")
+            .header(SEC_WEBSOCKET_KEY, generate_key());
+            let response = sender
+                .send_request(builder.body(Body::empty()).expect("build an upgrade"))
+                .await
+                .map_err(|error| TransportError(error.to_string()))?;
+            if response.status() != StatusCode::SWITCHING_PROTOCOLS {
+                return Ok(Opened::Refused(read(response.map(Body::new)).await));
+            }
+            let upgraded = hyper::upgrade::on(response)
+                .await
+                .map_err(|error| TransportError(error.to_string()))?;
+            Ok(Opened::Socket(Box::new(
+                WebSocketEvents::upgraded(TokioIo::new(upgraded)).await,
+            )))
+        })
+    }
+}
+
+/// The signal that ends one in-memory socket.
+#[derive(Default)]
+struct Cut {
+    is_cut: AtomicBool,
+    reader: AtomicWaker,
+}
+
+impl Cut {
+    fn cut(&self) {
+        self.is_cut.store(true, Ordering::SeqCst);
+        self.reader.wake();
+    }
+}
+
+/// A pipe end that reads end-of-stream once cut, as a connection reads when its server stops.
+struct Cuttable {
+    io: DuplexStream,
+    cut: Arc<Cut>,
+}
+
+impl AsyncRead for Cuttable {
+    fn poll_read(mut self: Pin<&mut Self>, cx: &mut Context<'_>, buf: &mut ReadBuf<'_>) -> Poll<io::Result<()>> {
+        self.cut.reader.register(cx.waker());
+        if self.cut.is_cut.load(Ordering::SeqCst) {
+            return Poll::Ready(Ok(()));
+        }
+        Pin::new(&mut self.io).poll_read(cx, buf)
+    }
+}
+
+impl AsyncWrite for Cuttable {
+    fn poll_write(mut self: Pin<&mut Self>, cx: &mut Context<'_>, buf: &[u8]) -> Poll<io::Result<usize>> {
+        if self.cut.is_cut.load(Ordering::SeqCst) {
+            return Poll::Ready(Err(io::ErrorKind::BrokenPipe.into()));
+        }
+        Pin::new(&mut self.io).poll_write(cx, buf)
+    }
+
+    fn poll_flush(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<io::Result<()>> {
+        Pin::new(&mut self.io).poll_flush(cx)
+    }
+
+    fn poll_shutdown(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<io::Result<()>> {
+        Pin::new(&mut self.io).poll_shutdown(cx)
+    }
+}
+
+fn with_headers(mut builder: axum::http::request::Builder, request: &Request) -> axum::http::request::Builder {
+    builder = builder.header(ACCEPT_ENCODING, ZSTD);
+    if let Some(token) = &request.token {
+        builder = builder.header(AUTHORIZATION, format!("Bearer {token}"));
+    }
+    if let Some(epoch) = request.epoch {
+        builder = builder.header(EPOCH_HEADER, epoch.to_string());
+    }
+    if let Some(schemas) = &request.schemas {
+        builder = builder.header(SCHEMAS_HEADER, schemas);
+    }
+    builder
 }
 
 async fn forward(routes: &Routes, request: Request) -> Response {
@@ -684,19 +840,10 @@ async fn forward(routes: &Routes, request: Request) -> Response {
         Method::Put => axum::http::Method::PUT,
         Method::Delete => axum::http::Method::DELETE,
     };
-    let mut builder = axum::http::Request::builder()
-        .method(method)
-        .uri(request.url)
-        .header(ACCEPT_ENCODING, ZSTD);
-    if let Some(token) = &request.token {
-        builder = builder.header(AUTHORIZATION, format!("Bearer {token}"));
-    }
-    if let Some(epoch) = request.epoch {
-        builder = builder.header(EPOCH_HEADER, epoch.to_string());
-    }
-    if let Some(schemas) = &request.schemas {
-        builder = builder.header(SCHEMAS_HEADER, schemas);
-    }
+    let mut builder = with_headers(
+        axum::http::Request::builder().method(method).uri(&request.url),
+        &request,
+    );
     if request.body.is_some() {
         builder = builder.header(CONTENT_TYPE, CBOR);
     }
@@ -709,6 +856,10 @@ async fn forward(routes: &Routes, request: Request) -> Response {
     let response = tower::ServiceExt::oneshot(router, http_request)
         .await
         .expect("the router never fails");
+    read(response).await
+}
+
+async fn read(response: axum::http::Response<Body>) -> Response {
     let status = response.status().as_u16();
     let is_zstd = response
         .headers()

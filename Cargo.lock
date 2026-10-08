@@ -1458,6 +1458,9 @@ version = "0.0.1"
 dependencies = [
  "axum",
  "ciborium",
+ "futures-util",
+ "hyper",
+ "hyper-util",
  "koloda",
  "koloda-server",
  "koloda-sync-proto",
@@ -1467,6 +1470,7 @@ dependencies = [
  "serde_json",
  "tempfile",
  "tokio",
+ "tokio-tungstenite",
  "tower",
  "url",
  "uuid",

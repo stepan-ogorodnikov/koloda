@@ -1,12 +1,23 @@
-//! One HTTP request to the sync server and its raw reply. The client (`client.rs`) owns CBOR, zstd, and retries, so
-//! tests can stand in for the network with the server's router.
+//! One HTTP request to the sync server and its raw reply, and the events socket. The client (`client.rs`) owns CBOR,
+//! zstd, and retries, so tests can stand in for the network with the server's router.
 
 use std::future::Future;
 use std::pin::Pin;
 use std::time::Duration;
 
-use koloda_sync_proto::transport::{EPOCH_HEADER, MAX_BODY_BYTES, SCHEMAS_HEADER};
-use reqwest::header::{ACCEPT_ENCODING, CONTENT_ENCODING, CONTENT_TYPE};
+use futures_util::StreamExt;
+use koloda_sync_proto::transport::{Heads, EPOCH_HEADER, MAX_BODY_BYTES, SCHEMAS_HEADER};
+use reqwest::header::{
+    ACCEPT_ENCODING, CONNECTION, CONTENT_ENCODING, CONTENT_TYPE, SEC_WEBSOCKET_ACCEPT, SEC_WEBSOCKET_KEY,
+    SEC_WEBSOCKET_VERSION, UPGRADE,
+};
+use reqwest::StatusCode;
+use tokio::io::{AsyncRead, AsyncWrite};
+use tokio_tungstenite::tungstenite::handshake::client::generate_key;
+use tokio_tungstenite::tungstenite::handshake::derive_accept_key;
+use tokio_tungstenite::tungstenite::protocol::{Role, WebSocketConfig};
+use tokio_tungstenite::tungstenite::Message;
+use tokio_tungstenite::WebSocketStream;
 use uuid::Uuid;
 
 use crate::error::SyncError;
@@ -16,6 +27,9 @@ pub const ZSTD: &str = "zstd";
 
 const CONNECT_TIMEOUT: Duration = Duration::from_secs(15);
 const REQUEST_TIMEOUT: Duration = Duration::from_secs(120);
+// WHY: the server sends nothing larger than a CBOR pair of lane heads, so anything bigger is refused before it is
+// buffered.
+const MAX_EVENT_BYTES: usize = 1024;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Method {
@@ -56,6 +70,57 @@ pub type Sending<'a> = Pin<Box<dyn Future<Output = Result<Response, TransportErr
 /// Implementations ask for zstd replies and read at most `MAX_BODY_BYTES` of body.
 pub trait Transport: Send + Sync {
     fn send(&self, request: Request) -> Sending<'_>;
+
+    /// Opens the events socket `request` names (`PROTOCOL.md` §Events); `request` carries no body.
+    fn listen(&self, request: Request) -> Opening<'_>;
+}
+
+pub type Opening<'a> = Pin<Box<dyn Future<Output = Result<Opened, TransportError>> + Send + 'a>>;
+
+pub enum Opened {
+    Socket(Box<dyn Events>),
+    /// The server answered the upgrade with this reply instead.
+    Refused(Response),
+}
+
+/// What the events socket delivered.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Delivery {
+    Heads(Heads),
+    /// A frame with no heads, such as the server's ping: the connection is alive.
+    Alive,
+}
+
+pub type Delivering<'a> = Pin<Box<dyn Future<Output = Option<Delivery>> + Send + 'a>>;
+
+/// An open events socket; `next` is `None` once it closed or sent anything but heads and control frames.
+pub trait Events: Send {
+    fn next(&mut self) -> Delivering<'_>;
+}
+
+/// The events of a WebSocket opened over any connection, so tests can open one without a network.
+pub struct WebSocketEvents<S>(WebSocketStream<S>);
+
+impl<S: AsyncRead + AsyncWrite + Unpin> WebSocketEvents<S> {
+    /// Takes over a connection whose upgrade to a WebSocket already succeeded.
+    pub async fn upgraded(stream: S) -> WebSocketEvents<S> {
+        let config = WebSocketConfig::default()
+            .max_message_size(Some(MAX_EVENT_BYTES))
+            .max_frame_size(Some(MAX_EVENT_BYTES));
+        WebSocketEvents(WebSocketStream::from_raw_socket(stream, Role::Client, Some(config)).await)
+    }
+}
+
+impl<S: AsyncRead + AsyncWrite + Unpin + Send> Events for WebSocketEvents<S> {
+    fn next(&mut self) -> Delivering<'_> {
+        Box::pin(async move {
+            match self.0.next().await? {
+                Ok(Message::Binary(bytes)) => ciborium::from_reader(bytes.as_ref()).ok().map(Delivery::Heads),
+                Ok(Message::Ping(_) | Message::Pong(_)) => Some(Delivery::Alive),
+                Ok(_) | Err(_) => None,
+            }
+        })
+    }
 }
 
 pub struct HttpTransport {
@@ -73,6 +138,22 @@ impl HttpTransport {
     }
 }
 
+impl HttpTransport {
+    fn request(&self, method: reqwest::Method, request: &Request) -> reqwest::RequestBuilder {
+        let mut builder = self.client.request(method, &request.url).header(ACCEPT_ENCODING, ZSTD);
+        if let Some(token) = &request.token {
+            builder = builder.bearer_auth(token);
+        }
+        if let Some(epoch) = request.epoch {
+            builder = builder.header(EPOCH_HEADER, epoch.to_string());
+        }
+        if let Some(schemas) = &request.schemas {
+            builder = builder.header(SCHEMAS_HEADER, schemas);
+        }
+        builder
+    }
+}
+
 impl Transport for HttpTransport {
     fn send(&self, request: Request) -> Sending<'_> {
         Box::pin(async move {
@@ -82,39 +163,64 @@ impl Transport for HttpTransport {
                 Method::Put => reqwest::Method::PUT,
                 Method::Delete => reqwest::Method::DELETE,
             };
-            let mut builder = self.client.request(method, &request.url).header(ACCEPT_ENCODING, ZSTD);
-            if let Some(token) = &request.token {
-                builder = builder.bearer_auth(token);
-            }
-            if let Some(epoch) = request.epoch {
-                builder = builder.header(EPOCH_HEADER, epoch.to_string());
-            }
-            if let Some(schemas) = &request.schemas {
-                builder = builder.header(SCHEMAS_HEADER, schemas);
-            }
+            let mut builder = self.request(method, &request);
             if let Some(body) = request.body {
                 builder = builder.header(CONTENT_TYPE, CBOR).body(body);
                 if request.is_zstd {
                     builder = builder.header(CONTENT_ENCODING, ZSTD);
                 }
             }
-
-            let mut response = builder.send().await.map_err(transport_error)?;
-            let status = response.status().as_u16();
-            let is_zstd = response
-                .headers()
-                .get(CONTENT_ENCODING)
-                .is_some_and(|encoding| encoding == ZSTD);
-            let mut body = Vec::new();
-            while let Some(chunk) = response.chunk().await.map_err(transport_error)? {
-                if body.len() + chunk.len() > MAX_BODY_BYTES {
-                    return Err(TransportError(format!("reply body is over {MAX_BODY_BYTES} bytes")));
-                }
-                body.extend_from_slice(&chunk);
-            }
-            Ok(Response { status, body, is_zstd })
+            read(builder.send().await.map_err(transport_error)?).await
         })
     }
+
+    // WHY: the upgrade goes through reqwest rather than a WebSocket client's own connector, so the socket uses the
+    // same TLS and connection settings as every other call.
+    fn listen(&self, request: Request) -> Opening<'_> {
+        Box::pin(async move {
+            let key = generate_key();
+            let response = self
+                .request(reqwest::Method::GET, &request)
+                .header(CONNECTION, "Upgrade")
+                .header(UPGRADE, "websocket")
+                .header(SEC_WEBSOCKET_VERSION, "13")
+                .header(SEC_WEBSOCKET_KEY, &key)
+                .send()
+                .await
+                .map_err(transport_error)?;
+            if response.status() != StatusCode::SWITCHING_PROTOCOLS {
+                return Ok(Opened::Refused(read(response).await?));
+            }
+            let accept = derive_accept_key(key.as_bytes());
+            if response
+                .headers()
+                .get(SEC_WEBSOCKET_ACCEPT)
+                .is_none_or(|answered| answered.as_bytes() != accept.as_bytes())
+            {
+                return Err(TransportError(
+                    "the events upgrade answered with the wrong accept key".to_string(),
+                ));
+            }
+            let upgraded = response.upgrade().await.map_err(transport_error)?;
+            Ok(Opened::Socket(Box::new(WebSocketEvents::upgraded(upgraded).await)))
+        })
+    }
+}
+
+async fn read(mut response: reqwest::Response) -> Result<Response, TransportError> {
+    let status = response.status().as_u16();
+    let is_zstd = response
+        .headers()
+        .get(CONTENT_ENCODING)
+        .is_some_and(|encoding| encoding == ZSTD);
+    let mut body = Vec::new();
+    while let Some(chunk) = response.chunk().await.map_err(transport_error)? {
+        if body.len() + chunk.len() > MAX_BODY_BYTES {
+            return Err(TransportError(format!("reply body is over {MAX_BODY_BYTES} bytes")));
+        }
+        body.extend_from_slice(&chunk);
+    }
+    Ok(Response { status, body, is_zstd })
 }
 
 // WHY: reqwest's message names the URL, never the bearer token or the body, so it is safe to report.

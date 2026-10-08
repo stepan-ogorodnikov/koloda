@@ -7,9 +7,13 @@ use std::time::{Duration, Instant};
 use koloda_sync::runner::{Event, EventSink, Sleeping, Timer};
 use tokio::sync::Notify;
 
-/// The runner's poll interval and coalescing window, pinned here as the waits the tests expect.
+/// The runner's poll intervals, coalescing window, and events socket waits, pinned here as the waits the tests expect.
 pub const POLL: Duration = Duration::from_secs(60);
+pub const POLL_LISTENING: Duration = Duration::from_secs(5 * 60);
 pub const COALESCE: Duration = Duration::from_millis(300);
+/// The socket waits this long for a frame while it is open, so a sleep of it shows the socket is open.
+pub const SILENT_FOR: Duration = Duration::from_secs(75);
+pub const FIRST_RETRY: Duration = Duration::from_secs(1);
 
 /// How long a test waits for the runner to reach a state before it fails.
 const PATIENCE: Duration = Duration::from_secs(20);

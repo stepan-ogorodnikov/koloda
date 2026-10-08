@@ -16,8 +16,11 @@ use crate::status::Status;
 
 /// Local writes within this window share one cycle.
 const COALESCE: Duration = Duration::from_millis(300);
-// WHY: no nudge channel exists yet, so the runner polls; a grade still reaches another device on its next poll.
-const POLL: Duration = Duration::from_secs(60);
+/// The poll while the events socket is down, and the longest wait after errors.
+pub(crate) const POLL: Duration = Duration::from_secs(60);
+// WHY: while the socket is up, every push by another device starts a cycle; this poll covers heads that move without a
+// push, such as an operator's `drop-envelope`.
+const POLL_LISTENING: Duration = Duration::from_secs(5 * 60);
 const FIRST_BACKOFF: Duration = Duration::from_secs(1);
 
 pub type Sleeping = Pin<Box<dyn Future<Output = ()> + Send>>;
@@ -162,7 +165,11 @@ impl Shared {
             wait = match result {
                 Ok(()) | Err(SyncError::BudgetSpent) => {
                     backoff = FIRST_BACKOFF;
-                    POLL
+                    if self.is_listening.load(Ordering::SeqCst) {
+                        POLL_LISTENING
+                    } else {
+                        POLL
+                    }
                 }
                 Err(_) => {
                     let after = backoff;

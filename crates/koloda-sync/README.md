@@ -30,7 +30,10 @@ A device's bearer token lives in the host's secret store under `sync.token.<devi
   and the switch.
 - `src/pairing.rs` — pairing codes, preview, and joining a space: blank, seed-only, a used file through Add or
   Replace, or a detached file re-attaching under a new device id, after applying a restore the space had since.
-- `src/runner.rs` — the background runner: triggers, coalescing, the poll, backoff, events, and tick budgets.
+- `src/runner.rs` — the background runner: triggers, coalescing, the poll and how long it waits while the events
+  socket is open, backoff, events, and tick budgets.
+- `src/events.rs` — the events socket while the runner runs: the session it listens with, reconnects, and nudges
+  that start a cycle, held back while one runs.
 - `src/status.rs` — the state the host shows, why the last cycle stopped (an authoritative restore waiting for the
   host among the reasons), the lane held at an envelope this app cannot read, whether the space is over its quota,
   and how far behind each lane is.
@@ -43,11 +46,13 @@ A device's bearer token lives in the host's secret store under `sync.token.<devi
   that tells the host which images arrived.
 - `src/client.rs` — CBOR and zstd bodies, the reply envelope, the skew estimate, retries, the server URL rule, and the
   epoch and the schemas this app writes, both of which every device call names.
-- `src/transport.rs` — `Transport`, one request and its raw reply; `HttpTransport` sends it with reqwest.
+- `src/transport.rs` — `Transport`, one request and its raw reply, and the events socket; `HttpTransport` sends both
+  with reqwest.
 - `src/error.rs` — `SyncError`.
 
 - `tests/engine/` — one test binary; `common.rs` calls `koloda-server`'s router in process through a `Transport`,
   on a server clock offset from system time; its backup and restore swap the router every device calls.
+  Events sockets run over an in-memory pipe, and only once a test serves them.
 
 ### Does NOT own (prevent scope creep)
 

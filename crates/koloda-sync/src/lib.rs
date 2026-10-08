@@ -15,6 +15,7 @@ mod attachments;
 mod bootstrap;
 mod client;
 mod cycle;
+mod events;
 mod fork;
 mod push;
 mod restore;
