@@ -243,6 +243,17 @@ The owner took every recommendation on 2026-10-08.
   Commit: Pause bulk sync on metered networks
   Depends on: 5
 
+- [x] 7. Serve the next TLS client after a failed handshake
+  Goal: a fix to item 3, found when its reload test hung in CI.
+  When a failed handshake's result and a new connection reached `TlsListener` together, the listener could wait for
+  yet another connection before it handed on the next good handshake.
+  The handshake branch of its `select!` takes a guard instead of a pattern that a failed handshake does not match.
+  Constraints: `crates/koloda-server/src/tls.rs` and its tests only.
+  Done when: a server test that repeats a failed handshake and then a good one ten times gets every good one served
+  in time; `bun run check:push` green.
+  Commit: Serve the next TLS client after a failed handshake
+  Depends on: 3
+
 ## Outcome
 
 <what shipped>

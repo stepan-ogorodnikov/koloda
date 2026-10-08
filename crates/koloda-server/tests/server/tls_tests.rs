@@ -46,8 +46,18 @@ async fn serve_tls(harness: &Harness, certificates: Arc<Certificates>) -> Socket
     address
 }
 
+// WHY: shorter than the server's 10-second handshake timeout, so a listener that waited out a stalled client before
+// serving the next one fails here, and a listener that never serves it fails rather than hangs.
+const WAIT: Duration = Duration::from_secs(5);
+
 /// Sends `GET /v1/spaces` over TLS to `localhost`, trusting only `authority`, and returns the status line.
 async fn status_line(address: SocketAddr, authority: &Authority) -> Result<String, std::io::Error> {
+    tokio::time::timeout(WAIT, request(address, authority))
+        .await
+        .map_err(|_elapsed| std::io::Error::other("the server answered nothing in time"))?
+}
+
+async fn request(address: SocketAddr, authority: &Authority) -> Result<String, std::io::Error> {
     let mut roots = RootCertStore::empty();
     roots.add(authority.der().clone()).expect("a trusted authority");
     let config = ClientConfig::builder_with_provider(Arc::new(rustls::crypto::ring::default_provider()))
@@ -128,14 +138,36 @@ async fn a_client_that_stalls_its_handshake_holds_up_no_other() {
     let _stalled = TcpStream::connect(address)
         .await
         .expect("a connection that sends nothing");
-    // WHY: shorter than the server's 10-second handshake timeout, so a listener that waited out the stalled client
-    // first would fail here.
-    let status = tokio::time::timeout(Duration::from_secs(5), status_line(address, &ca))
+    let status = status_line(address, &ca)
         .await
-        .expect("the second client is not kept waiting")
-        .expect("the second client's handshake succeeds");
+        .expect("the second client is served in time");
 
     assert_eq!(status, "HTTP/1.1 401 Unauthorized");
+}
+
+#[tokio::test]
+async fn a_failed_handshake_holds_up_no_later_client() {
+    let harness = Harness::new();
+    let dir = TempDir::new().expect("certificate directory");
+    let (ca, stranger) = (authority(), authority());
+    let (cert, key) = write_pair(dir.path(), &ca);
+    let address = serve_tls(
+        &harness,
+        Arc::new(Certificates::load(&cert, &key).expect("the pair loads")),
+    )
+    .await;
+
+    // A failed handshake and the next connection can reach the listener together, so the pair repeats.
+    for _ in 0..10 {
+        let refused = status_line(address, &stranger).await;
+        let served = status_line(address, &ca).await;
+
+        assert!(
+            refused.is_err(),
+            "a client that trusts another authority fails its handshake"
+        );
+        assert!(served.is_ok(), "the next client is served: {served:?}");
+    }
 }
 
 #[test]

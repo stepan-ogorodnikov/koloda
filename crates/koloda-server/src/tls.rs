@@ -144,7 +144,13 @@ impl Listener for TlsListener {
                         tokio::time::sleep(ACCEPT_RETRY).await;
                     }
                 },
-                Some(Ok(Some(handshaken))) = self.handshakes.join_next() => return handshaken,
+                // WHY: a guard rather than a pattern: a failed handshake that does not match a pattern would disable
+                // the branch for the rest of this wait, and a handshake that succeeds next would go unseen.
+                done = self.handshakes.join_next(), if !self.handshakes.is_empty() => {
+                    if let Some(Ok(Some(handshaken))) = done {
+                        return handshaken;
+                    }
+                }
             }
         }
     }
