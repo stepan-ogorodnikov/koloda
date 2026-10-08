@@ -61,6 +61,11 @@ impl Database {
         Ok(result)
     }
 
+    /// The file this database lives in, or `None` for an in-memory one.
+    pub fn file_path(&self) -> Result<Option<PathBuf>, AppError> {
+        self.with_conn(|conn| Ok(conn.path().filter(|path| !path.is_empty()).map(PathBuf::from)))
+    }
+
     pub fn new(conn: Connection) -> Self {
         Self {
             conn: Arc::new(Mutex::new(conn)),

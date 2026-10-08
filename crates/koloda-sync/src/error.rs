@@ -59,6 +59,12 @@ pub enum SyncError {
     CannotJoin(JoinMode),
     /// The server URL is neither `https` nor `http` to a loopback host; nothing was sent.
     InsecureServerUrl(String),
+    /// The volume that holds the database has `free` bytes and a bootstrap needs `needed`; it gave its lease back
+    /// before applying anything (`PROTOCOL.md` §Bootstrap).
+    LowDisk {
+        needed: u64,
+        free: u64,
+    },
 }
 
 impl From<AppError> for SyncError {
@@ -101,6 +107,12 @@ impl fmt::Display for SyncError {
             SyncError::CannotJoin(mode) => write!(f, "this file cannot join that space as {mode:?}"),
             SyncError::InsecureServerUrl(url) => {
                 write!(f, "{url} is not an https URL or an http URL to this machine")
+            }
+            SyncError::LowDisk { needed, free } => {
+                write!(
+                    f,
+                    "a bootstrap needs {needed} bytes free on this device's disk, and {free} are"
+                )
             }
         }
     }

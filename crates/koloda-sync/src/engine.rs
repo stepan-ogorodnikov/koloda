@@ -22,6 +22,7 @@ use uuid::Uuid;
 
 use crate::client::{server_url, Client, Skew};
 use crate::devices::DeviceSummary;
+use crate::disk::FreeSpace;
 use crate::error::SyncError;
 use crate::events::is_past;
 use crate::pairing::{ImportMode, IssuedPairing, Joined, Preview};
@@ -43,6 +44,7 @@ pub(crate) struct Shared {
     pub(crate) db: Database,
     pub(crate) secrets: Arc<dyn SecretStore>,
     pub(crate) transport: Arc<dyn Transport>,
+    pub(crate) disk: Arc<dyn FreeSpace>,
     pub(crate) platform: Platform,
     pub(crate) starter: Starter,
     pub(crate) skew: Skew,
@@ -73,6 +75,7 @@ impl Engine {
         db: Database,
         secrets: Arc<dyn SecretStore>,
         transport: Arc<dyn Transport>,
+        disk: Arc<dyn FreeSpace>,
         platform: Platform,
         starter: Starter,
     ) -> Result<Engine, SyncError> {
@@ -88,6 +91,7 @@ impl Engine {
                 db,
                 secrets,
                 transport,
+                disk,
                 platform,
                 starter,
                 skew: Skew::default(),

@@ -207,7 +207,7 @@ The owner took every recommendation on 2026-10-08.
   Commit: Add a Docker image and a compose example for the server
   Depends on: 3
 
-- [ ] 5. Check free disk before a bootstrap streams
+- [x] 5. Check free disk before a bootstrap streams
   Goal:
   - Before streaming, a bootstrap reads the free space on the volume that holds the database file.
     A join bootstrap needs three times the lease's `bytes` plus 64 MiB.

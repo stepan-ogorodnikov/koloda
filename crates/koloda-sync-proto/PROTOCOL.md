@@ -1214,7 +1214,12 @@ A space serves at most 4 open leases; a fifth gets `429 rate_limited`.
 A space over its quota opens no lease (§Quotas).
 An expired or released lease answers `410 lease_expired`, and only the device that opened a lease may read it.
 Revoke, restore, and absolute expiry cancel a lease.
-The client preflights free disk against the byte estimate.
+
+Before the first page applies, the device checks the free space on the volume that holds its database.
+A join bootstrap needs three times the lease's `bytes` plus 64 MiB.
+A re-bootstrap needs the same, less the file's current size, since it mostly rewrites rows the file holds.
+Short of that, it gives the lease back, applies nothing, and reports both numbers; the next trigger checks again.
+A database in memory, or a platform that cannot tell, skips the check.
 
 `hot` streams referents first: algorithms, algorithm revisions, templates, decks, cards, then the `learning`
 document, each kind in `seq` order.

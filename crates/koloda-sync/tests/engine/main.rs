@@ -9,6 +9,7 @@ mod client_tests;
 mod clock_tests;
 mod cycle_tests;
 mod devices_tests;
+mod disk_tests;
 mod events_tests;
 mod fork_tests;
 mod holds_tests;

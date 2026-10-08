@@ -4,6 +4,7 @@
 //! INVARIANT: every SQL statement stays in `koloda`; the engine only calls its sync functions.
 
 pub mod devices;
+pub mod disk;
 pub mod engine;
 pub mod error;
 pub mod pairing;

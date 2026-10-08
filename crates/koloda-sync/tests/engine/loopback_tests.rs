@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
 use koloda::app::db::Database;
+use koloda_sync::disk::SystemDisk;
 use koloda_sync::engine::Engine;
 use koloda_sync::runner::Event;
 use koloda_sync::transport::HttpTransport;
@@ -27,6 +28,7 @@ fn a_space_is_created_over_http_on_loopback() {
         db.clone(),
         Arc::new(MemorySecrets::default()),
         Arc::new(HttpTransport::new().expect("HTTP client")),
+        Arc::new(SystemDisk),
         Platform::DesktopLinux,
         starter(),
     )
@@ -62,6 +64,7 @@ fn a_grade_reaches_a_device_on_http_through_its_events_socket() {
         db.clone(),
         Arc::new(MemorySecrets::default()),
         Arc::new(HttpTransport::new().expect("HTTP client")),
+        Arc::new(SystemDisk),
         Platform::DesktopLinux,
         starter(),
     )

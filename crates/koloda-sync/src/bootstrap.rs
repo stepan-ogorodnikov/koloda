@@ -23,7 +23,7 @@ use crate::transport::Method;
 const MAX_LEASES: usize = 3;
 
 /// A joiner's union bootstrap, or a re-bootstrap whose barrier `begin_rebase` opened.
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub(crate) enum Bootstrap {
     Join,
     Rebase,
@@ -90,6 +90,11 @@ impl Shared {
             expires_at: snapshot.expires_at,
             server_ms: opened.meta.server_time_ms,
         };
+        // INVARIANT: checked before any page applies, so a file without room gives the lease back as it was.
+        if let Err(error) = self.check_disk(kind, snapshot.bytes).await {
+            self.release(session, &lease).await?;
+            return Err(error);
+        }
 
         let cursor_hot = match self.fill(session, &mut lease, snapshot.head_hot, changed).await {
             // INVARIANT: a held bootstrap starts over from a new lease on the next trigger, so it gives this one back

@@ -53,6 +53,11 @@ pub enum Stop {
     /// pairing code.
     Restored,
     PushRefused(ErrorCode),
+    /// A bootstrap needs `needed` bytes free on the volume that holds the database, and only `free` are.
+    LowDisk {
+        needed: u64,
+        free: u64,
+    },
     Error(String),
 }
 
@@ -65,6 +70,10 @@ impl Stop {
             SyncError::RestoreHeld => Stop::AuthoritativeRestore,
             SyncError::PairAgain => Stop::Restored,
             SyncError::PushRefused { code, .. } => Stop::PushRefused(*code),
+            SyncError::LowDisk { needed, free } => Stop::LowDisk {
+                needed: *needed,
+                free: *free,
+            },
             other => Stop::Error(other.to_string()),
         }
     }

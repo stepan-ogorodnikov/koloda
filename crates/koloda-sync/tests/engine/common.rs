@@ -3,6 +3,7 @@
 
 use std::collections::{HashMap, VecDeque};
 use std::io;
+use std::path::Path;
 use std::pin::Pin;
 use std::sync::atomic::{AtomicBool, AtomicI64, AtomicU64, Ordering};
 use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
@@ -28,6 +29,7 @@ use koloda_server::clock::Clock;
 use koloda_server::restore::{self, RestoreOptions};
 use koloda_server::server::Server;
 use koloda_server::{backup, data_dir, router};
+use koloda_sync::disk::FreeSpace;
 use koloda_sync::engine::Engine;
 use koloda_sync::transport::{
     Method, Opened, Opening, Request, Response, Sending, Transport, TransportError, WebSocketEvents, CBOR, ZSTD,
@@ -145,13 +147,20 @@ impl TestServer {
         )
     }
 
+    /// A blank file on disk at `path`, so the free-disk preflight reads it.
+    pub fn device_at(&self, path: &Path) -> Device {
+        self.device_on(Database::init(path).expect("a database file"), MemorySecrets::default())
+    }
+
     fn device_on(&self, db: Database, secrets: MemorySecrets) -> Device {
         let secrets = Arc::new(secrets);
         let transport = Arc::new(RouterTransport::new(Arc::clone(&self.routes)));
+        let disk = Arc::new(TestDisk(AtomicU64::new(u64::MAX)));
         let engine = Engine::start(
             db.clone(),
             secrets.clone(),
             transport.clone(),
+            disk.clone(),
             Platform::DesktopLinux,
             starter(),
         )
@@ -160,6 +169,7 @@ impl TestServer {
             db,
             secrets,
             transport,
+            disk,
             engine,
         }
     }
@@ -489,7 +499,17 @@ pub struct Device {
     pub db: Database,
     pub secrets: Arc<MemorySecrets>,
     pub transport: Arc<RouterTransport>,
+    pub disk: Arc<TestDisk>,
     pub engine: Engine,
+}
+
+/// The volume a device's database file is on, with the free bytes the test sets; plenty until it does.
+pub struct TestDisk(pub AtomicU64);
+
+impl FreeSpace for TestDisk {
+    fn free_bytes(&self, _path: &Path) -> Option<u64> {
+        Some(self.0.load(Ordering::SeqCst))
+    }
 }
 
 type StateRow = (Vec<u8>, Vec<u8>, String, Option<String>, Option<Vec<u8>>);
