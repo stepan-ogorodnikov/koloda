@@ -16,7 +16,7 @@ use crate::transport::{Delivery, Method, Opened};
 const FIRST_RETRY: Duration = Duration::from_secs(1);
 // WHY: the server pings every 30 seconds, so a socket silent past two pings is gone even if the connection has not
 // noticed, as after the machine slept.
-pub(crate) const SILENT_FOR: Duration = Duration::from_secs(75);
+const SILENT_FOR: Duration = Duration::from_secs(75);
 
 /// How one try at the socket ended.
 enum Listened {
@@ -103,6 +103,7 @@ impl Shared {
             tokio::select! {
                 delivery = events.next() => match delivery {
                     Some(Delivery::Heads(heads)) => {
+                        // WHY: a run state that cannot be read costs at most one more cycle.
                         if self.note_nudge(heads).unwrap_or(true) {
                             self.triggers.fire(false);
                         }
@@ -129,6 +130,7 @@ impl Shared {
         if self.listen_target.receiver_count() == 0 {
             return;
         }
+        // WHY: a sync state that cannot be read keeps the socket closed; the next cycle reads it again.
         let is_quiet = self
             .blocking(|shared| sync_state(&shared.db))
             .await

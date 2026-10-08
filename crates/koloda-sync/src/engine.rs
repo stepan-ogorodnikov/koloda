@@ -370,8 +370,8 @@ impl Shared {
             }
             // WHY: a spent budget is the host's limit, not a fault; the next tick picks up from the cursors.
             Err(SyncError::BudgetSpent) => {}
-            // WHY: a held bootstrap is waiting, not stopped; the status shows the hold beside the bootstrap state, and a
-            // bootstrap paused on a metered network shows the same way.
+            // WHY: a held bootstrap is waiting, not stopped; the status shows the hold beside the bootstrap state.
+            // A bootstrap paused on a metered network shows its pause the same way.
             Err(SyncError::Held(_) | SyncError::Metered { .. }) => run.stop = None,
             Err(error) => run.stop = Some(Stop::of(error)),
         }

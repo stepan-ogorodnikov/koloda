@@ -1,8 +1,8 @@
 //! `koloda-server` command line: `init` creates a data directory, `serve` runs the server on one over TLS or plain
-//! HTTP and collects garbage every hour, `backup` copies a running server, `restore` puts a backup back as a new generation, and
-//! `spaces` and `pair` list spaces and issue a pairing code beside a running `serve`, `quota` sets a space's size
-//! quota, `drop-envelope` removes one damaged envelope from a space's log, and `write-schema` raises a kind's write
-//! schema.
+//! HTTP and collects garbage every hour, `backup` copies a running server, `restore` puts a backup back as a new
+//! generation, and `spaces` and `pair` list spaces and issue a pairing code beside a running `serve`, `quota` sets a
+//! space's size quota, `drop-envelope` removes one damaged envelope from a space's log, and `write-schema` raises a
+//! kind's write schema.
 
 use std::io::{self, Write};
 use std::net::SocketAddr;
