@@ -16,6 +16,7 @@ mod pull_tests;
 mod push_tests;
 mod quota_tests;
 mod restore_tests;
+mod schema_tests;
 mod spaces_tests;
 mod stale_tests;
 mod tombstone_gc_tests;

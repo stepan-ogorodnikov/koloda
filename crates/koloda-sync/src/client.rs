@@ -8,7 +8,8 @@ use std::sync::Mutex;
 
 use koloda::app::error::{error_codes, AppError};
 use koloda::app::utility::get_current_timestamp;
-use koloda_sync_proto::transport::{ErrorCode, Meta, Reply, MAX_BODY_BYTES, MAX_EXPANSION_RATIO};
+use koloda_sync_proto::payload::SCHEMA;
+use koloda_sync_proto::transport::{encode_schemas, ErrorCode, Meta, Reply, MAX_BODY_BYTES, MAX_EXPANSION_RATIO};
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use url::{Host, Url};
@@ -53,7 +54,8 @@ pub(crate) struct Client<'a> {
     pub(crate) transport: &'a dyn Transport,
     pub(crate) skew: &'a Skew,
     pub(crate) spending: Option<&'a Mutex<Option<Spending>>>,
-    /// The session's epoch for device calls; `None` for calls made with a pairing code or the setup token.
+    /// The session's epoch for device calls, which also advertise this app's schemas; `None` for calls made with a
+    /// pairing code or the setup token.
     pub(crate) epoch: Option<Uuid>,
 }
 
@@ -88,6 +90,7 @@ impl Client<'_> {
             url: format!("{}{path}", self.base),
             token: token.map(str::to_string),
             epoch: self.epoch,
+            schemas: self.epoch.map(|_| encode_schemas(|_| SCHEMA)),
             body,
             is_zstd,
         };

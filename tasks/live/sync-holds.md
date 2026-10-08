@@ -314,7 +314,7 @@ The owner took every recommendation on 2026-10-08.
   Commit: Push held writes once the space has room
   Depends on: 4
 
-- [ ] 6. Raise a kind's write schema
+- [x] 6. Raise a kind's write schema
   Goal:
   - `koloda-sync-proto` gains `SCHEMAS_HEADER` (`koloda-schemas`) and its encoding (question 14).
   - The engine sends, on every device call, this app's `SCHEMA` for every registry kind.

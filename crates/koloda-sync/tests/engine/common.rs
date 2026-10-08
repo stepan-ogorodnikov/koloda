@@ -22,11 +22,12 @@ use koloda_sync::engine::Engine;
 use koloda_sync::transport::{Method, Request, Response, Sending, Transport, TransportError, CBOR, ZSTD};
 use koloda_sync_proto::envelope::Envelope;
 use koloda_sync_proto::hlc::{DeviceId, Hlc, Stamp};
-use koloda_sync_proto::payload::{seal, Payload, Seal};
+use koloda_sync_proto::payload::{seal, Payload, Seal, SCHEMA};
 use koloda_sync_proto::registry::Lane;
 use koloda_sync_proto::transport::{
-    ClaimPairing, Empty, Enrollment, ErrorBody, ErrorCode, IssuePairing, Meta, Outcome, Pairing, PairingClaim,
-    Platform, PullPage, Push, PushItem, PushReply, Receipts, Reply, RestoreMode, EPOCH_HEADER, MAX_RECEIPT_RANGE,
+    encode_schemas, ClaimPairing, Empty, Enrollment, ErrorBody, ErrorCode, IssuePairing, Meta, Outcome, Pairing,
+    PairingClaim, Platform, PullPage, Push, PushItem, PushReply, Receipts, Reply, RestoreMode, EPOCH_HEADER,
+    MAX_RECEIPT_RANGE, SCHEMAS_HEADER,
 };
 use rusqlite::backup::Backup;
 use rusqlite::{Connection, OptionalExtension};
@@ -274,6 +275,7 @@ impl TestServer {
             url: format!("{SERVER_URL}{path}"),
             token: token.map(str::to_string),
             epoch: token.and_then(|_| self.current_epoch(path)),
+            schemas: token.map(|_| encode_schemas(|_| SCHEMA)),
             body,
             is_zstd: false,
         })
@@ -416,6 +418,7 @@ impl Space {
             url: format!("{SERVER_URL}{path}"),
             token: Some(self.raw.token.clone()),
             epoch: self.server.current_epoch(&path),
+            schemas: Some(encode_schemas(|_| SCHEMA)),
             body: Some(cbor(&push)),
             is_zstd: false,
         }
@@ -690,6 +693,9 @@ async fn forward(routes: &Routes, request: Request) -> Response {
     }
     if let Some(epoch) = request.epoch {
         builder = builder.header(EPOCH_HEADER, epoch.to_string());
+    }
+    if let Some(schemas) = &request.schemas {
+        builder = builder.header(SCHEMAS_HEADER, schemas);
     }
     if request.body.is_some() {
         builder = builder.header(CONTENT_TYPE, CBOR);

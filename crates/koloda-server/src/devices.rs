@@ -212,22 +212,47 @@ fn device_info(server: &Server, space: Uuid, row: DeviceRow) -> Result<DeviceInf
     })
 }
 
-/// The lowest `hot` cursor among the space's active devices: not revoked, not flagged, and not stale by `last_seen`,
-/// so a device that never calls again stops pinning GC without being marked. `None` when no device is active.
-pub(crate) fn lowest_active_cursor(conn: &Connection, space: Uuid, now: u64) -> Result<Option<u64>, ApiError> {
+/// What an active device contributes to a decision about the whole space.
+pub(crate) struct Active {
+    pub(crate) name: String,
+    pub(crate) cursor_hot: u64,
+    /// The `koloda-schemas` value the device last sent; `None` when it never advertised.
+    pub(crate) schemas: Option<String>,
+}
+
+/// The space's active devices: not revoked, not flagged, and not stale by `last_seen`, so a device that never calls
+/// again stops pinning GC and schema raises without being marked.
+pub(crate) fn active(conn: &Connection, space: Uuid, now: u64) -> Result<Vec<Active>, ApiError> {
     let mut statement = conn.prepare(
-        "SELECT d.cursor_hot, d.last_seen, EXISTS (SELECT 1 FROM devices f WHERE f.forked_from = d.id)
+        "SELECT d.name, d.cursor_hot, d.schemas, d.last_seen,
+                EXISTS (SELECT 1 FROM devices f WHERE f.forked_from = d.id)
          FROM devices d WHERE d.space_id = ?1 AND d.revoked_at IS NULL AND d.rebase_required = 0",
     )?;
     let rows = statement
         .query_map(params![space], |row| {
-            Ok((row.get::<_, u64>(0)?, row.get::<_, u64>(1)?, row.get::<_, bool>(2)?))
+            Ok((
+                Active {
+                    name: row.get(0)?,
+                    cursor_hot: row.get(1)?,
+                    schemas: row.get(2)?,
+                },
+                row.get::<_, u64>(3)?,
+                row.get::<_, bool>(4)?,
+            ))
         })?
         .collect::<Result<Vec<_>, _>>()?;
     Ok(rows
         .into_iter()
         .filter(|(_, last_seen, is_forked_from)| !is_stale(*last_seen, *is_forked_from, now))
-        .map(|(cursor_hot, _, _)| cursor_hot)
+        .map(|(device, _, _)| device)
+        .collect())
+}
+
+/// The lowest `hot` cursor among the space's active devices, or `None` when no device is active.
+pub(crate) fn lowest_active_cursor(conn: &Connection, space: Uuid, now: u64) -> Result<Option<u64>, ApiError> {
+    Ok(active(conn, space, now)?
+        .into_iter()
+        .map(|device| device.cursor_hot)
         .min())
 }
 

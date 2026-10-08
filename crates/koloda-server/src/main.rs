@@ -1,7 +1,8 @@
 //! `koloda-server` command line: `init` creates a data directory, `serve` runs the server on one and collects
 //! garbage every hour, `backup` copies a running server, `restore` puts a backup back as a new generation, and
 //! `spaces` and `pair` list spaces and issue a pairing code beside a running `serve`, `quota` sets a space's size
-//! quota, and `drop-envelope` removes one damaged envelope from a space's log.
+//! quota, `drop-envelope` removes one damaged envelope from a space's log, and `write-schema` raises a kind's write
+//! schema.
 
 use std::io::{self, Write};
 use std::net::SocketAddr;
@@ -18,7 +19,7 @@ use koloda_server::quota::{Storage, DEFAULT_MIN_FREE_DISK, DEFAULT_RESERVE_DISK}
 use koloda_server::restore::{self, RestoreOptions};
 use koloda_server::router;
 use koloda_server::server::Server;
-use koloda_sync_proto::registry::Lane;
+use koloda_sync_proto::registry::{Kind, Lane};
 use koloda_sync_proto::transport::RestoreMode;
 use uuid::Uuid;
 
@@ -89,6 +90,14 @@ enum Command {
         data_dir: PathBuf,
         space: Uuid,
         bytes: String,
+    },
+    /// Raise a kind's write schema by one version, once every active device of the space has advertised it.
+    WriteSchema {
+        #[arg(long)]
+        data_dir: PathBuf,
+        space: Uuid,
+        kind: String,
+        schema: u32,
     },
     /// Serve plain HTTP; put a TLS reverse proxy in front of it.
     Serve {
@@ -196,6 +205,20 @@ fn run(cli: Cli) -> Result<(), String> {
                 Some(bytes) => println!("Space {space} may hold {bytes} bytes."),
                 None => println!("Space {space} has no quota."),
             }
+            Ok(())
+        }
+        Command::WriteSchema {
+            data_dir,
+            space,
+            kind,
+            schema,
+        } => {
+            let kind = Kind::from_wire(&kind).map_err(|error| error.to_string())?;
+            let server = Server::open(&data_dir, Arc::new(SystemClock)).map_err(|error| error.to_string())?;
+            server
+                .raise_write_schema(space, kind, schema)
+                .map_err(|error| error.to_string())?;
+            println!("Space {space} accepts {} at schema {schema}.", kind.as_wire());
             Ok(())
         }
         Command::Serve {

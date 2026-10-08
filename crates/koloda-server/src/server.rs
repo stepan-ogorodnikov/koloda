@@ -6,6 +6,7 @@ use std::sync::{Arc, Mutex, MutexGuard};
 
 use koloda_sync_proto::payload::SCHEMA;
 use koloda_sync_proto::registry::Kind;
+use koloda_sync_proto::transport::decode_schemas;
 use rusqlite::{params, Connection};
 use uuid::Uuid;
 
@@ -114,6 +115,44 @@ impl Server {
             params![schema, kind.as_wire()],
         )?;
         Ok(())
+    }
+
+    /// Raises the space's `write_schema` for `kind` by one version, once every active device has advertised it;
+    /// `koloda-server write-schema` runs it beside `serve` (`PROTOCOL.md` §Schema versions).
+    pub fn raise_write_schema(&self, space: Uuid, kind: Kind, schema: u32) -> Result<(), ApiError> {
+        let db = self.space(space)?.ok_or_else(ApiError::unknown_space)?;
+        let current: u32 = lock(&db.reader)?.query_row(
+            "SELECT schema FROM write_schema WHERE kind = ?1",
+            params![kind.as_wire()],
+            |row| row.get(0),
+        )?;
+        if schema.checked_sub(1) != Some(current) {
+            return Err(ApiError::bad_request(format!(
+                "`{}` is at schema {current}; a raise goes to {} only",
+                kind.as_wire(),
+                u64::from(current) + 1
+            )));
+        }
+        let behind: Vec<String> = devices::active(&*self.server_db()?, space, self.now_ms())?
+            .into_iter()
+            .filter(|device| {
+                let advertised = device
+                    .schemas
+                    .as_deref()
+                    .and_then(|text| decode_schemas(text).ok())
+                    .and_then(|schemas| schemas.get(kind.as_wire()).copied());
+                advertised.unwrap_or(0) < schema
+            })
+            .map(|device| device.name)
+            .collect();
+        if !behind.is_empty() {
+            return Err(ApiError::bad_request(format!(
+                "these active devices have not advertised schema {schema} for `{}`: {}",
+                kind.as_wire(),
+                behind.join(", ")
+            )));
+        }
+        self.set_write_schema(space, kind, schema)
     }
 
     /// Runs one collection pass over every space: tombstones every active device has passed, then attachments no

@@ -2,10 +2,11 @@ use std::collections::BTreeMap;
 use std::num::NonZeroU32;
 
 use ciborium::Value;
+use koloda_sync_proto::registry::Kind;
 use koloda_sync_proto::transport::{
-    AttachmentBody, ClaimPairing, CreateSpace, Cutoff, DependencyAction, DeviceInfo, DeviceMeta, Empty, Enrollment,
-    ErrorBody, ErrorCode, HeldReason, IssuePairing, KnownId, KnownState, LogEntry, Meta, Outcome, Platform, PullPage,
-    Push, PushItem, PushOutcome, Reply, Restore, RestoreMode, Snapshot, SnapshotPage,
+    decode_schemas, encode_schemas, AttachmentBody, ClaimPairing, CreateSpace, Cutoff, DependencyAction, DeviceInfo,
+    DeviceMeta, Empty, Enrollment, ErrorBody, ErrorCode, HeldReason, IssuePairing, KnownId, KnownState, LogEntry, Meta,
+    Outcome, Platform, PullPage, Push, PushItem, PushOutcome, Reply, Restore, RestoreMode, Snapshot, SnapshotPage,
 };
 use serde::Serialize;
 
@@ -387,5 +388,42 @@ fn bodies_keep_their_wire_keys() {
     ];
     for (name, encoded, expected) in cases {
         assert_eq!(keys(&encoded), expected, "{name}");
+    }
+}
+
+#[test]
+fn schemas_travel_as_kind_schema_pairs_in_registry_order() {
+    let encoded = encode_schemas(|kind| if kind == Kind::Decks { 2 } else { 1 });
+    assert_eq!(
+        encoded, "cards=1,reviews=1,decks=2,templates=1,algorithms=1,algorithm_revisions=1,settings.learning=1",
+        "every registry kind, in registry order"
+    );
+    let decoded = decode_schemas(&encoded).expect("an encoded value decodes");
+    assert_eq!(decoded.len(), Kind::ALL.len());
+    assert_eq!(decoded["decks"], 2);
+    assert_eq!(decoded["settings.learning"], 1);
+
+    let newer = decode_schemas("cards=3,future_kind=7").expect("a kind this build lacks is kept as text");
+    assert_eq!(
+        newer,
+        BTreeMap::from([("cards".to_string(), 3), ("future_kind".to_string(), 7)])
+    );
+
+    let malformed = [
+        ("empty", ""),
+        ("no schema", "cards"),
+        ("empty schema", "cards="),
+        ("empty kind", "=1"),
+        ("not a number", "cards=one"),
+        ("negative", "cards=-1"),
+        ("signed", "cards=+1"),
+        ("past u32", "cards=4294967296"),
+        ("two equals", "cards=1=2"),
+        ("trailing comma", "cards=1,"),
+        ("repeated kind", "cards=1,cards=2"),
+        ("spaced", "cards=1, decks=1"),
+    ];
+    for (name, text) in malformed {
+        assert!(decode_schemas(text).is_err(), "{name}: `{text}` is refused");
     }
 }

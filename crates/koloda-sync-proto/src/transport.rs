@@ -9,6 +9,8 @@ use std::num::NonZeroU32;
 
 use serde::{Deserialize, Serialize};
 
+use crate::registry::Kind;
+
 pub const MAX_BODY_BYTES: usize = 16 * 1024 * 1024;
 pub const MAX_EXPANSION_RATIO: usize = 32;
 pub const MAX_NAME_CHARS: usize = 100;
@@ -24,6 +26,51 @@ pub const MAX_ATTACHMENT_BYTES: usize = 5 * 1024 * 1024;
 pub const ATTACHMENT_MIMES: [&str; 5] = ["image/png", "image/jpeg", "image/gif", "image/webp", "image/avif"];
 /// The request header that names the epoch a device last saw, as hyphenated UUID text, on every device-token call.
 pub const EPOCH_HEADER: &str = "koloda-epoch";
+/// The request header that names the highest payload schema this app writes, per kind, on every device-token call:
+/// `kind=schema` pairs joined by `,` (`PROTOCOL.md` §Schema versions).
+pub const SCHEMAS_HEADER: &str = "koloda-schemas";
+
+/// Encodes `schema_of(kind)` for every registry kind, in registry order, as the `koloda-schemas` header value.
+pub fn encode_schemas(schema_of: impl Fn(Kind) -> u32) -> String {
+    Kind::ALL
+        .into_iter()
+        .map(|kind| format!("{}={}", kind.as_wire(), schema_of(kind)))
+        .collect::<Vec<_>>()
+        .join(",")
+}
+
+// WHY: kind names stay plain strings, so a server that predates a kind still accepts an app that writes it.
+pub fn decode_schemas(text: &str) -> Result<BTreeMap<String, u32>, MalformedSchemas> {
+    let malformed = || MalformedSchemas(text.to_string());
+    let mut schemas = BTreeMap::new();
+    for pair in text.split(',') {
+        let (kind, schema) = pair.split_once('=').ok_or_else(malformed)?;
+        let is_kind = !kind.is_empty() && kind.bytes().all(|byte| byte.is_ascii_graphic());
+        if !is_kind || schema.is_empty() || !schema.bytes().all(|byte| byte.is_ascii_digit()) {
+            return Err(malformed());
+        }
+        let schema = schema.parse().map_err(|_overflow| malformed())?;
+        if schemas.insert(kind.to_string(), schema).is_some() {
+            return Err(malformed());
+        }
+    }
+    Ok(schemas)
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct MalformedSchemas(pub String);
+
+impl fmt::Display for MalformedSchemas {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "`{SCHEMAS_HEADER}` is not `kind=schema` pairs joined by `,`: `{}`",
+            self.0
+        )
+    }
+}
+
+impl std::error::Error for MalformedSchemas {}
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]

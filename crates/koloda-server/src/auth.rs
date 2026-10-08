@@ -4,7 +4,7 @@
 
 use axum::http::header::AUTHORIZATION;
 use axum::http::{HeaderMap, StatusCode};
-use koloda_sync_proto::transport::{ErrorCode, EPOCH_HEADER};
+use koloda_sync_proto::transport::{decode_schemas, ErrorCode, EPOCH_HEADER, SCHEMAS_HEADER};
 use rusqlite::{params, Connection, OptionalExtension};
 use sha2::{Digest, Sha256};
 use uuid::Uuid;
@@ -175,12 +175,18 @@ pub(crate) fn require_device(
     // INVARIANT: a device on another epoch does nothing until it has applied the restore. Its cursor may be past the
     // restored head, so a pull would skip the new generation's first writes (PROTOCOL.md, Server restore).
     let epoch = requested_epoch(headers)?;
+    let schemas = requested_schemas(headers)?;
     let space = server.space(device_space)?.ok_or_else(ApiError::unknown_space)?;
     let reader = lock(&space.reader)?;
     let current: Uuid = reader.query_row("SELECT epoch FROM space WHERE id = 1", [], |row| row.get(0))?;
     if epoch != current {
         return Err(ApiError::epoch_changed(restore::combined(&reader, epoch, current)?));
     }
+    drop(reader);
+    server.server_db()?.execute(
+        "UPDATE devices SET schemas = ?1 WHERE id = ?2 AND schemas IS NOT ?1",
+        params![schemas, id],
+    )?;
     Ok(DeviceAuth {
         id,
         space: device_space,
@@ -198,6 +204,17 @@ fn requested_epoch(headers: &HeaderMap) -> Result<Uuid, ApiError> {
         .ok()
         .and_then(|text| Uuid::parse_str(text).ok())
         .ok_or_else(|| ApiError::bad_request(format!("`{EPOCH_HEADER}` is not a UUID")))
+}
+
+/// The `koloda-schemas` value as sent, once it decodes.
+fn requested_schemas(headers: &HeaderMap) -> Result<&str, ApiError> {
+    let text = headers
+        .get(SCHEMAS_HEADER)
+        .ok_or_else(|| ApiError::bad_request(format!("a device call carries `{SCHEMAS_HEADER}`")))?
+        .to_str()
+        .map_err(|_invalid| ApiError::bad_request(format!("`{SCHEMAS_HEADER}` is not text")))?;
+    decode_schemas(text).map_err(|error| ApiError::bad_request(error.to_string()))?;
+    Ok(text)
 }
 
 fn is_setup_token(server: &Server, token: &str) -> Result<bool, ApiError> {

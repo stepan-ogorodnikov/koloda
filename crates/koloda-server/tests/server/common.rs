@@ -20,8 +20,8 @@ use koloda_sync_proto::hlc::{DeviceId, Hlc, Stamp};
 use koloda_sync_proto::payload::SCHEMA;
 use koloda_sync_proto::registry::{Group, Kind, Op};
 use koloda_sync_proto::transport::{
-    ClaimPairing, CreateSpace, DeviceInfo, DeviceMeta, Enrollment, ErrorCode, IssuePairing, Outcome, Pairing,
-    PairingClaim, Platform, PullPage, Push, PushItem, PushReply, Reply, EPOCH_HEADER,
+    encode_schemas, ClaimPairing, CreateSpace, DeviceInfo, DeviceMeta, Enrollment, ErrorCode, IssuePairing, Outcome,
+    Pairing, PairingClaim, Platform, PullPage, Push, PushItem, PushReply, Reply, EPOCH_HEADER, SCHEMAS_HEADER,
 };
 use serde::de::DeserializeOwned;
 use serde::Serialize;
@@ -72,6 +72,7 @@ pub struct Call<'a> {
     accept_zstd: bool,
     peer: Option<SocketAddr>,
     epoch: Epoch,
+    schemas: Schemas,
 }
 
 /// The `koloda-epoch` header a call sends.
@@ -79,6 +80,14 @@ enum Epoch {
     /// The space's current epoch, read from its database, on a call with a token to a space path.
     Current,
     Named(Uuid),
+    Missing,
+}
+
+/// The `koloda-schemas` header a call sends.
+enum Schemas {
+    /// Schema `SCHEMA` for every kind, on a call with a token.
+    Current,
+    Named(String),
     Missing,
 }
 
@@ -143,6 +152,7 @@ impl Harness {
             accept_zstd: false,
             peer: None,
             epoch: Epoch::Current,
+            schemas: Schemas::Current,
         }
     }
 
@@ -248,11 +258,27 @@ impl Call<'_> {
         self
     }
 
+    /// Sends `schemas` as the schemas this device writes, instead of `SCHEMA` for every kind.
+    pub fn schemas(mut self, schemas: &str) -> Self {
+        self.schemas = Schemas::Named(schemas.to_string());
+        self
+    }
+
+    pub fn without_schemas(mut self) -> Self {
+        self.schemas = Schemas::Missing;
+        self
+    }
+
     pub async fn send<T: DeserializeOwned>(self) -> Answer<T> {
         let epoch = match self.epoch {
             Epoch::Named(epoch) => Some(epoch),
             Epoch::Missing => None,
             Epoch::Current => self.token.as_ref().and_then(|_| self.harness.current_epoch(&self.path)),
+        };
+        let schemas = match self.schemas {
+            Schemas::Named(schemas) => Some(schemas),
+            Schemas::Missing => None,
+            Schemas::Current => self.token.as_ref().map(|_| encode_schemas(|_| SCHEMA)),
         };
         let mut request = Request::builder().method(self.method).uri(self.path);
         if let Some(token) = &self.token {
@@ -260,6 +286,9 @@ impl Call<'_> {
         }
         if let Some(epoch) = epoch {
             request = request.header(EPOCH_HEADER, epoch.to_string());
+        }
+        if let Some(schemas) = schemas {
+            request = request.header(SCHEMAS_HEADER, schemas);
         }
         if let Some(encoding) = self.content_encoding {
             request = request.header(CONTENT_ENCODING, encoding);

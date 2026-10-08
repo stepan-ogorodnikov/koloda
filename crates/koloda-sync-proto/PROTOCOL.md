@@ -846,6 +846,12 @@ anything else, so it consumes nothing and records no cursor.
 Its cursor may be past the restored head, so a pull on the old epoch would skip the new generation's first writes.
 The error carries the restore the device must apply (§Server restore).
 
+Every device-token call also carries the header `koloda-schemas`: the highest payload schema the app writes, per kind
+(§Schema versions).
+A device call without it, or with one that does not decode, is `bad_request`.
+The server checks it right after it reads the epoch header, so both are refused before the epoch is compared.
+It stores the value on the device record only once the call passes the epoch check.
+
 Every response body is `{ meta, ok }` or `{ meta, error }`.
 `meta.server_time_ms` is always present.
 `meta.epoch` is present when the path names an existing space, unless the token belongs to another space.
@@ -1619,7 +1625,24 @@ The server stores one `write_schema[kind]`, the only version accepted on push.
 A client that can write a newer version keeps emitting the current one until the operator raises it.
 Older writes come back `held { schema }`; newer ones are `schema_read_only`.
 `schema_read_only` fails the whole push and consumes nothing.
-Raise it after enrolled devices have advertised they can write the new version.
+
+Every device-token call advertises what the app can write in the header `koloda-schemas` (§Endpoints):
+the highest schema per kind, as `kind=schema` pairs joined by `,`, in registry order.
+For example: `cards=1,reviews=1,decks=1,templates=1,algorithms=1,algorithm_revisions=1,settings.learning=1`.
+A value that is empty, repeats a kind, or has a pair that is not `kind=schema` with a decimal schema is `bad_request`.
+A kind the server does not know is kept, so an older server accepts a newer app.
+The server stores the value on the device record when it differs from the stored one.
+A device that has never made a device-token call has advertised nothing.
+
+The operator raises one kind with `koloda-server write-schema --data-dir <dir> <space> <kind> <schema>`.
+It runs beside `serve` and sets `write_schema[kind]` to `<schema>`.
+It refuses a schema that is not exactly one above the current one, so lowering, staying equal, and skipping a version
+are all refused.
+It refuses while any active device of the space has not advertised at least that schema for that kind.
+Active means the same as for tombstone collection (§Pull cursor): not revoked, not `rebase_required`, and not stale.
+A device that never advertised, or whose latest value omits the kind, counts as not having advertised it.
+The refusal names the devices.
+A device left out of the check, and one that returns with an older app, has its writes held (`held { schema }`).
 
 A client that meets an unknown `schema` or `kind` holds that lane at that envelope.
 A `hot` hold also stops `cold`.

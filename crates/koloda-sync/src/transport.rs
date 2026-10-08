@@ -5,7 +5,7 @@ use std::future::Future;
 use std::pin::Pin;
 use std::time::Duration;
 
-use koloda_sync_proto::transport::{EPOCH_HEADER, MAX_BODY_BYTES};
+use koloda_sync_proto::transport::{EPOCH_HEADER, MAX_BODY_BYTES, SCHEMAS_HEADER};
 use reqwest::header::{ACCEPT_ENCODING, CONTENT_ENCODING, CONTENT_TYPE};
 use uuid::Uuid;
 
@@ -33,6 +33,8 @@ pub struct Request {
     pub token: Option<String>,
     /// The epoch the device last saw, sent with every device-token call (`PROTOCOL.md` §Endpoints).
     pub epoch: Option<Uuid>,
+    /// The schemas this app writes, sent with every device-token call (`PROTOCOL.md` §Schema versions).
+    pub schemas: Option<String>,
     pub body: Option<Vec<u8>>,
     pub is_zstd: bool,
 }
@@ -86,6 +88,9 @@ impl Transport for HttpTransport {
             }
             if let Some(epoch) = request.epoch {
                 builder = builder.header(EPOCH_HEADER, epoch.to_string());
+            }
+            if let Some(schemas) = &request.schemas {
+                builder = builder.header(SCHEMAS_HEADER, schemas);
             }
             if let Some(body) = request.body {
                 builder = builder.header(CONTENT_TYPE, CBOR).body(body);

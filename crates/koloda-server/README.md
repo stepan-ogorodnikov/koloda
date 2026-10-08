@@ -47,6 +47,7 @@ koloda-server pair --data-dir ./data <space>
 ```bash
 koloda-server quota --data-dir ./data <space> <bytes|none>
 koloda-server drop-envelope --data-dir ./data <space> <lane> <seq> [--yes]
+koloda-server write-schema --data-dir ./data <space> <kind> <schema>
 ```
 
 `spaces` lists each space with its device count, and `pair` prints a pairing code for a space, as the setup token
@@ -55,6 +56,9 @@ issues one; both run beside `serve`, since access to the data directory is the a
 `drop-envelope` runs beside `serve` too: it removes one damaged envelope that devices hold at, as their status
 reports it, and asks first unless `--yes`.
 A dropped create or tombstone becomes a tombstone the server authors, so every device ends with the entity deleted.
+`write-schema` runs beside `serve` too: it raises a kind's `write_schema` by exactly one version.
+It refuses while an active device has not advertised that version in its `koloda-schemas` header (`PROTOCOL.md`
+§Schema versions).
 `restore` needs `serve` stopped: it takes the directory lock, also on a machine with no server yet.
 It copies the backup into a new generation and checks every copied file against the manifest.
 Each space gets a fresh epoch and a restore point; the old generation's newer points and revocations carry forward.
@@ -73,8 +77,8 @@ The replaced generation stays on disk; delete old generations by hand.
 
 ## Architectural Map
 
-- `src/main.rs` — command line: `init`, `serve`, `backup`, `restore`, `spaces`, `pair`, `quota`, and
-  `drop-envelope`.
+- `src/main.rs` — command line: `init`, `serve`, `backup`, `restore`, `spaces`, `pair`, `quota`, `drop-envelope`, and
+  `write-schema`.
 - `src/lib.rs` — the route table.
 - `src/clock.rs` — server time, injected so tests run on a manual clock.
 - `src/data_dir.rs` — layout, `init`, and the directory lock.
@@ -82,10 +86,10 @@ The replaced generation stays on disk; delete old generations by hand.
 - `src/restore.rs` — a backup staged as a new generation: epochs, restore points, carried-forward revocations, and
   the swap of `CURRENT`; and the restore points after a device's epoch, combined as one.
 - `src/db.rs` — connections and the two migration series under `src/migrations/`.
-- `src/server.rs` — shared state: `server.db`, open space databases, and the clock.
+- `src/server.rs` — shared state: `server.db`, open space databases, the clock, and the operator's write-schema raise.
 - `src/http.rs` — CBOR and zstd bodies, their limits, the reply envelope, and `meta`.
-- `src/auth.rs` — setup and device tokens, marking a device stale when it calls after a long absence, and refusing a
-  device call on another epoch with the restore it must apply.
+- `src/auth.rs` — setup and device tokens, marking a device stale when it calls after a long absence, refusing a
+  device call on another epoch with the restore it must apply, and storing the schemas a device advertises.
 - `src/spaces.rs` — space creation, which enrolls the creator, and the list.
 - `src/pairing.rs` — pairing codes: issue, preview, claim, and the limits on wrong codes.
 - `src/push.rs` — push batches and receipts; one transaction under the space writer lock.
@@ -97,13 +101,13 @@ The replaced generation stays on disk; delete old generations by hand.
 - `src/known.rs` — the join probe: which ids the space holds live or fenced.
 - `src/drop_envelope.rs` — dropping one damaged version from a space's log, and the tombstone the server authors in
   place of a dropped create or tombstone.
-- `src/devices.rs` — device records, revocation and detach, and fork.
+- `src/devices.rs` — device records, revocation and detach, fork, and which devices are active.
 - `src/attachments.rs` — attachment bytes by content address: upload checked against the id, download, the ids
   cards link that no device uploaded, card refs,
   and collection of attachments unlinked for 90 days.
 
 - `tests/server/` — one test binary; `common.rs` drives the router in-process on a manual clock, and sends each
-  device call with its space's current epoch unless a test names another.
+  device call with its space's current epoch and this crate's schemas unless a test names others.
 
 ### Does NOT own (prevent scope creep)
 

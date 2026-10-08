@@ -18,7 +18,8 @@ The server links only this crate, never `koloda`, so nothing here may depend on 
 - `src/hlc.rs` — hybrid logical clock, stamp order, and skew guards; callers pass time in.
 - `src/payload.rs` — schema-1 payloads for every group, and sealing: header from payload, then a round-trip check.
 - `src/registry.rs` — kinds, field groups, classes, lanes, parents, refs, and the header allowlist.
-- `src/transport.rs` — endpoint bodies, the reply envelope, error codes, and the request limits both sides enforce.
+- `src/transport.rs` — endpoint bodies, the reply envelope, error codes, the epoch and schemas headers, and the request
+  limits both sides enforce.
 
 - `tests/protocol/` — one test binary; `samples.rs` holds one sample per group.
 - `fixtures/` — golden sealed bytes of each sample, as hex; `fixtures_tests.rs` says how to regenerate them.
