@@ -98,6 +98,9 @@ sets `cold`'s and clears the joiner's bootstrap flag.
 - `settle_push` applies every outcome in one transaction; `fenced` and `drop_entity` delete through apply's
   `delete_entity` and `drop_entity`, so a settled delete matches an applied one.
 - `push_lost` fixes the batch's cohorts; `push_refused` returns first-time cohorts to `local`.
+- `release_held` puts `quota` and `dependency` holds back at the tail with their bytes and stamps, in `fixed`
+  cohorts, renumbers their registers, origins, or tombstones, and moves pending rows behind them.
+  A held update whose register moved on is dropped.
 - A row in flight when `push_batch` runs means an earlier push never settled; its cohort is fixed.
 - `settle_push` records the highest seq it saw consumed; `standing` compares it with the device record, and
   `has_foreign_receipt` tells a seq this file dropped from one another copy pushed.

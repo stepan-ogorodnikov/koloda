@@ -952,7 +952,8 @@ What the device does for each:
 - `dependency_fenced { repair_pointer }`: it drops the pending write.
   The referent's tombstone, when pulled, sweeps the pointer.
 - `held`: the row moves to `sync_held` with its reason.
-  This app version regenerates nothing, because only a schema bump or quotas can clear a reason.
+  A `quota` hold clears once a device record shows the space has room again (§Quotas); a `schema` hold waits for an
+  app version that writes the newer schema, so this one never regenerates it.
 - `seq_reused`: the push stops, and the file forks to a new device id (§Devices).
 
 `held` reasons:
@@ -966,6 +967,17 @@ What the device does for each:
 
 Regeneration is topological: creates, then pointer groups, then children.
 It changes only `sender_seq`, schema version, digest, and bytes.
+
+A `quota` release, at the start of a round whose device record shows room, moves every `quota` and `dependency` row
+back to the outbox in its original seq order, which capture already made topological.
+A `dependency` row waits behind a held create, so it goes back with the `quota` rows; one whose create stays held
+comes back `held` again.
+Nothing moves while no row is held for `quota`.
+A released row keeps its bytes (its schema has not changed), stamp, and `commit_id`, and takes a new seq in a `fixed`
+cohort marked consumed; the register, origin, or tombstone it lives in takes that seq, as a heal re-push does.
+A held update whose register has moved to another stamp since is dropped instead: it would only come back `stale`.
+Rows still pending move behind the released ones, so a write that names a held create follows it rather than coming
+back `held { dependency }` after the create's release.
 
 Every outcome for a `cards.create` or `cards.content` envelope, `stale` included, carries `missing_attachments`.
 Those are the ids the envelope links that the server holds no bytes for.
@@ -1532,6 +1544,8 @@ Capture adds nothing: every card envelope it records is pushed, and its outcome 
 That covers backfill, Add, and a heal re-push the same way.
 Row sync never waits on an upload; the bytes go up after the push that reported them.
 A device that lacks the bytes for a reported id does not queue it, and an upload whose attachment was swept drops.
+An upload answered `507` waits like a fetch the server cannot serve yet (§Download) and does not fail the cycle; the
+status shows the space is over its quota.
 
 ### Download
 

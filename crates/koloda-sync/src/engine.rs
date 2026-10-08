@@ -409,6 +409,11 @@ impl Shared {
         Ok(())
     }
 
+    pub(crate) fn note_quota(&self, is_over_quota: bool) -> Result<(), SyncError> {
+        self.lock(&self.run_state)?.is_over_quota = is_over_quota;
+        Ok(())
+    }
+
     /// Records the entry a lane stopped at, or clears that lane's hold once a pull of it passes the entry.
     pub(crate) fn note_hold(&self, lane: Lane, hold: Option<Hold>) -> Result<(), SyncError> {
         let mut run = self.lock(&self.run_state)?;

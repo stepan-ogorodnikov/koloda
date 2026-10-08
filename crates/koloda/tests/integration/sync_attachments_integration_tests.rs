@@ -4,7 +4,7 @@ use koloda::domain::cards::DeleteCardData;
 use koloda::repo::attachments::{add_attachment, get_attachment, get_attachment_bytes};
 use koloda::repo::cards::delete_card;
 use koloda::repo::sync::attachments::{
-    defer_fetch, due_transfers, finish_transfer, store_fetched, upload_source, Direction, Transfer,
+    defer_transfer, due_transfers, finish_transfer, store_fetched, upload_source, Direction, Transfer,
 };
 use koloda::repo::sync::outbox::{push_batch, settle_push};
 use koloda_sync_proto::payload::{CardContent, CardCreate, CardScheduling, InitialProductTs, Payload};
@@ -193,6 +193,13 @@ fn fetched_bytes_are_stored_only_when_they_match_their_id() {
     assert_eq!(due_now(&db), Vec::new(), "both fetches are done");
 }
 
+fn fetch_of(id: &str) -> Transfer {
+    Transfer {
+        id: id.to_string(),
+        direction: Direction::Fetch,
+    }
+}
+
 #[test]
 fn a_fetch_the_server_could_not_serve_waits_longer_each_time() {
     let db = test_db();
@@ -203,7 +210,7 @@ fn a_fetch_the_server_could_not_serve_waits_longer_each_time() {
     let mut delays = Vec::new();
     let mut at = 1_000_000;
     for _ in 0..11 {
-        defer_fetch(&db, &missing, at).unwrap();
+        defer_transfer(&db, &fetch_of(&missing), at).unwrap();
         let mut next = at;
         while due_transfers(&db, next, 10).unwrap().is_empty() {
             next += MINUTE_MS;
@@ -224,7 +231,7 @@ fn a_fetch_no_card_needs_any_more_is_dropped() {
     let (unlinked, arrived, first_try) = (png(11), png(12), png(13));
     pull_card(&db, &fixture, CARD, &[&id_of(&unlinked), &id_of(&first_try)]);
     pull_card(&db, &fixture, OTHER_CARD, &[&id_of(&arrived)]);
-    defer_fetch(&db, &id_of(&unlinked), 0).unwrap();
+    defer_transfer(&db, &fetch_of(&id_of(&unlinked)), 0).unwrap();
 
     delete_card(&db, DeleteCardData { id: CARD.to_string() }).unwrap();
     add_attachment(&db, arrived).unwrap();

@@ -27,6 +27,8 @@ pub struct Status {
     pub skew_ms: i64,
     /// The envelope a lane stopped at in the last pull; pushing and the other lane may still run.
     pub hold: Option<Hold>,
+    /// The space was over its quota, or the server low on disk, at the last device record: growing writes wait.
+    pub is_over_quota: bool,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -76,6 +78,7 @@ pub(crate) struct RunState {
     pub(crate) last_success_ms: Option<i64>,
     pub(crate) heads: Option<(u64, u64)>,
     pub(crate) hold: Option<Hold>,
+    pub(crate) is_over_quota: bool,
 }
 
 impl Shared {
@@ -104,6 +107,7 @@ impl Shared {
                 lag_cold: None,
                 skew_ms,
                 hold: None,
+                is_over_quota: false,
             });
         };
         let shown = if state.is_detached {
@@ -137,6 +141,7 @@ impl Shared {
             lag_cold: run.heads.map(|(_, cold)| cold.saturating_sub(state.cursor_cold)),
             skew_ms,
             hold: run.hold,
+            is_over_quota: run.is_over_quota,
         })
     }
 }

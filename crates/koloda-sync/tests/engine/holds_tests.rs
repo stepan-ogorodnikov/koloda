@@ -9,9 +9,9 @@ use koloda_sync::error::SyncError;
 use koloda_sync::status::State;
 use koloda_sync_proto::envelope::Envelope;
 use koloda_sync_proto::registry::Lane;
-use koloda_sync_proto::transport::RestoreMode;
+use koloda_sync_proto::transport::{ErrorCode, RestoreMode};
 
-use crate::common::{Device, Space, SERVER_URL};
+use crate::common::{error_reply, Device, Fault, Space, SERVER_URL};
 use crate::fixtures::seed_settings;
 
 /// The envelope with a payload no app version could have written; its header still reads.
@@ -277,4 +277,68 @@ fn heal_re_pushes_the_server_tombstone_of_a_dropped_create() {
     c.engine.sync_now().expect("a new device pulls the space");
     assert!(!c.has_card(&library.card));
     assert!(c.deck(&library.deck).is_some());
+}
+
+fn create_hlc(device: &Device, kind: &str, id: &str) -> i64 {
+    device.count(&format!(
+        "SELECT hlc FROM sync_origins WHERE kind = '{kind}' AND id = '{id}' AND group_name = 'create'"
+    ))
+}
+
+#[test]
+fn writes_held_over_the_quota_go_out_at_their_stamps_once_the_space_has_room() {
+    let space = Space::new();
+    let a = &space.device;
+    let library = a.library();
+    a.engine.sync_now().expect("A pushes its library");
+    let b = space.server.join(a);
+    b.engine.sync_now().expect("B pulls the library");
+    let server = space.server.server();
+    server.set_quota(space.space_id(), Some(1)).expect("the quota is set");
+    let deck = a.add_deck(&library.algorithm, &library.template, "French");
+    let card = a.add_card(&deck, &library.template, "bonjour");
+
+    a.engine.sync_now().expect("A's writes are held");
+
+    let status = a.engine.status().expect("status reads");
+    assert!(status.is_over_quota);
+    assert!(status.held > 0);
+    decks::delete_deck(
+        &a.db,
+        DeleteDeckData {
+            id: library.deck.clone(),
+        },
+    )
+    .expect("A deletes a deck");
+    a.engine.sync_now().expect("A's delete goes out over the quota");
+    b.engine.sync_now().expect("B pulls");
+    assert!(b.deck(&library.deck).is_none(), "a delete applies over the quota");
+    assert!(b.deck(&deck).is_none(), "the held deck has not reached the space");
+
+    server
+        .set_quota(space.space_id(), None)
+        .expect("the operator lifts the quota");
+    // A push refused after the release stands in for the app stopping between the two.
+    a.transport
+        .fault_on("/push", Fault::Reply(error_reply(507, ErrorCode::InsufficientStorage)));
+    a.engine.sync_now().expect_err("the push is refused");
+    assert_eq!(
+        a.engine.status().expect("status reads").held,
+        0,
+        "the release is stored"
+    );
+    let a = space.server.relaunch(a);
+    a.engine.sync_now().expect("A pushes its held writes");
+    b.engine.sync_now().expect("B pulls them");
+
+    let status = a.engine.status().expect("status reads");
+    assert!(!status.is_over_quota);
+    assert_eq!(status.held, 0);
+    assert!(b.deck(&deck).is_some());
+    assert!(b.has_card(&card));
+    assert_eq!(
+        create_hlc(&b, "cards", &card),
+        create_hlc(&a, "cards", &card),
+        "the card keeps the stamp it was captured with"
+    );
 }

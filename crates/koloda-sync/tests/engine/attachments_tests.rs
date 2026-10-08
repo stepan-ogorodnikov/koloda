@@ -341,3 +341,20 @@ fn a_tick_stops_between_transfers_once_its_bytes_are_spent() {
     assert!(second.is_done);
     assert!(images.iter().all(|id| b.image(id).is_some()));
 }
+
+#[test]
+fn an_upload_the_space_has_no_room_for_waits_without_failing_the_cycle() {
+    let space = Space::new();
+    let a = &space.device;
+    card_with_images(a, 1, 2_000);
+    a.transport.fault_on(
+        ATTACHMENTS,
+        Fault::Reply(error_reply(507, ErrorCode::InsufficientStorage)),
+    );
+
+    a.engine.sync_now().expect("the cycle ends without an error");
+
+    assert_eq!(a.queued(), (1, 0), "the upload stays queued");
+    a.engine.sync_now().expect("A syncs again");
+    assert_eq!(a.transfers(Method::Put), 1, "the upload waits before it tries again");
+}

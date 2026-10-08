@@ -5,7 +5,7 @@ use std::sync::Arc;
 
 use koloda::app::utility::get_current_timestamp;
 use koloda::repo::sync::apply::{apply_page, Hold, Page, PageEntry};
-use koloda::repo::sync::outbox::{has_foreign_receipt, pending_count, standing, Standing};
+use koloda::repo::sync::outbox::{has_foreign_receipt, pending_count, release_held, standing, Standing};
 use koloda::repo::sync::repair::repair_dangling_defaults;
 use koloda::repo::sync::restamp::restamp_local_cohorts;
 use koloda_sync_proto::hlc::SKEW_TOLERANCE_MS;
@@ -86,6 +86,11 @@ impl Shared {
                 pulled?;
             }
 
+            // INVARIANT: held writes go back to the outbox only once the space has room again, and ahead of what is
+            // pending, so a write that names a held create follows it (PROTOCOL.md, Push outcomes).
+            if !heads.is_over_quota {
+                self.blocking(|shared| release_held(&shared.db)).await?;
+            }
             let pushed = self.push(session, changed).await;
             if is_left_behind(&pushed) {
                 cursors = self.rebootstrap(session, changed).await?;
@@ -199,6 +204,7 @@ impl Shared {
             .await?;
         let heads = Heads::from_meta(answer.meta.device.as_ref())?;
         self.note_heads(heads.head_hot, heads.head_cold)?;
+        self.note_quota(heads.is_over_quota)?;
         Ok((answer.ok, heads))
     }
 
@@ -327,6 +333,7 @@ pub(crate) struct Heads {
     head_hot: u64,
     head_cold: u64,
     gc_horizon_hot: u64,
+    is_over_quota: bool,
 }
 
 impl Heads {
@@ -337,6 +344,7 @@ impl Heads {
             head_hot: meta.head_hot,
             head_cold: meta.head_cold,
             gc_horizon_hot: meta.gc_horizon_hot,
+            is_over_quota: meta.is_over_quota,
         })
     }
 }

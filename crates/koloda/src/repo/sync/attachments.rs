@@ -164,13 +164,14 @@ pub fn store_fetched(db: &Database, id: &str, data: &AddAttachmentData) -> Resul
     })
 }
 
-/// Schedules the next attempt of a fetch the server could not serve yet: 1 minute, doubling up to 6 hours.
-pub fn defer_fetch(db: &Database, id: &str, now: i64) -> Result<(), AppError> {
+/// Schedules the next attempt of a transfer the server could not serve or take yet: 1 minute, doubling up to 6 hours.
+pub fn defer_transfer(db: &Database, transfer: &Transfer, now: i64) -> Result<(), AppError> {
     throw_known_error(error_codes::DB_UPDATE, || {
         db.with_transaction(|tx| {
+            let direction = transfer.direction.as_sql();
             let attempts: u32 = tx.query_row(
-                "SELECT attempts FROM sync_attachment_queue WHERE id = ?1 AND direction = 'fetch'",
-                params![id],
+                "SELECT attempts FROM sync_attachment_queue WHERE id = ?1 AND direction = ?2",
+                params![transfer.id, direction],
                 |row| row.get(0),
             )?;
             let delay = 2_i64
@@ -179,10 +180,10 @@ pub fn defer_fetch(db: &Database, id: &str, now: i64) -> Result<(), AppError> {
                 .map_or(LAST_RETRY_MS, |delay| delay.min(LAST_RETRY_MS));
             tx.execute(
                 r#"
-                UPDATE sync_attachment_queue SET attempts = attempts + 1, next_attempt_at = ?2
-                WHERE id = ?1 AND direction = 'fetch'
+                UPDATE sync_attachment_queue SET attempts = attempts + 1, next_attempt_at = ?3
+                WHERE id = ?1 AND direction = ?2
                 "#,
-                params![id, now + delay],
+                params![transfer.id, direction, now + delay],
             )?;
             Ok(())
         })

@@ -5,11 +5,11 @@
 
 use std::collections::HashSet;
 
-use koloda_sync_proto::envelope::Envelope;
+use koloda_sync_proto::envelope::{digest, Envelope, Header};
 use koloda_sync_proto::hlc::DeviceId;
-use koloda_sync_proto::registry::Kind;
+use koloda_sync_proto::registry::{Group, Kind};
 use koloda_sync_proto::transport::{DependencyAction, HeldReason, Outcome, PushOutcome};
-use rusqlite::{params, Connection, OptionalExtension};
+use rusqlite::{params, Connection, OptionalExtension, ToSql};
 
 use super::apply::{delete_entity, drop_entity};
 use super::attachments;
@@ -299,6 +299,172 @@ pub fn held_count(db: &Database) -> Result<usize, AppError> {
             Ok(count)
         })
     })
+}
+
+/// Moves the writes held for `quota`, and every write held for `dependency`, back to the outbox once the space has room;
+/// returns how many went back (`PROTOCOL.md` §Push outcomes). Nothing moves while no write is held for `quota`.
+///
+/// INVARIANT: a released write keeps its bytes, stamp, and `commit_id`, and takes a new seq in a `fixed` cohort; the
+/// register, origin, or tombstone it lives in takes that seq. Writes still pending move behind the released ones, so a
+/// write that names a held create goes out after it.
+pub fn release_held(db: &Database) -> Result<usize, AppError> {
+    throw_known_error(error_codes::DB_UPDATE, || {
+        db.with_transaction(|tx| {
+            let has_quota: bool = tx.query_row(
+                "SELECT EXISTS (SELECT 1 FROM sync_held WHERE reason = 'quota')",
+                [],
+                |row| row.get(0),
+            )?;
+            if !has_quota {
+                return Ok(0);
+            }
+            let (device, mut next): (Vec<u8>, i64) = tx.query_row(
+                "SELECT device_id, next_sender_seq FROM sync_state WHERE id = 1",
+                [],
+                |row| Ok((row.get(0)?, row.get(1)?)),
+            )?;
+            let held: Vec<(i64, Vec<u8>, Vec<u8>)> = tx
+                .prepare(
+                    r#"
+                    SELECT sender_seq, commit_id, envelope FROM sync_held
+                    WHERE reason IN ('quota', 'dependency') ORDER BY sender_seq
+                    "#,
+                )?
+                .query_map([], |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)))?
+                .collect::<Result<_, _>>()?;
+            let pending: Vec<i64> = tx
+                .prepare("SELECT sender_seq FROM sync_outbox WHERE in_flight = 0 ORDER BY sender_seq")?
+                .query_map([], |row| row.get(0))?
+                .collect::<Result<_, _>>()?;
+
+            let mut released = 0;
+            for (held_seq, commit_id, envelope) in held {
+                tx.execute("DELETE FROM sync_held WHERE sender_seq = ?1", params![held_seq])?;
+                let header = Envelope::decode(&envelope).map_err(protocol_error)?.header;
+                let Some(home) = Home::of(tx, &header)? else {
+                    continue;
+                };
+                let sender_seq = next;
+                next += 1;
+                tx.execute(
+                    r#"
+                    INSERT INTO sync_outbox (sender_seq, kind, id, group_name, commit_id, envelope, digest, in_flight)
+                    VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, 0)
+                    "#,
+                    params![
+                        sender_seq,
+                        header.kind.as_wire(),
+                        header.id,
+                        header.group.map(|group| group.as_wire()),
+                        commit_id,
+                        envelope,
+                        digest(&envelope).0.as_slice()
+                    ],
+                )?;
+                home.renumber(tx, &header, &device, sender_seq)?;
+                tx.execute(
+                    r#"
+                    INSERT INTO sync_cohorts (commit_id, state, hlc, stamp_device, has_consumed)
+                    VALUES (?1, 'fixed', ?2, ?3, 1)
+                    ON CONFLICT (commit_id) DO UPDATE SET state = 'fixed', has_consumed = 1
+                    "#,
+                    params![
+                        commit_id,
+                        i64::try_from(header.stamp.hlc.raw()).map_err(protocol_error)?,
+                        header.stamp.device.0.as_slice()
+                    ],
+                )?;
+                released += 1;
+            }
+            if released > 0 {
+                for old_seq in pending {
+                    let new_seq = next;
+                    next += 1;
+                    tx.execute(
+                        "UPDATE sync_outbox SET sender_seq = ?2 WHERE sender_seq = ?1",
+                        params![old_seq, new_seq],
+                    )?;
+                    for table in ["sync_stamps", "sync_origins", "sync_tombstones"] {
+                        tx.execute(
+                            &format!("UPDATE {table} SET sender_seq = ?3 WHERE sender = ?1 AND sender_seq = ?2"),
+                            params![device, old_seq, new_seq],
+                        )?;
+                    }
+                }
+            }
+            tx.execute("UPDATE sync_state SET next_sender_seq = ?1 WHERE id = 1", params![next])?;
+            Ok(released)
+        })
+    })
+}
+
+/// The row a held write lives in: a tombstone, the origin of a create or immutable row, or a group's register.
+enum Home {
+    Tombstone,
+    Origin,
+    Register,
+}
+
+impl Home {
+    /// Where the write lives while that row still holds its stamp. A row with another stamp was overwritten since,
+    /// so the held write would only come back `stale`; a missing one was deleted.
+    fn of(conn: &Connection, header: &Header) -> Result<Option<Home>, AppError> {
+        let (kind, id) = (header.kind.as_wire(), header.id.as_str());
+        let stamp = |sql: &str, params: &[&dyn ToSql]| {
+            conn.query_row(sql, params, |row| {
+                Ok((row.get::<_, i64>(0)?, row.get::<_, Vec<u8>>(1)?))
+            })
+            .optional()
+        };
+        let (home, stored) = match header.group {
+            None => (
+                Home::Tombstone,
+                stamp(
+                    "SELECT hlc, stamp_device FROM sync_tombstones WHERE kind = ?1 AND id = ?2",
+                    &[&kind, &id],
+                )?,
+            ),
+            Some(group @ (Group::Create | Group::Row)) => (
+                Home::Origin,
+                stamp(
+                    "SELECT hlc, stamp_device FROM sync_origins WHERE kind = ?1 AND id = ?2 AND group_name = ?3",
+                    &[&kind, &id, &group.as_wire()],
+                )?,
+            ),
+            Some(group) => (
+                Home::Register,
+                stamp(
+                    "SELECT hlc, stamp_device FROM sync_stamps WHERE kind = ?1 AND id = ?2 AND group_name = ?3",
+                    &[&kind, &id, &group.as_wire()],
+                )?,
+            ),
+        };
+        let is_current = stored.is_some_and(|(hlc, device)| {
+            u64::try_from(hlc).is_ok_and(|hlc| hlc == header.stamp.hlc.raw())
+                && device.as_slice() == header.stamp.device.0.as_slice()
+        });
+        Ok(is_current.then_some(home))
+    }
+
+    fn renumber(&self, conn: &Connection, header: &Header, device: &[u8], sender_seq: i64) -> Result<(), AppError> {
+        let (kind, id) = (header.kind.as_wire(), header.id.as_str());
+        let group = header.group.map(|group| group.as_wire());
+        match self {
+            Home::Tombstone => conn.execute(
+                "UPDATE sync_tombstones SET sender = ?1, sender_seq = ?2 WHERE kind = ?3 AND id = ?4",
+                params![device, sender_seq, kind, id],
+            )?,
+            Home::Origin => conn.execute(
+                "UPDATE sync_origins SET sender = ?1, sender_seq = ?2 WHERE kind = ?3 AND id = ?4 AND group_name = ?5",
+                params![device, sender_seq, kind, id, group],
+            )?,
+            Home::Register => conn.execute(
+                "UPDATE sync_stamps SET sender = ?1, sender_seq = ?2 WHERE kind = ?3 AND id = ?4 AND group_name = ?5",
+                params![device, sender_seq, kind, id, group],
+            )?,
+        };
+        Ok(())
+    }
 }
 
 /// How the file stands against its own device record (`PROTOCOL.md` §Devices).

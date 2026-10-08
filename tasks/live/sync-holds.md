@@ -288,7 +288,7 @@ The owner took every recommendation on 2026-10-08.
   Commit: Hold growing writes above a space quota
   Depends on: none
 
-- [ ] 5. Push held writes once the space has room
+- [x] 5. Push held writes once the space has room
   Goal:
   - `outbox.rs` stores `held { quota }` with reason `quota`.
   - `koloda` gains `release_held(db) -> usize`, which moves rows back to the outbox as question 13 says.

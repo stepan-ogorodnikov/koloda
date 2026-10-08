@@ -7,7 +7,7 @@ use std::sync::Arc;
 use koloda::app::utility::get_current_timestamp;
 use koloda::domain::attachments::AddAttachmentData;
 use koloda::repo::sync::attachments::{
-    defer_fetch, due_transfers, finish_attachment_check, finish_transfer, queue_missing_uploads, store_fetched,
+    defer_transfer, due_transfers, finish_attachment_check, finish_transfer, queue_missing_uploads, store_fetched,
     upload_source, Direction, Transfer,
 };
 use koloda::repo::sync::sync_state;
@@ -129,6 +129,12 @@ impl Shared {
         self.spend_bytes(size)?;
         match sent {
             Ok(_) => self.finish(transfer).await?,
+            // WHY: a space with no room takes no bytes until it has room again; the upload waits, as a fetch the
+            // server cannot serve yet does, and the status shows the space is over its quota.
+            Err(SyncError::Server {
+                code: ErrorCode::InsufficientStorage,
+                ..
+            }) => self.defer(transfer).await?,
             Err(error) if is_refused_for_good(&error) => self.drop_refused(transfer, &error).await?,
             Err(error) => return Err(error),
         }
@@ -152,9 +158,7 @@ impl Shared {
                 code: ErrorCode::NotFound,
                 ..
             }) => {
-                let now = get_current_timestamp()?;
-                self.blocking(move |shared| defer_fetch(&shared.db, &transfer.id, now))
-                    .await?;
+                self.defer(transfer).await?;
                 return Ok(0);
             }
             Err(error) if is_refused_for_good(&error) => {
@@ -187,6 +191,12 @@ impl Shared {
     async fn drop_refused(self: &Arc<Self>, transfer: Transfer, error: &SyncError) -> Result<(), SyncError> {
         self.emit(Event::Error(format!("attachment {} was dropped: {error}", transfer.id)));
         self.finish(transfer).await
+    }
+
+    async fn defer(self: &Arc<Self>, transfer: Transfer) -> Result<(), SyncError> {
+        let now = get_current_timestamp()?;
+        self.blocking(move |shared| defer_transfer(&shared.db, &transfer, now))
+            .await
     }
 
     async fn finish(self: &Arc<Self>, transfer: Transfer) -> Result<(), SyncError> {
