@@ -239,6 +239,10 @@ pub struct PushOutcome {
     pub missing_attachments: Vec<String>,
 }
 
+/// The sender, and the stamp device, of the writes the server authors itself: the tombstone that replaces a dropped
+/// create or tombstone (`PROTOCOL.md` §Corrupt envelopes). No device id is nil.
+pub const SERVER_SENDER: [u8; 16] = [0; 16];
+
 /// Every outcome except `seq_reused` consumes its sequence (`PROTOCOL.md` §Push outcomes).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "status", rename_all = "snake_case")]

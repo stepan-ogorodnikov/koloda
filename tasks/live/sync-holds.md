@@ -230,7 +230,7 @@ The owner took every recommendation on 2026-10-08.
   Commit: Hold a lane at an envelope this app cannot read
   Depends on: 1
 
-- [ ] 3. Drop an envelope from a space's log
+- [x] 3. Drop an envelope from a space's log
   Goal:
   - `koloda-sync-proto` gains `SERVER_SENDER`, the nil UUID (question 9).
   - `koloda_server::drop::prepare(data_dir, space, lane, seq, now_ms)` reads the version at that seq and describes

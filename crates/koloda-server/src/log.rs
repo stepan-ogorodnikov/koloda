@@ -81,12 +81,7 @@ pub(crate) fn delete(tx: &Connection, entry: &Entry<'_>) -> Result<Outcome, ApiE
     if is_fenced(tx, header.kind, &header.id)? {
         return Ok(Outcome::Stale);
     }
-    let cards = match header.kind {
-        Kind::Decks => live_children(tx, "parent", &header.id)?,
-        Kind::Templates => live_children(tx, "template_ref", &header.id)?,
-        Kind::Cards => vec![header.id.clone()],
-        Kind::Algorithms | Kind::Reviews | Kind::AlgorithmRevisions | Kind::SettingsLearning => Vec::new(),
-    };
+    let cards = cascaded_cards(tx, header.kind, &header.id)?;
     for card in &cards {
         let mut statement = tx.prepare(
             "SELECT v.id FROM versions v JOIN heads h ON h.lane = v.lane AND h.seq = v.seq
@@ -107,6 +102,30 @@ pub(crate) fn delete(tx: &Connection, entry: &Entry<'_>) -> Result<Outcome, ApiE
     fence(tx, header.kind, &header.id)?;
     install(tx, entry, None)?;
     Ok(Outcome::Applied)
+}
+
+/// Appends a tombstone for an entity that is already fenced, as the server's replacement for a dropped one.
+pub(crate) fn append_tombstone(tx: &Connection, entry: &Entry<'_>) -> Result<(), ApiError> {
+    fence(tx, entry.header.kind, &entry.header.id)?;
+    install(tx, entry, None)
+}
+
+/// How many live cards, and reviews of them, a tombstone of `(kind, id)` would remove with it.
+pub(crate) fn cascade_counts(conn: &Connection, kind: Kind, id: &str) -> Result<(u64, u64), ApiError> {
+    let cards = cascaded_cards(conn, kind, id)?;
+    let mut reviews = 0;
+    for card in &cards {
+        reviews += conn.query_row(
+            "SELECT count(*) FROM versions v JOIN heads h ON h.lane = v.lane AND h.seq = v.seq
+             WHERE v.kind = 'reviews' AND v.grp = 'row' AND v.parent = ?1",
+            params![card],
+            |row| row.get::<_, u64>(0),
+        )?;
+    }
+    Ok((
+        u64::try_from(cards.len()).map_err(|error| ApiError::internal(error.to_string()))?,
+        reviews,
+    ))
 }
 
 /// Whether this sender had a create held for an entity the envelope names as its id, parent, or hard ref.
@@ -384,9 +403,19 @@ fn fence(tx: &Connection, kind: Kind, id: &str) -> Result<(), ApiError> {
     Ok(())
 }
 
+/// The live cards a tombstone of `(kind, id)` removes with it.
+fn cascaded_cards(conn: &Connection, kind: Kind, id: &str) -> Result<Vec<String>, ApiError> {
+    Ok(match kind {
+        Kind::Decks => live_children(conn, "parent", id)?,
+        Kind::Templates => live_children(conn, "template_ref", id)?,
+        Kind::Cards => vec![id.to_string()],
+        Kind::Algorithms | Kind::Reviews | Kind::AlgorithmRevisions | Kind::SettingsLearning => Vec::new(),
+    })
+}
+
 /// Live cards whose create names `id` in `column` (`parent` for their deck, `template_ref` for their template).
-fn live_children(tx: &Connection, column: &str, id: &str) -> Result<Vec<String>, ApiError> {
-    let mut statement = tx.prepare(&format!(
+fn live_children(conn: &Connection, column: &str, id: &str) -> Result<Vec<String>, ApiError> {
+    let mut statement = conn.prepare(&format!(
         "SELECT v.id FROM versions v JOIN heads h ON h.lane = v.lane AND h.seq = v.seq
          WHERE v.kind = 'cards' AND v.grp = 'create' AND v.{column} = ?1"
     ))?;

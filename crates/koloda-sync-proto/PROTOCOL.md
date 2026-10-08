@@ -1017,13 +1017,23 @@ A bootstrap that meets an entry it cannot read stops and releases its lease, sin
 hold at; the next trigger opens a new lease, and union apply makes the repeat safe.
 
 An app upgrade that reads it releases the hold; that covers decoder bugs.
-For bytes that are really damaged, an operator drop removes the version from the log, and holding clients pass it.
-Dropping a create also tombstones the entity, so every replica converges.
-That tombstone is server-authored.
-Its `stamp_device` is the reserved nil UUID, and its HLC is above both the dropped envelope's and server now.
-Its `sender` is the reserved server id, which no restore roster contains.
+For bytes that are really damaged, `koloda-server drop-envelope <space> <lane> <seq>` removes the version from the
+log, and holding clients pass it.
+The lane is part of the address, since each lane numbers its own seqs; the hold reports both.
+The version goes even when a bootstrap lease pins it, so no device reads it again.
+Dropping a create also tombstones the entity, with every descendant a pushed delete would remove, so every replica
+converges.
+Dropping a tombstone writes it again at a new seq, so a device held at the old one still applies the delete; the fence
+stays.
+Those tombstones are server-authored.
+Their `stamp_device` and `sender` are the nil UUID, `SERVER_SENDER`, which no device id is.
+The HLC is above both the dropped envelope's and server now, and the payload names no `successor`.
+The server sender takes seqs of its own, recorded like a device's, so a restore's cutoffs cover the server tombstones
+its backup holds; heal re-pushes the others like any write a device holds (§Server restore).
 Dropping an update or review leaves devices with what they had.
 A fresh bootstrap then sees that group as of the entity's create until the group is written again.
+A dropped `cards.content` head links the card's attachments through its create again.
+The command prints what it drops, with the cards and reviews a dropped create removes, and asks first.
 Storage damage on the server is better answered by restore (§Recovery).
 
 An unknown `schema` or `kind` holds the same way and reports `update_required` (§Schema versions).

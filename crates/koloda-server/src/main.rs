@@ -1,6 +1,7 @@
 //! `koloda-server` command line: `init` creates a data directory, `serve` runs the server on one and collects
 //! garbage every hour, `backup` copies a running server, `restore` puts a backup back as a new generation, and
-//! `spaces` and `pair` list spaces and issue a pairing code beside a running `serve`.
+//! `spaces` and `pair` list spaces and issue a pairing code beside a running `serve`, and `drop-envelope` removes one
+//! damaged envelope from a space's log.
 
 use std::io::{self, Write};
 use std::net::SocketAddr;
@@ -16,6 +17,7 @@ use koloda_server::data_dir::{self, DataDirLock};
 use koloda_server::restore::{self, RestoreOptions};
 use koloda_server::router;
 use koloda_server::server::Server;
+use koloda_sync_proto::registry::Lane;
 use koloda_sync_proto::transport::RestoreMode;
 use uuid::Uuid;
 
@@ -67,6 +69,18 @@ enum Command {
         #[arg(long)]
         data_dir: PathBuf,
         space: Uuid,
+    },
+    /// Remove one damaged envelope from a space's log, so devices held at it pass it.
+    DropEnvelope {
+        #[arg(long)]
+        data_dir: PathBuf,
+        space: Uuid,
+        /// `hot` or `cold`, as the device's hold reports it.
+        lane: String,
+        seq: u64,
+        /// Drop without asking.
+        #[arg(long)]
+        yes: bool,
     },
     /// Serve plain HTTP; put a TLS reverse proxy in front of it.
     Serve {
@@ -143,8 +157,56 @@ fn run(cli: Cli) -> Result<(), String> {
             println!("It works once, for {minutes} minutes.");
             Ok(())
         }
+        Command::DropEnvelope {
+            data_dir,
+            space,
+            lane,
+            seq,
+            yes,
+        } => {
+            let lane = Lane::from_wire(&lane).map_err(|error| error.to_string())?;
+            drop_envelope(&data_dir, space, lane, seq, yes)
+        }
         Command::Serve { data_dir, listen } => serve(data_dir, listen),
     }
+}
+
+fn drop_envelope(data_dir: &Path, space: Uuid, lane: Lane, seq: u64, is_confirmed: bool) -> Result<(), String> {
+    let server = Server::open(data_dir, Arc::new(SystemClock)).map_err(|error| error.to_string())?;
+    let dropping = server
+        .describe_drop(space, lane, seq)
+        .map_err(|error| error.to_string())?;
+    let group = if dropping.group.is_empty() {
+        "tombstone"
+    } else {
+        dropping.group.as_str()
+    };
+    println!(
+        "{} seq {}: {} {} ({group})",
+        lane.as_wire(),
+        seq,
+        dropping.kind,
+        dropping.id
+    );
+    if dropping.group == "create" {
+        println!(
+            "Every device deletes it, with {} card(s) and {} review(s).",
+            dropping.cards, dropping.reviews
+        );
+    } else if dropping.group.is_empty() {
+        println!("The server writes the delete again in its place.");
+    } else {
+        println!("Devices keep what they hold; a new device sees this group as the entity was created.");
+    }
+    if !is_confirmed && !confirm("Drop this envelope? [y/N] ")? {
+        println!("Nothing was dropped.");
+        return Ok(());
+    }
+    server
+        .drop_envelope(space, &dropping)
+        .map_err(|error| error.to_string())?;
+    println!("Dropped.");
+    Ok(())
 }
 
 fn restore(data_dir: &Path, backup: &Path, options: RestoreOptions, is_confirmed: bool) -> Result<(), String> {

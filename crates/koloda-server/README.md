@@ -42,8 +42,15 @@ koloda-server spaces --data-dir ./data
 koloda-server pair --data-dir ./data <space>
 ```
 
+```bash
+koloda-server drop-envelope --data-dir ./data <space> <lane> <seq> [--yes]
+```
+
 `spaces` lists each space with its device count, and `pair` prints a pairing code for a space, as the setup token
 issues one; both run beside `serve`, since access to the data directory is the authority.
+`drop-envelope` runs beside `serve` too: it removes one damaged envelope that devices hold at, as their status
+reports it, and asks first unless `--yes`.
+A dropped create or tombstone becomes a tombstone the server authors, so every device ends with the entity deleted.
 `restore` needs `serve` stopped: it takes the directory lock, also on a machine with no server yet.
 It copies the backup into a new generation and checks every copied file against the manifest.
 Each space gets a fresh epoch and a restore point; the old generation's newer points and revocations carry forward.
@@ -62,7 +69,7 @@ The replaced generation stays on disk; delete old generations by hand.
 
 ## Architectural Map
 
-- `src/main.rs` — command line: `init`, `serve`, `backup`, `restore`, `spaces`, and `pair`.
+- `src/main.rs` — command line: `init`, `serve`, `backup`, `restore`, `spaces`, `pair`, and `drop-envelope`.
 - `src/lib.rs` — the route table.
 - `src/clock.rs` — server time, injected so tests run on a manual clock.
 - `src/data_dir.rs` — layout, `init`, and the directory lock.
@@ -82,6 +89,8 @@ The replaced generation stays on disk; delete old generations by hand.
 - `src/pull.rs` — pull pages per lane, cut by entry count and bytes, and the cursors they record.
 - `src/bootstrap.rs` — snapshot leases: open, stream pages, heartbeat, release, and expiry.
 - `src/known.rs` — the join probe: which ids the space holds live or fenced.
+- `src/drop_envelope.rs` — dropping one damaged version from a space's log, and the tombstone the server authors in
+  place of a dropped create or tombstone.
 - `src/devices.rs` — device records, revocation and detach, and fork.
 - `src/attachments.rs` — attachment bytes by content address: upload checked against the id, download, the ids
   cards link that no device uploaded, card refs,

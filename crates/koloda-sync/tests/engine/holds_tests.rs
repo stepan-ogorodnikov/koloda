@@ -9,6 +9,7 @@ use koloda_sync::error::SyncError;
 use koloda_sync::status::State;
 use koloda_sync_proto::envelope::Envelope;
 use koloda_sync_proto::registry::Lane;
+use koloda_sync_proto::transport::RestoreMode;
 
 use crate::common::{Device, Space, SERVER_URL};
 use crate::fixtures::seed_settings;
@@ -194,4 +195,86 @@ fn a_bootstrap_that_meets_a_corrupt_entry_stops_and_starts_over_once_it_reads() 
     assert_eq!(status.state, State::Idle);
     assert_eq!(status.hold, None);
     assert!(b.has_card(&library.card));
+}
+
+fn drop_version(space: &Space, at: (Lane, u64)) {
+    let server = space.server.server();
+    let dropping = server
+        .describe_drop(space.space_id(), at.0, at.1)
+        .expect("the version is described");
+    server
+        .drop_envelope(space.space_id(), &dropping)
+        .expect("the version is dropped");
+}
+
+#[test]
+fn a_dropped_envelope_releases_the_hold_and_a_dropped_create_ends_deleted_everywhere() {
+    // Which write is damaged, then dropped; and what each device ends with: the added card on A and B, B's deck
+    // title, and B's reviews of the first card.
+    let cases = [
+        ("card create", "cards", "create", (false, false), "Renamed on A", 1),
+        ("deck title", "decks", "title", (true, true), "Spanish", 1),
+        ("review", "reviews", "row", (true, true), "Renamed on A", 0),
+    ];
+    for (case, kind, group, has_added, title, reviews) in cases {
+        let space = Space::new();
+        let a = &space.device;
+        let library = a.library();
+        a.engine.sync_now().expect("A pushes its library");
+        let b = space.server.join(a);
+        b.engine.sync_now().expect("B pulls the library");
+        let added = a.add_card(&library.deck, &library.template, "nuevo");
+        a.update_deck(&library.deck, "Renamed on A", &library.algorithm, &library.template);
+        a.grade(&library.card);
+        a.engine.sync_now().expect("A pushes its writes");
+        let id = match kind {
+            "cards" => added.clone(),
+            "decks" => library.deck.clone(),
+            _ => a.text("SELECT id FROM reviews"),
+        };
+        let at = space.server.version(space.space_id(), kind, &id, group);
+        space.server.damage(space.space_id(), at, unreadable_payload);
+        b.engine.sync_now().expect("B holds");
+        assert!(hold(&b).is_some(), "{case}");
+
+        drop_version(&space, at);
+        b.engine.sync_now().expect("B passes the dropped seq");
+        a.engine.sync_now().expect("A pulls what the drop wrote");
+
+        assert_eq!(hold(&b), None, "{case}");
+        assert_eq!((a.has_card(&added), b.has_card(&added)), has_added, "{case}");
+        assert_eq!(
+            b.deck(&library.deck).map(|deck| deck.title).as_deref(),
+            Some(title),
+            "{case}"
+        );
+        assert_eq!(b.reviews(&library.card), reviews, "{case}");
+    }
+}
+
+#[test]
+fn heal_re_pushes_the_server_tombstone_of_a_dropped_create() {
+    let space = Space::new();
+    let a = &space.device;
+    let library = a.library();
+    a.engine.sync_now().expect("A pushes its library");
+    let b = space.server.join(a);
+    b.engine.sync_now().expect("B pulls the library");
+    let backup = space.server.backup();
+    let at = space.server.version(space.space_id(), "cards", &library.card, "create");
+    space.server.damage(space.space_id(), at, unreadable_payload);
+    drop_version(&space, at);
+    a.engine.sync_now().expect("A applies the server's tombstone");
+    assert!(!a.has_card(&library.card));
+
+    // B was offline across the drop; the backup still holds the card's create, intact.
+    space.server.restore(&backup, RestoreMode::Heal);
+    a.engine.sync_now().expect("A heals, re-pushing the tombstone");
+    b.engine.sync_now().expect("B heals and pulls the tombstone");
+
+    assert!(!b.has_card(&library.card), "the card stays deleted");
+    let c = space.server.join(a);
+    c.engine.sync_now().expect("a new device pulls the space");
+    assert!(!c.has_card(&library.card));
+    assert!(c.deck(&library.deck).is_some());
 }
