@@ -284,6 +284,20 @@ pub fn pending_count(db: &Database) -> Result<usize, AppError> {
     })
 }
 
+/// The bytes of every envelope in the outbox, which a push of them all would send.
+pub fn pending_bytes(db: &Database) -> Result<u64, AppError> {
+    throw_known_error(error_codes::DB_GET, || {
+        db.with_conn(|conn| {
+            let bytes = conn.query_row(
+                "SELECT COALESCE(SUM(length(envelope)), 0) FROM sync_outbox",
+                [],
+                |row| row.get(0),
+            )?;
+            Ok(bytes)
+        })
+    })
+}
+
 /// The lowest seq still in the outbox, where receipts for a switch to a new device id start.
 pub fn lowest_pending_seq(db: &Database) -> Result<Option<u64>, AppError> {
     throw_known_error(error_codes::DB_GET, || {

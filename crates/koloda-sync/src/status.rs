@@ -10,6 +10,7 @@ use koloda_sync_proto::transport::ErrorCode;
 
 use crate::engine::Shared;
 use crate::error::SyncError;
+use crate::metered::MeteredPause;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Status {
@@ -29,6 +30,8 @@ pub struct Status {
     pub hold: Option<Hold>,
     /// The space was over its quota, or the server low on disk, at the last device record: growing writes wait.
     pub is_over_quota: bool,
+    /// Bulk transfers wait on a metered network; incremental sync goes on.
+    pub metered: Option<MeteredPause>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -106,6 +109,7 @@ impl Shared {
             .await?;
         let run = self.run_state()?;
         let skew_ms = self.skew.get();
+        let metered = self.metered_pause()?;
         let Some(state) = state else {
             return Ok(Status {
                 state: State::NotEnrolled,
@@ -119,6 +123,7 @@ impl Shared {
                 skew_ms,
                 hold: None,
                 is_over_quota: false,
+                metered,
             });
         };
         let shown = if state.is_detached {
@@ -153,6 +158,7 @@ impl Shared {
             skew_ms,
             hold: run.hold,
             is_over_quota: run.is_over_quota,
+            metered,
         })
     }
 }

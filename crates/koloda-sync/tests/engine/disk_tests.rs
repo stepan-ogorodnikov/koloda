@@ -3,8 +3,6 @@ use std::sync::atomic::Ordering;
 
 use koloda_sync::error::SyncError;
 use koloda_sync::status::{State, Stop};
-use koloda_sync::transport::Method;
-use koloda_sync_proto::transport::{Empty, Snapshot};
 use tempfile::TempDir;
 use uuid::Uuid;
 
@@ -24,18 +22,6 @@ fn joiner_on_disk(space: &Space, dir: &TempDir) -> Device {
     phone
 }
 
-/// The bytes a bootstrap of the space carries, as a lease the raw client opens and gives back reports them.
-fn snapshot_bytes(space: &Space) -> u64 {
-    let path = format!("/v1/spaces/{}/bootstrap", space.space_id());
-    let (status, reply) = space.server.call::<Snapshot>(Method::Post, &path, &space.raw.token);
-    assert_eq!(status, 200, "the raw client opens a lease: {:?}", reply.error);
-    let snapshot = reply.ok.expect("a lease");
-    let release = format!("{path}/{}", Uuid::from_bytes(snapshot.snapshot_id));
-    let (status, _) = space.server.call::<Empty>(Method::Delete, &release, &space.raw.token);
-    assert_eq!(status, 200, "the raw client gives its lease back");
-    snapshot.bytes
-}
-
 /// The database file and its write-ahead log, which together hold what a bootstrap writes.
 fn on_disk(path: &Path) -> u64 {
     let size = |path: &Path| std::fs::metadata(path).map_or(0, |file| file.len());
@@ -49,7 +35,7 @@ fn a_bootstrap_without_room_gives_its_lease_back_and_runs_once_there_is_room() {
     space.device.engine.sync_now().expect("the library is pushed");
     let dir = TempDir::new().expect("a directory for the file");
     let phone = joiner_on_disk(&space, &dir);
-    let needed = snapshot_bytes(&space) * 3 + MARGIN_BYTES;
+    let needed = space.snapshot_bytes() * 3 + MARGIN_BYTES;
     phone.disk.0.store(needed - 1, Ordering::SeqCst);
 
     let refused = phone.engine.sync_now();
@@ -100,7 +86,7 @@ fn a_bootstrap_grows_the_file_by_less_than_three_times_its_bytes() {
     let dir = TempDir::new().expect("a directory for the file");
     let phone = joiner_on_disk(&space, &dir);
     let path = dir.path().join("koloda.db");
-    let bytes = snapshot_bytes(&space);
+    let bytes = space.snapshot_bytes();
     let before = on_disk(&path);
 
     phone.engine.sync_now().expect("the bootstrap runs");

@@ -1257,11 +1257,26 @@ A lease that lapses once its pages are applied is released all the same; it does
 
 ### Metered networks
 
-Incremental sync of a small outbox and pulls near head always run.
-Bulk transfers pause on `metered` or `low_data` networks above a host threshold (20 MB by default).
-Bulk means bootstrap, re-bootstrap, backfill, a large import, the `cold` tail, and attachment transfers outside the
-device's download policy.
-The engine reports the pause with the estimate, and the host can continue on demand.
+The host reports whether the device is on a metered network, a low-data mode counting as one.
+It also sets the limit for bulk transfers, 20 MB by default.
+A `hot` pull, and a push while the outbox holds less than the limit, always run.
+
+Two bulk transfers are weighed before they start, by their envelope bytes before compression:
+
+- a bootstrap or re-bootstrap, by its lease's `bytes`;
+  above the limit it gives the lease back and waits, and later cycles wait without opening another lease;
+- a push while the outbox holds more than the limit, as after a large local import, by the outbox's bytes;
+  pulls go on meanwhile.
+
+The rest are counted as they run: backfill and heal batches by the envelope bytes they add, and incremental `cold`
+pulls and image transfers by the bytes on the wire.
+They share one allowance of the limit per metered network and stop once it is spent.
+A device that only grades and edits never spends it.
+The engine reports the pause, with the estimate when one is known.
+The host can allow bulk transfers on the network, which lifts every pause until it reports another network.
+Another network lifts them too, and starts a new allowance.
+A device policy for image downloads (always, on unmetered networks, or on demand) may later decide which transfers
+are bulk; until then every image transfer is.
 
 ## Recovery
 

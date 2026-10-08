@@ -228,7 +228,7 @@ The owner took every recommendation on 2026-10-08.
   Commit: Check free disk before a bootstrap streams
   Depends on: none
 
-- [ ] 6. Pause bulk sync on metered networks
+- [x] 6. Pause bulk sync on metered networks
   Goal: per question 6.
   - `Engine::set_network`, the limit, `Engine::allow_metered`, and `Status.metered`.
   - `PROTOCOL.md` §Metered networks states which transfers are bulk and how each is measured; the engine README

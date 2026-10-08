@@ -13,6 +13,7 @@ use koloda::repo::sync::attachments::{
 use koloda::repo::sync::sync_state;
 use koloda_sync_proto::transport::{AttachmentBody, Empty, ErrorCode, MissingAttachments, MAX_MISSING_IDS};
 
+use crate::client::local_error;
 use crate::engine::{Session, Shared};
 use crate::error::SyncError;
 use crate::runner::Event;
@@ -95,11 +96,19 @@ impl Shared {
                 if moved >= CYCLE_BYTES || self.triggers.generation() != generation {
                     return Ok(true);
                 }
+                // INVARIANT: transfers are bulk on a metered network; once its allowance is spent they wait for the
+                // host, not for the next cycle, so none is reported as still due (PROTOCOL.md, Metered networks).
+                if !self.has_bulk_room()? {
+                    self.hold_bulk()?;
+                    return Ok(false);
+                }
                 self.check_time()?;
-                moved += match transfer.direction {
+                let bytes = match transfer.direction {
                     Direction::Upload => self.upload(session, transfer).await?,
                     Direction::Fetch => self.fetch(session, transfer, fetched).await?,
                 };
+                self.spend_bulk(u64::try_from(bytes).map_err(local_error)?)?;
+                moved += bytes;
             }
         }
     }

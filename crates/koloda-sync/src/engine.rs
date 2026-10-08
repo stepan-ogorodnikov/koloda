@@ -25,6 +25,7 @@ use crate::devices::DeviceSummary;
 use crate::disk::FreeSpace;
 use crate::error::SyncError;
 use crate::events::is_past;
+use crate::metered::{Metered, Network};
 use crate::pairing::{ImportMode, IssuedPairing, Joined, Preview};
 use crate::runner::{Budget, Event, EventSink, Spending, Ticked, Timer, Triggers};
 use crate::status::{RunState, Status, Stop};
@@ -57,6 +58,7 @@ pub(crate) struct Shared {
     /// The session the events socket listens with; `None` while the file must send nothing.
     pub(crate) listen_target: watch::Sender<Option<Session>>,
     pub(crate) is_listening: AtomicBool,
+    pub(crate) metered: Mutex<Metered>,
 }
 
 /// What every call to the enrolled space needs, read once per cycle.
@@ -102,6 +104,7 @@ impl Engine {
                 spending: Mutex::new(None),
                 listen_target: watch::Sender::new(None),
                 is_listening: AtomicBool::new(false),
+                metered: Mutex::new(Metered::default()),
             }),
         })
     }
@@ -124,6 +127,16 @@ impl Engine {
     /// The app came to the foreground or the network came back; the runner syncs now.
     pub fn nudge(&self) {
         self.shared.triggers.fire(false);
+    }
+
+    /// The network the device is on. Another network than the last lifts every metered pause, and the runner syncs.
+    pub fn set_network(&self, network: Network) -> Result<(), SyncError> {
+        self.shared.set_network(network)
+    }
+
+    /// Lets bulk transfers run on this metered network, until the host reports another; the runner syncs now.
+    pub fn allow_metered(&self) -> Result<(), SyncError> {
+        self.shared.allow_metered()
     }
 
     /// Creates a space on the server and enrolls this file as its creator.
@@ -320,7 +333,7 @@ impl Shared {
             self.emit(Event::Changed { kinds: changed.clone() });
         }
         if let Err(error) = &result {
-            if !matches!(error, SyncError::BudgetSpent) {
+            if !matches!(error, SyncError::BudgetSpent | SyncError::Metered { .. }) {
                 self.emit(Event::Error(error.to_string()));
             }
         }
@@ -357,8 +370,9 @@ impl Shared {
             }
             // WHY: a spent budget is the host's limit, not a fault; the next tick picks up from the cursors.
             Err(SyncError::BudgetSpent) => {}
-            // WHY: a held bootstrap is waiting, not stopped; the status shows the hold beside the bootstrap state.
-            Err(SyncError::Held(_)) => run.stop = None,
+            // WHY: a held bootstrap is waiting, not stopped; the status shows the hold beside the bootstrap state, and a
+            // bootstrap paused on a metered network shows the same way.
+            Err(SyncError::Held(_) | SyncError::Metered { .. }) => run.stop = None,
             Err(error) => run.stop = Some(Stop::of(error)),
         }
         result

@@ -91,7 +91,14 @@ impl Shared {
             if !heads.is_over_quota {
                 self.blocking(|shared| release_held(&shared.db)).await?;
             }
-            let pushed = self.push(session, changed).await;
+            // INVARIANT: an outbox past the limit on a metered network waits whole, since a push never skips ahead
+            // of a seq; pulls go on (PROTOCOL.md, Metered networks).
+            let is_push_held = self.is_push_held().await?;
+            let pushed = if is_push_held {
+                Ok(())
+            } else {
+                self.push(session, changed).await
+            };
             if is_left_behind(&pushed) {
                 cursors = self.rebootstrap(session, changed).await?;
                 continue;
@@ -122,29 +129,37 @@ impl Shared {
             let Pulled {
                 heads: mut latest,
                 hold: hot_hold,
+                ..
             } = pulled?;
             let mut is_cold_held = false;
             if hot_hold.is_none() && cursors.1 < heads.head_cold {
-                let cold = self
-                    .pull(
-                        session,
-                        Lane::Cold,
-                        Some(heads.head_cold),
-                        &mut cursors.1,
-                        None,
-                        changed,
-                    )
-                    .await?;
-                latest = cold.heads;
-                is_cold_held = cold.hold.is_some();
+                if self.has_bulk_room()? {
+                    let cold = self
+                        .pull(
+                            session,
+                            Lane::Cold,
+                            Some(heads.head_cold),
+                            &mut cursors.1,
+                            None,
+                            changed,
+                        )
+                        .await?;
+                    latest = cold.heads;
+                    is_cold_held = cold.hold.is_some() || cold.is_bulk_held;
+                } else {
+                    self.hold_bulk()?;
+                    is_cold_held = true;
+                }
             }
 
-            // WHY: a held lane goes no further until an upgrade or a drop, so it counts as at head for this call;
-            // otherwise every round would pull it again.
+            // WHY: a held lane goes no further until an upgrade or a drop, or until a metered network allows it, so
+            // it counts as at head for this call; otherwise every round would pull it again. A held push likewise
+            // leaves its outbox waiting.
             let is_hot_held = hot_hold.is_some();
             let is_caught_up = (is_hot_held || cursors.0 >= latest.head_hot)
                 && (is_hot_held || is_cold_held || cursors.1 >= latest.head_cold);
-            if !is_caught_up || self.blocking(|shared| pending_count(&shared.db)).await? > 0 {
+            let is_pushed = is_push_held || self.blocking(|shared| pending_count(&shared.db)).await? == 0;
+            if !is_caught_up || !is_pushed {
                 continue;
             }
             // WHY: before catch-up, a referent a default names may still be on its way; after it, a missing one
@@ -156,7 +171,7 @@ impl Shared {
                 .blocking(|shared| repair_dangling_defaults(&shared.db, &shared.starter))
                 .await?;
             merge(changed, repaired);
-            if self.blocking(|shared| pending_count(&shared.db)).await? == 0 {
+            if is_push_held || self.blocking(|shared| pending_count(&shared.db)).await? == 0 {
                 return Ok(());
             }
         }
@@ -270,12 +285,23 @@ impl Shared {
                 Some(hold) => u64::try_from(hold.seq - 1).map_err(local_error)?,
                 None => answer.ok.scanned_through,
             };
-            if applied.hold.is_some() || !answer.ok.has_more {
+            // INVARIANT: an incremental `cold` pull is bulk on a metered network; a bootstrap's was weighed whole
+            // before it began (PROTOCOL.md, Metered networks).
+            let is_bulk = lane == Lane::Cold && lease.is_none();
+            if is_bulk {
+                self.spend_bulk(u64::try_from(answer.bytes).map_err(local_error)?)?;
+            }
+            let is_bulk_held = is_bulk && answer.ok.has_more && !self.has_bulk_room()?;
+            if is_bulk_held {
+                self.hold_bulk()?;
+            }
+            if applied.hold.is_some() || !answer.ok.has_more || is_bulk_held {
                 let heads = Heads::from_meta(answer.meta.device.as_ref())?;
                 self.note_heads(heads.head_hot, heads.head_cold)?;
                 return Ok(Pulled {
                     heads,
                     hold: applied.hold,
+                    is_bulk_held,
                 });
             }
         }
@@ -326,6 +352,8 @@ fn is_left_behind<T>(result: &Result<T, SyncError>) -> bool {
 pub(crate) struct Pulled {
     pub(crate) heads: Heads,
     pub(crate) hold: Option<Hold>,
+    /// The lane stopped with entries left because a metered network spent its allowance.
+    pub(crate) is_bulk_held: bool,
 }
 
 #[derive(Clone, Copy)]

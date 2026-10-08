@@ -65,6 +65,11 @@ pub enum SyncError {
         needed: u64,
         free: u64,
     },
+    /// A bootstrap of this many bytes waits on a metered network, until the host allows it or reports another network
+    /// (`PROTOCOL.md` §Metered networks).
+    Metered {
+        estimate_bytes: u64,
+    },
 }
 
 impl From<AppError> for SyncError {
@@ -112,6 +117,12 @@ impl fmt::Display for SyncError {
                 write!(
                     f,
                     "a bootstrap needs {needed} bytes free on this device's disk, and {free} are"
+                )
+            }
+            SyncError::Metered { estimate_bytes } => {
+                write!(
+                    f,
+                    "a bootstrap of {estimate_bytes} bytes waits for an unmetered network"
                 )
             }
         }

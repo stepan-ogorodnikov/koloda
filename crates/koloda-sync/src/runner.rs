@@ -163,7 +163,8 @@ impl Shared {
             seen = self.triggers.generation.load(Ordering::SeqCst);
             let (_, result) = self.run_cycle(None).await;
             wait = match result {
-                Ok(()) | Err(SyncError::BudgetSpent) => {
+                // WHY: a bootstrap paused on a metered network waits for the host, not for a retry.
+                Ok(()) | Err(SyncError::BudgetSpent | SyncError::Metered { .. }) => {
                     backoff = FIRST_BACKOFF;
                     if self.is_listening.load(Ordering::SeqCst) {
                         POLL_LISTENING

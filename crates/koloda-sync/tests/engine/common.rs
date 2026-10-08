@@ -40,7 +40,7 @@ use koloda_sync_proto::payload::{seal, Payload, Seal, SCHEMA};
 use koloda_sync_proto::registry::Lane;
 use koloda_sync_proto::transport::{
     encode_schemas, ClaimPairing, Empty, Enrollment, ErrorBody, ErrorCode, IssuePairing, Meta, Outcome, Pairing,
-    PairingClaim, Platform, PullPage, Push, PushItem, PushReply, Receipts, Reply, RestoreMode, EPOCH_HEADER,
+    PairingClaim, Platform, PullPage, Push, PushItem, PushReply, Receipts, Reply, RestoreMode, Snapshot, EPOCH_HEADER,
     MAX_RECEIPT_RANGE, SCHEMAS_HEADER,
 };
 use rusqlite::backup::Backup;
@@ -399,6 +399,18 @@ impl Space {
             hlc: Hlc::new(system_ms() + ahead_ms, 0).expect("wall time fits"),
             device: DeviceId(self.raw.device_id),
         }
+    }
+
+    /// The bytes a bootstrap of the space carries, as a lease the raw client opens and gives back reports them.
+    pub fn snapshot_bytes(&self) -> u64 {
+        let path = format!("/v1/spaces/{}/bootstrap", self.space_id());
+        let (status, reply) = self.server.call::<Snapshot>(Method::Post, &path, &self.raw.token);
+        assert_eq!(status, 200, "the raw client opens a lease: {:?}", reply.error);
+        let snapshot = reply.ok.expect("a lease");
+        let release = format!("{path}/{}", Uuid::from_bytes(snapshot.snapshot_id));
+        let (status, _) = self.server.call::<Empty>(Method::Delete, &release, &self.raw.token);
+        assert_eq!(status, 200, "the raw client gives its lease back");
+        snapshot.bytes
     }
 
     /// Seals and pushes one envelope from the raw client at its next seq.

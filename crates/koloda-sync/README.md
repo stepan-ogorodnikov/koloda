@@ -11,8 +11,8 @@ The contract is `crates/koloda-sync-proto/PROTOCOL.md`; endpoint bodies come fro
 `koloda` owns every sync table and SQL statement; the engine only calls its sync functions.
 The engine owns a tokio runtime, so host calls block until done; database work runs on its blocking threads.
 The host passes in the transport, and the reader of free disk space, `SystemDisk` outside tests.
-The host starts the background runner with an event sink, tells it about local commits and nudges, reads `status`,
-and on mobile runs bounded `tick`s instead.
+The host starts the background runner with an event sink and tells it about local commits, nudges, and the network.
+It reads `status`, and on mobile runs bounded `tick`s instead.
 A device's bearer token lives in the host's secret store under `sync.token.<device id>`, and nowhere else.
 
 ## Architectural Map
@@ -37,8 +37,10 @@ A device's bearer token lives in the host's secret store under `sync.token.<devi
   that start a cycle, held back while one runs.
 - `src/status.rs` — the state the host shows, why the last cycle stopped (an authoritative restore waiting for the
   host among the reasons), the lane held at an envelope this app cannot read, whether the space is over its quota,
-  and how far behind each lane is.
+  whether bulk transfers wait on a metered network, and how far behind each lane is.
 - `src/devices.rs` — the device list, revoking another device, and detaching this file.
+- `src/metered.rs` — bulk transfers on a metered network: the network the host reports, the bootstrap and outbox
+  checks, the allowance counted work spends, and the call that lifts the pause.
 - `src/disk.rs` — the free-disk preflight before a bootstrap applies, and the free-space reader the host passes in.
 - `src/bootstrap.rs` — a joiner's union bootstrap and a re-bootstrap from a snapshot lease: streams, catch-up,
   heartbeats, restarts, a stop that gives the lease back at an envelope this app cannot read, and the re-bootstrap's

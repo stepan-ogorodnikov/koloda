@@ -7,6 +7,7 @@ pub mod devices;
 pub mod disk;
 pub mod engine;
 pub mod error;
+pub mod metered;
 pub mod pairing;
 pub mod runner;
 pub mod status;

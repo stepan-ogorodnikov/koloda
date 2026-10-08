@@ -73,6 +73,7 @@ impl Shared {
         kind: Bootstrap,
         changed: &mut Vec<Kind>,
     ) -> Result<(u64, u64), SyncError> {
+        self.check_paused_bootstrap()?;
         let opened = self
             .cycle_client(session)
             .call::<(), Snapshot>(
@@ -90,8 +91,13 @@ impl Shared {
             expires_at: snapshot.expires_at,
             server_ms: opened.meta.server_time_ms,
         };
-        // INVARIANT: checked before any page applies, so a file without room gives the lease back as it was.
-        if let Err(error) = self.check_disk(kind, snapshot.bytes).await {
+        // INVARIANT: checked before any page applies, so a bootstrap that waits for an unmetered network, or for
+        // room on disk, gives the lease back and leaves the file as it was.
+        let checked = match self.check_bootstrap(snapshot.bytes) {
+            Ok(()) => self.check_disk(kind, snapshot.bytes).await,
+            paused => paused,
+        };
+        if let Err(error) = checked {
             self.release(session, &lease).await?;
             return Err(error);
         }
