@@ -1,6 +1,6 @@
 # Sync transport and deployment
 
-Status: draft
+Status: ready
 
 ## Intent
 
@@ -55,33 +55,36 @@ Out:
 
 ## Open questions
 
-- [ ] 1. Area guides? — open.
-  Proposal: `agents/TASKS.md`, `agents/IMPLEMENTATION-PLAN.md`, `agents/MARKDOWN.md`,
-  `agents/CODE-DOCUMENTATION.md`, `agents/CODE-STYLE.md`, `agents/TESTING.md`, `agents/RUST.md`, and
+The owner took every recommendation on 2026-10-08.
+
+- [x] 1. Area guides?
+  Answer: `agents/TASKS.md`, `agents/IMPLEMENTATION-PLAN.md`, `agents/MARKDOWN.md`,
+  `agents/CODE-DOCUMENTATION.md`, `agents/CODE-STYLE.md`, `agents/TESTING.md`, `agents/RUST.md`,
+  `agents/BACKWARDS-COMPATIBILITY.md` (the `serve` flags change), `agents/VERIFY.md` (the manual Docker check), and
   `agents/REVIEW.md` for self-review.
   Also `crates/koloda/README.md`, `crates/koloda-sync/README.md`, `crates/koloda-server/README.md`,
   `crates/koloda-sync-proto/PROTOCOL.md` and its README, and `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md`.
   `agents/DB.md` is left out: no item adds a migration.
-  Is there a guide for Dockerfiles or `.github/workflows`?
-- [ ] 2. One task, or two? — open.
-  Recommendation: one task, in plan order.
+  No guide covers Dockerfiles or `.github/workflows`.
+- [x] 2. One task, or two?
+  Answer: one task, in plan order.
   The socket comes first: a minute's delay is the gap users notice most, and it is the riskiest change to the runner.
   The alternative splits the engine-only preflight and metered pauses into a second task.
-- [ ] 3. How often does a device poll once the socket exists? — open.
-  Recommendation: every 5 minutes while the socket is up, and every 60 seconds, as today, while it is down.
+- [x] 3. How often does a device poll once the socket exists?
+  Answer: every 5 minutes while the socket is up, and every 60 seconds, as today, while it is down.
   - The poll while up covers `drop-envelope`, which runs in another process and nudges nobody.
   - Polling every 60 seconds while down means a proxy without WebSocket upgrades costs at most a minute.
   - Losing the socket starts a cycle, so polling falls back to 60 seconds at once.
   The proposal's text polls only while the socket is down, every few minutes.
-- [ ] 4. Built-in ACME? — open.
-  Recommendation: not in this task.
+- [x] 4. Built-in ACME?
+  Answer: not in this task.
   - Certificate files and `--insecure-http` cover certbot, a reverse proxy, and `tailscale serve`.
   - The compose example puts Caddy in front, which obtains and renews certificates itself.
   - ACME cannot be tested without a public domain.
   If yes: one more item after TLS, with `--acme-domain` and `--acme-email`, TLS-ALPN-01 through `rustls-acme`, a
   certificate cache under `<data-dir>/acme`, and a manual check against Let's Encrypt staging.
-- [ ] 5. What ships for Docker, and what checks it? — open.
-  Recommendation:
+- [x] 5. What ships for Docker, and what checks it?
+  Answer:
   - a multi-stage Dockerfile that builds a static musl binary into a non-root distroless image with a `/data`
     volume;
   - a root `.dockerignore`;
@@ -90,10 +93,10 @@ Out:
     `checks`.
   No image goes to a registry until the server has a release process.
   This machine has no Docker, so that job and your own run are the only checks.
-- [ ] 6. On a metered network, what counts as bulk, and how is it measured? — open.
+- [x] 6. On a metered network, what counts as bulk, and how is it measured?
   `PROTOCOL.md` says bulk transfers above the limit pause and tiny incremental sync never does, but not how a
   transfer's size is known before it runs.
-  Recommendation:
+  Answer:
   - The host sets `Network { is_metered }` (a low-data mode counts as metered) and the limit, 20 MB by default.
     A new engine starts unmetered.
   - A `hot` pull, and a push while the outbox holds less than the limit, always run.
@@ -134,10 +137,7 @@ Out:
   - a second socket for the same device closes the first;
   - revoking the device closes its socket;
   - `bun run check:push` green.
-  Commit:
-  a. Serve the events WebSocket with each space's lane heads
-  b. Nudge a space's devices over a WebSocket when its heads move
-  c. Send lane heads to connected devices
+  Commit: Serve the events WebSocket with each space's lane heads
   Depends on: none
 
 - [ ] 2. Sync on nudges from the events socket
@@ -166,10 +166,7 @@ Out:
   - polling is every 5 minutes while the socket is up and every 60 seconds while it is down, per question 3;
   - a loopback test where a grade on one engine reaches the other through the socket;
   - `bun run check:push` green.
-  Commit:
-  a. Sync on nudges from the events socket
-  b. Listen for nudges and poll less while the socket is up
-  c. Start a cycle when the server reports new heads
+  Commit: Sync on nudges from the events socket
   Depends on: 1
 
 - [ ] 3. Serve HTTPS from certificate files
@@ -190,10 +187,7 @@ Out:
   - a reload after the files change, and a broken pair keeping the old certificate;
   - `serve` refusing to start with neither mode or both;
   - `bun run check:push` green.
-  Commit:
-  a. Serve HTTPS from certificate files, plain HTTP only on request
-  b. Terminate TLS in serve and require --insecure-http for plain HTTP
-  c. Serve over TLS and reload certificates when they change
+  Commit: Serve HTTPS from certificate files, plain HTTP only on request
   Depends on: none
 
 - [ ] 4. Add a Docker image and a compose example
@@ -210,9 +204,7 @@ Out:
   - the new CI job builds the image on this branch;
   - manual: `docker compose up` with a test domain answers `GET /v1/spaces` with `401` through Caddy over HTTPS;
   - `bun run check:push` green.
-  Commit:
-  a. Add a Docker image and a compose example for the server
-  b. Package the server as a Docker image behind Caddy
+  Commit: Add a Docker image and a compose example for the server
   Depends on: 3
 
 - [ ] 5. Check free disk before a bootstrap streams
@@ -233,9 +225,7 @@ Out:
   - a fixture bootstrap of a few thousand reviews growing the file by less than three times the lease's `bytes`,
     which pins the factor;
   - `bun run check:push` green.
-  Commit:
-  a. Check free disk before a bootstrap streams
-  b. Refuse a bootstrap the disk cannot hold
+  Commit: Check free disk before a bootstrap streams
   Depends on: none
 
 - [ ] 6. Pause bulk sync on metered networks
@@ -250,10 +240,7 @@ Out:
   - a `cold` backlog and a backfill stop once the allowance is spent;
   - a new network clears both the pause and the allowance;
   - `bun run check:push` green.
-  Commit:
-  a. Pause bulk sync on metered networks
-  b. Hold bootstraps and large transfers on metered networks until allowed
-  c. Cap bulk transfers on metered networks at the host's limit
+  Commit: Pause bulk sync on metered networks
   Depends on: 5
 
 ## Outcome
