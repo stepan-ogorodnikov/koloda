@@ -1,6 +1,6 @@
 # Sync holds and quotas
 
-Status: ready
+Status: done
 
 ## Intent
 
@@ -342,4 +342,53 @@ The owner took every recommendation on 2026-10-08.
 
 ## Outcome
 
-<what shipped>
+- `apply_page` and `apply_snapshot_page` stop at the first entry this app cannot read and return it as a `Hold`
+  (`lane`, `seq`, `corrupt_envelope` or `update_required`).
+  The entries before it apply, and the lane cursor stays at the held seq minus one.
+  A delete or `cards.reset` whose payload alone does not decode applies from its header.
+  `PageEntry` carries the lane `seq`.
+- The engine keeps the last hold in memory and shows it as `Status.hold`.
+  A `hot` hold stops `cold`; a `cold` hold leaves `hot` running; pushing goes on, and a held lane counts as caught
+  up.
+  A bootstrap that meets a hold gives its lease back and stops with `SyncError::Held`; the next trigger starts over.
+- `koloda-server drop-envelope <space> <lane> <seq> [--yes]` runs beside `serve` (`Server::describe_drop`,
+  `Server::drop_envelope`, in `drop_envelope.rs`).
+  It removes the version and any lease item for it.
+  A dropped create or tombstone is replaced by a server tombstone whose sender and stamp device are the nil
+  `SERVER_SENDER`, with seqs in `senders`, so restore cutoffs cover it.
+  A dropped `cards.content` head links the create's attachments again.
+- Space quotas: `spaces.quota_bytes` (`server.db` `V3__quotas.sql`), set by `koloda-server quota`.
+  Usage is the space file's pages in use plus attachment sizes.
+  `serve --min-free-disk` (1 GiB) and `--reserve-disk` (64 MiB) read free space with `rustix` `statvfs` on Unix.
+  Over: every write but a delete is `held { quota }`, and bootstrap and upload are `507 insufficient_storage`.
+  Below the reserve, every push is `507`.
+  `DeviceMeta.is_over_quota` reports it.
+- `release_held` puts `quota` and `dependency` holds back in the outbox with their bytes, stamps, and commit ids, in
+  `fixed` cohorts, before pending rows; a held update whose register moved on is dropped.
+  The engine runs it when the device record shows room, and `Status.is_over_quota` shows the flag.
+  An upload answered `507` waits through `defer_transfer`, which replaced `defer_fetch`.
+- Every device call sends `koloda-schemas`; the server stores it on `devices.schemas`.
+  `koloda-server write-schema` raises a kind by one version once every active device advertises it.
+- `data_dir::init` writes `CURRENT` through `swap_current`.
+- `PROTOCOL.md`, the four crate docs, `agents/RUST.md`, and `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md` describe the
+  above.
+- Deviations from the plan text:
+  - Item 4 added the `quota` reason in `outbox.rs`, since the new `HeldReason` variant needed it.
+  - `release_held` also moves pending rows behind released ones, so a write naming a held create cannot come back
+    `held { dependency }` after the create's release and stay there.
+  - The drop is two `Server` methods rather than `prepare` and `commit`; the drop re-reads the version and refuses one
+    whose digest changed.
+  - Server tombstones are sealed at the server's `SCHEMA`, not the kind's `write_schema`.
+  - There is no `reviews_reset_at` column, so a reset applied from its header is checked by its register.
+  - Deletes are not chunked, so the reserve refuses every push, deletes included, instead of keeping headroom for one
+    delete chunk; a space over quota opens no lease, which stands for the cap on pinned bytes.
+  - Watermarks are off in `Server::open`; only `serve` turns them on.
+  - "Active" for a raise reuses tombstone collection's definition, which also leaves out `rebase_required` devices.
+  - `sync_apply`'s `a_failed_page_applies_nothing_and_keeps_the_cursor` pinned the replaced behavior and went; the
+    holds tests cover both of its cases.
+- Follow-ups noticed, not fixed:
+  - Device meta sums attachment sizes on every device call.
+  - An upload answered `507` keeps its backoff, up to 6 hours, after the space has room again.
+  - A header with a field this app does not know counts as corrupt, not `update_required`.
+- Manual verify: none — nothing user-visible until the NAPI commands and the desktop UI land; the operator commands
+  are covered by in-process tests.
