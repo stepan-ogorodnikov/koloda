@@ -1,6 +1,6 @@
 # Sync transport and deployment
 
-Status: ready
+Status: done
 
 ## Intent
 
@@ -256,4 +256,37 @@ The owner took every recommendation on 2026-10-08.
 
 ## Outcome
 
-<what shipped>
+- `GET /v1/spaces/{space}/events` upgrades to a WebSocket and sends `Heads { head_hot, head_cold }` as binary CBOR:
+  the current heads first, then the new ones after every push that raises a head.
+  The upgrade is an ordinary device call.
+  One socket per device; a new one, a revoke, or a detach closes the old one.
+  The server pings every 30 seconds and closes a socket silent for 60.
+  `drop-envelope` runs in another process and nudges nobody; the poll covers it.
+- The runner keeps one events socket open while the file is enrolled and attached, and reconnects with backoff from 1
+  to 60 seconds.
+  Heads above the last reported ones start a cycle; a device's own push costs none; a refused upgrade starts a cycle.
+  Polling is every 5 minutes while the socket is up and every 60 seconds while it is down, so a proxy without
+  WebSocket upgrades still syncs each minute.
+  `tick` opens no socket.
+- `serve` takes `--tls-cert` and `--tls-key`, or `--insecure-http`, and refuses neither or both.
+  `--listen` defaults to `0.0.0.0:8443` with TLS and `127.0.0.1:8080` with `--insecure-http`.
+  The certificate pair is re-read every 10 minutes when a file changes; a pair that does not load keeps the old one.
+  A failed handshake closes that connection only, and the listener serves the next client (item 7).
+- A Dockerfile, a root `.dockerignore`, and a compose example with Caddy in front.
+  The server README has a Docker section.
+  A CI job `docker` builds the image on branch pushes that touch the server, outside the required `checks`.
+- A bootstrap reads free space before it streams: three times the lease's `bytes` plus 64 MiB, less the file's size for
+  a re-bootstrap.
+  Short of that it releases the lease and stops with `SyncError::LowDisk { needed, free }`, shown as `Stop::LowDisk`.
+  An in-memory database skips the check.
+  `koloda` exposes the database file's path; the free-space reader is injected.
+- On a metered network (`Engine::set_network`), a bootstrap above the limit (20 MB by default) pauses with its
+  estimate, as does a push of an outbox above it.
+  Backfill, heal top-ups, `cold` pulls, and image transfers share one allowance per network.
+  `hot` pulls and small pushes never pause.
+  `Status.metered` shows the pause; `Engine::allow_metered()` lifts it; a new network clears the pause and the
+  allowance.
+- `PROTOCOL.md` §Endpoints, §Cycle, §Bootstrap, and §Metered networks, and the server, engine, and `koloda` READMEs state
+  the new rules.
+- Manual verify: the compose check (`docker compose up` with a test domain answering `401` through Caddy) was not run,
+  since this machine has no Docker; the CI `docker` job built the image on the tip.
