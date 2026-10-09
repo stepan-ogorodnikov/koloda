@@ -1,6 +1,6 @@
 # Sync phase-1 review fixes
 
-Status: ready
+Status: done
 
 ## Intent
 
@@ -343,3 +343,48 @@ The owner took every recommendation on 2026-10-09.
 
 ## Outcome
 
+- D1: every bootstrap lease raises `rebase_generation` (`begin_lease`) before its pages, apply marks creates while a
+  join bootstrap or the re-bootstrap barrier is open, and `finish_bootstrap` runs the same absence cleanup as
+  `finish_rebase` (`delete_absent`).
+  A bootstrap restarted on a new lease, join or re-bootstrap, ends without what the space deleted between the leases.
+- D4: fork, claim, and space creation carry a client-minted token (`check_token`, 64 lowercase hex); replies carry
+  none.
+  The server keeps only hashes (server migration `V4__client_tokens.sql`) and refuses a known nonce with another
+  token: `pairing_failed` for a claim, `400 bad_request` for fork and creation.
+  A fork's token waits under `sync.pending_token.{nonce}` before its nonce is stored.
+- D11: every call of a re-attach after its claim applies a `Restored` answer and repeats; the preview-epoch check and
+  the new-device lookup are gone.
+- D7: client migration `V13__sync_enrolling.sql` keeps a claim or creation sent and not recorded (`Enrolling`,
+  `store_enrolling`), with its token under `sync.pending_token.{nonce}`.
+  The next join with the same code, however typed, skips the preview and claims again with the same nonce and token,
+  and the next creation reuses its credentials.
+  `enroll_device`, `begin_import`, and a re-attach's `switch_device` clear the row; an authoritative reset keeps it.
+  Code normalization moved to `koloda_sync_proto::transport::code_hash`.
+- D3 and the `unknown_device` check finding: detach records the detach before it deletes the token, detaches locally
+  when an attached file has no token, and treats `401 unknown_device` on the file's own epoch as `revoked`.
+- D2: `drop-envelope` relinks a card's attachments through its create only when the dropped content version was the
+  head.
+- D6: an upload checks the room again under the writer lock and stores nothing when it is gone.
+- D8: a push checks skew after it settles each reply and sends no further batch past the tolerance.
+- D9: `top_up` records the metered pause whenever it finds the allowance spent with heal or backfill rows left
+  (`SyncState.is_scanning`).
+- D10: after a cycle that leaves a push waiting on server time, the runner sleeps until the earlier of the poll and
+  the wait's end (`push_wait_left`).
+- `PROTOCOL.md` §Bootstrap, §Re-bootstrap, §Devices, §Endpoints, §Bodies, §Pairing, §Re-attach, §Corrupt envelopes,
+  §Skew guards, §Metered networks, §Client state, and §Conformance cases, the four crate READMEs touched, and
+  `agents/RUST.md` describe the above.
+- Deviations from the plan text:
+  - Item 4: only `pairing_failed` drops a pending claim, and a creation keeps its credentials through any refusal;
+    "any reply but a transport error" could burn a code whose earlier attempt landed.
+  - Item 4: the authoritative reset keeps `sync_enrolling`, so a re-attach that met such a restore still finishes.
+  - Item 9: its tests start a heal after a cold page or the last image spent the allowance; a scan is open during
+    such a spend only when the cycle skipped its push, and then the pause shows at the next cycle that pushes.
+  - The engine tests gained `MemorySecrets::refuse_next` and `ManualTimer::wait_for_sleep_within`; `png`, `links`,
+    and `add_image` moved to the engine test fixtures.
+- Follow-ups noticed, not fixed:
+  - A blank join that stops between seeding its settings and enrolling reads as a used file on the retry, which then
+    asks for Add or Replace.
+  - A detach whose token delete fails leaves that old token in the secret store after the re-attach.
+- Process: items 4 to 10 were committed locally and checked with `bun run check:push`, and the branch was pushed
+  once at the end; CI `checks` passed on that tip.
+- Manual verify: none — nothing user-visible until the NAPI commands and the desktop UI land.
