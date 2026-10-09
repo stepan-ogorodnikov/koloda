@@ -4,7 +4,8 @@ use koloda::domain::cards::DeleteCardData;
 use koloda::repo::attachments::{add_attachment, get_attachment, get_attachment_bytes};
 use koloda::repo::cards::delete_card;
 use koloda::repo::sync::attachments::{
-    defer_transfer, due_transfers, finish_transfer, store_fetched, upload_source, Direction, Transfer,
+    defer_transfer, due_transfers, finish_transfer, queue_missing_uploads, release_deferred_uploads, store_fetched,
+    upload_source, Direction, Transfer,
 };
 use koloda::repo::sync::outbox::{push_batch, settle_push};
 use koloda_sync_proto::payload::{CardContent, CardCreate, CardScheduling, InitialProductTs, Payload};
@@ -222,6 +223,36 @@ fn a_fetch_the_server_could_not_serve_waits_longer_each_time() {
     let minutes = [1, 2, 4, 8, 16, 32, 64, 128, 256].map(|minutes| minutes * MINUTE_MS);
     assert_eq!(delays[..9], minutes, "the delay doubles from one minute");
     assert_eq!(delays[9..], [6 * HOUR_MS, 6 * HOUR_MS], "and stops at six hours");
+}
+
+#[test]
+fn a_deferred_upload_goes_at_once_with_a_fresh_backoff_once_released() {
+    let db = test_db();
+    let fixture = enrolled_deck(&db);
+    let waiting = add_attachment(&db, png(14)).unwrap().id;
+    let missing = id_of(&png(15));
+    queue_missing_uploads(&db, std::slice::from_ref(&waiting)).unwrap();
+    pull_card(&db, &fixture, CARD, &[&missing]);
+    let at = 1_000_000;
+    for _ in 0..3 {
+        defer_transfer(&db, &upload(&waiting), at).unwrap();
+    }
+    defer_transfer(&db, &fetch(&missing), at).unwrap();
+
+    release_deferred_uploads(&db).unwrap();
+
+    assert_eq!(
+        due_transfers(&db, at, 10).unwrap(),
+        vec![upload(&waiting)],
+        "the upload is due at once; the fetch keeps waiting for another device's upload"
+    );
+    defer_transfer(&db, &upload(&waiting), at).unwrap();
+    assert!(
+        due_transfers(&db, at + MINUTE_MS, 10)
+            .unwrap()
+            .contains(&upload(&waiting)),
+        "its next wait starts again from one minute"
+    );
 }
 
 #[test]

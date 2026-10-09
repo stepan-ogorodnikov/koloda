@@ -5,6 +5,7 @@ use std::sync::Arc;
 
 use koloda::app::utility::get_current_timestamp;
 use koloda::repo::sync::apply::{apply_page, Hold, Page, PageEntry};
+use koloda::repo::sync::attachments::release_deferred_uploads;
 use koloda::repo::sync::outbox::{
     has_foreign_receipt, highest_pending_hlc, pending_count, release_held, standing, unfix_unconsumed, Standing,
 };
@@ -89,9 +90,14 @@ impl Shared {
             }
 
             // INVARIANT: held writes go back to the outbox only once the space has room again, and ahead of what is
-            // pending, so a write that names a held create follows it (PROTOCOL.md, Push outcomes).
+            // pending, so a write that names a held create follows it (PROTOCOL.md, Push outcomes). Uploads the
+            // space had no room for go at once too, not after their backoff (PROTOCOL.md, Upload).
             if !heads.is_over_quota {
-                self.blocking(|shared| release_held(&shared.db)).await?;
+                self.blocking(|shared| {
+                    release_held(&shared.db)?;
+                    release_deferred_uploads(&shared.db)
+                })
+                .await?;
             }
             // INVARIANT: an outbox past the limit on a metered network waits whole, since a push never skips ahead
             // of a seq; pulls go on (PROTOCOL.md, Metered networks). So does an outbox whose stamps the space

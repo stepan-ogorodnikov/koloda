@@ -156,7 +156,7 @@ The owner took every recommendation on 2026-10-09.
   Commit: Hold a header with an unknown key as needing an update
   Depends on: none
 
-- [ ] 3. Retry deferred uploads as soon as the space has room
+- [x] 3. Retry deferred uploads as soon as the space has room
   Goal:
   - When the device record shows room, every deferred upload becomes due at once with its attempts reset.
     This runs beside `release_held` in the cycle.

@@ -190,6 +190,25 @@ pub fn defer_transfer(db: &Database, transfer: &Transfer, now: i64) -> Result<()
     })
 }
 
+/// Makes every deferred upload due at once, with its backoff reset, once the space has room again.
+///
+/// WHY: an upload defers only when the server answers `507`, so every deferred upload is one that waited for room.
+/// Fetches wait for another device's upload and keep their backoff.
+pub fn release_deferred_uploads(db: &Database) -> Result<(), AppError> {
+    throw_known_error(error_codes::DB_UPDATE, || {
+        db.with_conn(|conn| {
+            conn.execute(
+                r#"
+                UPDATE sync_attachment_queue SET attempts = 0, next_attempt_at = 0
+                WHERE direction = 'upload' AND attempts > 0
+                "#,
+                [],
+            )?;
+            Ok(())
+        })
+    })
+}
+
 /// Queued uploads and fetches, for the host's status.
 pub fn transfer_counts(db: &Database) -> Result<(usize, usize), AppError> {
     throw_known_error(error_codes::DB_GET, || {
