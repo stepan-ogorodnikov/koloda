@@ -87,11 +87,16 @@ impl ManualTimer {
 
     /// Blocks until the runner waits in a sleep of `duration`.
     pub fn wait_for_sleep(&self, duration: Duration) {
+        self.wait_for_any_sleep(&[duration]);
+    }
+
+    /// Blocks until the runner waits in a sleep of one of `durations`.
+    pub fn wait_for_any_sleep(&self, durations: &[Duration]) {
         let give_up = Instant::now() + PATIENCE;
         let mut state = self.0.state.lock().expect("timer lock");
-        while !state.sleeping.contains(&duration) {
+        while !durations.iter().any(|duration| state.sleeping.contains(duration)) {
             let left = give_up.saturating_duration_since(Instant::now());
-            assert!(!left.is_zero(), "the runner never slept for {duration:?}");
+            assert!(!left.is_zero(), "the runner never slept for any of {durations:?}");
             state = self.0.changed.wait_timeout(state, left).expect("timer lock").0;
         }
     }

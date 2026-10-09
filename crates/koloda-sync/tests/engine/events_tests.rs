@@ -61,6 +61,24 @@ fn listening(space: &Space) -> (Library, ManualTimer, Receiver<Event>) {
     (library, timer, events)
 }
 
+/// Nudges the idle runner and waits until the cycle that follows has ended with the socket open, so the runner then
+/// waits at the listening poll.
+fn nudge_while_listening(device: &Device, timer: &ManualTimer) {
+    // WHY: the runner's first cycle may end before the socket opens, so it idles at either poll.
+    timer.wait_for_any_sleep(&[POLL, POLL_LISTENING]);
+    let (cycle, cycle_starts) = channel();
+    device.transport.observe(move |request| {
+        if request.url.contains("/devices/") {
+            let _sent = cycle.send(()).is_ok();
+        }
+    });
+    device.engine.nudge();
+    // WHY: the sleep a nudge ends stays listed until the runner wakes, so a listening poll seen before the nudge's
+    // cycle starts is the old one.
+    next(&cycle_starts);
+    timer.wait_for_sleep(POLL_LISTENING);
+}
+
 fn renamed_elsewhere() -> Title {
     Title {
         title: "Renamed elsewhere".to_string(),
@@ -98,8 +116,7 @@ fn a_push_by_another_device_starts_a_cycle_with_no_poll() {
 fn a_nudge_that_echoes_the_device_own_push_starts_no_cycle() {
     let space = Space::new();
     let (library, timer, events) = listening(&space);
-    space.device.engine.nudge();
-    timer.wait_for_sleep(POLL_LISTENING);
+    nudge_while_listening(&space.device, &timer);
     let before = cycles(&space.device);
 
     space
@@ -170,8 +187,7 @@ fn a_refused_upgrade_starts_one_cycle_and_retries_with_backoff() {
 fn the_runner_polls_less_while_the_socket_is_up_and_cycles_when_it_drops() {
     let space = Space::new();
     let (_library, timer, _events) = listening(&space);
-    space.device.engine.nudge();
-    timer.wait_for_sleep(POLL_LISTENING);
+    nudge_while_listening(&space.device, &timer);
     let before = cycles(&space.device);
 
     space.device.transport.drop_sockets();
