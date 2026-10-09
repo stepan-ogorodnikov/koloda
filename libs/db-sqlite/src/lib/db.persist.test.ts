@@ -35,4 +35,38 @@ describe("db-sqlite persist/reload", () => {
     expect(reopenedForeignKeys).toBe(1);
     await reopened.close();
   });
+
+  it("skips a purge that wa-sqlite scheduled for after close", async () => {
+    const rejections: unknown[] = [];
+    const onRejection = (reason: unknown) => rejections.push(reason);
+    const scheduled: (() => void)[] = [];
+    process.on("unhandledRejection", onRejection);
+    // WHY: wa-sqlite schedules its purge on `requestIdleCallback` when there is one, so holding the callback lets
+    // the test run it after close. Faking `setTimeout` instead would also stall wa-sqlite's own transaction refresh.
+    Object.defineProperty(globalThis, "requestIdleCallback", {
+      configurable: true,
+      value: (callback: () => void) => scheduled.push(callback),
+    });
+    try {
+      const db = await openDb();
+      await db.exec("CREATE TABLE scratch (id INTEGER PRIMARY KEY, body BLOB NOT NULL)");
+      await db.exec(
+        `WITH RECURSIVE n (i) AS (SELECT 1 UNION ALL SELECT i + 1 FROM n WHERE i < 64)
+         INSERT INTO scratch (body) SELECT randomblob(4000) FROM n`,
+      );
+      // WHY: a purge is scheduled once commits have overwritten at least 16 existing pages.
+      await db.exec("UPDATE scratch SET body = randomblob(4000)");
+      await db.close();
+      expect(scheduled).toHaveLength(1);
+
+      for (const callback of scheduled) callback();
+      await new Promise((resolve) => setImmediate(resolve));
+      await new Promise((resolve) => setImmediate(resolve));
+    } finally {
+      Reflect.deleteProperty(globalThis, "requestIdleCallback");
+      process.off("unhandledRejection", onRejection);
+    }
+
+    expect(rejections).toEqual([]);
+  });
 });

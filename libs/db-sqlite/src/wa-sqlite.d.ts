@@ -5,6 +5,7 @@ declare module "wa-sqlite/src/examples/IDBBatchAtomicVFS.js" {
     name: string;
     constructor(idbDatabaseName?: string, options?: { durability?: "default" | "strict" | "relaxed" });
     close(): Promise<void>;
+    purge(path: string): Promise<void>;
   }
 }
 

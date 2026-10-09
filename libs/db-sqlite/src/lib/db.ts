@@ -133,6 +133,24 @@ async function wipeIncompatibleIdb(idbName: string) {
   }
 }
 
+// WORKAROUND: after a commit that overwrote enough pages, wa-sqlite schedules a purge of old page versions on
+// `requestIdleCallback`, or `setTimeout` where there is none. The callback reads the IndexedDB context that `close()`
+// nulls, so a purge that fires after close rejects unhandled. It is skipped instead; the purge record stays in
+// IndexedDB, and the next session's purge removes those versions.
+class ClosableIDBBatchAtomicVFS extends IDBBatchAtomicVFS {
+  #isClosed = false;
+
+  override async close() {
+    this.#isClosed = true;
+    await super.close();
+  }
+
+  override async purge(path: string) {
+    if (this.#isClosed) return;
+    await super.purge(path);
+  }
+}
+
 type Conn = {
   handle: number;
   vfs: IDBBatchAtomicVFS;
@@ -148,7 +166,7 @@ function isRecoverableSqliteError(error: unknown) {
 }
 
 async function openConnection(sqlite3: SQLiteAPI, idbName: string): Promise<Conn> {
-  const vfs = new IDBBatchAtomicVFS(idbName);
+  const vfs = new ClosableIDBBatchAtomicVFS(idbName);
   // WHY: wa-sqlite refuses a second register of the same VFS name. IndexedDB stays
   // `idbName`; the SQLite VFS name is unique so close+reopen of `koloda` works.
   const vfsName = `${idbName}-vfs-${++vfsSeq}`;
