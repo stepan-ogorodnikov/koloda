@@ -1,6 +1,6 @@
 # Sync phase-1 review fixes
 
-Status: draft
+Status: ready
 
 ## Intent
 
@@ -79,16 +79,18 @@ Out:
 
 ## Open questions
 
+The owner took every recommendation on 2026-10-09.
+
 - [x] 1. Area guides?
-  Answer: the owner left the choice to the agent on 2026-10-09.
+  Answer: the owner left the choice to the agent.
   `agents/TASKS.md`, `agents/IMPLEMENTATION-PLAN.md`, `agents/MARKDOWN.md`, `agents/CODE-DOCUMENTATION.md`,
   `agents/CODE-STYLE.md`, `agents/TESTING.md`, `agents/RUST.md`, `agents/DB.md` (item 2 adds a server migration,
-  and question 4's recommendation a client one), `agents/BACKWARDS-COMPATIBILITY.md` (wire bodies change outright),
-  and `agents/REVIEW.md` for self-review.
+  item 4 a client one), `agents/BACKWARDS-COMPATIBILITY.md` (wire bodies change outright), and `agents/REVIEW.md`
+  for self-review.
   Also `crates/koloda/README.md`, `crates/koloda-sync/README.md`, `crates/koloda-server/README.md`,
   `crates/koloda-sync-proto/PROTOCOL.md` and its README.
 - [x] 2. How is D1 fixed?
-  Answer (owner, 2026-10-09): by marks, for both kinds of bootstrap.
+  Answer: by marks, for both kinds of bootstrap.
   - Every lease starts a new mark generation before its first page.
     A create a lease delivered counts only if the lease the bootstrap finishes on delivered it too.
   - A join bootstrap ends with the same absence cleanup as a re-bootstrap.
@@ -98,43 +100,42 @@ Out:
   - The alternative was a persisted floor, the lowest `head_hot` of the bootstrap's leases, for catch-up.
     It needs the tombstone to still be on the server, which a device that does not pin GC cannot promise.
 - [x] 3. How is D4 fixed?
-  Answer (owner, 2026-10-09): the client mints the token for fork, claim, and space creation, and sends it.
+  Answer: the client mints the token for fork, claim, and space creation, and sends it.
   - Retries carry the same token, so their order stops mattering and nothing rewrites a token hash.
   - The server keeps only hashes; the plaintext claim and creation tokens it holds today go.
-  - Replies stop carrying a token, since the client already holds it.
-  - A known nonce with another token is refused and writes nothing.
-    A claim answers `pairing_failed`, as for any other caller; fork and creation answer `400 bad_request`.
-- [ ] 4. Where does a pending claim or creation wait between host calls? — open
+  - The agent added two details, which the owner accepted:
+    - Replies stop carrying a token, since the client already holds it.
+    - A known nonce with another token is refused and writes nothing.
+      A claim answers `pairing_failed`, as for any other caller; fork and creation answer `400 bad_request`.
+- [x] 4. Where does a pending claim or creation wait between host calls?
   It needs the nonce and the token, and for a claim the normalized code, the space id, and the server URL.
   A blank file has no `sync_state` row yet.
-  - Recommended, A: the nonce and details in the file, the token in the secret store.
-    - A new singleton table, `sync_enrolling`, holds the kind, nonce, code hash, space id, and server URL.
-    - The token goes under a secret key named by the nonce, and is written before the row.
-      A stop between the two then leaves a token nobody names, never a nonce without its token.
-    - The transaction that records the enrollment clears the row.
-    - Fork already keeps its nonce in the file (`sync_state.fork_nonce`), and uses the same token key in item 2.
-  - B: everything in the secret store, under a key named by the code, and one key for creation.
-    No client migration, but two files on one machine joining with one code would share a device.
-- [ ] 5. D8: what happens to the batch whose reply moved the skew? — open
-  - Recommended, A: settle it, then stop before the next batch with `ClockSkew`.
-    Its outcomes are the server's decision and do not depend on the client's clock.
-    What the pause protects is the unsent `local` cohorts, which re-stamp once the clock is right.
-  - B, the report's: leave that batch in flight unsettled.
-    The next cycle resends it and settles the outcome the server stored.
-- [ ] 6. Does `unknown_device` with the file's own epoch detach the file by itself? — open
+  Answer: the nonce and details in the file, the token in the secret store.
+  - A new singleton table, `sync_enrolling`, holds the kind, nonce, code hash, space id, and server URL.
+  - The token goes under the secret key `sync.pending_token.{nonce}`, written before the row.
+    A stop between the two then leaves a token nobody names, never a nonce without its token.
+  - The transaction that records the enrollment clears the row.
+  - Fork already keeps its nonce in the file (`sync_state.fork_nonce`), and uses the same token key in item 2.
+  The alternative kept everything in the secret store, under a key named by the code, and one key for creation.
+  It needs no client migration, but two files on one machine joining with one code would share a device.
+- [x] 5. D8: what happens to the batch whose reply moved the skew?
+  Answer: settle it, then stop before the next batch with `ClockSkew`.
+  Its outcomes are the server's decision and do not depend on the client's clock.
+  What the pause protects is the unsent `local` cohorts, which re-stamp once the clock is right.
+  The alternative, the report's, left that batch in flight unsettled, for the next cycle to resend.
+- [x] 6. Does `unknown_device` with the file's own epoch detach the file by itself?
   That reply means the server lost or replaced the device record: D4's outcome, or damage on the server.
-  - Recommended, A: no.
-    A cycle keeps reporting `UnknownDevice`, and `detach` then succeeds without the server.
-    The user sees the problem before anything on the device changes.
-  - B: detach on the reply, as `401 revoked` does.
-- [ ] 7. Drop D5? — open
-  - Recommended, A: yes.
-    Add remints live and fenced ids alike, and the live-or-fenced answer matters only for the two seed ids.
-    A fence is permanent, so an id only goes from unknown to known.
-    A mixed read therefore remints what a consistent one would, except an id that became known mid-probe.
-    That is the protocol's accepted edge of two copies probing at the same moment.
-    The probe also runs in chunks, so one transaction per chunk would not give one snapshot anyway.
-  - B: read each chunk in one transaction, as tidying.
+  Answer: no.
+  A cycle keeps reporting `UnknownDevice`, and `detach` then succeeds without the server.
+  The user sees the problem before anything on the device changes.
+  The alternative detached on the reply, as `401 revoked` does.
+- [x] 7. Drop D5?
+  Answer: yes.
+  Add remints live and fenced ids alike, and the live-or-fenced answer matters only for the two seed ids.
+  A fence is permanent, so an id only goes from unknown to known.
+  A mixed read therefore remints what a consistent one would, except an id that became known mid-probe.
+  That is the protocol's accepted edge of two copies probing at the same moment.
+  The probe also runs in chunks, so one transaction per chunk would not give one snapshot anyway.
 
 ## Plan
 
@@ -162,7 +163,7 @@ Out:
     D after its second lease;
   - the same engine test for a re-bootstrap;
   - `bun run check:push` green.
-  Commit:
+  Commit: Remove what a restarted bootstrap's earlier lease left behind
   Depends on: none
 
 - [ ] 2. Mint enrollment tokens on the client
@@ -177,8 +178,9 @@ Out:
     `token_hash`; creation rows live 10 minutes, so it may empty that table.
   - Client: claim and creation mint a token per host call for now; item 4 keeps them across calls.
   - Client: fork mints its token with its nonce.
-    It writes the token to the secret store under a key named by the nonce before the nonce is stored.
+    It writes the token to the secret store under `sync.pending_token.{nonce}` before the nonce is stored.
     It reuses both until the switch, then removes the key.
+    A stored nonce whose key is gone is replaced by a new nonce and token.
   - `PROTOCOL.md` §Devices (the token row, fork step 3), §Endpoints, §Bodies, and §Pairing state the rules.
     So do the server and engine READMEs and the Device switch note in `agents/RUST.md`.
   Constraints:
@@ -193,7 +195,7 @@ Out:
   - `a_crash_between_the_fork_reply_and_the_switch_makes_one_fork_record` passes with the token the file stored
     before the call;
   - `bun run check:push` green.
-  Commit:
+  Commit: Mint enrollment tokens on the client
   Depends on: none
 
 - [ ] 3. Apply a restore met anywhere in a re-attach
@@ -211,15 +213,19 @@ Out:
     applies it and finishes on the claimed device;
   - the re-attach tests in `restore_tests.rs` still pass;
   - `bun run check:push` green.
-  Commit:
+  Commit: Apply a restore met anywhere in a re-attach
   Depends on: none
 
 - [ ] 4. Keep a claim and a space creation until the file records them
   Goal (per question 4):
-  - Before a claim or a creation, the engine stores its nonce and token as question 4 decides.
+  - Client migration `V13__sync_enrolling.sql` adds the singleton `sync_enrolling`: the kind (claim or creation),
+    nonce, code hash, space id, and server URL.
+  - Before a claim or a creation, the engine writes the token under `sync.pending_token.{nonce}`, then the row.
     Every later call for the same code, or any later creation, reuses them until the file records the enrollment.
-  - The transaction that records it clears the pending record: `enroll_device`, `begin_import`, or `switch_device`
-    for a re-attach.
+    A row whose key is gone is dropped, and the call starts over with a new nonce and token.
+  - The transaction that records it clears the row: `enroll_device`, `begin_import`, or `switch_device` for a
+    re-attach.
+    `sync_enrolling` joins `SYNC_TABLES`, so `begin_import` clears it with the rest.
     The token key goes after that transaction.
   - A definitive failure clears it too: `pairing_failed`, or any reply but a transport error before a claim lands.
   - A join whose code has a pending claim skips the preview, and uses the stored space id and server URL.
@@ -227,7 +233,8 @@ Out:
   - Code normalization moves to `koloda-sync-proto`, shared with the server's `code_hash`.
   - `PROTOCOL.md` §Pairing, §Bodies, and §Re-attach, and the engine README, state the rules.
   Constraints:
-  - Question 4's answer decides the storage; under A, `agents/DB.md` for the client migration.
+  - `agents/DB.md` for the client migration, including the schema inventory snapshot.
+  - The web host creates the table through the shared SQL series and never writes it.
   Done when:
   - an engine test: a claim whose every attempt loses the reply, then `join` again with the same code, ends with
     one device whose token works;
@@ -237,7 +244,7 @@ Out:
   - an engine test: a creation whose replies are lost makes one space on the retry;
   - `a_wrong_code_fails_and_leaves_the_file_alone` still holds;
   - `bun run check:push` green.
-  Commit:
+  Commit: Keep a claim and a space creation until the file records them
   Depends on: 2, 3
 
 - [ ] 5. Detach a file whatever its token state
@@ -247,13 +254,15 @@ Out:
   - `detach` detaches locally without a server call when an attached file has no token.
   - `detach` treats `unknown_device` with the file's own epoch as it treats `revoked`.
   - `PROTOCOL.md` §Devices, the engine README, and the Detach note in `agents/RUST.md` state the rules.
+  Constraints:
+  - A cycle that meets `unknown_device` still only reports it; nothing detaches until the host calls `detach`.
   Done when:
   - engine tests, each ending in a re-attach that works:
     - a secret store that fails the delete still leaves the file detached;
     - an attached file whose token is gone detaches;
     - a file the server answers `unknown_device` detaches;
   - `bun run check:push` green.
-  Commit:
+  Commit: Detach a file whatever its token state
   Depends on: none
 
 - [ ] 6. Relink a card's attachments only when its content head goes
@@ -264,7 +273,7 @@ Out:
   - a server test: a lease pins content v1, v2 becomes the head, v1 is dropped, and v2's attachments stay linked;
   - a dropped content head still relinks through the create;
   - `bun run check:push` green.
-  Commit:
+  Commit: Relink a card's attachments only when its content head goes
   Depends on: none
 
 - [ ] 7. Recheck an upload's room under the writer lock
@@ -278,20 +287,20 @@ Out:
     upload is refused `507`, with no row and no file;
   - an upload of bytes the space already stores still succeeds while the space is over;
   - `bun run check:push` green.
-  Commit:
+  Commit: Recheck an upload's room under the writer lock
   Depends on: none
 
 - [ ] 8. Stop a push once a reply puts skew past the tolerance
   Goal (per question 5):
-  - After each push reply, the push loop checks skew before it sends the next batch.
+  - After each push reply, the push loop settles it, then checks skew before it sends the next batch.
     Past the tolerance it returns `ClockSkew`, and the cycle pauses the clock as for any skew stop.
-  - The batch whose reply moved the skew is handled as question 5 decides.
+  - The batch whose reply moved the skew stays settled; only the batches not yet sent wait.
   - `PROTOCOL.md` §Skew guards and the engine README state the rule.
   Done when:
   - an engine test: a push of several batches whose second reply moves server time past the tolerance sends no
     third batch, ends with `ClockSkew`, and lands the rest at new stamps once the skew is back inside;
   - `bun run check:push` green.
-  Commit:
+  Commit: Stop a push once a reply puts skew past the tolerance
   Depends on: none
 
 - [ ] 9. Show the metered pause when heal or backfill waits for the allowance
@@ -307,7 +316,7 @@ Out:
   - the same with the last image of a due batch;
   - `backfill_stops_once_the_allowance_is_spent` still passes;
   - `bun run check:push` green.
-  Commit:
+  Commit: Show the metered pause when heal or backfill waits for the allowance
   Depends on: none
 
 - [ ] 10. Wake the runner when a push wait ends
@@ -320,7 +329,7 @@ Out:
   - a runner test with the fake timer: while the socket is up, a push wait 2 minutes out makes the runner sleep 2
     minutes, not 5, and the next cycle pushes;
   - `bun run check:push` green.
-  Commit:
+  Commit: Wake the runner when a push wait ends
   Depends on: none
 
 ## Outcome
