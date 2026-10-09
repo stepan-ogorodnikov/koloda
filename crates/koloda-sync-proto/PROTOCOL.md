@@ -1250,8 +1250,11 @@ A follow-up pull must also have reached a head observed after the lease was take
 Record the pinned cold head `H`, pull `hot` past it, and stream entries with `seq <= H` newest first.
 Then switch to incremental pulls from `H`.
 
-Join bootstrap is **union**: it never deletes a local id because the snapshot lacks it.
-Absence cleanup belongs only to re-bootstrap (§Recovery).
+Join bootstrap is **union** for rows the file already held.
+An entity with no create origin stays, and so does a create still in the outbox or held.
+Each lease raises the mark generation before its first page, and a create that lease delivers is marked.
+The bootstrap ends with the same absence cleanup as a re-bootstrap (§Re-bootstrap).
+A create only an earlier lease of this bootstrap delivered is removed with its descendants.
 
 On a joining device, bootstrap runs in this order:
 
@@ -1259,14 +1262,17 @@ On a joining device, bootstrap runs in this order:
 2. Stream the `hot` snapshot; its pages leave the cursors alone.
 3. Pull `hot` incrementally from `head_hot` to a head read after the lease opened.
 4. Stream the `cold` snapshot and set the `cold` cursor to the lease's `head_cold`.
-5. Clear the bootstrap flag, release the lease, and repair learning defaults.
+5. Remove creates only an earlier lease of this bootstrap delivered, clear the bootstrap flag, release the lease,
+   and repair learning defaults.
 
 The normal cycle then pulls `cold` from that head.
 Nothing is pushed until the bootstrap ends.
 Every path that makes a joiner active sets a persisted flag, so a relaunch bootstraps again instead of pulling from
 0.
 The device heartbeats once the last reply's server time is within half a TTL of the lease's expiry.
-A lapsed lease (`410 lease_expired`) restarts the bootstrap from step 1; union apply makes the repeat safe.
+A lapsed lease (`410 lease_expired`) restarts the bootstrap from step 1 under a new mark generation.
+A create only that lease delivered is absent when the bootstrap finishes.
+A repeated insert is still safe.
 A lease that lapses once its pages are applied is released all the same; it does not restart a finished bootstrap.
 `429 rate_limited` waits for the next cycle.
 
@@ -1301,15 +1307,17 @@ Used for `cursor_too_old`, a stale device's return, and a file that is behind (�
 Not used for joining.
 
 The barrier is a rebase generation and an open flag, both persisted.
-Opening it raises the generation.
+Opening it raises the generation once.
 Opening it while it is open changes nothing, so a relaunch or a lapsed lease resumes the same re-bootstrap.
+Every lease, including a join bootstrap's, raises the generation again before its first page.
+A create counts only when the lease the bootstrap finishes on delivered it.
 A cycle that finds the barrier open resumes it before anything else, as a joiner's cycle resumes its bootstrap.
 
 1. Open the barrier, then a snapshot lease.
    Do not push.
 2. Apply the snapshot, own sender included, through the apply rule.
-   Every create it delivers marks its origin with the generation, whether the apply rule inserted the row or dropped
-   the create as a duplicate.
+   Every create it delivers marks its origin with the lease's generation, whether the apply rule inserted the row
+   or dropped the create as a duplicate.
 3. Catch up incrementally to a head observed after the lease, marking the same way.
    `cold` resumes from the lease's cold head, as in a join bootstrap.
 4. Clean up absence in one transaction.
@@ -1790,6 +1798,8 @@ Every implementation of the engine and the server must pass these.
 - Rename on one device, notes or parameters on another; a no-op save emits nothing.
 - Algorithm deleted while another device changes its parameters (revisions from both survive).
 - Re-bootstrap with local writes during absence cleanup.
+- A bootstrap restarted on a new lease drops an entity only the earlier lease delivered, for a join and for a
+  re-bootstrap.
 - Start-fresh-then-Join overlays seeds; Add keeps an unmodified seed algorithm and remints a used seed template.
 - Start-fresh-then-Join into a space that deleted the seed template (the local seed row is deleted, never pushed).
 - Add with decks on an unmodified seed algorithm the space deleted (reminted, decks follow); an unused one is

@@ -1,7 +1,5 @@
-//! The re-bootstrap barrier: a generation that snapshot and catch-up apply mark creates with, and the absence
-//! cleanup that ends it (`crates/koloda-sync-proto/PROTOCOL.md` §Re-bootstrap).
-//!
-//! A join bootstrap is union and never deletes; only a re-bootstrap removes what the server no longer holds.
+//! The re-bootstrap barrier, the mark generation each bootstrap lease raises, and the absence cleanup that ends a
+//! join bootstrap or a re-bootstrap (`crates/koloda-sync-proto/PROTOCOL.md` §Bootstrap, §Re-bootstrap).
 
 use koloda_sync_proto::registry::Kind;
 use rusqlite::{params, Connection};
@@ -24,6 +22,22 @@ pub fn begin_rebase(db: &Database) -> Result<(), AppError> {
     throw_known_error(error_codes::DB_UPDATE, || db.with_conn(open_barrier))
 }
 
+/// Raises the mark generation for the lease whose pages are about to apply.
+///
+/// INVARIANT: this does not open or close the re-bootstrap barrier. A lapsed lease resumes the same barrier, and
+/// only the lease the bootstrap finishes on keeps its marks.
+pub fn begin_lease(db: &Database) -> Result<(), AppError> {
+    throw_known_error(error_codes::DB_UPDATE, || {
+        db.with_conn(|conn| {
+            conn.execute(
+                "UPDATE sync_state SET rebase_generation = rebase_generation + 1 WHERE id = 1",
+                [],
+            )?;
+            Ok(())
+        })
+    })
+}
+
 pub(super) fn open_barrier(conn: &Connection) -> Result<(), AppError> {
     conn.execute(
         r#"
@@ -40,28 +54,36 @@ pub(super) fn open_barrier(conn: &Connection) -> Result<(), AppError> {
 pub fn finish_rebase(db: &Database, cursor_cold: u64, starter: &Starter) -> Result<Vec<Kind>, AppError> {
     throw_known_error(error_codes::DB_UPDATE, || {
         db.with_transaction(|tx| {
-            let mut changed = Changed::default();
-            for kind in ABSENT_KINDS {
-                let mut after = String::new();
-                while let Some(batch) = absent_batch(tx, kind, &after)? {
-                    for id in &batch {
-                        remove_entity(tx, kind, id, None, starter, &mut changed)?;
-                    }
-                    after = batch.last().cloned().unwrap_or_default();
-                }
-            }
+            let changed = delete_absent(tx, starter)?;
             tx.execute(
                 "UPDATE sync_state SET cursor_cold = ?1, is_rebasing = 0 WHERE id = 1",
                 params![cursor_cold],
             )?;
-            Ok(changed.0)
+            Ok(changed)
         })
     })
 }
 
-// INVARIANT: absent means the server holds no create for it. A create still waiting in the outbox (in flight or not)
-// or held was never taken, so its entity stays whatever its age, and so does one a running heal has yet to re-push.
-// Removal records no tombstone and no fence: the server's reason for lacking the entity is not known to be a delete.
+/// Deletes creates the finishing lease did not mark, and returns the kinds whose product rows changed.
+///
+/// INVARIANT: absent means this bootstrap's finishing lease delivered no create for it. A create still waiting in
+/// the outbox (in flight or not) or held was never taken, so its entity stays, and so does one a running heal has
+/// yet to re-push. A row with no create origin was never delivered by a lease and stays. Removal records no
+/// tombstone and no fence: the server's reason for lacking the entity is not known to be a delete.
+pub(super) fn delete_absent(conn: &Connection, starter: &Starter) -> Result<Vec<Kind>, AppError> {
+    let mut changed = Changed::default();
+    for kind in ABSENT_KINDS {
+        let mut after = String::new();
+        while let Some(batch) = absent_batch(conn, kind, &after)? {
+            for id in &batch {
+                remove_entity(conn, kind, id, None, starter, &mut changed)?;
+            }
+            after = batch.last().cloned().unwrap_or_default();
+        }
+    }
+    Ok(changed.0)
+}
+
 fn absent_batch(conn: &Connection, kind: Kind, after: &str) -> Result<Option<Vec<String>>, AppError> {
     let ids: Vec<String> = conn
         .prepare(

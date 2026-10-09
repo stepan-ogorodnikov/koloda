@@ -44,9 +44,9 @@ A device's bearer token lives in the host's secret store under `sync.token.<devi
 - `src/metered.rs` — bulk transfers on a metered network: the network the host reports, the bootstrap and outbox
   checks, the allowance counted work spends, and the call that lifts the pause.
 - `src/disk.rs` — the free-disk preflight before a bootstrap applies, and the free-space reader the host passes in.
-- `src/bootstrap.rs` — a joiner's union bootstrap and a re-bootstrap from a snapshot lease: streams, catch-up,
-  heartbeats, restarts, a stop that gives the lease back at an envelope this app cannot read, and the re-bootstrap's
-  absence cleanup at the end.
+- `src/bootstrap.rs` — a join bootstrap and a re-bootstrap from a snapshot lease: streams, catch-up, heartbeats,
+  restarts, a stop that gives the lease back at an envelope this app cannot read, and absence cleanup at the end.
+  Each lease raises the mark generation before its pages.
 - `src/attachments.rs` — image uploads and fetches after the cycle's rounds: the one check after a restore of the
   images the server lacks, retries and waits, early stops, and the event
   that tells the host which images arrived.

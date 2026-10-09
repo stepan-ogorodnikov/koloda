@@ -1,5 +1,5 @@
-//! Bootstrap from a snapshot lease: a joiner's union bootstrap, and a re-bootstrap that ends by removing what the
-//! server no longer holds (`crates/koloda-sync-proto/PROTOCOL.md` §Bootstrap, §Re-bootstrap).
+//! Bootstrap from a snapshot lease. A join and a re-bootstrap both end by removing what only an earlier lease of
+//! that bootstrap delivered (`crates/koloda-sync-proto/PROTOCOL.md` §Bootstrap, §Re-bootstrap).
 //!
 //! INVARIANT: nothing is pushed until the bootstrap ends. Repairs it captures wait in the outbox, because a referent
 //! may still be on its way until `hot` has caught up to a head read after the lease.
@@ -7,7 +7,7 @@
 use std::sync::Arc;
 
 use koloda::repo::sync::apply::{apply_snapshot_page, finish_bootstrap, PageEntry};
-use koloda::repo::sync::rebase::{begin_rebase, finish_rebase};
+use koloda::repo::sync::rebase::{begin_lease, begin_rebase, finish_rebase};
 use koloda::repo::sync::repair::repair_dangling_defaults;
 use koloda_sync_proto::registry::{Kind, Lane};
 use koloda_sync_proto::transport::{Empty, ErrorCode, Lease, Snapshot, SnapshotPage};
@@ -18,8 +18,8 @@ use crate::engine::{merge, Session, Shared};
 use crate::error::SyncError;
 use crate::transport::Method;
 
-// WHY: a lapsed lease restarts the bootstrap, and union apply makes the repeat safe; a call gives up after this many
-// leases so that a server whose leases keep lapsing cannot hold it forever.
+// WHY: a lapsed lease restarts under a new mark generation; a call gives up after this many leases so that a server
+// whose leases keep lapsing cannot hold it forever.
 const MAX_LEASES: usize = 3;
 
 /// A joiner's union bootstrap, or a re-bootstrap whose barrier `begin_rebase` opened.
@@ -101,6 +101,12 @@ impl Shared {
             self.release(session, &lease).await?;
             return Err(error);
         }
+        // INVARIANT: the generation rises after the room checks, so a bootstrap that waits applies nothing and
+        // leaves the marks of an earlier attempt for the lease that finishes.
+        if let Err(error) = self.blocking(|shared| begin_lease(&shared.db)).await {
+            self.release(session, &lease).await?;
+            return Err(error);
+        }
 
         let cursor_hot = match self.fill(session, &mut lease, snapshot.head_hot, changed).await {
             // INVARIANT: a held bootstrap starts over from a new lease on the next trigger, so it gives this one back
@@ -115,18 +121,17 @@ impl Shared {
         // WHY: the flag clears before the release, so a failed release costs a lingering lease, not a second bootstrap.
         // A re-bootstrap's server flag clears only on release, so a failed release there costs a second one.
         let cursor_cold = snapshot.head_cold;
-        match kind {
+        let removed = match kind {
             Bootstrap::Join => {
-                self.blocking(move |shared| finish_bootstrap(&shared.db, cursor_cold))
-                    .await?;
+                self.blocking(move |shared| finish_bootstrap(&shared.db, cursor_cold, &shared.starter))
+                    .await?
             }
             Bootstrap::Rebase => {
-                let removed = self
-                    .blocking(move |shared| finish_rebase(&shared.db, cursor_cold, &shared.starter))
-                    .await?;
-                merge(changed, removed);
+                self.blocking(move |shared| finish_rebase(&shared.db, cursor_cold, &shared.starter))
+                    .await?
             }
-        }
+        };
+        merge(changed, removed);
         self.release(session, &lease).await?;
         let repaired = self
             .blocking(|shared| repair_dangling_defaults(&shared.db, &shared.starter))

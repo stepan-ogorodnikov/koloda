@@ -100,18 +100,20 @@ pub fn apply_snapshot_page(
     apply_entries(db, lane, entries, starter, |_, _| Ok(()))
 }
 
-/// Ends a bootstrap: `cold` resumes from the lease's cold head, and the next cycle pulls incrementally.
+/// Ends a bootstrap: removes what only an earlier lease of it delivered, `cold` resumes from the lease's cold head,
+/// and the next cycle pulls incrementally. Returns the kinds whose product rows changed.
 ///
 /// INVARIANT: call it once both snapshots and the `hot` catch-up are applied; `hot`'s cursor is already the
 /// catch-up's `scanned_through`.
-pub fn finish_bootstrap(db: &Database, cursor_cold: u64) -> Result<(), AppError> {
+pub fn finish_bootstrap(db: &Database, cursor_cold: u64, starter: &Starter) -> Result<Vec<Kind>, AppError> {
     throw_known_error(error_codes::DB_UPDATE, || {
-        db.with_conn(|conn| {
-            conn.execute(
+        db.with_transaction(|tx| {
+            let changed = super::rebase::delete_absent(tx, starter)?;
+            tx.execute(
                 "UPDATE sync_state SET cursor_cold = ?1, is_bootstrapping = 0 WHERE id = 1",
                 params![cursor_cold],
             )?;
-            Ok(())
+            Ok(changed)
         })
     })
 }
@@ -378,15 +380,17 @@ fn apply_create(conn: &Connection, entry: &Entry, starter: &Starter, changed: &m
     Ok(())
 }
 
-// INVARIANT: while a re-bootstrap's barrier is open, every create the server still holds marks its origin, the
-// duplicates the apply rule drops included. A create left unmarked is absent on the server (PROTOCOL.md,
-// Re-bootstrap).
+// INVARIANT: while a join bootstrap or a re-bootstrap is open, every create the lease delivered marks its origin,
+// the duplicates the apply rule drops included. A create left unmarked by the lease the bootstrap finishes on is
+// absent (PROTOCOL.md, Bootstrap, Re-bootstrap).
 fn mark_seen(conn: &Connection, kind: Kind, id: &str) -> Result<(), AppError> {
     conn.execute(
         r#"
         UPDATE sync_origins SET seen_generation = (SELECT rebase_generation FROM sync_state WHERE id = 1)
         WHERE kind = ?1 AND id = ?2 AND group_name = 'create'
-          AND EXISTS (SELECT 1 FROM sync_state WHERE id = 1 AND is_rebasing = 1)
+          AND EXISTS (
+              SELECT 1 FROM sync_state WHERE id = 1 AND (is_rebasing = 1 OR is_bootstrapping = 1)
+          )
         "#,
         params![kind.as_wire(), id],
     )?;

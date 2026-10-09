@@ -83,7 +83,7 @@ so card-progress and review namespaces stay distinct.
 
 **Remote apply** — `apply_page` writes product rows with its own SQL, never through repo write paths that capture.
 `apply_snapshot_page` applies a bootstrap page by the same rule and leaves the cursors alone; `finish_bootstrap`
-sets `cold`'s and clears the joiner's bootstrap flag.
+removes what only an earlier lease of that bootstrap delivered, sets `cold`'s cursor, and clears the flag.
 
 - A page stops at the first entry this app cannot read: what precedes it applies, the cursor stays just below it,
   and the `Hold` says whether the bytes are corrupt or need an app update.
@@ -126,8 +126,9 @@ remote apply queues a fetch for each linked id the file lacks.
 - A cycle that stops for skew calls `pause_clock`; `restamp_local_cohorts` clears the pause.
 - It moves exactly the registers, origins, and tombstones that still hold a member's old stamp.
 
-**Re-bootstrap** — `begin_rebase` opens the barrier; `apply_create` marks every create it meets while it is open,
-duplicates included; `finish_rebase` removes what stayed unmarked.
+**Re-bootstrap** — `begin_rebase` opens the barrier once; `begin_lease` raises the mark generation before each
+lease's pages. `apply_create` marks every create it meets while a join bootstrap or the barrier is open, duplicates
+included. `finish_rebase` and `finish_bootstrap` remove what the finishing lease left unmarked.
 
 - Removal goes through apply's `remove_entity`, the path an applied tombstone takes, minus the tombstone.
 - A create still in the outbox or in `sync_held` is unsent, not absent.
@@ -173,6 +174,7 @@ capture keeps recording for a later re-attach.
 - The space id is stored at enrollment; only an `active` file in the same space re-attaches.
 - `add_to_space` keeps, deletes, or remints seed rows, remints known rows with their dependents, then reserves the
   backfill stamps as a joiner.
+- A join bootstrap ends with the same absence cleanup as a re-bootstrap. A row with no create origin stays.
 - `replace_with_space` deletes product rows only; a blank joiner seeds with `seed_joiner_db` and enrolls.
 - Join tests probe through `FakeSpace::probe`; `copy_of` stands in for a copied file.
 

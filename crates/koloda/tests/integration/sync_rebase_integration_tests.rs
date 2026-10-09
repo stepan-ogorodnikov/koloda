@@ -5,16 +5,18 @@ use std::collections::HashMap;
 
 use koloda::app::db::Database;
 use koloda::domain::decks::{UpdateDeckData, UpdateDeckValues};
+use koloda::domain::seed_ids::{SEED_ALGORITHM_SIMPLE_ID, SEED_TEMPLATE_TYPE_ID};
 use koloda::repo::decks::{get_deck, update_deck};
-use koloda::repo::sync::apply::{apply_snapshot_page, PageEntry};
+use koloda::repo::sync::apply::{apply_snapshot_page, finish_bootstrap, PageEntry};
 use koloda::repo::sync::outbox::{push_batch, settle_push};
-use koloda::repo::sync::rebase::{begin_rebase, finish_rebase};
+use koloda::repo::sync::rebase::{begin_lease, begin_rebase, finish_rebase};
 use koloda_sync_proto::registry::{Kind, Lane};
 use koloda_sync_proto::transport::{HeldReason, Outcome, PushOutcome};
+use rusqlite::params;
 use uuid::Uuid;
 
 use crate::common::fixtures::{add_algorithm, add_card, add_deck, add_template};
-use crate::common::sync::{apply, count, device, hot_page, outbox, replica, starter, FakeSpace};
+use crate::common::sync::{apply, count, device, hot_page, outbox, replica, seeded_replica, starter, FakeSpace};
 
 /// Every create the replica has not pushed yet, by entity id, as the bytes a server would hold.
 fn creates(db: &Database) -> HashMap<String, Vec<u8>> {
@@ -306,4 +308,91 @@ fn an_empty_space_empties_the_four_kinds_and_keeps_revisions_and_settings() {
         settings,
         "settings are never absent"
     );
+}
+
+fn forget_create(db: &Database, id: &str) {
+    db.with_conn(|conn| {
+        conn.execute("DELETE FROM sync_origins WHERE id = ?1 AND group_name = 'create'", [id])?;
+        conn.execute("DELETE FROM sync_outbox WHERE id = ?1", [id])?;
+        Ok(())
+    })
+    .expect("the local create is forgotten");
+}
+
+fn hold_create(db: &Database, id: &str) {
+    let entry = outbox(db)
+        .into_iter()
+        .find(|entry| entry.envelope.header.id == id)
+        .expect("the create is queued");
+    let bytes = entry.envelope.encode().expect("the envelope encodes");
+    db.with_conn(|conn| {
+        conn.execute("DELETE FROM sync_outbox WHERE sender_seq = ?1", [entry.sender_seq])?;
+        conn.execute(
+            r#"
+            INSERT INTO sync_held (sender_seq, kind, id, group_name, commit_id, envelope, reason)
+            VALUES (?1, 'decks', ?2, 'create', x'00', ?3, 'schema')
+            "#,
+            params![entry.sender_seq, id, bytes],
+        )?;
+        Ok(())
+    })
+    .expect("the create is held");
+}
+
+#[test]
+fn a_join_bootstrap_drops_what_only_its_earlier_lease_delivered() {
+    let db = seeded_replica();
+    let local = add_deck(&db, SEED_ALGORITHM_SIMPLE_ID, SEED_TEMPLATE_TYPE_ID, "Local");
+    forget_create(&db, &local);
+    let queued = add_deck(&db, SEED_ALGORITHM_SIMPLE_ID, SEED_TEMPLATE_TYPE_ID, "Queued");
+    let held = add_deck(&db, SEED_ALGORITHM_SIMPLE_ID, SEED_TEMPLATE_TYPE_ID, "Held");
+    hold_create(&db, &held);
+
+    let other = replica();
+    let algorithm = add_algorithm(&other, "FSRS");
+    let template = add_template(&other, "Basic");
+    let gone = add_deck(&other, &algorithm, &template, "Gone");
+    let card = add_card(&other, &gone, &template, "hola");
+    let kept = add_deck(&other, &algorithm, &template, "Kept");
+    let sent = creates(&other);
+
+    begin_lease(&db).expect("the first lease marks");
+    stream(
+        &db,
+        vec![
+            sent[&algorithm].clone(),
+            sent[&template].clone(),
+            sent[&gone].clone(),
+            sent[&card].clone(),
+        ],
+    );
+    begin_lease(&db).expect("the second lease marks");
+    stream(
+        &db,
+        vec![sent[&algorithm].clone(), sent[&template].clone(), sent[&kept].clone()],
+    );
+    finish_bootstrap(&db, 0, &starter()).expect("the join bootstrap finishes");
+
+    assert!(!present(&db, "decks", &gone) && !present(&db, "cards", &card));
+    assert!(present(&db, "decks", &kept), "the second lease's deck stays");
+    assert!(present(&db, "decks", &local), "a row with no create origin stays");
+    assert!(present(&db, "decks", &queued));
+    assert!(
+        outbox(&db).iter().any(|entry| {
+            entry.envelope.header.id == queued
+                && entry
+                    .envelope
+                    .header
+                    .group
+                    .is_some_and(|group| group.as_wire() == "create")
+        }),
+        "the outboxed create stays"
+    );
+    assert!(present(&db, "decks", &held));
+    assert_eq!(
+        count(&db, &format!("SELECT COUNT(*) FROM sync_held WHERE id = '{held}'")),
+        1
+    );
+    assert!(present(&db, "algorithms", SEED_ALGORITHM_SIMPLE_ID));
+    assert_eq!(count(&db, "SELECT is_bootstrapping FROM sync_state"), 0);
 }

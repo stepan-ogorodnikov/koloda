@@ -3,6 +3,8 @@
 use koloda::domain::decks::DeleteDeckData;
 use koloda::repo::decks::delete_deck;
 use koloda_sync::transport::Method;
+use koloda_sync_proto::payload::{Delete, Payload};
+use koloda_sync_proto::registry::Kind;
 use koloda_sync_proto::transport::{ErrorCode, PullPage};
 use uuid::Uuid;
 
@@ -197,7 +199,7 @@ fn a_lapsed_lease_restarts_the_stream_under_the_same_barrier() {
     a.engine.sync_now().expect("A re-bootstraps and syncs");
 
     assert_eq!(opens(a), 2, "a second lease");
-    assert_eq!(generation(a), 1, "under the same barrier");
+    assert_eq!(generation(a), 3, "one barrier, and one mark generation per lease");
     assert!(a.deck(&away.doomed).is_none());
     assert!(!is_rebasing(a));
 }
@@ -215,11 +217,12 @@ fn a_relaunch_mid_rebase_finishes_the_same_re_bootstrap() {
     );
     assert!(a.engine.sync_now().is_err(), "the stream stops mid-way");
     assert!(is_rebasing(a), "the barrier outlives the stop");
+    assert_eq!(generation(a), 2, "the stopped lease raised the mark generation");
 
     let relaunched = away.space.server.relaunch(a);
     relaunched.engine.sync_now().expect("the relaunch resumes it");
 
-    assert_eq!(generation(&relaunched), 1, "the same barrier");
+    assert_eq!(generation(&relaunched), 3, "the resumed lease raises it again");
     assert!(!is_rebasing(&relaunched));
     assert!(relaunched.deck(&away.doomed).is_none());
     assert_eq!(
@@ -241,4 +244,34 @@ fn a_stale_device_re_bootstraps_before_it_pushes_even_with_nothing_collected() {
 
     assert!(opens_before_pushing(a, before), "the record's flag alone starts it");
     assert!(a.outbox().is_empty());
+}
+
+#[test]
+fn a_restarted_re_bootstrap_drops_what_only_the_lapsed_lease_delivered() {
+    let away = away();
+    let a = &away.space.device;
+    away.space.server.backdate(device_id(a), 91 * DAY_MS);
+    let delete = Payload::Delete {
+        kind: Kind::Decks,
+        delete: Delete { successor: None },
+    };
+    let during = away
+        .space
+        .raw_request(vec![(away.doomed.clone(), None, away.space.raw_stamp(1_000), delete)]);
+    a.transport.fault_on("/bootstrap/", Fault::After(vec![during]));
+    a.transport.fault_when(
+        Method::Get,
+        "/pull",
+        Fault::Reply(error_reply(410, ErrorCode::LeaseExpired)),
+    );
+
+    a.engine.sync_now().expect("A re-bootstraps on a second lease");
+
+    assert!(
+        a.deck(&away.doomed).is_none(),
+        "the deck only the first lease delivered is gone"
+    );
+    assert!(!a.has_card(&away.doomed_card), "and its card");
+    assert!(a.deck(&away.deck).is_some(), "a deck both leases deliver stays");
+    assert_eq!(opens(a), 2, "a second lease");
 }

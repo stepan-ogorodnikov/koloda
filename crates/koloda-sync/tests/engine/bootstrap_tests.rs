@@ -219,6 +219,34 @@ fn a_lease_that_lapses_mid_stream_restarts_the_bootstrap() {
 }
 
 #[test]
+fn a_restarted_join_drops_what_only_the_lapsed_lease_delivered() {
+    let space = Space::new();
+    let library = space.device.library();
+    space.device.engine.sync_now().expect("A syncs");
+    let b = space.server.join(&space.device);
+    let delete = Payload::Delete {
+        kind: Kind::Decks,
+        delete: Delete { successor: None },
+    };
+    let during = space.raw_request(vec![(library.deck.clone(), None, space.raw_stamp(1_000), delete)]);
+    b.transport.fault_on("/bootstrap/", Fault::After(vec![during]));
+    b.transport.fault_when(
+        Method::Get,
+        "/pull",
+        Fault::Reply(error_reply(410, ErrorCode::LeaseExpired)),
+    );
+
+    b.engine.sync_now().expect("B bootstraps on a second lease");
+
+    assert!(
+        b.deck(&library.deck).is_none(),
+        "the deck only the first lease delivered is gone"
+    );
+    assert!(!b.has_card(&library.card), "and its card");
+    assert_eq!(opens(&b), 2, "a second lease: {:?}", requests(&b));
+}
+
+#[test]
 fn heartbeats_keep_a_lease_alive_past_its_ttl() {
     let space = Space::new();
     let library = space.device.library();

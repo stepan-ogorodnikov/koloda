@@ -24,6 +24,8 @@ Rust is the source of truth for the AI provider enum and secrets redaction; `@ko
   It then remints known rows on Add, or deletes product rows on Replace; a blank joiner seeds with `seed_joiner_db`.
   `apply_page` in `apply.rs` applies envelopes other devices captured, and `apply_snapshot_page` a bootstrap
   snapshot's; both stop at the first entry this app cannot read and return it as a `Hold`.
+  `finish_bootstrap` sets the `cold` cursor, clears the joiner's flag, and removes what only an earlier lease of
+  that bootstrap delivered.
   `repair.rs` repoints pointers to dead rows.
   `outbox.rs` picks push batches of whole cohorts and settles each reply, lost reply, or refusal in one transaction.
   It also tells how many bytes the outbox holds, which a metered network weighs before a push.
@@ -32,7 +34,8 @@ Rust is the source of truth for the AI provider enum and secrets redaction; `@ko
   `attachments.rs` queues image uploads that push outcomes ask for and fetches of images remote cards link, and
   stores fetched bytes through the same insert as a local add.
   `restamp.rs` gives each pending `local` cohort a new stamp after a clock correction or a new device id.
-  `rebase.rs` opens a re-bootstrap's barrier and, once its stream is applied, deletes what the server no longer holds.
+  `rebase.rs` opens a re-bootstrap's barrier once, raises the mark generation for each lease, and deletes what the
+  finishing lease left unmarked. A join bootstrap ends the same way.
   `switch.rs` moves a file to a new device id: it settles what the old sender's receipts show accepted, renumbers the
   rest, and re-stamps the cohorts no receipt touched.
   `heal.rs` re-pushes, after a server restore, every write above its sender's cutoff, re-encoded from the row with its

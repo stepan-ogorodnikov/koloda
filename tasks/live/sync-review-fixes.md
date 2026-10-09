@@ -139,7 +139,7 @@ The owner took every recommendation on 2026-10-09.
 
 ## Plan
 
-- [ ] 1. Clean up after a restarted bootstrap by marks
+- [x] 1. Clean up after a restarted bootstrap by marks
   Goal (per question 2):
   - Every bootstrap lease, join or re-bootstrap, raises `sync_state.rebase_generation` before its first page
     applies.
