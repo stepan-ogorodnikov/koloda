@@ -1,6 +1,6 @@
 # Sync engine audit fixes
 
-Status: draft
+Status: ready
 
 ## Intent
 
@@ -95,7 +95,7 @@ Out:
 
 - R2's resumable bootstrap: deferred to the mobile host (question 2).
 - P1's pin-by-seq redesign (question 5).
-- R9's receipt collection, if question 4 keeps the recommendation.
+- R9's receipt collection (question 4).
 - P3's chunked deletes, already "may later" in `PROTOCOL.md`; nothing to change.
 - The two smaller decisions of `sync-review-fixes`: the authoritative reset keeps `sync_enrolling`, and a fork leaves
   a claim pending for another space alone.
@@ -104,13 +104,14 @@ Out:
 
 ## Open questions
 
-The owner took the agent's recommendations on 2026-10-09; questions 1 and 4 still need an answer.
+The owner took every recommendation on 2026-10-09.
 
-- [ ] 1. Area guides? — open.
-  Proposed, as for `sync-review-fixes`: `agents/TASKS.md`, `agents/IMPLEMENTATION-PLAN.md`, `agents/MARKDOWN.md`,
-  `agents/CODE-DOCUMENTATION.md`, `agents/CODE-STYLE.md`, `agents/TESTING.md`, `agents/RUST.md`, `agents/DB.md`
-  (items 1, 2, and 13 add migrations), `agents/BACKWARDS-COMPATIBILITY.md` (item 5 changes what holds), and
-  `agents/REVIEW.md` for self-review.
+- [x] 1. Area guides?
+  Answer: the set proposed, as for `sync-review-fixes`.
+  `agents/TASKS.md`, `agents/IMPLEMENTATION-PLAN.md`, `agents/MARKDOWN.md`, `agents/CODE-DOCUMENTATION.md`,
+  `agents/CODE-STYLE.md`, `agents/TESTING.md`, `agents/RUST.md`, `agents/DB.md` (items 1, 2, and 13 add
+  migrations), `agents/BACKWARDS-COMPATIBILITY.md` (item 5 changes what holds), and `agents/REVIEW.md` for
+  self-review.
   Also the four crate READMEs and `crates/koloda-sync-proto/PROTOCOL.md`.
 - [x] 2. R2: how does a device that only ticks bootstrap?
   Answer: deferred to the mobile host; item 15 states the limit in `PROTOCOL.md` §Bootstrap.
@@ -127,13 +128,11 @@ The owner took the agent's recommendations on 2026-10-09; questions 1 and 4 stil
   - R12 bounds the rows a heal call scans instead of driving the scan from an index.
   - The index would hold one entry per review in `sync_origins`, hundreds of MB at 20M reviews, kept on every apply.
   - `sync_outbox (commit_id)` is indexed: the outbox drains, so that index stays small.
-- [ ] 4. R9: collect receipts, or keep them for v1? — open.
-  Recommendation: keep them for v1, and say so in `PROTOCOL.md`.
+- [x] 4. R9: collect receipts, or keep them for v1?
+  Answer: keep them for v1; item 15 says so in `PROTOCOL.md`.
   - Collecting needs a protocol rule for a replay below the kept floor.
     There the server can no longer tell a same-digest retry from a reused seq.
   - Receipts are about 1.4 GB at 20M reviews by the report's estimate, beside a log several times that.
-  - Item 15 assumes the recommendation.
-    Collecting instead replaces that sentence with a spec item and a server item.
 - [x] 5. P1: pin leases by seq?
   Answer: not in v1; `lease_items` stays, and item 15 states its cost in `PROTOCOL.md` §Bootstrap.
 - [x] 6. P2: what does a join do on a file attached to another space?
@@ -170,9 +169,7 @@ The owner took the agent's recommendations on 2026-10-09; questions 1 and 4 stil
   Done when:
   - the new test passes, and fails with `V6` removed (checked by hand once);
   - `bun run check:push` green.
-  Commit:
-  - a. Index the space's heads by version
-  - b. Stop pulls and lease ends from scanning heads
+  Commit: Index the space's heads by version
   Depends on: none
 
 - [ ] 2. Renumber a device's seqs through the primary key
@@ -194,9 +191,7 @@ The owner took the agent's recommendations on 2026-10-09; questions 1 and 4 stil
   - the new test passes;
   - the fork, heal, and held-release tests in `koloda` and `koloda-sync` pass unchanged;
   - `bun run check:push` green.
-  Commit:
-  - a. Renumber a device's seqs through the primary key
-  - b. Find a renumbered row's stamps by its entity
+  Commit: Renumber a device's seqs through the primary key
   Depends on: none
 
 - [ ] 3. Group the outbox into cohorts in SQL
@@ -210,9 +205,7 @@ The owner took the agent's recommendations on 2026-10-09; questions 1 and 4 stil
   - a `koloda` test: an outbox of many cohorts, some in flight, yields the same batches as before;
   - the push tests pass unchanged;
   - `bun run check:push` green.
-  Commit:
-  - a. Group the outbox into cohorts in SQL
-  - b. Read only the cohorts a push sends
+  Commit: Group the outbox into cohorts in SQL
   Depends on: 2
 
 - [ ] 4. Bound the rows a heal call scans
@@ -231,9 +224,7 @@ The owner took the agent's recommendations on 2026-10-09; questions 1 and 4 stil
     and finishes;
   - the heal tests pass unchanged;
   - `bun run check:push` green.
-  Commit:
-  - a. Bound the rows a heal call scans
-  - b. Advance a heal scan by window, not by match
+  Commit: Bound the rows a heal call scans
   Depends on: none
 
 - [ ] 5. Hold the lane on a payload that breaks a domain rule
@@ -252,9 +243,7 @@ The owner took the agent's recommendations on 2026-10-09; questions 1 and 4 stil
   - an engine test: a raw review with an invalid rating, pushed as the corrupt-envelope tests push, holds the other
     device's `cold` lane at its seq, and `drop-envelope` of it lets the lane move on;
   - `bun run check:push` green.
-  Commit:
-  - a. Hold the lane on a payload that breaks a domain rule
-  - b. Treat a decodable payload that fails validation as corrupt
+  Commit: Hold the lane on a payload that breaks a domain rule
   Depends on: none
 
 - [ ] 6. Seed a blank joiner and enroll it in one transaction
@@ -269,9 +258,7 @@ The owner took the agent's recommendations on 2026-10-09; questions 1 and 4 stil
     the next join with the same code joins as blank on the same device.
     A test-only SQLite trigger that aborts the `sync_state` insert once is one way to fail it.
   - `bun run check:push` green.
-  Commit:
-  - a. Seed a blank joiner and enroll it in one transaction
-  - b. Keep a blank join blank until it enrolls
+  Commit: Seed a blank joiner and enroll it in one transaction
   Depends on: none
 
 - [ ] 7. Finish an interrupted untouched-seed join without asking
@@ -290,9 +277,7 @@ The owner took the agent's recommendations on 2026-10-09; questions 1 and 4 stil
     not show `ImportPending`, and the next cycle adds, bootstraps, and syncs;
   - a used file left `import_pending` still waits for `import`;
   - `bun run check:push` green.
-  Commit:
-  - a. Finish an interrupted untouched-seed join without asking
-  - b. Add an untouched seed left pending on the next cycle
+  Commit: Finish an interrupted untouched-seed join without asking
   Depends on: none
 
 - [ ] 8. Refuse a join while the file is attached to another space
@@ -309,9 +294,7 @@ The owner took the agent's recommendations on 2026-10-09; questions 1 and 4 stil
     claims from another device;
   - after detaching from A, the same file joins B as a used file;
   - `bun run check:push` green.
-  Commit:
-  - a. Refuse a join while the file is attached to another space
-  - b. Ask a file to detach before it joins another space
+  Commit: Refuse a join while the file is attached to another space
   Depends on: none
 
 - [ ] 9. Report a failed secret delete after a commit without failing the call
@@ -329,9 +312,7 @@ The owner took the agent's recommendations on 2026-10-09; questions 1 and 4 stil
     - a detach whose token delete fails returns `Ok` and emits the error, and the re-attach removes the old token;
     - a join whose pending-token delete fails returns `Ok`;
   - `bun run check:push` green.
-  Commit:
-  - a. Report a failed secret delete after a commit without failing the call
-  - b. Forget an old token on re-attach and warn on a failed delete
+  Commit: Report a failed secret delete after a commit without failing the call
   Depends on: none
 
 - [ ] 10. Check skew before an enrollment reserves stamps
@@ -345,9 +326,7 @@ The owner took the agent's recommendations on 2026-10-09; questions 1 and 4 stil
   - engine tests: a join and a space creation with the clock an hour ahead stop with `ClockSkew` before enrolling,
     then finish on the same device once the clock is back;
   - `bun run check:push` green.
-  Commit:
-  - a. Check skew before an enrollment reserves stamps
-  - b. Refuse to enroll on a clock outside the tolerance
+  Commit: Check skew before an enrollment reserves stamps
   Depends on: 6
 
 - [ ] 11. Remint cards and their reviews a chunk at a time
@@ -363,9 +342,7 @@ The owner took the agent's recommendations on 2026-10-09; questions 1 and 4 stil
   - the Add tests pass unchanged;
   - a `koloda` test: an Add that remints a deck with more cards than one chunk moves every card and review;
   - `bun run check:push` green.
-  Commit:
-  - a. Remint cards and their reviews a chunk at a time
-  - b. Stream an Add's remint instead of collecting every id
+  Commit: Remint cards and their reviews a chunk at a time
   Depends on: none
 
 - [ ] 12. Write a device's last seen and cursors only when they move
@@ -381,9 +358,7 @@ The owner took the agent's recommendations on 2026-10-09; questions 1 and 4 stil
     writes nothing;
   - the staleness tests pass unchanged;
   - `bun run check:push` green.
-  Commit:
-  - a. Write a device's last seen and cursors only when they move
-  - b. Skip server writes a request does not need
+  Commit: Write a device's last seen and cursors only when they move
   Depends on: none
 
 - [ ] 13. Keep the pairing preview's counts and bytes in counters
@@ -402,9 +377,7 @@ The owner took the agent's recommendations on 2026-10-09; questions 1 and 4 stil
   - a server test: after pushes, compaction, a cascading delete, `drop-envelope`, and GC, the preview matches what
     the old scan returns;
   - `bun run check:push` green.
-  Commit:
-  - a. Keep the pairing preview's counts and bytes in counters
-  - b. Count live entities and log bytes by trigger
+  Commit: Keep the pairing preview's counts and bytes in counters
   Depends on: 1
 
 - [ ] 14. Defer a transfer the server fails on
@@ -417,9 +390,7 @@ The owner took the agent's recommendations on 2026-10-09; questions 1 and 4 stil
   - an engine test: the server fails one fetch with a `5xx`, for example a blob file removed from its disk, and
     the other images of the batch arrive that cycle;
   - `bun run check:push` green.
-  Commit:
-  - a. Defer a transfer the server fails on
-  - b. Keep one failing image from holding back the others
+  Commit: Defer a transfer the server fails on
   Depends on: none
 
 - [ ] 15. State the sync limits v1 accepts
@@ -433,9 +404,7 @@ The owner took the agent's recommendations on 2026-10-09; questions 1 and 4 stil
   Done when:
   - the sentences are in place;
   - `bun run check:push` green.
-  Commit:
-  - a. State the sync limits v1 accepts
-  - b. Record the deferred audit findings in the protocol
+  Commit: State the sync limits v1 accepts
   Depends on: none
 
 ## Outcome
