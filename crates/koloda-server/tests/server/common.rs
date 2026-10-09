@@ -112,6 +112,7 @@ impl Harness {
             min_free_disk,
             reserve_disk,
             free_space: disk,
+            ..Storage::default()
         };
         Harness::open_with(dir, setup_token, storage)
     }
@@ -137,7 +138,13 @@ impl Harness {
 
     /// Opens the data directory again, as `serve` does when it starts after a restore moved `CURRENT`.
     pub fn reopen(&mut self) {
-        self.server = Arc::new(Server::open(self._dir.path(), self.clock.clone()).expect("open the data directory"));
+        self.reopen_with(Storage::default());
+    }
+
+    pub fn reopen_with(&mut self, storage: Storage) {
+        self.server = Arc::new(
+            Server::open_with(self._dir.path(), self.clock.clone(), storage).expect("open the data directory"),
+        );
         self.router = router(Arc::clone(&self.server));
     }
 

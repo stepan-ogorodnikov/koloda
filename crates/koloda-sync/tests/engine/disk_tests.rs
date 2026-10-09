@@ -1,8 +1,10 @@
 use std::path::Path;
 use std::sync::atomic::Ordering;
 
+use koloda_server::quota::Storage;
 use koloda_sync::error::SyncError;
 use koloda_sync::status::{State, Stop};
+use koloda_sync_proto::transport::ErrorCode;
 use tempfile::TempDir;
 use uuid::Uuid;
 
@@ -97,4 +99,42 @@ fn a_bootstrap_grows_the_file_by_less_than_three_times_its_bytes() {
         "the file grew by {grown} bytes for a snapshot of {bytes}, past the preflight's factor"
     );
     assert_eq!(phone.reviews(&library.card), 3_000, "every review arrived");
+}
+
+// WHY: the server test owns the refusal; this one shows the status a host reads and that no write is lost.
+#[test]
+fn writes_a_server_out_of_disk_refuses_wait_in_the_outbox_and_go_once_it_has_room() {
+    let space = Space::new();
+    let a = &space.device;
+    let library = a.library();
+    a.engine.sync_now().expect("A pushes its library");
+    // WHY: SQLite never caps a file below its size, so a cap of one page holds the space where it is.
+    space.server.restart_with(Storage {
+        max_space_pages: 1,
+        ..Storage::default()
+    });
+    a.add_cards(&library.deck, &library.template, 200);
+    let pending = a.outbox().len();
+
+    let refused = a.engine.sync_now();
+    let status = a.engine.status().expect("status reads");
+
+    assert!(
+        matches!(
+            refused,
+            Err(SyncError::PushRefused {
+                code: ErrorCode::InsufficientStorage,
+                ..
+            })
+        ),
+        "{refused:?}"
+    );
+    assert_eq!(
+        status.state,
+        State::Stopped(Stop::PushRefused(ErrorCode::InsufficientStorage))
+    );
+    assert_eq!(a.outbox().len(), pending, "every card waits");
+    space.server.restart_with(Storage::default());
+    a.engine.sync_now().expect("A pushes once the server has room");
+    assert!(a.outbox().is_empty());
 }

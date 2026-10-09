@@ -42,6 +42,9 @@ pub struct Storage {
     /// Below this many free bytes, every push is refused before anything is consumed or fenced.
     pub reserve_disk: u64,
     pub free_space: Arc<dyn FreeSpace>,
+    /// Caps each space file at this many pages, or at its size when it opens if that is larger, so a write past it
+    /// fails as on a full disk. Zero, the default, leaves the files uncapped; `serve` has no flag for it.
+    pub max_space_pages: u64,
 }
 
 impl Default for Storage {
@@ -50,6 +53,7 @@ impl Default for Storage {
             min_free_disk: 0,
             reserve_disk: 0,
             free_space: Arc::new(VolumeFreeSpace),
+            max_space_pages: 0,
         }
     }
 }

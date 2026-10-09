@@ -44,6 +44,7 @@ That is for a TLS reverse proxy in front of it, or for `tailscale serve --bg 808
 A proxy must pass WebSocket upgrades on `/v1/spaces/{space}/events`, which tells devices when to sync.
 Below `--min-free-disk` free bytes (1 GiB by default) it holds growing writes as if every space were over its quota,
 and below `--reserve-disk` (64 MiB) it refuses every push; on a platform without `statvfs` both are off.
+A request that runs out of disk anyway is refused with `507` and consumes nothing.
 It runs a garbage collection pass every hour, over tombstones every active device has passed and attachments no card
 has linked for 90 days; `Server::collect_garbage` runs one on demand.
 `backup` copies the active generation while `serve` runs, into a directory that is missing or empty.

@@ -189,7 +189,7 @@ The owner took every recommendation on 2026-10-09.
   Commit: Keep a running total of each space's attachment bytes
   Depends on: none
 
-- [ ] 5. Answer a server out of disk with 507
+- [x] 5. Answer a server out of disk with 507
   Goal (per question 4):
   - SQLite's disk-full error, and an attachment file write that fails for lack of space, answer
     `507 insufficient_storage` instead of `500 internal`.
@@ -206,6 +206,10 @@ The owner took every recommendation on 2026-10-09.
   - `bun run check:push` green.
   Commit: Answer a server out of disk with 507
   Depends on: none
+  Deviation: the tests push new cards and reviews, not a deck delete.
+  A delete frees more pages than its fences take and grows only the WAL, which the page cap does not limit, so it
+  applies under the cap; a real full disk fails its WAL write as `SQLITE_FULL`, which the same mapping answers.
+  The `StorageFull` mapping for an attachment write has no test: nothing in a test fills the disk under the store.
 
 - [ ] 6. Test algorithm repair racing a deck's template change
   Goal:

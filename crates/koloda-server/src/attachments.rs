@@ -286,5 +286,12 @@ fn write_synced(path: &Path, bytes: &[u8]) -> io::Result<()> {
 }
 
 fn io_error(error: io::Error) -> ApiError {
+    if error.kind() == io::ErrorKind::StorageFull {
+        return ApiError::new(
+            StatusCode::INSUFFICIENT_STORAGE,
+            ErrorCode::InsufficientStorage,
+            format!("the server is out of disk: {error}"),
+        );
+    }
     ApiError::internal(format!("attachment store: {error}"))
 }

@@ -14,7 +14,9 @@ use rusqlite::Connection;
 use sha2::{Digest, Sha256};
 use uuid::Uuid;
 
-use crate::common::{batch, card_create, outcomes, stamp, tombstone, uuid, write, Harness, TestDisk};
+use koloda_server::quota::Storage;
+
+use crate::common::{batch, card_create, child, outcomes, stamp, tombstone, uuid, write, Harness, TestDisk};
 
 const QUOTA: Outcome = Outcome::Held {
     reason: HeldReason::Quota,
@@ -310,6 +312,63 @@ async fn an_upload_counts_toward_the_quota_once_until_it_is_collected() {
     assert!(!is_over_above, "the image counts once");
     assert!(is_over_at, "the image counts");
     assert!(!is_over_after_collection, "a collected image counts no more");
+}
+
+/// The space file's heads and its lanes' highest seq, which a push that consumed nothing leaves alone.
+fn heads_and_seq(harness: &Harness, device: &Enrollment) -> (i64, i64) {
+    let conn = Connection::open(
+        harness
+            .generation_dir()
+            .join("spaces")
+            .join(format!("{}.db", space(device))),
+    )
+    .expect("the space database opens");
+    conn.query_row(
+        "SELECT (SELECT COUNT(*) FROM heads), (SELECT MAX(head) FROM lanes)",
+        [],
+        |row| Ok((row.get(0)?, row.get(1)?)),
+    )
+    .expect("counts read")
+}
+
+#[tokio::test]
+async fn a_push_that_runs_out_of_disk_consumes_nothing_and_applies_once_there_is_room() {
+    let mut harness = Harness::new();
+    let device = harness.create_space("Study").await;
+    decks(&harness, &device).await;
+    let mut items = Vec::new();
+    for card in 0..200_u64 {
+        let card_id = format!("01920000-0000-7000-8000-{card:012x}");
+        let seq = 4 + card * 2;
+        items.push((seq, card_create(&card_id, DECK, TEMPLATE, stamp(1, 0, 1))));
+        let review_id = format!("01920000-0000-7000-9000-{card:012x}");
+        items.push((
+            seq + 1,
+            child(Kind::Reviews, &review_id, &card_id, Group::Row, stamp(1, 0, 1)),
+        ));
+    }
+    let before = heads_and_seq(&harness, &device);
+    // WHY: SQLite never caps a file below its size, so a cap of one page holds the space where it is.
+    harness.reopen_with(Storage {
+        max_space_pages: 1,
+        ..Storage::default()
+    });
+
+    let refused = harness.push(&device, items.clone()).await.error();
+    let after_refusal = heads_and_seq(&harness, &device);
+    harness.reopen();
+    let applied = push_outcomes(&harness, &device, items).await;
+
+    assert_eq!(
+        refused,
+        (StatusCode::INSUFFICIENT_STORAGE, ErrorCode::InsufficientStorage)
+    );
+    assert_eq!(after_refusal, before, "the push consumed nothing");
+    assert_eq!(
+        applied,
+        vec![Outcome::Applied; 400],
+        "the same push applies once there is room"
+    );
 }
 
 #[tokio::test]

@@ -1046,6 +1046,9 @@ While a space is over:
 Usage is read once per push, so a push may overshoot the quota by one batch.
 Below the reserve, every push that holds a new seq is refused with `507` before anything is consumed or fenced.
 Deletes are refused too; they wait until the operator frees disk.
+A request whose transaction or attachment write runs out of disk anyway, as a large delete above the reserve can,
+is `507` as well.
+Its transaction rolls back, so it consumed nothing, and the device sends it again on a later cycle.
 A device learns that a space has room again from `is_over_quota` and pushes its held writes (§Push outcomes).
 
 ### Corrupt envelopes

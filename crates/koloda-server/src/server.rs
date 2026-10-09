@@ -92,13 +92,13 @@ impl Server {
         if !path.exists() {
             return Ok(None);
         }
-        let space = Arc::new(SpaceDb::open(&path)?);
+        let space = Arc::new(SpaceDb::open(&path, self.storage().max_space_pages)?);
         spaces.insert(id, Arc::clone(&space));
         Ok(Some(space))
     }
 
     pub(crate) fn create_space_db(&self, id: Uuid, epoch: Uuid, now_ms: u64) -> Result<(), ApiError> {
-        let space = SpaceDb::open(&self.space_path(id))?;
+        let space = SpaceDb::open(&self.space_path(id), self.storage().max_space_pages)?;
         let mut conn = lock(&space.writer)?;
         let tx = conn.transaction()?;
         tx.execute(
@@ -213,8 +213,11 @@ impl Server {
 }
 
 impl SpaceDb {
-    fn open(path: &Path) -> Result<SpaceDb, ApiError> {
+    fn open(path: &Path, max_pages: u64) -> Result<SpaceDb, ApiError> {
         let writer = db::open_space(path)?;
+        if max_pages > 0 {
+            writer.pragma_update(None, "max_page_count", max_pages)?;
+        }
         let (head_hot, head_cold) = log::lane_heads(&writer)?;
         Ok(SpaceDb {
             writer: Mutex::new(writer),

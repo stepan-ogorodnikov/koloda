@@ -114,6 +114,15 @@ impl fmt::Display for ApiError {
 
 impl From<rusqlite::Error> for ApiError {
     fn from(error: rusqlite::Error) -> Self {
+        // WHY: a disk that fills mid-transaction rolls the transaction back, so the request consumed nothing; the
+        // device keeps what it sent and waits for room, as below the reserve (PROTOCOL.md, Quotas).
+        if error.sqlite_error_code() == Some(rusqlite::ErrorCode::DiskFull) {
+            return ApiError::new(
+                StatusCode::INSUFFICIENT_STORAGE,
+                ErrorCode::InsufficientStorage,
+                format!("the server is out of disk: {error}"),
+            );
+        }
         ApiError::internal(format!("sqlite: {error}"))
     }
 }

@@ -26,6 +26,7 @@ use koloda::app::init::seed_joiner_db;
 use koloda::app::secrets::SecretStore;
 use koloda::repo::sync::{enroll_device, SpaceRole};
 use koloda_server::clock::Clock;
+use koloda_server::quota::Storage;
 use koloda_server::restore::{self, RestoreOptions};
 use koloda_server::server::Server;
 use koloda_server::{backup, data_dir, router};
@@ -127,6 +128,15 @@ impl TestServer {
                 is_rotating_tokens: false,
             },
         );
+    }
+
+    /// Starts the server again on the same data directory with `storage`, as `serve` does after a restart.
+    pub fn restart_with(&self, storage: Storage) {
+        let server = Arc::new(
+            Server::open_with(self._dir.path(), self.clock.clone(), storage).expect("open the data directory"),
+        );
+        *self.routes.lock().expect("routes lock") = router(Arc::clone(&server));
+        *self.server.lock().expect("server lock") = server;
     }
 
     pub fn restore_with(&self, out: &TempDir, options: RestoreOptions) {
