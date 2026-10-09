@@ -211,7 +211,7 @@ The owner took every recommendation on 2026-10-09.
   applies under the cap; a real full disk fails its WAL write as `SQLITE_FULL`, which the same mapping answers.
   The `StorageFull` mapping for an attachment write has no test: nothing in a test fills the disk under the store.
 
-- [ ] 6. Test algorithm repair racing a deck's template change
+- [x] 6. Test algorithm repair racing a deck's template change
   Goal:
   - A deletes an algorithm with a successor, so its deck's `algorithm` pointer repairs to the successor.
   - Meanwhile B changes the same deck's template.

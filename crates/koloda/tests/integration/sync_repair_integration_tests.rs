@@ -112,6 +112,45 @@ fn a_deck_switched_to_an_algorithm_deleted_with_a_successor_follows_the_successo
 }
 
 #[test]
+fn an_algorithm_repair_racing_a_template_change_on_the_same_deck_keeps_both() {
+    for is_template_change_pushed_first in [true, false] {
+        let (a, b) = (replica(), replica());
+        let doomed = add_algorithm(&a, "Doomed");
+        let successor = add_algorithm(&a, "Successor");
+        let (basic, cloze) = (add_template(&a, "Basic"), add_template(&a, "Cloze"));
+        let deck = add_deck(&a, &doomed, &basic, "Spanish");
+        let mut space = FakeSpace::default();
+        space.push(&a);
+        space.pull(&b);
+
+        delete_algorithm(
+            &a,
+            DeleteAlgorithmData {
+                id: doomed.clone(),
+                successor_id: Some(successor.clone()),
+            },
+        )
+        .unwrap();
+        repoint_deck(&b, &deck, None, Some(&cloze));
+
+        let order: [&Database; 2] = if is_template_change_pushed_first {
+            [&b, &a]
+        } else {
+            [&a, &b]
+        };
+        settle(&mut space, &order);
+
+        for (name, db) in [("A", &a), ("B", &b)] {
+            assert_eq!(
+                deck_pointers(db, &deck),
+                (successor.clone(), cloze.clone()),
+                "replica {name}, template change pushed first: {is_template_change_pushed_first}"
+            );
+        }
+    }
+}
+
+#[test]
 fn a_dead_pointer_without_a_live_successor_repairs_to_the_lowest_live_id() {
     for successor in [None, Some(GONE), Some("live")] {
         let b = replica();
