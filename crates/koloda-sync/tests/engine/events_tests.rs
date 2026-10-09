@@ -3,12 +3,14 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use koloda_sync::runner::Event;
+use koloda_sync_proto::envelope::Envelope;
+use koloda_sync_proto::hlc::Hlc;
 use koloda_sync_proto::payload::{Payload, Title};
-use koloda_sync_proto::registry::Kind;
+use koloda_sync_proto::registry::{Group, Kind, Lane};
 use koloda_sync_proto::transport::{ErrorCode, RestoreMode};
 use uuid::Uuid;
 
-use crate::common::{error_reply, Device, Fault, Space};
+use crate::common::{error_reply, system_ms, Device, Fault, Space};
 use crate::fixtures::Library;
 use crate::runner_support::{
     channel_sink, wait_for, ManualTimer, COALESCE, FIRST_RETRY, POLL, POLL_LISTENING, SILENT_FOR,
@@ -232,5 +234,64 @@ fn a_restore_behind_a_dropped_socket_is_applied_and_the_socket_reconnects_on_the
     assert_eq!(
         listens[1].epoch, epoch,
         "the socket reconnected once the cycle applied the restore"
+    );
+}
+
+#[test]
+fn a_push_waiting_on_server_time_wakes_the_runner_when_the_wait_ends() {
+    const MINUTE: Duration = Duration::from_secs(60);
+    let space = Space::new();
+    let a = &space.device;
+    let library = a.library();
+    a.engine.sync_now().expect("A pushes its library");
+    // A rename held over the quota is consumed at a stamp seven minutes ahead. Once the server's clock goes back, the
+    // released rename is refused as ahead and cannot move, so its push waits until server time is two minutes on.
+    let server = space.server.server();
+    server.set_quota(space.space_id(), Some(1)).expect("the quota is set");
+    space.server.clock.set_offset(4 * 60 * 1000);
+    let ahead = Hlc::new(system_ms() + 7 * 60 * 1000, 0).expect("wall time fits").raw();
+    a.execute(&format!("UPDATE sync_state SET last_hlc = {ahead}"));
+    a.update_deck(&library.deck, "Renamed", &library.algorithm, &library.template);
+    a.engine.sync_now().expect("the rename is held over the quota");
+    space.server.clock.set_offset(0);
+    server.set_quota(space.space_id(), None).expect("the quota is lifted");
+    a.engine.sync_now().expect("the push waits for server time");
+    assert!(a
+        .engine
+        .status()
+        .expect("the status reads")
+        .push_resumes_at_ms
+        .is_some());
+    a.transport.serve_events();
+    let timer = ManualTimer::default();
+    let (sink, _events) = channel_sink();
+    a.engine
+        .start_runner(sink, Arc::new(timer.clone()))
+        .expect("the runner starts");
+    timer.wait_for_sleep(SILENT_FOR);
+    let (cycle_starts, _sockets) = starts(a);
+
+    // WHY: the runner's first cycle may end before the socket opens; a nudge runs one that ends with it open.
+    a.engine.nudge();
+    next(&cycle_starts);
+    // WHY: below two minutes by the time the cycle has run, and above the socket's 75 s silence wait.
+    let slept = timer.wait_for_sleep_within(Duration::from_secs(100)..=2 * MINUTE);
+    space.server.clock.set_offset(4 * 60 * 1000);
+    timer.advance(slept);
+    next(&cycle_starts);
+    timer.wait_for_any_sleep(&[POLL, POLL_LISTENING]);
+
+    assert!(a.outbox().is_empty(), "the cycle after the wait pushes the rename");
+    assert_eq!(
+        space
+            .raw_pull(Lane::Hot, 0)
+            .entries
+            .iter()
+            .filter(|entry| entry.sender == *a.state().expect("enrolled").device_id.as_bytes())
+            .filter_map(|entry| Envelope::decode(&entry.envelope).ok())
+            .filter(|envelope| envelope.header.group == Some(Group::Title))
+            .count(),
+        1,
+        "the rename reached the space"
     );
 }

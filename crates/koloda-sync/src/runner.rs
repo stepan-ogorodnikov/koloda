@@ -166,11 +166,14 @@ impl Shared {
                 // WHY: a bootstrap paused on a metered network waits for the host, not for a retry.
                 Ok(()) | Err(SyncError::BudgetSpent | SyncError::Metered { .. }) => {
                     backoff = FIRST_BACKOFF;
-                    if self.is_listening.load(Ordering::SeqCst) {
+                    let poll = if self.is_listening.load(Ordering::SeqCst) {
                         POLL_LISTENING
                     } else {
                         POLL
-                    }
+                    };
+                    // WHY: a push waiting on server time goes once the wait ends, not at the next poll; a trigger
+                    // still ends the sleep sooner. A wait that cannot be read leaves the poll.
+                    self.push_wait_left().ok().flatten().map_or(poll, |left| left.min(poll))
                 }
                 Err(_) => {
                     let after = backoff;

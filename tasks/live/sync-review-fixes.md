@@ -328,7 +328,7 @@ The owner took every recommendation on 2026-10-09.
   Commit: Show the metered pause when heal or backfill waits for the allowance
   Depends on: none
 
-- [ ] 10. Wake the runner when a push wait ends
+- [x] 10. Wake the runner when a push wait ends
   Goal:
   - After a cycle that leaves a push waiting on server time, `run_forever` sleeps until the earlier of the poll and
     `push_resumes_at_ms`, inside the interruptible `triggers.wait`, and then runs a cycle.

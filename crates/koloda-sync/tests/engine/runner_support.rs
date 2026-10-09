@@ -1,5 +1,6 @@
 //! A timer the test moves by hand and an event sink the test reads, so runner tests never sleep.
 
+use std::ops::RangeInclusive;
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::sync::{Arc, Condvar, Mutex};
 use std::time::{Duration, Instant};
@@ -88,6 +89,20 @@ impl ManualTimer {
     /// Blocks until the runner waits in a sleep of `duration`.
     pub fn wait_for_sleep(&self, duration: Duration) {
         self.wait_for_any_sleep(&[duration]);
+    }
+
+    /// Blocks until the runner waits in a sleep within `range`, and returns its duration.
+    pub fn wait_for_sleep_within(&self, range: RangeInclusive<Duration>) -> Duration {
+        let give_up = Instant::now() + PATIENCE;
+        let mut state = self.0.state.lock().expect("timer lock");
+        loop {
+            if let Some(slept) = state.sleeping.iter().find(|slept| range.contains(*slept)) {
+                return *slept;
+            }
+            let left = give_up.saturating_duration_since(Instant::now());
+            assert!(!left.is_zero(), "the runner never slept within {range:?}");
+            state = self.0.changed.wait_timeout(state, left).expect("timer lock").0;
+        }
     }
 
     /// Blocks until the runner waits in a sleep of one of `durations`.

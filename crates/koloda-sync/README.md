@@ -40,6 +40,7 @@ A pending claim or creation keeps its nonce in `koloda`'s `sync_enrolling`, writ
   nonce and token; only `pairing_failed` drops it.
 - `src/runner.rs` — the background runner: triggers, coalescing, the poll and how long it waits while the events
   socket is open, backoff, events, and tick budgets.
+  A push waiting on server time cuts the idle sleep short: the runner wakes when the wait ends, not at the next poll.
 - `src/events.rs` — the events socket while the runner runs: the session it listens with, reconnects, and nudges
   that start a cycle, held back while one runs.
 - `src/status.rs` — the state the host shows, why the last cycle stopped (an authoritative restore waiting for the

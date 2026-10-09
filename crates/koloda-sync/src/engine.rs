@@ -4,6 +4,7 @@
 use std::future::Future;
 use std::sync::atomic::AtomicBool;
 use std::sync::{Arc, Mutex, MutexGuard};
+use std::time::Duration;
 
 use koloda::app::db::Database;
 use koloda::app::error::{error_codes, AppError};
@@ -468,9 +469,28 @@ impl Shared {
     }
 
     /// Holds pushing until server time reaches `until`, in unix milliseconds.
+    ///
+    /// INVARIANT: it fires no trigger. The runner sleeps until the wait ends, and a trigger from the cycle that set
+    /// it would end that sleep at once.
     pub(crate) fn note_push_wait(&self, until: i64) -> Result<(), SyncError> {
         self.lock(&self.run_state)?.push_waits_until = Some(until);
         Ok(())
+    }
+
+    /// How long a push waiting on server time still waits, by the skew estimate. A wait that has ended is cleared,
+    /// so it shortens one sleep to nothing and no more.
+    pub(crate) fn push_wait_left(&self) -> Result<Option<Duration>, SyncError> {
+        let server_now_ms = get_current_timestamp()? + self.skew.get();
+        let mut run = self.lock(&self.run_state)?;
+        let Some(until) = run.push_waits_until else {
+            return Ok(None);
+        };
+        if until <= server_now_ms {
+            run.push_waits_until = None;
+        }
+        Ok(Some(Duration::from_millis(
+            u64::try_from(until - server_now_ms).unwrap_or(0),
+        )))
     }
 
     /// Whether pushing still waits for server time; the wait ends once `server_now_ms` reaches it.
