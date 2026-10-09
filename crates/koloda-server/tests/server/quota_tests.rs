@@ -273,6 +273,46 @@ async fn a_space_without_room_opens_no_bootstrap_and_stores_no_upload() {
 }
 
 #[tokio::test]
+async fn an_upload_counts_toward_the_quota_once_until_it_is_collected() {
+    let harness = Harness::new();
+    let device = harness.create_space("Study").await;
+    decks(&harness, &device).await;
+    let (id, body) = image(8);
+    let upload = || {
+        harness
+            .call(
+                Method::PUT,
+                format!("/v1/spaces/{}/attachments/{id}", uuid(device.space_id)),
+            )
+            .token(&device.token)
+            .body(&body)
+            .send::<Empty>()
+    };
+    assert_eq!(upload().await.status, StatusCode::OK);
+    assert_eq!(upload().await.status, StatusCode::OK, "a repeat upload stores nothing");
+    let with_image = usage(&harness, &device);
+    let set_quota = |quota| {
+        harness
+            .server
+            .set_quota(space(&device), Some(quota))
+            .expect("the quota is set");
+    };
+
+    set_quota(with_image + 1);
+    let is_over_above = is_over_quota(&harness, &device).await;
+    set_quota(with_image);
+    let is_over_at = is_over_quota(&harness, &device).await;
+    // An image no card links is collected after 90 days.
+    harness.clock.advance(91 * 24 * 60 * 60 * 1000);
+    harness.server.collect_garbage().expect("collection runs");
+    let is_over_after_collection = is_over_quota(&harness, &device).await;
+
+    assert!(!is_over_above, "the image counts once");
+    assert!(is_over_at, "the image counts");
+    assert!(!is_over_after_collection, "a collected image counts no more");
+}
+
+#[tokio::test]
 async fn a_quota_names_a_space_that_exists() {
     let harness = Harness::new();
 

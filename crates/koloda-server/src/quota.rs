@@ -110,7 +110,8 @@ impl Server {
 /// The space's pages in use plus the bytes of its stored attachments.
 ///
 /// WHY: pages, not row bytes, so the count costs no scan of the log and follows what the file holds on disk. A
-/// delete lowers it once its transaction frees whole pages.
+/// delete lowers it once its transaction frees whole pages. The attachment total is kept by triggers
+/// (`V5__attachment_bytes.sql`), so it costs no scan either.
 fn usage(conn: &Connection) -> Result<u64, ApiError> {
     let pages: u64 = conn.query_row(
         "SELECT (SELECT page_count FROM pragma_page_count()) - (SELECT freelist_count FROM pragma_freelist_count())",
@@ -118,6 +119,6 @@ fn usage(conn: &Connection) -> Result<u64, ApiError> {
         |row| row.get(0),
     )?;
     let page_size: u64 = conn.query_row("SELECT page_size FROM pragma_page_size()", [], |row| row.get(0))?;
-    let attachments: u64 = conn.query_row("SELECT coalesce(sum(size), 0) FROM attachments", [], |row| row.get(0))?;
+    let attachments: u64 = conn.query_row("SELECT attachment_bytes FROM space WHERE id = 1", [], |row| row.get(0))?;
     Ok(pages.saturating_mul(page_size).saturating_add(attachments))
 }

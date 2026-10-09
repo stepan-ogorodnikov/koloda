@@ -116,6 +116,11 @@ async fn an_attachment_whose_file_was_collected_meanwhile_is_left_out() {
     let copy = out.path().join("spaces").join(format!("{space}.db"));
     assert_eq!(count(&copy, "SELECT COUNT(*) FROM attachments"), 1);
     assert_eq!(
+        count(&copy, "SELECT attachment_bytes FROM space WHERE id = 1"),
+        64,
+        "the copy's attachment total, which its quota reads after a restore, drops with the row"
+    );
+    assert_eq!(
         sha256(&out.path().join("attachments").join(space.to_string()).join(&ids[0])),
         ids[0],
         "the copied bytes hash to their id"

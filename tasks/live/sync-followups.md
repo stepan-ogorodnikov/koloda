@@ -173,7 +173,7 @@ The owner took every recommendation on 2026-10-09.
   Commit: Retry deferred uploads as soon as the space has room
   Depends on: none
 
-- [ ] 4. Keep a running total of each space's attachment bytes
+- [x] 4. Keep a running total of each space's attachment bytes
   Goal:
   - Space migration `V5__attachment_bytes.sql` adds `space.attachment_bytes`, filled from the current sum.
   - The total moves with every insert and delete of an `attachments` row, by the means question 3 picks.
