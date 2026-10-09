@@ -138,7 +138,7 @@ included. `finish_rebase` and `finish_bootstrap` remove what the finishing lease
 - `settle_push` sets `sync_cohorts.has_consumed`; only such a cohort stays `fixed` across a switch.
 - The caller stores the new token before the fork call, under `sync.pending_token.{nonce}`, and copies it to
   `sync.token.{device}` before `switch_device`. The id swap, renumbering, re-stamp, and a re-attach's server URL
-  are one transaction.
+  and pending claim are one transaction.
 
 **Heal** — `begin_heal` stores a restore's cutoffs and restarts the scan; `heal_batch` enqueues the next batch.
 
@@ -153,7 +153,7 @@ included. `finish_rebase` and `finish_bootstrap` remove what the finishing lease
 host accepts it.
 
 - It deletes product rows through join's `delete_product_rows`, the list Replace uses, and empties every table in
-  join's `SYNC_TABLES` but `sync_state`.
+  join's `SYNC_TABLES` but `sync_state` and `sync_enrolling`; a pending claim outlives it.
 - `next_sender_seq` and `last_observed_server_seq` rise to the server's record, so the reset file is neither a seq
   reuser nor read as behind.
 
@@ -177,6 +177,9 @@ capture keeps recording for a later re-attach.
   backfill stamps as a joiner.
 - A join bootstrap ends with the same absence cleanup as a re-bootstrap. A row with no create origin stays.
 - `replace_with_space` deletes product rows only; a blank joiner seeds with `seed_joiner_db` and enrolls.
+- A claim or a space creation waits in `sync_enrolling` (`store_enrolling`) until the transaction that records it
+  clears the row: `enroll_device`, `begin_import` (through `SYNC_TABLES`), or a re-attach's `switch_device`.
+  A fork's switch leaves it.
 - Join tests probe through `FakeSpace::probe`; `copy_of` stands in for a copied file.
 
 **Review writes** — `insert_review` in `src/repo/reviews.rs` is the single write path (`pub(crate)`).

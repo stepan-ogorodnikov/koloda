@@ -17,7 +17,8 @@ Rust is the source of truth for the AI provider enum and secrets redaction; `@ko
 - Domain: `domain/` — cards (`CardState`), shared FSRS progress validators (`progress`), decks, templates, algorithms/`AlgorithmFSRS`, lessons, reviews, conversations (opaque `state`), settings slices (`LearningDefaults`, `DailyLimits`), `ai`, attachments (format sniffing, size cap), timestamp serde (`time`).
 - Repos: `repo/` — SQLite repos parallel to `@koloda/db-sqlite` (plus AI secrets redaction/reconstruction). Owns `rusqlite` adapters (e.g. `FromSql` for `SettingsName`).
   `repo/attachment_bytes.rs` is the only reader and writer of `attachment_bytes` (`docs/decisions/MEDIA-STORAGE.md`).
-  `repo/sync/` owns the `sync_*` tables; `mod.rs` enrolls the device.
+  `repo/sync/` owns the `sync_*` tables; `mod.rs` enrolls the device, and keeps a claim or a space creation sent
+  but not recorded in `sync_enrolling` until the transaction that records it.
   Product writes record sync envelopes through `Capture` in `capture.rs`.
   `backfill.rs` moves rows written before enrollment into the outbox in bounded batches.
   `join.rs` tells a joining file's mode, records its claim, and lists the ids the space is probed for.

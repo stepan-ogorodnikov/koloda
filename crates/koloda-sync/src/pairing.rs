@@ -10,17 +10,17 @@ use koloda::app::utility::get_current_timestamp;
 use koloda::repo::sync::join::{add_to_space, begin_import, join_mode, probe_ids, replace_with_space, JoinMode, Known};
 use koloda::repo::sync::outbox::lowest_pending_seq;
 use koloda::repo::sync::switch::switch_device;
-use koloda::repo::sync::{enroll_device, sync_state, SpaceRole};
+use koloda::repo::sync::{clear_enrolling, enroll_device, sync_state, Enrolling, SpaceRole};
 use koloda_sync_proto::registry::Kind;
 use koloda_sync_proto::transport::{
-    ClaimPairing, DeviceInfo, EntityId, ErrorCode, IssuePairing, KnownIds, KnownState, Pairing, PairingClaim,
-    PairingPreview, PreviewPairing, Receipt, Receipts, MAX_KNOWN_IDS, MAX_RECEIPT_RANGE,
+    code_hash, ClaimPairing, DeviceInfo, EntityId, ErrorCode, IssuePairing, KnownIds, KnownState, Pairing,
+    PairingClaim, PairingPreview, PreviewPairing, Receipt, Receipts, MAX_KNOWN_IDS, MAX_RECEIPT_RANGE,
 };
 use serde::de::DeserializeOwned;
 use uuid::Uuid;
 
-use crate::client::{local_error, mint_token, server_url};
-use crate::engine::{token_key, Session, Shared};
+use crate::client::{local_error, server_url};
+use crate::engine::{pending_token_key, token_key, Credentials, Session, Shared};
 use crate::error::SyncError;
 use crate::transport::Method;
 
@@ -50,6 +50,14 @@ pub struct Joined {
     pub mode: JoinMode,
     pub hint: Option<Vec<u8>>,
     pub known_ids: usize,
+}
+
+/// Where a claim of one code goes. `pending` holds the credentials of a claim of it the file has not recorded.
+struct ClaimTarget {
+    base: String,
+    space: Uuid,
+    code_hash: [u8; 32],
+    pending: Option<Credentials>,
 }
 
 /// How a used file finishes its join (`PROTOCOL.md` §Joining).
@@ -93,11 +101,62 @@ impl Shared {
         })
     }
 
-    // INVARIANT: retries inside `call` resend the same nonce and token, so a lost reply still claims one device.
-    async fn claim(&self, base: &str, code: &str, device_name: &str) -> Result<(PairingClaim, String), SyncError> {
-        let token = mint_token()?;
-        let claim = self
-            .client(base)
+    // WHY: the server answers the preview of a claimed code `pairing_failed`, so a claim that may have landed skips
+    // it. Its space and server URL come from the preview before its first attempt.
+    async fn claim_target(self: &Arc<Self>, server_url_text: &str, code: &str) -> Result<ClaimTarget, SyncError> {
+        let code_hash = code_hash(code);
+        if let Some((
+            Enrolling::Claim {
+                nonce,
+                code_hash: stored,
+                space_id,
+                server_url,
+            },
+            token,
+        )) = self.pending_enrollment().await?
+        {
+            if stored == code_hash {
+                return Ok(ClaimTarget {
+                    base: server_url,
+                    space: space_id,
+                    code_hash,
+                    pending: Some(Credentials { nonce, token }),
+                });
+            }
+        }
+        let base = server_url(server_url_text)?;
+        let preview = self.preview_at(&base, code).await?;
+        Ok(ClaimTarget {
+            base,
+            space: Uuid::from_bytes(preview.space_id),
+            code_hash,
+            pending: None,
+        })
+    }
+
+    // INVARIANT: every attempt, retries inside `call` and later host calls alike, sends the nonce and token stored
+    // before the first, so a claim that lands without a reply still enrolls one device.
+    async fn claim(
+        self: &Arc<Self>,
+        target: &ClaimTarget,
+        code: &str,
+        device_name: &str,
+    ) -> Result<(PairingClaim, Credentials), SyncError> {
+        let credentials = match &target.pending {
+            Some(credentials) => credentials.clone(),
+            None => {
+                let (code_hash, space_id, server_url) = (target.code_hash, target.space, target.base.clone());
+                self.begin_enrolling(move |nonce| Enrolling::Claim {
+                    nonce,
+                    code_hash,
+                    space_id,
+                    server_url,
+                })
+                .await?
+            }
+        };
+        let reply = self
+            .client(&target.base)
             .call(
                 Method::Post,
                 "/v1/pairings/claim",
@@ -106,18 +165,41 @@ impl Shared {
                     code: code.to_string(),
                     name: device_name.to_string(),
                     platform: self.platform,
-                    nonce: Uuid::new_v4().into_bytes(),
-                    token: token.clone(),
+                    nonce: credentials.nonce,
+                    token: credentials.token.clone(),
                 }),
             )
-            .await?
-            .ok;
-        Ok((claim, token))
+            .await;
+        match reply {
+            Ok(answer) => Ok((answer.ok, credentials)),
+            // WHY: the code is used, expired, or wrong for this nonce, so no later attempt can land. Any other refusal
+            // keeps the credentials: an earlier attempt may have landed, and only they can return its device.
+            Err(
+                error @ SyncError::Server {
+                    code: ErrorCode::PairingFailed,
+                    ..
+                },
+            ) => {
+                let nonce = credentials.nonce;
+                self.blocking(move |shared| {
+                    clear_enrolling(&shared.db)?;
+                    shared.secrets.remove(&pending_token_key(&nonce))
+                })
+                .await?;
+                Err(error)
+            }
+            Err(error) => Err(error),
+        }
     }
 
     /// Re-attaches a detached file to the space it was in: a new device id that keeps the file's rows, stamps,
     /// cursors, and pending writes (`PROTOCOL.md` §Re-attach).
-    async fn reattach(self: Arc<Self>, base: String, code: &str, device_name: &str) -> Result<Joined, SyncError> {
+    async fn reattach(
+        self: Arc<Self>,
+        target: ClaimTarget,
+        code: &str,
+        device_name: &str,
+    ) -> Result<Joined, SyncError> {
         let state = self
             .blocking(|shared| sync_state(&shared.db))
             .await?
@@ -129,22 +211,23 @@ impl Shared {
         }
         let stored = state.epoch.ok_or(SyncError::NotEnrolled)?;
 
-        let (claim, token) = self.claim(&base, code, device_name).await?;
+        let (claim, credentials) = self.claim(&target, code, device_name).await?;
         let device = Uuid::from_bytes(claim.enrollment.device_id);
-        let saved = token.clone();
+        let saved = credentials.token.clone();
         self.blocking(move |shared| shared.secrets.set(&token_key(device), &saved))
             .await?;
         let mut session = Session {
-            base,
+            base: target.base,
             space: state.space_id,
             device,
-            token,
+            token: credentials.token,
             epoch: stored,
         };
         let old = state.device_id;
         // WHY: a restore that predates the old device has no record of it, so none of its seqs were consumed there.
         // INVARIANT: every call after the claim names the stored epoch until a restore moves it, and a `Restored`
         // answer is applied and the call repeated, so a restore that lands on the lookup or the receipts is not lost.
+        // A call that fails otherwise leaves the claim pending, and the next join with its code resumes here.
         let path = format!("/v1/spaces/{}/devices/{old}", session.space);
         let last_sender_seq = match self
             .call_across_restore::<DeviceInfo>(&mut session, Method::Get, &path)
@@ -172,6 +255,7 @@ impl Shared {
             )
         })
         .await?;
+        self.finish_enrolling(credentials.nonce).await?;
         Ok(Joined {
             mode: JoinMode::Reattach,
             hint: claim.hint,
@@ -263,23 +347,22 @@ impl Shared {
         device_name: &str,
         settings: SeedSettings,
     ) -> Result<Joined, SyncError> {
-        let base = server_url(server_url_text)?;
+        let target = self.claim_target(server_url_text, code).await?;
         // INVARIANT: the mode is read for the previewed space before the code is claimed, so a file that cannot
         // re-attach is refused while its code can still be used by another device.
-        let preview = self.preview_at(&base, code).await?;
-        let space = Uuid::from_bytes(preview.space_id);
+        let space = target.space;
         let mode = self.blocking(move |shared| join_mode(&shared.db, space)).await?;
         if mode == JoinMode::Reattach {
-            return self.reattach(base, code, device_name).await;
+            return self.reattach(target, code, device_name).await;
         }
 
-        let (claim, token) = self.claim(&base, code, device_name).await?;
+        let (claim, credentials) = self.claim(&target, code, device_name).await?;
         let enrollment = claim.enrollment;
         let session = Session {
-            base,
+            base: target.base,
             space: Uuid::from_bytes(enrollment.space_id),
             device: Uuid::from_bytes(enrollment.device_id),
-            token,
+            token: credentials.token,
             epoch: Uuid::from_bytes(enrollment.epoch),
         };
         let epoch = Uuid::from_bytes(enrollment.epoch);
@@ -294,6 +377,7 @@ impl Shared {
                 enroll_device(&shared.db, device, space, SpaceRole::Joiner, epoch, &base)
             })
             .await?;
+            self.finish_enrolling(credentials.nonce).await?;
             return Ok(Joined {
                 mode,
                 hint: claim.hint,
@@ -303,6 +387,7 @@ impl Shared {
 
         self.blocking(move |shared| begin_import(&shared.db, device, space, epoch, &base))
             .await?;
+        self.finish_enrolling(credentials.nonce).await?;
         let known = self.probe(&session).await?;
         let known_ids = known.len();
         // WHY: only the untouched seed joins without asking; Add's seed rules are the only change it needs.

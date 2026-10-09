@@ -13,11 +13,10 @@ use axum::http::{HeaderMap, StatusCode};
 use axum::response::Response;
 use axum::Extension;
 use koloda_sync_proto::transport::{
-    ClaimPairing, Enrollment, ErrorCode, IssuePairing, Pairing, PairingClaim, PairingPreview, PreviewPairing,
-    MAX_HINT_BYTES,
+    code_hash, ClaimPairing, Enrollment, ErrorCode, IssuePairing, Pairing, PairingClaim, PairingPreview,
+    PreviewPairing, MAX_HINT_BYTES,
 };
 use rusqlite::{params, Connection, OptionalExtension};
-use sha2::{Digest, Sha256};
 use uuid::Uuid;
 
 use crate::auth::{self, SpaceAuth};
@@ -115,7 +114,13 @@ fn issue_code(server: &Server, caller: &SpaceAuth, request: IssuePairing) -> Res
     conn.execute("DELETE FROM pairings WHERE expires_at < ?1", params![now])?;
     conn.execute(
         "INSERT INTO pairings (code_hash, space_id, issuer, expires_at, hint) VALUES (?1, ?2, ?3, ?4, ?5)",
-        params![code_hash(&code), caller.space, caller.device, expires_at, request.hint],
+        params![
+            code_hash(&code).to_vec(),
+            caller.space,
+            caller.device,
+            expires_at,
+            request.hint
+        ],
     )?;
     Ok(Pairing { code, expires_at })
 }
@@ -192,7 +197,7 @@ fn device_token_hash(conn: &Connection, device: Uuid) -> Result<Option<Vec<u8>>,
 }
 
 fn live_code(conn: &Connection, code: &str, now: u64) -> Result<Option<Code>, ApiError> {
-    let hash = code_hash(code);
+    let hash = code_hash(code).to_vec();
     let row = conn
         .query_row(
             "SELECT space_id, hint, claim_nonce, claim_device
@@ -213,20 +218,6 @@ fn live_code(conn: &Connection, code: &str, now: u64) -> Result<Option<Code>, Ap
         )
         .optional()?;
     Ok(row)
-}
-
-// WHY: people type codes, so case, separators, and the letters Crockford base32 reads as digits do not matter.
-fn code_hash(code: &str) -> Vec<u8> {
-    let normalized: String = code
-        .chars()
-        .filter(|letter| !letter.is_whitespace() && *letter != '-')
-        .map(|letter| match letter.to_ascii_uppercase() {
-            'O' => '0',
-            'I' | 'L' => '1',
-            other => other,
-        })
-        .collect();
-    Sha256::digest(normalized.as_bytes()).to_vec()
 }
 
 fn guarded<T>(server: &Server, address: IpAddr, attempt: impl FnOnce() -> Result<T, ApiError>) -> Result<T, ApiError> {

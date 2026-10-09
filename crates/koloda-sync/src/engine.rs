@@ -13,7 +13,9 @@ use koloda::app::utility::get_current_timestamp;
 use koloda::repo::sync::apply::Hold;
 use koloda::repo::sync::repair::Starter;
 use koloda::repo::sync::restamp::pause_clock;
-use koloda::repo::sync::{enroll_device, enrolled_device, sync_state, SpaceRole};
+use koloda::repo::sync::{
+    enroll_device, enrolled_device, store_enrolling, stored_enrolling, sync_state, Enrolling, SpaceRole,
+};
 use koloda_sync_proto::registry::{Kind, Lane};
 use koloda_sync_proto::transport::{CreateSpace, Enrollment, ErrorCode, Heads, Platform};
 use tokio::runtime::Runtime;
@@ -549,14 +551,19 @@ impl Shared {
             return Err(SyncError::AlreadyEnrolled);
         }
 
-        // INVARIANT: retries inside `call` resend the same nonce and token, so a lost reply still ends in one space.
-        let token = mint_token()?;
+        // INVARIANT: every attempt, retries inside `call` and later host calls alike, sends the nonce and token stored
+        // before the first, so a creation that lands without a reply still ends in one space. Any refusal keeps them:
+        // an earlier attempt may have landed, and the server forgets the nonce on its own after 10 minutes.
+        let credentials = match self.pending_enrollment().await? {
+            Some((Enrolling::Creation { nonce }, token)) => Credentials { nonce, token },
+            _ => self.begin_enrolling(|nonce| Enrolling::Creation { nonce }).await?,
+        };
         let request = CreateSpace {
             name: space_name.to_string(),
             device_name: device_name.to_string(),
             platform: self.platform,
-            nonce: Uuid::new_v4().into_bytes(),
-            token: token.clone(),
+            nonce: credentials.nonce,
+            token: credentials.token.clone(),
         };
         let enrollment: Enrollment = self
             .client(&base)
@@ -564,6 +571,7 @@ impl Shared {
             .await?
             .ok;
 
+        let token = credentials.token;
         self.blocking(move |shared| {
             let device = Uuid::from_bytes(enrollment.device_id);
             shared.secrets.set(&token_key(device), &token)?;
@@ -576,8 +584,57 @@ impl Shared {
                 &base,
             )
         })
+        .await?;
+        self.finish_enrolling(credentials.nonce).await
+    }
+
+    /// The claim or creation this file sent and has not recorded, with its token. `None` when there is none, or its
+    /// token is gone; the call then starts over with new credentials.
+    pub(crate) async fn pending_enrollment(self: &Arc<Self>) -> Result<Option<(Enrolling, String)>, SyncError> {
+        self.blocking(|shared| {
+            let Some(enrolling) = stored_enrolling(&shared.db)? else {
+                return Ok(None);
+            };
+            let token = shared.secrets.get(&pending_token_key(&enrolling.nonce()))?;
+            Ok(token.map(|token| (enrolling, token)))
+        })
         .await
     }
+
+    /// New credentials for a claim or creation, stored before anything is sent. They replace any other pending one.
+    pub(crate) async fn begin_enrolling(
+        self: &Arc<Self>,
+        enrolling: impl FnOnce([u8; 16]) -> Enrolling + Send + 'static,
+    ) -> Result<Credentials, SyncError> {
+        let nonce = Uuid::new_v4().into_bytes();
+        let token = mint_token()?;
+        let stored = token.clone();
+        self.blocking(move |shared| {
+            let replaced = stored_enrolling(&shared.db)?;
+            // INVARIANT: the secret is written before the row, so a stop cannot leave a nonce with no token.
+            shared.secrets.set(&pending_token_key(&nonce), &stored)?;
+            store_enrolling(&shared.db, &enrolling(nonce))?;
+            if let Some(replaced) = replaced {
+                shared.secrets.remove(&pending_token_key(&replaced.nonce()))?;
+            }
+            Ok(())
+        })
+        .await?;
+        Ok(Credentials { nonce, token })
+    }
+
+    /// Removes the pending token once the transaction that records the enrollment has cleared its row.
+    pub(crate) async fn finish_enrolling(self: &Arc<Self>, nonce: [u8; 16]) -> Result<(), SyncError> {
+        self.blocking(move |shared| shared.secrets.remove(&pending_token_key(&nonce)))
+            .await
+    }
+}
+
+/// The nonce and token every attempt of one enrollment sends, until the file records it.
+#[derive(Clone)]
+pub(crate) struct Credentials {
+    pub(crate) nonce: [u8; 16],
+    pub(crate) token: String,
 }
 
 /// Adds kinds not already listed, keeping first-changed order.
@@ -591,4 +648,9 @@ pub(crate) fn merge(changed: &mut Vec<Kind>, kinds: Vec<Kind>) {
 
 pub(crate) fn token_key(device: Uuid) -> String {
     format!("sync.token.{device}")
+}
+
+/// Where the token of a fork, a claim, or a space creation waits until the file records the new device.
+pub(crate) fn pending_token_key(nonce: &[u8; 16]) -> String {
+    format!("sync.pending_token.{}", Uuid::from_bytes(*nonce))
 }

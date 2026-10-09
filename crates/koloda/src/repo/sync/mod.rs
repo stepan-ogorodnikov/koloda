@@ -84,9 +84,109 @@ pub fn enroll_device(
                 ],
             )?;
 
+            // INVARIANT: the pending claim or creation goes in the transaction that records it, so a file never
+            // holds both an enrollment and a nonce that would enroll it again.
+            tx.execute("DELETE FROM sync_enrolling", [])?;
+
             // INVARIANT: the backfill stamps are reserved in the enrollment transaction, so every write captured
             // after enrollment is stamped above them.
             backfill::reserve(tx)
+        })
+    })
+}
+
+/// A claim or a space creation sent and not recorded yet (PROTOCOL.md, Pairing). Every attempt sends its nonce and
+/// the token the engine keeps under `sync.pending_token.{nonce}`, written before this row.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum Enrolling {
+    /// A claim of the code whose `transport::code_hash` is `code_hash`, in the space its preview named, sent to
+    /// `server_url`.
+    Claim {
+        nonce: [u8; 16],
+        code_hash: [u8; 32],
+        space_id: Uuid,
+        server_url: String,
+    },
+    Creation {
+        nonce: [u8; 16],
+    },
+}
+
+impl Enrolling {
+    pub fn nonce(&self) -> [u8; 16] {
+        match self {
+            Enrolling::Claim { nonce, .. } | Enrolling::Creation { nonce } => *nonce,
+        }
+    }
+}
+
+type EnrollingRow = (String, Vec<u8>, Option<Vec<u8>>, Option<Vec<u8>>, Option<String>);
+
+pub fn stored_enrolling(db: &Database) -> Result<Option<Enrolling>, AppError> {
+    throw_known_error(error_codes::DB_GET, || {
+        db.with_conn(|conn| {
+            let row: Option<EnrollingRow> = conn
+                .query_row(
+                    "SELECT kind, nonce, code_hash, space_id, server_url FROM sync_enrolling WHERE id = 1",
+                    [],
+                    |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?, row.get(4)?)),
+                )
+                .optional()?;
+            let Some((kind, nonce, code_hash, space_id, server_url)) = row else {
+                return Ok(None);
+            };
+            let nonce = <[u8; 16]>::try_from(nonce.as_slice()).map_err(protocol_error)?;
+            match (kind.as_str(), code_hash, space_id, server_url) {
+                ("claim", Some(code_hash), Some(space_id), Some(server_url)) => Ok(Some(Enrolling::Claim {
+                    nonce,
+                    code_hash: <[u8; 32]>::try_from(code_hash.as_slice()).map_err(protocol_error)?,
+                    space_id: Uuid::from_slice(&space_id).map_err(protocol_error)?,
+                    server_url,
+                })),
+                ("creation", None, None, None) => Ok(Some(Enrolling::Creation { nonce })),
+                _ => Err(protocol_error(format!("malformed pending {kind}"))),
+            }
+        })
+    })
+}
+
+/// Records `enrolling`, replacing any other pending claim or creation.
+pub fn store_enrolling(db: &Database, enrolling: &Enrolling) -> Result<(), AppError> {
+    let (kind, nonce, code_hash, space_id, server_url) = match enrolling {
+        Enrolling::Claim {
+            nonce,
+            code_hash,
+            space_id,
+            server_url,
+        } => (
+            "claim",
+            nonce,
+            Some(code_hash.as_slice()),
+            Some(space_id.as_bytes().as_slice()),
+            Some(server_url.as_str()),
+        ),
+        Enrolling::Creation { nonce } => ("creation", nonce, None, None, None),
+    };
+    throw_known_error(error_codes::DB_UPDATE, || {
+        db.with_conn(|conn| {
+            conn.execute(
+                r#"
+                INSERT OR REPLACE INTO sync_enrolling (id, kind, nonce, code_hash, space_id, server_url)
+                VALUES (1, ?1, ?2, ?3, ?4, ?5)
+                "#,
+                params![kind, nonce.as_slice(), code_hash, space_id, server_url],
+            )?;
+            Ok(())
+        })
+    })
+}
+
+/// Forgets a claim the server refused for good.
+pub fn clear_enrolling(db: &Database) -> Result<(), AppError> {
+    throw_known_error(error_codes::DB_UPDATE, || {
+        db.with_conn(|conn| {
+            conn.execute("DELETE FROM sync_enrolling", [])?;
+            Ok(())
         })
     })
 }

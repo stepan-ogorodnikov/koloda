@@ -11,7 +11,7 @@ use koloda_sync_proto::transport::{Enrollment, ForkDevice, Receipt, Receipts, MA
 use uuid::Uuid;
 
 use crate::client::{local_error, mint_token};
-use crate::engine::{merge, token_key, Session, Shared};
+use crate::engine::{merge, pending_token_key, token_key, Session, Shared};
 use crate::error::SyncError;
 use crate::transport::Method;
 
@@ -140,8 +140,4 @@ impl Shared {
             .ok
             .receipts)
     }
-}
-
-fn pending_token_key(nonce: &[u8; 16]) -> String {
-    format!("sync.pending_token.{}", Uuid::from_bytes(*nonce))
 }

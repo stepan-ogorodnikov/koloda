@@ -8,6 +8,7 @@ use std::fmt;
 use std::num::NonZeroU32;
 
 use serde::{Deserialize, Serialize};
+use sha2::{Digest as _, Sha256};
 
 use crate::registry::Kind;
 
@@ -25,6 +26,22 @@ pub fn check_token(token: &str) -> Result<(), &'static str> {
     } else {
         Err("a token is 64 lowercase hex characters")
     }
+}
+
+/// The SHA-256 of a pairing code as people type it (`PROTOCOL.md` §Pairing). The server stores only this, and a device
+/// keeps it for a claim it has not recorded.
+pub fn code_hash(code: &str) -> [u8; 32] {
+    // WHY: people type codes, so case, separators, and the letters Crockford base32 reads as digits do not matter.
+    let normalized: String = code
+        .chars()
+        .filter(|letter| !letter.is_whitespace() && *letter != '-')
+        .map(|letter| match letter.to_ascii_uppercase() {
+            'O' => '0',
+            'I' | 'L' => '1',
+            other => other,
+        })
+        .collect();
+    Sha256::digest(normalized.as_bytes()).into()
 }
 
 pub const MAX_HINT_BYTES: usize = 4 * 1024;

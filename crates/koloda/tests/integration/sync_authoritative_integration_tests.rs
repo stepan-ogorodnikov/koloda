@@ -10,7 +10,7 @@ use koloda::repo::cards::delete_card;
 use koloda::repo::settings;
 use koloda::repo::sync::authoritative::{hold_authoritative, reset_for_authoritative};
 use koloda::repo::sync::heal::begin_heal;
-use koloda::repo::sync::{sync_state, SpaceRole};
+use koloda::repo::sync::{store_enrolling, stored_enrolling, sync_state, Enrolling, SpaceRole};
 use serde_json::json;
 use uuid::Uuid;
 
@@ -103,9 +103,22 @@ fn a_held_restore_deletes_nothing_until_the_reset() {
 fn a_reset_keeps_only_device_local_data_and_bootstraps_as_a_blank_joiner() {
     let db = used_file();
     let own = device(&db);
+    let claim = Enrolling::Claim {
+        nonce: [1; 16],
+        code_hash: [2; 32],
+        space_id: Uuid::now_v7(),
+        server_url: "https://sync.test".to_string(),
+    };
+    store_enrolling(&db, &claim).expect("a claim is pending");
     hold_authoritative(&db, RESTORED, 4).expect("restore is held");
 
     reset_for_authoritative(&db).expect("file resets");
+
+    assert_eq!(
+        stored_enrolling(&db).expect("reads"),
+        Some(claim),
+        "a pending claim stays for the next join with its code"
+    );
 
     for table in PRODUCT_TABLES.into_iter().chain(SYNC_TABLES) {
         assert_eq!(rows(&db, table), 0, "{table} is empty");

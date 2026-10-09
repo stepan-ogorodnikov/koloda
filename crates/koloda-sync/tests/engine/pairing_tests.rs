@@ -9,7 +9,7 @@ use koloda_sync_proto::payload::{Delete, Payload};
 use koloda_sync_proto::registry::{Group, Kind, Lane};
 use koloda_sync_proto::transport::{DeviceList, ErrorCode};
 
-use crate::common::{Device, Fault, Space, SERVER_URL};
+use crate::common::{error_reply, Device, Fault, Space, SERVER_URL};
 use crate::fixtures::{seed_data, seed_settings};
 
 fn issue(space: &Space, hint: Option<Vec<u8>>) -> IssuedPairing {
@@ -208,4 +208,103 @@ fn a_lost_claim_reply_is_retried_to_the_same_device() {
         "A, the raw client, and B, with no fourth device from the retry"
     );
     b.engine.sync_now().expect("B's stored token works");
+}
+
+fn previews(device: &Device) -> usize {
+    device
+        .transport
+        .sent()
+        .iter()
+        .filter(|request| request.url.ends_with("/pairings/preview"))
+        .count()
+}
+
+fn space_devices(space: &Space) -> usize {
+    let (_, reply) = space.server.call::<DeviceList>(
+        Method::Get,
+        &format!("/v1/spaces/{}/devices", space.space_id()),
+        &space.device.token(),
+    );
+    reply.ok.expect("the device list").devices.len()
+}
+
+/// Keeps the file from recording a claim that lands on the server, in some way.
+type Interrupt = fn(&Device);
+
+#[test]
+fn a_claim_the_file_never_recorded_finishes_on_the_next_join_with_the_same_code() {
+    let cases: [(&str, Interrupt); 2] = [
+        ("every reply lost", |b| {
+            for _ in 0..4 {
+                b.transport.fault_on("/pairings/claim", Fault::LoseReply);
+            }
+        }),
+        ("a stop after the reply", |b| b.secrets.refuse_next("sync.token.")),
+    ];
+
+    for (name, interrupt) in cases {
+        let space = Space::new();
+        let issued = issue(&space, None);
+        let b = space.server.device();
+        interrupt(&b);
+        assert!(join(&b, &issued.code).is_err(), "{name}: the first join fails");
+        assert!(b.state().is_none(), "{name}: the file records nothing");
+        assert_eq!(space_devices(&space), 3, "{name}: the claim landed");
+        let relaunched = space.server.relaunch(&b);
+
+        // WHY: typed in lowercase with a hyphen, the code still names the pending claim.
+        let (head, tail) = issued.code.split_at_checked(5).expect("a 10-character code");
+        let typed = format!("{head}-{tail}").to_lowercase();
+        let joined = join(&relaunched, &typed).expect("the next join finishes the claim");
+
+        assert_eq!(joined.mode, JoinMode::Blank, "{name}");
+        assert_eq!(
+            previews(&relaunched),
+            0,
+            "{name}: the claimed code is not previewed again"
+        );
+        assert_eq!(
+            space_devices(&space),
+            3,
+            "{name}: A, the raw client, and B, with no fourth device"
+        );
+        relaunched.engine.sync_now().expect("B's stored token works");
+        assert_eq!(relaunched.count("SELECT COUNT(*) FROM sync_enrolling"), 0, "{name}");
+        assert!(
+            relaunched
+                .secrets
+                .keys()
+                .iter()
+                .all(|key| !key.starts_with("sync.pending_token.")),
+            "{name}: the recorded claim removes its pending token"
+        );
+    }
+}
+
+#[test]
+fn a_claim_refused_as_failed_leaves_nothing_pending() {
+    let space = Space::new();
+    let issued = issue(&space, None);
+    let b = space.server.device();
+    b.transport.fault_on(
+        "/pairings/claim",
+        Fault::Reply(error_reply(404, ErrorCode::PairingFailed)),
+    );
+
+    let result = join(&b, &issued.code);
+
+    assert!(
+        matches!(
+            result,
+            Err(SyncError::Server {
+                code: ErrorCode::PairingFailed,
+                ..
+            })
+        ),
+        "{result:?}"
+    );
+    assert_eq!(b.count("SELECT COUNT(*) FROM sync_enrolling"), 0, "no claim is pending");
+    assert!(b.secrets.keys().is_empty(), "no token is kept");
+    join(&b, &issued.code).expect("the next join previews and claims afresh");
+    assert_eq!(previews(&b), 2, "the second join previews the code");
 }

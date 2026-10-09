@@ -216,7 +216,7 @@ The owner took every recommendation on 2026-10-09.
   Commit: Apply a restore met anywhere in a re-attach
   Depends on: none
 
-- [ ] 4. Keep a claim and a space creation until the file records them
+- [x] 4. Keep a claim and a space creation until the file records them
   Goal (per question 4):
   - Client migration `V13__sync_enrolling.sql` adds the singleton `sync_enrolling`: the kind (claim or creation),
     nonce, code hash, space id, and server URL.
@@ -227,7 +227,11 @@ The owner took every recommendation on 2026-10-09.
     re-attach.
     `sync_enrolling` joins `SYNC_TABLES`, so `begin_import` clears it with the rest.
     The token key goes after that transaction.
-  - A definitive failure clears it too: `pairing_failed`, or any reply but a transport error before a claim lands.
+  - Only `pairing_failed` clears a pending claim without recording it.
+    Any other refusal keeps it, and a creation keeps its credentials through every refusal.
+    An earlier attempt may have landed with its reply lost, and only the same nonce and token return its device.
+    Implementation narrowed this from "any reply but a transport error"; a later `429` or `400` would burn the code.
+  - The authoritative reset keeps the row with `sync_state`, so a re-attach that met one still finishes.
   - A join whose code has a pending claim skips the preview, and uses the stored space id and server URL.
     The server answers the preview of a claimed code `pairing_failed`, so a retry could not reach the claim.
   - Code normalization moves to `koloda-sync-proto`, shared with the server's `code_hash`.

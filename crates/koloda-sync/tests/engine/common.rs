@@ -21,7 +21,7 @@ use futures_util::task::AtomicWaker;
 use hyper_util::rt::TokioIo;
 use hyper_util::service::TowerToHyperService;
 use koloda::app::db::Database;
-use koloda::app::error::AppError;
+use koloda::app::error::{error_codes, AppError};
 use koloda::app::init::seed_joiner_db;
 use koloda::app::secrets::SecretStore;
 use koloda::repo::sync::{enroll_device, SpaceRole};
@@ -985,19 +985,43 @@ fn cbor<B: Serialize>(body: &B) -> Vec<u8> {
 }
 
 #[derive(Default)]
-pub struct MemorySecrets(Mutex<HashMap<String, String>>);
+pub struct MemorySecrets {
+    secrets: Mutex<HashMap<String, String>>,
+    /// A key prefix whose next write or removal fails, as a locked keychain refuses it.
+    refusing: Mutex<Option<String>>,
+}
 
 impl MemorySecrets {
     pub fn copy(&self) -> MemorySecrets {
-        MemorySecrets(Mutex::new(self.secrets().clone()))
+        MemorySecrets {
+            secrets: Mutex::new(self.secrets().clone()),
+            refusing: Mutex::default(),
+        }
     }
 
     pub fn keys(&self) -> Vec<String> {
         self.secrets().keys().cloned().collect()
     }
 
+    /// Fails the next write or removal of a key that starts with `prefix`.
+    pub fn refuse_next(&self, prefix: &str) {
+        *self.refusing.lock().unwrap_or_else(PoisonError::into_inner) = Some(prefix.to_string());
+    }
+
     fn secrets(&self) -> MutexGuard<'_, HashMap<String, String>> {
-        self.0.lock().unwrap_or_else(PoisonError::into_inner)
+        self.secrets.lock().unwrap_or_else(PoisonError::into_inner)
+    }
+
+    fn check(&self, key: &str) -> Result<(), AppError> {
+        let mut refusing = self.refusing.lock().unwrap_or_else(PoisonError::into_inner);
+        if refusing.as_deref().is_some_and(|prefix| key.starts_with(prefix)) {
+            *refusing = None;
+            return Err(AppError::new(
+                error_codes::SECRET_STORE,
+                Some("the secret store refused".to_string()),
+            ));
+        }
+        Ok(())
     }
 }
 
@@ -1007,11 +1031,13 @@ impl SecretStore for MemorySecrets {
     }
 
     fn set(&self, key: &str, value: &str) -> Result<(), AppError> {
+        self.check(key)?;
         self.secrets().insert(key.to_string(), value.to_string());
         Ok(())
     }
 
     fn remove(&self, key: &str) -> Result<(), AppError> {
+        self.check(key)?;
         self.secrets().remove(key);
         Ok(())
     }

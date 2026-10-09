@@ -17,7 +17,7 @@ use koloda::repo::decks::{delete_deck, get_deck, update_deck};
 use koloda::repo::settings::{get_settings, set_settings};
 use koloda::repo::sync::backfill::{backfill_batch, Backfill};
 use koloda::repo::sync::join::{add_to_space, begin_import, join_mode, probe_ids, replace_with_space, JoinMode, Known};
-use koloda::repo::sync::{enroll_device, SpaceRole};
+use koloda::repo::sync::{enroll_device, store_enrolling, stored_enrolling, Enrolling, SpaceRole};
 use koloda::repo::templates::{delete_template, get_template, update_template};
 use koloda_sync_proto::registry::Kind;
 use rusqlite::types::Value;
@@ -284,6 +284,44 @@ fn a_claim_clears_what_the_file_recorded_for_another_space() {
         (None, 0),
         "backfill stamps wait for Add or Replace"
     );
+}
+
+/// Records an enrollment the way one path does.
+type Record = fn(&Database);
+
+#[test]
+fn a_pending_enrollment_reads_back_until_the_transaction_that_records_it() {
+    let claim = Enrolling::Claim {
+        nonce: [1; 16],
+        code_hash: [2; 32],
+        space_id: SPACE,
+        server_url: SERVER_URL.to_string(),
+    };
+    let creation = Enrolling::Creation { nonce: [3; 16] };
+    let records: [(&str, Record); 2] = [
+        ("a claim", |db| {
+            begin_import(db, Uuid::now_v7(), SPACE, EPOCH, SERVER_URL).expect("claim records");
+        }),
+        ("an enrollment", |db| {
+            enroll_device(db, Uuid::now_v7(), SPACE, SpaceRole::Joiner, EPOCH, SERVER_URL).expect("database enrolls");
+        }),
+    ];
+
+    for (name, record) in records {
+        let db = test_db();
+        store_enrolling(&db, &creation).expect("the creation stores");
+        assert_eq!(stored_enrolling(&db).expect("reads"), Some(creation.clone()), "{name}");
+        store_enrolling(&db, &claim).expect("the claim stores");
+        assert_eq!(
+            stored_enrolling(&db).expect("reads"),
+            Some(claim.clone()),
+            "{name}: the claim replaces the creation"
+        );
+
+        record(&db);
+
+        assert_eq!(stored_enrolling(&db).expect("reads"), None, "{name} clears it");
+    }
 }
 
 #[test]

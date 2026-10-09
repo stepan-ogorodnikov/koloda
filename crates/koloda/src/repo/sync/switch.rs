@@ -23,7 +23,8 @@ use crate::app::error::{error_codes, throw_known_error, AppError};
 /// Moves the file to `new_device` in one transaction, and returns the kinds whose product rows a settled receipt
 /// changed. `receipts` are the old sender's, for its pending seqs at or below its `last_sender_seq`. With
 /// `is_rebase`, the re-bootstrap barrier opens in the same transaction, so the new id never runs without it. A
-/// re-attach passes the `server_url` its code was redeemed through, which may differ from the stored one.
+/// re-attach passes the `server_url` its code was redeemed through, which may differ from the stored one, and its
+/// pending claim is cleared with the switch that records it.
 ///
 /// INVARIANT: the caller stores the new token first, so a crash leaves the file as it was or fully switched.
 pub fn switch_device(
@@ -53,6 +54,10 @@ pub fn switch_device(
                 "#,
                 params![new_device.as_bytes().as_slice(), next_sender_seq, server_url],
             )?;
+            // INVARIANT: only a re-attach passes a server URL. A fork leaves alone a claim pending for another space.
+            if server_url.is_some() {
+                tx.execute("DELETE FROM sync_enrolling", [])?;
+            }
             // INVARIANT: re-stamp runs after the id swap, so the cohorts no receipt touched carry the new device.
             // Two copies that adopted the same remote stamp would otherwise mint identical stamps next.
             restamp(tx, now_ms)?;

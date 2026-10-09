@@ -912,6 +912,9 @@ Names are 1 to 100 characters after trimming.
 Creating a space also enrolls its creator, so the first device needs no pairing code.
 The same `nonce` and `token` return the same result for 10 minutes.
 A different token for that nonce is `bad_request` and writes nothing.
+A device keeps both until it records the enrollment, across relaunches, and its next creation sends them again.
+A refusal does not end them, since an earlier attempt may have landed; past 10 minutes the server no longer knows the
+nonce, and they create a new space.
 A malformed token, one that is not 64 lowercase hex characters, is `bad_request`.
 A space's `device_count` counts the devices that are not revoked.
 An `epoch_changed` error carries `restore`: `epoch` (the space's), `mode`, `head_hot`, `head_cold`, and `cutoffs`,
@@ -1431,7 +1434,7 @@ Examples: a mass delete, a bad import, a device gone wrong.
 A client on the old epoch first records the restore and sends nothing until its host accepts it.
 The host warns before it starts, and a relaunch keeps the record.
 A heal or bootstrap in progress gives way to it.
-Accepting deletes every product row and every sync table but the sync state.
+Accepting deletes every product row and every sync table but the sync state and a pending claim.
 Settings, conversations, and attachments stay; `learning` stays at stamp zero for the space's document to overlay.
 It keeps `device_id`.
 It sets `next_sender_seq` above both its local value and the server's `last_sender_seq` for it, so it never reuses
@@ -1539,11 +1542,14 @@ Any of them may answer `epoch_changed`.
 A heal is applied at once; an authoritative restore is held for the host, as on any device (§Server restore).
 The file then repeats that call on the new epoch.
 That covers the lookup of the old device and the receipt reads.
+A call that fails otherwise leaves the claim pending (§Pairing).
+The next join with the code gets the same device and resumes from the lookup.
 It then follows steps 1, 2, and 4 of the "behind" procedure (§Devices) with the old device id.
 It reads the old sender's receipts for its pending seqs, classifies by cohort, renumbers, and re-stamps the cohorts
 with no accepted member under the new id, in one local transaction.
 A restored space that has no record of the old device consumed none of its seqs.
 The same transaction records the server URL the code was redeemed through, which may differ from the stored one.
+It also ends the pending claim.
 It re-bootstraps only if `cursor_too_old`.
 The claimed record starts with no cursor, below any GC horizon, so its first push would be refused.
 The cycle therefore pulls `hot` before it pushes while the record's cursor is below the horizon and the file's own is
@@ -1579,9 +1585,17 @@ Nothing keeps syncing afterwards.
   A different token, or a different nonce, on a used code fails `pairing_failed` and writes nothing.
   A device that gets no reply to its claim retries it with the same nonce and token.
   A malformed token is `bad_request`.
+- **Pending claim**: a device keeps the nonce and token until it records the claim, across relaunches.
+  It also keeps the code's hash, the space id, and the server URL.
+  Its next join with that code, however typed, sends them again.
+  Only `pairing_failed` ends a pending claim.
+  Any other refusal may follow an attempt that landed, and only the same nonce and token return its device.
+  A join with another code, or a space creation, replaces it.
 - **Preview first**: a joining device previews the code, then tells its mode for the previewed space, before it
   claims.
   A file that would re-attach is refused while its code is still unused.
+  A pending claim skips the preview, since the server answers the preview of a claimed code `pairing_failed`.
+  The space id and server URL it kept stand in for the preview's.
 - **Failures**: a used, expired, or wrong code fails alike with `pairing_failed`, so a reply never says which.
   Wrong codes are limited per client address and server-wide, because a wrong code names no space.
   After 10 failures from one address, or 100 in all, previews and claims get `429 rate_limited` until the minute's
@@ -1734,6 +1748,7 @@ Only native hosts write them; they are device-local runtime state, never synced.
 | Table | Key | Holds |
 | --- | --- | --- |
 | `sync_state` | Singleton | `device_id`, `space_id`, `epoch`, join phase, cursors, last HLC, stable high-water, `next_sender_seq`, last observed server seq, skew, role (creator or joiner), backfill phase stamps and watermark, rebase generation and barrier flag, fork nonce, clock pause, heal scan step and watermark, an authoritative restore waiting for the host, the image check a restore asks for |
+| `sync_enrolling` | Singleton | A claim or space creation sent and not recorded: kind, nonce, and for a claim the code's hash, space id, and server URL; its token waits in the secret store |
 | `sync_stamps` | `(kind, id, group)` | LWW register (§Field groups and merge) |
 | `sync_origins` | `(kind, id, group)` | Stamp and sender of immutable rows; legacy timestamp floor for creates; the re-bootstrap generation that last delivered a create |
 | `sync_outbox` | `sender_seq` | Encoded envelope, digest, `commit_id`, in-flight flag |

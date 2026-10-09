@@ -796,6 +796,55 @@
       "foreign_keys": []
     },
     {
+      "name": "sync_enrolling",
+      "columns": [
+        {
+          "name": "code_hash",
+          "type": "BLOB",
+          "notnull": 0,
+          "pk": 0,
+          "dflt_value": null
+        },
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "notnull": 1,
+          "pk": 1,
+          "dflt_value": null
+        },
+        {
+          "name": "kind",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0,
+          "dflt_value": null
+        },
+        {
+          "name": "nonce",
+          "type": "BLOB",
+          "notnull": 1,
+          "pk": 0,
+          "dflt_value": null
+        },
+        {
+          "name": "server_url",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0,
+          "dflt_value": null
+        },
+        {
+          "name": "space_id",
+          "type": "BLOB",
+          "notnull": 0,
+          "pk": 0,
+          "dflt_value": null
+        }
+      ],
+      "indexes": [],
+      "foreign_keys": []
+    },
+    {
       "name": "sync_heal_cutoffs",
       "columns": [
         {

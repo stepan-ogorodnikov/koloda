@@ -39,8 +39,9 @@ const PROBE_KINDS: [Kind; 5] = [
     Kind::Cards,
 ];
 
-pub(super) const SYNC_TABLES: [&str; 9] = [
+pub(super) const SYNC_TABLES: [&str; 10] = [
     "sync_state",
+    "sync_enrolling",
     "sync_stamps",
     "sync_origins",
     "sync_outbox",
@@ -105,7 +106,8 @@ pub fn begin_import(
     throw_known_error(error_codes::DB_ADD, || {
         db.with_transaction(|tx| {
             // WHY: the claim replaces the device id, so nothing recorded for an earlier space may be pushed or
-            // applied again. Add and Replace start from empty sync tables.
+            // applied again. Add and Replace start from empty sync tables. The pending claim goes with them, since
+            // this records it.
             for table in SYNC_TABLES {
                 tx.execute(&format!("DELETE FROM {table}"), [])?;
             }

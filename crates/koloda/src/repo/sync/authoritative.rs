@@ -44,7 +44,12 @@ pub fn reset_for_authoritative(db: &Database) -> Result<(), AppError> {
                 return Err(protocol_error("no authoritative restore is waiting"));
             }
             delete_product_rows(tx)?;
-            for table in SYNC_TABLES.iter().filter(|table| **table != "sync_state") {
+            // WHY: the device id stays, and so does a re-attach's claim this file has not recorded yet; a later
+            // join with its code still finishes it.
+            for table in SYNC_TABLES
+                .iter()
+                .filter(|table| !matches!(**table, "sync_state" | "sync_enrolling"))
+            {
                 tx.execute(&format!("DELETE FROM {table}"), [])?;
             }
             // INVARIANT: the device id stays, so its next seq must be above every seq it ever sent and every seq the

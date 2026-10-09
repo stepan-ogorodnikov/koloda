@@ -8,6 +8,7 @@ use koloda::repo::cards::reset_card_progress;
 use koloda::repo::decks::{get_deck, update_deck};
 use koloda::repo::sync::outbox::{push_batch, push_lost, settle_push};
 use koloda::repo::sync::switch::switch_device;
+use koloda::repo::sync::{store_enrolling, stored_enrolling, Enrolling};
 use koloda_sync_proto::envelope::digest;
 use koloda_sync_proto::hlc::{DeviceId, Stamp};
 use koloda_sync_proto::transport::{HeldReason, Outcome, PushOutcome, Receipt};
@@ -322,4 +323,34 @@ fn a_fenced_receipt_deletes_the_entity_as_a_push_outcome_does() {
         1,
         "and fenced"
     );
+}
+
+#[test]
+fn a_re_attach_clears_the_pending_claim_and_a_fork_keeps_it() {
+    let claim = Enrolling::Claim {
+        nonce: [1; 16],
+        code_hash: [2; 32],
+        space_id: Uuid::now_v7(),
+        server_url: "https://sync.test".to_string(),
+    };
+    for (name, server_url, expected) in [
+        ("a fork", None, Some(claim.clone())),
+        ("a re-attach", Some("https://other.test"), None),
+    ] {
+        let db = replica();
+        store_enrolling(&db, &claim).expect("the claim stores");
+
+        switch_device(
+            &db,
+            Uuid::now_v7(),
+            &[],
+            &starter(),
+            now_ms(),
+            server_url.is_none(),
+            server_url,
+        )
+        .expect("the file switches");
+
+        assert_eq!(stored_enrolling(&db).expect("reads"), expected, "{name}");
+    }
 }

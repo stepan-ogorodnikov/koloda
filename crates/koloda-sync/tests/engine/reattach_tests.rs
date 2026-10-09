@@ -8,7 +8,7 @@ use koloda_sync::transport::Method;
 use koloda_sync_proto::transport::{PullPage, Push, PushItem, PushReply};
 use uuid::Uuid;
 
-use crate::common::{Device, Space, SERVER_URL};
+use crate::common::{Device, Fault, Space, SERVER_URL};
 use crate::fixtures::{seed_settings, Library};
 
 const DAY_MS: u64 = 24 * 60 * 60 * 1000;
@@ -213,4 +213,54 @@ fn a_file_below_the_horizon_re_attaches_through_a_re_bootstrap() {
     assert_eq!(opens(a), 1, "it re-bootstraps");
     assert!(a.deck(&pair.doomed).is_none(), "it loses what the space deleted");
     assert!(pair.b.deck(&created).is_some(), "its own create reaches the space");
+}
+
+#[test]
+fn a_re_attach_that_fails_after_its_claim_finishes_on_the_next_join_with_the_same_code() {
+    let pair = pair();
+    let a = &pair.space.device;
+    let old = device_id(a);
+    a.engine.detach().expect("A detaches");
+    let code = pair.b.engine.issue_pairing(None).expect("B issues a code").code;
+    let before = pair.b.engine.devices().expect("the device list").len();
+    for _ in 0..4 {
+        a.transport
+            .fault_when(Method::Get, &format!("/devices/{old}"), Fault::LoseReply);
+    }
+
+    let result = a.engine.join(SERVER_URL, &code, "Laptop", seed_settings());
+
+    assert!(matches!(result, Err(SyncError::Transport(_))), "{result:?}");
+    assert_eq!(device_id(a), old, "the file has not switched");
+    let claimed: Vec<Uuid> = pair
+        .b
+        .engine
+        .devices()
+        .expect("the device list")
+        .into_iter()
+        .map(|device| device.id)
+        .collect();
+    assert_eq!(claimed.len(), before + 1, "the claim landed");
+
+    let relaunched = pair.space.server.relaunch(a);
+    let joined = relaunched
+        .engine
+        .join(SERVER_URL, &code, "Laptop", seed_settings())
+        .expect("the next join finishes the re-attach");
+
+    assert_eq!(joined.mode, JoinMode::Reattach);
+    let device = device_id(&relaunched);
+    assert_ne!(device, old, "a new device id");
+    assert!(claimed.contains(&device), "the device the first claim made");
+    assert_eq!(
+        pair.b.engine.devices().expect("the device list").len(),
+        before + 1,
+        "no second device"
+    );
+    relaunched.engine.sync_now().expect("the claimed device's token works");
+    assert_eq!(
+        relaunched.count("SELECT COUNT(*) FROM sync_enrolling"),
+        0,
+        "the switch records the claim"
+    );
 }

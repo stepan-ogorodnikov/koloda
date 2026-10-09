@@ -14,13 +14,15 @@ The host passes in the transport, and the reader of free disk space, `SystemDisk
 The host starts the background runner with an event sink and tells it about local commits, nudges, and the network.
 It reads `status`, and on mobile runs bounded `tick`s instead.
 A device's bearer token lives in the host's secret store under `sync.token.<device id>`.
-A fork's token waits under `sync.pending_token.<nonce>` until the switch, and nowhere else.
+A fork's, a claim's, or a space creation's token waits under `sync.pending_token.<nonce>` until the file records the
+new device, and nowhere else.
+A pending claim or creation keeps its nonce in `koloda`'s `sync_enrolling`, written after the token.
 
 ## Architectural Map
 
 - `src/lib.rs` — crate root.
-- `src/engine.rs` — `Engine`: the runtime, host calls, space creation, the session a cycle uses, and running the
-  cycle again on a restored epoch.
+- `src/engine.rs` — `Engine`: the runtime, host calls, space creation, the claim or creation kept pending until the
+  file records it, the session a cycle uses, and running the cycle again on a restored epoch.
 - `src/cycle.rs` — the cycle: the device record and the behind check, re-bootstrap when the server left the file
   behind, held writes and waiting uploads released once the space has room, push, `hot` to head, `cold` to the
   recorded head, a lane held at an envelope this app cannot read, the skew pause, a push refused as ahead
@@ -33,6 +35,8 @@ A fork's token waits under `sync.pending_token.<nonce>` until the switch, and no
   the call, receipts, and the switch.
 - `src/pairing.rs` — pairing codes, preview, and joining a space: blank, seed-only, a used file through Add or
   Replace, or a detached file re-attaching under a new device id, after applying a restore the space had since.
+  A claim the file has not recorded skips the preview on the next join with its code and claims again with the same
+  nonce and token; only `pairing_failed` drops it.
 - `src/runner.rs` — the background runner: triggers, coalescing, the poll and how long it waits while the events
   socket is open, backoff, events, and tick budgets.
 - `src/events.rs` — the events socket while the runner runs: the session it listens with, reconnects, and nudges

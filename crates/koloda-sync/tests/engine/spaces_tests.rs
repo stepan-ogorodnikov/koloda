@@ -79,7 +79,10 @@ fn a_wrong_setup_token_enrolls_nothing() {
         "{result:?}"
     );
     assert!(device.state().is_none(), "the file is not enrolled");
-    assert!(device.secrets.keys().is_empty(), "no token is stored");
+    assert!(
+        device.secrets.keys().iter().all(|key| !key.starts_with("sync.token.")),
+        "no device token is stored"
+    );
 }
 
 #[test]
@@ -100,4 +103,62 @@ fn a_lost_reply_is_retried_into_the_same_space() {
         "the retry reuses the nonce, so the server holds one space"
     );
     assert_eq!(spaces.first().map(|space| space.id), Some(*state.space_id.as_bytes()));
+}
+
+fn spaces(server: &TestServer) -> Vec<[u8; 16]> {
+    let (_, reply) = server.call::<SpaceList>(Method::Get, "/v1/spaces", &server.setup_token);
+    reply
+        .ok
+        .expect("the space list")
+        .spaces
+        .into_iter()
+        .map(|space| space.id)
+        .collect()
+}
+
+fn lose_every_reply(device: &Device) {
+    for _ in 0..4 {
+        device.transport.fault(Fault::LoseReply);
+    }
+}
+
+#[test]
+fn a_creation_that_lost_every_reply_makes_one_space_on_the_next_call() {
+    let server = TestServer::new();
+    let device = server.device();
+    lose_every_reply(&device);
+    let result = create(&server, &device);
+    assert!(matches!(result, Err(SyncError::Transport(_))), "{result:?}");
+    assert_eq!(spaces(&server).len(), 1, "the creation landed");
+
+    let relaunched = server.relaunch(&device);
+    create(&server, &relaunched).expect("the next call finishes the creation");
+
+    let state = relaunched.state().expect("the file is enrolled");
+    assert_eq!(spaces(&server), vec![*state.space_id.as_bytes()], "one space");
+    relaunched.engine.sync_now().expect("the stored token works");
+    assert_eq!(relaunched.count("SELECT COUNT(*) FROM sync_enrolling"), 0);
+}
+
+#[test]
+fn a_pending_creation_whose_token_is_gone_starts_over() {
+    let server = TestServer::new();
+    let device = server.device();
+    lose_every_reply(&device);
+    assert!(create(&server, &device).is_err(), "no reply arrives");
+    for key in device.secrets.keys() {
+        device.secrets.remove(&key).expect("the key is removed");
+    }
+
+    create(&server, &device).expect("the next call creates a space");
+
+    let state = device.state().expect("the file is enrolled");
+    let spaces = spaces(&server);
+    assert_eq!(spaces.len(), 2, "the lost creation and a new one");
+    assert_eq!(
+        spaces.last(),
+        Some(state.space_id.as_bytes()),
+        "the file is in the new space"
+    );
+    device.engine.sync_now().expect("the new token works");
 }
