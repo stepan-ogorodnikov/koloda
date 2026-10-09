@@ -4,6 +4,7 @@ use std::collections::HashMap;
 
 use koloda::app::init::{SeedData, SeedSettings};
 use koloda::domain::algorithms::InsertAlgorithmData;
+use koloda::domain::attachments::AddAttachmentData;
 use koloda::domain::cards::{CardContentField, InsertCardData, UpdateCardProgress};
 use koloda::domain::decks::{Deck, InsertDeckData, UpdateDeckData, UpdateDeckValues};
 use koloda::domain::lessons::LessonResultData;
@@ -11,6 +12,7 @@ use koloda::domain::reviews::InsertReviewData;
 use koloda::domain::templates::{
     InsertTemplateData, TemplateContent, TemplateField, TemplateLayoutItem, UpdateTemplateData, UpdateTemplateValues,
 };
+use koloda::repo::attachments::add_attachment;
 use koloda::repo::sync::repair::Starter;
 use koloda::repo::{algorithms, cards, decks, lessons, templates};
 use koloda_sync_proto::payload::{Payload, Review};
@@ -27,6 +29,32 @@ pub struct Library {
     pub template: String,
     pub deck: String,
     pub card: String,
+}
+
+/// A PNG of `len` bytes whose body zstd cannot shrink, so its size on the wire is its size.
+pub fn png(seed: u64, len: usize) -> AddAttachmentData {
+    let mut bytes = b"\x89PNG\r\n\x1a\n".to_vec();
+    let mut state = seed.wrapping_mul(0x9e37_79b9_7f4a_7c15) | 1;
+    while bytes.len() < len {
+        state ^= state << 13;
+        state ^= state >> 7;
+        state ^= state << 17;
+        bytes.extend(state.to_le_bytes());
+    }
+    bytes.truncate(len);
+    AddAttachmentData {
+        bytes,
+        width: None,
+        height: None,
+    }
+}
+
+/// Card text that links each image.
+pub fn links(ids: &[&str]) -> String {
+    ids.iter()
+        .map(|id| format!("![x](attachment:{id})"))
+        .collect::<Vec<_>>()
+        .join(" ")
 }
 
 /// A `Good` review of a new card, as another device's grade pushes it.
@@ -157,6 +185,12 @@ fn template_content() -> TemplateContent {
 }
 
 impl Device {
+    pub fn add_image(&self, seed: u64, len: usize) -> String {
+        add_attachment(&self.db, png(seed, len))
+            .expect("the image is stored")
+            .id
+    }
+
     pub fn add_algorithm(&self, title: &str) -> String {
         algorithms::add_algorithm(&self.db, algorithm_data(title))
             .expect("algorithm is created")

@@ -6,6 +6,7 @@ use std::sync::Arc;
 use koloda::repo::sync::backfill::{backfill_batch, Backfill};
 use koloda::repo::sync::heal::{heal_batch, Heal};
 use koloda::repo::sync::outbox::{pending_bytes, pending_count, push_batch, push_lost, push_refused, settle_push};
+use koloda::repo::sync::sync_state;
 use koloda_sync_proto::registry::Kind;
 use koloda_sync_proto::transport::{ErrorCode, Push, PushItem, PushReply};
 
@@ -26,6 +27,8 @@ impl Shared {
     // INVARIANT: heal and backfill add a batch only while the outbox holds less than one push batch, so the outbox
     // never holds the whole database (PROTOCOL.md, Backfill, Server restore). On a metered network they are bulk:
     // each batch counts against the allowance, and none is added once it is spent (PROTOCOL.md, Metered networks).
+    // A scan left with rows then shows the pause, whichever work spent the allowance: a batch here, or an earlier
+    // cold page or image.
     async fn top_up(self: &Arc<Self>) -> Result<(), SyncError> {
         while self.blocking(|shared| pending_count(&shared.db)).await? < PUSH_ITEMS && self.has_bulk_room()? {
             let is_counting = self.is_counting_bulk()?;
@@ -47,9 +50,15 @@ impl Shared {
                 self.spend_bulk(after.saturating_sub(before))?;
             }
             if !is_more {
-                break;
+                return Ok(());
             }
-            if !self.has_bulk_room()? {
+        }
+        if !self.has_bulk_room()? {
+            let is_scanning = self
+                .blocking(|shared| sync_state(&shared.db))
+                .await?
+                .is_some_and(|state| state.is_scanning);
+            if is_scanning {
                 self.hold_bulk()?;
             }
         }

@@ -50,6 +50,8 @@ A pending claim or creation keeps its nonce in `koloda`'s `sync_enrolling`, writ
   or the server no longer knows it.
 - `src/metered.rs` — bulk transfers on a metered network: the network the host reports, the bootstrap and outbox
   checks, the allowance counted work spends, and the call that lifts the pause.
+  The push's top-up records the pause whenever it finds the allowance spent with heal or backfill rows left, so a
+  scan that a cold page or an image starved shows it too.
 - `src/disk.rs` — the free-disk preflight before a bootstrap applies, and the free-space reader the host passes in.
 - `src/bootstrap.rs` — a join bootstrap and a re-bootstrap from a snapshot lease: streams, catch-up, heartbeats,
   restarts, a stop that gives the lease back at an envelope this app cannot read, and absence cleanup at the end.

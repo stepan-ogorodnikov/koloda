@@ -213,6 +213,8 @@ pub struct SyncState {
     pub is_restore_held: bool,
     /// After a restore, the file asks the server once which linked images it lacks.
     pub is_checking_attachments: bool,
+    /// A heal or backfill scan still has rows to add to the outbox.
+    pub is_scanning: bool,
 }
 
 pub fn sync_state(db: &Database) -> Result<Option<SyncState>, AppError> {
@@ -223,7 +225,8 @@ pub fn sync_state(db: &Database) -> Result<Option<SyncState>, AppError> {
                     r#"
                     SELECT device_id, space_id, server_url, cursor_hot, cursor_cold, is_bootstrapping,
                            join_phase = 'import_pending', detached_at IS NOT NULL, is_rebasing,
-                           is_clock_paused, epoch, authoritative_epoch IS NOT NULL, is_checking_attachments
+                           is_clock_paused, epoch, authoritative_epoch IS NOT NULL, is_checking_attachments,
+                           heal_step IS NOT NULL OR backfill_step IS NOT NULL
                     FROM sync_state WHERE id = 1
                     "#,
                     [],
@@ -243,6 +246,7 @@ pub fn sync_state(db: &Database) -> Result<Option<SyncState>, AppError> {
                             is_clock_paused: row.get(9)?,
                             is_restore_held: row.get(11)?,
                             is_checking_attachments: row.get(12)?,
+                            is_scanning: row.get(13)?,
                         };
                         Ok((ids, state))
                     },

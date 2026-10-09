@@ -307,12 +307,17 @@ The owner took every recommendation on 2026-10-09.
   Commit: Stop a push once a reply puts skew past the tolerance
   Depends on: none
 
-- [ ] 9. Show the metered pause when heal or backfill waits for the allowance
+- [x] 9. Show the metered pause when heal or backfill waits for the allowance
   Goal:
   - When the allowance is spent and heal or backfill still has rows (`sync_state.heal_step`, `backfill_step`),
     `top_up` calls `hold_bulk` and adds nothing.
   - The pause shows by the end of the cycle that spent the allowance, whichever work spent it: a backfill or heal
     batch, a cold page, or an image.
+  - Implementation found that a scan is open while a cold page or an image spends the allowance only when the push
+    did not run that cycle (a skew pause, a push waiting on server time): a push with room drains heal and backfill
+    first.
+    The reachable case is a scan that opens after the spend, such as a heal after a restore.
+    The tests cover that; in the push-skipped case the pause shows at the next cycle that pushes.
   - `PROTOCOL.md` §Metered networks already says the engine reports the pause; the engine README says how.
   Done when:
   - an engine test: on a metered network, a cold page spends the allowance while a backfill is open, and the status

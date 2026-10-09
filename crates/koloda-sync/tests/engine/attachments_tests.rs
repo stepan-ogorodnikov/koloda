@@ -2,9 +2,9 @@ use std::sync::mpsc::channel;
 use std::sync::Arc;
 
 use koloda::app::init::seed_db;
-use koloda::domain::attachments::{AddAttachmentData, SweepAttachmentsData};
+use koloda::domain::attachments::SweepAttachmentsData;
 use koloda::domain::cards::{CardContentField, UpdateCardData, UpdateCardValues};
-use koloda::repo::attachments::{add_attachment, get_attachment_bytes, sweep_attachments};
+use koloda::repo::attachments::{get_attachment_bytes, sweep_attachments};
 use koloda::repo::cards::update_card;
 use koloda_sync::pairing::ImportMode;
 use koloda_sync::runner::{Budget, Event};
@@ -12,44 +12,13 @@ use koloda_sync::transport::Method;
 use koloda_sync_proto::transport::ErrorCode;
 
 use crate::common::{error_reply, Device, Fault, Space, TestServer, SERVER_URL};
-use crate::fixtures::{seed_data, seed_settings, Library, BACK, FRONT};
+use crate::fixtures::{links, seed_data, seed_settings, Library, BACK, FRONT};
 use crate::runner_support::{channel_sink, wait_for, ManualTimer};
 
 const ATTACHMENTS: &str = "/attachments/";
 const DAY_MS: u64 = 24 * 60 * 60 * 1000;
 
-/// A PNG of `len` bytes whose body zstd cannot shrink, so its size on the wire is its size.
-fn png(seed: u64, len: usize) -> AddAttachmentData {
-    let mut bytes = b"\x89PNG\r\n\x1a\n".to_vec();
-    let mut state = seed.wrapping_mul(0x9e37_79b9_7f4a_7c15) | 1;
-    while bytes.len() < len {
-        state ^= state << 13;
-        state ^= state >> 7;
-        state ^= state << 17;
-        bytes.extend(state.to_le_bytes());
-    }
-    bytes.truncate(len);
-    AddAttachmentData {
-        bytes,
-        width: None,
-        height: None,
-    }
-}
-
-fn links(ids: &[&str]) -> String {
-    ids.iter()
-        .map(|id| format!("![x](attachment:{id})"))
-        .collect::<Vec<_>>()
-        .join(" ")
-}
-
 impl Device {
-    fn add_image(&self, seed: u64, len: usize) -> String {
-        add_attachment(&self.db, png(seed, len))
-            .expect("the image is stored")
-            .id
-    }
-
     fn image(&self, id: &str) -> Option<Vec<u8>> {
         get_attachment_bytes(&self.db, id).expect("attachment bytes read")
     }

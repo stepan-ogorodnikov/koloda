@@ -1311,6 +1311,7 @@ pulls and image transfers by the bytes on the wire.
 They share one allowance of the limit per metered network and stop once it is spent.
 A device that only grades and edits never spends it.
 The engine reports the pause, with the estimate when one is known.
+A heal or backfill left with rows once the allowance is spent waits too, whichever counted work spent it.
 The host can allow bulk transfers on the network, which lifts every pause until it reports another network.
 Another network lifts them too, and starts a new allowance.
 A device policy for image downloads (always, on unmetered networks, or on demand) may later decide which transfers

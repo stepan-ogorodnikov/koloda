@@ -5,9 +5,10 @@ use koloda_sync::transport::Method;
 use koloda_sync_proto::envelope::Envelope;
 use koloda_sync_proto::payload::{Payload, Title};
 use koloda_sync_proto::registry::{Group, Kind, Lane};
+use koloda_sync_proto::transport::RestoreMode;
 
 use crate::common::{Device, Space, SERVER_URL};
-use crate::fixtures::{seed_settings, Library};
+use crate::fixtures::{links, seed_settings, Library};
 
 // WHY: above a grade's outbox, and below a library's snapshot or a page of a hundred reviews, even compressed.
 const LIMIT: u64 = 2_000;
@@ -187,6 +188,62 @@ fn backfill_stops_once_the_allowance_is_spent() {
     assert!(pushed < 1_001, "only the first batch went out: {pushed}");
     assert_eq!(status.metered, Some(MeteredPause { estimate_bytes: None }));
     assert_eq!(cards_on_server(&space), 1_001, "the rest went out once allowed");
+}
+
+/// Spends the peer's allowance with work that leaves none of its own waiting.
+type Spend = fn(&Space, &Device, &Library);
+
+#[test]
+fn a_heal_that_meets_a_spent_allowance_shows_the_pause() {
+    let cases: [(&str, Spend); 2] = [
+        ("the last cold page", |space, peer, _| {
+            grade_all(&space.device);
+            space.device.engine.sync_now().expect("the grades are pushed");
+            peer.engine.sync_now().expect("one cold page brings every review");
+        }),
+        ("the last image of a due batch", |space, peer, library| {
+            let image = space.device.add_image(1, 3_000);
+            space
+                .device
+                .add_card(&library.deck, &library.template, &links(&[&image]));
+            space.device.engine.sync_now().expect("the image is uploaded");
+            peer.engine.sync_now().expect("the peer fetches the image");
+        }),
+    ];
+
+    for (name, spend) in cases {
+        let space = Space::new();
+        let (library, peer) = metered_peer(&space);
+        spend(&space, &peer, &library);
+        let spent = peer.engine.status().expect("the status reads").metered;
+        let backup = space.server.backup();
+        peer.update_deck(
+            &library.deck,
+            "Renamed on the peer",
+            &library.algorithm,
+            &library.template,
+        );
+        peer.engine.sync_now().expect("the rename is pushed");
+        space.server.restore(&backup, RestoreMode::Heal);
+
+        peer.engine.sync_now().expect("the peer takes the restore");
+        let healing = peer.engine.status().expect("the status reads").metered;
+        peer.engine.sync_now().expect("the next cycle runs");
+        let next = peer.engine.status().expect("the status reads").metered;
+        peer.engine.allow_metered().expect("bulk sync is allowed");
+        peer.engine.sync_now().expect("the heal runs");
+        space.device.engine.sync_now().expect("the creator pulls");
+
+        assert_eq!(spent, None, "{name}: nothing waits while no heal runs");
+        let paused = Some(MeteredPause { estimate_bytes: None });
+        assert_eq!(healing, paused, "{name}: the heal waits for the allowance");
+        assert_eq!(next, paused, "{name}: and still does a cycle later");
+        assert_eq!(
+            space.device.deck(&library.deck).map(|deck| deck.title),
+            Some("Renamed on the peer".to_string()),
+            "{name}: the heal re-pushes the rename once allowed"
+        );
+    }
 }
 
 #[test]
