@@ -748,14 +748,17 @@ Rules:
   are applied.
 - The space carries an `epoch`: an opaque generation UUID that changes on every server restore.
 
-Detaching on the device deletes the token and records when.
+Detaching on the device records when, then deletes the token.
+A stop or a failed delete between the two still leaves a detached file that can re-attach.
 Rows and sync tables stay, and capture keeps recording, for a later re-attach.
+A file whose token is gone detaches without a server call.
 A detached file sends no request.
 A `401 revoked` reply to any call detaches the file this way; `detach` revokes the own device first.
 A `401 revoked` or `401 unknown_device` whose epoch is not the one the device sent means a restore predates the
 device, or rotated every token (§Server restore).
 The file detaches the same way, and its status asks for a new pairing rather than reporting a revocation.
 A `401 unknown_device` on the epoch the device sent stops the engine.
+The file stays attached until the user detaches it; `detach` then treats that reply as `revoked`.
 
 ### Behind its own record: rollback and copies
 

@@ -251,7 +251,7 @@ The owner took every recommendation on 2026-10-09.
   Commit: Keep a claim and a space creation until the file records them
   Depends on: 2, 3
 
-- [ ] 5. Detach a file whatever its token state
+- [x] 5. Detach a file whatever its token state
   Goal (per question 6):
   - `detach_locally` marks the file detached, then deletes the token.
     It reads `sync_state` itself, so a missing token does not stop it, and a token already gone is not an error.

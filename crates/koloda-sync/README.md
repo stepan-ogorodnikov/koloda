@@ -45,7 +45,8 @@ A pending claim or creation keeps its nonce in `koloda`'s `sync_enrolling`, writ
   host among the reasons), the lane held at an envelope this app cannot read, whether the space is over its quota,
   whether bulk transfers wait on a metered network, when a push waiting for server time resumes, and how far behind
   each lane is.
-- `src/devices.rs` — the device list, revoking another device, and detaching this file.
+- `src/devices.rs` — the device list, revoking another device, and detaching this file, also when its token is gone
+  or the server no longer knows it.
 - `src/metered.rs` — bulk transfers on a metered network: the network the host reports, the bootstrap and outbox
   checks, the allowance counted work spends, and the call that lifts the pause.
 - `src/disk.rs` — the free-disk preflight before a bootstrap applies, and the free-space reader the host passes in.

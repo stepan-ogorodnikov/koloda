@@ -4,7 +4,7 @@
 use std::sync::Arc;
 
 use koloda::app::utility::get_current_timestamp;
-use koloda::repo::sync::detach;
+use koloda::repo::sync::{detach, enrolled_device};
 use koloda_sync_proto::transport::{DeviceList, Empty, ErrorCode, Platform};
 use uuid::Uuid;
 
@@ -67,7 +67,20 @@ impl Shared {
 
     /// Revokes this file's own device, then detaches the file.
     pub(crate) async fn detach(self: &Arc<Self>) -> Result<(), SyncError> {
-        let session = self.session().await?;
+        let session = match self.session().await {
+            Ok(session) => session,
+            // WHY: an attached file whose token is gone can make no server call; nothing else could detach it or let
+            // it pair again.
+            Err(SyncError::NotEnrolled) => {
+                let is_enrolled = self.blocking(|shared| enrolled_device(&shared.db)).await?.is_some();
+                return if is_enrolled {
+                    self.detach_locally().await
+                } else {
+                    Err(SyncError::NotEnrolled)
+                };
+            }
+            Err(error) => return Err(error),
+        };
         let revoked = self
             .device_client(&session)
             .call::<(), Empty>(
@@ -78,23 +91,29 @@ impl Shared {
             )
             .await;
         match revoked {
-            // WHY: a device another one revoked first is detached all the same.
+            // WHY: a device another one revoked first is detached all the same. So is one the server no longer knows
+            // on the file's own epoch, which no call could detach or pair again otherwise; a cycle only reports it.
             Ok(_)
             | Err(SyncError::Server {
-                code: ErrorCode::Revoked,
+                code: ErrorCode::Revoked | ErrorCode::UnknownDevice,
                 ..
             }) => self.detach_locally().await,
             Err(error) => Err(error),
         }
     }
 
-    /// Forgets the token and marks the file detached; rows and sync tables stay for a later re-attach.
+    /// Marks the file detached, then forgets its token; rows and sync tables stay for a later re-attach.
     pub(crate) async fn detach_locally(self: &Arc<Self>) -> Result<(), SyncError> {
         self.stop_listening();
-        let session = self.session().await?;
+        let device = self
+            .blocking(|shared| enrolled_device(&shared.db))
+            .await?
+            .ok_or(SyncError::NotEnrolled)?;
+        // INVARIANT: the mark comes before the token goes, so a stop or a failed delete between them leaves a
+        // detached file that pairs again, never an attached one with no token.
         self.blocking(move |shared| {
-            shared.secrets.remove(&token_key(session.device))?;
-            detach(&shared.db, get_current_timestamp()?)
+            detach(&shared.db, get_current_timestamp()?)?;
+            shared.secrets.remove(&token_key(device))
         })
         .await
     }

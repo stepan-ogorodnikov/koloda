@@ -160,6 +160,8 @@ host accepts it.
 **Detach** — `detach` records when the file left its space; the engine sends nothing for a detached file, and
 capture keeps recording for a later re-attach.
 
+- The engine records the detach before it deletes the token, so a failed delete still leaves the file detached.
+
 **Backfill** — `enroll_device` reserves one stamp per backfill phase.
 `backfill_batch` scans rows written before enrollment into the outbox, capped by envelopes and by bytes.
 
