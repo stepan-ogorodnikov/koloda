@@ -8,15 +8,14 @@ use koloda_server::data_dir::DataDirLock;
 use koloda_server::restore::{prepare, RestoreError, RestoreOptions};
 use koloda_sync_proto::registry::{Group, Kind};
 use koloda_sync_proto::transport::{
-    DeviceInfo, Empty, Enrollment, ErrorCode, IssuePairing, Pairing, PairingClaim, RestoreMode, Snapshot, SnapshotPage,
-    SpaceList,
+    DeviceInfo, Empty, ErrorCode, IssuePairing, Pairing, PairingClaim, RestoreMode, Snapshot, SnapshotPage, SpaceList,
 };
 use rusqlite::{params, Connection};
 use sha2::{Digest, Sha256};
 use tempfile::TempDir;
 use uuid::Uuid;
 
-use crate::common::{claim_request, nonce, stamp, uuid, write, Answer, Harness};
+use crate::common::{claim_request, nonce, stamp, uuid, write, Answer, Enrolled, Harness};
 
 const HEAL: RestoreOptions = RestoreOptions {
     mode: RestoreMode::Heal,
@@ -38,7 +37,7 @@ fn restore(harness: &mut Harness, out: &Path, options: RestoreOptions) -> Vec<(U
     epochs
 }
 
-async fn record(harness: &Harness, device: &Enrollment) -> Answer<DeviceInfo> {
+async fn record(harness: &Harness, device: &Enrolled) -> Answer<DeviceInfo> {
     harness
         .get(format!(
             "/v1/spaces/{}/devices/{}",

@@ -5,7 +5,9 @@ use koloda_sync_proto::transport::{
     PairingPreview, Platform, PreviewPairing, Snapshot, SpaceList,
 };
 
-use crate::common::{claim_request, encode, nonce, outcomes, stamp, uuid, write, Call, Harness, START_MS};
+use crate::common::{
+    claim_request, encode, nonce, outcomes, stamp, token, uuid, write, Call, Enrolled, Harness, START_MS,
+};
 
 fn device_path(space: [u8; 16], device: [u8; 16]) -> String {
     format!("/v1/spaces/{}/devices/{}", uuid(space), uuid(device))
@@ -91,13 +93,13 @@ async fn device_tokens_answer_only_for_their_own_space() {
     assert_eq!(other_device.error(), (StatusCode::NOT_FOUND, ErrorCode::NotFound));
 }
 
-fn revoke<'a>(harness: &'a Harness, caller: &Enrollment, target: [u8; 16]) -> Call<'a> {
+fn revoke<'a>(harness: &'a Harness, caller: &Enrolled, target: [u8; 16]) -> Call<'a> {
     harness
         .call(Method::DELETE, device_path(caller.space_id, target))
         .token(&caller.token)
 }
 
-async fn stored_bytes(harness: &Harness, device: &Enrollment) -> u64 {
+async fn stored_bytes(harness: &Harness, device: &Enrolled) -> u64 {
     let code = harness
         .post(format!("/v1/spaces/{}/pairings", uuid(device.space_id)))
         .token(&device.token)
@@ -274,44 +276,86 @@ async fn a_fork_is_a_new_device_and_the_old_token_keeps_working() {
     assert_eq!(home_record.last_sender_seq, 1, "the old record keeps its own progress");
 }
 
-async fn fork(harness: &Harness, device: &Enrollment, nonce: [u8; 16]) -> Enrollment {
-    harness
+async fn fork(harness: &Harness, device: &Enrolled, nonce: [u8; 16]) -> Enrolled {
+    let minted = token(&nonce);
+    let enrollment = harness
         .post(format!("/v1/spaces/{}/devices/fork", uuid(device.space_id)))
         .token(&device.token)
-        .body(&ForkDevice { nonce })
+        .body(&ForkDevice {
+            nonce,
+            token: minted.clone(),
+        })
         .send::<Enrollment>()
         .await
-        .ok()
+        .ok();
+    Enrolled::from_reply(enrollment, minted)
 }
 
 #[tokio::test]
-async fn a_fork_retried_with_its_nonce_returns_the_same_device_with_a_fresh_token() {
+async fn a_fork_retried_with_its_nonce_and_token_returns_the_same_device() {
     let harness = Harness::new();
     let home = harness.create_space("Home").await;
+    let nonce = [1; 16];
 
-    let first = fork(&harness, &home, [1; 16]).await;
-    let retried = fork(&harness, &home, [1; 16]).await;
+    let first = fork(&harness, &home, nonce).await;
+    let retried = fork(&harness, &home, nonce).await;
     let other = fork(&harness, &home, [2; 16]).await;
 
-    assert_eq!(retried.device_id, first.device_id, "one record per nonce");
+    assert_eq!(retried, first, "one record per nonce and token");
     assert_ne!(other.device_id, first.device_id, "another nonce is another fork");
     let list = harness
         .get(format!("/v1/spaces/{}/devices", uuid(home.space_id)))
-        .token(&retried.token)
+        .token(&token(&nonce))
         .send::<DeviceList>()
         .await
         .ok();
     assert_eq!(list.devices.len(), 3, "the creator and two forks");
-    let stale_token = harness
+}
+
+#[tokio::test]
+async fn two_forks_with_one_nonce_and_token_return_one_device_and_another_token_changes_nothing() {
+    let harness = Harness::new();
+    let home = harness.create_space("Home").await;
+    let nonce = [7; 16];
+    let (first, second) = tokio::join!(fork(&harness, &home, nonce), fork(&harness, &home, nonce));
+
+    assert_eq!(first, second, "either order returns the one device");
+    let list = harness
         .get(format!("/v1/spaces/{}/devices", uuid(home.space_id)))
-        .token(&first.token)
+        .token(&token(&nonce))
         .send::<DeviceList>()
+        .await
+        .ok();
+    assert_eq!(list.devices.len(), 2, "the creator and one fork");
+
+    let refused = harness
+        .post(format!("/v1/spaces/{}/devices/fork", uuid(home.space_id)))
+        .token(&home.token)
+        .body(&ForkDevice {
+            nonce,
+            token: token(&[8; 16]),
+        })
+        .send::<Enrollment>()
         .await;
-    assert_eq!(
-        stale_token.error().1,
-        ErrorCode::UnknownDevice,
-        "the first token was replaced"
-    );
+    assert_eq!(refused.error(), (StatusCode::BAD_REQUEST, ErrorCode::BadRequest));
+    let unchanged = harness
+        .get(format!("/v1/spaces/{}/devices", uuid(home.space_id)))
+        .token(&token(&nonce))
+        .send::<DeviceList>()
+        .await
+        .ok();
+    assert_eq!(unchanged.devices.len(), 2, "the refused token wrote nothing");
+
+    let malformed = harness
+        .post(format!("/v1/spaces/{}/devices/fork", uuid(home.space_id)))
+        .token(&home.token)
+        .body(&ForkDevice {
+            nonce,
+            token: "not-a-token".to_string(),
+        })
+        .send::<Enrollment>()
+        .await;
+    assert_eq!(malformed.error(), (StatusCode::BAD_REQUEST, ErrorCode::BadRequest));
 }
 
 #[tokio::test]

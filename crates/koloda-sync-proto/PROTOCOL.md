@@ -722,7 +722,7 @@ A joining device never backfills them (§Joining).
 | Field | Notes |
 | --- | --- |
 | `device_id` | UUID minted at enrollment; `sender` on the wire |
-| `token` | 256-bit bearer secret; hashed on the server, in the OS secure store on the client |
+| `token` | 256-bit bearer secret the client mints, 64 lowercase hex characters; hashed on the server, in the OS secure store on the client |
 | `name`, `platform` | User-editable name; `desktop-win`, `desktop-mac`, `desktop-linux`, `ios`, `android` |
 | `last_seen`, `cursor_hot`, `cursor_cold` | Maintained by the server |
 | `last_sender_seq` | Highest consumed `sender_seq`, and its digest |
@@ -790,9 +790,12 @@ A file that is behind:
    It could then beat a grade whose review the reset did not kill.
    A cohort remembers when a push reply consumed one of its members, even after that member left the outbox.
    A cohort that a lost reply fixed, with no member known consumed, returns to `local` when no receipt shows one.
-3. Forks: `POST .../devices/fork` with its current token returns a fresh device id and token.
-   The request carries a nonce the file stores before it calls.
-   The same nonce from the same device returns the same new device with a fresh token.
+3. Forks: `POST .../devices/fork` carries a nonce and the token the file minted, and returns a fresh device id.
+   The file writes that token to the secret store under `sync.pending_token.{nonce}` before it stores the nonce.
+   It reuses both until the switch, then removes the pending key.
+   A stored nonce whose key is gone is replaced by a new nonce and token.
+   The same nonce and token from the same device return the same new device and write nothing.
+   A different token for that nonce is `400 bad_request` and writes nothing.
    A file that stopped before the switch therefore forks to the same record when it retries, and no orphan record
    pins GC.
    The new device keeps the old one's name and platform, records which device it forked from, and starts with no
@@ -805,8 +808,9 @@ A file that is behind:
    Re-stamping is required: two copies that adopted the same remote stamp mint identical HLCs next.
    Renumbering starts at 1 in the old order and moves the sender and seq of the register, origin, or tombstone each
    row wrote; rows in `sync_held` keep the seqs they were consumed at.
-   Steps 1, 2, and 4 and the swap of the device id are one local transaction, after the new token is stored, so a
-   crash leaves the file as it was or fully switched.
+   Steps 1, 2, and 4 and the swap of the device id are one local transaction. The new token is already in the secret
+   store before the call, and copied to the new device's key before the transaction, so a crash leaves the file as
+   it was or fully switched.
    The re-bootstrap barrier opens in the same transaction, so the new id never runs without it.
 5. Re-bootstraps (§Recovery), own entries included, because writes under the old id were excluded from its pulls.
 
@@ -833,7 +837,7 @@ Unknown `kind`, `group`, or `op`, and lane mismatches, are rejected at a header 
 | `GET /v1/spaces` | List spaces; setup token |
 | `POST /v1/spaces/{space}/pairings` | Issue a pairing code; device token, or setup token for break-glass; revoking the issuer invalidates its codes |
 | `POST /v1/pairings/preview` | Body has `code`; space name, epoch, approximate counts and bytes; does not consume the code; rate-limited |
-| `POST /v1/pairings/claim` | Body has `code`, name, platform, nonce; returns device id, token, and epoch; the same nonce returns the same result |
+| `POST /v1/pairings/claim` | Body has `code`, name, platform, nonce, and the token the client minted; returns device id and epoch; the same nonce and token return the same device, and another token is `pairing_failed` |
 | `POST /v1/spaces/{space}/push` | Batch of envelopes; atomic, with per-seq outcomes |
 | `GET /v1/spaces/{space}/receipts` | Stored outcomes for any sender's seqs; usable while `rebase_required` |
 | `GET /v1/spaces/{space}/pull?lane&after&max_seq&limit` | Envelopes with `after < seq <= max_seq`, own sender excluded, minus anything under a committed deletion scope; each entry carries `(seq, sender, sender_seq)`; returns `scanned_through`, `has_more`, heads, epoch |
@@ -843,7 +847,7 @@ Unknown `kind`, `group`, or `op`, and lane mismatches, are rejected at a header 
 | `DELETE /v1/spaces/{space}/bootstrap/{snapshot}` | Releases the lease |
 | `GET /v1/spaces/{space}/events` | WebSocket; the lane heads on connect and on every change (§Events) |
 | `GET/DELETE /v1/spaces/{space}/devices[/{id}]` | Device list and revocation; `DELETE` of self is detach |
-| `POST /v1/spaces/{space}/devices/fork` | Current token in, new device id and token out (§Devices) |
+| `POST /v1/spaces/{space}/devices/fork` | Current token authenticates; body has nonce and the new token; new device id out (§Devices) |
 | `POST /v1/spaces/{space}/ids/known` | Id chunk in, the ones live or fenced in the space out, each marked which (§Joining) |
 | `PUT/GET /v1/spaces/{space}/attachments/{id}` | Attachment bytes and metadata (§Attachments) |
 | `GET /v1/spaces/{space}/attachments/missing?after&limit` | Ids that live cards link and the space holds no bytes for (§Attachments) |
@@ -884,15 +888,15 @@ Names are 1 to 100 characters after trimming.
 
 | Endpoint | Request | `ok` |
 | --- | --- | --- |
-| `POST /v1/spaces` | `name`, `device_name`, `platform`, `nonce` | `space_id`, `device_id`, `token`, `epoch` |
+| `POST /v1/spaces` | `name`, `device_name`, `platform`, `nonce`, `token` | `space_id`, `device_id`, `epoch` |
 | `GET /v1/spaces` | none | `spaces`, each with `id`, `name`, `created_at`, `device_count` |
 | `GET /v1/spaces/{space}/devices/{id}` | none | `id`, `name`, `platform`, `created_at`, `last_seen`, `last_sender_seq`, `last_sender_digest`, `cursor_hot`, `cursor_cold`, `revoked_at`, `rebase_required` |
 | `GET /v1/spaces/{space}/devices` | none | `devices`, each a device record as above |
 | `DELETE /v1/spaces/{space}/devices/{id}` | none | empty |
-| `POST /v1/spaces/{space}/devices/fork` | `nonce` | the new device's enrollment, as space creation returns it; the same nonce returns the same device with a fresh token |
+| `POST /v1/spaces/{space}/devices/fork` | `nonce`, `token` | the new device's enrollment, as space creation returns it; the same nonce and token return the same device, and another token is `bad_request` |
 | `POST /v1/spaces/{space}/pairings` | `hint`, optional bytes of at most 4 KiB | `code`, `expires_at` |
 | `POST /v1/pairings/preview` | `code` | `space_id`, `name`, `epoch`, `counts` per kind, `bytes` |
-| `POST /v1/pairings/claim` | `code`, `name`, `platform`, `nonce` | `enrollment` as space creation returns it, `hint` |
+| `POST /v1/pairings/claim` | `code`, `name`, `platform`, `nonce`, `token` | `enrollment` as space creation returns it, `hint` |
 | `POST /v1/spaces/{space}/push` | `items`, each `sender_seq` and `envelope` bytes; at most 5000 | `outcomes`, each `sender_seq`, `outcome`, `replayed`, and `missing_attachments` when not empty |
 | `POST /v1/spaces/{space}/ids/known` | `ids`, each `kind` and `id`; at most 1000 | `ids` the space holds, in the order asked, each `kind`, `id`, `state` (`live` or `fenced`) |
 | `GET /v1/spaces/{space}/pull?lane&after&max_seq&limit` | `lane` and `after`; `max_seq` defaults to the lane head | `entries`, each `seq`, `sender`, `sender_seq`, `envelope`; `scanned_through`, `has_more` |
@@ -906,7 +910,9 @@ Names are 1 to 100 characters after trimming.
 | `GET /v1/spaces/{space}/attachments/missing?after&limit` | `after` an id, optional; `limit` at most 1000, the default | `ids`, in id order |
 
 Creating a space also enrolls its creator, so the first device needs no pairing code.
-The same `nonce` returns the same result, token included, for 10 minutes.
+The same `nonce` and `token` return the same result for 10 minutes.
+A different token for that nonce is `bad_request` and writes nothing.
+A malformed token, one that is not 64 lowercase hex characters, is `bad_request`.
 A space's `device_count` counts the devices that are not revoked.
 An `epoch_changed` error carries `restore`: `epoch` (the space's), `mode`, `head_hot`, `head_cold`, and `cutoffs`,
 each a `sender` and its `last_seq`; a sender `cutoffs` does not list counts as 0.
@@ -1567,9 +1573,10 @@ Nothing keeps syncing afterwards.
   It is shown as text and as a QR that also encodes the server URL and space id.
   Case, spaces, and hyphens do not matter, and `O`, `I`, and `L` read as `0`, `1`, and `1`.
   The server stores only its hash.
-- **Claim**: a claim retried with the same nonce returns the same device and token until the code expires.
-  A different nonce on a used code fails.
-  A device that gets no reply to its claim retries it with the same nonce.
+- **Claim**: a claim retried with the same nonce and token returns the same device until the code expires.
+  A different token, or a different nonce, on a used code fails `pairing_failed` and writes nothing.
+  A device that gets no reply to its claim retries it with the same nonce and token.
+  A malformed token is `bad_request`.
 - **Preview first**: a joining device previews the code, then tells its mode for the previewed space, before it
   claims.
   A file that would re-attach is refused while its code is still unused.

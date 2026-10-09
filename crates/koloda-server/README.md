@@ -137,7 +137,7 @@ No image is published to a registry.
 - `src/http.rs` — CBOR and zstd bodies, their limits, the reply envelope, and `meta`.
 - `src/auth.rs` — setup and device tokens, marking a device stale when it calls after a long absence, refusing a
   device call on another epoch with the restore it must apply, and storing the schemas a device advertises.
-- `src/spaces.rs` — space creation, which enrolls the creator, and the list.
+- `src/spaces.rs` — space creation, which enrolls the creator with the token the client minted, and the list.
 - `src/pairing.rs` — pairing codes: issue, preview, claim, and the limits on wrong codes.
 - `src/push.rs` — push batches and receipts; one transaction under the space writer lock.
 - `src/quota.rs` — space quotas, the disk watermarks and the free space they read, and how much room a space has.
@@ -150,7 +150,8 @@ No image is published to a registry.
 - `src/known.rs` — the join probe: which ids the space holds live or fenced.
 - `src/drop_envelope.rs` — dropping one damaged version from a space's log, and the tombstone the server authors in
   place of a dropped create or tombstone.
-- `src/devices.rs` — device records, revocation and detach, fork, and which devices are active.
+- `src/devices.rs` — device records, revocation and detach, fork of a client-minted token, and which devices are
+  active. Server stores only token hashes.
 - `src/attachments.rs` — attachment bytes by content address: upload checked against the id, download, the ids
   cards link that no device uploaded, card refs,
   and collection of attachments unlinked for 90 days.

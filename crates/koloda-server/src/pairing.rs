@@ -53,7 +53,6 @@ struct Code {
 struct Claim {
     nonce: Vec<u8>,
     device: Uuid,
-    token: String,
 }
 
 pub(crate) async fn issue(
@@ -142,63 +141,66 @@ fn preview_code(server: &Server, request: &PreviewPairing) -> Result<PairingPrev
 }
 
 fn claim_code(server: &Server, request: ClaimPairing) -> Result<PairingClaim, ApiError> {
+    auth::require_token(&request.token)?;
     let name = checked_name("device name", &request.name)?;
+    let hash = auth::token_hash(&request.token).to_vec();
     let now = server.now_ms();
     let mut conn = server.server_db()?;
     conn.execute("DELETE FROM pairings WHERE expires_at < ?1", params![now])?;
     let code = live_code(&conn, &request.code, now)?.ok_or_else(failed)?;
     let epoch = server.space_epoch(code.space)?.into_bytes();
-    let enrollment = |device: Uuid, token: String| PairingClaim {
+    let enrollment = |device: Uuid| PairingClaim {
         enrollment: Enrollment {
             space_id: code.space.into_bytes(),
             device_id: device.into_bytes(),
-            token,
             epoch,
         },
         hint: code.hint.clone(),
     };
     if let Some(claim) = &code.claim {
-        // INVARIANT: a used code answers only its own claim's retry; any other caller sees an unknown code.
-        return if claim.nonce == request.nonce {
-            Ok(enrollment(claim.device, claim.token.clone()))
+        // INVARIANT: a used code answers only its own claim's retry, and only when the token hashes to that
+        // device. Any other caller, and a different token, see an unknown code. Neither writes.
+        let same_token = device_token_hash(&conn, claim.device)?.as_deref() == Some(hash.as_slice());
+        return if claim.nonce.as_slice() == request.nonce.as_slice() && same_token {
+            Ok(enrollment(claim.device))
         } else {
             Err(failed())
         };
     }
 
     let device = Uuid::new_v4();
-    let token = auth::new_token().map_err(|error| ApiError::internal(error.to_string()))?;
     let tx = conn.transaction()?;
     tx.execute(
         "INSERT INTO devices (id, space_id, token_hash, name, platform, created_at, last_seen)
          VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?6)",
-        params![
-            device,
-            code.space,
-            auth::token_hash(&token).to_vec(),
-            name,
-            request.platform.as_wire(),
-            now
-        ],
+        params![device, code.space, hash, name, request.platform.as_wire(), now],
     )?;
     tx.execute(
-        "UPDATE pairings SET claim_nonce = ?1, claim_device = ?2, claim_token = ?3 WHERE code_hash = ?4",
-        params![request.nonce.to_vec(), device, token, code.hash],
+        "UPDATE pairings SET claim_nonce = ?1, claim_device = ?2 WHERE code_hash = ?3",
+        params![request.nonce.to_vec(), device, code.hash],
     )?;
     tx.commit()?;
-    Ok(enrollment(device, token))
+    Ok(enrollment(device))
+}
+
+fn device_token_hash(conn: &Connection, device: Uuid) -> Result<Option<Vec<u8>>, ApiError> {
+    Ok(conn
+        .query_row("SELECT token_hash FROM devices WHERE id = ?1", params![device], |row| {
+            row.get(0)
+        })
+        .optional()?)
 }
 
 fn live_code(conn: &Connection, code: &str, now: u64) -> Result<Option<Code>, ApiError> {
     let hash = code_hash(code);
     let row = conn
         .query_row(
-            "SELECT space_id, hint, claim_nonce, claim_device, claim_token
+            "SELECT space_id, hint, claim_nonce, claim_device
              FROM pairings WHERE code_hash = ?1 AND expires_at >= ?2",
             params![hash, now],
             |row| {
-                let claim = match (row.get(2)?, row.get(3)?, row.get(4)?) {
-                    (Some(nonce), Some(device), Some(token)) => Some(Claim { nonce, device, token }),
+                let claim = match (row.get(2)?, row.get(3)?) {
+                    (Some(nonce), Some(device)) => Some(Claim { nonce, device }),
                     _ => None,
                 };
                 Ok(Code {

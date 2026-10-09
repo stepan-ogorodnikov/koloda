@@ -6,21 +6,21 @@ use axum::http::{Method, StatusCode};
 use futures_util::{SinkExt, StreamExt};
 use koloda_sync_proto::payload::SCHEMA;
 use koloda_sync_proto::registry::{Group, Kind};
-use koloda_sync_proto::transport::{encode_schemas, Empty, Enrollment, ErrorCode, Heads, EPOCH_HEADER, SCHEMAS_HEADER};
+use koloda_sync_proto::transport::{encode_schemas, Empty, ErrorCode, Heads, EPOCH_HEADER, SCHEMAS_HEADER};
 use tokio::net::TcpStream;
 use tokio_tungstenite::tungstenite::client::IntoClientRequest;
 use tokio_tungstenite::tungstenite::Message;
 use tokio_tungstenite::{MaybeTlsStream, WebSocketStream};
 use uuid::Uuid;
 
-use crate::common::{stamp, uuid, write, Harness};
+use crate::common::{stamp, uuid, write, Enrolled, Harness};
 
 type Socket = WebSocketStream<MaybeTlsStream<TcpStream>>;
 
 // WHY: a bound on how long a broken test waits for a frame, not an ordering; every frame here is already due.
 const WAIT: Duration = Duration::from_secs(10);
 
-fn events_path(device: &Enrollment) -> String {
+fn events_path(device: &Enrolled) -> String {
     format!("/v1/spaces/{}/events", uuid(device.space_id))
 }
 
@@ -35,7 +35,7 @@ async fn listen(harness: &Harness) -> SocketAddr {
     address
 }
 
-async fn connect(address: SocketAddr, device: &Enrollment) -> Socket {
+async fn connect(address: SocketAddr, device: &Enrolled) -> Socket {
     let mut request = format!("ws://{address}{}", events_path(device))
         .into_client_request()
         .expect("a WebSocket request");

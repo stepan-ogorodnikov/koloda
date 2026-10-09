@@ -16,6 +16,7 @@ path = "tests/engine/main.rs"
 ciborium = "0.2"
 fs4 = "1"
 futures-util = "0.3"
+getrandom = "0.2"
 koloda = { path = "../koloda" }
 koloda-sync-proto = { path = "../koloda-sync-proto" }
 reqwest = { version = "0.13", default-features = false, features = ["rustls"] }

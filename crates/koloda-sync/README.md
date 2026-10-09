@@ -13,7 +13,8 @@ The engine owns a tokio runtime, so host calls block until done; database work r
 The host passes in the transport, and the reader of free disk space, `SystemDisk` outside tests.
 The host starts the background runner with an event sink and tells it about local commits, nudges, and the network.
 It reads `status`, and on mobile runs bounded `tick`s instead.
-A device's bearer token lives in the host's secret store under `sync.token.<device id>`, and nowhere else.
+A device's bearer token lives in the host's secret store under `sync.token.<device id>`.
+A fork's token waits under `sync.pending_token.<nonce>` until the switch, and nowhere else.
 
 ## Architectural Map
 
@@ -28,8 +29,8 @@ A device's bearer token lives in the host's secret store under `sync.token.<devi
   backfill top the outbox up before each batch.
 - `src/restore.rs` — a server restore the server reported: heal starts the re-push scan; an authoritative restore is
   held until the host calls `accept_restore`, which discards local data so the next cycle bootstraps.
-- `src/fork.rs` — a file behind its own record forks to a new device id: the stored nonce, the new token, receipts,
-  and the switch.
+- `src/fork.rs` — a file behind its own record forks to a new device id: the pending token and nonce, stored before
+  the call, receipts, and the switch.
 - `src/pairing.rs` — pairing codes, preview, and joining a space: blank, seed-only, a used file through Add or
   Replace, or a detached file re-attaching under a new device id, after applying a restore the space had since.
 - `src/runner.rs` — the background runner: triggers, coalescing, the poll and how long it waits while the events

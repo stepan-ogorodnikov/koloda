@@ -136,7 +136,8 @@ included. `finish_rebase` and `finish_bootstrap` remove what the finishing lease
 **Device switch** — `switch_device` settles accepted rows through `settle_item`, the path a push reply takes.
 
 - `settle_push` sets `sync_cohorts.has_consumed`; only such a cohort stays `fixed` across a switch.
-- The caller stores the new token before the call; the id swap, renumbering, re-stamp, and a re-attach's server URL
+- The caller stores the new token before the fork call, under `sync.pending_token.{nonce}`, and copies it to
+  `sync.token.{device}` before `switch_device`. The id swap, renumbering, re-stamp, and a re-attach's server URL
   are one transaction.
 
 **Heal** — `begin_heal` stores a restore's cutoffs and restarts the scan; `heal_batch` enqueues the next batch.

@@ -6,12 +6,12 @@ use koloda_sync_proto::transport::{
     DeviceInfo, Empty, Enrollment, ErrorCode, ForkDevice, Outcome, Receipts, Snapshot, SnapshotPage,
 };
 
-use crate::common::{outcomes, stamp, uuid, write, Harness};
+use crate::common::{outcomes, stamp, uuid, write, Enrolled, Harness};
 
 const HOUR_MS: u64 = 60 * 60 * 1000;
 const DAY_MS: u64 = 24 * HOUR_MS;
 
-async fn record(harness: &Harness, caller: &Enrollment, device: &Enrollment) -> DeviceInfo {
+async fn record(harness: &Harness, caller: &Enrolled, device: &Enrolled) -> DeviceInfo {
     harness
         .get(format!(
             "/v1/spaces/{}/devices/{}",
@@ -24,7 +24,7 @@ async fn record(harness: &Harness, caller: &Enrollment, device: &Enrollment) -> 
         .ok()
 }
 
-async fn push_title(harness: &Harness, device: &Enrollment, seq: u64, offset_ms: u64) -> Option<ErrorCode> {
+async fn push_title(harness: &Harness, device: &Enrolled, seq: u64, offset_ms: u64) -> Option<ErrorCode> {
     let answer = harness
         .push(
             device,
@@ -39,7 +39,7 @@ async fn push_title(harness: &Harness, device: &Enrollment, seq: u64, offset_ms:
     }
 }
 
-async fn open_lease(harness: &Harness, device: &Enrollment) -> Snapshot {
+async fn open_lease(harness: &Harness, device: &Enrolled) -> Snapshot {
     harness
         .post(format!("/v1/spaces/{}/bootstrap", uuid(device.space_id)))
         .token(&device.token)
@@ -49,7 +49,7 @@ async fn open_lease(harness: &Harness, device: &Enrollment) -> Snapshot {
 }
 
 /// A space whose deck the phone may write a title to.
-async fn space_with_deck(harness: &Harness) -> (Enrollment, Enrollment) {
+async fn space_with_deck(harness: &Harness) -> (Enrolled, Enrolled) {
     let home = harness.create_space("Home").await;
     harness
         .push(
@@ -156,7 +156,10 @@ async fn a_record_another_was_forked_from_goes_stale_after_a_day() {
     harness
         .post(format!("/v1/spaces/{}/devices/fork", uuid(phone.space_id)))
         .token(&phone.token)
-        .body(&ForkDevice { nonce: [9; 16] })
+        .body(&ForkDevice {
+            nonce: [9; 16],
+            token: crate::common::token(&[9; 16]),
+        })
         .send::<Enrollment>()
         .await
         .ok();

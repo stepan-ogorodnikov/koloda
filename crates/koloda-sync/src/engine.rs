@@ -20,7 +20,7 @@ use tokio::runtime::Runtime;
 use tokio::sync::watch;
 use uuid::Uuid;
 
-use crate::client::{server_url, Client, Skew};
+use crate::client::{mint_token, server_url, Client, Skew};
 use crate::devices::DeviceSummary;
 use crate::disk::FreeSpace;
 use crate::error::SyncError;
@@ -549,12 +549,14 @@ impl Shared {
             return Err(SyncError::AlreadyEnrolled);
         }
 
-        // INVARIANT: retries inside `call` resend the same nonce, so a lost reply still ends in one space.
+        // INVARIANT: retries inside `call` resend the same nonce and token, so a lost reply still ends in one space.
+        let token = mint_token()?;
         let request = CreateSpace {
             name: space_name.to_string(),
             device_name: device_name.to_string(),
             platform: self.platform,
             nonce: Uuid::new_v4().into_bytes(),
+            token: token.clone(),
         };
         let enrollment: Enrollment = self
             .client(&base)
@@ -564,7 +566,7 @@ impl Shared {
 
         self.blocking(move |shared| {
             let device = Uuid::from_bytes(enrollment.device_id);
-            shared.secrets.set(&token_key(device), &enrollment.token)?;
+            shared.secrets.set(&token_key(device), &token)?;
             enroll_device(
                 &shared.db,
                 device,

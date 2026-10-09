@@ -4,10 +4,10 @@ use std::num::NonZeroU32;
 use ciborium::Value;
 use koloda_sync_proto::registry::Kind;
 use koloda_sync_proto::transport::{
-    decode_schemas, encode_schemas, AttachmentBody, ClaimPairing, CreateSpace, Cutoff, DependencyAction, DeviceInfo,
-    DeviceMeta, Empty, Enrollment, ErrorBody, ErrorCode, Heads, HeldReason, IssuePairing, KnownId, KnownState,
-    LogEntry, Meta, Outcome, Platform, PullPage, Push, PushItem, PushOutcome, Reply, Restore, RestoreMode, Snapshot,
-    SnapshotPage,
+    check_token, decode_schemas, encode_schemas, AttachmentBody, ClaimPairing, CreateSpace, Cutoff, DependencyAction,
+    DeviceInfo, DeviceMeta, Empty, Enrollment, ErrorBody, ErrorCode, Heads, HeldReason, IssuePairing, KnownId,
+    KnownState, LogEntry, Meta, Outcome, Platform, PullPage, Push, PushItem, PushOutcome, Reply, Restore, RestoreMode,
+    Snapshot, SnapshotPage,
 };
 use serde::Serialize;
 
@@ -68,7 +68,6 @@ fn replies_carry_meta_and_exactly_one_of_ok_and_error() {
     let enrollment = Enrollment {
         space_id: [1; 16],
         device_id: [2; 16],
-        token: "token".to_string(),
         epoch: [3; 16],
     };
     let ok = Reply {
@@ -104,7 +103,7 @@ fn replies_carry_meta_and_exactly_one_of_ok_and_error() {
         ["server_time_ms"],
         "absent epoch and device are omitted"
     );
-    assert_eq!(keys(field(&ok, "ok")), ["space_id", "device_id", "token", "epoch"]);
+    assert_eq!(keys(field(&ok, "ok")), ["space_id", "device_id", "epoch"]);
     assert_eq!(
         field(field(&ok, "ok"), "space_id"),
         &Value::Bytes(vec![1; 16]),
@@ -243,8 +242,9 @@ fn bodies_keep_their_wire_keys() {
                 device_name: "Laptop".to_string(),
                 platform: Platform::DesktopLinux,
                 nonce: [1; 16],
+                token: "ab".repeat(32),
             }),
-            vec!["name", "device_name", "platform", "nonce"],
+            vec!["name", "device_name", "platform", "nonce", "token"],
         ),
         (
             "issue pairing",
@@ -258,8 +258,9 @@ fn bodies_keep_their_wire_keys() {
                 name: "Phone".to_string(),
                 platform: Platform::Ios,
                 nonce: [1; 16],
+                token: "ab".repeat(32),
             }),
-            vec!["code", "name", "platform", "nonce"],
+            vec!["code", "name", "platform", "nonce", "token"],
         ),
         (
             "push",
@@ -434,5 +435,19 @@ fn schemas_travel_as_kind_schema_pairs_in_registry_order() {
     ];
     for (name, text) in malformed {
         assert!(decode_schemas(text).is_err(), "{name}: `{text}` is refused");
+    }
+}
+
+#[test]
+fn a_token_is_64_lowercase_hex_characters() {
+    check_token(&"ab".repeat(32)).expect("64 lowercase hex is a token");
+    for token in [
+        String::new(),
+        "ab".repeat(31),
+        "ab".repeat(33),
+        "AB".repeat(32),
+        "zz".repeat(32),
+    ] {
+        assert!(check_token(&token).is_err(), "{token}");
     }
 }

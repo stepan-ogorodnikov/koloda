@@ -14,6 +14,7 @@ use uuid::Uuid;
 
 use crate::auth::{self, DeviceAuth};
 use crate::bootstrap;
+use crate::db::is_constraint;
 use crate::http::{read_body, respond, ApiError};
 use crate::log;
 use crate::server::{lock, Server};
@@ -98,7 +99,7 @@ pub(crate) async fn fork(
     let request = read_body::<ForkDevice>(&headers, body).await;
     respond(server, headers, move |server, scope, headers| {
         let caller = auth::require_device(server, scope, headers, &space)?;
-        fork_device(server, &caller, request?.nonce)
+        fork_device(server, &caller, request?)
     })
     .await
 }
@@ -129,46 +130,72 @@ fn revoke_device(server: &Server, caller: &DeviceAuth, id: Uuid) -> Result<(), A
     Ok(())
 }
 
-// INVARIANT: a fork is idempotent by nonce. A retry after a lost reply, or after the file stopped before it stored the
-// token, gets the same device with a fresh token: the first token was never kept, and one file never makes two records.
-fn fork_device(server: &Server, caller: &DeviceAuth, nonce: [u8; 16]) -> Result<Enrollment, ApiError> {
+// INVARIANT: a fork is idempotent by nonce and token. A retry after a lost reply returns the same device and writes
+// nothing. A different token for that nonce is refused and writes nothing, so one file never makes two records and
+// never replaces a token the other copy kept.
+fn fork_device(server: &Server, caller: &DeviceAuth, request: ForkDevice) -> Result<Enrollment, ApiError> {
+    auth::require_token(&request.token)?;
+    let hash = auth::token_hash(&request.token).to_vec();
     let now = server.now_ms();
-    let token = auth::new_token().map_err(|error| ApiError::internal(error.to_string()))?;
-    let token_hash = auth::token_hash(&token).to_vec();
-    let conn = server.server_db()?;
-    let earlier: Option<Uuid> = conn
-        .query_row(
-            "SELECT id FROM devices WHERE forked_from = ?1 AND fork_nonce = ?2",
-            params![caller.id, nonce.as_slice()],
-            |row| row.get(0),
-        )
-        .optional()?;
-    let device = match earlier {
-        Some(device) => {
-            conn.execute(
-                "UPDATE devices SET token_hash = ?1 WHERE id = ?2",
-                params![token_hash, device],
-            )?;
-            device
-        }
-        None => {
-            let device = Uuid::new_v4();
-            conn.execute(
-                "INSERT INTO devices
-                     (id, space_id, token_hash, name, platform, created_at, last_seen, forked_from, fork_nonce)
-                 SELECT ?1, space_id, ?2, name, platform, ?3, ?3, id, ?5 FROM devices WHERE id = ?4",
-                params![device, token_hash, now, caller.id, nonce.as_slice()],
-            )?;
-            device
+    let device = {
+        let mut conn = server.server_db()?;
+        match same_fork(&conn, caller.id, &request.nonce, &hash)? {
+            Some(device) => device,
+            None => match insert_fork(&mut conn, caller, &request.nonce, &hash, now)? {
+                Some(device) => device,
+                // The unique index lost to a request that committed first.
+                None => same_fork(&conn, caller.id, &request.nonce, &hash)?
+                    .ok_or_else(|| ApiError::bad_request("the token is already enrolled"))?,
+            },
         }
     };
-    drop(conn);
     Ok(Enrollment {
         space_id: caller.space.into_bytes(),
         device_id: device.into_bytes(),
-        token,
         epoch: server.space_epoch(caller.space)?.into_bytes(),
     })
+}
+
+/// The fork this nonce already recorded, when `hash` is that device's token hash.
+fn same_fork(conn: &Connection, from: Uuid, nonce: &[u8; 16], hash: &[u8]) -> Result<Option<Uuid>, ApiError> {
+    let row: Option<(Uuid, Vec<u8>)> = conn
+        .query_row(
+            "SELECT id, token_hash FROM devices WHERE forked_from = ?1 AND fork_nonce = ?2",
+            params![from, nonce.as_slice()],
+            |row| Ok((row.get(0)?, row.get(1)?)),
+        )
+        .optional()?;
+    match row {
+        Some((device, stored)) if stored == hash => Ok(Some(device)),
+        Some(_) => Err(ApiError::bad_request("the nonce was used with another token")),
+        None => Ok(None),
+    }
+}
+
+/// Inserts the fork, or `None` when a unique index says another request did. The transaction ends before return.
+fn insert_fork(
+    conn: &mut Connection,
+    caller: &DeviceAuth,
+    nonce: &[u8; 16],
+    hash: &[u8],
+    now: u64,
+) -> Result<Option<Uuid>, ApiError> {
+    let device = Uuid::new_v4();
+    let tx = conn.transaction()?;
+    if let Err(error) = tx.execute(
+        "INSERT INTO devices
+             (id, space_id, token_hash, name, platform, created_at, last_seen, forked_from, fork_nonce)
+         SELECT ?1, space_id, ?2, name, platform, ?3, ?3, id, ?5 FROM devices WHERE id = ?4",
+        params![device, hash, now, caller.id, nonce.as_slice()],
+    ) {
+        return if is_constraint(&error) {
+            Ok(None)
+        } else {
+            Err(error.into())
+        };
+    }
+    tx.commit()?;
+    Ok(Some(device))
 }
 
 fn find(conn: &Connection, space: Uuid, id: Uuid) -> Result<Option<DeviceRow>, ApiError> {

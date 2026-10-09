@@ -7,7 +7,7 @@ use std::path::Path;
 use std::time::Duration;
 
 use refinery::Runner;
-use rusqlite::{Connection, OpenFlags};
+use rusqlite::{Connection, ErrorCode, OpenFlags};
 
 mod server_migrations {
     use refinery::embed_migrations;
@@ -69,3 +69,10 @@ impl fmt::Display for DbError {
 }
 
 impl std::error::Error for DbError {}
+
+pub(crate) fn is_constraint(error: &rusqlite::Error) -> bool {
+    matches!(
+        error,
+        rusqlite::Error::SqliteFailure(failure, _) if failure.code == ErrorCode::ConstraintViolation
+    )
+}

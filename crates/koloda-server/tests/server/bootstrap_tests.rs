@@ -2,18 +2,17 @@ use axum::http::{Method, StatusCode};
 use koloda_sync_proto::envelope::{Envelope, Header, Refs};
 use koloda_sync_proto::registry::{Group, Kind};
 use koloda_sync_proto::transport::{
-    Empty, Enrollment, ErrorCode, IssuePairing, Lease, LogEntry, Pairing, PairingPreview, PreviewPairing, Snapshot,
-    SnapshotPage,
+    Empty, ErrorCode, IssuePairing, Lease, LogEntry, Pairing, PairingPreview, PreviewPairing, Snapshot, SnapshotPage,
 };
 
 use koloda_server::clock::Clock;
 
-use crate::common::{card_create, child, encode, stamp, tombstone, uuid, write, Answer, Harness, START_MS};
+use crate::common::{card_create, child, encode, stamp, tombstone, uuid, write, Answer, Enrolled, Harness, START_MS};
 
 const LEASE_TTL_MS: u64 = 5 * 60 * 1000;
 const LEASE_LIFETIME_MS: u64 = 24 * 60 * 60 * 1000;
 
-async fn open(harness: &Harness, device: &Enrollment) -> Answer<Snapshot> {
+async fn open(harness: &Harness, device: &Enrolled) -> Answer<Snapshot> {
     harness
         .post(format!("/v1/spaces/{}/bootstrap", uuid(device.space_id)))
         .token(&device.token)
@@ -21,7 +20,7 @@ async fn open(harness: &Harness, device: &Enrollment) -> Answer<Snapshot> {
         .await
 }
 
-fn lease_path(device: &Enrollment, snapshot: &Snapshot) -> String {
+fn lease_path(device: &Enrolled, snapshot: &Snapshot) -> String {
     format!(
         "/v1/spaces/{}/bootstrap/{}",
         uuid(device.space_id),
@@ -29,7 +28,7 @@ fn lease_path(device: &Enrollment, snapshot: &Snapshot) -> String {
     )
 }
 
-async fn page(harness: &Harness, device: &Enrollment, snapshot: &Snapshot, query: &str) -> Answer<SnapshotPage> {
+async fn page(harness: &Harness, device: &Enrolled, snapshot: &Snapshot, query: &str) -> Answer<SnapshotPage> {
     harness
         .get(format!("{}?{query}", lease_path(device, snapshot)))
         .token(&device.token)
@@ -38,7 +37,7 @@ async fn page(harness: &Harness, device: &Enrollment, snapshot: &Snapshot, query
 }
 
 /// Every entry of a lane, two per page, so the stream crosses page boundaries.
-async fn stream(harness: &Harness, device: &Enrollment, snapshot: &Snapshot, lane: &str) -> Vec<LogEntry> {
+async fn stream(harness: &Harness, device: &Enrolled, snapshot: &Snapshot, lane: &str) -> Vec<LogEntry> {
     let mut entries = Vec::new();
     let mut after = 0;
     loop {
@@ -65,7 +64,7 @@ fn headers(entries: &[LogEntry]) -> Vec<(Kind, String, Option<Group>)> {
         .collect()
 }
 
-async fn stored_bytes(harness: &Harness, device: &Enrollment) -> u64 {
+async fn stored_bytes(harness: &Harness, device: &Enrolled) -> u64 {
     let code = harness
         .post(format!("/v1/spaces/{}/pairings", uuid(device.space_id)))
         .token(&device.token)

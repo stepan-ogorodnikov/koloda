@@ -1,6 +1,8 @@
 use koloda_sync::error::SyncError;
 use koloda_sync::transport::Response;
-use koloda_sync_proto::transport::{Enrollment, Meta, Reply};
+use std::collections::BTreeMap;
+
+use koloda_sync_proto::transport::{Meta, PairingPreview, Reply};
 
 use crate::common::{system_ms, Fault, TestServer, SERVER_URL};
 
@@ -91,11 +93,12 @@ fn a_zstd_reply_may_expand_past_the_request_ratio() {
             epoch: None,
             device: None,
         },
-        ok: Some(Enrollment {
+        ok: Some(PairingPreview {
             space_id: [1; 16],
-            device_id: [2; 16],
-            token: "t".repeat(64 * 1024),
+            name: "Home".to_string(),
             epoch: [3; 16],
+            counts: BTreeMap::from([("a".repeat(64 * 1024), 1)]),
+            bytes: 0,
         }),
         error: None,
     };
@@ -112,9 +115,7 @@ fn a_zstd_reply_may_expand_past_the_request_ratio() {
         is_zstd: true,
     }));
 
-    let result = device
-        .engine
-        .create_space(SERVER_URL, &server.setup_token, "Study", "Laptop");
+    let result = device.engine.preview(SERVER_URL, "0123456789");
 
     let error = result.err();
     assert!(error.is_none(), "a reply is limited by size only: {error:?}");

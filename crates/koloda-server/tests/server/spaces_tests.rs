@@ -1,7 +1,7 @@
 use axum::http::StatusCode;
 use koloda_sync_proto::transport::{CreateSpace, DeviceInfo, Enrollment, ErrorCode, SpaceList};
 
-use crate::common::{create_request, nonce, uuid, Harness};
+use crate::common::{create_request, nonce, token, uuid, Harness};
 
 #[tokio::test]
 async fn space_creation_enrolls_the_creator_and_replays_by_nonce() {
@@ -32,10 +32,7 @@ async fn space_creation_enrolls_the_creator_and_replays_by_nonce() {
         .await
         .ok();
 
-    assert_eq!(
-        replayed, created,
-        "the same nonce returns the same enrollment, token included"
-    );
+    assert_eq!(replayed, created, "the same nonce and token return the same enrollment");
     assert_ne!(other.space_id, created.space_id, "a new nonce creates a second space");
     let creator = harness
         .get(format!(
@@ -43,7 +40,7 @@ async fn space_creation_enrolls_the_creator_and_replays_by_nonce() {
             uuid(created.space_id),
             uuid(created.device_id)
         ))
-        .token(&created.token)
+        .token(&request.token)
         .send::<DeviceInfo>()
         .await
         .ok();
@@ -56,6 +53,58 @@ async fn space_creation_enrolls_the_creator_and_replays_by_nonce() {
         .ok();
     let listed: Vec<_> = list.spaces.iter().map(|space| (space.id, space.device_count)).collect();
     assert_eq!(listed, vec![(created.space_id, 1), (other.space_id, 1)]);
+}
+
+#[tokio::test]
+async fn a_creation_retried_with_another_token_is_refused_and_a_malformed_token_is_bad_request() {
+    let harness = Harness::new();
+    let request = create_request("Home", nonce("home"));
+    let created = harness
+        .post("/v1/spaces")
+        .token(&harness.setup_token)
+        .body(&request)
+        .send::<Enrollment>()
+        .await
+        .ok();
+
+    let mut other = request.clone();
+    other.token = token(&nonce("other"));
+    let refused = harness
+        .post("/v1/spaces")
+        .token(&harness.setup_token)
+        .body(&other)
+        .send::<Enrollment>()
+        .await;
+    assert_eq!(refused.error(), (StatusCode::BAD_REQUEST, ErrorCode::BadRequest));
+
+    let mut malformed = request.clone();
+    malformed.token = "not-a-token".to_string();
+    let malformed = harness
+        .post("/v1/spaces")
+        .token(&harness.setup_token)
+        .body(&malformed)
+        .send::<Enrollment>()
+        .await;
+    assert_eq!(malformed.error(), (StatusCode::BAD_REQUEST, ErrorCode::BadRequest));
+
+    let list = harness
+        .get("/v1/spaces")
+        .token(&harness.setup_token)
+        .send::<SpaceList>()
+        .await
+        .ok();
+    assert_eq!(list.spaces.len(), 1, "neither retry created a space");
+    let creator = harness
+        .get(format!(
+            "/v1/spaces/{}/devices/{}",
+            uuid(created.space_id),
+            uuid(created.device_id)
+        ))
+        .token(&request.token)
+        .send::<DeviceInfo>()
+        .await
+        .ok();
+    assert_eq!(creator.name, "Home laptop", "the original token still authenticates");
 }
 
 #[tokio::test]

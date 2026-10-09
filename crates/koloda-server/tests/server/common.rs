@@ -197,17 +197,21 @@ impl Harness {
         self._dir.path().join("generations").join(current.trim())
     }
 
-    pub async fn create_space(&self, name: &str) -> Enrollment {
-        self.post("/v1/spaces")
+    pub async fn create_space(&self, name: &str) -> Enrolled {
+        let request = create_request(name, nonce(name));
+        let token = request.token.clone();
+        let enrollment = self
+            .post("/v1/spaces")
             .token(&self.setup_token)
-            .body(&create_request(name, nonce(name)))
+            .body(&request)
             .send::<Enrollment>()
             .await
-            .ok()
+            .ok();
+        Enrolled::from_reply(enrollment, token)
     }
 
     /// Enrolls a second device into `space` through a pairing code its creator issues.
-    pub async fn pair(&self, space: &Enrollment, name: &str) -> Enrollment {
+    pub async fn pair(&self, space: &Enrolled, name: &str) -> Enrolled {
         let pairing = self
             .post(format!("/v1/spaces/{}/pairings", uuid(space.space_id)))
             .token(&space.token)
@@ -215,12 +219,36 @@ impl Harness {
             .send::<Pairing>()
             .await
             .ok();
-        self.post("/v1/pairings/claim")
-            .body(&claim_request(&pairing.code, name, nonce(name)))
+        let request = claim_request(&pairing.code, name, nonce(name));
+        let token = request.token.clone();
+        let enrollment = self
+            .post("/v1/pairings/claim")
+            .body(&request)
             .send::<PairingClaim>()
             .await
             .ok()
-            .enrollment
+            .enrollment;
+        Enrolled::from_reply(enrollment, token)
+    }
+}
+
+/// An enrollment plus the token the test minted. The wire reply no longer carries it.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Enrolled {
+    pub space_id: [u8; 16],
+    pub device_id: [u8; 16],
+    pub epoch: [u8; 16],
+    pub token: String,
+}
+
+impl Enrolled {
+    pub fn from_reply(enrollment: Enrollment, token: String) -> Enrolled {
+        Enrolled {
+            space_id: enrollment.space_id,
+            device_id: enrollment.device_id,
+            epoch: enrollment.epoch,
+            token,
+        }
     }
 }
 
@@ -351,6 +379,7 @@ pub fn create_request(name: &str, nonce: [u8; 16]) -> CreateSpace {
         name: name.to_string(),
         device_name: format!("{name} laptop"),
         platform: Platform::DesktopLinux,
+        token: token(&nonce),
         nonce,
     }
 }
@@ -360,8 +389,20 @@ pub fn claim_request(code: &str, name: &str, nonce: [u8; 16]) -> ClaimPairing {
         code: code.to_string(),
         name: name.to_string(),
         platform: Platform::DesktopMac,
+        token: token(&nonce),
         nonce,
     }
+}
+
+/// 64 lowercase hex characters, different for every nonce.
+pub fn token(nonce: &[u8; 16]) -> String {
+    let mut token = String::with_capacity(64);
+    for _ in 0..2 {
+        for byte in nonce {
+            token.push_str(&format!("{byte:02x}"));
+        }
+    }
+    token
 }
 
 pub fn nonce(seed: &str) -> [u8; 16] {
@@ -446,11 +487,11 @@ pub fn outcomes(reply: PushReply) -> Vec<(u64, Outcome, bool)> {
 }
 
 impl Harness {
-    pub async fn push(&self, device: &Enrollment, items: Vec<(u64, Header)>) -> Answer<PushReply> {
+    pub async fn push(&self, device: &Enrolled, items: Vec<(u64, Header)>) -> Answer<PushReply> {
         self.push_body(device, &batch(items)).await
     }
 
-    pub async fn push_body(&self, device: &Enrollment, push: &Push) -> Answer<PushReply> {
+    pub async fn push_body(&self, device: &Enrolled, push: &Push) -> Answer<PushReply> {
         self.post(format!("/v1/spaces/{}/push", uuid(device.space_id)))
             .token(&device.token)
             .body(push)
@@ -458,7 +499,7 @@ impl Harness {
             .await
     }
 
-    pub async fn device_meta(&self, device: &Enrollment) -> DeviceMeta {
+    pub async fn device_meta(&self, device: &Enrolled) -> DeviceMeta {
         self.get(format!(
             "/v1/spaces/{}/devices/{}",
             uuid(device.space_id),
@@ -485,7 +526,7 @@ pub fn tombstone(kind: Kind, id: &str, parent: Option<&str>, stamp: Stamp) -> He
 
 impl Harness {
     /// Pulls with `query` after `?`, such as `lane=hot&after=0`.
-    pub async fn pull(&self, device: &Enrollment, query: &str) -> Answer<PullPage> {
+    pub async fn pull(&self, device: &Enrolled, query: &str) -> Answer<PullPage> {
         self.get(format!("/v1/spaces/{}/pull?{query}", uuid(device.space_id)))
             .token(&device.token)
             .send::<PullPage>()

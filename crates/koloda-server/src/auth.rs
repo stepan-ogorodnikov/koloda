@@ -1,10 +1,11 @@
 //! Bearer tokens: 256 random bits as lowercase hex, stored only as their SHA-256.
 //!
-//! The setup token creates and lists spaces. A device token names one device in one space.
+//! The setup token, minted here, creates and lists spaces. A device token names one device in one space.
+//! The client mints that token and sends it on enrollment; this module only checks and hashes it.
 
 use axum::http::header::AUTHORIZATION;
 use axum::http::{HeaderMap, StatusCode};
-use koloda_sync_proto::transport::{decode_schemas, ErrorCode, EPOCH_HEADER, SCHEMAS_HEADER};
+use koloda_sync_proto::transport::{check_token, decode_schemas, ErrorCode, EPOCH_HEADER, SCHEMAS_HEADER};
 use rusqlite::{params, Connection, OptionalExtension};
 use sha2::{Digest, Sha256};
 use uuid::Uuid;
@@ -54,6 +55,10 @@ pub(crate) fn random_bytes<const N: usize>() -> Result<[u8; N], getrandom::Error
 
 pub(crate) fn token_hash(token: &str) -> [u8; 32] {
     Sha256::digest(token.as_bytes()).into()
+}
+
+pub(crate) fn require_token(token: &str) -> Result<(), ApiError> {
+    check_token(token).map_err(|message| ApiError::bad_request(message.to_string()))
 }
 
 pub(crate) fn require_setup(server: &Server, headers: &HeaderMap) -> Result<(), ApiError> {

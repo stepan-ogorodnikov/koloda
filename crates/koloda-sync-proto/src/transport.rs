@@ -14,6 +14,19 @@ use crate::registry::Kind;
 pub const MAX_BODY_BYTES: usize = 16 * 1024 * 1024;
 pub const MAX_EXPANSION_RATIO: usize = 32;
 pub const MAX_NAME_CHARS: usize = 100;
+/// A bearer token is 32 random bytes, written as lowercase hex (`PROTOCOL.md` §Devices).
+pub const TOKEN_HEX_LEN: usize = 64;
+
+/// Refuses a token that is not 64 lowercase hex characters.
+pub fn check_token(token: &str) -> Result<(), &'static str> {
+    let is_token = token.len() == TOKEN_HEX_LEN && token.bytes().all(|byte| matches!(byte, b'0'..=b'9' | b'a'..=b'f'));
+    if is_token {
+        Ok(())
+    } else {
+        Err("a token is 64 lowercase hex characters")
+    }
+}
+
 pub const MAX_HINT_BYTES: usize = 4 * 1024;
 pub const MAX_PUSH_ITEMS: usize = 5_000;
 pub const MAX_RECEIPT_RANGE: u64 = 5_000;
@@ -180,6 +193,8 @@ pub struct CreateSpace {
     pub platform: Platform,
     #[serde(with = "serde_bytes")]
     pub nonce: [u8; 16],
+    /// 32 random bytes as 64 lowercase hex characters, minted by the client.
+    pub token: String,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -189,7 +204,6 @@ pub struct Enrollment {
     pub space_id: [u8; 16],
     #[serde(with = "serde_bytes")]
     pub device_id: [u8; 16],
-    pub token: String,
     #[serde(with = "serde_bytes")]
     pub epoch: [u8; 16],
 }
@@ -235,15 +249,19 @@ pub struct ClaimPairing {
     pub platform: Platform,
     #[serde(with = "serde_bytes")]
     pub nonce: [u8; 16],
+    /// 32 random bytes as 64 lowercase hex characters, minted by the client.
+    pub token: String,
 }
 
-/// A fork request. The same nonce from the same device returns the same new device, with a fresh token
+/// A fork request. The same nonce and token from the same device return the same new device
 /// (`PROTOCOL.md` §Devices).
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct ForkDevice {
     #[serde(with = "serde_bytes")]
     pub nonce: [u8; 16],
+    /// 32 random bytes as 64 lowercase hex characters, minted by the client.
+    pub token: String,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]

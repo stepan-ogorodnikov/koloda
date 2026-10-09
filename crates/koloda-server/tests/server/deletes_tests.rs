@@ -2,11 +2,11 @@ use axum::http::StatusCode;
 use koloda_sync_proto::envelope::{Header, Refs};
 use koloda_sync_proto::registry::{Group, Kind};
 use koloda_sync_proto::transport::{
-    DependencyAction, Enrollment, EntityId, ErrorCode, IssuePairing, Known, KnownIds, KnownState, Outcome, Pairing,
-    PairingPreview, PreviewPairing, MAX_KNOWN_IDS,
+    DependencyAction, EntityId, ErrorCode, IssuePairing, Known, KnownIds, KnownState, Outcome, Pairing, PairingPreview,
+    PreviewPairing, MAX_KNOWN_IDS,
 };
 
-use crate::common::{card_create, child, outcomes, stamp, tombstone, uuid, write, Harness};
+use crate::common::{card_create, child, outcomes, stamp, tombstone, uuid, write, Enrolled, Harness};
 
 const DROP: Outcome = Outcome::DependencyFenced {
     action: DependencyAction::DropEntity,
@@ -31,7 +31,7 @@ fn pointer(kind: Kind, id: &str, group: Group, algorithm: Option<&str>, template
 }
 
 /// Pushes each header as its own batch, from `first_seq` on, and returns the outcomes.
-async fn push_each(harness: &Harness, device: &Enrollment, first_seq: u64, headers: Vec<Header>) -> Vec<Outcome> {
+async fn push_each(harness: &Harness, device: &Enrolled, first_seq: u64, headers: Vec<Header>) -> Vec<Outcome> {
     let mut seen = Vec::new();
     for (seq, header) in (first_seq..).zip(headers) {
         let reply = harness.push(device, vec![(seq, header)]).await.ok();
@@ -40,7 +40,7 @@ async fn push_each(harness: &Harness, device: &Enrollment, first_seq: u64, heade
     seen
 }
 
-async fn probe(harness: &Harness, device: &Enrollment, ids: &[(Kind, &str)]) -> Vec<(String, KnownState)> {
+async fn probe(harness: &Harness, device: &Enrolled, ids: &[(Kind, &str)]) -> Vec<(String, KnownState)> {
     let ids = ids
         .iter()
         .map(|(kind, id)| EntityId {
@@ -61,7 +61,7 @@ async fn probe(harness: &Harness, device: &Enrollment, ids: &[(Kind, &str)]) -> 
         .collect()
 }
 
-async fn counts(harness: &Harness, device: &Enrollment) -> Vec<(String, u64)> {
+async fn counts(harness: &Harness, device: &Enrolled) -> Vec<(String, u64)> {
     let code = harness
         .post(format!("/v1/spaces/{}/pairings", uuid(device.space_id)))
         .token(&device.token)

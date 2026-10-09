@@ -4,11 +4,11 @@
 use koloda_server::clock::Clock;
 use koloda_sync_proto::envelope::{Envelope, Header, Refs};
 use koloda_sync_proto::registry::{Group, Kind, Lane};
-use koloda_sync_proto::transport::{Enrollment, ErrorCode, LogEntry, Outcome, Snapshot, SnapshotPage, SERVER_SENDER};
+use koloda_sync_proto::transport::{ErrorCode, LogEntry, Outcome, Snapshot, SnapshotPage, SERVER_SENDER};
 use rusqlite::Connection;
 use uuid::Uuid;
 
-use crate::common::{card_create, child, outcomes, stamp, tombstone, uuid, write, Harness};
+use crate::common::{card_create, child, outcomes, stamp, tombstone, uuid, write, Enrolled, Harness};
 
 const DECK: &str = "01920000-0000-7000-8000-0000000000d1";
 const TEMPLATE: &str = "01920000-0000-7000-8000-0000000000e1";
@@ -17,11 +17,11 @@ const SECOND: &str = "01920000-0000-7000-8000-0000000000c2";
 const ATTACHMENT_A: &str = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 const ATTACHMENT_B: &str = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
 
-fn space(device: &Enrollment) -> Uuid {
+fn space(device: &Enrolled) -> Uuid {
     Uuid::from_bytes(device.space_id)
 }
 
-fn space_db(harness: &Harness, device: &Enrollment) -> Connection {
+fn space_db(harness: &Harness, device: &Enrolled) -> Connection {
     Connection::open(
         harness
             .generation_dir()
@@ -32,7 +32,7 @@ fn space_db(harness: &Harness, device: &Enrollment) -> Connection {
 }
 
 /// The lane and seq of the version that holds a write; `group` is `""` for a tombstone.
-fn version(harness: &Harness, device: &Enrollment, kind: Kind, id: &str, group: &str) -> (Lane, u64) {
+fn version(harness: &Harness, device: &Enrolled, kind: Kind, id: &str, group: &str) -> (Lane, u64) {
     let (lane, seq): (String, u64) = space_db(harness, device)
         .query_row(
             "SELECT lane, seq FROM versions WHERE kind = ?1 AND id = ?2 AND grp = ?3",
@@ -43,7 +43,7 @@ fn version(harness: &Harness, device: &Enrollment, kind: Kind, id: &str, group: 
     (Lane::from_wire(&lane).expect("a known lane"), seq)
 }
 
-fn drop_version(harness: &Harness, device: &Enrollment, (lane, seq): (Lane, u64)) {
+fn drop_version(harness: &Harness, device: &Enrolled, (lane, seq): (Lane, u64)) {
     let dropping = harness
         .server
         .describe_drop(space(device), lane, seq)
@@ -55,7 +55,7 @@ fn drop_version(harness: &Harness, device: &Enrollment, (lane, seq): (Lane, u64)
 }
 
 /// A deck with two cards on a template, three reviews of the first card, and a deck rename, all from `writer`.
-async fn library(harness: &Harness, writer: &Enrollment) {
+async fn library(harness: &Harness, writer: &Enrolled) {
     let reply = harness
         .push(
             writer,
@@ -77,7 +77,7 @@ async fn library(harness: &Harness, writer: &Enrollment) {
         .all(|(_, outcome, _)| *outcome == Outcome::Applied));
 }
 
-async fn pulled(harness: &Harness, reader: &Enrollment, lane: Lane) -> Vec<LogEntry> {
+async fn pulled(harness: &Harness, reader: &Enrolled, lane: Lane) -> Vec<LogEntry> {
     harness
         .pull(reader, &format!("lane={}&after=0", lane.as_wire()))
         .await

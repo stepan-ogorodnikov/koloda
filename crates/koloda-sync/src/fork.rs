@@ -5,12 +5,12 @@ use std::sync::Arc;
 
 use koloda::app::utility::get_current_timestamp;
 use koloda::repo::sync::outbox::lowest_pending_seq;
-use koloda::repo::sync::switch::{fork_nonce, switch_device};
+use koloda::repo::sync::switch::{store_fork_nonce, stored_fork_nonce, switch_device};
 use koloda_sync_proto::registry::Kind;
 use koloda_sync_proto::transport::{Enrollment, ForkDevice, Receipt, Receipts, MAX_RECEIPT_RANGE};
 use uuid::Uuid;
 
-use crate::client::local_error;
+use crate::client::{local_error, mint_token};
 use crate::engine::{merge, token_key, Session, Shared};
 use crate::error::SyncError;
 use crate::transport::Method;
@@ -23,21 +23,23 @@ impl Shared {
         last_sender_seq: u64,
         changed: &mut Vec<Kind>,
     ) -> Result<(), SyncError> {
-        // INVARIANT: the nonce is stored before the call, so a file that stops before the switch forks to the same
-        // record when it retries, and no orphan record pins GC.
-        let nonce = self.blocking(|shared| fork_nonce(&shared.db)).await?;
+        // INVARIANT: the token is in the secret store before the nonce is stored, and both are stored before the
+        // call, so a file that stops before the switch forks to the same record when it retries.
+        let (nonce, token) = self.fork_credentials().await?;
         let enrollment: Enrollment = self
             .cycle_client(session)
             .call(
                 Method::Post,
                 &format!("/v1/spaces/{}/devices/fork", session.space),
                 Some(&session.token),
-                Some(&ForkDevice { nonce }),
+                Some(&ForkDevice {
+                    nonce,
+                    token: token.clone(),
+                }),
             )
             .await?
             .ok;
         let device = Uuid::from_bytes(enrollment.device_id);
-        let token = enrollment.token;
         let stored = token.clone();
         self.blocking(move |shared| shared.secrets.set(&token_key(device), &stored))
             .await?;
@@ -50,11 +52,45 @@ impl Shared {
         merge(changed, settled);
 
         let old = session.device;
-        self.blocking(move |shared| shared.secrets.remove(&token_key(old)))
-            .await?;
+        let pending = pending_token_key(&nonce);
+        self.blocking(move |shared| {
+            shared.secrets.remove(&token_key(old))?;
+            shared.secrets.remove(&pending)?;
+            Ok(())
+        })
+        .await?;
         session.device = device;
         session.token = token;
         Ok(())
+    }
+
+    /// The nonce and token of the fork in progress. A stored nonce whose pending token is gone is replaced.
+    async fn fork_credentials(self: &Arc<Self>) -> Result<([u8; 16], String), SyncError> {
+        let reused = self
+            .blocking(|shared| {
+                let Some(nonce) = stored_fork_nonce(&shared.db)? else {
+                    return Ok(None);
+                };
+                let token = shared.secrets.get(&pending_token_key(&nonce))?;
+                Ok(token.map(|token| (nonce, token)))
+            })
+            .await?;
+        if let Some(reused) = reused {
+            return Ok(reused);
+        }
+
+        let nonce = Uuid::new_v4().into_bytes();
+        let token = mint_token()?;
+        let pending = pending_token_key(&nonce);
+        let stored = token.clone();
+        self.blocking(move |shared| {
+            // INVARIANT: the secret is written before the nonce, so a crash cannot leave a nonce with no token.
+            shared.secrets.set(&pending, &stored)?;
+            store_fork_nonce(&shared.db, nonce)?;
+            Ok(())
+        })
+        .await?;
+        Ok((nonce, token))
     }
 
     /// `sender`'s receipts for this file's pending seqs at or below `last_sender_seq`.
@@ -104,4 +140,8 @@ impl Shared {
             .ok
             .receipts)
     }
+}
+
+fn pending_token_key(nonce: &[u8; 16]) -> String {
+    format!("sync.pending_token.{}", Uuid::from_bytes(*nonce))
 }

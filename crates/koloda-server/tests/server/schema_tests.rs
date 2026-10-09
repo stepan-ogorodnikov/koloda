@@ -6,13 +6,13 @@ use axum::http::{Method, StatusCode};
 use koloda_sync_proto::envelope::Header;
 use koloda_sync_proto::registry::{Group, Kind};
 use koloda_sync_proto::transport::{
-    encode_schemas, DeviceInfo, DeviceList, Empty, Enrollment, ErrorCode, HeldReason, Outcome, SpaceList,
+    encode_schemas, DeviceInfo, DeviceList, Empty, ErrorCode, HeldReason, Outcome, SpaceList,
 };
 use uuid::Uuid;
 
-use crate::common::{outcomes, stamp, uuid, write, Harness};
+use crate::common::{outcomes, stamp, uuid, write, Enrolled, Harness};
 
-fn space(device: &Enrollment) -> Uuid {
+fn space(device: &Enrolled) -> Uuid {
     Uuid::from_bytes(device.space_id)
 }
 
@@ -29,7 +29,7 @@ fn deck_at(schema: u32) -> Header {
 }
 
 /// A device call that sends `schemas`, answered with the space's write schemas as its `meta` reports them.
-async fn advertise(harness: &Harness, device: &Enrollment, schemas: &str) -> BTreeMap<String, u32> {
+async fn advertise(harness: &Harness, device: &Enrolled, schemas: &str) -> BTreeMap<String, u32> {
     harness
         .get(format!(
             "/v1/spaces/{}/devices/{}",
@@ -47,7 +47,7 @@ async fn advertise(harness: &Harness, device: &Enrollment, schemas: &str) -> BTr
         .write_schema
 }
 
-fn raise(harness: &Harness, device: &Enrollment, schema: u32) -> Result<(), ErrorCode> {
+fn raise(harness: &Harness, device: &Enrolled, schema: u32) -> Result<(), ErrorCode> {
     harness
         .server
         .raise_write_schema(space(device), Kind::Decks, schema)

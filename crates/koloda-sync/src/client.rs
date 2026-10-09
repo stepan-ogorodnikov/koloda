@@ -234,3 +234,10 @@ fn decompress(encoded: &[u8]) -> Result<Vec<u8>, TransportError> {
 pub(crate) fn local_error(error: impl std::fmt::Display) -> SyncError {
     SyncError::Local(AppError::new(error_codes::UNKNOWN, Some(error.to_string())))
 }
+
+/// 32 random bytes as 64 lowercase hex characters, the enrollment token format (`PROTOCOL.md` §Devices).
+pub(crate) fn mint_token() -> Result<String, SyncError> {
+    let mut bytes = [0u8; 32];
+    getrandom::getrandom(&mut bytes).map_err(local_error)?;
+    Ok(bytes.iter().map(|byte| format!("{byte:02x}")).collect())
+}

@@ -166,7 +166,7 @@ The owner took every recommendation on 2026-10-09.
   Commit: Remove what a restarted bootstrap's earlier lease left behind
   Depends on: none
 
-- [ ] 2. Mint enrollment tokens on the client
+- [x] 2. Mint enrollment tokens on the client
   Goal (per question 3):
   - `koloda-sync-proto`: `CreateSpace`, `ClaimPairing`, and `ForkDevice` carry `token`, and `Enrollment` drops it.
     The token format, 32 random bytes as lowercase hex as the server mints today, and a check for it live there.

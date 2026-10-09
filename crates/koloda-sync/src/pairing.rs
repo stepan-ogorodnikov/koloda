@@ -17,7 +17,7 @@ use koloda_sync_proto::transport::{
 };
 use uuid::Uuid;
 
-use crate::client::{local_error, server_url};
+use crate::client::{local_error, mint_token, server_url};
 use crate::engine::{token_key, Session, Shared};
 use crate::error::SyncError;
 use crate::transport::Method;
@@ -91,9 +91,10 @@ impl Shared {
         })
     }
 
-    // INVARIANT: retries inside `call` resend the same nonce, so a lost reply still claims one device.
-    async fn claim(&self, base: &str, code: &str, device_name: &str) -> Result<PairingClaim, SyncError> {
-        Ok(self
+    // INVARIANT: retries inside `call` resend the same nonce and token, so a lost reply still claims one device.
+    async fn claim(&self, base: &str, code: &str, device_name: &str) -> Result<(PairingClaim, String), SyncError> {
+        let token = mint_token()?;
+        let claim = self
             .client(base)
             .call(
                 Method::Post,
@@ -104,10 +105,12 @@ impl Shared {
                     name: device_name.to_string(),
                     platform: self.platform,
                     nonce: Uuid::new_v4().into_bytes(),
+                    token: token.clone(),
                 }),
             )
             .await?
-            .ok)
+            .ok;
+        Ok((claim, token))
     }
 
     /// Re-attaches a detached file to the space it was in: a new device id that keeps the file's rows, stamps,
@@ -130,9 +133,8 @@ impl Shared {
         }
         let stored = state.epoch.ok_or(SyncError::NotEnrolled)?;
 
-        let claim = self.claim(&base, code, device_name).await?;
+        let (claim, token) = self.claim(&base, code, device_name).await?;
         let device = Uuid::from_bytes(claim.enrollment.device_id);
-        let token = claim.enrollment.token;
         let saved = token.clone();
         self.blocking(move |shared| shared.secrets.set(&token_key(device), &saved))
             .await?;
@@ -243,13 +245,13 @@ impl Shared {
             return self.reattach(base, code, device_name, preview).await;
         }
 
-        let claim = self.claim(&base, code, device_name).await?;
+        let (claim, token) = self.claim(&base, code, device_name).await?;
         let enrollment = claim.enrollment;
         let session = Session {
             base,
             space: Uuid::from_bytes(enrollment.space_id),
             device: Uuid::from_bytes(enrollment.device_id),
-            token: enrollment.token,
+            token,
             epoch: Uuid::from_bytes(enrollment.epoch),
         };
         let epoch = Uuid::from_bytes(enrollment.epoch);

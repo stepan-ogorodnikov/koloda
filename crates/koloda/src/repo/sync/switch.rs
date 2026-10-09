@@ -64,18 +64,29 @@ pub fn switch_device(
     })
 }
 
-/// The nonce of the fork this file is making, stored on first use so that a retry after a crash forks to the same
-/// record.
-pub fn fork_nonce(db: &Database) -> Result<[u8; 16], AppError> {
+/// The nonce of a fork that has not switched yet. The pending token for it lives in the secret store, written
+/// before this nonce.
+pub fn stored_fork_nonce(db: &Database) -> Result<Option<[u8; 16]>, AppError> {
     throw_known_error(error_codes::DB_UPDATE, || {
-        db.with_transaction(|tx| {
-            tx.execute(
-                "UPDATE sync_state SET fork_nonce = ?1 WHERE id = 1 AND fork_nonce IS NULL",
-                params![Uuid::new_v4().as_bytes().as_slice()],
+        db.with_conn(|conn| {
+            let nonce: Option<Vec<u8>> =
+                conn.query_row("SELECT fork_nonce FROM sync_state WHERE id = 1", [], |row| row.get(0))?;
+            nonce
+                .map(|nonce| <[u8; 16]>::try_from(nonce.as_slice()).map_err(protocol_error))
+                .transpose()
+        })
+    })
+}
+
+/// Stores `nonce` as the fork in progress, replacing one whose pending token is gone.
+pub fn store_fork_nonce(db: &Database, nonce: [u8; 16]) -> Result<(), AppError> {
+    throw_known_error(error_codes::DB_UPDATE, || {
+        db.with_conn(|conn| {
+            conn.execute(
+                "UPDATE sync_state SET fork_nonce = ?1 WHERE id = 1",
+                params![nonce.as_slice()],
             )?;
-            let nonce: Vec<u8> =
-                tx.query_row("SELECT fork_nonce FROM sync_state WHERE id = 1", [], |row| row.get(0))?;
-            <[u8; 16]>::try_from(nonce.as_slice()).map_err(protocol_error)
+            Ok(())
         })
     })
 }

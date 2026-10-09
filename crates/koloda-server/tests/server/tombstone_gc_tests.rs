@@ -4,9 +4,9 @@
 
 use axum::http::{Method, StatusCode};
 use koloda_sync_proto::registry::{Group, Kind};
-use koloda_sync_proto::transport::{Empty, Enrollment, ErrorCode, Outcome, Snapshot};
+use koloda_sync_proto::transport::{Empty, ErrorCode, Outcome, Snapshot};
 
-use crate::common::{outcomes, stamp, tombstone, uuid, write, Harness};
+use crate::common::{outcomes, stamp, tombstone, uuid, write, Enrolled, Harness};
 
 const DAY_MS: u64 = 24 * 60 * 60 * 1000;
 
@@ -14,7 +14,7 @@ fn collect(harness: &Harness) {
     harness.server.collect_garbage().expect("a collection pass");
 }
 
-async fn create_and_delete_deck(harness: &Harness, home: &Enrollment) {
+async fn create_and_delete_deck(harness: &Harness, home: &Enrolled) {
     let pushed = harness
         .push(
             home,
@@ -29,7 +29,7 @@ async fn create_and_delete_deck(harness: &Harness, home: &Enrollment) {
 }
 
 /// Pulls `hot` from `after`: the seqs it returned, or the error code.
-async fn pull_hot(harness: &Harness, device: &Enrollment, after: u64) -> Result<Vec<u64>, ErrorCode> {
+async fn pull_hot(harness: &Harness, device: &Enrolled, after: u64) -> Result<Vec<u64>, ErrorCode> {
     let answer = harness.pull(device, &format!("lane=hot&after={after}")).await;
     if answer.status == StatusCode::OK {
         Ok(answer.ok().entries.iter().map(|entry| entry.seq).collect())
@@ -39,11 +39,11 @@ async fn pull_hot(harness: &Harness, device: &Enrollment, after: u64) -> Result<
 }
 
 /// A pull from 2 records cursor 2: the device has passed the tombstone.
-async fn pass_tombstone(harness: &Harness, device: &Enrollment) {
+async fn pass_tombstone(harness: &Harness, device: &Enrolled) {
     pull_hot(harness, device, 2).await.expect("a pull from 2 answers");
 }
 
-async fn horizon(harness: &Harness, device: &Enrollment) -> u64 {
+async fn horizon(harness: &Harness, device: &Enrolled) -> u64 {
     harness.device_meta(device).await.gc_horizon_hot
 }
 

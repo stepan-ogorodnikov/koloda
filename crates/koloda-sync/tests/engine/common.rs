@@ -346,7 +346,7 @@ impl TestServer {
     }
 
     /// Enrolls a raw client in the device's space through a pairing code the device's token issues.
-    pub fn pair(&self, device: &Device) -> Enrollment {
+    pub fn pair(&self, device: &Device) -> Enrolled {
         let space = device.state().expect("the device is enrolled").space_id;
         let (_, issued) = self.post::<_, Pairing>(
             &format!("/v1/spaces/{space}/pairings"),
@@ -354,6 +354,8 @@ impl TestServer {
             &IssuePairing::default(),
         );
         let code = issued.ok.expect("a pairing code").code;
+        let nonce = *Uuid::new_v4().as_bytes();
+        let token = token(&nonce);
         let (_, claimed) = self.post::<_, PairingClaim>(
             "/v1/pairings/claim",
             None,
@@ -361,18 +363,49 @@ impl TestServer {
                 code,
                 name: "Raw client".to_string(),
                 platform: Platform::DesktopMac,
-                nonce: *Uuid::new_v4().as_bytes(),
+                nonce,
+                token: token.clone(),
             },
         );
-        claimed.ok.expect("the claim enrolls the raw client").enrollment
+        Enrolled::from_reply(claimed.ok.expect("the claim enrolls the raw client").enrollment, token)
     }
+}
+
+/// An enrollment plus the token the test minted. The wire reply no longer carries it.
+#[derive(Clone, Debug)]
+pub struct Enrolled {
+    pub space_id: [u8; 16],
+    pub device_id: [u8; 16],
+    pub epoch: [u8; 16],
+    pub token: String,
+}
+
+impl Enrolled {
+    fn from_reply(enrollment: Enrollment, token: String) -> Enrolled {
+        Enrolled {
+            space_id: enrollment.space_id,
+            device_id: enrollment.device_id,
+            epoch: enrollment.epoch,
+            token,
+        }
+    }
+}
+
+fn token(nonce: &[u8; 16]) -> String {
+    let mut token = String::with_capacity(64);
+    for _ in 0..2 {
+        for byte in nonce {
+            token.push_str(&format!("{byte:02x}"));
+        }
+    }
+    token
 }
 
 /// The engine's device in a space it created, and a raw client in the same space that pushes hand-sealed envelopes.
 pub struct Space {
     pub server: TestServer,
     pub device: Device,
-    pub raw: Enrollment,
+    pub raw: Enrolled,
     raw_seq: AtomicU64,
 }
 

@@ -7,16 +7,14 @@ use std::sync::Arc;
 use axum::http::{Method, StatusCode};
 use koloda_sync_proto::envelope::{Envelope, Header};
 use koloda_sync_proto::registry::{Group, Kind};
-use koloda_sync_proto::transport::{
-    AttachmentBody, Empty, Enrollment, ErrorCode, HeldReason, Outcome, Push, PushItem, Snapshot,
-};
+use koloda_sync_proto::transport::{AttachmentBody, Empty, ErrorCode, HeldReason, Outcome, Push, PushItem, Snapshot};
 use rusqlite::Connection;
 use sha2::{Digest, Sha256};
 use uuid::Uuid;
 
 use koloda_server::quota::Storage;
 
-use crate::common::{batch, card_create, child, outcomes, stamp, tombstone, uuid, write, Harness, TestDisk};
+use crate::common::{batch, card_create, child, outcomes, stamp, tombstone, uuid, write, Enrolled, Harness, TestDisk};
 
 const QUOTA: Outcome = Outcome::Held {
     reason: HeldReason::Quota,
@@ -26,12 +24,12 @@ const OTHER_DECK: &str = "01920000-0000-7000-8000-0000000000d2";
 const TEMPLATE: &str = "01920000-0000-7000-8000-0000000000e1";
 const CARD: &str = "01920000-0000-7000-8000-0000000000c1";
 
-fn space(device: &Enrollment) -> Uuid {
+fn space(device: &Enrolled) -> Uuid {
     Uuid::from_bytes(device.space_id)
 }
 
 /// What the space file holds: its pages in use plus the bytes of its attachments, as the quota counts them.
-fn usage(harness: &Harness, device: &Enrollment) -> u64 {
+fn usage(harness: &Harness, device: &Enrolled) -> u64 {
     let conn = Connection::open(
         harness
             .generation_dir()
@@ -49,11 +47,11 @@ fn usage(harness: &Harness, device: &Enrollment) -> u64 {
     .expect("usage reads")
 }
 
-async fn is_over_quota(harness: &Harness, device: &Enrollment) -> bool {
+async fn is_over_quota(harness: &Harness, device: &Enrolled) -> bool {
     harness.device_meta(device).await.is_over_quota
 }
 
-async fn push_outcomes(harness: &Harness, device: &Enrollment, items: Vec<(u64, Header)>) -> Vec<Outcome> {
+async fn push_outcomes(harness: &Harness, device: &Enrolled, items: Vec<(u64, Header)>) -> Vec<Outcome> {
     outcomes(harness.push(device, items).await.ok())
         .into_iter()
         .map(|(_, outcome, _)| outcome)
@@ -61,7 +59,7 @@ async fn push_outcomes(harness: &Harness, device: &Enrollment, items: Vec<(u64, 
 }
 
 /// A template and two decks, applied before any quota is set.
-async fn decks(harness: &Harness, device: &Enrollment) {
+async fn decks(harness: &Harness, device: &Enrolled) {
     let applied = push_outcomes(
         harness,
         device,
@@ -315,7 +313,7 @@ async fn an_upload_counts_toward_the_quota_once_until_it_is_collected() {
 }
 
 /// The space file's heads and its lanes' highest seq, which a push that consumed nothing leaves alone.
-fn heads_and_seq(harness: &Harness, device: &Enrollment) -> (i64, i64) {
+fn heads_and_seq(harness: &Harness, device: &Enrolled) -> (i64, i64) {
     let conn = Connection::open(
         harness
             .generation_dir()

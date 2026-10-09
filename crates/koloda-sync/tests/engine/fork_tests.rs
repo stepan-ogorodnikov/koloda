@@ -1,6 +1,7 @@
 //! A file behind its own device record forks to a new device and re-bootstraps (`crates/koloda-sync-proto/PROTOCOL.md`
 //! §Behind its own record).
 
+use koloda::app::secrets::SecretStore;
 use koloda::domain::cards::ResetCardProgressData;
 use koloda::domain::decks::DeleteDeckData;
 use koloda::repo::{cards, decks};
@@ -223,15 +224,81 @@ fn a_crash_between_the_fork_reply_and_the_switch_makes_one_fork_record() {
     }
     assert!(copy.engine.sync_now().is_err(), "no fork reply arrives");
     assert_eq!(device_id(&copy), device_id(&space.device), "the file has not switched");
+    let pending_key = copy
+        .secrets
+        .keys()
+        .into_iter()
+        .find(|key| key.starts_with("sync.pending_token."))
+        .expect("the token is stored before the fork call");
+    let pending = copy
+        .secrets
+        .get(&pending_key)
+        .expect("the pending token reads")
+        .expect("the pending token is present");
 
     let relaunched = space.server.relaunch(&copy);
     relaunched.engine.sync_now().expect("the relaunch finishes the fork");
 
+    assert_eq!(
+        relaunched.token(),
+        pending,
+        "the switch keeps the token stored before the call"
+    );
+    assert!(
+        relaunched
+            .secrets
+            .keys()
+            .iter()
+            .all(|key| !key.starts_with("sync.pending_token.")),
+        "the switch removes the pending key"
+    );
     assert_ne!(device_id(&relaunched), device_id(&space.device));
     assert_eq!(
         relaunched.engine.devices().expect("devices list").len(),
         3,
         "creator, raw client, and one fork"
+    );
+}
+
+#[test]
+fn a_stored_fork_nonce_without_its_token_starts_a_new_fork() {
+    let space = Space::new();
+    let library = space.device.library();
+    space.device.engine.sync_now().expect("the library is pushed");
+    let copy = space.server.copy(&space.device);
+    rename(&space.device, &library, "Renamed");
+    space.device.engine.sync_now().expect("the original pushes on");
+    for _ in 0..4 {
+        copy.transport
+            .fault_when(Method::Post, "/devices/fork", Fault::LoseReply);
+    }
+    assert!(copy.engine.sync_now().is_err(), "no fork reply arrives");
+    let pending_key = copy
+        .secrets
+        .keys()
+        .into_iter()
+        .find(|key| key.starts_with("sync.pending_token."))
+        .expect("the token is stored before the fork call");
+    copy.secrets.remove(&pending_key).expect("the pending token is removed");
+
+    let relaunched = space.server.relaunch(&copy);
+    relaunched
+        .engine
+        .sync_now()
+        .expect("the relaunch forks under a new nonce");
+
+    assert_eq!(
+        relaunched.engine.devices().expect("devices list").len(),
+        4,
+        "creator, raw client, the fork whose token was lost, and the new fork"
+    );
+    assert!(
+        relaunched
+            .secrets
+            .keys()
+            .iter()
+            .all(|key| !key.starts_with("sync.pending_token.")),
+        "the new fork's pending key is removed at the switch"
     );
 }
 

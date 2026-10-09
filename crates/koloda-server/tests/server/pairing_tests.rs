@@ -2,16 +2,15 @@ use std::net::SocketAddr;
 
 use axum::http::StatusCode;
 use koloda_sync_proto::transport::{
-    DeviceInfo, Enrollment, ErrorCode, IssuePairing, Pairing, PairingClaim, PairingPreview, PreviewPairing,
-    MAX_HINT_BYTES,
+    DeviceInfo, ErrorCode, IssuePairing, Pairing, PairingClaim, PairingPreview, PreviewPairing, MAX_HINT_BYTES,
 };
 use uuid::Uuid;
 
-use crate::common::{claim_request, nonce, uuid, Harness, START_MS};
+use crate::common::{claim_request, nonce, token, uuid, Enrolled, Harness, START_MS};
 
 const CODE_TTL_MS: u64 = 10 * 60 * 1000;
 
-async fn issue(harness: &Harness, space: &Enrollment, token: &str, hint: Option<Vec<u8>>) -> Pairing {
+async fn issue(harness: &Harness, space: &Enrolled, token: &str, hint: Option<Vec<u8>>) -> Pairing {
     harness
         .post(format!("/v1/spaces/{}/pairings", uuid(space.space_id)))
         .token(token)
@@ -60,7 +59,7 @@ async fn a_claimed_code_enrolls_a_device_with_its_own_token() {
     assert_eq!(preview.name, "Home");
     assert_eq!((preview.space_id, preview.epoch), (home.space_id, home.epoch));
     assert_eq!(claimed.hint, hint, "the claim returns the inviting device's setup hint");
-    assert_eq!(replayed, claimed, "the same nonce returns the same device and token");
+    assert_eq!(replayed, claimed, "the same nonce and token return the same device");
     let joined = claimed.enrollment;
     assert_eq!((joined.space_id, joined.epoch), (home.space_id, home.epoch));
     assert_ne!(joined.device_id, home.device_id);
@@ -70,11 +69,55 @@ async fn a_claimed_code_enrolls_a_device_with_its_own_token() {
             uuid(joined.space_id),
             uuid(joined.device_id)
         ))
-        .token(&joined.token)
+        .token(&claim.token)
         .send::<DeviceInfo>()
         .await
         .ok();
     assert_eq!(record.name, "Phone");
+}
+
+#[tokio::test]
+async fn a_claim_retried_with_another_token_fails_and_a_malformed_token_is_bad_request() {
+    let harness = Harness::new();
+    let home = harness.create_space("Home").await;
+    let pairing = issue(&harness, &home, &home.token, None).await;
+    let claim = claim_request(&pairing.code, "Phone", nonce("phone"));
+    let claimed = harness
+        .post("/v1/pairings/claim")
+        .body(&claim)
+        .send::<PairingClaim>()
+        .await
+        .ok();
+
+    let mut other = claim.clone();
+    other.token = token(&nonce("other"));
+    let refused = harness
+        .post("/v1/pairings/claim")
+        .body(&other)
+        .send::<PairingClaim>()
+        .await;
+    assert_eq!(refused.error(), (StatusCode::NOT_FOUND, ErrorCode::PairingFailed));
+
+    let mut malformed = claim.clone();
+    malformed.token = "not-a-token".to_string();
+    let malformed = harness
+        .post("/v1/pairings/claim")
+        .body(&malformed)
+        .send::<PairingClaim>()
+        .await;
+    assert_eq!(malformed.error(), (StatusCode::BAD_REQUEST, ErrorCode::BadRequest));
+
+    let record = harness
+        .get(format!(
+            "/v1/spaces/{}/devices/{}",
+            uuid(claimed.enrollment.space_id),
+            uuid(claimed.enrollment.device_id)
+        ))
+        .token(&claim.token)
+        .send::<DeviceInfo>()
+        .await
+        .ok();
+    assert_eq!(record.name, "Phone", "the original token still authenticates");
 }
 
 #[tokio::test]

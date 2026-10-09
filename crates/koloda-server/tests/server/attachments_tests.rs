@@ -7,12 +7,12 @@ use koloda_sync_proto::envelope::{Header, Refs};
 use koloda_sync_proto::hlc::Stamp;
 use koloda_sync_proto::registry::{Group, Kind};
 use koloda_sync_proto::transport::{
-    AttachmentBody, Empty, Enrollment, ErrorCode, MissingAttachments, Outcome, PushOutcome, MAX_ATTACHMENT_BYTES,
+    AttachmentBody, Empty, ErrorCode, MissingAttachments, Outcome, PushOutcome, MAX_ATTACHMENT_BYTES,
 };
 use rusqlite::{params, Connection, OpenFlags, OptionalExtension};
 use sha2::{Digest, Sha256};
 
-use crate::common::{card_create, child, stamp, tombstone, uuid, write, Answer, Harness, START_MS};
+use crate::common::{card_create, child, stamp, tombstone, uuid, write, Answer, Enrolled, Harness, START_MS};
 
 /// Bytes the server stores as they are: it checks the hash, never the format.
 fn image(seed: u8, len: usize) -> (String, AttachmentBody) {
@@ -29,11 +29,11 @@ fn image(seed: u8, len: usize) -> (String, AttachmentBody) {
     )
 }
 
-fn path(device: &Enrollment, id: &str) -> String {
+fn path(device: &Enrolled, id: &str) -> String {
     format!("/v1/spaces/{}/attachments/{id}", uuid(device.space_id))
 }
 
-async fn put(harness: &Harness, device: &Enrollment, id: &str, body: &AttachmentBody) -> Answer<Empty> {
+async fn put(harness: &Harness, device: &Enrolled, id: &str, body: &AttachmentBody) -> Answer<Empty> {
     harness
         .call(Method::PUT, path(device, id))
         .token(&device.token)
@@ -42,7 +42,7 @@ async fn put(harness: &Harness, device: &Enrollment, id: &str, body: &Attachment
         .await
 }
 
-async fn get(harness: &Harness, device: &Enrollment, id: &str) -> Answer<AttachmentBody> {
+async fn get(harness: &Harness, device: &Enrolled, id: &str) -> Answer<AttachmentBody> {
     harness
         .get(path(device, id))
         .token(&device.token)
@@ -51,7 +51,7 @@ async fn get(harness: &Harness, device: &Enrollment, id: &str) -> Answer<Attachm
 }
 
 /// Every file in the space's attachment directory, temporary ones included.
-fn files(harness: &Harness, device: &Enrollment) -> Vec<String> {
+fn files(harness: &Harness, device: &Enrolled) -> Vec<String> {
     let dir = harness.generation_dir().join("attachments").join(uuid(device.space_id));
     let Ok(entries) = std::fs::read_dir(dir) else {
         return Vec::new();
@@ -247,7 +247,7 @@ fn content(stamp: Stamp, ids: &[&str]) -> Header {
 }
 
 /// Pushes the deck and template the test card needs, as seqs 1 and 2.
-async fn push_parents(harness: &Harness, device: &Enrollment) {
+async fn push_parents(harness: &Harness, device: &Enrolled) {
     harness
         .push(
             device,
@@ -260,14 +260,14 @@ async fn push_parents(harness: &Harness, device: &Enrollment) {
         .ok();
 }
 
-async fn push_one(harness: &Harness, device: &Enrollment, seq: u64, header: Header) -> PushOutcome {
+async fn push_one(harness: &Harness, device: &Enrolled, seq: u64, header: Header) -> PushOutcome {
     let mut reply = harness.push(device, vec![(seq, header)]).await.ok();
     assert_eq!(reply.outcomes.len(), 1);
     reply.outcomes.remove(0)
 }
 
 /// The space database as the server left it: `None` when no row, else the attachment's `unlinked_since`.
-fn unlinked_since(harness: &Harness, device: &Enrollment, id: &str) -> Option<Option<u64>> {
+fn unlinked_since(harness: &Harness, device: &Enrolled, id: &str) -> Option<Option<u64>> {
     let path = harness
         .generation_dir()
         .join("spaces")
@@ -469,7 +469,7 @@ async fn a_collected_attachment_linked_again_is_reported_and_stored_again() {
     assert_eq!(files(&harness, &home), vec![id]);
 }
 
-async fn missing(harness: &Harness, device: &Enrollment, query: &str) -> Vec<String> {
+async fn missing(harness: &Harness, device: &Enrolled, query: &str) -> Vec<String> {
     harness
         .get(format!(
             "/v1/spaces/{}/attachments/missing{query}",

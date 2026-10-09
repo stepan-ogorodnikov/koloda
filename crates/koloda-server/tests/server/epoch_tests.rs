@@ -4,11 +4,11 @@ use axum::http::{Method, StatusCode};
 use koloda_server::backup::backup;
 use koloda_server::restore::{prepare, RestoreOptions};
 use koloda_sync_proto::registry::{Group, Kind};
-use koloda_sync_proto::transport::{Cutoff, DeviceInfo, Enrollment, ErrorCode, Restore, RestoreMode};
+use koloda_sync_proto::transport::{Cutoff, DeviceInfo, ErrorCode, Restore, RestoreMode};
 use tempfile::TempDir;
 use uuid::Uuid;
 
-use crate::common::{batch, stamp, uuid, write, Answer, Harness};
+use crate::common::{batch, stamp, uuid, write, Answer, Enrolled, Harness};
 
 fn backed_up(harness: &Harness) -> TempDir {
     let out = tempfile::tempdir().expect("backup directory");
@@ -33,7 +33,7 @@ fn restore(harness: &mut Harness, out: &TempDir, mode: RestoreMode) -> Uuid {
     epoch
 }
 
-async fn push_template(harness: &Harness, device: &Enrollment, seq: u64) {
+async fn push_template(harness: &Harness, device: &Enrolled, seq: u64) {
     let id = Uuid::new_v4().to_string();
     harness
         .push(
@@ -44,7 +44,7 @@ async fn push_template(harness: &Harness, device: &Enrollment, seq: u64) {
         .ok();
 }
 
-async fn record_on(harness: &Harness, device: &Enrollment, epoch: Uuid) -> Answer<DeviceInfo> {
+async fn record_on(harness: &Harness, device: &Enrolled, epoch: Uuid) -> Answer<DeviceInfo> {
     harness
         .get(format!(
             "/v1/spaces/{}/devices/{}",
@@ -67,7 +67,7 @@ fn restore_of<T>(answer: &Answer<T>) -> Restore {
         .expect("epoch_changed carries the restore")
 }
 
-fn cutoff(device: &Enrollment, last_seq: u64) -> Cutoff {
+fn cutoff(device: &Enrolled, last_seq: u64) -> Cutoff {
     Cutoff {
         sender: device.device_id,
         last_seq,
