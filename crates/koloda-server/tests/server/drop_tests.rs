@@ -16,6 +16,7 @@ const FIRST: &str = "01920000-0000-7000-8000-0000000000c1";
 const SECOND: &str = "01920000-0000-7000-8000-0000000000c2";
 const ATTACHMENT_A: &str = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 const ATTACHMENT_B: &str = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
+const ATTACHMENT_C: &str = "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc";
 
 fn space(device: &Enrolled) -> Uuid {
     Uuid::from_bytes(device.space_id)
@@ -263,43 +264,53 @@ async fn a_dropped_version_leaves_a_lease_that_pinned_it() {
     assert!(!page.entries.is_empty(), "the rest of the snapshot still streams");
 }
 
-#[tokio::test]
-async fn a_dropped_content_head_links_the_create_attachments_again() {
-    let harness = Harness::new();
-    let writer = harness.create_space("Study").await;
-    let mut create = card_create(FIRST, DECK, TEMPLATE, stamp(0, 2, 1));
-    create.refs.attachment_ids = vec![ATTACHMENT_A.to_string()];
-    let content = Header {
+/// A card content version that links `attachment`.
+fn content(attachment: &str, counter: u16) -> Header {
+    Header {
         refs: Refs {
-            attachment_ids: vec![ATTACHMENT_B.to_string()],
+            attachment_ids: vec![attachment.to_string()],
             ..Refs::default()
         },
-        ..child(Kind::Cards, FIRST, DECK, Group::Content, stamp(1, 0, 1))
-    };
+        ..child(Kind::Cards, FIRST, DECK, Group::Content, stamp(1, counter, 1))
+    }
+}
+
+/// The first card, created linking attachment A, with a content version that links B.
+async fn linked_card(harness: &Harness, writer: &Enrolled) {
+    let mut create = card_create(FIRST, DECK, TEMPLATE, stamp(0, 2, 1));
+    create.refs.attachment_ids = vec![ATTACHMENT_A.to_string()];
     harness
         .push(
-            &writer,
+            writer,
             vec![
                 (1, write(Kind::Templates, TEMPLATE, Group::Create, stamp(0, 0, 1))),
                 (2, write(Kind::Decks, DECK, Group::Create, stamp(0, 1, 1))),
                 (3, create),
-                (4, content),
+                (4, content(ATTACHMENT_B, 0)),
             ],
         )
         .await
         .ok();
-    let links = |harness: &Harness| -> Vec<String> {
-        let conn = space_db(harness, &writer);
-        let mut statement = conn
-            .prepare("SELECT attachment FROM attachment_refs WHERE card = ?1")
-            .expect("refs query prepares");
-        statement
-            .query_map([FIRST], |row| row.get(0))
-            .expect("refs read")
-            .collect::<Result<_, _>>()
-            .expect("refs read")
-    };
-    assert_eq!(links(&harness), vec![ATTACHMENT_B]);
+}
+
+fn links(harness: &Harness, device: &Enrolled) -> Vec<String> {
+    let conn = space_db(harness, device);
+    let mut statement = conn
+        .prepare("SELECT attachment FROM attachment_refs WHERE card = ?1")
+        .expect("refs query prepares");
+    statement
+        .query_map([FIRST], |row| row.get(0))
+        .expect("refs read")
+        .collect::<Result<_, _>>()
+        .expect("refs read")
+}
+
+#[tokio::test]
+async fn a_dropped_content_head_links_the_create_attachments_again() {
+    let harness = Harness::new();
+    let writer = harness.create_space("Study").await;
+    linked_card(&harness, &writer).await;
+    assert_eq!(links(&harness, &writer), vec![ATTACHMENT_B]);
 
     drop_version(
         &harness,
@@ -307,7 +318,36 @@ async fn a_dropped_content_head_links_the_create_attachments_again() {
         version(&harness, &writer, Kind::Cards, FIRST, "content"),
     );
 
-    assert_eq!(links(&harness), vec![ATTACHMENT_A]);
+    assert_eq!(links(&harness, &writer), vec![ATTACHMENT_A]);
+}
+
+#[tokio::test]
+async fn a_dropped_superseded_content_version_leaves_the_heads_attachments_linked() {
+    let harness = Harness::new();
+    let writer = harness.create_space("Study").await;
+    let reader = harness.pair(&writer, "Phone").await;
+    linked_card(&harness, &writer).await;
+    let superseded = version(&harness, &writer, Kind::Cards, FIRST, "content");
+    harness
+        .post(format!("/v1/spaces/{}/bootstrap", uuid(reader.space_id)))
+        .token(&reader.token)
+        .send::<Snapshot>()
+        .await
+        .ok();
+    let reply = harness.push(&writer, vec![(5, content(ATTACHMENT_C, 1))]).await.ok();
+    assert_eq!(
+        outcomes(reply).first().map(|(_, outcome, _)| *outcome),
+        Some(Outcome::Applied)
+    );
+    assert_eq!(links(&harness, &writer), vec![ATTACHMENT_C]);
+
+    drop_version(&harness, &writer, superseded);
+
+    assert_eq!(
+        links(&harness, &writer),
+        vec![ATTACHMENT_C],
+        "the head's attachment stays linked"
+    );
 }
 
 #[tokio::test]

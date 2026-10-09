@@ -94,11 +94,12 @@ impl Server {
         if version.group == Group::Create.as_wire() || version.group == TOMBSTONE {
             tombstone(&tx, &version, now)?;
         } else {
-            tx.execute(
+            let was_head = tx.execute(
                 "DELETE FROM heads WHERE lane = ?1 AND seq = ?2",
                 params![lane, dropping.seq],
-            )?;
-            if version.kind == Kind::Cards.as_wire() && version.group == Group::Content.as_wire() {
+            )? > 0;
+            // WHY: a superseded version kept only by a lease is no head; the live head's attachments stay linked.
+            if was_head && version.kind == Kind::Cards.as_wire() && version.group == Group::Content.as_wire() {
                 relink_to_create(&tx, &version.id, now)?;
             }
         }

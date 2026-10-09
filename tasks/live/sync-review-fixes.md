@@ -269,7 +269,7 @@ The owner took every recommendation on 2026-10-09.
   Commit: Detach a file whatever its token state
   Depends on: none
 
-- [ ] 6. Relink a card's attachments only when its content head goes
+- [x] 6. Relink a card's attachments only when its content head goes
   Goal:
   - In `drop_envelope`, `relink_to_create` runs only when the `heads` delete removed a row.
   - Dropping a superseded version, kept only by a lease, leaves `attachment_refs` and `unlinked_since` alone.

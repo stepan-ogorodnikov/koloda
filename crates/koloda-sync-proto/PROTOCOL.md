@@ -1117,6 +1117,7 @@ its backup holds; heal re-pushes the others like any write a device holds (§Ser
 Dropping an update or review leaves devices with what they had.
 A fresh bootstrap then sees that group as of the entity's create until the group is written again.
 A dropped `cards.content` head links the card's attachments through its create again.
+A dropped superseded version, which only a lease kept, changes no link.
 The command prints what it drops, with the cards and reviews a dropped create removes, and asks first.
 Storage damage on the server is better answered by restore (§Recovery).
 
