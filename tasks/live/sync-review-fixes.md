@@ -280,7 +280,7 @@ The owner took every recommendation on 2026-10-09.
   Commit: Relink a card's attachments only when its content head goes
   Depends on: none
 
-- [ ] 7. Recheck an upload's room under the writer lock
+- [x] 7. Recheck an upload's room under the writer lock
   Goal:
   - In `store` in `crates/koloda-server/src/attachments.rs`, after the `is_stored` recheck, `room` runs again on
     the writer transaction.

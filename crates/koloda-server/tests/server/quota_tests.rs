@@ -1,8 +1,10 @@
 //! Space quotas and disk watermarks (`crates/koloda-sync-proto/PROTOCOL.md` §Quotas).
 
+use std::collections::VecDeque;
 use std::num::NonZeroU32;
+use std::path::Path;
 use std::sync::atomic::{AtomicU64, Ordering};
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 use axum::http::{Method, StatusCode};
 use koloda_sync_proto::envelope::{Envelope, Header};
@@ -12,9 +14,11 @@ use rusqlite::Connection;
 use sha2::{Digest, Sha256};
 use uuid::Uuid;
 
-use koloda_server::quota::Storage;
+use koloda_server::quota::{FreeSpace, Storage};
 
-use crate::common::{batch, card_create, child, outcomes, stamp, tombstone, uuid, write, Enrolled, Harness, TestDisk};
+use crate::common::{
+    batch, card_create, child, outcomes, stamp, tombstone, uuid, write, Answer, Enrolled, Harness, TestDisk,
+};
 
 const QUOTA: Outcome = Outcome::Held {
     reason: HeldReason::Quota,
@@ -379,4 +383,89 @@ async fn a_quota_names_a_space_that_exists() {
         .expect_err("no such space");
 
     assert_eq!(error.code(), ErrorCode::UnknownSpace);
+}
+
+/// A volume whose free bytes are scripted per check, in order; plenty once the script runs out.
+struct ScriptedDisk(Mutex<VecDeque<u64>>);
+
+impl FreeSpace for ScriptedDisk {
+    fn free_bytes(&self, _path: &Path) -> Option<u64> {
+        Some(self.0.lock().expect("script lock").pop_front().unwrap_or(u64::MAX))
+    }
+}
+
+async fn put_image(harness: &Harness, device: &Enrolled, (id, body): &(String, AttachmentBody)) -> Answer<Empty> {
+    harness
+        .call(
+            Method::PUT,
+            format!("/v1/spaces/{}/attachments/{id}", uuid(device.space_id)),
+        )
+        .token(&device.token)
+        .body(body)
+        .send::<Empty>()
+        .await
+}
+
+#[tokio::test]
+async fn an_upload_that_loses_its_room_while_staging_stores_nothing() {
+    let mut harness = Harness::new();
+    let device = harness.create_space("Study").await;
+    decks(&harness, &device).await;
+    let stored = image(10);
+    assert_eq!(put_image(&harness, &device, &stored).await.status, StatusCode::OK);
+    // WHY: room on the check before staging, then none on the one under the writer lock, as a push that filled the
+    // disk meanwhile leaves it.
+    harness.reopen_with(Storage {
+        min_free_disk: 1,
+        free_space: Arc::new(ScriptedDisk(Mutex::new(VecDeque::from([u64::MAX, 0])))),
+        ..Storage::default()
+    });
+
+    let refused = put_image(&harness, &device, &image(11)).await.error();
+
+    assert_eq!(
+        refused,
+        (StatusCode::INSUFFICIENT_STORAGE, ErrorCode::InsufficientStorage)
+    );
+    let conn = Connection::open(
+        harness
+            .generation_dir()
+            .join("spaces")
+            .join(format!("{}.db", space(&device))),
+    )
+    .expect("the space database opens");
+    let rows: Vec<String> = conn
+        .prepare("SELECT id FROM attachments")
+        .expect("attachments query prepares")
+        .query_map([], |row| row.get(0))
+        .expect("attachments read")
+        .collect::<Result<_, _>>()
+        .expect("attachments read");
+    assert_eq!(rows, vec![stored.0.clone()], "no row for the refused upload");
+    let files: Vec<String> =
+        std::fs::read_dir(harness.generation_dir().join("attachments").join(uuid(device.space_id)))
+            .expect("the attachments directory reads")
+            .map(|entry| {
+                entry
+                    .expect("a directory entry")
+                    .file_name()
+                    .to_string_lossy()
+                    .into_owned()
+            })
+            .collect();
+    assert_eq!(
+        files,
+        vec![stored.0.clone()],
+        "no file, staged or stored, for the refused upload"
+    );
+
+    harness
+        .server
+        .set_quota(space(&device), Some(usage(&harness, &device)))
+        .expect("the quota is set");
+    assert_eq!(
+        put_image(&harness, &device, &stored).await.status,
+        StatusCode::OK,
+        "bytes the space already stores upload while it is over"
+    );
 }

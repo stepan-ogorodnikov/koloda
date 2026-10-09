@@ -138,12 +138,16 @@ fn store(server: &Server, space_id: Uuid, id: &str, attachment: &AttachmentBody)
         return Ok(());
     }
     let quota = server.quota(space_id)?;
-    if server.room(&*lock(&space.reader)?, quota)? != Room::Free {
-        return Err(ApiError::new(
+    let no_room = || {
+        ApiError::new(
             StatusCode::INSUFFICIENT_STORAGE,
             ErrorCode::InsufficientStorage,
             "this space is over its quota or the server is low on disk",
-        ));
+        )
+    };
+    // WHY: checked before staging too, so a space already over costs no write.
+    if server.room(&*lock(&space.reader)?, quota)? != Room::Free {
+        return Err(no_room());
     }
     let dir = server.attachments_dir(space_id);
     fs::create_dir_all(&dir).map_err(io_error)?;
@@ -154,6 +158,12 @@ fn store(server: &Server, space_id: Uuid, id: &str, attachment: &AttachmentBody)
     let tx = conn.transaction()?;
     if is_stored(&tx, id)? {
         return fs::remove_file(&staged).map_err(io_error);
+    }
+    // INVARIANT: the room is checked again under the writer lock, so a push that filled the space while the bytes
+    // were staged cannot be overrun.
+    if server.room(&tx, quota)? != Room::Free {
+        fs::remove_file(&staged).map_err(io_error)?;
+        return Err(no_room());
     }
     fs::rename(&staged, dir.join(id)).map_err(io_error)?;
     File::open(&dir).and_then(|dir| dir.sync_all()).map_err(io_error)?;
