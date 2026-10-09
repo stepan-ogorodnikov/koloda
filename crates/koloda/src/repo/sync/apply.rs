@@ -190,8 +190,9 @@ fn decode(lane: Lane, entry: &PageEntry) -> Result<Result<Entry, HoldReason>, Ap
     }))
 }
 
-// WHY: only vocabulary this app lacks means a newer writer; every other decode failure is a decoder bug or damaged
-// bytes, and the server refuses a header it cannot read on push (PROTOCOL.md, Corrupt envelopes).
+// WHY: only vocabulary this app lacks, or a frame or header key it lacks, means a newer writer; every other decode
+// failure is a decoder bug or damaged bytes, and the server refuses a header it cannot read on push (PROTOCOL.md,
+// Corrupt envelopes).
 fn unreadable(error: &EnvelopeError) -> HoldReason {
     match error {
         EnvelopeError::Registry(
@@ -199,7 +200,8 @@ fn unreadable(error: &EnvelopeError) -> HoldReason {
             | RegistryError::UnknownGroup(_)
             | RegistryError::UnknownOp(_)
             | RegistryError::GroupNotInKind { .. },
-        ) => HoldReason::UpdateRequired,
+        )
+        | EnvelopeError::UnknownKey { .. } => HoldReason::UpdateRequired,
         _ => HoldReason::CorruptEnvelope,
     }
 }

@@ -296,10 +296,86 @@ fn decode_rejects_headers_that_do_not_parse_or_validate() {
     for (bytes, expected) in cases {
         assert_eq!(Header::decode(&bytes), Err(expected.clone()), "{expected:?}");
     }
+}
 
-    let unknown_field = raw_card_content_header(|entries| set(entries, "extra", Value::Bool(true)));
-    assert!(matches!(
-        Header::decode(&unknown_field),
-        Err(EnvelopeError::Malformed { part: Part::Header, .. })
-    ));
+#[test]
+fn a_key_this_app_does_not_know_is_named_as_a_newer_writers() {
+    let refs_with = |key: &str| {
+        Value::Map(vec![
+            (
+                Value::Text("attachment_ids".to_string()),
+                Value::Array(vec![Value::Text("aa".to_string())]),
+            ),
+            (Value::Text(key.to_string()), Value::Text("deck-1".to_string())),
+        ])
+    };
+    let header_cases = [
+        (
+            raw_card_content_header(|entries| set(entries, "key_id", Value::Bytes(vec![1; 16]))),
+            "key_id",
+        ),
+        (
+            raw_card_content_header(|entries| set(entries, "refs", refs_with("deck_id"))),
+            "deck_id",
+        ),
+    ];
+    for (bytes, key) in header_cases {
+        assert_eq!(
+            Header::decode(&bytes),
+            Err(EnvelopeError::UnknownKey {
+                part: Part::Header,
+                key: key.to_string(),
+            }),
+            "{key}"
+        );
+    }
+
+    let header = card_content().encode().expect("header encodes");
+    let frame = Value::Map(vec![
+        (Value::Text("header".to_string()), Value::Bytes(header)),
+        (Value::Text("payload".to_string()), Value::Bytes(vec![1])),
+        (Value::Text("nonce".to_string()), Value::Bytes(vec![2; 24])),
+    ]);
+    let mut bytes = Vec::new();
+    ciborium::into_writer(&frame, &mut bytes).expect("frame encodes");
+    assert_eq!(
+        Envelope::decode(&bytes),
+        Err(EnvelopeError::UnknownKey {
+            part: Part::Envelope,
+            key: "nonce".to_string(),
+        })
+    );
+}
+
+#[test]
+fn a_known_key_with_a_wrong_type_stays_malformed() {
+    // WHY: every header and `refs` key is present, so a name missing from the codec's lists would be reported as
+    // unknown here.
+    let every_ref = Value::Map(vec![
+        (
+            Value::Text("algorithm_id".to_string()),
+            Value::Text("algorithm-1".to_string()),
+        ),
+        (
+            Value::Text("template_id".to_string()),
+            Value::Text("template-1".to_string()),
+        ),
+        (
+            Value::Text("attachment_ids".to_string()),
+            Value::Array(vec![Value::Text("aa".to_string())]),
+        ),
+    ]);
+    let bytes = raw_card_content_header(|entries| {
+        set(entries, "refs", every_ref);
+        set(entries, "hlc", Value::Text("soon".to_string()));
+    });
+
+    assert!(
+        matches!(
+            Header::decode(&bytes),
+            Err(EnvelopeError::Malformed { part: Part::Header, .. })
+        ),
+        "{:?}",
+        Header::decode(&bytes)
+    );
 }

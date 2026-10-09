@@ -54,6 +54,7 @@ pub enum Part {
 pub enum EnvelopeError {
     TooLarge { part: Part, len: usize, max: usize },
     Malformed { part: Part, reason: String },
+    UnknownKey { part: Part, key: String },
     Registry(RegistryError),
     MissingParent { kind: Kind },
     UnexpectedParent { kind: Kind },
@@ -71,6 +72,23 @@ struct WireFrame {
     #[serde(with = "serde_bytes")]
     payload: Vec<u8>,
 }
+
+// INVARIANT: each list names every field of its wire struct. A missing name turns a malformed value of that field into
+// an unknown key, which holds for an app update instead of reporting corruption.
+const FRAME_KEYS: &[&str] = &["header", "payload"];
+const HEADER_KEYS: &[&str] = &[
+    "kind",
+    "id",
+    "parent",
+    "refs",
+    "group",
+    "op",
+    "hlc",
+    "stamp_device",
+    "schema",
+    "commit_id",
+];
+const REFS_KEYS: &[&str] = &["algorithm_id", "template_id", "attachment_ids"];
 
 // INVARIANT: field order is the encoding order. Reordering fields changes every digest and golden fixture.
 #[derive(Serialize, Deserialize)]
@@ -119,7 +137,7 @@ impl Envelope {
             bytes.len(),
             MAX_HEADER_BYTES + MAX_PAYLOAD_BYTES + MAX_FRAME_OVERHEAD_BYTES,
         )?;
-        let frame: WireFrame = decode_cbor(bytes, Part::Envelope)?;
+        let frame: WireFrame = decode_map(bytes, Part::Envelope, FRAME_KEYS)?;
         check_len(Part::Payload, frame.payload.len(), MAX_PAYLOAD_BYTES)?;
         Ok(Envelope {
             header: Header::decode(&frame.header)?,
@@ -137,7 +155,7 @@ impl Header {
 
     pub fn decode(bytes: &[u8]) -> Result<Header, EnvelopeError> {
         check_len(Part::Header, bytes.len(), MAX_HEADER_BYTES)?;
-        let wire: WireHeader = decode_cbor(bytes, Part::Header)?;
+        let wire: WireHeader = decode_map(bytes, Part::Header, HEADER_KEYS)?;
         let header = Header::from_wire(wire)?;
         header.validate()?;
         Ok(header)
@@ -246,6 +264,34 @@ impl Header {
     }
 }
 
+/// Decodes a frame or header map. When that fails, a key this app does not know names the failure instead, so a
+/// newer writer reads as one and not as damaged bytes.
+fn decode_map<T: for<'de> Deserialize<'de>>(bytes: &[u8], part: Part, known: &[&str]) -> Result<T, EnvelopeError> {
+    decode_cbor(bytes, part).map_err(|error| unknown_key(bytes, part, known).unwrap_or(error))
+}
+
+fn unknown_key(bytes: &[u8], part: Part, known: &[&str]) -> Option<EnvelopeError> {
+    let entries = ciborium::from_reader::<ciborium::Value, _>(bytes)
+        .ok()?
+        .into_map()
+        .ok()?;
+    entries.into_iter().find_map(|(key, value)| {
+        let key = key.into_text().ok()?;
+        if !known.contains(&key.as_str()) {
+            return Some(EnvelopeError::UnknownKey { part, key });
+        }
+        // WHY: `refs` is a map inside the header; a newer app may name a ref this one lacks.
+        let refs = value
+            .into_map()
+            .ok()
+            .filter(|_| part == Part::Header && key == "refs")?;
+        refs.into_iter().find_map(|(key, _)| {
+            let key = key.into_text().ok()?;
+            (!REFS_KEYS.contains(&key.as_str())).then_some(EnvelopeError::UnknownKey { part, key })
+        })
+    })
+}
+
 pub fn digest(encoded: &[u8]) -> Digest {
     Digest(Sha256::digest(encoded).into())
 }
@@ -293,6 +339,9 @@ impl fmt::Display for EnvelopeError {
                 write!(f, "{part:?} is {len} bytes, over the {max}-byte limit")
             }
             EnvelopeError::Malformed { part, reason } => write!(f, "malformed {part:?}: {reason}"),
+            EnvelopeError::UnknownKey { part, key } => {
+                write!(f, "{part:?} has key `{key}`, which this app does not know")
+            }
             EnvelopeError::Registry(error) => write!(f, "{error}"),
             EnvelopeError::MissingParent { kind } => write!(f, "`{}` envelope has no parent", kind.as_wire()),
             EnvelopeError::UnexpectedParent { kind } => {

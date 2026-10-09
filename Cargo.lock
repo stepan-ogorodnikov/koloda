@@ -1472,6 +1472,7 @@ version = "0.0.1"
 dependencies = [
  "chrono",
  "chrono-tz",
+ "ciborium",
  "json-patch",
  "keyring",
  "koloda-sync-proto",

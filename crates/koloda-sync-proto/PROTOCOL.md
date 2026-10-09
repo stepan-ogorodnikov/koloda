@@ -129,7 +129,9 @@ The header is a CBOR map with these keys, in this order; optional keys are omitt
 | `schema` | Payload schema version of the kind (§Schema versions) |
 | `commit_id` | 16 random bytes shared by one commit |
 
-Unknown keys are rejected.
+Unknown keys are rejected, in the frame, the header, and `refs`.
+The server refuses such a push as `bad_request`.
+A client that pulls one reads a newer writer and holds for an app update (§Corrupt envelopes).
 One logical header has one encoding: `attachment_ids` are sorted and unique, and an empty `refs` map is omitted.
 The digest is the SHA-256 of the encoded envelope bytes.
 
@@ -1069,6 +1071,8 @@ The client cannot tell which, so it never guesses a value:
 Both header rules need a header that decodes.
 A header that names a kind, group, or op this app lacks, or a group outside its kind, needs an app update instead,
 and so does a schema above the app's own; that is `update_required { lane, seq }`.
+So does a frame, header, or `refs` key this app lacks, since only a newer app writes one.
+A payload key it lacks is corrupt: a new payload key comes with a schema raise.
 Any other envelope that does not decode, a lane mismatch, or a payload that does not decode is corrupt.
 The page applies every entry before the held one in one transaction and sets the lane cursor to the held seq minus
 one.

@@ -3,6 +3,7 @@
 
 use std::time::{SystemTime, UNIX_EPOCH};
 
+use ciborium::Value;
 use koloda::app::db::Database;
 use koloda::domain::cards::UpdateCardProgress;
 use koloda::domain::decks::{UpdateDeckData, UpdateDeckValues};
@@ -173,6 +174,41 @@ fn renamed(envelope: &Envelope, from: &str, to: &str) -> Vec<u8> {
         .expect("the text is inside the bytes")
         .copy_from_slice(to.as_bytes());
     bytes
+}
+
+/// `map`'s CBOR with one more key, as a newer app would write it.
+fn with_key(map: &[u8], key: &str) -> Vec<u8> {
+    let mut entries = ciborium::from_reader::<Value, _>(map)
+        .expect("the map is CBOR")
+        .into_map()
+        .expect("the CBOR is a map");
+    entries.push((Value::Text(key.to_string()), Value::Bytes(vec![1; 16])));
+    let mut bytes = Vec::new();
+    ciborium::into_writer(&Value::Map(entries), &mut bytes).expect("the map encodes");
+    bytes
+}
+
+fn with_header_key(envelope: &Envelope) -> Vec<u8> {
+    let header = with_key(&envelope.header.encode().expect("header encodes"), "key_id");
+    let frame = Value::Map(vec![
+        (Value::Text("header".to_string()), Value::Bytes(header)),
+        (
+            Value::Text("payload".to_string()),
+            Value::Bytes(envelope.payload.clone()),
+        ),
+    ]);
+    let mut bytes = Vec::new();
+    ciborium::into_writer(&frame, &mut bytes).expect("the frame encodes");
+    bytes
+}
+
+fn with_payload_key(envelope: &Envelope) -> Vec<u8> {
+    Envelope {
+        header: envelope.header.clone(),
+        payload: with_key(&envelope.payload, "subtitle"),
+    }
+    .encode()
+    .expect("envelope encodes")
 }
 
 fn at_schema(envelope: &Envelope, schema: u32) -> Vec<u8> {
@@ -392,7 +428,7 @@ fn a_corrupt_reset_applies_from_its_header() {
 
 #[test]
 fn an_unreadable_hot_entry_reports_why() {
-    let cases: [(&str, Target, Damage, HoldReason); 7] = [
+    let cases: [(&str, Target, Damage, HoldReason); 9] = [
         (
             "unknown kind",
             |written| (Kind::Decks, written.deck.clone(), "title"),
@@ -416,6 +452,18 @@ fn an_unreadable_hot_entry_reports_why() {
             |written| (Kind::Decks, written.deck.clone(), "title"),
             |envelope| at_schema(envelope, SCHEMA + 1),
             HoldReason::UpdateRequired,
+        ),
+        (
+            "a header key this app lacks",
+            |written| (Kind::Decks, written.deck.clone(), "title"),
+            with_header_key,
+            HoldReason::UpdateRequired,
+        ),
+        (
+            "a payload key this app lacks, which comes only with a schema raise",
+            |written| (Kind::Decks, written.deck.clone(), "title"),
+            with_payload_key,
+            HoldReason::CorruptEnvelope,
         ),
         (
             "schema zero",
@@ -506,8 +554,13 @@ fn a_delete_at_a_newer_schema_holds_instead_of_applying() {
 
 #[test]
 fn a_snapshot_page_stops_at_an_unreadable_entry_and_leaves_the_cursors() {
-    let cases: [(&str, Damage, HoldReason); 2] = [
+    let cases: [(&str, Damage, HoldReason); 3] = [
         ("corrupt card create", unreadable_payload, HoldReason::CorruptEnvelope),
+        (
+            "a header key this app lacks",
+            with_header_key,
+            HoldReason::UpdateRequired,
+        ),
         (
             "unknown kind",
             |envelope| renamed(envelope, "cards", "carts"),

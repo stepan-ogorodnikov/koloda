@@ -136,7 +136,7 @@ The owner took every recommendation on 2026-10-09.
   Commit: Stop resending a fixed cohort the server refuses as ahead
   Depends on: none
 
-- [ ] 2. Hold a header with an unknown key as needing an update
+- [x] 2. Hold a header with an unknown key as needing an update
   Goal:
   - `Envelope::decode` and `Header::decode` report a frame or header map with a text key this app does not know as a
     new `EnvelopeError` variant naming the part and the key, instead of `Malformed`.
