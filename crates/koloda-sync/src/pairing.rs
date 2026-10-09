@@ -8,13 +8,15 @@ use std::sync::Arc;
 use koloda::app::init::{seed_joiner_db, SeedSettings};
 use koloda::app::utility::get_current_timestamp;
 use koloda::repo::sync::join::{add_to_space, begin_import, join_mode, probe_ids, replace_with_space, JoinMode, Known};
+use koloda::repo::sync::outbox::lowest_pending_seq;
 use koloda::repo::sync::switch::switch_device;
 use koloda::repo::sync::{enroll_device, sync_state, SpaceRole};
 use koloda_sync_proto::registry::Kind;
 use koloda_sync_proto::transport::{
     ClaimPairing, DeviceInfo, EntityId, ErrorCode, IssuePairing, KnownIds, KnownState, Pairing, PairingClaim,
-    PairingPreview, PreviewPairing, MAX_KNOWN_IDS,
+    PairingPreview, PreviewPairing, Receipt, Receipts, MAX_KNOWN_IDS, MAX_RECEIPT_RANGE,
 };
+use serde::de::DeserializeOwned;
 use uuid::Uuid;
 
 use crate::client::{local_error, mint_token, server_url};
@@ -115,13 +117,7 @@ impl Shared {
 
     /// Re-attaches a detached file to the space it was in: a new device id that keeps the file's rows, stamps,
     /// cursors, and pending writes (`PROTOCOL.md` §Re-attach).
-    async fn reattach(
-        self: Arc<Self>,
-        base: String,
-        code: &str,
-        device_name: &str,
-        preview: PairingPreview,
-    ) -> Result<Joined, SyncError> {
+    async fn reattach(self: Arc<Self>, base: String, code: &str, device_name: &str) -> Result<Joined, SyncError> {
         let state = self
             .blocking(|shared| sync_state(&shared.db))
             .await?
@@ -145,55 +141,23 @@ impl Shared {
             token,
             epoch: stored,
         };
-        // INVARIANT: a space restored since the file last synced answers the first call made with the stored epoch;
-        // that restore is applied before the switch, so the old sender's receipts come from the restored space. An
-        // authoritative one is only held, and the switch still moves the file to the new id it will bootstrap under.
-        if Uuid::from_bytes(preview.epoch) != stored {
-            let own = self
-                .device_client(&session)
-                .call::<(), DeviceInfo>(
-                    Method::Get,
-                    &format!("/v1/spaces/{}/devices/{device}", session.space),
-                    Some(&session.token),
-                    None,
-                )
-                .await;
-            match own {
-                Err(SyncError::Restored {
-                    restore,
-                    last_sender_seq,
-                }) => {
-                    let epoch = Uuid::from_bytes(restore.epoch);
-                    match self.apply_restore(restore, last_sender_seq).await {
-                        Ok(_) | Err(SyncError::RestoreHeld) => session.epoch = epoch,
-                        Err(error) => return Err(error),
-                    }
-                }
-                Ok(_) => session.epoch = Uuid::from_bytes(preview.epoch),
-                Err(error) => return Err(error),
-            }
-        }
-
         let old = state.device_id;
         // WHY: a restore that predates the old device has no record of it, so none of its seqs were consumed there.
+        // INVARIANT: every call after the claim names the stored epoch until a restore moves it, and a `Restored`
+        // answer is applied and the call repeated, so a restore that lands on the lookup or the receipts is not lost.
+        let path = format!("/v1/spaces/{}/devices/{old}", session.space);
         let last_sender_seq = match self
-            .device_client(&session)
-            .call::<(), DeviceInfo>(
-                Method::Get,
-                &format!("/v1/spaces/{}/devices/{old}", session.space),
-                Some(&session.token),
-                None,
-            )
+            .call_across_restore::<DeviceInfo>(&mut session, Method::Get, &path)
             .await
         {
-            Ok(answer) => answer.ok.last_sender_seq,
+            Ok(info) => info.last_sender_seq,
             Err(SyncError::Server {
                 code: ErrorCode::NotFound,
                 ..
             }) => 0,
             Err(error) => return Err(error),
         };
-        let receipts = self.pending_receipts(&session, old, last_sender_seq).await?;
+        let receipts = self.receipts_across_restore(&mut session, old, last_sender_seq).await?;
         let now_ms = u64::try_from(get_current_timestamp()?).map_err(local_error)?;
         let url = session.base.clone();
         self.blocking(move |shared| {
@@ -213,6 +177,70 @@ impl Shared {
             hint: claim.hint,
             known_ids: 0,
         })
+    }
+
+    /// One call during a re-attach. A `Restored` answer is applied, the session moves to that epoch, and the call
+    /// is repeated. An authoritative restore is held and the call still repeats, so the switch can finish.
+    async fn call_across_restore<T: DeserializeOwned>(
+        self: &Arc<Self>,
+        session: &mut Session,
+        method: Method,
+        path: &str,
+    ) -> Result<T, SyncError> {
+        loop {
+            match self
+                .device_client(session)
+                .call::<(), T>(method, path, Some(&session.token), None)
+                .await
+            {
+                Ok(reply) => return Ok(reply.ok),
+                Err(SyncError::Restored {
+                    restore,
+                    last_sender_seq,
+                }) => {
+                    let epoch = Uuid::from_bytes(restore.epoch);
+                    match self.apply_restore(restore, last_sender_seq).await {
+                        Ok(_) | Err(SyncError::RestoreHeld) => session.epoch = epoch,
+                        Err(error) => return Err(error),
+                    }
+                }
+                Err(error) => return Err(error),
+            }
+        }
+    }
+
+    /// The old sender's receipts for pending seqs at or below `last_sender_seq`, across a restore on any page.
+    async fn receipts_across_restore(
+        self: &Arc<Self>,
+        session: &mut Session,
+        sender: Uuid,
+        last_sender_seq: u64,
+    ) -> Result<Vec<Receipt>, SyncError> {
+        let Some(lowest) = self
+            .blocking(|shared| lowest_pending_seq(&shared.db))
+            .await?
+            .filter(|lowest| *lowest <= last_sender_seq)
+        else {
+            return Ok(Vec::new());
+        };
+        let mut receipts = Vec::new();
+        let mut from = lowest - 1;
+        while from < last_sender_seq {
+            let through = last_sender_seq.min(from + MAX_RECEIPT_RANGE);
+            let page = self
+                .call_across_restore::<Receipts>(
+                    session,
+                    Method::Get,
+                    &format!(
+                        "/v1/spaces/{}/receipts?sender={sender}&after={from}&through={through}",
+                        session.space
+                    ),
+                )
+                .await?;
+            receipts.extend(page.receipts);
+            from = through;
+        }
+        Ok(receipts)
     }
 
     async fn preview_at(&self, base: &str, code: &str) -> Result<PairingPreview, SyncError> {
@@ -242,7 +270,7 @@ impl Shared {
         let space = Uuid::from_bytes(preview.space_id);
         let mode = self.blocking(move |shared| join_mode(&shared.db, space)).await?;
         if mode == JoinMode::Reattach {
-            return self.reattach(base, code, device_name, preview).await;
+            return self.reattach(base, code, device_name).await;
         }
 
         let (claim, token) = self.claim(&base, code, device_name).await?;

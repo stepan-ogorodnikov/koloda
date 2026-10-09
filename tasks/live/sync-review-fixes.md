@@ -198,7 +198,7 @@ The owner took every recommendation on 2026-10-09.
   Commit: Mint enrollment tokens on the client
   Depends on: none
 
-- [ ] 3. Apply a restore met anywhere in a re-attach
+- [x] 3. Apply a restore met anywhere in a re-attach
   Goal:
   - In `reattach`, every call after the claim and before `switch_device` handles `Restored` the same way.
     It calls `apply_restore`, which holds an authoritative one, moves the session to the restore's epoch, and repeats

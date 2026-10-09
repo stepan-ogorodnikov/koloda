@@ -2,6 +2,8 @@
 //! local data once the host accepts it (`crates/koloda-sync-proto/PROTOCOL.md` §Server restore).
 
 use std::collections::HashMap;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Arc;
 
 use koloda::domain::attachments::AddAttachmentData;
 use koloda::domain::cards::{CardContentField, DeleteCardData, UpdateCardData, UpdateCardValues};
@@ -567,6 +569,44 @@ fn a_re_attach_records_the_url_its_code_came_through() {
         pair.b.state().expect("B is enrolled").server_url.as_deref(),
         Some("https://moved.test")
     );
+}
+
+#[test]
+fn a_restore_after_the_claim_is_applied_and_the_re_attach_finishes_on_the_claimed_device() {
+    let pair = pair();
+    let old = pair.b.state().expect("B is enrolled").device_id;
+    pair.b.engine.detach().expect("B detaches");
+    let code = pair.a().engine.issue_pairing(None).expect("A issues a code").code;
+    let restored = Arc::new(AtomicBool::new(false));
+    let flag = Arc::clone(&restored);
+    // WHY: the observer runs during `join`, before this function returns, so the server is still here.
+    let server = &pair.space.server as *const crate::common::TestServer as usize;
+    pair.b.transport.observe(move |request| {
+        if request.method != Method::Get || !request.url.contains("/devices/") || flag.swap(true, Ordering::SeqCst) {
+            return;
+        }
+        // SAFETY: `server` points at `pair.space.server`, which this `join` keeps alive.
+        let server = unsafe { &*(server as *const crate::common::TestServer) };
+        let backup = server.backup();
+        server.restore(&backup, RestoreMode::Heal);
+    });
+
+    reattach(&pair.b, &code, SERVER_URL);
+
+    let state = pair.b.state().expect("B is enrolled");
+    assert_ne!(state.device_id, old, "the file finishes on the device the claim made");
+    assert!(
+        restored.load(Ordering::SeqCst),
+        "the restore ran on the lookup after the claim"
+    );
+    assert_eq!(
+        Some(pair.b.epoch()),
+        pair.space
+            .server
+            .current_epoch(&format!("/v1/spaces/{}/", pair.space.space_id())),
+        "the restore that landed after the claim was applied"
+    );
+    pair.b.sync();
 }
 
 #[test]

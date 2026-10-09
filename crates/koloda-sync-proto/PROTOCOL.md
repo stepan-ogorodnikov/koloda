@@ -916,7 +916,8 @@ A malformed token, one that is not 64 lowercase hex characters, is `bad_request`
 A space's `device_count` counts the devices that are not revoked.
 An `epoch_changed` error carries `restore`: `epoch` (the space's), `mode`, `head_hot`, `head_cold`, and `cutoffs`,
 each a `sender` and its `last_seq`; a sender `cutoffs` does not list counts as 0.
-A re-attaching file learns a restore the same way: from its first call made with the epoch it stored.
+A re-attaching file learns a restore the same way, from any call after the claim made with the epoch it stored.
+It repeats that call once the restore is applied.
 An outcome is a map tagged by `status`, such as `{ status: applied }` or `{ status: held, reason: schema }`.
 A receipt range is `after < seq <= through`.
 An endpoint that returns nothing answers `ok` with an empty map.
@@ -1533,10 +1534,11 @@ A file that was in this space claims a new code.
 That covers a detached or revoked file, one enrolled after the backup of a restored server, and rotated tokens.
 An attached file is refused before the claim, so the code stays usable.
 It keeps rows, stamps, origins, cursors, tombstones, and outbox bytes.
-When the previewed epoch is not the file's, the space was restored since.
-The file's first call after the claim names the epoch it stored, and the `epoch_changed` reply carries the restore.
+Its calls after the claim name the epoch it stored.
+Any of them may answer `epoch_changed`.
 A heal is applied at once; an authoritative restore is held for the host, as on any device (§Server restore).
-Either way, the later calls name the new epoch.
+The file then repeats that call on the new epoch.
+That covers the lookup of the old device and the receipt reads.
 It then follows steps 1, 2, and 4 of the "behind" procedure (§Devices) with the old device id.
 It reads the old sender's receipts for its pending seqs, classifies by cohort, renumbers, and re-stamps the cohorts
 with no accepted member under the new id, in one local transaction.
