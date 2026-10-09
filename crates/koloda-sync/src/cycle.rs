@@ -5,10 +5,12 @@ use std::sync::Arc;
 
 use koloda::app::utility::get_current_timestamp;
 use koloda::repo::sync::apply::{apply_page, Hold, Page, PageEntry};
-use koloda::repo::sync::outbox::{has_foreign_receipt, pending_count, release_held, standing, Standing};
+use koloda::repo::sync::outbox::{
+    has_foreign_receipt, highest_pending_hlc, pending_count, release_held, standing, unfix_unconsumed, Standing,
+};
 use koloda::repo::sync::repair::repair_dangling_defaults;
 use koloda::repo::sync::restamp::restamp_local_cohorts;
-use koloda_sync_proto::hlc::SKEW_TOLERANCE_MS;
+use koloda_sync_proto::hlc::{Hlc, SKEW_TOLERANCE_MS};
 use koloda_sync_proto::registry::{Kind, Lane};
 use koloda_sync_proto::transport::{DeviceInfo, DeviceMeta, ErrorCode, PullPage, MAX_RECEIPT_RANGE};
 use uuid::Uuid;
@@ -92,9 +94,10 @@ impl Shared {
                 self.blocking(|shared| release_held(&shared.db)).await?;
             }
             // INVARIANT: an outbox past the limit on a metered network waits whole, since a push never skips ahead
-            // of a seq; pulls go on (PROTOCOL.md, Metered networks).
-            let is_push_held = self.is_push_held().await?;
-            let pushed = if is_push_held {
+            // of a seq; pulls go on (PROTOCOL.md, Metered networks). So does an outbox whose stamps the space
+            // refused as ahead, until server time reaches them (PROTOCOL.md, Skew guards).
+            let mut is_push_held = self.is_push_held().await? || self.is_push_waiting(self.server_now_ms()?)?;
+            let mut pushed = if is_push_held {
                 Ok(())
             } else {
                 self.push(session, changed).await
@@ -104,11 +107,19 @@ impl Shared {
                 continue;
             }
             // WHY: a stamp ahead of server time was captured on a clock set ahead and refused whole; its cohorts are
-            // `local` again. One re-stamp per cycle: if the space still refuses, only wall time helps.
-            if is_stamp_ahead(&pushed) && !has_restamped_ahead {
-                has_restamped_ahead = true;
-                self.restamp().await?;
-                continue;
+            // `local` again, and so is a `fixed` one no push consumed, as after a lost reply. One re-stamp per cycle:
+            // if the space still refuses, a cohort with a consumed member is ahead and only server time helps.
+            if is_stamp_ahead(&pushed) {
+                if !has_restamped_ahead {
+                    has_restamped_ahead = true;
+                    self.unfix_ahead(record.last_sender_seq).await?;
+                    self.restamp().await?;
+                    continue;
+                }
+                if self.wait_for_server_time().await? {
+                    is_push_held = true;
+                    pushed = Ok(());
+                }
             }
             // WHY: a reused seq means another copy of the file pushed under this id; the reply cut the batch there.
             if matches!(pushed, Err(SyncError::Behind)) {
@@ -311,6 +322,34 @@ impl Shared {
         let now_ms = u64::try_from(get_current_timestamp()?).map_err(local_error)?;
         self.blocking(move |shared| restamp_local_cohorts(&shared.db, now_ms))
             .await
+    }
+
+    /// Returns to `local` the `fixed` cohorts the space would refuse as ahead and no push consumed, so the re-stamp
+    /// that follows moves them.
+    async fn unfix_ahead(self: &Arc<Self>, last_sender_seq: u64) -> Result<(), SyncError> {
+        let limit_ms = u64::try_from(self.server_now_ms()?).map_err(local_error)? + SKEW_TOLERANCE_MS;
+        let ahead_of = Hlc::new(limit_ms, u16::MAX).map_err(local_error)?;
+        self.blocking(move |shared| unfix_unconsumed(&shared.db, last_sender_seq, ahead_of))
+            .await?;
+        Ok(())
+    }
+
+    /// Holds pushing until server time lets the outbox's highest stamp through, and returns whether it does. A
+    /// refusal that the outbox's stamps do not explain holds nothing, so it stops the cycle as any refusal does.
+    async fn wait_for_server_time(self: &Arc<Self>) -> Result<bool, SyncError> {
+        let Some(highest) = self.blocking(|shared| highest_pending_hlc(&shared.db)).await? else {
+            return Ok(false);
+        };
+        let until = i64::try_from(highest.wall_ms().saturating_sub(SKEW_TOLERANCE_MS)).map_err(local_error)?;
+        if until <= self.server_now_ms()? {
+            return Ok(false);
+        }
+        self.note_push_wait(until)?;
+        Ok(true)
+    }
+
+    fn server_now_ms(&self) -> Result<i64, SyncError> {
+        Ok(get_current_timestamp()? + self.skew.get())
     }
 
     // INVARIANT: push and apply pause while the clocks disagree by more than the tolerance; stamps from a wrong clock

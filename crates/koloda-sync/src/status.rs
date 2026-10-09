@@ -32,6 +32,9 @@ pub struct Status {
     pub is_over_quota: bool,
     /// Bulk transfers wait on a metered network; incremental sync goes on.
     pub metered: Option<MeteredPause>,
+    /// Local time, in unix milliseconds, when pushing resumes after the space refused the outbox's stamps as ahead of
+    /// its clock; pulls go on meanwhile.
+    pub push_resumes_at_ms: Option<i64>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -93,6 +96,8 @@ pub(crate) struct RunState {
     pub(crate) nudged: Option<(u64, u64)>,
     pub(crate) hold: Option<Hold>,
     pub(crate) is_over_quota: bool,
+    /// Server time, in unix milliseconds, that the outbox's highest stamp waits for (`Shared::wait_for_server_time`).
+    pub(crate) push_waits_until: Option<i64>,
 }
 
 impl Shared {
@@ -124,6 +129,7 @@ impl Shared {
                 hold: None,
                 is_over_quota: false,
                 metered,
+                push_resumes_at_ms: None,
             });
         };
         let shown = if state.is_detached {
@@ -159,6 +165,7 @@ impl Shared {
             hold: run.hold,
             is_over_quota: run.is_over_quota,
             metered,
+            push_resumes_at_ms: run.push_waits_until.map(|at| at - skew_ms),
         })
     }
 }

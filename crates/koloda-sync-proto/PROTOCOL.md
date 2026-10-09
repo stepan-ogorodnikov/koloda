@@ -600,9 +600,16 @@ The clock therefore only goes back over stamps that `local` cohorts alone held.
   The first cycle whose reply shows a skew inside the tolerance re-stamps every `local` cohort (§Cohorts) before it
   pushes or applies anything, and clears the record.
 - The server rejects an envelope whose wall part is more than 5 minutes ahead of **server now**.
-  The whole push then fails with `stamp_ahead` and consumes nothing, so its cohorts return to `local`.
-  The client re-stamps them once and pushes again; a second `stamp_ahead` in the same cycle stops it.
-  A space that already holds a far-ahead stamp waits for wall time to catch up.
+  The whole push then fails with `stamp_ahead` and consumes nothing, so its `uncertain` cohorts return to `local`.
+  So does a `fixed` cohort above the limit that no push consumed, as after a lost reply.
+  It has no consumed member, and every member's seq is above the `last_sender_seq` of the record the round read.
+  The client re-stamps once and pushes again.
+- A second `stamp_ahead` in the same cycle meets a stamp the client cannot move.
+  That is a cohort with a consumed member after the server's clock went back, or a re-stamp above a far-ahead stamp
+  the space already holds.
+  Pushing then waits until server time, by the skew estimate, reaches the outbox's highest stamp less 5 minutes.
+  Pulls go on, and the status shows when pushing resumes.
+  A second refusal that the outbox's stamps do not explain stops the cycle.
 
 ### Cohorts
 
@@ -618,6 +625,7 @@ Anything else fixes it to its original stamp.
 - A row still in flight when the next batch is picked means the same, as after the app stopped mid-push.
 - An error reply consumed nothing.
   Its `uncertain` cohorts return to `local` and their rows leave flight; `fixed` cohorts keep theirs in flight.
+  After `stamp_ahead`, a `fixed` cohort that no push consumed returns to `local` as well (§Skew guards).
 - Rows a reply did not reach, after `seq_reused`, leave flight the same way.
 
 Re-stamp walks only `local` cohorts and gives every pending member of a cohort one new stamp in one transaction.

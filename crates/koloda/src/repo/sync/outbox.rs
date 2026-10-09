@@ -6,7 +6,7 @@
 use std::collections::HashSet;
 
 use koloda_sync_proto::envelope::{digest, Envelope, Header};
-use koloda_sync_proto::hlc::DeviceId;
+use koloda_sync_proto::hlc::{DeviceId, Hlc};
 use koloda_sync_proto::registry::{Group, Kind};
 use koloda_sync_proto::transport::{DependencyAction, HeldReason, Outcome, PushOutcome};
 use rusqlite::{params, Connection, OptionalExtension, ToSql};
@@ -561,6 +561,51 @@ pub fn push_refused(db: &Database, batch: &Batch) -> Result<(), AppError> {
                 settle_cohort(tx, &commit_id, "local")?;
             }
             Ok(())
+        })
+    })
+}
+
+/// After a push refused for a stamp ahead of the server, returns to `local` every `fixed` cohort stamped above
+/// `ahead_of` that no push consumed, and takes its rows out of flight; returns how many (`PROTOCOL.md` §Cohorts).
+///
+/// INVARIANT: a cohort with a consumed member, or with a row at or below the record's `last_sender_seq`, keeps its
+/// stamp. The server had consumed no seq above `last_sender_seq` when the record was read, so only the others are
+/// known never to have been consumed, and a re-stamp cannot split them from a sibling the space holds.
+pub fn unfix_unconsumed(db: &Database, last_sender_seq: u64, ahead_of: Hlc) -> Result<usize, AppError> {
+    throw_known_error(error_codes::DB_UPDATE, || {
+        db.with_transaction(|tx| {
+            let unconsumed = r#"
+                SELECT c.commit_id FROM sync_cohorts c
+                WHERE c.state = 'fixed' AND c.has_consumed = 0 AND c.hlc > ?2
+                  AND NOT EXISTS (SELECT 1 FROM sync_outbox o WHERE o.commit_id = c.commit_id AND o.sender_seq <= ?1)
+            "#;
+            let bound = i64::try_from(ahead_of.raw()).map_err(protocol_error)?;
+            tx.execute(
+                &format!("UPDATE sync_outbox SET in_flight = 0 WHERE commit_id IN ({unconsumed})"),
+                params![last_sender_seq, bound],
+            )?;
+            Ok(tx.execute(
+                &format!("UPDATE sync_cohorts SET state = 'local' WHERE commit_id IN ({unconsumed})"),
+                params![last_sender_seq, bound],
+            )?)
+        })
+    })
+}
+
+/// The highest stamp of a write in the outbox, which every push of the whole outbox must get past the server.
+pub fn highest_pending_hlc(db: &Database) -> Result<Option<Hlc>, AppError> {
+    throw_known_error(error_codes::DB_GET, || {
+        db.with_conn(|conn| {
+            let hlc: Option<i64> = conn.query_row(
+                r#"
+                SELECT MAX(c.hlc) FROM sync_cohorts c
+                WHERE EXISTS (SELECT 1 FROM sync_outbox o WHERE o.commit_id = c.commit_id)
+                "#,
+                [],
+                |row| row.get(0),
+            )?;
+            hlc.map(|hlc| u64::try_from(hlc).map(Hlc::from_raw).map_err(protocol_error))
+                .transpose()
         })
     })
 }

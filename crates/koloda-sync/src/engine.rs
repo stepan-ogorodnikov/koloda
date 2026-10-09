@@ -465,6 +465,22 @@ impl Shared {
         Ok(())
     }
 
+    /// Holds pushing until server time reaches `until`, in unix milliseconds.
+    pub(crate) fn note_push_wait(&self, until: i64) -> Result<(), SyncError> {
+        self.lock(&self.run_state)?.push_waits_until = Some(until);
+        Ok(())
+    }
+
+    /// Whether pushing still waits for server time; the wait ends once `server_now_ms` reaches it.
+    pub(crate) fn is_push_waiting(&self, server_now_ms: i64) -> Result<bool, SyncError> {
+        let mut run = self.lock(&self.run_state)?;
+        let is_waiting = run.push_waits_until.is_some_and(|until| server_now_ms < until);
+        if !is_waiting {
+            run.push_waits_until = None;
+        }
+        Ok(is_waiting)
+    }
+
     /// Records the entry a lane stopped at, or clears that lane's hold once a pull of it passes the entry.
     pub(crate) fn note_hold(&self, lane: Lane, hold: Option<Hold>) -> Result<(), SyncError> {
         let mut run = self.lock(&self.run_state)?;

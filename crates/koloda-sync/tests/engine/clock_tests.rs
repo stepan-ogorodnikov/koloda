@@ -207,6 +207,97 @@ fn a_space_that_keeps_refusing_gets_one_retry_per_cycle() {
 }
 
 #[test]
+fn a_lost_push_refused_as_ahead_is_re_stamped_and_lands_while_the_cycle_pulls() {
+    let space = Space::new();
+    let a = &space.device;
+    let library = a.library();
+    a.engine.sync_now().expect("A syncs");
+    let b = space.server.join(a);
+    b.engine.sync_now().expect("B syncs");
+    set_clock_ahead(a, DAY_MS);
+    a.update_deck(&library.deck, "Renamed", &library.algorithm, &library.template);
+    // WHY: the client sends a request up to four times while no complete reply arrives.
+    for _ in 0..4 {
+        a.transport.fault_on("/push", Fault::LoseReply);
+    }
+    assert!(a.engine.sync_now().is_err(), "every reply is lost");
+    assert_eq!(
+        a.cohort_states(),
+        vec!["fixed"],
+        "the lost push fixed the rename's cohort"
+    );
+    let card = b.add_card(&library.deck, &library.template, "from B");
+    b.engine.sync_now().expect("B pushes a card");
+    let before = pushes(a);
+
+    a.engine.sync_now().expect("A re-stamps the rename and syncs");
+
+    assert_eq!(pushes(a) - before, 2, "refused at the old stamp, then accepted");
+    assert!(a.outbox().is_empty());
+    assert!(a.has_card(&card), "the cycle pulls");
+    let title = pushed(&space, a)
+        .into_iter()
+        .find(|(_, group, _)| *group == Some(Group::Title))
+        .expect("the rename was pushed");
+    assert!(
+        title.2.hlc.wall_ms() < system_ms() + MINUTE_MS,
+        "the rename went out from the corrected clock"
+    );
+}
+
+#[test]
+fn a_cohort_with_a_consumed_member_waits_for_server_time_and_keeps_its_stamp() {
+    let space = Space::new();
+    let a = &space.device;
+    let library = a.library();
+    a.engine.sync_now().expect("A pushes its library");
+    let b = space.server.join(a);
+    b.engine.sync_now().expect("B pulls the library");
+    let server = space.server.server();
+    server.set_quota(space.space_id(), Some(1)).expect("the quota is set");
+    // The server's clock runs four minutes ahead and A stamps eight ahead: inside the tolerance of each other.
+    space.server.clock.set_offset(4 * 60 * 1000);
+    set_clock_ahead(a, 8 * MINUTE_MS);
+    a.update_deck(&library.deck, "Renamed", &library.algorithm, &library.template);
+    let captured = a.outbox()[0].envelope.header.stamp;
+    a.engine.sync_now().expect("the rename is held over the quota");
+    // The server's clock goes back, and the operator lifts the quota: the released rename is a consumed cohort.
+    space.server.clock.set_offset(0);
+    server.set_quota(space.space_id(), None).expect("the quota is lifted");
+    let card = b.add_card(&library.deck, &library.template, "from B");
+    b.engine.sync_now().expect("B pushes a card");
+
+    a.engine.sync_now().expect("A pulls while its push waits");
+    let waiting = a.engine.status().expect("status reads");
+    let before = pushes(a);
+    a.engine.sync_now().expect("A syncs again while its push waits");
+
+    assert!(a.has_card(&card), "pulls go on");
+    assert_eq!(a.outbox().len(), 1, "the rename waits");
+    assert_eq!(pushes(a), before, "no push goes out while it waits");
+    let resumes_in = waiting
+        .push_resumes_at_ms
+        .expect("the status shows when pushing resumes")
+        - i64::try_from(system_ms()).expect("now fits");
+    assert!(
+        (2 * 60 * 1000..=4 * 60 * 1000).contains(&resumes_in),
+        "three minutes, when server time is 5 minutes below the stamp: {resumes_in} ms"
+    );
+
+    // Server time moves past the stamp less the tolerance.
+    space.server.clock.set_offset(4 * 60 * 1000);
+    a.engine.sync_now().expect("A pushes once server time allows");
+
+    assert!(a.outbox().is_empty());
+    assert_eq!(a.engine.status().expect("status reads").push_resumes_at_ms, None);
+    let title = pushed(&space, a)
+        .into_iter()
+        .find(|(_, group, _)| *group == Some(Group::Title))
+        .expect("the rename was pushed");
+    assert_eq!(title.2, captured, "the rename keeps its stamp");
+}
+
+#[test]
 fn a_cycle_with_no_pause_leaves_the_stamps_it_captured_alone() {
     let space = Space::new();
     let a = &space.device;

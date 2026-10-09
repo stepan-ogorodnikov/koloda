@@ -22,7 +22,8 @@ A device's bearer token lives in the host's secret store under `sync.token.<devi
   cycle again on a restored epoch.
 - `src/cycle.rs` — the cycle: the device record and the behind check, re-bootstrap when the server left the file
   behind, held writes released once the space has room, push, `hot` to head, `cold` to the recorded head, a lane held
-  at an envelope this app cannot read, the skew pause, and repair after catch-up.
+  at an envelope this app cannot read, the skew pause, a push refused as ahead (re-stamped once, then waiting for
+  server time), and repair after catch-up.
 - `src/push.rs` — pushing the outbox in batches and handing each reply, loss, or refusal to `koloda`; heal and
   backfill top the outbox up before each batch.
 - `src/restore.rs` — a server restore the server reported: heal starts the re-push scan; an authoritative restore is
@@ -37,7 +38,8 @@ A device's bearer token lives in the host's secret store under `sync.token.<devi
   that start a cycle, held back while one runs.
 - `src/status.rs` — the state the host shows, why the last cycle stopped (an authoritative restore waiting for the
   host among the reasons), the lane held at an envelope this app cannot read, whether the space is over its quota,
-  whether bulk transfers wait on a metered network, and how far behind each lane is.
+  whether bulk transfers wait on a metered network, when a push waiting for server time resumes, and how far behind
+  each lane is.
 - `src/devices.rs` — the device list, revoking another device, and detaching this file.
 - `src/metered.rs` — bulk transfers on a metered network: the network the host reports, the bootstrap and outbox
   checks, the allowance counted work spends, and the call that lifts the pause.

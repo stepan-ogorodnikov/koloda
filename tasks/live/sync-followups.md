@@ -107,7 +107,7 @@ The owner took every recommendation on 2026-10-09.
 
 ## Plan
 
-- [ ] 1. Stop resending a fixed cohort the server refuses as ahead
+- [x] 1. Stop resending a fixed cohort the server refuses as ahead
   Goal (per question 2):
   - After a push refused with `stamp_ahead`, the engine finds the `fixed` cohorts stamped more than
     `SKEW_TOLERANCE_MS` ahead of server time, which is local now plus the skew estimate.

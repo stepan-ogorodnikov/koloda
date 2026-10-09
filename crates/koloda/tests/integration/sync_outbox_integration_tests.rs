@@ -1,8 +1,9 @@
 use koloda::app::db::Database;
 use koloda::domain::decks::{UpdateDeckData, UpdateDeckValues};
 use koloda::repo::decks::{get_deck, update_deck};
-use koloda::repo::sync::outbox::{push_batch, release_held, settle_push};
+use koloda::repo::sync::outbox::{push_batch, push_lost, release_held, settle_push, unfix_unconsumed};
 use koloda_sync_proto::envelope::{Envelope, Header};
+use koloda_sync_proto::hlc::Hlc;
 use koloda_sync_proto::registry::Kind;
 use koloda_sync_proto::transport::{HeldReason, Outcome, PushOutcome};
 
@@ -156,6 +157,118 @@ fn a_row_left_in_flight_goes_out_first_and_fixes_its_cohort() {
         6,
         "nothing leaves the outbox"
     );
+}
+
+/// Sends the whole outbox and loses the reply, which fixes every cohort.
+fn lose_every_cohort(db: &Database) {
+    let batch = push_batch(db, 100, 1 << 20).expect("a batch is picked");
+    push_lost(db, &batch).expect("the loss is recorded");
+}
+
+/// The stamps of the fixture's cohorts, in seq order.
+fn cohort_hlcs(db: &Database) -> Vec<Hlc> {
+    db.with_conn(|conn| {
+        let hlcs = conn
+            .prepare(
+                r#"
+                SELECT c.hlc FROM sync_cohorts c
+                ORDER BY (SELECT MIN(sender_seq) FROM sync_outbox o WHERE o.commit_id = c.commit_id)
+                "#,
+            )?
+            .query_map([], |row| row.get::<_, i64>(0))?
+            .collect::<Result<Vec<_>, _>>()?;
+        Ok(hlcs)
+    })
+    .expect("cohorts read")
+    .into_iter()
+    .map(|hlc| Hlc::from_raw(u64::try_from(hlc).expect("stamps are positive")))
+    .collect()
+}
+
+/// How a case leaves the fixture's cohorts, and the record's `last_sender_seq` and the server's limit it unfixes with.
+type Unfix = fn(&Database, &[Commit]) -> (u64, Hlc);
+
+#[test]
+fn only_a_fixed_cohort_no_push_consumed_returns_to_local_above_the_limit() {
+    let cases: [(&str, Unfix, [&str; 3]); 5] = [
+        (
+            "every row above the record's seq and every stamp above the limit",
+            |db, _| {
+                lose_every_cohort(db);
+                (0, Hlc::from_raw(0))
+            },
+            ["local", "local", "local"],
+        ),
+        (
+            "a cohort with a row at the record's seq may have been consumed",
+            |db, commits| {
+                lose_every_cohort(db);
+                (commits[0].seqs[0], Hlc::from_raw(0))
+            },
+            ["fixed", "local", "local"],
+        ),
+        (
+            "a cohort with a consumed member keeps its stamp",
+            |db, commits| {
+                lose_every_cohort(db);
+                let seq = commits[2].seqs[0];
+                db.with_conn(|conn| {
+                    conn.execute(
+                        &format!(
+                            "UPDATE sync_cohorts SET has_consumed = 1 \
+                             WHERE commit_id = (SELECT commit_id FROM sync_outbox WHERE sender_seq = {seq})"
+                        ),
+                        [],
+                    )?;
+                    Ok(())
+                })
+                .expect("the member is marked consumed");
+                (0, Hlc::from_raw(0))
+            },
+            ["local", "local", "fixed"],
+        ),
+        (
+            "cohorts at or below the limit are not refused",
+            |db, _| {
+                lose_every_cohort(db);
+                (0, cohort_hlcs(db)[1])
+            },
+            ["fixed", "fixed", "local"],
+        ),
+        (
+            "cohorts sent for the first time are not fixed",
+            |db, _| {
+                push_batch(db, 100, 1 << 20).expect("a batch is picked");
+                (0, Hlc::from_raw(0))
+            },
+            ["uncertain", "uncertain", "uncertain"],
+        ),
+    ];
+
+    for (name, arrange, states) in cases {
+        let (db, commits) = three_commits();
+        let (last_sender_seq, ahead_of) = arrange(&db, &commits);
+
+        let unfixed = unfix_unconsumed(&db, last_sender_seq, ahead_of).expect("cohorts settle");
+
+        assert_eq!(cohort_states(&db), states, "{name}");
+        assert_eq!(
+            unfixed,
+            states.iter().filter(|state| **state == "local").count(),
+            "{name}: the count of cohorts returned"
+        );
+        let in_flight_seqs: Vec<u64> = commits
+            .iter()
+            .zip(states)
+            .filter(|(_, state)| *state != "local")
+            .flat_map(|(commit, _)| commit.seqs.clone())
+            .collect();
+        assert_eq!(
+            in_flight(&db),
+            in_flight_seqs,
+            "{name}: a returned cohort's rows leave flight"
+        );
+    }
 }
 
 /// Pushes the whole outbox and settles every row with the outcome `held` picks for its header.
