@@ -1,6 +1,6 @@
 # Sync follow-ups and conformance gaps
 
-Status: ready
+Status: done
 
 ## Intent
 
@@ -223,4 +223,37 @@ The owner took every recommendation on 2026-10-09.
 
 ## Outcome
 
-<what shipped>
+- After a push refused with `stamp_ahead`, `unfix_unconsumed` (`outbox.rs`) returns to `local`, and takes out of
+  flight, every `fixed` cohort stamped above server time plus the tolerance with no consumed member and every row
+  above the round's record `last_sender_seq`; the cycle's one re-stamp then moves it.
+  A second refusal in the cycle holds pushing until server time, by the skew estimate, reaches the outbox's highest
+  stamp less the tolerance (`highest_pending_hlc`); pulls go on, and `Status.push_resumes_at_ms` shows when.
+  A second refusal that the outbox's stamps do not explain still stops the cycle with `PushRefused`.
+- `EnvelopeError::UnknownKey { part, key }` names a frame, header, or `refs` key this app lacks; apply holds it as
+  `UpdateRequired`.
+  A payload key it lacks stays corrupt.
+  The server still refuses such a push as `bad_request`.
+- `release_deferred_uploads` (`repo/sync/attachments.rs`) makes every upload a `507` deferred due at once with its
+  attempts reset; the cycle runs it beside `release_held` when the record shows room.
+- Space migration `V5__attachment_bytes.sql` adds `space.attachment_bytes`, filled from the current sum and kept by
+  insert and delete triggers on `attachments`; `usage` reads it.
+- SQLite's disk-full error, and an attachment write that fails with `StorageFull`, answer `507 insufficient_storage`
+  and consume nothing.
+  `Storage.max_space_pages` caps each space file (`PRAGMA max_page_count`), zero by default, for tests.
+- Tests cover algorithm repair racing a deck's template change.
+- `PROTOCOL.md` §Envelope encoding, §Skew guards, §Cohorts, §Quotas, §Corrupt envelopes, and §Upload, the three crate
+  READMEs touched, and `agents/RUST.md` describe the above.
+- Deviations from the plan text:
+  - Item 5's tests push new cards and reviews, not a deck delete; see the item's Deviation note.
+  - The `StorageFull` mapping for attachment writes has no test.
+  - `koloda` gained `ciborium` as a dev-dependency, so a holds test can write a header with an extra key.
+  - The engine test of item 3 replaced `an_upload_the_space_has_no_room_for_waits_without_failing_the_cycle`, which
+    faked a `507` while the record showed room; it now uses a real quota and covers both the wait and the release.
+- Follow-ups noticed, not fixed:
+  - When a push wait for server time ends, nothing starts a cycle; pushing resumes on the next poll, up to 5 minutes
+    later while the events socket is up.
+  - `events_tests::the_runner_polls_less_while_the_socket_is_up_and_cycles_when_it_drops` failed once under load:
+    after `nudge()`, `wait_for_sleep(POLL_LISTENING)` can return on the earlier sleep before the nudge's cycle runs.
+  - `@koloda/db-sqlite` `algorithms.integration.test.ts` failed once in CI with an unhandled rejection from the
+    wa-sqlite `IDBBatchAtomicVFS.purge` timer after close.
+- Manual verify: none — nothing user-visible until the NAPI commands and the desktop UI land.
