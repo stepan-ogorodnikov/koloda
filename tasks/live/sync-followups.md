@@ -1,6 +1,6 @@
 # Sync follow-ups and conformance gaps
 
-Status: draft
+Status: ready
 
 ## Intent
 
@@ -58,59 +58,57 @@ Out:
 
 ## Open questions
 
-- [ ] 1. Area guides? — open
-  Recommended: as for `sync-holds`.
+The owner took every recommendation on 2026-10-09.
+
+- [x] 1. Area guides?
+  Answer: as for `sync-holds`.
   That is `agents/TASKS.md`, `agents/IMPLEMENTATION-PLAN.md`, `agents/MARKDOWN.md`, `agents/CODE-DOCUMENTATION.md`,
   `agents/CODE-STYLE.md`, `agents/TESTING.md`, `agents/RUST.md`, `agents/DB.md` (item 4 adds a space migration),
   and `agents/REVIEW.md` for self-review.
   Also `crates/koloda/README.md`, `crates/koloda-sync/README.md`, `crates/koloda-server/README.md`,
   `crates/koloda-sync-proto/PROTOCOL.md` and its README, and `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md`.
-- [ ] 2. What happens to a `fixed` cohort a push refuses with `stamp_ahead`? — open
+- [x] 2. What happens to a `fixed` cohort a push refuses with `stamp_ahead`?
   A cohort is `fixed` in two cases.
   A push carrying it got no complete reply, so a member may have been consumed.
   Or a member is known consumed (`has_consumed`): a switch remainder, a released hold, or a heal re-push.
   Re-stamp walks only `local` cohorts, so today neither case ever changes stamp, and both are refused every cycle.
-  - Recommended, A: re-stamp the ones never consumed, and let the others wait.
-    - A cohort with no consumed member, every member's seq above the `last_sender_seq` of this round's device record,
-      returns to `local` and leaves flight.
-      The cycle's one re-stamp then takes it.
-      The record proves the server never consumed those seqs.
-      A late copy of the lost push is refused `stamp_ahead` too, or, once acceptable, meets the re-stamped push as
-      `seq_reused`, which forks as today.
-    - A cohort with a consumed member keeps its stamp.
-      Pushing waits until server time reaches the stamp minus the tolerance.
-      Pulls go on, and the status shows when pushing resumes.
-      Only a server clock set back makes such a stamp ahead.
-  - B: every `fixed` cohort waits.
-    Simplest, but a clock that was hours ahead when the reply was lost blocks pushing for hours.
-  - C: A's re-stamp only.
-    A cohort with a consumed member stays refused every cycle, and the cycle keeps ending before its pull.
-- [ ] 3. Does the attachment total move by trigger or in code? — open
+  Answer: re-stamp the ones never consumed, and let the others wait.
+  - A cohort with no consumed member, every member's seq above the `last_sender_seq` of this round's device record,
+    returns to `local` and leaves flight.
+    The cycle's one re-stamp then takes it.
+    The record proves the server never consumed those seqs.
+    A late copy of the lost push is refused `stamp_ahead` too, or, once acceptable, meets the re-stamped push as
+    `seq_reused`, which forks as today.
+  - A cohort with a consumed member keeps its stamp.
+    Pushing waits until server time reaches the stamp minus the tolerance.
+    Pulls go on, and the status shows when pushing resumes.
+    Only a server clock set back makes such a stamp ahead.
+  The alternatives were that every `fixed` cohort waits, which blocks pushing for as long as the clock was ahead, or
+  the re-stamp alone, which leaves a cohort with a consumed member refused every cycle.
+- [x] 3. Does the attachment total move by trigger or in code?
   Three places insert or delete `attachments` rows: upload, collection, and the backup dropping a row whose file a
   collection removed meanwhile.
-  - Recommended: two SQLite triggers on `attachments`, created by the migration.
-    No writer can miss the total, and the backup's `VACUUM INTO` copy carries the triggers.
-    The proposal's rejection of triggers is about client capture, which needs app-level meaning; a sum needs none.
-  - Alternative: adjust the total in each writer's transaction.
-    That matches the server's code today, which has no triggers, but a future writer must remember it.
-- [ ] 4. How is "client and server ENOSPC during a 20M-review deck delete" covered? — open
+  Answer: two SQLite triggers on `attachments`, created by the migration.
+  No writer can miss the total, and the backup's `VACUUM INTO` copy carries the triggers.
+  The proposal's rejection of triggers is about client capture, which needs app-level meaning; a sum needs none.
+  The alternative adjusts the total in each writer's transaction, which a future writer must remember.
+- [x] 4. How is "client and server ENOSPC during a 20M-review deck delete" covered?
   The server's reserve watermark already refuses every push below 64 MiB free, and that is tested.
   A delete above the reserve that outgrows the disk mid-transaction rolls back and answers `500 internal` today.
-  - Recommended, A: the server half, scaled down.
-    SQLite's disk-full error, and an attachment write that fails for lack of space, answer `507 insufficient_storage`.
-    `Storage` gains a cap on each space file's pages (`PRAGMA max_page_count`), off by default with no `serve` flag.
+  Answer: the server half, scaled down.
+  - SQLite's disk-full error, and an attachment write that fails for lack of space, answer
+    `507 insufficient_storage`.
+  - `Storage` gains a cap on each space file's pages (`PRAGMA max_page_count`), off by default with no `serve` flag.
     Tests use the cap to fill a space.
-    The client half stays out.
+  - The client half stays out.
     A full disk on a device fails the write in SQLite's WAL, which a page cap does not imitate.
     Capture is in the same transaction as the delete, so the rollback takes both.
-  - B: both halves, with the client test capping the device database's pages too.
-    It passes for the wrong reason: the cap trips the main file where a real device trips the WAL.
-  - C: neither; strike the scenario as covered by the watermark test and SQLite's atomicity.
+  The alternatives were both halves, where the client test passes for the wrong reason, or neither.
 
 ## Plan
 
 - [ ] 1. Stop resending a fixed cohort the server refuses as ahead
-  Goal (per question 2, answer A):
+  Goal (per question 2):
   - After a push refused with `stamp_ahead`, the engine finds the `fixed` cohorts stamped more than
     `SKEW_TOLERANCE_MS` ahead of server time, which is local now plus the skew estimate.
   - A cohort with no consumed member, whose every pending row's seq is above this round's record
@@ -135,10 +133,7 @@ Out:
   - an engine test: a cohort with a consumed member, stamped ahead of a server clock set back, waits with the status
     showing when, keeps pulling, and lands at its old stamp once server time allows;
   - `bun run check:push` green.
-  Commit:
-  a. Stop resending a fixed cohort the server refuses as ahead
-  b. Re-stamp a lost push refused as ahead and wait out a consumed one
-  c. Keep pulling while a fixed cohort waits for server time
+  Commit: Stop resending a fixed cohort the server refuses as ahead
   Depends on: none
 
 - [ ] 2. Hold a header with an unknown key as needing an update
@@ -158,9 +153,7 @@ Out:
   - a `koloda` holds test: a `hot` entry whose header has an unknown key holds with `UpdateRequired`, and a snapshot
     page stops at it;
   - `bun run check:push` green.
-  Commit:
-  a. Hold a header with an unknown key as needing an update
-  b. Report unknown envelope keys as update_required, not corrupt
+  Commit: Hold a header with an unknown key as needing an update
   Depends on: none
 
 - [ ] 3. Retry deferred uploads as soon as the space has room
@@ -177,9 +170,7 @@ Out:
   - an engine test: an upload refused for room goes up in the first cycle after the quota is raised, with no clock
     advance;
   - `bun run check:push` green.
-  Commit:
-  a. Retry deferred uploads as soon as the space has room
-  b. Release uploads a full space deferred along with its held writes
+  Commit: Retry deferred uploads as soon as the space has room
   Depends on: none
 
 - [ ] 4. Keep a running total of each space's attachment bytes
@@ -195,13 +186,11 @@ Out:
     backup copy that dropped a row;
   - an existing quota test still holds a write once uploads pass the quota;
   - `bun run check:push` green.
-  Commit:
-  a. Keep a running total of each space's attachment bytes
-  b. Read a space's attachment bytes from a stored total
+  Commit: Keep a running total of each space's attachment bytes
   Depends on: none
 
 - [ ] 5. Answer a server out of disk with 507
-  Goal (per question 4, answer A):
+  Goal (per question 4):
   - SQLite's disk-full error, and an attachment file write that fails for lack of space, answer
     `507 insufficient_storage` instead of `500 internal`.
   - A push that runs out of disk mid-transaction consumes nothing, as any refused push.
@@ -215,9 +204,7 @@ Out:
     fences unchanged; with the cap lifted the same push applies;
   - an engine test: the device keeps the delete pending through the refusal and lands it once the cap lifts;
   - `bun run check:push` green.
-  Commit:
-  a. Answer a server out of disk with 507
-  b. Refuse a push that runs out of disk as insufficient storage
+  Commit: Answer a server out of disk with 507
   Depends on: none
 
 - [ ] 6. Test algorithm repair racing a deck's template change
@@ -227,9 +214,7 @@ Out:
   - Both replicas end with the successor and B's template.
   Constraints: test only, in `sync_repair_integration_tests.rs`.
   Done when: the test passes; `bun run check:push` green.
-  Commit:
-  a. Test algorithm repair racing a deck's template change
-  Only one honest message.
+  Commit: Test algorithm repair racing a deck's template change
   Depends on: none
 
 ## Outcome
