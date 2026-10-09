@@ -28,7 +28,8 @@ A pending claim or creation keeps its nonce in `koloda`'s `sync_enrolling`, writ
   recorded head, a lane held at an envelope this app cannot read, the skew pause, a push refused as ahead
   (re-stamped once, then waiting for server time), and repair after catch-up.
 - `src/push.rs` — pushing the outbox in batches and handing each reply, loss, or refusal to `koloda`; heal and
-  backfill top the outbox up before each batch.
+  backfill top the outbox up before each batch, and a reply that moves skew past the tolerance stops the push once it
+  is settled.
 - `src/restore.rs` — a server restore the server reported: heal starts the re-push scan; an authoritative restore is
   held until the host calls `accept_restore`, which discards local data so the next cycle bootstraps.
 - `src/fork.rs` — a file behind its own record forks to a new device id: the pending token and nonce, stored before

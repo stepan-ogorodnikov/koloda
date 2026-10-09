@@ -294,7 +294,7 @@ The owner took every recommendation on 2026-10-09.
   Commit: Recheck an upload's room under the writer lock
   Depends on: none
 
-- [ ] 8. Stop a push once a reply puts skew past the tolerance
+- [x] 8. Stop a push once a reply puts skew past the tolerance
   Goal (per question 5):
   - After each push reply, the push loop settles it, then checks skew before it sends the next batch.
     Past the tolerance it returns `ClockSkew`, and the cycle pauses the clock as for any skew stop.

@@ -4,6 +4,7 @@
 //! there; a skew pause by moving the server's clock.
 
 use std::collections::BTreeMap;
+use std::sync::Arc;
 
 use koloda::domain::cards::ResetCardProgressData;
 use koloda::repo::cards;
@@ -317,4 +318,72 @@ fn a_cycle_with_no_pause_leaves_the_stamps_it_captured_alone() {
         captured.device,
         DeviceId(*a.state().expect("enrolled").device_id.as_bytes())
     );
+}
+
+#[test]
+fn a_push_stops_before_its_next_batch_once_a_reply_moves_skew_past_the_tolerance() {
+    let space = Space::new();
+    let a = &space.device;
+    let library = a.library();
+    a.engine.sync_now().expect("A syncs");
+    // WHY: each card is its own cohort, near a tenth of the 4 MiB push cap, so 25 take three batches.
+    let text = "x".repeat(400 * 1024);
+    for _ in 0..25 {
+        a.add_card(&library.deck, &library.template, &text);
+    }
+    let clock = Arc::clone(&space.server.clock);
+    let mut seen = 0;
+    a.transport.observe(move |request| {
+        if request.method == Method::Post && request.url.ends_with("/push") {
+            seen += 1;
+            // WHY: ahead, not behind, so the server still accepts the batch it answers.
+            if seen == 2 {
+                clock.set_offset(10 * 60 * 1000);
+            }
+        }
+    });
+    let before = pushes(a);
+
+    let paused = a.engine.sync_now();
+
+    assert!(matches!(paused, Err(SyncError::ClockSkew { .. })), "{paused:?}");
+    assert_eq!(pushes(a) - before, 2, "no third batch");
+    let waiting: BTreeMap<String, Stamp> = a
+        .outbox()
+        .into_iter()
+        .map(|row| {
+            assert!(
+                !row.in_flight,
+                "the second batch is settled and the rest was never sent"
+            );
+            (row.envelope.header.id, row.envelope.header.stamp)
+        })
+        .collect();
+    assert!(!waiting.is_empty(), "cards wait for the clock");
+    assert_eq!(a.cohort_states().iter().filter(|state| *state != "local").count(), 0);
+
+    space.server.clock.set_offset(0);
+    a.engine.sync_now().expect("the corrected clock syncs");
+
+    assert!(a.outbox().is_empty(), "the rest lands");
+    let sender = *a.state().expect("enrolled").device_id.as_bytes();
+    let mut landed = BTreeMap::new();
+    let mut after = 0;
+    loop {
+        let page = space.raw_pull(Lane::Hot, after);
+        for entry in page.entries.iter().filter(|entry| entry.sender == sender) {
+            let header = Envelope::decode(&entry.envelope).expect("entry decodes").header;
+            if waiting.contains_key(&header.id) {
+                landed.insert(header.id, header.stamp);
+            }
+        }
+        if !page.has_more {
+            break;
+        }
+        after = page.scanned_through;
+    }
+    assert_eq!(landed.len(), waiting.len(), "every waiting card lands");
+    for (id, stamp) in &landed {
+        assert!(*stamp > waiting[id], "{id} takes a new stamp");
+    }
 }

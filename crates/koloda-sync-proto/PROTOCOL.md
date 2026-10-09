@@ -601,6 +601,9 @@ The clock therefore only goes back over stamps that `local` cohorts alone held.
   The pause is recorded where the cycle stops, and the record outlives a relaunch.
   The first cycle whose reply shows a skew inside the tolerance re-stamps every `local` cohort (§Cohorts) before it
   pushes or applies anything, and clears the record.
+- A push checks the skew after every reply.
+  The batch whose reply moved it past the tolerance is settled, since its outcomes are the server's.
+  No further batch goes out; the cohorts not yet sent stay `local` and take new stamps after the pause.
 - The server rejects an envelope whose wall part is more than 5 minutes ahead of **server now**.
   The whole push then fails with `stamp_ahead` and consumes nothing, so its `uncertain` cohorts return to `local`.
   So does a `fixed` cohort above the limit that no push consumed, as after a lost reply.

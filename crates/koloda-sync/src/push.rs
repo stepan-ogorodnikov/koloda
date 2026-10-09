@@ -56,8 +56,8 @@ impl Shared {
         Ok(())
     }
 
-    /// Sends batches until the outbox is empty and backfill is done, a reply stops the push, or no reply consumes
-    /// one.
+    /// Sends batches until the outbox is empty and backfill is done, a reply stops the push or moves skew past the
+    /// tolerance, or no reply consumes one.
     pub(crate) async fn push(self: &Arc<Self>, session: &Session, changed: &mut Vec<Kind>) -> Result<(), SyncError> {
         loop {
             self.top_up().await?;
@@ -123,6 +123,10 @@ impl Shared {
             if settled.is_behind {
                 return Err(SyncError::Behind);
             }
+            // INVARIANT: a reply that moved skew past the tolerance is settled first, since its outcomes do not depend
+            // on this clock; the cohorts not yet in a batch stay `local` and take new stamps once the clock is right
+            // (PROTOCOL.md, Skew guards).
+            self.check_skew()?;
         }
     }
 }
