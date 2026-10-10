@@ -1,11 +1,15 @@
+use std::sync::Arc;
+
 use koloda::app::secrets::SecretStore;
 use koloda::repo::sync::join::JoinMode;
 use koloda_sync::error::SyncError;
+use koloda_sync::runner::Event;
 use koloda_sync::transport::Method;
 use koloda_sync_proto::transport::Platform;
 
 use crate::common::{Device, TestServer, SERVER_URL};
 use crate::fixtures::{seed_settings, Library};
+use crate::runner_support::{channel_sink, wait_for, ManualTimer, POLL};
 
 /// A creator with a library and a blank joiner that joined by code, both synced.
 fn two_devices(server: &TestServer) -> (Device, Device, Library) {
@@ -125,7 +129,7 @@ fn detach_leaves_a_file_that_pairs_again_whatever_its_token_state() {
         (
             "a secret store that fails the delete",
             |b| b.secrets.refuse_next("sync.token."),
-            false,
+            true,
             1,
         ),
         (
@@ -179,6 +183,11 @@ fn detach_leaves_a_file_that_pairs_again_whatever_its_token_state() {
             .expect("B re-attaches");
         assert_eq!(joined.mode, JoinMode::Reattach, "{name}");
         assert_ne!(id(&b), old, "{name}: a new device id");
+        assert_eq!(
+            b.secrets.keys(),
+            vec![format!("sync.token.{}", id(&b))],
+            "{name}: only the new device's token is kept"
+        );
         b.update_deck(&library.deck, "Back", &library.algorithm, &library.template);
         b.engine.sync_now().expect("B syncs");
         a.engine.sync_now().expect("A syncs");
@@ -188,4 +197,29 @@ fn detach_leaves_a_file_that_pairs_again_whatever_its_token_state() {
             "{name}: B's write reaches A"
         );
     }
+}
+
+#[test]
+fn a_token_delete_that_fails_after_the_detach_is_reported_and_the_detach_succeeds() {
+    let server = TestServer::new();
+    let (_, b, _) = two_devices(&server);
+    let (sink, events) = channel_sink();
+    let timer = ManualTimer::default();
+    b.engine
+        .start_runner(sink, Arc::new(timer.clone()))
+        .expect("the runner starts");
+    timer.wait_for_sleep(POLL);
+    b.secrets.refuse_next("sync.token.");
+
+    b.engine.detach().expect("the detach succeeds");
+
+    wait_for(
+        &events,
+        |event| matches!(event, Event::Error(text) if text.contains("the secret store refused")),
+    );
+    assert_eq!(
+        b.count("SELECT detached_at IS NOT NULL FROM sync_state"),
+        1,
+        "the file is detached"
+    );
 }

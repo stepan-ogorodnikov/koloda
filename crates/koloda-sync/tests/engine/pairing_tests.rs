@@ -432,6 +432,31 @@ fn a_blank_join_stopped_before_it_enrolls_joins_as_blank_on_the_same_device_next
 }
 
 #[test]
+fn a_join_whose_pending_token_delete_fails_still_joins() {
+    let space = Space::new();
+    let issued = issue(&space, None);
+    let b = space.server.device();
+    // WHY: a claim the file never recorded keeps its pending token, so the refusal meets only its delete.
+    for _ in 0..4 {
+        b.transport.fault_on("/pairings/claim", Fault::LoseReply);
+    }
+    assert!(join(&b, &issued.code).is_err(), "the first join loses every reply");
+    b.secrets.refuse_next("sync.pending_token.");
+
+    let joined = join(&b, &issued.code).expect("the join succeeds");
+
+    assert_eq!(joined.mode, JoinMode::Blank);
+    assert!(
+        b.secrets
+            .keys()
+            .iter()
+            .any(|key| key.starts_with("sync.pending_token.")),
+        "the delete failed"
+    );
+    b.engine.sync_now().expect("B syncs");
+}
+
+#[test]
 fn a_claim_refused_as_failed_leaves_nothing_pending() {
     let space = Space::new();
     let issued = issue(&space, None);

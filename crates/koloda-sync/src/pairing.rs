@@ -255,7 +255,9 @@ impl Shared {
             )
         })
         .await?;
-        self.finish_enrolling(credentials.nonce).await?;
+        self.finish_enrolling(credentials.nonce).await;
+        // WHY: a detach whose token delete failed left the old device's token behind.
+        self.forget_secrets(vec![token_key(old)]).await;
         Ok(Joined {
             mode: JoinMode::Reattach,
             hint: claim.hint,
@@ -386,7 +388,7 @@ impl Shared {
                 })
             })
             .await?;
-            self.finish_enrolling(credentials.nonce).await?;
+            self.finish_enrolling(credentials.nonce).await;
             return Ok(Joined {
                 mode,
                 hint: claim.hint,
@@ -396,7 +398,7 @@ impl Shared {
 
         self.blocking(move |shared| begin_import(&shared.db, device, space, epoch, &base))
             .await?;
-        self.finish_enrolling(credentials.nonce).await?;
+        self.finish_enrolling(credentials.nonce).await;
         let known = self.probe(&session).await?;
         let known_ids = known.len();
         // WHY: only the untouched seed joins without asking; Add's seed rules are the only change it needs.

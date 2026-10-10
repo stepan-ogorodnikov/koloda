@@ -311,13 +311,14 @@ The owner took every recommendation on 2026-10-09.
   Commit: Refuse a join while the file is attached to another space
   Depends on: none
 
-- [ ] 9. Report a failed secret delete after a commit without failing the call
+- [x] 9. Report a failed secret delete after a commit without failing the call
   Goal (F2, per question 8):
   - `detach_locally`: once `detach` has committed, a failed delete of the token emits `Event::Error` and returns
     `Ok`.
   - Every caller of `finish_enrolling`: once the enrollment has committed, a failed delete of
     `sync.pending_token.{nonce}` emits `Event::Error`, and the call succeeds.
   - `reattach`: after `switch_device` commits, it deletes `token_key(old)` as well, best effort.
+  - Implementation: one `forget_secrets` does every such delete, and a fork's deletes after its switch use it too.
   - The engine README and the Detach note in `agents/RUST.md` state the rules.
   Constraints:
   - A secret operation before a commit still fails its call.

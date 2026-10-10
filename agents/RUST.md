@@ -163,6 +163,7 @@ host accepts it.
 capture keeps recording for a later re-attach.
 
 - The engine records the detach before it deletes the token, so a failed delete still leaves the file detached.
+  That delete emits `Event::Error` and the detach succeeds; a re-attach removes the token it left.
 
 **Backfill** — `enroll_device` reserves one stamp per backfill phase.
 `backfill_batch` scans rows written before enrollment into the outbox, capped by envelopes and by bytes.

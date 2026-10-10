@@ -605,7 +605,8 @@ impl Shared {
             )
         })
         .await?;
-        self.finish_enrolling(credentials.nonce).await
+        self.finish_enrolling(credentials.nonce).await;
+        Ok(())
     }
 
     /// The claim or creation this file sent and has not recorded, with its token. `None` when there is none, or its
@@ -644,9 +645,20 @@ impl Shared {
     }
 
     /// Removes the pending token once the transaction that records the enrollment has cleared its row.
-    pub(crate) async fn finish_enrolling(self: &Arc<Self>, nonce: [u8; 16]) -> Result<(), SyncError> {
-        self.blocking(move |shared| shared.secrets.remove(&pending_token_key(&nonce)))
-            .await
+    pub(crate) async fn finish_enrolling(self: &Arc<Self>, nonce: [u8; 16]) {
+        self.forget_secrets(vec![pending_token_key(&nonce)]).await;
+    }
+
+    /// Removes secrets a committed change left unused, each on its own.
+    ///
+    /// INVARIANT: a failed removal is reported as an error event and never fails the call. The file already records
+    /// the change, so an error would report a detach that did detach, or a join that did join, as failed.
+    pub(crate) async fn forget_secrets(self: &Arc<Self>, keys: Vec<String>) {
+        for key in keys {
+            if let Err(error) = self.blocking(move |shared| shared.secrets.remove(&key)).await {
+                self.emit(Event::Error(error.to_string()));
+            }
+        }
     }
 }
 

@@ -51,14 +51,8 @@ impl Shared {
             .await?;
         merge(changed, settled);
 
-        let old = session.device;
-        let pending = pending_token_key(&nonce);
-        self.blocking(move |shared| {
-            shared.secrets.remove(&token_key(old))?;
-            shared.secrets.remove(&pending)?;
-            Ok(())
-        })
-        .await?;
+        self.forget_secrets(vec![token_key(session.device), pending_token_key(&nonce)])
+            .await;
         session.device = device;
         session.token = token;
         Ok(())

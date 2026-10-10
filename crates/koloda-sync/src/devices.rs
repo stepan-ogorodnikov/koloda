@@ -110,11 +110,10 @@ impl Shared {
             .await?
             .ok_or(SyncError::NotEnrolled)?;
         // INVARIANT: the mark comes before the token goes, so a stop or a failed delete between them leaves a
-        // detached file that pairs again, never an attached one with no token.
-        self.blocking(move |shared| {
-            detach(&shared.db, get_current_timestamp()?)?;
-            shared.secrets.remove(&token_key(device))
-        })
-        .await
+        // detached file that pairs again, never an attached one with no token. A re-attach removes a token left.
+        self.blocking(move |shared| detach(&shared.db, get_current_timestamp()?))
+            .await?;
+        self.forget_secrets(vec![token_key(device)]).await;
+        Ok(())
     }
 }

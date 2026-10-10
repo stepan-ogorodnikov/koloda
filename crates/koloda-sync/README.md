@@ -17,6 +17,8 @@ A device's bearer token lives in the host's secret store under `sync.token.<devi
 A fork's, a claim's, or a space creation's token waits under `sync.pending_token.<nonce>` until the file records the
 new device, and nowhere else.
 A pending claim or creation keeps its nonce in `koloda`'s `sync_enrolling`, written after the token.
+Once the file records an enrollment, a device switch, or a detach, it deletes the tokens that no longer apply.
+A delete that fails then emits `Event::Error` and the call succeeds; a re-attach also removes the old device's token.
 
 ## Architectural Map
 
