@@ -179,6 +179,12 @@ Settings → Sync shows, for a device in a space:
 
 A stopped sync shows why it stopped (§When sync stops).
 
+The title bar shows a sync indicator on every screen: syncing, up to date, or needs attention.
+Its tooltip gives the last sync, or why sync needs attention; clicking it opens Settings → Sync.
+Sync needs attention when it stopped, waits for the Add or Replace choice, holds at a change it cannot read, or the
+space is full.
+A device that never joined a space, left one, or was removed shows no indicator.
+
 "Sync now" syncs at once.
 Sync also runs by itself:
 

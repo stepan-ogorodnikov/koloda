@@ -424,6 +424,10 @@ msgstr "Колоды, карточки, прогресс, шаблоны и ал
 msgid "settings.sync.import.replace.recommended"
 msgstr "Заменить (рекомендуется)"
 
+#: ../../libs/settings-react/src/lib/sync/sync-indicator.tsx:34
+msgid "settings.sync.indicator.attention"
+msgstr "Синхронизации нужно ваше внимание. Откройте настройки синхронизации."
+
 #: ../../libs/settings-react/src/lib/sync/settings-sync-invite.tsx:27
 msgid "settings.sync.invite"
 msgstr "Пригласить устройство"
@@ -487,6 +491,7 @@ msgid "settings.sync.join.title"
 msgstr "Подключиться к пространству"
 
 #: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:43
+#: ../../libs/settings-react/src/lib/sync/sync-indicator.tsx:41
 msgid "settings.sync.last-sync {lastSync}"
 msgstr "Последняя синхронизация: {lastSync}"
 
@@ -549,10 +554,12 @@ msgid "settings.sync.space-name.label"
 msgstr "Название пространства"
 
 #: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:13
+#: ../../libs/settings-react/src/lib/sync/sync-indicator.tsx:38
 msgid "settings.sync.state.bootstrapping"
 msgstr "Загрузка пространства"
 
 #: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:14
+#: ../../libs/settings-react/src/lib/sync/sync-indicator.tsx:40
 msgid "settings.sync.state.idle"
 msgstr "Всё синхронизировано"
 
@@ -569,6 +576,7 @@ msgid "settings.sync.state.stopped"
 msgstr "Синхронизация остановлена"
 
 #: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:15
+#: ../../libs/settings-react/src/lib/sync/sync-indicator.tsx:36
 msgid "settings.sync.state.syncing"
 msgstr "Синхронизация"
 

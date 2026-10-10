@@ -424,6 +424,10 @@ msgstr "This device's decks, cards, progress, templates, and algorithms will be 
 msgid "settings.sync.import.replace.recommended"
 msgstr "Replace (recommended)"
 
+#: ../../libs/settings-react/src/lib/sync/sync-indicator.tsx:34
+msgid "settings.sync.indicator.attention"
+msgstr "Sync needs your attention. Open Sync settings."
+
 #: ../../libs/settings-react/src/lib/sync/settings-sync-invite.tsx:27
 msgid "settings.sync.invite"
 msgstr "Invite a device"
@@ -487,6 +491,7 @@ msgid "settings.sync.join.title"
 msgstr "Join a space"
 
 #: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:43
+#: ../../libs/settings-react/src/lib/sync/sync-indicator.tsx:41
 msgid "settings.sync.last-sync {lastSync}"
 msgstr "Last synced {lastSync}"
 
@@ -549,10 +554,12 @@ msgid "settings.sync.space-name.label"
 msgstr "Space name"
 
 #: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:13
+#: ../../libs/settings-react/src/lib/sync/sync-indicator.tsx:38
 msgid "settings.sync.state.bootstrapping"
 msgstr "Downloading the space"
 
 #: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:14
+#: ../../libs/settings-react/src/lib/sync/sync-indicator.tsx:40
 msgid "settings.sync.state.idle"
 msgstr "Up to date"
 
@@ -569,6 +576,7 @@ msgid "settings.sync.state.stopped"
 msgstr "Sync stopped"
 
 #: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:15
+#: ../../libs/settings-react/src/lib/sync/sync-indicator.tsx:36
 msgid "settings.sync.state.syncing"
 msgstr "Syncing"
 

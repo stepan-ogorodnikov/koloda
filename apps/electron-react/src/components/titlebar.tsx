@@ -4,7 +4,11 @@ import {
   WINDOW_SET_TITLE_BAR_OVERLAY_CHANNEL,
   WINDOW_SET_WINDOW_BUTTON_POSITION_CHANNEL,
 } from "@koloda/native-ipc";
+import { syncQueriesAtom } from "@koloda/core-react";
+import { SyncIndicator } from "@koloda/settings-react";
 import { Titlebar as TitlebarContent } from "@koloda/ui";
+import { useNavigate } from "@tanstack/react-router";
+import { useAtomValue } from "jotai";
 import { useEffect, useRef } from "react";
 
 type TitlebarOverlayOptions = {
@@ -34,6 +38,8 @@ const titlebar = [
 ].join(" ");
 
 export function Titlebar() {
+  const sync = useAtomValue(syncQueriesAtom);
+  const navigate = useNavigate();
   const titlebarRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<TitlebarOverlayOptions | undefined>(undefined);
   const windowButtonPositionRef = useRef<WindowButtonPositionOptions | undefined>(undefined);
@@ -138,6 +144,11 @@ export function Titlebar() {
     >
       <div className={titlebarContent}>
         <TitlebarContent />
+        {sync && (
+          <div className="relative z-100 pr-3 [-webkit-app-region:no-drag]">
+            <SyncIndicator sync={sync} onOpen={() => navigate({ to: "/settings/sync" })} />
+          </div>
+        )}
       </div>
     </div>
   );

@@ -5,5 +5,6 @@ export { SettingsAi } from "./lib/settings-ai";
 export { SettingsAIAddProfile } from "./lib/settings-ai-add-profile";
 export { SettingsSync } from "./lib/sync/settings-sync";
 export { SyncFirstRunJoin } from "./lib/sync/sync-first-run-join";
+export { SyncIndicator } from "./lib/sync/sync-indicator";
 export { ColorSchemePicker } from "./lib/interface-controls/color-scheme-picker";
 export { LanguagePicker } from "./lib/interface-controls/language-picker";

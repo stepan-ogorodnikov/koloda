@@ -357,13 +357,19 @@ The owner took every recommendation on 2026-10-10, except question 5: no e2e tes
   Commit: Explain why sync stopped
   Depends on: 5
 
-- [ ] 8. Show sync in the title bar
+- [x] 8. Show sync in the title bar
   Goal (per question 7):
   - While the file is in a space, `titlebar.tsx` shows a sync indicator: syncing, idle, or stopped.
   - Its tooltip gives the last sync, or the stop's short message.
   - Clicking it opens Settings → Sync.
   - A file in no space shows nothing.
   - `SYNC.md` §Status names the indicator.
+  - Implementation:
+    - the indicator is `SyncIndicator` in `settings-react`, where component tests run; `titlebar.tsx` places it and
+      opens the route;
+    - it shows for every state but a device that never joined or that left or was removed by another device;
+      a restore or an unknown device needs a new join, so it shows as needing attention;
+    - attention also covers the Add or Replace choice, a held lane, and a full space.
   Done when:
   - component tests: each state, and nothing for a file in no space;
   - Manual verify: a file in a space → the title bar shows the indicator → click → Settings → Sync opens;
