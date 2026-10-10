@@ -2,7 +2,7 @@
 //! its stored stamp (`crates/koloda-sync-proto/PROTOCOL.md` §Server restore).
 //!
 //! A write is lacking when its `(sender, sender_seq)` is above that sender's cutoff; a sender with no cutoff counts as
-//! 0. The scan runs in bounded batches, like backfill, and resumes from its step and the last id it enqueued.
+//! 0. The scan runs in bounded batches, like backfill, and resumes from its step and the last id it scanned.
 
 use koloda_sync_proto::envelope::digest;
 use koloda_sync_proto::hlc::{DeviceId, Hlc, Stamp};
@@ -58,6 +58,10 @@ const STEPS: [Step; 11] = [
 
 const ABOVE_CUTOFF: &str =
     "x.sender_seq > COALESCE((SELECT c.last_seq FROM sync_heal_cutoffs c WHERE c.sender = x.sender), 0)";
+
+// INVARIANT: one call scans at most this many rows, whatever it finds, so a scan with nothing above the cutoff still
+// ends each call quickly and resumes from the last id it scanned.
+pub const SCAN_ROWS: usize = 10_000;
 
 impl Step {
     fn as_sql(self) -> String {
@@ -155,7 +159,8 @@ pub fn begin_heal(
     })
 }
 
-/// Enqueues the next batch of the heal scan: at most `max_envelopes`, and it stops once it holds `max_bytes`.
+/// Enqueues the next batch of the heal scan: at most `max_envelopes`, and it stops once it holds `max_bytes` or has
+/// scanned `SCAN_ROWS` rows. A batch that scanned rows and found nothing returns `Pending` with nothing enqueued.
 pub fn heal_batch(db: &Database, max_envelopes: usize, max_bytes: usize) -> Result<Heal, AppError> {
     throw_known_error(error_codes::DB_ADD, || {
         db.with_transaction(|tx| run_batch(tx, max_envelopes, max_bytes))
@@ -194,10 +199,24 @@ fn run_batch(conn: &Connection, max_envelopes: usize, max_bytes: usize) -> Resul
     let mut budget = max_envelopes;
     let mut bytes = 0;
     let mut has_written = false;
+    let mut scanned = 0;
     loop {
-        let ids = candidates(conn, step, after.as_deref(), max_envelopes)?;
-        let is_exhausted = ids.len() < max_envelopes;
-        for id in ids {
+        let window = candidates(conn, step, after.as_deref(), SCAN_ROWS - scanned)?;
+        let Some(last) = window.last else {
+            match step.next() {
+                Some(next) => {
+                    step = next;
+                    after = None;
+                    continue;
+                }
+                None => {
+                    writer.finish(None, None)?;
+                    conn.execute("DELETE FROM sync_heal_cutoffs", [])?;
+                    return Ok(Heal::Finished);
+                }
+            }
+        };
+        for id in window.ids {
             let writes = writes(conn, step, &id)?;
             // INVARIANT: a batch never splits one entity's writes. An entity larger than the whole budget still goes
             // alone, so every batch advances the scan.
@@ -214,43 +233,40 @@ fn run_batch(conn: &Connection, max_envelopes: usize, max_bytes: usize) -> Resul
                 return writer.finish(Some(step), after.as_ref());
             }
         }
-
-        if !is_exhausted {
-            continue;
-        }
-        match step.next() {
-            Some(next) => {
-                step = next;
-                after = None;
-            }
-            None => {
-                writer.finish(None, None)?;
-                conn.execute("DELETE FROM sync_heal_cutoffs", [])?;
-                return Ok(Heal::Finished);
-            }
+        after = Some(last);
+        scanned += window.rows;
+        if scanned >= SCAN_ROWS {
+            return writer.finish(Some(step), after.as_ref());
         }
     }
 }
 
-fn candidates(conn: &Connection, step: Step, after: Option<&str>, limit: usize) -> Result<Vec<String>, AppError> {
+/// The ids after `after`, in id order, that a step scanned: the ones with a write above its sender's cutoff, the
+/// last one scanned, and how many it scanned. A step ends once its window scans no row.
+struct Window {
+    ids: Vec<String>,
+    last: Option<String>,
+    rows: usize,
+}
+
+fn candidates(conn: &Connection, step: Step, after: Option<&str>, limit: usize) -> Result<Window, AppError> {
     let limit = i64::try_from(limit).map_err(protocol_error)?;
     let sql = match step {
         Step::Entities(kind) => {
             let (table, _) = table(kind);
             format!(
                 r#"
-                SELECT t.id FROM {table} AS t
+                SELECT t.id,
+                    EXISTS (
+                        SELECT 1 FROM sync_origins x
+                        WHERE x.kind = ?2 AND x.id = t.id AND x.group_name = '{CREATE_GROUP}' AND {ABOVE_CUTOFF}
+                    )
+                    OR EXISTS (
+                        SELECT 1 FROM sync_stamps x
+                        WHERE x.kind = ?2 AND x.id = t.id AND x.synthetic = 0 AND {ABOVE_CUTOFF}
+                    )
+                FROM {table} AS t
                 WHERE (?1 IS NULL OR t.id > ?1)
-                  AND (
-                      EXISTS (
-                          SELECT 1 FROM sync_origins x
-                          WHERE x.kind = ?2 AND x.id = t.id AND x.group_name = '{CREATE_GROUP}' AND {ABOVE_CUTOFF}
-                      )
-                      OR EXISTS (
-                          SELECT 1 FROM sync_stamps x
-                          WHERE x.kind = ?2 AND x.id = t.id AND x.synthetic = 0 AND {ABOVE_CUTOFF}
-                      )
-                  )
                 ORDER BY t.id
                 LIMIT ?3
                 "#
@@ -261,9 +277,13 @@ fn candidates(conn: &Connection, step: Step, after: Option<&str>, limit: usize) 
             let (table, _) = table(kind);
             format!(
                 r#"
-                SELECT t.id FROM {table} AS t
-                JOIN sync_origins x ON x.kind = ?2 AND x.id = t.id AND x.group_name = '{ROW_GROUP}'
-                WHERE (?1 IS NULL OR t.id > ?1) AND {ABOVE_CUTOFF}
+                SELECT t.id,
+                    EXISTS (
+                        SELECT 1 FROM sync_origins x
+                        WHERE x.kind = ?2 AND x.id = t.id AND x.group_name = '{ROW_GROUP}' AND {ABOVE_CUTOFF}
+                    )
+                FROM {table} AS t
+                WHERE (?1 IS NULL OR t.id > ?1)
                 ORDER BY t.id
                 LIMIT ?3
                 "#
@@ -271,26 +291,38 @@ fn candidates(conn: &Connection, step: Step, after: Option<&str>, limit: usize) 
         }
         Step::Learning => format!(
             r#"
-            SELECT DISTINCT x.id FROM sync_stamps x
-            WHERE (?1 IS NULL OR x.id > ?1) AND x.kind = ?2 AND x.synthetic = 0 AND {ABOVE_CUTOFF}
+            SELECT x.id, MAX(x.synthetic = 0 AND {ABOVE_CUTOFF}) FROM sync_stamps x
+            WHERE (?1 IS NULL OR x.id > ?1) AND x.kind = ?2
+            GROUP BY x.id
             ORDER BY x.id
             LIMIT ?3
             "#
         ),
         Step::Tombstones(_) => format!(
             r#"
-            SELECT x.id FROM sync_tombstones x
-            WHERE (?1 IS NULL OR x.id > ?1) AND x.kind = ?2 AND {ABOVE_CUTOFF}
+            SELECT x.id, {ABOVE_CUTOFF} FROM sync_tombstones x
+            WHERE (?1 IS NULL OR x.id > ?1) AND x.kind = ?2
             ORDER BY x.id
             LIMIT ?3
             "#
         ),
     };
-    let ids = conn
-        .prepare(&sql)?
-        .query_map(params![after, step_kind(step).as_wire(), limit], |row| row.get(0))?
-        .collect::<Result<Vec<String>, _>>()?;
-    Ok(ids)
+    let mut statement = conn.prepare(&sql)?;
+    let mut rows = statement.query(params![after, step_kind(step).as_wire(), limit])?;
+    let mut window = Window {
+        ids: Vec::new(),
+        last: None,
+        rows: 0,
+    };
+    while let Some(row) = rows.next()? {
+        let id: String = row.get(0)?;
+        if row.get(1)? {
+            window.ids.push(id.clone());
+        }
+        window.last = Some(id);
+        window.rows += 1;
+    }
+    Ok(window)
 }
 
 fn step_kind(step: Step) -> Kind {

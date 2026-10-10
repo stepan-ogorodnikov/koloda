@@ -215,7 +215,7 @@ The owner took every recommendation on 2026-10-09.
   Commit: Group the outbox into cohorts in SQL
   Depends on: 2
 
-- [ ] 4. Bound the rows a heal call scans
+- [x] 4. Bound the rows a heal call scans
   Goal (R12, per question 3):
   - `candidates` in `heal.rs` scans a window: at most a fixed number of rows after `after`, in id order.
     It returns the matches and the last id scanned.

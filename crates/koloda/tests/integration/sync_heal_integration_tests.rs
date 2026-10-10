@@ -10,7 +10,7 @@ use koloda::domain::settings::SettingsName;
 use koloda::repo::cards::{delete_card, update_card};
 use koloda::repo::lessons::submit_lesson_result;
 use koloda::repo::settings;
-use koloda::repo::sync::heal::{begin_heal, heal_batch, Heal};
+use koloda::repo::sync::heal::{begin_heal, heal_batch, Heal, SCAN_ROWS};
 use koloda::repo::sync::outbox::push_batch;
 use koloda::repo::sync::rebase::{begin_rebase, finish_rebase};
 use koloda::repo::sync::restamp::restamp_local_cohorts;
@@ -429,6 +429,65 @@ fn a_capped_batch_resumes_where_it_stopped() {
             + count(&batched, "SELECT COUNT(*) FROM sync_state WHERE heal_step IS NOT NULL"),
         0,
         "a finished scan clears its state"
+    );
+}
+
+#[test]
+fn a_scan_with_nothing_above_the_cutoff_stops_each_call_at_the_row_cap() {
+    let db = replica();
+    let own = device(&db);
+    let algorithm = add_algorithm(&db, "FSRS");
+    let template = add_template(&db, "Basic");
+    let deck = add_deck(&db, &algorithm, &template, "Spanish");
+    FakeSpace::default().push(&db);
+    // More cards than two calls may scan, each created at a seq the restored server holds.
+    db.with_conn(|conn| {
+        conn.execute(
+            r#"
+            WITH RECURSIVE n(i) AS (SELECT 1 UNION ALL SELECT i + 1 FROM n WHERE i < ?1)
+            INSERT INTO cards (id, deck_id, template_id, content, created_at)
+            SELECT printf('card-%06d', i), ?2, ?3, '{}', 0 FROM n
+            "#,
+            rusqlite::params![2 * SCAN_ROWS + 1, deck, template],
+        )?;
+        conn.execute(
+            r#"
+            INSERT INTO sync_origins (kind, id, group_name, hlc, stamp_device, sender, sender_seq)
+            SELECT 'cards', id, 'create', 1, ?1, ?1, 1 FROM cards WHERE id LIKE 'card-%'
+            "#,
+            [own.as_bytes().as_slice()],
+        )?;
+        Ok(())
+    })
+    .expect("cards seed");
+    heal(&db, &[(own, 1 << 40)]);
+
+    // How far into the cards each call left the scan.
+    let mut reached = Vec::new();
+    while heal_batch(&db, 500, usize::MAX).expect("heal batch runs") == Heal::Pending {
+        reached.push(count(
+            &db,
+            r#"
+            SELECT COUNT(*) FROM cards c JOIN sync_state s
+            WHERE s.heal_step = 'cards' AND c.id <= s.heal_after_id
+            "#,
+        ));
+        assert!(reached.len() <= 4, "the scan ends");
+    }
+
+    let cap = i64::try_from(SCAN_ROWS).expect("the cap fits");
+    assert!(reached.len() >= 2, "one call does not scan every card: {reached:?}");
+    let mut before = 0;
+    for after in reached {
+        assert!(after > before, "every call moves the scan on");
+        assert!(after - before <= cap, "no call scans more than the cap");
+        before = after;
+    }
+    assert!(outbox(&db).is_empty(), "nothing goes out again");
+    assert_eq!(
+        count(&db, "SELECT COUNT(*) FROM sync_state WHERE heal_step IS NOT NULL"),
+        0,
+        "the scan finishes"
     );
 }
 

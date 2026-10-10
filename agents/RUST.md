@@ -142,6 +142,7 @@ included. `finish_rebase` and `finish_bootstrap` remove what the finishing lease
 
 **Heal** — `begin_heal` stores a restore's cutoffs and restarts the scan; `heal_batch` enqueues the next batch.
 
+- One call scans at most `SCAN_ROWS` rows and resumes from the last id it scanned, so it may enqueue nothing.
 - A write is re-encoded from the row with its stored stamp: creates through each repo's `create_payload`, update
   groups from the row and the register's `product_ts`, tombstones from `sync_tombstones` (which keeps a card's deck).
 - A write of this device still waiting in the outbox moves to the tail with its cohort instead; one in flight is
