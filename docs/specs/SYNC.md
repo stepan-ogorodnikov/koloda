@@ -3,7 +3,7 @@
 ## Scope
 
 Covers keeping one person's data the same on their desktop devices through a sync server they run.
-That is spaces, devices, creating a space, and sync status.
+That is spaces, devices, creating a space, inviting a device, and sync status.
 How each kind of data behaves on its own is in its spec: CARDS.md, DECKS.md, TEMPLATES.md, ALGORITHMS.md,
 LEARNING-SETTINGS.md, and MEDIA.md.
 How two devices' edits to the same thing merge is the sync protocol's rule, not this spec's.
@@ -24,6 +24,7 @@ Changes made offline sync once the device can reach the server again.
 - **Space** — one person's synced data on a sync server; one server can keep several spaces
 - **Device** — one copy of the app's data in a space, named by the user
 - **Setup token** — the secret a sync server prints once when it is set up; creating a space needs it
+- **Pairing code** — a short code a device in a space issues, so that another device can join the space
 - **Status** — what sync is doing on this device now
 
 ### Relationships
@@ -61,6 +62,23 @@ If the server refuses, the form stays open with what the user entered and shows 
 - the address is not https and not on this computer;
 - the setup token is wrong;
 - the server cannot be reached.
+
+## Inviting a device
+
+A device in a space invites another one from Settings → Sync with "Invite a device".
+It shows a pairing code and the server's address; the other device enters both to join.
+Both have a copy button.
+
+A pairing code:
+
+- works once;
+- expires 10 minutes after it is issued;
+- ignores letter case and the dash it is shown with.
+
+The dialog counts down the time left.
+Once the code expires, the dialog says so and offers a new code.
+If no code can be issued, as when the server cannot be reached, the dialog shows why and offers to try again.
+Closing the dialog does not cancel the code; it still expires on its own.
 
 ## Status
 

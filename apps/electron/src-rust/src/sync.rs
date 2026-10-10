@@ -61,6 +61,14 @@ pub struct CreateSpaceWire {
     device_name: String,
 }
 
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PairingWire {
+    code: String,
+    expires_at: i64,
+    server_url: String,
+}
+
 pub struct SyncHost {
     db: Database,
     engine: OnceLock<Engine>,
@@ -110,6 +118,17 @@ impl SyncHost {
         engine.create_space(&data.server_url, &data.setup_token, &data.space_name, &data.device_name)?;
         self.start_runner()?;
         engine.status()
+    }
+
+    pub fn issue_pairing(&self) -> Result<PairingWire, SyncError> {
+        let engine = self.engine()?;
+        let issued = engine.issue_pairing(None)?;
+        Ok(PairingWire {
+            code: issued.code,
+            // WHY: the server stamps the expiry by its clock; the countdown runs on this one.
+            expires_at: i64::try_from(issued.expires_at).unwrap_or(i64::MAX) - engine.skew_ms(),
+            server_url: issued.server_url,
+        })
     }
 
     pub fn engine(&self) -> Result<&Engine, SyncError> {

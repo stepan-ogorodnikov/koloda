@@ -13,19 +13,19 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
-#: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:44
+#: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:46
 msgid "{fetches, plural, other {settings.sync.fetches}}"
 msgstr "{fetches, plural, one {# image waits to download} other {# images wait to download}}"
 
-#: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:37
+#: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:39
 msgid "{left, plural, other {settings.sync.download-left}}"
 msgstr "{left, plural, one {# change left to download} other {# changes left to download}}"
 
-#: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:42
+#: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:44
 msgid "{pending, plural, other {settings.sync.pending}}"
 msgstr "{pending, plural, one {# change waits to upload} other {# changes wait to upload}}"
 
-#: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:43
+#: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:45
 msgid "{uploads, plural, other {settings.sync.uploads}}"
 msgstr "{uploads, plural, one {# image waits to upload} other {# images wait to upload}}"
 
@@ -326,11 +326,48 @@ msgstr "Create a space"
 msgid "settings.sync.device-name.label"
 msgstr "This device's name"
 
-#: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:40
+#: ../../libs/settings-react/src/lib/sync/settings-sync-invite.tsx:27
+msgid "settings.sync.invite"
+msgstr "Invite a device"
+
+#: ../../libs/settings-react/src/lib/sync/settings-sync-invite.tsx:79
+msgid "settings.sync.invite.code"
+msgstr "Pairing code"
+
+#: ../../libs/settings-react/src/lib/sync/settings-sync-invite.tsx:81
+msgid "settings.sync.invite.copy-code"
+msgstr "Copy the pairing code"
+
+#: ../../libs/settings-react/src/lib/sync/settings-sync-invite.tsx:86
+msgid "settings.sync.invite.copy-server-url"
+msgstr "Copy the server address"
+
+#: ../../libs/settings-react/src/lib/sync/settings-sync-invite.tsx:65
+msgid "settings.sync.invite.expired"
+msgstr "This code has expired."
+
+#: ../../libs/settings-react/src/lib/sync/settings-sync-invite.tsx:88
+msgid "settings.sync.invite.expires-in {timeLeft}"
+msgstr "The code expires in {timeLeft}"
+
+#: ../../libs/settings-react/src/lib/sync/settings-sync-invite.tsx:77
+msgid "settings.sync.invite.message"
+msgstr "On the other device, open Settings → Sync, choose Join a space, and enter:"
+
+#: ../../libs/settings-react/src/lib/sync/settings-sync-invite.tsx:44
+#: ../../libs/settings-react/src/lib/sync/settings-sync-invite.tsx:67
+msgid "settings.sync.invite.new-code"
+msgstr "New code"
+
+#: ../../libs/settings-react/src/lib/sync/settings-sync-invite.tsx:32
+msgid "settings.sync.invite.title"
+msgstr "Invite a device"
+
+#: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:42
 msgid "settings.sync.last-sync {lastSync}"
 msgstr "Last synced {lastSync}"
 
-#: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:40
+#: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:42
 msgid "settings.sync.last-sync.none"
 msgstr "Not synced since the app started"
 
@@ -339,6 +376,7 @@ msgid "settings.sync.not-in-space"
 msgstr "This device doesn't sync. Create a space on your sync server, or join a space another device created."
 
 #: ../../libs/settings-react/src/lib/sync/settings-sync-create-space.tsx:60
+#: ../../libs/settings-react/src/lib/sync/settings-sync-invite.tsx:84
 msgid "settings.sync.server-url.label"
 msgstr "Server address"
 
@@ -350,30 +388,30 @@ msgstr "Setup token"
 msgid "settings.sync.space-name.label"
 msgstr "Space name"
 
-#: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:11
+#: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:12
 msgid "settings.sync.state.bootstrapping"
 msgstr "Downloading the space"
 
-#: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:12
+#: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:13
 msgid "settings.sync.state.idle"
 msgstr "Up to date"
 
-#: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:10
+#: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:11
 msgid "settings.sync.state.import-pending"
 msgstr "Waiting for your choice"
 
-#: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:9
+#: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:10
 msgid "settings.sync.state.not-enrolled"
 msgstr "Not syncing"
 
-#: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:14
+#: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:15
 msgid "settings.sync.state.stopped"
 msgstr "Sync stopped"
 
-#: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:13
+#: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:14
 msgid "settings.sync.state.syncing"
 msgstr "Syncing"
 
-#: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:32
+#: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:33
 msgid "settings.sync.sync-now"
 msgstr "Sync now"

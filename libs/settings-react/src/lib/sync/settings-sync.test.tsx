@@ -48,6 +48,7 @@ function syncQueries(createSpace: (data: CreateSpaceData) => Promise<SyncStatus>
     getStatusQuery: () => ({ queryKey: ["sync", "status"], queryFn: async () => status({ type: "idle" }) }),
     getDeviceNameQuery: () => ({ queryKey: ["sync", "device_name"], queryFn: async () => "laptop" }),
     createSpaceMutation: () => ({ mutationFn: createSpace }),
+    issuePairingMutation: () => ({ mutationFn: vi.fn() }),
     nudge: vi.fn(async () => {}),
   };
 }

@@ -226,13 +226,17 @@ The owner took every recommendation on 2026-10-10, except question 5: no e2e tes
   Commit: Create a sync space from Settings
   Depends on: 1
 
-- [ ] 3. Invite a device with a pairing code
+- [x] 3. Invite a device with a pairing code
   Goal:
   - "Invite a device" on a file in a space calls `cmd_sync_issue_pairing`.
   - The dialog shows the code, grouped for reading, the server URL, and the time left of the code's 10 minutes.
     Both have copy buttons.
   - An expired code shows as expired, with "New code".
   - `SYNC.md` §Inviting a device.
+  - Implementation:
+    - the addon turns the server's expiry into this device's clock by the engine's skew estimate;
+    - opening the dialog issues the code; a failed issue shows why, with "New code" to try again;
+    - the status view's "Sync now" now uses `onPress`, as other buttons do.
   Done when:
   - component tests: the countdown, expiry, and a new code;
   - Manual verify: Settings → Sync → Invite a device → a code with 10 minutes left; after they pass, it shows as

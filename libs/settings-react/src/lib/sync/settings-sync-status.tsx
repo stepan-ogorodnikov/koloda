@@ -4,6 +4,7 @@ import type { SyncQueries } from "@koloda/core-react";
 import { Button } from "@koloda/ui";
 import { msg, plural } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
+import { SettingsSyncInvite } from "./settings-sync-invite";
 
 const STATE_LABELS = {
   notEnrolled: msg`settings.sync.state.not-enrolled`,
@@ -28,9 +29,10 @@ export function SettingsSyncStatus({ status, sync }: SettingsSyncStatusProps) {
     <div className="flex flex-col gap-2">
       <div className="flex items-center gap-4">
         <h2 className="text-lg font-semibold">{_(STATE_LABELS[state.type])}</h2>
-        <Button variants={{ style: "bordered" }} onClick={() => void sync.nudge()}>
+        <Button variants={{ style: "bordered" }} onPress={() => void sync.nudge()}>
           {_(msg`settings.sync.sync-now`)}
         </Button>
+        <SettingsSyncInvite sync={sync} />
       </div>
       {state.type === "stopped" && state.stop.reason === "error" && <p className="fg-level-2">{state.stop.message}</p>}
       {state.type === "bootstrapping" && left > 0 && (

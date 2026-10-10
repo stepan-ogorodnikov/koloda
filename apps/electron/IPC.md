@@ -90,6 +90,8 @@ writes capture nothing and do not.
 - `cmd_sync_create_space` `{ data: { serverUrl, setupToken, spaceName, deviceName } }` — creates a space on the
   server, enrolls this database as its first device, starts the runner, and returns the status.
   The setup token is sent once and not kept.
+- `cmd_sync_issue_pairing` — a pairing code for another device, the server URL, and `expiresAt` in this device's
+  clock (the server's expiry minus the engine's skew estimate).
 - `cmd_sync_device_name` — the OS host name, which main reads; the default name of this device.
 - Engine events stream on `SYNC_EVENT_CHANNEL` (`sync:event`) to every window as a `SyncEvent`:
   - `changed` `{ kinds }` — rows of these kinds changed; the renderer refreshes the queries each kind feeds;

@@ -679,6 +679,14 @@ impl KolodaDb {
     }
 
     #[napi]
+    pub fn sync_issue_pairing(&self, env: Env) -> Result<JsObject> {
+        self.run_sync(env, move |sync| {
+            let pairing = sync.issue_pairing().map_err(sync_error)?;
+            to_value(&pairing)
+        })
+    }
+
+    #[napi]
     pub fn sync_status(&self, env: Env) -> Result<JsObject> {
         self.run_sync(env, move |sync| {
             let status = sync.engine().and_then(|engine| engine.status()).map_err(sync_error)?;

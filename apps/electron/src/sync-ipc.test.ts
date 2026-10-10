@@ -27,15 +27,13 @@ function window(isDestroyed = false) {
 
 async function startedSync() {
   let onEvent: (event: SyncEngineEvent) => void = () => {};
+  // WHY: only the start handler's callback is under test; the other commands pass straight through.
   registerSyncIpc({
     syncStart: vi.fn(async (_starter: SyncStarter, callback: (event: SyncEngineEvent) => void) => {
       onEvent = callback;
       return { state: { type: "notEnrolled" } } as never;
     }),
-    syncStatus: vi.fn(),
-    syncNudge: vi.fn(),
-    syncCreateSpace: vi.fn(),
-  });
+  } as unknown as Parameters<typeof registerSyncIpc>[0]);
   await electron.handlers.get("cmd_sync_start")?.({}, { starter: {} });
   return (event: SyncEngineEvent) => onEvent(event);
 }

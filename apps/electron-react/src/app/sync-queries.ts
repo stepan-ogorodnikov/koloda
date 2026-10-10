@@ -15,5 +15,8 @@ export const syncQueries: SyncQueries = {
   createSpaceMutation: () => ({
     mutationFn: (data: CreateSpaceData) => invoke("cmd_sync_create_space", { data }),
   }),
+  issuePairingMutation: () => ({
+    mutationFn: () => invoke("cmd_sync_issue_pairing", undefined),
+  }),
   nudge: () => invoke("cmd_sync_nudge", undefined),
 };

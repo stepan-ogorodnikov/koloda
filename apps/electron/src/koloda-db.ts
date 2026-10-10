@@ -14,6 +14,7 @@ import type {
   Conversation,
   CreateSpaceData,
   DeleteConversationData,
+  IssuedPairing,
   SetConversationData,
   SyncStatus,
 } from "@koloda/app";
@@ -140,4 +141,5 @@ export interface KolodaDb {
   syncStatus(): Promise<SyncStatus>;
   syncNudge(): Promise<void>;
   syncCreateSpace(data: CreateSpaceData): Promise<SyncStatus>;
+  syncIssuePairing(): Promise<IssuedPairing>;
 }

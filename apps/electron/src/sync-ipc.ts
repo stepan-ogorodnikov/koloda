@@ -5,7 +5,7 @@ import { hostname } from "node:os";
 import { assertAppSender } from "./app-sender";
 import type { KolodaDb, SyncEngineEvent } from "./koloda-db";
 
-type SyncDb = Pick<KolodaDb, "syncStart" | "syncStatus" | "syncNudge" | "syncCreateSpace">;
+type SyncDb = Pick<KolodaDb, "syncStart" | "syncStatus" | "syncNudge" | "syncCreateSpace" | "syncIssuePairing">;
 
 function broadcast(event: SyncEvent) {
   for (const window of BrowserWindow.getAllWindows()) {
@@ -38,6 +38,10 @@ export function registerSyncIpc(db: SyncDb) {
   ipcMain.handle("cmd_sync_create_space", (event, { data }: IpcArgs<"cmd_sync_create_space">) => {
     assertAppSender(event);
     return db.syncCreateSpace(data);
+  });
+  ipcMain.handle("cmd_sync_issue_pairing", (event) => {
+    assertAppSender(event);
+    return db.syncIssuePairing();
   });
   ipcMain.handle("cmd_sync_device_name", (event) => {
     assertAppSender(event);

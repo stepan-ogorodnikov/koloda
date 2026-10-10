@@ -32,6 +32,13 @@ export type CreateSpaceData = {
   deviceName: string;
 };
 
+/** A pairing code another device joins with; `expiresAt` is in this device's clock. */
+export type IssuedPairing = {
+  code: string;
+  expiresAt: number;
+  serverUrl: string;
+};
+
 export type SyncStatus = {
   state: SyncState;
   lastSuccessAt: number | null;
