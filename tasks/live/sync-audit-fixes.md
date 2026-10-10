@@ -330,13 +330,15 @@ The owner took every recommendation on 2026-10-09.
   Commit: Report a failed secret delete after a commit without failing the call
   Depends on: none
 
-- [ ] 10. Check skew before an enrollment reserves stamps
+- [x] 10. Check skew before an enrollment reserves stamps
   Goal (R7):
   - `create_space` in `engine.rs`, and `join` in `pairing.rs` on its blank and used paths, call `check_skew()`
     after the enrollment reply and before `enroll_device` or `begin_import`.
   - A skew stop leaves the claim or creation pending in `sync_enrolling`.
     The next attempt, once the clock is back, finishes on the same device.
   - `PROTOCOL.md` §Skew guards states it.
+  - Implementation: the tests set the clock 6 minutes ahead, not an hour.
+    Correcting it moves the test server's clock forward, and a jump past 10 minutes outlives the creation's nonce.
   Done when:
   - engine tests: a join and a space creation with the clock an hour ahead stop with `ClockSkew` before enrolling,
     then finish on the same device once the clock is back;

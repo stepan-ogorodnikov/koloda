@@ -14,12 +14,16 @@ use koloda_sync_proto::envelope::Envelope;
 use koloda_sync_proto::hlc::{DeviceId, Hlc, Stamp};
 use koloda_sync_proto::payload::{CardReset, CardScheduling, Payload};
 use koloda_sync_proto::registry::{Group, Kind, Lane};
-use koloda_sync_proto::transport::{ErrorCode, PushReply};
+use koloda_sync_proto::transport::{DeviceList, ErrorCode, PushReply, SpaceList};
 
-use crate::common::{error_reply, system_ms, Device, Fault, Space};
+use crate::common::{error_reply, system_ms, Device, Fault, Space, TestServer, SERVER_URL};
+use crate::fixtures::seed_settings;
 
 const MINUTE_MS: u64 = 60 * 1000;
 const DAY_MS: u64 = 24 * 60 * MINUTE_MS;
+// WHY: past the 5-minute skew tolerance, yet within the 10 minutes the server keeps a creation's nonce, so moving the
+// server's clock back to system time stands in for correcting the device's clock.
+const AHEAD_MS: i64 = 6 * 60 * 1000;
 
 fn set_clock_ahead(device: &Device, ahead_ms: u64) {
     let raw = Hlc::new(system_ms() + ahead_ms, 0).expect("wall time fits").raw();
@@ -386,4 +390,71 @@ fn a_push_stops_before_its_next_batch_once_a_reply_moves_skew_past_the_tolerance
     for (id, stamp) in &landed {
         assert!(*stamp > waiting[id], "{id} takes a new stamp");
     }
+}
+
+#[test]
+fn a_join_on_a_clock_ahead_stops_before_it_enrolls_and_finishes_on_the_same_device() {
+    let space = Space::new();
+    let code = space.device.engine.issue_pairing(None).expect("a code is issued").code;
+    let b = space.server.device();
+    let devices = || {
+        let path = format!("/v1/spaces/{}/devices", space.space_id());
+        let (_, reply) = space
+            .server
+            .call::<DeviceList>(Method::Get, &path, &space.device.token());
+        reply.ok.expect("the device list").devices.len()
+    };
+    // B's clock ahead of the server's.
+    space.server.clock.set_offset(-AHEAD_MS);
+
+    let stopped = b.engine.join(SERVER_URL, &code, "Phone", seed_settings());
+
+    assert!(matches!(stopped, Err(SyncError::ClockSkew { .. })), "{stopped:?}");
+    assert!(b.state().is_none(), "nothing is enrolled, so no stamp is reserved");
+    assert_eq!(
+        b.count("SELECT COUNT(*) FROM sync_enrolling"),
+        1,
+        "the claim stays pending"
+    );
+    assert_eq!(devices(), 3, "A, the raw client, and B's landed claim");
+
+    space.server.clock.set_offset(0);
+    b.engine
+        .join(SERVER_URL, &code, "Phone", seed_settings())
+        .expect("the join finishes on the corrected clock");
+
+    assert_eq!(devices(), 3, "on the same device");
+    b.engine.sync_now().expect("B syncs");
+}
+
+#[test]
+fn a_space_created_on_a_clock_ahead_stops_before_it_enrolls_and_finishes_once_the_clock_is_back() {
+    let server = TestServer::new();
+    let a = server.device();
+    server.clock.set_offset(-AHEAD_MS);
+
+    let stopped = a
+        .engine
+        .create_space(SERVER_URL, &server.setup_token, "Study", "Laptop");
+
+    assert!(matches!(stopped, Err(SyncError::ClockSkew { .. })), "{stopped:?}");
+    assert!(a.state().is_none(), "nothing is enrolled, so no stamp is reserved");
+    assert_eq!(
+        a.count("SELECT COUNT(*) FROM sync_enrolling"),
+        1,
+        "the creation stays pending"
+    );
+
+    server.clock.set_offset(0);
+    a.engine
+        .create_space(SERVER_URL, &server.setup_token, "Study", "Laptop")
+        .expect("the creation finishes on the corrected clock");
+
+    let (_, reply) = server.call::<SpaceList>(Method::Get, "/v1/spaces", &server.setup_token);
+    assert_eq!(
+        reply.ok.expect("the space list").spaces.len(),
+        1,
+        "the retry records the space the first call created"
+    );
+    a.engine.sync_now().expect("A syncs");
 }

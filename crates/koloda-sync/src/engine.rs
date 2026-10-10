@@ -590,6 +590,9 @@ impl Shared {
             .call(Method::Post, "/v1/spaces", Some(setup_token), Some(&request))
             .await?
             .ok;
+        // INVARIANT: as for a claim, skew is checked before the enrollment reserves stamps on the local clock; the
+        // creation stays pending until a call on a corrected clock records it.
+        self.check_skew()?;
 
         let token = credentials.token;
         self.blocking(move |shared| {

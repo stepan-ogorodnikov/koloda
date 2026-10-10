@@ -361,6 +361,10 @@ impl Shared {
         }
 
         let (claim, credentials) = self.claim(&target, code, device_name).await?;
+        // INVARIANT: skew is checked before the file records the claim, since the enrollment reserves stamps on the
+        // local clock that the space would refuse as ahead. The claim stays pending, so the next join with its code
+        // finishes on the same device once the clock is back (PROTOCOL.md, Skew guards).
+        self.check_skew()?;
         let enrollment = claim.enrollment;
         let session = Session {
             base: target.base,

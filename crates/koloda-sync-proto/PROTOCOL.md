@@ -615,6 +615,10 @@ The clock therefore only goes back over stamps that `local` cohorts alone held.
   Pushing then waits until server time, by the skew estimate, reaches the outbox's highest stamp less 5 minutes.
   Pulls go on, and the status shows when pushing resumes.
   A second refusal that the outbox's stamps do not explain stops the cycle.
+- A claim or a space creation checks the skew of its reply before the file records the enrollment.
+  Recording it reserves backfill stamps on the local clock, which the space would refuse as ahead.
+  Past the tolerance, the call stops and the claim or creation stays pending (§Pairing).
+  The next attempt on a corrected clock sends the same nonce and records the same device.
 
 ### Cohorts
 
