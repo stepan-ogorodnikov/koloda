@@ -5,7 +5,18 @@ import { AlertIcon, Button, RefreshIcon, SuccessIcon, Tooltip } from "@koloda/ui
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useQuery } from "@tanstack/react-query";
+import { tv } from "tailwind-variants";
 import { useSyncStopMessage } from "./sync-messages";
+
+const indicatorIcon = tv({
+  base: "size-5 min-w-5",
+  variants: {
+    isSpinning: { true: "animate-spin" },
+  },
+  defaultVariants: {
+    isSpinning: false,
+  },
+});
 
 export type SyncIndicatorProps = { sync: SyncQueries; onOpen: () => void };
 
@@ -28,9 +39,10 @@ export function SyncIndicator({ sync, onOpen }: SyncIndicatorProps) {
   if (!status || !isShown(status)) return null;
 
   const { state, lastSuccessAt } = status;
+  const isAttention = needsAttention(status);
   const isBusy = state.type === "syncing" || state.type === "bootstrapping";
   const lastSync = lastSuccessAt === null ? null : formatTimestamp(new Date(lastSuccessAt), "datetime");
-  const label = needsAttention(status)
+  const label = isAttention
     ? (stopMessage(status) ?? _(msg`settings.sync.indicator.attention`))
     : state.type === "syncing"
       ? _(msg`settings.sync.state.syncing`)
@@ -39,16 +51,12 @@ export function SyncIndicator({ sync, onOpen }: SyncIndicatorProps) {
         : lastSync === null
           ? _(msg`settings.sync.state.idle`)
           : _(msg`settings.sync.last-sync ${lastSync}`);
-  const Icon = needsAttention(status) ? AlertIcon : isBusy ? RefreshIcon : SuccessIcon;
+  const Icon = isAttention ? AlertIcon : isBusy ? RefreshIcon : SuccessIcon;
 
   return (
     <Tooltip content={label}>
       <Button variants={{ style: "ghost", size: "smallIcon" }} aria-label={label} onPress={onOpen}>
-        <Icon
-          className={isBusy && !needsAttention(status) ? "size-5 min-w-5 animate-spin" : "size-5 min-w-5"}
-          strokeWidth={1.75}
-          aria-hidden="true"
-        />
+        <Icon className={indicatorIcon({ isSpinning: isBusy && !isAttention })} strokeWidth={1.75} aria-hidden="true" />
       </Button>
     </Tooltip>
   );
