@@ -41,6 +41,9 @@ const PROBE_KINDS: [Kind; 5] = [
     Kind::Cards,
 ];
 
+/// How many cards an Add reads and remints at a time, with their reviews.
+pub const REMINT_CHUNK: usize = 1_000;
+
 pub(super) const SYNC_TABLES: [&str; 10] = [
     "sync_state",
     "sync_enrolling",
@@ -328,44 +331,73 @@ fn remint(conn: &Connection, is_known: impl Fn(&String) -> bool) -> Result<(), A
             .filter(&is_known),
     );
     let decks = mint(column(conn, "SELECT id FROM decks", [])?.into_iter().filter(&is_known));
-    let cards = mint(
-        pairs(conn, "SELECT id, deck_id FROM cards")?
-            .into_iter()
-            .filter(|(id, deck_id)| is_known(id) || decks.contains_key(deck_id))
-            .map(|(id, _)| id),
-    );
-    let mut reviews = HashMap::new();
-    for card_id in cards.keys() {
-        reviews.extend(mint(column(
-            conn,
-            "SELECT id FROM reviews WHERE card_id = ?1",
-            [card_id],
-        )?));
-    }
 
     // INVARIANT: foreign keys are checked at commit. A row and the rows that name it move in separate statements.
     conn.pragma_update(None, "defer_foreign_keys", true)?;
+    remint_cards(conn, &is_known, &decks)?;
     let remints = [
         (Kind::Algorithms, &algorithms),
         (Kind::AlgorithmRevisions, &revisions),
         (Kind::Templates, &templates),
         (Kind::Decks, &decks),
-        (Kind::Cards, &cards),
-        (Kind::Reviews, &reviews),
     ];
     for (kind, ids) in remints {
-        let (table, key) = table(kind);
-        for (old, new) in ids {
-            conn.prepare_cached(&format!("UPDATE {table} SET {key} = ?2 WHERE {key} = ?1"))?
-                .execute(params![old, new])?;
-            for (holder, pointer) in pointers(kind) {
-                conn.prepare_cached(&format!("UPDATE {holder} SET {pointer} = ?2 WHERE {pointer} = ?1"))?
-                    .execute(params![old, new])?;
-            }
-        }
+        move_rows(conn, kind, ids)?;
     }
 
     repoint_learning(conn, &algorithms, &templates)
+}
+
+/// Remints, a chunk at a time, every known card and every card of a reminted deck, with their reviews. It runs before
+/// decks move, so a card's `deck_id` still names its deck's old id.
+fn remint_cards(
+    conn: &Connection,
+    is_known: &impl Fn(&String) -> bool,
+    decks: &HashMap<String, String>,
+) -> Result<(), AppError> {
+    let limit = i64::try_from(REMINT_CHUNK).map_err(protocol_error)?;
+    // WHY: the cursor is the rowid, which a remint keeps. A new id sorts after the old ones, so a cursor on ids would
+    // meet a reminted card again.
+    let mut after = 0;
+    loop {
+        let chunk: Vec<(i64, String, String)> = conn
+            .prepare_cached("SELECT rowid, id, deck_id FROM cards WHERE rowid > ?1 ORDER BY rowid LIMIT ?2")?
+            .query_map(params![after, limit], |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)))?
+            .collect::<Result<_, _>>()?;
+        let Some((last, _, _)) = chunk.last() else {
+            return Ok(());
+        };
+        after = *last;
+        let cards = mint(
+            chunk
+                .into_iter()
+                .filter(|(_, id, deck_id)| is_known(id) || decks.contains_key(deck_id))
+                .map(|(_, id, _)| id),
+        );
+        let mut reviews = HashMap::new();
+        for card_id in cards.keys() {
+            reviews.extend(mint(column(
+                conn,
+                "SELECT id FROM reviews WHERE card_id = ?1",
+                [card_id],
+            )?));
+        }
+        move_rows(conn, Kind::Cards, &cards)?;
+        move_rows(conn, Kind::Reviews, &reviews)?;
+    }
+}
+
+fn move_rows(conn: &Connection, kind: Kind, ids: &HashMap<String, String>) -> Result<(), AppError> {
+    let (table, key) = table(kind);
+    for (old, new) in ids {
+        conn.prepare_cached(&format!("UPDATE {table} SET {key} = ?2 WHERE {key} = ?1"))?
+            .execute(params![old, new])?;
+        for (holder, pointer) in pointers(kind) {
+            conn.prepare_cached(&format!("UPDATE {holder} SET {pointer} = ?2 WHERE {pointer} = ?1"))?
+                .execute(params![old, new])?;
+        }
+    }
+    Ok(())
 }
 
 fn pointers(kind: Kind) -> &'static [(&'static str, &'static str)] {

@@ -181,6 +181,7 @@ capture keeps recording for a later re-attach.
   One `active` in another space and not detached is `AttachedElsewhere`, which the engine refuses.
 - `add_to_space` keeps, deletes, or remints seed rows, remints known rows with their dependents, then reserves the
   backfill stamps as a joiner.
+  Cards and their reviews move `REMINT_CHUNK` cards at a time, keyed by rowid, before their decks move.
 - A join bootstrap ends with the same absence cleanup as a re-bootstrap. A row with no create origin stays.
 - `replace_with_space` deletes product rows only; a blank joiner seeds with `seed_joiner` and enrolls with `enroll`
   in one transaction, so a stop between them leaves the file blank.

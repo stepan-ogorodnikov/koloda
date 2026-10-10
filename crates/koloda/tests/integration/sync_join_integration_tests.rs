@@ -16,7 +16,9 @@ use koloda::repo::attachments::add_attachment;
 use koloda::repo::decks::{delete_deck, get_deck, update_deck};
 use koloda::repo::settings::{get_settings, set_settings};
 use koloda::repo::sync::backfill::{backfill_batch, Backfill};
-use koloda::repo::sync::join::{add_to_space, begin_import, join_mode, probe_ids, replace_with_space, JoinMode, Known};
+use koloda::repo::sync::join::{
+    add_to_space, begin_import, join_mode, probe_ids, replace_with_space, JoinMode, Known, REMINT_CHUNK,
+};
 use koloda::repo::sync::{detach, enroll_device, store_enrolling, stored_enrolling, Enrolling, SpaceRole};
 use koloda::repo::templates::{delete_template, get_template, update_template};
 use koloda_sync_proto::registry::Kind;
@@ -24,7 +26,9 @@ use rusqlite::types::Value;
 use serde_json::json;
 use uuid::Uuid;
 
-use crate::common::fixtures::{add_algorithm, add_card, add_conversation, add_deck, add_template, insert_review_row};
+use crate::common::fixtures::{
+    add_algorithm, add_card, add_conversation, add_deck, add_template, insert_card_row, insert_review_row,
+};
 use crate::common::sync::{
     apply, copy_of, count, device, enroll_as, hot_page, outbox, FakeSpace, OutboxEntry, EPOCH, SERVER_URL, SPACE,
 };
@@ -658,6 +662,60 @@ fn reminted_rows_keep_their_values_and_pointers_follow_them() {
         learning(copy)["defaults"],
         json!({ "algorithm": algorithm, "template": template }),
         "the learning defaults follow the reminted algorithm and template"
+    );
+}
+
+#[test]
+fn add_remints_every_card_and_review_of_a_known_deck_larger_than_one_chunk() {
+    let creator = seeded_db();
+    let algorithm = add_algorithm(&creator, "FSRS");
+    let template = add_template(&creator, "Vocabulary");
+    let deck = add_deck(&creator, &algorithm, &template, "Spanish");
+    let copy = copy_of(&creator);
+    let mut space = FakeSpace::default();
+    enroll_as(&creator, SpaceRole::Creator);
+    space.drain_backfill(&creator, 100);
+    for created_at in 0..=REMINT_CHUNK {
+        let created_at = i64::try_from(created_at).expect("the count fits");
+        let card = insert_card_row(&copy, &deck, &template, 0, None, created_at);
+        insert_review_row(&copy, &card, 2, 0, created_at);
+    }
+    let (cards, reviews) = (ids(&copy, "cards"), ids(&copy, "reviews"));
+
+    space.join_by_add(&copy);
+
+    let reminted_deck = id_titled(&copy, "decks", "Spanish");
+    assert_ne!(reminted_deck, deck, "the known deck is reminted");
+    let moved = |table: &str, before: &[String]| {
+        let after = ids(&copy, table);
+        assert_eq!(after.len(), before.len(), "every row of {table} stays");
+        after.iter().filter(|id| !before.contains(id)).count()
+    };
+    assert_eq!(
+        moved("cards", &cards),
+        REMINT_CHUNK + 1,
+        "every card moves with its deck"
+    );
+    assert_eq!(
+        moved("reviews", &reviews),
+        REMINT_CHUNK + 1,
+        "and every review with its card"
+    );
+    assert_eq!(
+        count(
+            &copy,
+            &format!("SELECT COUNT(*) FROM cards WHERE deck_id = '{reminted_deck}'")
+        ),
+        i64::try_from(REMINT_CHUNK + 1).expect("the count fits"),
+        "every card names the deck's new id"
+    );
+    assert_eq!(
+        count(
+            &copy,
+            "SELECT COUNT(*) FROM reviews WHERE card_id NOT IN (SELECT id FROM cards)"
+        ),
+        0,
+        "every review names its card's new id"
     );
 }
 

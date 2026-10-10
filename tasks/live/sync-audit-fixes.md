@@ -346,11 +346,13 @@ The owner took every recommendation on 2026-10-09.
   Commit: Check skew before an enrollment reserves stamps
   Depends on: 6
 
-- [ ] 11. Remint cards and their reviews a chunk at a time
+- [x] 11. Remint cards and their reviews a chunk at a time
   Goal (R6):
   - `remint` in `join.rs` reads card ids in chunks with a keyset cursor.
     It mints and moves each chunk's cards and their reviews before the next chunk.
   - Algorithms, revisions, templates, and decks stay collected; they are small.
+  - Implementation keys the cursor on the rowid, which a remint keeps; a new UUIDv7 sorts after the old ids.
+    Cards move before decks, so a card's `deck_id` still names its deck's old id when the chunk is filtered.
   Constraints:
   - Add stays one local transaction, with foreign keys deferred.
   - Memory is bounded by a chunk, not by the file.
