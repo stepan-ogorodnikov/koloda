@@ -22,9 +22,9 @@ use hyper_util::rt::TokioIo;
 use hyper_util::service::TowerToHyperService;
 use koloda::app::db::Database;
 use koloda::app::error::{error_codes, AppError};
-use koloda::app::init::seed_joiner_db;
+use koloda::app::init::seed_joiner;
 use koloda::app::secrets::SecretStore;
-use koloda::repo::sync::{enroll_device, SpaceRole};
+use koloda::repo::sync::{enroll, SpaceRole};
 use koloda_server::clock::Clock;
 use koloda_server::quota::Storage;
 use koloda_server::restore::{self, RestoreOptions};
@@ -194,16 +194,20 @@ impl TestServer {
             .secrets
             .set(&format!("sync.token.{device_id}"), &enrollment.token)
             .expect("the token is stored");
-        seed_joiner_db(&joiner.db, seed_settings()).expect("the joiner seeds its settings");
-        enroll_device(
-            &joiner.db,
-            device_id,
-            Uuid::from_bytes(enrollment.space_id),
-            SpaceRole::Joiner,
-            Uuid::from_bytes(enrollment.epoch),
-            SERVER_URL,
-        )
-        .expect("the joiner enrolls");
+        joiner
+            .db
+            .with_transaction(|tx| {
+                seed_joiner(tx, seed_settings())?;
+                enroll(
+                    tx,
+                    device_id,
+                    Uuid::from_bytes(enrollment.space_id),
+                    SpaceRole::Joiner,
+                    Uuid::from_bytes(enrollment.epoch),
+                    SERVER_URL,
+                )
+            })
+            .expect("the joiner seeds its settings and enrolls");
         joiner
     }
 

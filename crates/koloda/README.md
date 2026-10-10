@@ -22,7 +22,7 @@ Rust is the source of truth for the AI provider enum and secrets redaction; `@ko
   Product writes record sync envelopes through `Capture` in `capture.rs`.
   `backfill.rs` moves rows written before enrollment into the outbox in bounded batches.
   `join.rs` tells a joining file's mode, records its claim, and lists the ids the space is probed for.
-  It then remints known rows on Add, or deletes product rows on Replace; a blank joiner seeds with `seed_joiner_db`.
+  It then remints known rows on Add, or deletes product rows on Replace; a blank joiner seeds with `seed_joiner`.
   `apply_page` in `apply.rs` applies envelopes other devices captured, and `apply_snapshot_page` a bootstrap
   snapshot's; both stop at the first entry this app cannot read and return it as a `Hold`.
   `finish_bootstrap` sets the `cold` cursor, clears the joiner's flag, and removes what only an earlier lease of

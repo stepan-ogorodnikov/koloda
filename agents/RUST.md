@@ -180,7 +180,8 @@ capture keeps recording for a later re-attach.
 - `add_to_space` keeps, deletes, or remints seed rows, remints known rows with their dependents, then reserves the
   backfill stamps as a joiner.
 - A join bootstrap ends with the same absence cleanup as a re-bootstrap. A row with no create origin stays.
-- `replace_with_space` deletes product rows only; a blank joiner seeds with `seed_joiner_db` and enrolls.
+- `replace_with_space` deletes product rows only; a blank joiner seeds with `seed_joiner` and enrolls with `enroll`
+  in one transaction, so a stop between them leaves the file blank.
 - A claim or a space creation waits in `sync_enrolling` (`store_enrolling`) until the transaction that records it
   clears the row: `enroll_device`, `begin_import` (through `SYNC_TABLES`), or a re-attach's `switch_device`.
   A fork's switch leaves it.

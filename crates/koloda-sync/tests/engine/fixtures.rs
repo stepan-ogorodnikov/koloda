@@ -93,7 +93,7 @@ pub fn seed_data(total: u32) -> SeedData {
     }
 }
 
-/// First-run settings for a blank joiner; `seed_joiner_db` points the learning defaults at the seed ids.
+/// First-run settings for a blank joiner; `seed_joiner` points the learning defaults at the seed ids.
 pub fn seed_settings() -> SeedSettings {
     SeedSettings {
         interface: json!({

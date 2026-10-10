@@ -256,13 +256,15 @@ The owner took every recommendation on 2026-10-09.
   Commit: Hold the lane on a payload that breaks a domain rule
   Depends on: none
 
-- [ ] 6. Seed a blank joiner and enroll it in one transaction
+- [x] 6. Seed a blank joiner and enroll it in one transaction
   Goal (F1):
   - The blank path of `join` in `pairing.rs` seeds settings and enrolls in one transaction.
   - `seed_joiner_db` in `app/init.rs` and `enroll_device` in `repo/sync/mod.rs` each gain a form that takes the
     transaction.
   - A stop before that commit leaves the file blank, with its claim pending in `sync_enrolling`.
     The next join with the same code joins it as blank, on the same device.
+  - Implementation replaced `seed_joiner_db` with `seed_joiner`, since only tests called the database form after it;
+    `enroll_device` keeps its form beside `enroll` for space creation.
   Done when:
   - an engine test: a blank join whose enrollment fails leaves no settings rows, and `get_db_status` reports blank;
     the next join with the same code joins as blank on the same device.

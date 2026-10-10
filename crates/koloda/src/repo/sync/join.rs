@@ -1,5 +1,5 @@
 //! Joining an existing space: the local mode check, the claim, the ids the space is probed for, Add, and Replace
-//! (`crates/koloda-sync-proto/PROTOCOL.md` §Joining). A blank file seeds with `app::init::seed_joiner_db`.
+//! (`crates/koloda-sync-proto/PROTOCOL.md` §Joining). A blank file seeds with `app::init::seed_joiner`.
 
 use std::collections::HashMap;
 

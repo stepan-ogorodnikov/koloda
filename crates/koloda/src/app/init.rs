@@ -1,3 +1,4 @@
+use rusqlite::Connection;
 use serde::Deserialize;
 use serde_json::Value;
 
@@ -90,7 +91,8 @@ pub fn seed_db(db: &Database, data: SeedData) -> Result<(), AppError> {
     })
 }
 
-pub fn seed_joiner_db(db: &Database, settings: SeedSettings) -> Result<(), AppError> {
+/// Seeds a blank joiner's settings inside the caller's transaction, which also records its enrollment.
+pub fn seed_joiner(conn: &Connection, settings: SeedSettings) -> Result<(), AppError> {
     let interface = SettingsName::Interface.normalize(settings.interface)?;
     let hotkeys = SettingsName::Hotkeys.normalize(settings.hotkeys)?;
     let now = get_current_timestamp()?;
@@ -101,12 +103,10 @@ pub fn seed_joiner_db(db: &Database, settings: SeedSettings) -> Result<(), AppEr
     learning_settings.defaults.template = crate::domain::seed_ids::SEED_TEMPLATE_TYPE_ID.to_string();
     let learning = SettingsName::Learning.normalize(serde_json::to_value(&learning_settings)?)?;
 
-    db.with_transaction(|tx| {
-        settings::upsert_settings(tx, SettingsName::Interface, &interface, now)?;
-        settings::upsert_settings(tx, SettingsName::Learning, &learning, now)?;
-        settings::upsert_settings(tx, SettingsName::Hotkeys, &hotkeys, now)?;
-        Ok(())
-    })
+    settings::upsert_settings(conn, SettingsName::Interface, &interface, now)?;
+    settings::upsert_settings(conn, SettingsName::Learning, &learning, now)?;
+    settings::upsert_settings(conn, SettingsName::Hotkeys, &hotkeys, now)?;
+    Ok(())
 }
 
 fn parse_learning_settings(learning: Value) -> Result<LearningSettings, AppError> {

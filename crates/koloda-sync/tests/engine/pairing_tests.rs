@@ -1,4 +1,4 @@
-use koloda::app::init::seed_db;
+use koloda::app::init::{get_db_status, seed_db, DbStatus};
 use koloda::domain::seed_ids::{SEED_ALGORITHM_SIMPLE_ID, SEED_TEMPLATE_TYPE_ID};
 use koloda::repo::sync::join::JoinMode;
 use koloda_sync::error::SyncError;
@@ -279,6 +279,53 @@ fn a_claim_the_file_never_recorded_finishes_on_the_next_join_with_the_same_code(
             "{name}: the recorded claim removes its pending token"
         );
     }
+}
+
+#[test]
+fn a_blank_join_stopped_before_it_enrolls_joins_as_blank_on_the_same_device_next_time() {
+    let space = Space::new();
+    let issued = issue(&space, None);
+    let b = space.server.device();
+    // A stop inside the transaction that seeds and enrolls, as a crash or a full disk would make it.
+    b.db.with_conn(|conn| {
+        conn.execute_batch(
+            "CREATE TEMP TRIGGER stop_enrollment BEFORE INSERT ON sync_state BEGIN SELECT RAISE(ABORT, 'stopped'); END",
+        )?;
+        Ok(())
+    })
+    .expect("the trigger is created");
+
+    assert!(join(&b, &issued.code).is_err(), "the first join fails");
+    assert_eq!(
+        b.count("SELECT COUNT(*) FROM settings"),
+        0,
+        "no settings without the enrollment"
+    );
+    assert!(
+        matches!(get_db_status(&b.db).expect("status reads"), DbStatus::Blank),
+        "the file still opens to the first-run seed"
+    );
+    assert_eq!(
+        b.count("SELECT COUNT(*) FROM sync_enrolling"),
+        1,
+        "the claim stays pending"
+    );
+
+    b.db.with_conn(|conn| {
+        conn.execute_batch("DROP TRIGGER stop_enrollment")?;
+        Ok(())
+    })
+    .expect("the trigger is dropped");
+    let joined = join(&b, &issued.code).expect("the next join finishes the claim");
+
+    assert_eq!(joined.mode, JoinMode::Blank);
+    assert_eq!(
+        space_devices(&space),
+        3,
+        "A, the raw client, and B, with no fourth device"
+    );
+    assert_eq!(b.count("SELECT COUNT(*) FROM settings"), 3);
+    b.engine.sync_now().expect("B syncs");
 }
 
 #[test]

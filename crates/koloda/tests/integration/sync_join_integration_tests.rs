@@ -4,7 +4,7 @@ use std::collections::HashMap;
 use std::num::NonZeroU32;
 
 use koloda::app::db::Database;
-use koloda::app::init::seed_joiner_db;
+use koloda::app::init::seed_joiner;
 use koloda::domain::algorithms::{DeleteAlgorithmData, UpdateAlgorithmData, UpdateAlgorithmValues};
 use koloda::domain::attachments::AddAttachmentData;
 use koloda::domain::decks::{DeleteDeckData, UpdateDeckData, UpdateDeckValues};
@@ -1059,7 +1059,9 @@ fn a_blank_joiner_holds_no_seed_rows_and_takes_the_spaces_real_defaults() {
 
     let joiner = test_db();
     assert_eq!(join_mode(&joiner, SPACE).unwrap(), JoinMode::Blank);
-    seed_joiner_db(&joiner, seed_data("Simple", "Basic").settings).expect("blank joiner seeds");
+    joiner
+        .with_transaction(|tx| seed_joiner(tx, seed_data("Simple", "Basic").settings))
+        .expect("blank joiner seeds");
     for table in SYNCED_TABLES {
         assert!(ids(&joiner, table).is_empty(), "a blank joiner holds no {table}");
     }

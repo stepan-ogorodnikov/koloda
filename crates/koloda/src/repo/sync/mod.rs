@@ -69,31 +69,43 @@ pub fn enroll_device(
     server_url: &str,
 ) -> Result<(), AppError> {
     throw_known_error(error_codes::DB_ADD, || {
-        db.with_transaction(|tx| {
-            tx.execute(
-                r#"
-                INSERT INTO sync_state
-                    (id, device_id, space_id, last_hlc, next_sender_seq, role, epoch, server_url, is_bootstrapping)
-                VALUES (1, ?1, ?2, 0, 1, ?3, ?4, ?5, ?6)
-                "#,
-                params![
-                    device_id.as_bytes().as_slice(),
-                    space_id.as_bytes().as_slice(),
-                    role.as_sql(),
-                    epoch.as_bytes().as_slice(),
-                    server_url,
-                    role == SpaceRole::Joiner
-                ],
-            )?;
+        db.with_transaction(|tx| enroll(tx, device_id, space_id, role, epoch, server_url))
+    })
+}
 
-            // INVARIANT: the pending claim or creation goes in the transaction that records it, so a file never
-            // holds both an enrollment and a nonce that would enroll it again.
-            tx.execute("DELETE FROM sync_enrolling", [])?;
+/// `enroll_device` inside the caller's transaction, such as the one that seeds a blank joiner.
+pub fn enroll(
+    conn: &Connection,
+    device_id: Uuid,
+    space_id: Uuid,
+    role: SpaceRole,
+    epoch: Uuid,
+    server_url: &str,
+) -> Result<(), AppError> {
+    throw_known_error(error_codes::DB_ADD, || {
+        conn.execute(
+            r#"
+            INSERT INTO sync_state
+                (id, device_id, space_id, last_hlc, next_sender_seq, role, epoch, server_url, is_bootstrapping)
+            VALUES (1, ?1, ?2, 0, 1, ?3, ?4, ?5, ?6)
+            "#,
+            params![
+                device_id.as_bytes().as_slice(),
+                space_id.as_bytes().as_slice(),
+                role.as_sql(),
+                epoch.as_bytes().as_slice(),
+                server_url,
+                role == SpaceRole::Joiner
+            ],
+        )?;
 
-            // INVARIANT: the backfill stamps are reserved in the enrollment transaction, so every write captured
-            // after enrollment is stamped above them.
-            backfill::reserve(tx)
-        })
+        // INVARIANT: the pending claim or creation goes in the transaction that records it, so a file never
+        // holds both an enrollment and a nonce that would enroll it again.
+        conn.execute("DELETE FROM sync_enrolling", [])?;
+
+        // INVARIANT: the backfill stamps are reserved in the enrollment transaction, so every write captured
+        // after enrollment is stamped above them.
+        backfill::reserve(conn)
     })
 }
 

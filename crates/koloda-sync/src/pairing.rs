@@ -5,12 +5,12 @@
 use std::collections::{BTreeMap, HashMap};
 use std::sync::Arc;
 
-use koloda::app::init::{seed_joiner_db, SeedSettings};
+use koloda::app::init::{seed_joiner, SeedSettings};
 use koloda::app::utility::get_current_timestamp;
 use koloda::repo::sync::join::{add_to_space, begin_import, join_mode, probe_ids, replace_with_space, JoinMode, Known};
 use koloda::repo::sync::outbox::lowest_pending_seq;
 use koloda::repo::sync::switch::switch_device;
-use koloda::repo::sync::{clear_enrolling, enroll_device, sync_state, Enrolling, SpaceRole};
+use koloda::repo::sync::{clear_enrolling, enroll, sync_state, Enrolling, SpaceRole};
 use koloda_sync_proto::registry::Kind;
 use koloda_sync_proto::transport::{
     code_hash, ClaimPairing, DeviceInfo, EntityId, ErrorCode, IssuePairing, KnownIds, KnownState, Pairing,
@@ -372,9 +372,13 @@ impl Shared {
 
         let (space, base) = (session.space, session.base.clone());
         if mode == JoinMode::Blank {
+            // INVARIANT: the settings and the enrollment commit together. A stop before the commit leaves the file
+            // blank with its claim pending, so the next join with the code joins it as blank on the same device.
             self.blocking(move |shared| {
-                seed_joiner_db(&shared.db, settings)?;
-                enroll_device(&shared.db, device, space, SpaceRole::Joiner, epoch, &base)
+                shared.db.with_transaction(|tx| {
+                    seed_joiner(tx, settings)?;
+                    enroll(tx, device, space, SpaceRole::Joiner, epoch, &base)
+                })
             })
             .await?;
             self.finish_enrolling(credentials.nonce).await?;
