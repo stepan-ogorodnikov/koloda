@@ -22,6 +22,8 @@ pub enum JoinMode {
     UntouchedSeed,
     Used,
     Reattach,
+    /// Active in another space; it detaches before it joins one.
+    AttachedElsewhere,
 }
 
 /// The probe's answer for an id the space holds.
@@ -55,13 +57,22 @@ pub(super) const SYNC_TABLES: [&str; 10] = [
 pub fn join_mode(db: &Database, space_id: Uuid) -> Result<JoinMode, AppError> {
     throw_known_error(error_codes::DB_GET, || {
         db.with_conn(|conn| {
-            let is_in_space: bool = conn.query_row(
-                "SELECT EXISTS (SELECT 1 FROM sync_state WHERE id = 1 AND space_id = ?1 AND join_phase = 'active')",
-                params![space_id.as_bytes().as_slice()],
-                |row| row.get(0),
-            )?;
-            if is_in_space {
-                return Ok(JoinMode::Reattach);
+            let active: Option<(bool, bool)> = conn
+                .query_row(
+                    r#"
+                    SELECT space_id = ?1, detached_at IS NOT NULL FROM sync_state
+                    WHERE id = 1 AND join_phase = 'active'
+                    "#,
+                    params![space_id.as_bytes().as_slice()],
+                    |row| Ok((row.get(0)?, row.get(1)?)),
+                )
+                .optional()?;
+            match active {
+                Some((true, _)) => return Ok(JoinMode::Reattach),
+                // INVARIANT: a join clears every sync table, so writes still pending for the other space would never
+                // reach it, and its device record would stay. A detached file joins by its rows.
+                Some((false, false)) => return Ok(JoinMode::AttachedElsewhere),
+                Some((false, true)) | None => {}
             }
 
             let has_settings: bool = conn.query_row("SELECT EXISTS (SELECT 1 FROM settings)", [], |row| row.get(0))?;

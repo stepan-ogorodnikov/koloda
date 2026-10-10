@@ -177,6 +177,7 @@ capture keeps recording for a later re-attach.
 
 - While pending, `Capture` records nothing, and `backfill_batch` and `apply_page` refuse.
 - The space id is stored at enrollment; only an `active` file in the same space re-attaches.
+  One `active` in another space and not detached is `AttachedElsewhere`, which the engine refuses.
 - `add_to_space` keeps, deletes, or remints seed rows, remints known rows with their dependents, then reserves the
   backfill stamps as a joiner.
 - A join bootstrap ends with the same absence cleanup as a re-bootstrap. A row with no create origin stays.

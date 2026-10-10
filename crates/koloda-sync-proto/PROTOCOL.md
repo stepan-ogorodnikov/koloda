@@ -1465,8 +1465,9 @@ Joining looks at the local file:
 | --- | --- |
 | Blank | Join; skip the product seed; seed device-local settings and the `learning` document at stamp zero |
 | Only the untouched first-run seed | Join; probe the two seed ids; seed rows the space holds live stay at stamp zero and are overlaid, the others are deleted; the seed algorithm's local revisions are deleted, and the space's history arrives; `learning` stays at stamp zero and is overlaid |
-| Used, never synced, or from another space | Probe, then the user picks **Add** or **Replace** |
+| Used, never synced, or detached from another space | Probe, then the user picks **Add** or **Replace** |
 | Was in this space | Re-attach |
+| Attached to another space | Refused before the claim; the user detaches it first |
 
 A file is blank until its first-run seed writes settings.
 A blank file that joins seeds only its settings.
@@ -1476,6 +1477,9 @@ template, both unmodified, and it has no deck or card; `learning` does not count
 A seed row is unmodified while its `updated_at` is NULL.
 Every save sets it, even one that changes nothing.
 A file was in this space when its sync state is active there; a file still in `import_pending` is judged by its rows.
+A file active in another space and not detached is refused, and its code stays usable by another device.
+A join clears every sync table, so writes pending for the other space would never reach it, and its device record
+would stay.
 A file holding only the untouched first-run seed goes through the same claim, probe, and Add as a used file.
 It joins without asking the user, and only Add's seed-row rules change it.
 A join of such a file interrupted after its claim, by a failed probe or a stop, finishes its Add on the next cycle.

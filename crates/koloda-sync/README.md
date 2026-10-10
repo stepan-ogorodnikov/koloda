@@ -36,6 +36,7 @@ A pending claim or creation keeps its nonce in `koloda`'s `sync_enrolling`, writ
   the call, receipts, and the switch.
 - `src/pairing.rs` — pairing codes, preview, and joining a space: blank, seed-only, a used file through Add or
   Replace, or a detached file re-attaching under a new device id, after applying a restore the space had since.
+  A file attached to another space is refused before its code is claimed; it detaches first.
   A claim the file has not recorded skips the preview on the next join with its code and claims again with the same
   nonce and token; only `pairing_failed` drops it.
 - `src/runner.rs` — the background runner: triggers, coalescing, the poll and how long it waits while the events

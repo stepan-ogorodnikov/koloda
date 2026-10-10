@@ -252,6 +252,43 @@ fn an_attached_file_is_refused_before_its_code_is_claimed() {
 }
 
 #[test]
+fn a_file_attached_to_another_space_is_refused_until_it_detaches() {
+    let space = Space::with(|device| seed_db(&device.db, seed_data(77)).expect("A starts fresh"));
+    let a = &space.device;
+    let library = a.library();
+    a.engine.sync_now().expect("A syncs");
+    let other = space.server.device();
+    other
+        .engine
+        .create_space(SERVER_URL, &space.server.setup_token, "Other", "Desktop")
+        .expect("a second space is created");
+    let issued = other.engine.issue_pairing(None).expect("a code is issued");
+
+    let result = join(a, &issued.code);
+
+    assert!(
+        matches!(result, Err(SyncError::CannotJoin(JoinMode::AttachedElsewhere))),
+        "{result:?}"
+    );
+    assert!(claims(a).is_empty(), "nothing is claimed");
+    assert_eq!(a.count("SELECT COUNT(*) FROM sync_enrolling"), 0, "no claim is pending");
+    assert_eq!(
+        a.state().map(|state| state.space_id),
+        Some(space.space_id()),
+        "the file stays in its space"
+    );
+    let c = space.server.device();
+    join(&c, &issued.code).expect("the code is still unused");
+
+    a.engine.detach().expect("A detaches");
+    let issued = other.engine.issue_pairing(None).expect("another code is issued");
+    let joined = join(a, &issued.code).expect("the detached file joins");
+
+    assert_eq!(joined.mode, JoinMode::Used, "it joins by its rows");
+    assert!(a.has_card(&library.card), "and keeps them until Add or Replace");
+}
+
+#[test]
 fn a_lost_claim_reply_is_retried_to_the_same_device() {
     let space = Space::new();
     let issued = issue(&space, None);

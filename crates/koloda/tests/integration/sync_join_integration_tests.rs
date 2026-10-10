@@ -17,7 +17,7 @@ use koloda::repo::decks::{delete_deck, get_deck, update_deck};
 use koloda::repo::settings::{get_settings, set_settings};
 use koloda::repo::sync::backfill::{backfill_batch, Backfill};
 use koloda::repo::sync::join::{add_to_space, begin_import, join_mode, probe_ids, replace_with_space, JoinMode, Known};
-use koloda::repo::sync::{enroll_device, store_enrolling, stored_enrolling, Enrolling, SpaceRole};
+use koloda::repo::sync::{detach, enroll_device, store_enrolling, stored_enrolling, Enrolling, SpaceRole};
 use koloda::repo::templates::{delete_template, get_template, update_template};
 use koloda_sync_proto::registry::Kind;
 use rusqlite::types::Value;
@@ -130,7 +130,7 @@ fn sync_state(db: &Database) -> SyncState {
 #[test]
 fn join_mode_follows_the_files_rows_and_space() {
     type Setup = fn() -> Database;
-    let cases: [(&str, Setup, JoinMode); 11] = [
+    let cases: [(&str, Setup, JoinMode); 12] = [
         ("fresh database", test_db, JoinMode::Blank),
         ("first-run seed", seeded_db, JoinMode::UntouchedSeed),
         (
@@ -217,6 +217,17 @@ fn join_mode_follows_the_files_rows_and_space() {
                 let db = seeded_db();
                 enroll_device(&db, Uuid::now_v7(), OTHER_SPACE, SpaceRole::Joiner, EPOCH, SERVER_URL)
                     .expect("database enrolls");
+                db
+            },
+            JoinMode::AttachedElsewhere,
+        ),
+        (
+            "detached from another space",
+            || {
+                let db = seeded_db();
+                enroll_device(&db, Uuid::now_v7(), OTHER_SPACE, SpaceRole::Joiner, EPOCH, SERVER_URL)
+                    .expect("database enrolls");
+                detach(&db, 1).expect("database detaches");
                 db
             },
             JoinMode::UntouchedSeed,

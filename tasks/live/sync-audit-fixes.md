@@ -294,7 +294,7 @@ The owner took every recommendation on 2026-10-09.
   Commit: Finish an interrupted untouched-seed join without asking
   Depends on: none
 
-- [ ] 8. Refuse a join while the file is attached to another space
+- [x] 8. Refuse a join while the file is attached to another space
   Goal (P2, per question 6):
   - `join_mode` reports a file active in another space as its own mode.
   - `join` refuses it with `CannotJoin` before it writes `sync_enrolling` and before the claim.

@@ -352,8 +352,10 @@ impl Shared {
         // re-attach is refused while its code can still be used by another device.
         let space = target.space;
         let mode = self.blocking(move |shared| join_mode(&shared.db, space)).await?;
-        if mode == JoinMode::Reattach {
-            return self.reattach(target, code, device_name).await;
+        match mode {
+            JoinMode::Reattach => return self.reattach(target, code, device_name).await,
+            JoinMode::AttachedElsewhere => return Err(SyncError::CannotJoin(mode)),
+            JoinMode::Blank | JoinMode::UntouchedSeed | JoinMode::Used => {}
         }
 
         let (claim, credentials) = self.claim(&target, code, device_name).await?;
