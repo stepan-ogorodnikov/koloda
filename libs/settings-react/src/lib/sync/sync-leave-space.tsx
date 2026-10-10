@@ -24,6 +24,8 @@ export function SyncLeaveSpace({ sync }: SyncLeaveSpaceProps) {
     mutate(undefined, {
       onSuccess: (status) => {
         setIsOpen(false);
+        // WHY: the list marked this device as its own; after a later join it is another device of that space.
+        queryClient.removeQueries({ queryKey: queryKeys.sync.devices() });
         queryClient.setQueryData(queryKeys.sync.status(), status);
       },
     });

@@ -98,7 +98,7 @@ describe("SettingsSyncDevices", () => {
     expect(getDevices).toHaveBeenCalledTimes(2);
   });
 
-  it("leaves the space only once confirmed, and keeps the status it returns", async () => {
+  it("leaves the space only once confirmed, keeps the status it returns, and forgets the device list", async () => {
     const left: SyncStatus = {
       state: { type: "stopped", stop: { reason: "revoked" } },
       lastSuccessAt: null,
@@ -122,5 +122,6 @@ describe("SettingsSyncDevices", () => {
 
     expect(detach).toHaveBeenCalled();
     expect(queryClient.getQueryData(["sync", "status"])).toBe(left);
+    expect(queryClient.getQueryData(["sync", "devices"])).toBeUndefined();
   });
 });

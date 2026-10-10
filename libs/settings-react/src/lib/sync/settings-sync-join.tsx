@@ -59,6 +59,8 @@ export function JoinFlow({ sync, onDone, onCancel }: JoinFlowProps) {
       onSuccess: (result) => {
         // INVARIANT: a used database's status waits for Add or Replace; the page asks, with this count.
         setKnownIds(result.mode === "used" ? result.knownIds : null);
+        // WHY: a list cached before a leave still marks the old device as this one.
+        queryClient.removeQueries({ queryKey: queryKeys.sync.devices() });
         queryClient.setQueryData(queryKeys.sync.status(), result.status);
         onDone();
       },
