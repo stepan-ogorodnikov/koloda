@@ -357,6 +357,70 @@ msgstr "Переключить язык"
 msgid "settings.hotkeys.ui.toggle-sidebar-controls"
 msgstr "Переключить боковую панель"
 
+#: ../../libs/app/src/lib/error.ts:127
+msgid "sync.already-enrolled"
+msgstr "Это устройство уже синхронизируется с пространством"
+
+#: ../../libs/app/src/lib/error.ts:133
+msgid "sync.attached-elsewhere"
+msgstr "Это устройство в другом пространстве. Выйдите из него, прежде чем подключаться к этому"
+
+#: ../../libs/app/src/lib/error.ts:134
+msgid "sync.cannot-join"
+msgstr "Это устройство не может подключиться к этому пространству"
+
+#: ../../libs/app/src/lib/error.ts:132
+msgid "sync.clock-skew"
+msgstr "Часы этого устройства расходятся с часами сервера синхронизации больше чем на 5 минут"
+
+#: ../../libs/app/src/lib/error.ts:129
+msgid "sync.detached"
+msgstr "Это устройство больше не в пространстве"
+
+#: ../../libs/app/src/lib/error.ts:137
+msgid "sync.failed"
+msgstr "Синхронизация не удалась"
+
+#: ../../libs/app/src/lib/error.ts:135
+msgid "sync.insecure-server-url"
+msgstr "Используйте адрес https, а http — только для сервера на этом компьютере"
+
+#: ../../libs/app/src/lib/error.ts:136
+msgid "sync.low-disk"
+msgstr "Недостаточно места на диске, чтобы загрузить пространство"
+
+#: ../../libs/app/src/lib/error.ts:128
+msgid "sync.not-enrolled"
+msgstr "Это устройство не синхронизируется с пространством"
+
+#: ../../libs/app/src/lib/error.ts:130
+msgid "sync.pair-again"
+msgstr "Сервер синхронизации больше не знает это устройство. Подключитесь к пространству снова с новым кодом"
+
+#: ../../libs/app/src/lib/error.ts:124
+msgid "sync.pairing-failed"
+msgstr "Код подключения неверный, истёк или уже использован"
+
+#: ../../libs/app/src/lib/error.ts:125
+msgid "sync.rate-limited"
+msgstr "Слишком много попыток. Подождите минуту и попробуйте снова"
+
+#: ../../libs/app/src/lib/error.ts:131
+msgid "sync.restore-held"
+msgstr "Сервер синхронизации восстановлен из резервной копии. Подтвердите восстановление, чтобы продолжить синхронизацию"
+
+#: ../../libs/app/src/lib/error.ts:126
+msgid "sync.server"
+msgstr "Сервер синхронизации сообщил об ошибке"
+
+#: ../../libs/app/src/lib/error.ts:123
+msgid "sync.unauthorized"
+msgstr "Сервер синхронизации не принял токен"
+
+#: ../../libs/app/src/lib/error.ts:122
+msgid "sync.unreachable"
+msgstr "Не удалось связаться с сервером синхронизации"
+
 #: ../../libs/app/src/lib/error.ts:10
 msgid "unknown"
 msgstr "Произошла ошибка"

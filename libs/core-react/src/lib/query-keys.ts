@@ -54,6 +54,9 @@ export const queryKeys = {
   reviews: {
     card: (data: GetReviewsData) => ["reviews", String(data.cardId)] as const,
   },
+  sync: {
+    status: () => ["sync", "status"] as const,
+  },
   templates: {
     all: () => ["templates"] as const,
     detail: (id: Template["id"]) => ["templates", String(id)] as const,

@@ -2,7 +2,7 @@ import type { InterfaceSettings } from "@koloda/app";
 import { DEFAULT_INTERFACE_SETTINGS } from "@koloda/app";
 import { DEFAULT_HOTKEYS_SETTINGS } from "@koloda/app";
 import { DEFAULT_LEARNING_SETTINGS } from "@koloda/app";
-import type { DbStatus, SeedDbData } from "@koloda/native-ipc";
+import type { DbStatus, SeedDbData, SyncStarter } from "@koloda/native-ipc";
 import { DEFAULT_FSRS_ALGORITHM, DEFAULT_TEMPLATE } from "@koloda/srs";
 import { msg } from "@lingui/core/macro";
 import type { I18nContext } from "@lingui/react";
@@ -14,14 +14,21 @@ export async function getStatus(): Promise<DbStatus> {
 
 type seedParams = Partial<InterfaceSettings> & { t: I18nContext["_"] };
 
+// INVARIANT: the first-run seed and the rows sync repair creates when none is left are the same starter content.
+export function starterContent(t: I18nContext["_"]): SyncStarter {
+  const title = t(msg`app.setup.default-title`);
+  return {
+    algorithm: { title, content: DEFAULT_FSRS_ALGORITHM },
+    template: { ...DEFAULT_TEMPLATE, title },
+  };
+}
+
 export async function seedDB({ t, ...settings }: seedParams): Promise<void> {
   const status = await getStatus();
   if (status === "ok") return;
 
-  const title = t(msg`app.setup.default-title`);
   const data: SeedDbData = {
-    algorithm: { title, content: DEFAULT_FSRS_ALGORITHM },
-    template: { ...DEFAULT_TEMPLATE, title },
+    ...starterContent(t),
     settings: {
       interface: { ...DEFAULT_INTERFACE_SETTINGS, ...settings },
       learning: DEFAULT_LEARNING_SETTINGS,

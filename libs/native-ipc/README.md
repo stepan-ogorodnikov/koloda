@@ -2,7 +2,7 @@
 
 Machine-checked contract for the desktop renderer↔main command surface: the `DataIpc`
 channel map (`{ args; result }` per channel), the wire types only this boundary needs,
-and the push-channel constants (`AI_STREAM_CHANNEL`, `APP_SHUTDOWN_*`, `WINDOW_*`).
+and the push-channel constants (`AI_STREAM_CHANNEL`, `SYNC_EVENT_CHANNEL`, `APP_SHUTDOWN_*`, `WINDOW_*`).
 
 ## Where it sits
 
@@ -14,7 +14,8 @@ surfacing as "no handler" at runtime. The human-readable surface it enforces is
 ## Architectural Map
 
 - `src/index.ts` — the whole package: `DataIpc` contract, `DataChannel`/
-  `DataOnlyChannel`/`IpcArgs`/`IpcResult` helpers, push-channel constants, `AiStreamEvent`.
+  `DataOnlyChannel`/`IpcArgs`/`IpcResult` helpers, push-channel constants, `AiStreamEvent`,
+  and the sync wire types `SyncEvent`, `SyncKind`, and `SyncStarter`.
 
 ### Does NOT own (prevent scope creep)
 

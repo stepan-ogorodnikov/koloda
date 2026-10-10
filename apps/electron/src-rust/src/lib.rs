@@ -7,12 +7,17 @@ use koloda::domain::lessons::GetLessonsParams;
 use koloda::domain::settings::SettingsName;
 use koloda::repo;
 use napi::bindgen_prelude::*;
-use napi::{Env, JsObject};
+use napi::threadsafe_function::ThreadSafeCallContext;
+use napi::{Env, JsFunction, JsObject};
 use napi_derive::napi;
 use std::num::NonZeroU32;
 use std::panic::{self, AssertUnwindSafe};
 use std::sync::mpsc::{self, Sender};
+use std::sync::Arc;
 use std::thread;
+use sync::{EventCallback, StarterWire, StatusWire, SyncHost};
+
+mod sync;
 
 fn to_napi_error(err: AppError) -> Error {
     let error_json = serde_json::json!({
@@ -36,6 +41,10 @@ fn parse_settings_name(name: &str) -> Result<SettingsName> {
     // rejection, not a domain failure, but the renderer still needs `{code}`.
     name.parse::<SettingsName>()
         .map_err(|e| to_napi_error(AppError::new(error_codes::UNKNOWN, Some(e.to_string()))))
+}
+
+fn sync_error(err: koloda_sync::error::SyncError) -> Error {
+    to_napi_error(sync::to_app_error(err))
 }
 
 fn to_value<T: serde::Serialize>(val: &T) -> Result<serde_json::Value> {
@@ -73,15 +82,58 @@ struct AddAttachmentWire {
     height: Option<NonZeroU32>,
 }
 
-type Job = Box<dyn FnOnce(&Database) + Send>;
+type Job<C> = Box<dyn FnOnce(&C) + Send>;
+
+fn spawn_worker<C: Send + 'static>(name: &str, context: C) -> Result<Sender<Job<C>>> {
+    let (jobs, queue) = mpsc::channel::<Job<C>>();
+    thread::Builder::new()
+        .name(name.to_string())
+        .spawn(move || {
+            for job in queue {
+                job(&context);
+            }
+        })
+        .map_err(|e| to_napi_error(AppError::new(error_codes::UNKNOWN, Some(e.to_string()))))?;
+    Ok(jobs)
+}
+
+fn queue<C, T, F>(env: Env, jobs: &Sender<Job<C>>, worker: &'static str, work: F) -> Result<JsObject>
+where
+    C: 'static,
+    T: ToNapiValue + Send + 'static,
+    F: FnOnce(&C) -> Result<T> + Send + 'static,
+{
+    let (deferred, promise) = env.create_deferred()?;
+    let job: Job<C> = Box::new(move |context| {
+        // WHY: a panic would otherwise kill the worker and leave every later call pending.
+        match panic::catch_unwind(AssertUnwindSafe(|| work(context))) {
+            Ok(Ok(value)) => deferred.resolve(move |_| Ok(value)),
+            Ok(Err(err)) => deferred.reject(err),
+            Err(_) => deferred.reject(to_napi_error(AppError::new(
+                error_codes::UNKNOWN,
+                Some(format!("{worker} worker panicked")),
+            ))),
+        }
+    });
+    jobs.send(job).map_err(|e| {
+        to_napi_error(AppError::new(
+            error_codes::UNKNOWN,
+            Some(format!("{worker} worker stopped: {e}")),
+        ))
+    })?;
+    Ok(promise)
+}
 
 // WHY: SQLite work used to run on Electron's main thread, so a slow query froze every
 // window. Each method now queues its body on one dedicated thread and returns a Promise.
 // INVARIANT: one FIFO worker — jobs run in call order, exactly as the synchronous calls did,
 // so a read issued after a write always sees it. Do not move this onto the libuv pool.
+// Sync host calls wait on the network, so they queue on a second FIFO worker of their own.
 #[napi]
 pub struct KolodaDb {
-    jobs: Sender<Job>,
+    jobs: Sender<Job<Database>>,
+    sync: Arc<SyncHost>,
+    sync_jobs: Sender<Job<Arc<SyncHost>>>,
 }
 
 impl KolodaDb {
@@ -90,25 +142,29 @@ impl KolodaDb {
         T: ToNapiValue + Send + 'static,
         F: FnOnce(&Database) -> Result<T> + Send + 'static,
     {
-        let (deferred, promise) = env.create_deferred()?;
-        let job: Job = Box::new(move |db| {
-            // WHY: a panic would otherwise kill the worker and leave every later call pending.
-            match panic::catch_unwind(AssertUnwindSafe(|| work(db))) {
-                Ok(Ok(value)) => deferred.resolve(move |_| Ok(value)),
-                Ok(Err(err)) => deferred.reject(err),
-                Err(_) => deferred.reject(to_napi_error(AppError::new(
-                    error_codes::UNKNOWN,
-                    Some("Database worker panicked".to_string()),
-                ))),
-            }
-        });
-        self.jobs.send(job).map_err(|e| {
-            to_napi_error(AppError::new(
-                error_codes::UNKNOWN,
-                Some(format!("Database worker stopped: {e}")),
-            ))
-        })?;
-        Ok(promise)
+        queue(env, &self.jobs, "Database", work)
+    }
+
+    // INVARIANT: every product write goes through here; the engine syncs a write only once it hears of it.
+    fn run_write<T, F>(&self, env: Env, work: F) -> Result<JsObject>
+    where
+        T: ToNapiValue + Send + 'static,
+        F: FnOnce(&Database) -> Result<T> + Send + 'static,
+    {
+        let sync = Arc::clone(&self.sync);
+        self.run(env, move |db| {
+            let value = work(db)?;
+            sync.notify_local_change();
+            Ok(value)
+        })
+    }
+
+    fn run_sync<T, F>(&self, env: Env, work: F) -> Result<JsObject>
+    where
+        T: ToNapiValue + Send + 'static,
+        F: FnOnce(&SyncHost) -> Result<T> + Send + 'static,
+    {
+        queue(env, &self.sync_jobs, "Sync", move |sync: &Arc<SyncHost>| work(sync))
     }
 }
 
@@ -118,16 +174,12 @@ impl KolodaDb {
     #[napi(constructor)]
     pub fn new(db_path: String) -> Result<Self> {
         let db = Database::init(db_path).map_err(to_napi_error)?;
-        let (jobs, queue) = mpsc::channel::<Job>();
-        thread::Builder::new()
-            .name("koloda-db".to_string())
-            .spawn(move || {
-                for job in queue {
-                    job(&db);
-                }
-            })
-            .map_err(|e| to_napi_error(AppError::new(error_codes::UNKNOWN, Some(e.to_string()))))?;
-        Ok(Self { jobs })
+        let sync = Arc::new(SyncHost::new(db.clone()));
+        Ok(Self {
+            jobs: spawn_worker("koloda-db", db)?,
+            sync_jobs: spawn_worker("koloda-sync-host", Arc::clone(&sync))?,
+            sync,
+        })
     }
 
     #[napi]
@@ -177,7 +229,7 @@ impl KolodaDb {
 
     #[napi]
     pub fn add_card(&self, env: Env, data: serde_json::Value) -> Result<JsObject> {
-        self.run(env, move |db| {
+        self.run_write(env, move |db| {
             let data = from_wire(data)?;
             let card = repo::cards::add_card(db, data).map_err(to_napi_error)?;
             to_value(&card)
@@ -186,7 +238,7 @@ impl KolodaDb {
 
     #[napi]
     pub fn add_cards(&self, env: Env, cards_data: serde_json::Value) -> Result<JsObject> {
-        self.run(env, move |db| {
+        self.run_write(env, move |db| {
             let cards = from_wire(cards_data)?;
             let result = repo::cards::add_cards(db, cards).map_err(to_napi_error)?;
             to_value(&result)
@@ -195,7 +247,7 @@ impl KolodaDb {
 
     #[napi]
     pub fn update_card(&self, env: Env, data: serde_json::Value) -> Result<JsObject> {
-        self.run(env, move |db| {
+        self.run_write(env, move |db| {
             let data = from_wire(data)?;
             let card = repo::cards::update_card(db, data).map_err(to_napi_error)?;
             to_value(&card)
@@ -204,7 +256,7 @@ impl KolodaDb {
 
     #[napi]
     pub fn delete_card(&self, env: Env, data: serde_json::Value) -> Result<JsObject> {
-        self.run(env, move |db| {
+        self.run_write(env, move |db| {
             let data = from_wire(data)?;
             repo::cards::delete_card(db, data).map_err(to_napi_error)
         })
@@ -212,7 +264,7 @@ impl KolodaDb {
 
     #[napi]
     pub fn delete_cards(&self, env: Env, data: serde_json::Value) -> Result<JsObject> {
-        self.run(env, move |db| {
+        self.run_write(env, move |db| {
             let data = from_wire(data)?;
             repo::cards::delete_cards(db, data).map_err(to_napi_error)
         })
@@ -220,7 +272,7 @@ impl KolodaDb {
 
     #[napi]
     pub fn reset_card_progress(&self, env: Env, data: serde_json::Value) -> Result<JsObject> {
-        self.run(env, move |db| {
+        self.run_write(env, move |db| {
             let data = from_wire(data)?;
             let card = repo::cards::reset_card_progress(db, data).map_err(to_napi_error)?;
             to_value(&card)
@@ -246,7 +298,7 @@ impl KolodaDb {
 
     #[napi]
     pub fn add_algorithm(&self, env: Env, data: serde_json::Value) -> Result<JsObject> {
-        self.run(env, move |db| {
+        self.run_write(env, move |db| {
             let data = from_wire(data)?;
             let algorithm = repo::algorithms::add_algorithm(db, data).map_err(to_napi_error)?;
             to_value(&algorithm)
@@ -255,7 +307,7 @@ impl KolodaDb {
 
     #[napi]
     pub fn update_algorithm(&self, env: Env, data: serde_json::Value) -> Result<JsObject> {
-        self.run(env, move |db| {
+        self.run_write(env, move |db| {
             let data = from_wire(data)?;
             let algorithm = repo::algorithms::update_algorithm(db, data).map_err(to_napi_error)?;
             to_value(&algorithm)
@@ -264,7 +316,7 @@ impl KolodaDb {
 
     #[napi]
     pub fn clone_algorithm(&self, env: Env, data: serde_json::Value) -> Result<JsObject> {
-        self.run(env, move |db| {
+        self.run_write(env, move |db| {
             let data = from_wire(data)?;
             let algorithm = repo::algorithms::clone_algorithm(db, data).map_err(to_napi_error)?;
             to_value(&algorithm)
@@ -273,7 +325,7 @@ impl KolodaDb {
 
     #[napi]
     pub fn delete_algorithm(&self, env: Env, data: serde_json::Value) -> Result<JsObject> {
-        self.run(env, move |db| {
+        self.run_write(env, move |db| {
             let data = from_wire(data)?;
             repo::algorithms::delete_algorithm(db, data).map_err(to_napi_error)
         })
@@ -307,7 +359,7 @@ impl KolodaDb {
 
     #[napi]
     pub fn add_deck(&self, env: Env, data: serde_json::Value) -> Result<JsObject> {
-        self.run(env, move |db| {
+        self.run_write(env, move |db| {
             let data = from_wire(data)?;
             let deck = repo::decks::add_deck(db, data).map_err(to_napi_error)?;
             to_value(&deck)
@@ -316,7 +368,7 @@ impl KolodaDb {
 
     #[napi]
     pub fn update_deck(&self, env: Env, data: serde_json::Value) -> Result<JsObject> {
-        self.run(env, move |db| {
+        self.run_write(env, move |db| {
             let data = from_wire(data)?;
             let deck = repo::decks::update_deck(db, data).map_err(to_napi_error)?;
             to_value(&deck)
@@ -325,7 +377,7 @@ impl KolodaDb {
 
     #[napi]
     pub fn delete_deck(&self, env: Env, data: serde_json::Value) -> Result<JsObject> {
-        self.run(env, move |db| {
+        self.run_write(env, move |db| {
             let data = from_wire(data)?;
             repo::decks::delete_deck(db, data).map_err(to_napi_error)
         })
@@ -350,7 +402,7 @@ impl KolodaDb {
 
     #[napi]
     pub fn add_template(&self, env: Env, data: serde_json::Value) -> Result<JsObject> {
-        self.run(env, move |db| {
+        self.run_write(env, move |db| {
             let data = from_wire(data)?;
             let template = repo::templates::add_template(db, data).map_err(to_napi_error)?;
             to_value(&template)
@@ -359,7 +411,7 @@ impl KolodaDb {
 
     #[napi]
     pub fn update_template(&self, env: Env, data: serde_json::Value) -> Result<JsObject> {
-        self.run(env, move |db| {
+        self.run_write(env, move |db| {
             let data = from_wire(data)?;
             let template = repo::templates::update_template(db, data).map_err(to_napi_error)?;
             to_value(&template)
@@ -368,7 +420,7 @@ impl KolodaDb {
 
     #[napi]
     pub fn clone_template(&self, env: Env, data: serde_json::Value) -> Result<JsObject> {
-        self.run(env, move |db| {
+        self.run_write(env, move |db| {
             let data = from_wire(data)?;
             let template = repo::templates::clone_template(db, data).map_err(to_napi_error)?;
             to_value(&template)
@@ -377,7 +429,7 @@ impl KolodaDb {
 
     #[napi]
     pub fn delete_template(&self, env: Env, data: serde_json::Value) -> Result<JsObject> {
-        self.run(env, move |db| {
+        self.run_write(env, move |db| {
             let data = from_wire(data)?;
             repo::templates::delete_template(db, data).map_err(to_napi_error)
         })
@@ -404,7 +456,7 @@ impl KolodaDb {
 
     #[napi]
     pub fn set_settings(&self, env: Env, params: serde_json::Value) -> Result<JsObject> {
-        self.run(env, move |db| {
+        self.run_write(env, move |db| {
             #[derive(serde::Deserialize)]
             struct P {
                 name: String,
@@ -419,7 +471,7 @@ impl KolodaDb {
 
     #[napi]
     pub fn patch_settings(&self, env: Env, params: serde_json::Value) -> Result<JsObject> {
-        self.run(env, move |db| {
+        self.run_write(env, move |db| {
             #[derive(serde::Deserialize)]
             struct P {
                 name: String,
@@ -494,7 +546,7 @@ impl KolodaDb {
 
     #[napi]
     pub fn submit_lesson_result(&self, env: Env, data: serde_json::Value) -> Result<JsObject> {
-        self.run(env, move |db| {
+        self.run_write(env, move |db| {
             let data = from_wire(data)?;
             repo::lessons::submit_lesson_result(db, data).map_err(to_napi_error)
         })
@@ -603,6 +655,33 @@ impl KolodaDb {
         self.run(env, move |db| {
             let data: koloda::domain::ai::RemoveProfileData = from_wire(data)?;
             repo::ai::remove_ai_profile(db, &data.id).map_err(to_napi_error)
+        })
+    }
+
+    #[napi]
+    pub fn sync_start(&self, env: Env, starter: serde_json::Value, on_event: JsFunction) -> Result<JsObject> {
+        let on_event: EventCallback = on_event
+            .create_threadsafe_function(0, |ctx: ThreadSafeCallContext<serde_json::Value>| Ok(vec![ctx.value]))?;
+        self.run_sync(env, move |sync| {
+            let starter: StarterWire = from_wire(starter)?;
+            let status = sync.start(starter, on_event).map_err(sync_error)?;
+            to_value(&StatusWire::from(status))
+        })
+    }
+
+    #[napi]
+    pub fn sync_status(&self, env: Env) -> Result<JsObject> {
+        self.run_sync(env, move |sync| {
+            let status = sync.engine().and_then(|engine| engine.status()).map_err(sync_error)?;
+            to_value(&StatusWire::from(status))
+        })
+    }
+
+    #[napi]
+    pub fn sync_nudge(&self, env: Env) -> Result<JsObject> {
+        self.run_sync(env, move |sync| {
+            sync.nudge();
+            Ok(())
         })
     }
 }

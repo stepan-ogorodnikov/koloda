@@ -117,7 +117,7 @@ The owner took every recommendation on 2026-10-10, except question 5: no e2e tes
 
 ## Plan
 
-- [ ] 1. Run the sync engine in the desktop app
+- [x] 1. Run the sync engine in the desktop app
   Goal:
   - `koloda-electron` depends on `koloda-sync`, `koloda-sync-proto`, and `uuid`.
   - `KolodaDb` keeps a clone of its `Database`, which shares one connection, and a slot for the engine.
@@ -155,6 +155,17 @@ The owner took every recommendation on 2026-10-10, except question 5: no e2e tes
     - one map from kind to query keys, with a test that every `Kind` has an entry;
     - the `staleTime` WHY in `app-providers.tsx` says rows change by mutation or by sync.
   - `IPC.md` §Sync, `apps/electron/README.md`, and `crates/koloda-sync/README.md` describe the above.
+  - Implementation:
+    - the host is `SyncHost` in `src-rust/src/sync.rs`; one generic `queue` runs both workers' jobs;
+    - `uuid` waits for item 4, its first user;
+    - the codes are `sync_error_codes` in `sync.rs`, and `error-parity.test.ts` parses them beside `error_codes`;
+    - `SyncStatus` lives in `@koloda/app`, for the settings screens; `SyncEvent`, `SyncKind`, and `SyncStarter`
+      live in `@koloda/native-ipc`;
+    - the renderer's start and nudges are `use-sync-engine.ts`, and `sync-events.ts` maps kinds to query keys;
+      its test reads the kinds from the Rust registry;
+    - the renderer's Vitest config aliases the Lingui macro as the web's does, so a test can import query keys;
+    - `seedDB` and the engine's starter share `starterContent` in `setup.ts`;
+    - `bun run check:push` does not run `cargo test -p koloda-electron`, as before; its tests were run by hand.
   Constraints:
   - No change to `koloda-sync`, `koloda`, or the server.
   - The `koloda-db` FIFO invariant holds: sync queues nothing on that thread.

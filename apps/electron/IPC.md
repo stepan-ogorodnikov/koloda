@@ -73,6 +73,28 @@ over `KolodaDb`, streaming tool events back on the same channel.
   - Network failure, timeout, and a non-2xx status are `attachments.fetch`.
   - The bytes go through `KolodaDb.addAttachment`, so the repo sniffs, hashes, and dedupes them.
 
+## Sync (`src/sync-ipc.ts`)
+
+The `koloda-sync` engine runs inside the addon on the app's database (`src-rust/src/sync.rs`).
+Its host calls wait on the network, so they run on a sync thread of their own, never on the database thread.
+Every product write command tells the engine a local commit happened; conversations, AI profiles, and attachment
+writes capture nothing and do not.
+
+- `cmd_sync_start` `{ starter }` — starts the engine on the first call and returns the status.
+  - `starter` is the algorithm and template sync repair creates when none is left.
+    The first-run seed builds the same content.
+  - The background runner starts once the database is in a space; a database in no space runs nothing.
+  - A later call, as after a renderer reload, only returns the status.
+- `cmd_sync_status` — the current `SyncStatus` (`@koloda/app`).
+- `cmd_sync_nudge` — asks the runner to sync now; main also nudges when the system resumes.
+- Engine events stream on `SYNC_EVENT_CHANNEL` (`sync:event`) to every window as a `SyncEvent`:
+  - `changed` `{ kinds }` — rows of these kinds changed; the renderer refreshes the queries each kind feeds;
+  - `status` `{ status }` — the status after each change of state;
+  - `attachmentsFetched` `{ ids }` — these images arrived.
+- An engine `error` event goes to main's log only; the status already says why sync stopped.
+- Failures cross as `{ code, details }` with a `sync.*` code (`sync_error_codes` in `src-rust/src/sync.rs`), or the
+  `koloda` code of a local failure.
+
 ## Window and Lifecycle
 
 Channel names below are exported as `WINDOW_*_CHANNEL` constants from `@koloda/native-ipc` — both

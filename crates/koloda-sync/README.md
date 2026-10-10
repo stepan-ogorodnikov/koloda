@@ -1,7 +1,8 @@
 # koloda-sync
 
 The sync engine on native devices: it calls `koloda-server` and drives `koloda`'s sync tables.
-A library crate with no product surface: no app calls it yet, so `docs/decisions/APP-ROLES.md` has no row for it.
+A library crate with no product surface of its own: the desktop addon (`apps/electron/src-rust/src/sync.rs`) hosts
+it, so `docs/decisions/APP-ROLES.md` has no row for it.
 It links `koloda` and `koloda-sync-proto`; the web host never syncs.
 
 ## Where it sits

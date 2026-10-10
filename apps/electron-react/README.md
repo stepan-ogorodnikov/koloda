@@ -26,8 +26,10 @@ Normally booted by `nx run @koloda/electron:serve`; runs standalone in a browser
 - IPC bridge: `src/app/electron.ts` — typed `window.electronAPI` wrapper; IPC error payloads become `AppError`.
 - Wire format: `src/app/ipc.ts` — `toWire`/`fromWire` (Date to epoch ms, BigInt checks) for NAPI-safe payloads.
 - AI runtime: `src/app/ai-runtime.ts` — streaming chat over the `ai:stream` channel; errors map to `AIError`.
+- Sync: `src/app/use-sync-engine.ts` starts the engine once the database status is known and nudges it on focus and
+  when the network returns; `src/app/sync-events.ts` refreshes the queries each synced kind feeds.
 - Queries: `src/app/queries.ts` — the `Queries` contract as `cmd_*` invokes against the Rust core.
-- Setup: `src/app/setup.ts` — database status and seeding via IPC.
+- Setup: `src/app/setup.ts` — database status, seeding via IPC, and the starter content sync repair shares.
 - Close coordination: `src/app/electron-close-coordination.ts` — durable interrupt and flush before window destroy.
 - Store wiring: `src/app/store.ts` — jotai store, UI preferences, navigator locale detection.
 - Chrome: `src/components/` — app entry with the blank-database setup gate, setup screen, titlebar.

@@ -357,6 +357,70 @@ msgstr "Toggle language"
 msgid "settings.hotkeys.ui.toggle-sidebar-controls"
 msgstr "Toggle sidebar"
 
+#: ../../libs/app/src/lib/error.ts:127
+msgid "sync.already-enrolled"
+msgstr "This device already syncs with a space"
+
+#: ../../libs/app/src/lib/error.ts:133
+msgid "sync.attached-elsewhere"
+msgstr "This device is in another space. Leave it before joining this one"
+
+#: ../../libs/app/src/lib/error.ts:134
+msgid "sync.cannot-join"
+msgstr "This device can't join that space"
+
+#: ../../libs/app/src/lib/error.ts:132
+msgid "sync.clock-skew"
+msgstr "This device's clock is more than 5 minutes off the sync server's"
+
+#: ../../libs/app/src/lib/error.ts:129
+msgid "sync.detached"
+msgstr "This device is no longer in the space"
+
+#: ../../libs/app/src/lib/error.ts:137
+msgid "sync.failed"
+msgstr "Sync failed"
+
+#: ../../libs/app/src/lib/error.ts:135
+msgid "sync.insecure-server-url"
+msgstr "Use an https address, or http only for a server on this computer"
+
+#: ../../libs/app/src/lib/error.ts:136
+msgid "sync.low-disk"
+msgstr "Not enough free disk space to download the space"
+
+#: ../../libs/app/src/lib/error.ts:128
+msgid "sync.not-enrolled"
+msgstr "This device doesn't sync with a space"
+
+#: ../../libs/app/src/lib/error.ts:130
+msgid "sync.pair-again"
+msgstr "The sync server no longer knows this device. Join the space again with a new pairing code"
+
+#: ../../libs/app/src/lib/error.ts:124
+msgid "sync.pairing-failed"
+msgstr "The pairing code is wrong, expired, or already used"
+
+#: ../../libs/app/src/lib/error.ts:125
+msgid "sync.rate-limited"
+msgstr "Too many attempts. Wait a minute and try again"
+
+#: ../../libs/app/src/lib/error.ts:131
+msgid "sync.restore-held"
+msgstr "The sync server was restored from a backup. Confirm the restore to keep syncing"
+
+#: ../../libs/app/src/lib/error.ts:126
+msgid "sync.server"
+msgstr "The sync server reported an error"
+
+#: ../../libs/app/src/lib/error.ts:123
+msgid "sync.unauthorized"
+msgstr "The sync server didn't accept the token"
+
+#: ../../libs/app/src/lib/error.ts:122
+msgid "sync.unreachable"
+msgstr "Couldn't reach the sync server"
+
 #: ../../libs/app/src/lib/error.ts:10
 msgid "unknown"
 msgstr "An error occurred"

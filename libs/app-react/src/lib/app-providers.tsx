@@ -54,7 +54,8 @@ export function AppProviders({ store, basepath, history, activateLanguage, getLa
           queries: {
             retry: false,
             // WHY: all data lives in a local database and changes only through
-            // explicit mutations, which invalidate the affected queries. Without
+            // explicit mutations or, on the desktop, sync, and both invalidate the
+            // affected queries (sync per kind, `apps/electron-react` `sync-events.ts`). Without
             // a staleTime every (re)mounting observer considers data stale and
             // refetches, replacing cached object identities and triggering
             // re-render cascades across consumers of the same query.

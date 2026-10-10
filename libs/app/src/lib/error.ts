@@ -119,6 +119,22 @@ export const ERROR_MESSAGES = {
   keyring: msg`keyring`,
   "secret-store": msg`secret-store`,
   "windows-credentials": msg`windows-credentials`,
+  "sync.unreachable": msg`sync.unreachable`,
+  "sync.unauthorized": msg`sync.unauthorized`,
+  "sync.pairing-failed": msg`sync.pairing-failed`,
+  "sync.rate-limited": msg`sync.rate-limited`,
+  "sync.server": msg`sync.server`,
+  "sync.already-enrolled": msg`sync.already-enrolled`,
+  "sync.not-enrolled": msg`sync.not-enrolled`,
+  "sync.detached": msg`sync.detached`,
+  "sync.pair-again": msg`sync.pair-again`,
+  "sync.restore-held": msg`sync.restore-held`,
+  "sync.clock-skew": msg`sync.clock-skew`,
+  "sync.attached-elsewhere": msg`sync.attached-elsewhere`,
+  "sync.cannot-join": msg`sync.cannot-join`,
+  "sync.insecure-server-url": msg`sync.insecure-server-url`,
+  "sync.low-disk": msg`sync.low-disk`,
+  "sync.failed": msg`sync.failed`,
 } as const;
 
 export type ErrorCode = keyof typeof ERROR_MESSAGES;

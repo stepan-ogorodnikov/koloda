@@ -11,6 +11,8 @@ workspace = true
 
 [dependencies]
 koloda = { path = "../../../crates/koloda" }
+koloda-sync = { path = "../../../crates/koloda-sync" }
+koloda-sync-proto = { path = "../../../crates/koloda-sync-proto" }
 napi = { version = "2", features = ["napi6", "serde-json"] }
 napi-derive = "2"
 serde = { version = "1.0", features = ["derive"] }

@@ -1,7 +1,7 @@
 // Machine-checked contract for the full desktop renderer<->main command surface:
 // data commands (`apps/electron/src/data-ipc.ts`), AI commands
-// (`src/ai-ipc.ts`), and the `AI_STREAM_CHANNEL` push channel, all consumed by
-// the renderer through `invoke`.
+// (`src/ai-ipc.ts`), sync commands (`src/sync-ipc.ts`), and the `AI_STREAM_CHANNEL`
+// and `SYNC_EVENT_CHANNEL` push channels, all consumed by the renderer through `invoke`.
 //
 // Each channel maps to `{ args; result }` — the shapes crossing
 // `window.electronAPI.invoke` before `toWire`/`fromWire` coercion. Data-command
@@ -27,6 +27,7 @@ import type {
   InterfaceSettings,
   LearningSettings,
   SetConversationData,
+  SyncStatus,
 } from "@koloda/app";
 import type { AllowedSettings, PatchSettingsData, SetSettingsData, SettingsName } from "@koloda/settings";
 import type {
@@ -86,6 +87,22 @@ export type AttachmentContentWire = Attachment & { bytes: string };
 /** Payload for `cmd_add_attachment`, with its bytes base64-encoded for the NAPI wire. */
 export type AddAttachmentWire = Omit<AddAttachmentData, "bytes"> & { bytes: string };
 
+/** Starter content the sync engine creates when no algorithm or template is left (mirrors Rust `StarterWire`). */
+export type SyncStarter = {
+  algorithm: InsertAlgorithmData;
+  template: InsertTemplateData;
+};
+
+/** Wire name of a synced kind (mirrors `Kind::as_wire` in `koloda-sync-proto`). */
+export type SyncKind =
+  | "cards"
+  | "reviews"
+  | "decks"
+  | "templates"
+  | "algorithms"
+  | "algorithm_revisions"
+  | "settings.learning";
+
 /** Lesson queue query for `cmd_get_lessons` (mirrors Rust `GetLessonsParams`). */
 export type GetLessonsParams = {
   dueAt: number;
@@ -97,6 +114,9 @@ export type GetLessonsParams = {
  * Single source of truth for `ai-ipc.ts` and the renderer runtime adapter.
  */
 export const AI_STREAM_CHANNEL = "ai:stream";
+
+/** Main-to-renderer push channel for sync engine events (see `SyncEvent`). */
+export const SYNC_EVENT_CHANNEL = "sync:event";
 
 /**
  * Window-close handshake channels (see `apps/electron/src/window-close-coordinator.ts`
@@ -128,6 +148,15 @@ export type AiStreamEvent =
   | { requestId: string; type: "toolResult"; callId: string; output?: unknown; error?: string }
   | { requestId: string; type: "done"; usage?: StreamUsage }
   | { requestId: string; type: "error"; code: string; message: string };
+
+/**
+ * Events the sync engine sends on `SYNC_EVENT_CHANNEL` (mirrors Rust `EventWire`).
+ * Main logs `error` events and forwards the rest to every window.
+ */
+export type SyncEvent =
+  | { type: "changed"; kinds: SyncKind[] }
+  | { type: "status"; status: SyncStatus }
+  | { type: "attachmentsFetched"; ids: string[] };
 
 export interface DataIpc {
   get_db_status: { args: undefined; result: DbStatus };
@@ -200,6 +229,11 @@ export interface DataIpc {
   cmd_ai_list_models: { args: { profileId: string }; result: AIModel[] };
   cmd_ai_chat_stream: { args: { requestId: string; profileId: string; request: ChatStreamRequest }; result: void };
   cmd_ai_abort: { args: { requestId: string }; result: void };
+
+  // Sync commands (`sync-ipc.ts`). Engine events stream on `SYNC_EVENT_CHANNEL`.
+  cmd_sync_start: { args: { starter: SyncStarter }; result: SyncStatus };
+  cmd_sync_status: { args: undefined; result: SyncStatus };
+  cmd_sync_nudge: { args: undefined; result: void };
 }
 
 export type DataChannel = keyof DataIpc;
@@ -213,8 +247,11 @@ type AiChannel = "cmd_ai_list_models" | "cmd_ai_chat_stream" | "cmd_ai_abort";
 /** Channels registered by `media-ipc.ts` (network access in main) rather than by `data-ipc.ts`. */
 type MediaChannel = "cmd_add_attachment_from_url";
 
+/** Channels registered by `sync-ipc.ts`, which hands the engine main's event broadcaster. */
+type SyncChannel = "cmd_sync_start" | "cmd_sync_status" | "cmd_sync_nudge";
+
 /** Channels served by the `KolodaDb`-backed handler table in `data-ipc.ts`. */
-export type DataOnlyChannel = Exclude<DataChannel, AiChannel | MediaChannel>;
+export type DataOnlyChannel = Exclude<DataChannel, AiChannel | MediaChannel | SyncChannel>;
 
 export type IpcArgs<C extends DataChannel> = DataIpc[C]["args"];
 

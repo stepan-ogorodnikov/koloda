@@ -10,7 +10,7 @@
 // no data handler can reach them through this interface. Do not add it here,
 // and do not register a renderer `cmd_*` for it.
 import type { AddAIProfileData, AIProfile, RemoveAIProfileData, UpdateAIProfileData } from "@koloda/ai";
-import type { Conversation, DeleteConversationData, SetConversationData } from "@koloda/app";
+import type { Conversation, DeleteConversationData, SetConversationData, SyncStatus } from "@koloda/app";
 import type { AllowedSettings, PatchSettingsData, SetSettingsData, SettingsName } from "@koloda/settings";
 import type {
   Algorithm,
@@ -52,7 +52,12 @@ import type {
   DbStatus,
   GetLessonsParams,
   SeedDbData,
+  SyncEvent,
+  SyncStarter,
 } from "@koloda/native-ipc";
+
+/** What the engine sends the `syncStart` callback: main logs `error` and forwards the rest as a `SyncEvent`. */
+export type SyncEngineEvent = SyncEvent | { type: "error"; message: string };
 
 export interface KolodaDb {
   // Lifecycle
@@ -123,4 +128,9 @@ export interface KolodaDb {
   addAiProfile(data: AddAIProfileData): Promise<AIProfile>;
   updateAiProfile(data: UpdateAIProfileData): Promise<AIProfile>;
   removeAiProfile(data: RemoveAIProfileData): Promise<void>;
+
+  // Sync (a worker of its own; host calls wait on the network)
+  syncStart(starter: SyncStarter, onEvent: (event: SyncEngineEvent) => void): Promise<SyncStatus>;
+  syncStatus(): Promise<SyncStatus>;
+  syncNudge(): Promise<void>;
 }

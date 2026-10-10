@@ -2,11 +2,13 @@ import { Layout, QueryError } from "@koloda/ui";
 import { useQuery } from "@tanstack/react-query";
 import { Outlet } from "@tanstack/react-router";
 import { appQueryOptions } from "../app/queries";
+import { useSyncEngine } from "../app/use-sync-engine";
 import { Titlebar } from "./titlebar";
 import { Setup } from "./setup";
 
 export function AppEntry() {
   const { data, isError, error, refetch } = useQuery(appQueryOptions);
+  useSyncEngine(data !== undefined);
 
   return (
     <Layout titlebar={<Titlebar />}>
