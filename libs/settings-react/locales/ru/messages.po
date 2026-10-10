@@ -310,6 +310,11 @@ msgstr "Неограниченно"
 msgid "settings.learning.limits.untouched"
 msgstr "Новые"
 
+#: ../../libs/settings-react/src/lib/sync/settings-sync-devices.tsx:100
+#: ../../libs/settings-react/src/lib/sync/settings-sync-devices.tsx:145
+msgid "settings.sync.cancel"
+msgstr "Отмена"
+
 #: ../../libs/settings-react/src/lib/sync/settings-sync-create-space.tsx:20
 msgid "settings.sync.create"
 msgstr "Создать пространство"
@@ -325,6 +330,30 @@ msgstr "Новое пространство"
 #: ../../libs/settings-react/src/lib/sync/settings-sync-create-space.tsx:63
 msgid "settings.sync.device-name.label"
 msgstr "Имя этого устройства"
+
+#: ../../libs/settings-react/src/lib/sync/settings-sync-devices.tsx:28
+msgid "settings.sync.devices"
+msgstr "Устройства"
+
+#: ../../libs/settings-react/src/lib/sync/settings-sync-devices.tsx:44
+msgid "settings.sync.devices.last-seen {lastSeen}"
+msgstr "Был в сети {lastSeen}"
+
+#: ../../libs/settings-react/src/lib/sync/settings-sync-devices.tsx:89
+msgid "settings.sync.devices.remove"
+msgstr "Удалить"
+
+#: ../../libs/settings-react/src/lib/sync/settings-sync-devices.tsx:97
+msgid "settings.sync.devices.remove.confirm"
+msgstr "Удалить"
+
+#: ../../libs/settings-react/src/lib/sync/settings-sync-devices.tsx:93
+msgid "settings.sync.devices.remove.message {name}"
+msgstr "Удалить {name} из пространства? Устройство перестанет синхронизироваться, его данные останутся на нём."
+
+#: ../../libs/settings-react/src/lib/sync/settings-sync-devices.tsx:41
+msgid "settings.sync.devices.this-device"
+msgstr "Это устройство"
 
 #: ../../libs/settings-react/src/lib/sync/settings-sync-invite.tsx:27
 msgid "settings.sync.invite"
@@ -371,7 +400,23 @@ msgstr "Последняя синхронизация: {lastSync}"
 msgid "settings.sync.last-sync.none"
 msgstr "Синхронизации ещё не было с запуска приложения"
 
-#: ../../libs/settings-react/src/lib/sync/settings-sync.tsx:17
+#: ../../libs/settings-react/src/lib/sync/settings-sync-devices.tsx:134
+msgid "settings.sync.leave"
+msgstr "Выйти из пространства"
+
+#: ../../libs/settings-react/src/lib/sync/settings-sync-devices.tsx:142
+msgid "settings.sync.leave.confirm"
+msgstr "Выйти"
+
+#: ../../libs/settings-react/src/lib/sync/settings-sync-devices.tsx:138
+msgid "settings.sync.leave.message"
+msgstr "Это устройство перестанет синхронизироваться. Его данные останутся, а позже оно сможет снова подключиться к пространству."
+
+#: ../../libs/settings-react/src/lib/sync/settings-sync.tsx:27
+msgid "settings.sync.left"
+msgstr "Это устройство не в пространстве: оно вышло из него, или его удалило другое устройство. Данные остались здесь. Подключитесь к пространству, чтобы снова синхронизироваться."
+
+#: ../../libs/settings-react/src/lib/sync/settings-sync.tsx:21
 msgid "settings.sync.not-in-space"
 msgstr "Это устройство не синхронизируется. Создайте пространство на своём сервере синхронизации или подключитесь к пространству, созданному на другом устройстве."
 

@@ -39,6 +39,15 @@ export type IssuedPairing = {
   serverUrl: string;
 };
 
+export type SyncDevice = {
+  id: string;
+  name: string;
+  platform: "desktop-win" | "desktop-mac" | "desktop-linux" | "ios" | "android";
+  lastSeenAt: number;
+  isRevoked: boolean;
+  isSelf: boolean;
+};
+
 export type SyncStatus = {
   state: SyncState;
   lastSuccessAt: number | null;

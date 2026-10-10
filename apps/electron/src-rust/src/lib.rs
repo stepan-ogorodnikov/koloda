@@ -687,6 +687,30 @@ impl KolodaDb {
     }
 
     #[napi]
+    pub fn sync_devices(&self, env: Env) -> Result<JsObject> {
+        self.run_sync(env, move |sync| {
+            let devices = sync.devices().map_err(sync_error)?;
+            to_value(&devices)
+        })
+    }
+
+    #[napi]
+    pub fn sync_revoke_device(&self, env: Env, params: serde_json::Value) -> Result<JsObject> {
+        self.run_sync(env, move |sync| {
+            let id = extract_id(params)?;
+            sync.revoke_device(&id).map_err(sync_error)
+        })
+    }
+
+    #[napi]
+    pub fn sync_detach(&self, env: Env) -> Result<JsObject> {
+        self.run_sync(env, move |sync| {
+            let status = sync.detach().map_err(sync_error)?;
+            to_value(&StatusWire::from(status))
+        })
+    }
+
+    #[napi]
     pub fn sync_status(&self, env: Env) -> Result<JsObject> {
         self.run_sync(env, move |sync| {
             let status = sync.engine().and_then(|engine| engine.status()).map_err(sync_error)?;

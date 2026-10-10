@@ -1,4 +1,4 @@
-import type { AppError, CreateSpaceData, IssuedPairing, SyncStatus } from "@koloda/app";
+import type { AppError, CreateSpaceData, IssuedPairing, SyncDevice, SyncStatus } from "@koloda/app";
 import type { UseMutationOptions } from "@tanstack/react-query";
 import { atom } from "jotai";
 import type { AppQueryOptions } from "./queries";
@@ -8,6 +8,9 @@ export type SyncQueries = {
   getDeviceNameQuery: () => AppQueryOptions<string>;
   createSpaceMutation: () => UseMutationOptions<SyncStatus, AppError, CreateSpaceData>;
   issuePairingMutation: () => UseMutationOptions<IssuedPairing, AppError, void>;
+  getDevicesQuery: () => AppQueryOptions<SyncDevice[]>;
+  revokeDeviceMutation: () => UseMutationOptions<void, AppError, { id: string }>;
+  detachMutation: () => UseMutationOptions<SyncStatus, AppError, void>;
   nudge: () => Promise<void>;
 };
 

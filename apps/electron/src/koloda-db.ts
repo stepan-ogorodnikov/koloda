@@ -16,6 +16,7 @@ import type {
   DeleteConversationData,
   IssuedPairing,
   SetConversationData,
+  SyncDevice,
   SyncStatus,
 } from "@koloda/app";
 import type { AllowedSettings, PatchSettingsData, SetSettingsData, SettingsName } from "@koloda/settings";
@@ -142,4 +143,7 @@ export interface KolodaDb {
   syncNudge(): Promise<void>;
   syncCreateSpace(data: CreateSpaceData): Promise<SyncStatus>;
   syncIssuePairing(): Promise<IssuedPairing>;
+  syncDevices(): Promise<SyncDevice[]>;
+  syncRevokeDevice(params: { id: string }): Promise<void>;
+  syncDetach(): Promise<SyncStatus>;
 }

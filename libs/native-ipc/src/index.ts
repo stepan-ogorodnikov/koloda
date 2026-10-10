@@ -29,6 +29,7 @@ import type {
   CreateSpaceData,
   IssuedPairing,
   SetConversationData,
+  SyncDevice,
   SyncStatus,
 } from "@koloda/app";
 import type { AllowedSettings, PatchSettingsData, SetSettingsData, SettingsName } from "@koloda/settings";
@@ -238,6 +239,9 @@ export interface DataIpc {
   cmd_sync_nudge: { args: undefined; result: void };
   cmd_sync_create_space: { args: { data: CreateSpaceData }; result: SyncStatus };
   cmd_sync_issue_pairing: { args: undefined; result: IssuedPairing };
+  cmd_sync_devices: { args: undefined; result: SyncDevice[] };
+  cmd_sync_revoke_device: { args: { id: string }; result: void };
+  cmd_sync_detach: { args: undefined; result: SyncStatus };
   // The OS host name, which main reads; the default name of this device in a space.
   cmd_sync_device_name: { args: undefined; result: string };
 }
@@ -260,6 +264,9 @@ type SyncChannel =
   | "cmd_sync_nudge"
   | "cmd_sync_create_space"
   | "cmd_sync_issue_pairing"
+  | "cmd_sync_devices"
+  | "cmd_sync_revoke_device"
+  | "cmd_sync_detach"
   | "cmd_sync_device_name";
 
 /** Channels served by the `KolodaDb`-backed handler table in `data-ipc.ts`. */

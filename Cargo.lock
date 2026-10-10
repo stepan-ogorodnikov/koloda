@@ -1501,6 +1501,7 @@ dependencies = [
  "napi-derive",
  "serde",
  "serde_json",
+ "uuid",
 ]
 
 [[package]]

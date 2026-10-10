@@ -14,6 +14,7 @@ use koloda::domain::templates::InsertTemplateData;
 use koloda::repo::sync::apply::{Hold, HoldReason};
 use koloda::repo::sync::join::JoinMode;
 use koloda::repo::sync::repair::Starter;
+use koloda_sync::devices::DeviceSummary;
 use koloda_sync::disk::SystemDisk;
 use koloda_sync::engine::Engine;
 use koloda_sync::error::SyncError;
@@ -23,6 +24,7 @@ use koloda_sync::transport::HttpTransport;
 use koloda_sync_proto::transport::{ErrorCode, Platform};
 use napi::threadsafe_function::{ErrorStrategy, ThreadsafeFunction, ThreadsafeFunctionCallMode};
 use serde::{Deserialize, Serialize};
+use uuid::Uuid;
 
 /// Codes a host call fails with; `libs/app` `ERROR_MESSAGES` has a message for each (`error-parity.test.ts`).
 pub mod sync_error_codes {
@@ -67,6 +69,30 @@ pub struct PairingWire {
     code: String,
     expires_at: i64,
     server_url: String,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DeviceWire {
+    id: String,
+    name: String,
+    platform: &'static str,
+    last_seen_at: i64,
+    is_revoked: bool,
+    is_self: bool,
+}
+
+impl From<DeviceSummary> for DeviceWire {
+    fn from(device: DeviceSummary) -> DeviceWire {
+        DeviceWire {
+            id: device.id.to_string(),
+            name: device.name,
+            platform: device.platform.as_wire(),
+            last_seen_at: i64::try_from(device.last_seen).unwrap_or(i64::MAX),
+            is_revoked: device.revoked_at.is_some(),
+            is_self: device.is_self,
+        }
+    }
 }
 
 pub struct SyncHost {
@@ -129,6 +155,23 @@ impl SyncHost {
             expires_at: i64::try_from(issued.expires_at).unwrap_or(i64::MAX) - engine.skew_ms(),
             server_url: issued.server_url,
         })
+    }
+
+    pub fn devices(&self) -> Result<Vec<DeviceWire>, SyncError> {
+        let devices = self.engine()?.devices()?;
+        Ok(devices.into_iter().map(DeviceWire::from).collect())
+    }
+
+    pub fn revoke_device(&self, id: &str) -> Result<(), SyncError> {
+        let id = Uuid::parse_str(id)
+            .map_err(|error| SyncError::Local(AppError::new(error_codes::UNKNOWN, Some(error.to_string()))))?;
+        self.engine()?.revoke_device(id)
+    }
+
+    pub fn detach(&self) -> Result<Status, SyncError> {
+        let engine = self.engine()?;
+        engine.detach()?;
+        engine.status()
     }
 
     pub fn engine(&self) -> Result<&Engine, SyncError> {

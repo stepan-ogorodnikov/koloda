@@ -18,5 +18,15 @@ export const syncQueries: SyncQueries = {
   issuePairingMutation: () => ({
     mutationFn: () => invoke("cmd_sync_issue_pairing", undefined),
   }),
+  getDevicesQuery: () => ({
+    queryKey: queryKeys.sync.devices(),
+    queryFn: () => invoke("cmd_sync_devices", undefined),
+  }),
+  revokeDeviceMutation: () => ({
+    mutationFn: (data: { id: string }) => invoke("cmd_sync_revoke_device", data),
+  }),
+  detachMutation: () => ({
+    mutationFn: () => invoke("cmd_sync_detach", undefined),
+  }),
   nudge: () => invoke("cmd_sync_nudge", undefined),
 };

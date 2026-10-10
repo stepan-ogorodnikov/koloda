@@ -310,6 +310,11 @@ msgstr "Unlimited"
 msgid "settings.learning.limits.untouched"
 msgstr "New"
 
+#: ../../libs/settings-react/src/lib/sync/settings-sync-devices.tsx:100
+#: ../../libs/settings-react/src/lib/sync/settings-sync-devices.tsx:145
+msgid "settings.sync.cancel"
+msgstr "Cancel"
+
 #: ../../libs/settings-react/src/lib/sync/settings-sync-create-space.tsx:20
 msgid "settings.sync.create"
 msgstr "Create a space"
@@ -325,6 +330,30 @@ msgstr "Create a space"
 #: ../../libs/settings-react/src/lib/sync/settings-sync-create-space.tsx:63
 msgid "settings.sync.device-name.label"
 msgstr "This device's name"
+
+#: ../../libs/settings-react/src/lib/sync/settings-sync-devices.tsx:28
+msgid "settings.sync.devices"
+msgstr "Devices"
+
+#: ../../libs/settings-react/src/lib/sync/settings-sync-devices.tsx:44
+msgid "settings.sync.devices.last-seen {lastSeen}"
+msgstr "Last seen {lastSeen}"
+
+#: ../../libs/settings-react/src/lib/sync/settings-sync-devices.tsx:89
+msgid "settings.sync.devices.remove"
+msgstr "Remove"
+
+#: ../../libs/settings-react/src/lib/sync/settings-sync-devices.tsx:97
+msgid "settings.sync.devices.remove.confirm"
+msgstr "Remove"
+
+#: ../../libs/settings-react/src/lib/sync/settings-sync-devices.tsx:93
+msgid "settings.sync.devices.remove.message {name}"
+msgstr "Remove {name} from the space? It stops syncing and keeps its data."
+
+#: ../../libs/settings-react/src/lib/sync/settings-sync-devices.tsx:41
+msgid "settings.sync.devices.this-device"
+msgstr "This device"
 
 #: ../../libs/settings-react/src/lib/sync/settings-sync-invite.tsx:27
 msgid "settings.sync.invite"
@@ -371,7 +400,23 @@ msgstr "Last synced {lastSync}"
 msgid "settings.sync.last-sync.none"
 msgstr "Not synced since the app started"
 
-#: ../../libs/settings-react/src/lib/sync/settings-sync.tsx:17
+#: ../../libs/settings-react/src/lib/sync/settings-sync-devices.tsx:134
+msgid "settings.sync.leave"
+msgstr "Leave the space"
+
+#: ../../libs/settings-react/src/lib/sync/settings-sync-devices.tsx:142
+msgid "settings.sync.leave.confirm"
+msgstr "Leave"
+
+#: ../../libs/settings-react/src/lib/sync/settings-sync-devices.tsx:138
+msgid "settings.sync.leave.message"
+msgstr "This device stops syncing. Its data stays, and it can join a space again later."
+
+#: ../../libs/settings-react/src/lib/sync/settings-sync.tsx:27
+msgid "settings.sync.left"
+msgstr "This device is in no space: it left its space, or another device removed it. Its data stays here. Join a space to sync again."
+
+#: ../../libs/settings-react/src/lib/sync/settings-sync.tsx:21
 msgid "settings.sync.not-in-space"
 msgstr "This device doesn't sync. Create a space on your sync server, or join a space another device created."
 

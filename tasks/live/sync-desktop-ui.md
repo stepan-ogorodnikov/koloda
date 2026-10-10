@@ -245,7 +245,7 @@ The owner took every recommendation on 2026-10-10, except question 5: no e2e tes
   Commit: Invite a device with a pairing code
   Depends on: 2
 
-- [ ] 4. List, revoke, and leave the space's devices
+- [x] 4. List, revoke, and leave the space's devices
   Goal:
   - The page lists the space's devices (`cmd_sync_devices`): name, platform, last seen, and this device marked.
     Revoked devices are not listed.
@@ -254,6 +254,11 @@ The owner took every recommendation on 2026-10-10, except question 5: no e2e tes
     Its data stays, sync stops, and the device can join again.
   - Out of reach, the list shows the error with a retry.
   - `SYNC.md` §Devices and §Leaving a space.
+  - Implementation:
+    - the addon sends `isRevoked`, and the page leaves revoked devices out;
+    - a file that left or was revoked shows that it is in no space, without its status or devices; item 5 adds its
+      join;
+    - after leaving, the runner's cycles fail as detached; main logs each, about once a minute, until a join.
   Done when:
   - component tests: the list, both confirmations, and the error;
   - Manual verify: Settings → Sync → Leave the space → confirm → the status says the device is in no space, and its

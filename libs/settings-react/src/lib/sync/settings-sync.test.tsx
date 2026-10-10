@@ -49,6 +49,9 @@ function syncQueries(createSpace: (data: CreateSpaceData) => Promise<SyncStatus>
     getDeviceNameQuery: () => ({ queryKey: ["sync", "device_name"], queryFn: async () => "laptop" }),
     createSpaceMutation: () => ({ mutationFn: createSpace }),
     issuePairingMutation: () => ({ mutationFn: vi.fn() }),
+    getDevicesQuery: () => ({ queryKey: ["sync", "devices"], queryFn: async () => [] }),
+    revokeDeviceMutation: () => ({ mutationFn: vi.fn() }),
+    detachMutation: () => ({ mutationFn: vi.fn() }),
     nudge: vi.fn(async () => {}),
   };
 }
@@ -89,6 +92,14 @@ describe("SettingsSync", () => {
     expect(screen.queryByRole("button", { name: "settings.sync.create" })).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "settings.sync.sync-now" }));
     expect(sync.nudge).toHaveBeenCalled();
+  });
+
+  it("tells a device that left its space, instead of showing its status", () => {
+    renderSync(status({ type: "stopped", stop: { reason: "revoked" } }), syncQueries(vi.fn()));
+
+    expect(screen.getByText("settings.sync.left")).not.toBeNull();
+    expect(screen.queryByRole("button", { name: "settings.sync.sync-now" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "settings.sync.create" })).toBeNull();
   });
 
   it("shows what is left to download across both lanes while downloading", () => {

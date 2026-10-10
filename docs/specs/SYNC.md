@@ -3,7 +3,7 @@
 ## Scope
 
 Covers keeping one person's data the same on their desktop devices through a sync server they run.
-That is spaces, devices, creating a space, inviting a device, and sync status.
+That is spaces, devices, creating a space, inviting a device, managing devices, leaving a space, and sync status.
 How each kind of data behaves on its own is in its spec: CARDS.md, DECKS.md, TEMPLATES.md, ALGORITHMS.md,
 LEARNING-SETTINGS.md, and MEDIA.md.
 How two devices' edits to the same thing merge is the sync protocol's rule, not this spec's.
@@ -79,6 +79,29 @@ The dialog counts down the time left.
 Once the code expires, the dialog says so and offers a new code.
 If no code can be issued, as when the server cannot be reached, the dialog shows why and offers to try again.
 Closing the dialog does not cancel the code; it still expires on its own.
+
+## Devices
+
+Settings → Sync lists the devices in the space: each one's name, its system, and when the server last heard from it.
+This device is marked as this device.
+Removed devices, and devices that left, are not listed.
+If the server cannot be reached, the list shows why and offers to try again.
+
+"Remove" on another device asks first, then takes that device out of the space.
+Removing is how to cut off a lost or stolen device.
+The removed device stops syncing the next time it reaches the server, and keeps its data.
+It can join a space again with a new pairing code.
+A device does not remove itself; it leaves instead.
+
+## Leaving a space
+
+"Leave the space" asks first, then takes this device out of the space.
+Its data stays, and it stops syncing.
+The other devices no longer list it.
+Leaving needs the server: while the server cannot be reached, leaving fails and says why.
+
+A device that left, or was removed, shows that it is in no space.
+It can join a space again; it cannot create one.
 
 ## Status
 

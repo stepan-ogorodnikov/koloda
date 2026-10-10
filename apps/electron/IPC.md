@@ -92,6 +92,10 @@ writes capture nothing and do not.
   The setup token is sent once and not kept.
 - `cmd_sync_issue_pairing` — a pairing code for another device, the server URL, and `expiresAt` in this device's
   clock (the server's expiry minus the engine's skew estimate).
+- `cmd_sync_devices` — the space's devices: `id`, `name`, `platform`, `lastSeenAt` (server time), `isRevoked`,
+  and `isSelf`.
+- `cmd_sync_revoke_device` `{ id }` — revokes another device of the space.
+- `cmd_sync_detach` — revokes this device and detaches the database; rows stay. Returns the status.
 - `cmd_sync_device_name` — the OS host name, which main reads; the default name of this device.
 - Engine events stream on `SYNC_EVENT_CHANNEL` (`sync:event`) to every window as a `SyncEvent`:
   - `changed` `{ kinds }` — rows of these kinds changed; the renderer refreshes the queries each kind feeds;

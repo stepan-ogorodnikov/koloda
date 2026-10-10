@@ -5,7 +5,17 @@ import { hostname } from "node:os";
 import { assertAppSender } from "./app-sender";
 import type { KolodaDb, SyncEngineEvent } from "./koloda-db";
 
-type SyncDb = Pick<KolodaDb, "syncStart" | "syncStatus" | "syncNudge" | "syncCreateSpace" | "syncIssuePairing">;
+type SyncDb = Pick<
+  KolodaDb,
+  | "syncStart"
+  | "syncStatus"
+  | "syncNudge"
+  | "syncCreateSpace"
+  | "syncIssuePairing"
+  | "syncDevices"
+  | "syncRevokeDevice"
+  | "syncDetach"
+>;
 
 function broadcast(event: SyncEvent) {
   for (const window of BrowserWindow.getAllWindows()) {
@@ -42,6 +52,18 @@ export function registerSyncIpc(db: SyncDb) {
   ipcMain.handle("cmd_sync_issue_pairing", (event) => {
     assertAppSender(event);
     return db.syncIssuePairing();
+  });
+  ipcMain.handle("cmd_sync_devices", (event) => {
+    assertAppSender(event);
+    return db.syncDevices();
+  });
+  ipcMain.handle("cmd_sync_revoke_device", (event, args: IpcArgs<"cmd_sync_revoke_device">) => {
+    assertAppSender(event);
+    return db.syncRevokeDevice(args);
+  });
+  ipcMain.handle("cmd_sync_detach", (event) => {
+    assertAppSender(event);
+    return db.syncDetach();
   });
   ipcMain.handle("cmd_sync_device_name", (event) => {
     assertAppSender(event);
