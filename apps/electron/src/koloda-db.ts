@@ -154,4 +154,5 @@ export interface KolodaDb {
   syncPreview(data: PreviewRequest): Promise<SpacePreview>;
   syncJoin(data: JoinData & { settings: SeedDbData["settings"] }): Promise<JoinedSpace>;
   syncImport(params: { mode: ImportMode }): Promise<SyncStatus>;
+  syncAcceptRestore(): Promise<SyncStatus>;
 }

@@ -18,6 +18,7 @@ type SyncDb = Pick<
   | "syncPreview"
   | "syncJoin"
   | "syncImport"
+  | "syncAcceptRestore"
 >;
 
 function broadcast(event: SyncEvent) {
@@ -79,6 +80,10 @@ export function registerSyncIpc(db: SyncDb) {
   ipcMain.handle("cmd_sync_import", (event, args: IpcArgs<"cmd_sync_import">) => {
     assertAppSender(event);
     return db.syncImport(args);
+  });
+  ipcMain.handle("cmd_sync_accept_restore", (event) => {
+    assertAppSender(event);
+    return db.syncAcceptRestore();
   });
   ipcMain.handle("cmd_sync_device_name", (event) => {
     assertAppSender(event);

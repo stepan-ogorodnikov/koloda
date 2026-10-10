@@ -5,6 +5,7 @@ import { Button } from "@koloda/ui";
 import { msg, plural } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { SettingsSyncInvite } from "./settings-sync-invite";
+import { SettingsSyncProblems } from "./settings-sync-problems";
 
 const STATE_LABELS = {
   notEnrolled: msg`settings.sync.state.not-enrolled`,
@@ -34,7 +35,7 @@ export function SettingsSyncStatus({ status, sync }: SettingsSyncStatusProps) {
         </Button>
         <SettingsSyncInvite sync={sync} />
       </div>
-      {state.type === "stopped" && state.stop.reason === "error" && <p className="fg-level-2">{state.stop.message}</p>}
+      <SettingsSyncProblems status={status} sync={sync} />
       {state.type === "bootstrapping" && left > 0 && (
         <p>{_(msg`${plural(left, { other: "settings.sync.download-left" })}`)}</p>
       )}

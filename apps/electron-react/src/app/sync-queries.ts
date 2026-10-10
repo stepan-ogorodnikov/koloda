@@ -40,5 +40,8 @@ export const createSyncQueries = (getInterface: () => Partial<InterfaceSettings>
   importMutation: () => ({
     mutationFn: (mode: ImportMode) => invoke("cmd_sync_import", { mode }),
   }),
+  acceptRestoreMutation: () => ({
+    mutationFn: () => invoke("cmd_sync_accept_restore", undefined),
+  }),
   nudge: () => invoke("cmd_sync_nudge", undefined),
 });

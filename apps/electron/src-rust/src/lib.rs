@@ -744,6 +744,14 @@ impl KolodaDb {
     }
 
     #[napi]
+    pub fn sync_accept_restore(&self, env: Env) -> Result<JsObject> {
+        self.run_sync(env, move |sync| {
+            let status = sync.accept_restore().map_err(sync_error)?;
+            to_value(&StatusWire::from(status))
+        })
+    }
+
+    #[napi]
     pub fn sync_status(&self, env: Env) -> Result<JsObject> {
         self.run_sync(env, move |sync| {
             let status = sync.engine().and_then(|engine| engine.status()).map_err(sync_error)?;

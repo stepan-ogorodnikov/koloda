@@ -5,6 +5,7 @@ import { useLingui } from "@lingui/react";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { JoinFlow } from "./settings-sync-join";
+import { useSyncStopMessage } from "./sync-messages";
 
 export type SyncFirstRunJoinProps = { sync: SyncQueries; onReady: () => void; onCancel: () => void };
 
@@ -22,6 +23,7 @@ type FirstDownloadProps = { sync: SyncQueries; onReady: () => void };
 function FirstDownload({ sync, onReady }: FirstDownloadProps) {
   const { _ } = useLingui();
   const { data: status } = useQuery(sync.getStatusQuery());
+  const stopMessage = useSyncStopMessage();
   const state = status?.state;
   const isReady = state?.type === "idle" || state?.type === "syncing";
   const left = (status?.lagHot ?? 0) + (status?.lagCold ?? 0);
@@ -35,11 +37,7 @@ function FirstDownload({ sync, onReady }: FirstDownloadProps) {
       <RefreshIcon className="size-6 min-w-6 animate-spin" strokeWidth={1.75} aria-hidden="true" />
       <p>{_(msg`settings.sync.first-run.downloading`)}</p>
       {left > 0 && <p className="fg-level-2">{_(msg`${plural(left, { other: "settings.sync.download-left" })}`)}</p>}
-      {state?.type === "stopped" && (
-        <p className="fg-level-2">
-          {state.stop.reason === "error" ? state.stop.message : _(msg`settings.sync.state.stopped`)}
-        </p>
-      )}
+      {status && state?.type === "stopped" && <p className="fg-level-2">{stopMessage(status)}</p>}
     </Dialog.Content>
   );
 }

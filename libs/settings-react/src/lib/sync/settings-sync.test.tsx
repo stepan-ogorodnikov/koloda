@@ -55,6 +55,7 @@ function syncQueries(createSpace: (data: CreateSpaceData) => Promise<SyncStatus>
     previewMutation: () => ({ mutationFn: vi.fn() }),
     joinMutation: () => ({ mutationFn: vi.fn() }),
     importMutation: () => ({ mutationFn: vi.fn() }),
+    acceptRestoreMutation: () => ({ mutationFn: vi.fn() }),
     nudge: vi.fn(async () => {}),
   };
 }
@@ -124,7 +125,7 @@ describe("SettingsSync", () => {
       syncQueries(vi.fn()),
     );
 
-    expect(screen.getByText("no reply from the sync server")).not.toBeNull();
+    expect(screen.getByText("settings.sync.stop.error no reply from the sync server")).not.toBeNull();
   });
 });
 

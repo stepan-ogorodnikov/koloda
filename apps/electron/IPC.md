@@ -104,6 +104,9 @@ writes capture nothing and do not.
   Returns `mode` (`blank`, `untouchedSeed`, `used`, or `reattach`), `knownIds`, and the status;
   a `used` database waits for `cmd_sync_import`.
 - `cmd_sync_import` `{ mode }` — `add` or `replace` for a used database that joined; returns the status.
+- `cmd_sync_accept_restore` — accepts an authoritative server restore the status reports: the database discards its
+  product rows and sync tables, keeps its settings, conversations, and images, and downloads the backup.
+  Returns the status.
 - `cmd_sync_device_name` — the OS host name, which main reads; the default name of this device.
 - Engine events stream on `SYNC_EVENT_CHANNEL` (`sync:event`) to every window as a `SyncEvent`:
   - `changed` `{ kinds }` — rows of these kinds changed; the renderer refreshes the queries each kind feeds;

@@ -4,7 +4,7 @@
 
 Covers keeping one person's data the same on their desktop devices through a sync server they run.
 That is spaces, devices, creating, joining, and leaving a space, joining on first run, inviting and managing devices,
-and sync status.
+sync status, and what happens when sync stops.
 First setup without sync is in INTERFACE-SETTINGS.md (§First Setup).
 How each kind of data behaves on its own is in its spec: CARDS.md, DECKS.md, TEMPLATES.md, ALGORITHMS.md,
 LEARNING-SETTINGS.md, and MEDIA.md.
@@ -177,7 +177,7 @@ Settings → Sync shows, for a device in a space:
 - how many images wait to upload, and how many wait to download;
 - while the space downloads, how many changes are left.
 
-A stopped sync shows why it stopped.
+A stopped sync shows why it stopped (§When sync stops).
 
 "Sync now" syncs at once.
 Sync also runs by itself:
@@ -189,3 +189,38 @@ Sync also runs by itself:
 
 A change made on one device usually shows on the others within seconds.
 Screens that show synced data refresh as changes arrive.
+
+## When sync stops
+
+Settings → Sync says why sync stopped and what the user can do.
+Unless a reason below needs the user, sync retries on its own.
+
+- This device's clock is more than 5 minutes off the server's: nothing syncs until the clock is right, then sync
+  resumes by itself.
+  Changes made meanwhile keep their order.
+- The device left the space, or another device removed it: see §Leaving a space.
+- The server was restored from a backup made before this device joined, or no longer knows it for another reason:
+  the device joins the space again with a new pairing code.
+  Its data stays, and its changes sync after the join.
+- The server was restored from a backup that replaces every device's data: the device syncs nothing until the user
+  continues, and asks once more first.
+  Continuing deletes this device's synced data and downloads the backup's; changes made after the backup are lost.
+  Settings that never sync stay.
+- The space's download needs more free disk space than there is: the message says how much it needs and how much is
+  free.
+- The server refused this device's changes: the message shows the server's reason code.
+- Anything else, such as a server out of reach: the message says what failed.
+
+Some problems leave the rest of sync running:
+
+- Another device synced a change that this version of the app cannot read.
+  Downloads stop at that change until the app is updated, and resume there; nothing is skipped.
+  Uploads go on.
+- A change in the space is damaged, so no version can read it.
+  Downloads stop at it, and the message names it with the server command that drops it.
+  A damaged review holds up only other reviews; any other damaged change holds up every download.
+  Uploads go on.
+- The space is full: new changes wait to upload, and deletions still upload, which frees room.
+- This device made changes while its clock was ahead of the server's: they wait to upload until the server's clock
+  passes them, and the message says when.
+  Downloads go on.

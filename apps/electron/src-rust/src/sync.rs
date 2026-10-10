@@ -246,6 +246,13 @@ impl SyncHost {
         engine.status()
     }
 
+    pub fn accept_restore(&self) -> Result<Status, SyncError> {
+        let engine = self.engine()?;
+        engine.accept_restore()?;
+        self.sync_soon()?;
+        engine.status()
+    }
+
     pub fn engine(&self) -> Result<&Engine, SyncError> {
         self.engine.get().ok_or_else(|| {
             SyncError::Local(AppError::new(
@@ -268,7 +275,8 @@ impl SyncHost {
         }
     }
 
-    // WHY: enrolling, joining, and importing start no cycle; a runner that already ran would wait for its next poll.
+    // WHY: enrolling, joining, importing, and accepting a restore start no cycle; a runner that already ran would wait
+    // for its next poll.
     fn sync_soon(&self) -> Result<(), SyncError> {
         self.start_runner()?;
         self.nudge();

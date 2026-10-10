@@ -118,7 +118,7 @@ describe("SyncFirstRunJoin", () => {
       );
     });
 
-    expect(await screen.findByText("no reply from the sync server")).not.toBeNull();
+    expect(await screen.findByText("settings.sync.stop.error no reply from the sync server")).not.toBeNull();
     expect(screen.getByText("settings.sync.first-run.downloading")).not.toBeNull();
     expect(onReady).not.toHaveBeenCalled();
   });

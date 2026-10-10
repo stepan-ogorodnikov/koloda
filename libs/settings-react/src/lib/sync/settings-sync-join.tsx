@@ -1,15 +1,15 @@
 import type { JoinData, JoinedSpace, SpacePreview, ZodIssue } from "@koloda/app";
 import { formatAppError } from "@koloda/app";
-import { langAtom, queryKeys } from "@koloda/core-react";
+import { queryKeys } from "@koloda/core-react";
 import type { SyncQueries } from "@koloda/core-react";
 import { Button, Dialog, ErrorMessage, Label, TextField, useAppForm } from "@koloda/ui";
 import { msg, plural } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useAtomValue } from "jotai";
 import { useState } from "react";
 import { SyncImportChoice } from "./sync-import-choice";
 import { joinSchema } from "./sync-forms";
+import { useFormatBytes } from "./sync-messages";
 
 export type SettingsSyncJoinProps = { sync: SyncQueries };
 
@@ -178,16 +178,12 @@ type PreviewStepProps = {
 
 function PreviewStep({ preview, onBack, onJoin, isPending, error }: PreviewStepProps) {
   const { _ } = useLingui();
-  const locale = useAtomValue(langAtom);
+  const formatBytes = useFormatBytes();
   const name = preview.spaceName;
   const decks = preview.counts.decks ?? 0;
   const cards = preview.counts.cards ?? 0;
   const reviews = preview.counts.reviews ?? 0;
-  const size = new Intl.NumberFormat(locale, {
-    style: "unit",
-    unit: "megabyte",
-    maximumFractionDigits: 1,
-  }).format(preview.bytes / 1_000_000);
+  const size = formatBytes(preview.bytes);
 
   return (
     <>

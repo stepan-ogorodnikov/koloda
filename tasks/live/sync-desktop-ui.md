@@ -325,7 +325,7 @@ The owner took every recommendation on 2026-10-10, except question 5: no e2e tes
   Commit: Join a space on first run
   Depends on: 5
 
-- [ ] 7. Explain why sync stopped
+- [x] 7. Explain why sync stopped
   Goal:
   - Each stop and hold shows a message and what the user can do:
     - clock skew: the clock is off by some minutes; once it is fixed, sync resumes on its own;
@@ -342,6 +342,13 @@ The owner took every recommendation on 2026-10-10, except question 5: no e2e tes
     - push waiting for server time: until when;
     - any other error: its message; sync retries on its own.
   - `SYNC.md` §When sync stops.
+  - Implementation:
+    - `useSyncStopMessage` in `sync-messages.ts` words each stop, for the page, the first-run wait, and item 8;
+    - an unknown device and a restore that detached the file show as in no space, with their message and "Join a
+      space", like a device that left: the server takes none of their calls;
+    - the corrupt-envelope command shows `<space>` and `<data-dir>` as placeholders: the status carries no space id,
+      and the message points at `koloda-server spaces`;
+    - `cmd_sync_accept_restore` is new; accepting also nudges the runner.
   Done when:
   - component tests: each stop and hold renders its message and action;
   - Manual verify: stop the server → Sync now → the page says the server is out of reach and retries on its own;

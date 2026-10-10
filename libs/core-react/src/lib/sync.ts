@@ -25,6 +25,7 @@ export type SyncQueries = {
   previewMutation: () => UseMutationOptions<SpacePreview, AppError, PreviewRequest>;
   joinMutation: () => UseMutationOptions<JoinedSpace, AppError, JoinData>;
   importMutation: () => UseMutationOptions<SyncStatus, AppError, ImportMode>;
+  acceptRestoreMutation: () => UseMutationOptions<SyncStatus, AppError, void>;
   nudge: () => Promise<void>;
 };
 

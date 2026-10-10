@@ -13,32 +13,36 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
-#: ../../libs/settings-react/src/lib/sync/settings-sync-join.tsx:197
+#: ../../libs/settings-react/src/lib/sync/settings-sync-join.tsx:193
 msgid "{cards, plural, other {settings.sync.join.preview.cards}}"
 msgstr "{cards, plural, one {# карточка} few {# карточки} many {# карточек} other {# карточки}}"
 
-#: ../../libs/settings-react/src/lib/sync/settings-sync-join.tsx:196
+#: ../../libs/settings-react/src/lib/sync/settings-sync-join.tsx:192
 msgid "{decks, plural, other {settings.sync.join.preview.decks}}"
 msgstr "{decks, plural, one {# колода} few {# колоды} many {# колод} other {# колоды}}"
 
-#: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:46
+#: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:47
 msgid "{fetches, plural, other {settings.sync.fetches}}"
 msgstr "{fetches, plural, one {# изображение ждёт загрузки} few {# изображения ждут загрузки} many {# изображений ждут загрузки} other {# изображения ждут загрузки}}"
 
-#: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:39
-#: ../../libs/settings-react/src/lib/sync/sync-first-run-join.tsx:37
+#: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:40
+#: ../../libs/settings-react/src/lib/sync/sync-first-run-join.tsx:39
 msgid "{left, plural, other {settings.sync.download-left}}"
 msgstr "{left, plural, one {Осталось загрузить # изменение} few {Осталось загрузить # изменения} many {Осталось загрузить # изменений} other {Осталось загрузить # изменения}}"
 
-#: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:44
+#: ../../libs/settings-react/src/lib/sync/sync-messages.ts:35
+msgid "{minutes, plural, other {settings.sync.stop.clock-skew}}"
+msgstr "Часы этого устройства расходятся с часами сервера синхронизации на {minutes, plural, one {# минуту} few {# минуты} many {# минут} other {# минуты}}. Исправьте время, и синхронизация продолжится сама."
+
+#: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:45
 msgid "{pending, plural, other {settings.sync.pending}}"
 msgstr "{pending, plural, one {# изменение ждёт отправки} few {# изменения ждут отправки} many {# изменений ждут отправки} other {# изменения ждут отправки}}"
 
-#: ../../libs/settings-react/src/lib/sync/settings-sync-join.tsx:198
+#: ../../libs/settings-react/src/lib/sync/settings-sync-join.tsx:194
 msgid "{reviews, plural, other {settings.sync.join.preview.reviews}}"
 msgstr "{reviews, plural, one {# повторение} few {# повторения} many {# повторений} other {# повторения}}"
 
-#: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:45
+#: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:46
 msgid "{uploads, plural, other {settings.sync.uploads}}"
 msgstr "{uploads, plural, one {# изображение ждёт отправки} few {# изображения ждут отправки} many {# изображений ждут отправки} other {# изображения ждут отправки}}"
 
@@ -324,13 +328,14 @@ msgid "settings.learning.limits.untouched"
 msgstr "Новые"
 
 #: ../../libs/settings-react/src/lib/sync/settings-sync-join.tsx:159
-#: ../../libs/settings-react/src/lib/sync/settings-sync-join.tsx:204
+#: ../../libs/settings-react/src/lib/sync/settings-sync-join.tsx:200
 #: ../../libs/settings-react/src/lib/sync/sync-import-choice.tsx:45
 msgid "settings.sync.back"
 msgstr "Назад"
 
 #: ../../libs/settings-react/src/lib/sync/settings-sync-devices.tsx:100
 #: ../../libs/settings-react/src/lib/sync/settings-sync-devices.tsx:145
+#: ../../libs/settings-react/src/lib/sync/settings-sync-problems.tsx:87
 msgid "settings.sync.cancel"
 msgstr "Отмена"
 
@@ -375,9 +380,21 @@ msgstr "Удалить {name} из пространства? Устройств�
 msgid "settings.sync.devices.this-device"
 msgstr "Это устройство"
 
-#: ../../libs/settings-react/src/lib/sync/sync-first-run-join.tsx:36
+#: ../../libs/settings-react/src/lib/sync/sync-first-run-join.tsx:38
 msgid "settings.sync.first-run.downloading"
 msgstr "Загружаем пространство. Приложение откроется, когда загрузка закончится."
+
+#: ../../libs/settings-react/src/lib/sync/settings-sync-problems.tsx:45
+msgid "settings.sync.hold.corrupt {lane} {seq}"
+msgstr "В пространстве есть повреждённое изменение, которое приложение не может прочитать ({lane} {seq}), поэтому загрузка остановилась на нём. Отправка продолжается. Чтобы удалить изменение, выполните на сервере синхронизации:"
+
+#: ../../libs/settings-react/src/lib/sync/settings-sync-problems.tsx:47
+msgid "settings.sync.hold.corrupt.spaces"
+msgstr "koloda-server spaces показывает идентификаторы пространств сервера."
+
+#: ../../libs/settings-react/src/lib/sync/settings-sync-problems.tsx:30
+msgid "settings.sync.hold.update-required"
+msgstr "Другое устройство синхронизировало изменение, которое эта версия приложения не может прочитать, поэтому загрузка остановилась на нём. Обновите приложение, и синхронизация продолжится с этого места. Отправка продолжается."
 
 #: ../../libs/settings-react/src/lib/sync/sync-import-choice.tsx:62
 msgid "settings.sync.import.add"
@@ -453,15 +470,15 @@ msgstr "Подключиться к пространству"
 msgid "settings.sync.join.continue"
 msgstr "Продолжить"
 
-#: ../../libs/settings-react/src/lib/sync/settings-sync-join.tsx:199
+#: ../../libs/settings-react/src/lib/sync/settings-sync-join.tsx:195
 msgid "settings.sync.join.preview.size {size}"
 msgstr "Нужно загрузить около {size}"
 
-#: ../../libs/settings-react/src/lib/sync/settings-sync-join.tsx:195
+#: ../../libs/settings-react/src/lib/sync/settings-sync-join.tsx:191
 msgid "settings.sync.join.preview.space {name}"
 msgstr "Пространство «{name}»"
 
-#: ../../libs/settings-react/src/lib/sync/settings-sync-join.tsx:208
+#: ../../libs/settings-react/src/lib/sync/settings-sync-join.tsx:204
 msgid "settings.sync.join.submit"
 msgstr "Подключиться"
 
@@ -469,11 +486,11 @@ msgstr "Подключиться"
 msgid "settings.sync.join.title"
 msgstr "Подключиться к пространству"
 
-#: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:42
+#: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:43
 msgid "settings.sync.last-sync {lastSync}"
 msgstr "Последняя синхронизация: {lastSync}"
 
-#: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:42
+#: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:43
 msgid "settings.sync.last-sync.none"
 msgstr "Синхронизации ещё не было с запуска приложения"
 
@@ -489,13 +506,33 @@ msgstr "Выйти"
 msgid "settings.sync.leave.message"
 msgstr "Это устройство перестанет синхронизироваться. Его данные останутся, а позже оно сможет снова подключиться к пространству."
 
-#: ../../libs/settings-react/src/lib/sync/settings-sync.tsx:32
+#: ../../libs/settings-react/src/lib/sync/sync-messages.ts:38
 msgid "settings.sync.left"
 msgstr "Это устройство не в пространстве: оно вышло из него, или его удалило другое устройство. Данные остались здесь. Подключитесь к пространству, чтобы снова синхронизироваться."
 
-#: ../../libs/settings-react/src/lib/sync/settings-sync.tsx:23
+#: ../../libs/settings-react/src/lib/sync/settings-sync.tsx:28
 msgid "settings.sync.not-in-space"
 msgstr "Это устройство не синхронизируется. Создайте пространство на своём сервере синхронизации или подключитесь к пространству, созданному на другом устройстве."
+
+#: ../../libs/settings-react/src/lib/sync/settings-sync-problems.tsx:32
+msgid "settings.sync.over-quota"
+msgstr "Пространство заполнено, поэтому новые изменения ждут отправки. Удаление колод или карточек освобождает место."
+
+#: ../../libs/settings-react/src/lib/sync/settings-sync-problems.tsx:33
+msgid "settings.sync.push-waits {resumesAt}"
+msgstr "Часы этого устройства спешили относительно сервера, поэтому его изменения ждут отправки до {resumesAt}."
+
+#: ../../libs/settings-react/src/lib/sync/settings-sync-problems.tsx:84
+msgid "settings.sync.restore.confirm"
+msgstr "Заменить"
+
+#: ../../libs/settings-react/src/lib/sync/settings-sync-problems.tsx:76
+msgid "settings.sync.restore.continue"
+msgstr "Продолжить"
+
+#: ../../libs/settings-react/src/lib/sync/settings-sync-problems.tsx:80
+msgid "settings.sync.restore.message"
+msgstr "Заменить данные этого устройства данными из резервной копии? Изменения, сделанные здесь после копии, будут потеряны."
 
 #: ../../libs/settings-react/src/lib/sync/settings-sync-create-space.tsx:60
 #: ../../libs/settings-react/src/lib/sync/settings-sync-invite.tsx:84
@@ -511,31 +548,50 @@ msgstr "Токен настройки"
 msgid "settings.sync.space-name.label"
 msgstr "Название пространства"
 
-#: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:12
+#: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:13
 msgid "settings.sync.state.bootstrapping"
 msgstr "Загрузка пространства"
 
-#: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:13
+#: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:14
 msgid "settings.sync.state.idle"
 msgstr "Всё синхронизировано"
 
-#: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:11
+#: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:12
 msgid "settings.sync.state.import-pending"
 msgstr "Ждёт вашего выбора"
 
-#: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:10
+#: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:11
 msgid "settings.sync.state.not-enrolled"
 msgstr "Синхронизация выключена"
 
-#: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:15
-#: ../../libs/settings-react/src/lib/sync/sync-first-run-join.tsx:40
+#: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:16
 msgid "settings.sync.state.stopped"
 msgstr "Синхронизация остановлена"
 
-#: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:14
+#: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:15
 msgid "settings.sync.state.syncing"
 msgstr "Синхронизация"
 
-#: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:33
+#: ../../libs/settings-react/src/lib/sync/sync-messages.ts:43
+msgid "settings.sync.stop.authoritative-restore"
+msgstr "Сервер синхронизации восстановлен из резервной копии, которая заменяет данные этого устройства. Изменения, сделанные здесь после копии, будут потеряны."
+
+#: ../../libs/settings-react/src/lib/sync/sync-messages.ts:55
+msgid "settings.sync.stop.error {message}"
+msgstr "{message}. Синхронизация повторится сама."
+
+#: ../../libs/settings-react/src/lib/sync/sync-messages.ts:47
+msgid "settings.sync.stop.low-disk {needed} {free}"
+msgstr "Для загрузки пространства нужно {needed} свободного места на диске, а свободно {free}. Освободите место; синхронизация повторится сама."
+
+#: ../../libs/settings-react/src/lib/sync/sync-messages.ts:41
+msgid "settings.sync.stop.pair-again"
+msgstr "Сервер синхронизации больше не знает это устройство — например, после восстановления из копии, сделанной до его подключения. Подключитесь к пространству снова с новым кодом. Данные этого устройства останутся."
+
+#: ../../libs/settings-react/src/lib/sync/sync-messages.ts:51
+msgid "settings.sync.stop.push-refused {code}"
+msgstr "Сервер синхронизации отклонил изменения этого устройства ({code}). Синхронизация повторится сама."
+
+#: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:34
 msgid "settings.sync.sync-now"
 msgstr "Синхронизировать"

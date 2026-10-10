@@ -7,14 +7,19 @@ import { SettingsSyncDevices } from "./settings-sync-devices";
 import { SettingsSyncJoin } from "./settings-sync-join";
 import { SettingsSyncStatus } from "./settings-sync-status";
 import { SyncImportChoice } from "./sync-import-choice";
+import { useSyncStopMessage } from "./sync-messages";
 
 export type SettingsSyncProps = { status: SyncStatus; sync: SyncQueries };
 
 export function SettingsSync({ status, sync }: SettingsSyncProps) {
   const { _ } = useLingui();
+  const stopMessage = useSyncStopMessage()(status);
   const { state } = status;
-  // WHY: a revoked device and one that left both stay detached; only a join brings them back.
-  const hasLeft = state.type === "stopped" && state.stop.reason === "revoked";
+  // WHY: the server no longer takes this device's token, so only a join brings it back: it left, another device
+  // removed it, or the server was restored without it.
+  const hasLeft =
+    state.type === "stopped" &&
+    (state.stop.reason === "revoked" || state.stop.reason === "restored" || state.stop.reason === "unknownDevice");
 
   return (
     <div className="self-center flex flex-col gap-4 w-full max-w-main p-4">
@@ -29,7 +34,7 @@ export function SettingsSync({ status, sync }: SettingsSyncProps) {
       )}
       {hasLeft && (
         <>
-          <p className="fg-level-2">{_(msg`settings.sync.left`)}</p>
+          <p className="fg-level-2">{stopMessage}</p>
           <div className="flex flex-row gap-2">
             <SettingsSyncJoin sync={sync} />
           </div>
