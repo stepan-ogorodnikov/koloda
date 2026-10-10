@@ -37,6 +37,7 @@ export function useSyncStopMessage() {
         case "revoked":
           return _(msg`settings.sync.left`);
         case "unknownDevice":
+          return _(msg`settings.sync.stop.unknown-device`);
         case "restored":
           return _(msg`settings.sync.stop.pair-again`);
         case "authoritativeRestore":

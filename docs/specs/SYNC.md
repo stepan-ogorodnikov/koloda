@@ -205,9 +205,11 @@ Unless a reason below needs the user, sync retries on its own.
   resumes by itself.
   Changes made meanwhile keep their order.
 - The device left the space, or another device removed it: see §Leaving a space.
-- The server was restored from a backup made before this device joined, or no longer knows it for another reason:
-  the device joins the space again with a new pairing code.
+- The server was restored from a backup made before this device joined, or every device's access was reset: the
+  device is out of the space and joins it again with a new pairing code.
   Its data stays, and its changes sync after the join.
+- The server no longer knows this device for another reason: the device leaves the space first, which works even
+  though the server does not know it, then joins it again the same way.
 - The server was restored from a backup that replaces every device's data: the device syncs nothing until the user
   continues, and asks once more first.
   Continuing deletes this device's synced data and downloads the backup's; changes made after the backup are lost.

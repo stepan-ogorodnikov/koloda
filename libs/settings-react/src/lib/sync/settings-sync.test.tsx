@@ -106,6 +106,22 @@ describe("SettingsSync", () => {
     expect(screen.queryByRole("button", { name: "settings.sync.create" })).toBeNull();
   });
 
+  it("has a device the server no longer knows leave its space first, since an attached device cannot join", () => {
+    renderSync(status({ type: "stopped", stop: { reason: "unknownDevice" } }), syncQueries(vi.fn()));
+
+    expect(screen.getByText("settings.sync.stop.unknown-device")).not.toBeNull();
+    expect(screen.getByRole("button", { name: "settings.sync.leave" })).not.toBeNull();
+    expect(screen.queryByRole("button", { name: "settings.sync.join" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "settings.sync.sync-now" })).toBeNull();
+  });
+
+  it("offers a device a restore left out of its space to join again", () => {
+    renderSync(status({ type: "stopped", stop: { reason: "restored" } }), syncQueries(vi.fn()));
+
+    expect(screen.getByText("settings.sync.stop.pair-again")).not.toBeNull();
+    expect(screen.getByRole("button", { name: "settings.sync.join" })).not.toBeNull();
+  });
+
   it("asks a database that joined with its own data to add or replace it, also after a restart", () => {
     renderSync(status({ type: "importPending" }), syncQueries(vi.fn()));
 

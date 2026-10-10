@@ -6,6 +6,7 @@ import { SettingsSyncCreateSpace } from "./settings-sync-create-space";
 import { SettingsSyncDevices } from "./settings-sync-devices";
 import { SettingsSyncJoin } from "./settings-sync-join";
 import { SettingsSyncStatus } from "./settings-sync-status";
+import { SyncLeaveSpace } from "./sync-leave-space";
 import { SyncImportChoice } from "./sync-import-choice";
 import { useSyncStopMessage } from "./sync-messages";
 
@@ -15,11 +16,12 @@ export function SettingsSync({ status, sync }: SettingsSyncProps) {
   const { _ } = useLingui();
   const stopMessage = useSyncStopMessage()(status);
   const { state } = status;
-  // WHY: the server no longer takes this device's token, so only a join brings it back: it left, another device
-  // removed it, or the server was restored without it.
-  const hasLeft =
-    state.type === "stopped" &&
-    (state.stop.reason === "revoked" || state.stop.reason === "restored" || state.stop.reason === "unknownDevice");
+  // WHY: the file is detached, so only a join brings it back: it left, another device removed it, or a restore left
+  // it out.
+  const hasLeft = state.type === "stopped" && (state.stop.reason === "revoked" || state.stop.reason === "restored");
+  // WHY: the server no longer knows this device, but the file stays attached, and an attached file cannot join;
+  // leaving works all the same, since the engine takes that answer as a revocation (PROTOCOL.md §Devices).
+  const isUnknown = state.type === "stopped" && state.stop.reason === "unknownDevice";
 
   return (
     <div className="self-center flex flex-col gap-4 w-full max-w-main p-4">
@@ -40,8 +42,16 @@ export function SettingsSync({ status, sync }: SettingsSyncProps) {
           </div>
         </>
       )}
+      {isUnknown && (
+        <>
+          <p className="fg-level-2">{stopMessage}</p>
+          <div>
+            <SyncLeaveSpace sync={sync} />
+          </div>
+        </>
+      )}
       {state.type === "importPending" && <SyncImportChoice sync={sync} />}
-      {state.type !== "notEnrolled" && state.type !== "importPending" && !hasLeft && (
+      {state.type !== "notEnrolled" && state.type !== "importPending" && !hasLeft && !isUnknown && (
         <>
           <SettingsSyncStatus status={status} sync={sync} />
           <SettingsSyncDevices sync={sync} />

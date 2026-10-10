@@ -333,9 +333,9 @@ msgstr "New"
 msgid "settings.sync.back"
 msgstr "Back"
 
-#: ../../libs/settings-react/src/lib/sync/settings-sync-devices.tsx:100
-#: ../../libs/settings-react/src/lib/sync/settings-sync-devices.tsx:145
+#: ../../libs/settings-react/src/lib/sync/settings-sync-devices.tsx:101
 #: ../../libs/settings-react/src/lib/sync/settings-sync-problems.tsx:87
+#: ../../libs/settings-react/src/lib/sync/sync-leave-space.tsx:45
 msgid "settings.sync.cancel"
 msgstr "Cancel"
 
@@ -356,27 +356,27 @@ msgstr "Create a space"
 msgid "settings.sync.device-name.label"
 msgstr "This device's name"
 
-#: ../../libs/settings-react/src/lib/sync/settings-sync-devices.tsx:28
+#: ../../libs/settings-react/src/lib/sync/settings-sync-devices.tsx:29
 msgid "settings.sync.devices"
 msgstr "Devices"
 
-#: ../../libs/settings-react/src/lib/sync/settings-sync-devices.tsx:44
+#: ../../libs/settings-react/src/lib/sync/settings-sync-devices.tsx:45
 msgid "settings.sync.devices.last-seen {lastSeen}"
 msgstr "Last seen {lastSeen}"
 
-#: ../../libs/settings-react/src/lib/sync/settings-sync-devices.tsx:89
+#: ../../libs/settings-react/src/lib/sync/settings-sync-devices.tsx:90
 msgid "settings.sync.devices.remove"
 msgstr "Remove"
 
-#: ../../libs/settings-react/src/lib/sync/settings-sync-devices.tsx:97
+#: ../../libs/settings-react/src/lib/sync/settings-sync-devices.tsx:98
 msgid "settings.sync.devices.remove.confirm"
 msgstr "Remove"
 
-#: ../../libs/settings-react/src/lib/sync/settings-sync-devices.tsx:93
+#: ../../libs/settings-react/src/lib/sync/settings-sync-devices.tsx:94
 msgid "settings.sync.devices.remove.message {name}"
 msgstr "Remove {name} from the space? It stops syncing and keeps its data."
 
-#: ../../libs/settings-react/src/lib/sync/settings-sync-devices.tsx:41
+#: ../../libs/settings-react/src/lib/sync/settings-sync-devices.tsx:42
 msgid "settings.sync.devices.this-device"
 msgstr "This device"
 
@@ -499,15 +499,15 @@ msgstr "Last synced {lastSync}"
 msgid "settings.sync.last-sync.none"
 msgstr "Not synced since the app started"
 
-#: ../../libs/settings-react/src/lib/sync/settings-sync-devices.tsx:134
+#: ../../libs/settings-react/src/lib/sync/sync-leave-space.tsx:34
 msgid "settings.sync.leave"
 msgstr "Leave the space"
 
-#: ../../libs/settings-react/src/lib/sync/settings-sync-devices.tsx:142
+#: ../../libs/settings-react/src/lib/sync/sync-leave-space.tsx:42
 msgid "settings.sync.leave.confirm"
 msgstr "Leave"
 
-#: ../../libs/settings-react/src/lib/sync/settings-sync-devices.tsx:138
+#: ../../libs/settings-react/src/lib/sync/sync-leave-space.tsx:38
 msgid "settings.sync.leave.message"
 msgstr "This device stops syncing. Its data stays, and it can join a space again later."
 
@@ -515,7 +515,7 @@ msgstr "This device stops syncing. Its data stays, and it can join a space again
 msgid "settings.sync.left"
 msgstr "This device is in no space: it left its space, or another device removed it. Its data stays here. Join a space to sync again."
 
-#: ../../libs/settings-react/src/lib/sync/settings-sync.tsx:28
+#: ../../libs/settings-react/src/lib/sync/settings-sync.tsx:30
 msgid "settings.sync.not-in-space"
 msgstr "This device doesn't sync. Create a space on your sync server, or join a space another device created."
 
@@ -580,25 +580,29 @@ msgstr "Sync stopped"
 msgid "settings.sync.state.syncing"
 msgstr "Syncing"
 
-#: ../../libs/settings-react/src/lib/sync/sync-messages.ts:43
+#: ../../libs/settings-react/src/lib/sync/sync-messages.ts:44
 msgid "settings.sync.stop.authoritative-restore"
 msgstr "The sync server was restored from a backup that replaces this device's data. Changes made here since the backup will be lost."
 
-#: ../../libs/settings-react/src/lib/sync/sync-messages.ts:55
+#: ../../libs/settings-react/src/lib/sync/sync-messages.ts:56
 msgid "settings.sync.stop.error {message}"
 msgstr "{message}. Sync retries on its own."
 
-#: ../../libs/settings-react/src/lib/sync/sync-messages.ts:47
+#: ../../libs/settings-react/src/lib/sync/sync-messages.ts:48
 msgid "settings.sync.stop.low-disk {needed} {free}"
 msgstr "Downloading the space needs {needed} of free disk space, and {free} is free. Free some space; sync retries on its own."
 
-#: ../../libs/settings-react/src/lib/sync/sync-messages.ts:41
+#: ../../libs/settings-react/src/lib/sync/sync-messages.ts:42
 msgid "settings.sync.stop.pair-again"
 msgstr "The sync server no longer knows this device, as after a restore from a backup made before it joined. Join the space again with a new pairing code. This device's data stays."
 
-#: ../../libs/settings-react/src/lib/sync/sync-messages.ts:51
+#: ../../libs/settings-react/src/lib/sync/sync-messages.ts:52
 msgid "settings.sync.stop.push-refused {code}"
 msgstr "The sync server refused this device's changes ({code}). Sync retries on its own."
+
+#: ../../libs/settings-react/src/lib/sync/sync-messages.ts:40
+msgid "settings.sync.stop.unknown-device"
+msgstr "The sync server no longer knows this device. Leave the space here, then join it again with a new pairing code. This device's data stays."
 
 #: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:34
 msgid "settings.sync.sync-now"

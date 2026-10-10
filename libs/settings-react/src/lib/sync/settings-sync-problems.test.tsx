@@ -63,7 +63,7 @@ function renderProblems(current: SyncStatus, acceptRestore = vi.fn()) {
 describe("SettingsSyncProblems", () => {
   it.each<[SyncStop, string]>([
     [{ reason: "clockSkew" }, "settings.sync.stop.clock-skew"],
-    [{ reason: "unknownDevice" }, "settings.sync.stop.pair-again"],
+    [{ reason: "unknownDevice" }, "settings.sync.stop.unknown-device"],
     [{ reason: "restored" }, "settings.sync.stop.pair-again"],
     [{ reason: "authoritativeRestore" }, "settings.sync.stop.authoritative-restore"],
     [{ reason: "lowDisk", needed: 2_500_000_000, free: 300_000_000 }, "settings.sync.stop.low-disk 2.5 GB 300 MB"],
