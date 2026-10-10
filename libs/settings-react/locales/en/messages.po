@@ -13,11 +13,11 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
-#: ../../libs/settings-react/src/lib/sync/settings-sync-join.tsx:193
+#: ../../libs/settings-react/src/lib/sync/settings-sync-join.tsx:189
 msgid "{cards, plural, other {settings.sync.join.preview.cards}}"
 msgstr "{cards, plural, one {# card} other {# cards}}"
 
-#: ../../libs/settings-react/src/lib/sync/settings-sync-join.tsx:192
+#: ../../libs/settings-react/src/lib/sync/settings-sync-join.tsx:188
 msgid "{decks, plural, other {settings.sync.join.preview.decks}}"
 msgstr "{decks, plural, one {# deck} other {# decks}}"
 
@@ -26,7 +26,7 @@ msgid "{fetches, plural, other {settings.sync.fetches}}"
 msgstr "{fetches, plural, one {# image waits to download} other {# images wait to download}}"
 
 #: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:40
-#: ../../libs/settings-react/src/lib/sync/sync-first-run-join.tsx:39
+#: ../../libs/settings-react/src/lib/sync/sync-first-run-join.tsx:40
 msgid "{left, plural, other {settings.sync.download-left}}"
 msgstr "{left, plural, one {# change left to download} other {# changes left to download}}"
 
@@ -38,7 +38,7 @@ msgstr "This device's clock is {minutes, plural, one {# minute} other {# minutes
 msgid "{pending, plural, other {settings.sync.pending}}"
 msgstr "{pending, plural, one {# change waits to upload} other {# changes wait to upload}}"
 
-#: ../../libs/settings-react/src/lib/sync/settings-sync-join.tsx:194
+#: ../../libs/settings-react/src/lib/sync/settings-sync-join.tsx:190
 msgid "{reviews, plural, other {settings.sync.join.preview.reviews}}"
 msgstr "{reviews, plural, one {# review} other {# reviews}}"
 
@@ -327,15 +327,15 @@ msgstr "Unlimited"
 msgid "settings.learning.limits.untouched"
 msgstr "New"
 
-#: ../../libs/settings-react/src/lib/sync/settings-sync-join.tsx:159
-#: ../../libs/settings-react/src/lib/sync/settings-sync-join.tsx:200
-#: ../../libs/settings-react/src/lib/sync/sync-import-choice.tsx:45
+#: ../../libs/settings-react/src/lib/sync/settings-sync-join.tsx:155
+#: ../../libs/settings-react/src/lib/sync/settings-sync-join.tsx:196
+#: ../../libs/settings-react/src/lib/sync/sync-import-choice.tsx:48
 msgid "settings.sync.back"
 msgstr "Back"
 
 #: ../../libs/settings-react/src/lib/sync/settings-sync-devices.tsx:101
-#: ../../libs/settings-react/src/lib/sync/settings-sync-problems.tsx:87
-#: ../../libs/settings-react/src/lib/sync/sync-leave-space.tsx:45
+#: ../../libs/settings-react/src/lib/sync/settings-sync-problems.tsx:90
+#: ../../libs/settings-react/src/lib/sync/sync-leave-space.tsx:47
 msgid "settings.sync.cancel"
 msgstr "Cancel"
 
@@ -352,7 +352,7 @@ msgid "settings.sync.create.title"
 msgstr "Create a space"
 
 #: ../../libs/settings-react/src/lib/sync/settings-sync-create-space.tsx:63
-#: ../../libs/settings-react/src/lib/sync/settings-sync-join.tsx:123
+#: ../../libs/settings-react/src/lib/sync/settings-sync-join.tsx:119
 msgid "settings.sync.device-name.label"
 msgstr "This device's name"
 
@@ -380,51 +380,51 @@ msgstr "Remove {name} from the space? It stops syncing and keeps its data."
 msgid "settings.sync.devices.this-device"
 msgstr "This device"
 
-#: ../../libs/settings-react/src/lib/sync/sync-first-run-join.tsx:38
+#: ../../libs/settings-react/src/lib/sync/sync-first-run-join.tsx:39
 msgid "settings.sync.first-run.downloading"
 msgstr "Downloading the space. The app opens when it's done."
 
-#: ../../libs/settings-react/src/lib/sync/settings-sync-problems.tsx:45
+#: ../../libs/settings-react/src/lib/sync/settings-sync-problems.tsx:46
 msgid "settings.sync.hold.corrupt {lane} {seq}"
 msgstr "The space holds a damaged change this app can't read ({lane} {seq}), so downloads wait at it. Uploads go on. To drop the change, run on the sync server:"
 
-#: ../../libs/settings-react/src/lib/sync/settings-sync-problems.tsx:47
+#: ../../libs/settings-react/src/lib/sync/settings-sync-problems.tsx:48
 msgid "settings.sync.hold.corrupt.spaces"
 msgstr "koloda-server spaces lists the server's space ids."
 
-#: ../../libs/settings-react/src/lib/sync/settings-sync-problems.tsx:30
+#: ../../libs/settings-react/src/lib/sync/settings-sync-problems.tsx:43
 msgid "settings.sync.hold.update-required"
 msgstr "Another device synced a change this version of the app can't read, so downloads wait at it. Update the app, and sync resumes from there. Uploads go on."
 
-#: ../../libs/settings-react/src/lib/sync/sync-import-choice.tsx:62
+#: ../../libs/settings-react/src/lib/sync/sync-import-choice.tsx:65
 msgid "settings.sync.import.add"
 msgstr "Add"
 
-#: ../../libs/settings-react/src/lib/sync/sync-import-choice.tsx:54
+#: ../../libs/settings-react/src/lib/sync/sync-import-choice.tsx:57
 msgid "settings.sync.import.copy"
 msgstr "This device's data looks like a copy of data already in the space. Replace it with the space's data. Add keeps both, so the copied decks show twice."
 
-#: ../../libs/settings-react/src/lib/sync/sync-import-choice.tsx:54
+#: ../../libs/settings-react/src/lib/sync/sync-import-choice.tsx:57
 msgid "settings.sync.import.message"
 msgstr "This device already has data. Add it to the space, or replace it with the space's data."
 
-#: ../../libs/settings-react/src/lib/sync/sync-import-choice.tsx:69
+#: ../../libs/settings-react/src/lib/sync/sync-import-choice.tsx:72
 msgid "settings.sync.import.replace"
 msgstr "Replace"
 
-#: ../../libs/settings-react/src/lib/sync/sync-import-choice.tsx:42
+#: ../../libs/settings-react/src/lib/sync/sync-import-choice.tsx:45
 msgid "settings.sync.import.replace.confirm"
 msgstr "Delete and replace"
 
-#: ../../libs/settings-react/src/lib/sync/sync-import-choice.tsx:38
+#: ../../libs/settings-react/src/lib/sync/sync-import-choice.tsx:41
 msgid "settings.sync.import.replace.message"
 msgstr "This device's decks, cards, progress, templates, and algorithms will be deleted and replaced with the space's."
 
-#: ../../libs/settings-react/src/lib/sync/sync-import-choice.tsx:69
+#: ../../libs/settings-react/src/lib/sync/sync-import-choice.tsx:72
 msgid "settings.sync.import.replace.recommended"
 msgstr "Replace (recommended)"
 
-#: ../../libs/settings-react/src/lib/sync/sync-indicator.tsx:34
+#: ../../libs/settings-react/src/lib/sync/sync-indicator.tsx:46
 msgid "settings.sync.indicator.attention"
 msgstr "Sync needs your attention. Open Sync settings."
 
@@ -433,7 +433,7 @@ msgid "settings.sync.invite"
 msgstr "Invite a device"
 
 #: ../../libs/settings-react/src/lib/sync/settings-sync-invite.tsx:79
-#: ../../libs/settings-react/src/lib/sync/settings-sync-join.tsx:122
+#: ../../libs/settings-react/src/lib/sync/settings-sync-join.tsx:118
 msgid "settings.sync.invite.code"
 msgstr "Pairing code"
 
@@ -466,32 +466,32 @@ msgstr "New code"
 msgid "settings.sync.invite.title"
 msgstr "Invite a device"
 
-#: ../../libs/settings-react/src/lib/sync/settings-sync-join.tsx:22
+#: ../../libs/settings-react/src/lib/sync/settings-sync-join.tsx:23
 msgid "settings.sync.join"
 msgstr "Join a space"
 
-#: ../../libs/settings-react/src/lib/sync/settings-sync-join.tsx:164
+#: ../../libs/settings-react/src/lib/sync/settings-sync-join.tsx:160
 msgid "settings.sync.join.continue"
 msgstr "Continue"
 
-#: ../../libs/settings-react/src/lib/sync/settings-sync-join.tsx:195
+#: ../../libs/settings-react/src/lib/sync/settings-sync-join.tsx:191
 msgid "settings.sync.join.preview.size {size}"
 msgstr "About {size} to download"
 
-#: ../../libs/settings-react/src/lib/sync/settings-sync-join.tsx:191
+#: ../../libs/settings-react/src/lib/sync/settings-sync-join.tsx:187
 msgid "settings.sync.join.preview.space {name}"
 msgstr "Space “{name}”"
 
-#: ../../libs/settings-react/src/lib/sync/settings-sync-join.tsx:204
+#: ../../libs/settings-react/src/lib/sync/settings-sync-join.tsx:200
 msgid "settings.sync.join.submit"
 msgstr "Join"
 
-#: ../../libs/settings-react/src/lib/sync/settings-sync-join.tsx:27
+#: ../../libs/settings-react/src/lib/sync/settings-sync-join.tsx:28
 msgid "settings.sync.join.title"
 msgstr "Join a space"
 
 #: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:43
-#: ../../libs/settings-react/src/lib/sync/sync-indicator.tsx:41
+#: ../../libs/settings-react/src/lib/sync/sync-indicator.tsx:53
 msgid "settings.sync.last-sync {lastSync}"
 msgstr "Last synced {lastSync}"
 
@@ -499,15 +499,15 @@ msgstr "Last synced {lastSync}"
 msgid "settings.sync.last-sync.none"
 msgstr "Not synced since the app started"
 
-#: ../../libs/settings-react/src/lib/sync/sync-leave-space.tsx:34
+#: ../../libs/settings-react/src/lib/sync/sync-leave-space.tsx:36
 msgid "settings.sync.leave"
 msgstr "Leave the space"
 
-#: ../../libs/settings-react/src/lib/sync/sync-leave-space.tsx:42
+#: ../../libs/settings-react/src/lib/sync/sync-leave-space.tsx:44
 msgid "settings.sync.leave.confirm"
 msgstr "Leave"
 
-#: ../../libs/settings-react/src/lib/sync/sync-leave-space.tsx:38
+#: ../../libs/settings-react/src/lib/sync/sync-leave-space.tsx:40
 msgid "settings.sync.leave.message"
 msgstr "This device stops syncing. Its data stays, and it can join a space again later."
 
@@ -519,29 +519,29 @@ msgstr "This device is in no space: it left its space, or another device removed
 msgid "settings.sync.not-in-space"
 msgstr "This device doesn't sync. Create a space on your sync server, or join a space another device created."
 
-#: ../../libs/settings-react/src/lib/sync/settings-sync-problems.tsx:32
+#: ../../libs/settings-react/src/lib/sync/settings-sync-problems.tsx:31
 msgid "settings.sync.over-quota"
 msgstr "The space is full, so new changes wait to upload. Deleting decks or cards frees room."
 
-#: ../../libs/settings-react/src/lib/sync/settings-sync-problems.tsx:33
+#: ../../libs/settings-react/src/lib/sync/settings-sync-problems.tsx:32
 msgid "settings.sync.push-waits {resumesAt}"
 msgstr "This device's clock was ahead of the server's, so its changes wait to upload until {resumesAt}."
 
-#: ../../libs/settings-react/src/lib/sync/settings-sync-problems.tsx:84
+#: ../../libs/settings-react/src/lib/sync/settings-sync-problems.tsx:87
 msgid "settings.sync.restore.confirm"
 msgstr "Replace"
 
-#: ../../libs/settings-react/src/lib/sync/settings-sync-problems.tsx:76
+#: ../../libs/settings-react/src/lib/sync/settings-sync-problems.tsx:79
 msgid "settings.sync.restore.continue"
 msgstr "Continue"
 
-#: ../../libs/settings-react/src/lib/sync/settings-sync-problems.tsx:80
+#: ../../libs/settings-react/src/lib/sync/settings-sync-problems.tsx:83
 msgid "settings.sync.restore.message"
 msgstr "Replace this device's data with the backup's? Changes made here since the backup are lost."
 
 #: ../../libs/settings-react/src/lib/sync/settings-sync-create-space.tsx:60
 #: ../../libs/settings-react/src/lib/sync/settings-sync-invite.tsx:84
-#: ../../libs/settings-react/src/lib/sync/settings-sync-join.tsx:121
+#: ../../libs/settings-react/src/lib/sync/settings-sync-join.tsx:117
 msgid "settings.sync.server-url.label"
 msgstr "Server address"
 
@@ -554,12 +554,12 @@ msgid "settings.sync.space-name.label"
 msgstr "Space name"
 
 #: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:13
-#: ../../libs/settings-react/src/lib/sync/sync-indicator.tsx:38
+#: ../../libs/settings-react/src/lib/sync/sync-indicator.tsx:50
 msgid "settings.sync.state.bootstrapping"
 msgstr "Downloading the space"
 
 #: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:14
-#: ../../libs/settings-react/src/lib/sync/sync-indicator.tsx:40
+#: ../../libs/settings-react/src/lib/sync/sync-indicator.tsx:52
 msgid "settings.sync.state.idle"
 msgstr "Up to date"
 
@@ -576,7 +576,7 @@ msgid "settings.sync.state.stopped"
 msgstr "Sync stopped"
 
 #: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:15
-#: ../../libs/settings-react/src/lib/sync/sync-indicator.tsx:36
+#: ../../libs/settings-react/src/lib/sync/sync-indicator.tsx:48
 msgid "settings.sync.state.syncing"
 msgstr "Syncing"
 
