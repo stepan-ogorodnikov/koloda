@@ -7,8 +7,8 @@ use std::sync::Arc;
 use koloda::app::utility::get_current_timestamp;
 use koloda::domain::attachments::AddAttachmentData;
 use koloda::repo::sync::attachments::{
-    defer_transfer, due_transfers, finish_attachment_check, finish_transfer, queue_missing_uploads, store_fetched,
-    upload_source, Direction, Transfer,
+    defer_for_room, defer_transfer, due_transfers, finish_attachment_check, finish_transfer, queue_missing_uploads,
+    store_fetched, upload_source, Direction, Transfer,
 };
 use koloda::repo::sync::sync_state;
 use koloda_sync_proto::transport::{AttachmentBody, Empty, ErrorCode, MissingAttachments, MAX_MISSING_IDS};
@@ -143,8 +143,13 @@ impl Shared {
             Err(SyncError::Server {
                 code: ErrorCode::InsufficientStorage,
                 ..
-            }) => self.defer(transfer).await?,
+            }) => {
+                let now = get_current_timestamp()?;
+                self.blocking(move |shared| defer_for_room(&shared.db, &transfer, now))
+                    .await?;
+            }
             Err(error) if is_refused_for_good(&error) => self.drop_refused(transfer, &error).await?,
+            Err(error) if is_server_fault(&error) => self.defer_faulted(transfer, &error).await?,
             Err(error) => return Err(error),
         }
         Ok(size)
@@ -172,6 +177,10 @@ impl Shared {
             }
             Err(error) if is_refused_for_good(&error) => {
                 self.drop_refused(transfer, &error).await?;
+                return Ok(0);
+            }
+            Err(error) if is_server_fault(&error) => {
+                self.defer_faulted(transfer, &error).await?;
                 return Ok(0);
             }
             Err(error) => return Err(error),
@@ -202,6 +211,16 @@ impl Shared {
         self.finish(transfer).await
     }
 
+    // WHY: one image the server fails on waits out its backoff, so it does not hold back every other image; the host
+    // hears of it, since only a fix on the server ends the waits.
+    async fn defer_faulted(self: &Arc<Self>, transfer: Transfer, error: &SyncError) -> Result<(), SyncError> {
+        self.emit(Event::Error(format!(
+            "attachment {} waits to retry: {error}",
+            transfer.id
+        )));
+        self.defer(transfer).await
+    }
+
     async fn defer(self: &Arc<Self>, transfer: Transfer) -> Result<(), SyncError> {
         let now = get_current_timestamp()?;
         self.blocking(move |shared| defer_transfer(&shared.db, &transfer, now))
@@ -214,8 +233,8 @@ impl Shared {
     }
 }
 
-// WHY: the server refuses these the same way on every retry; any other error, such as no reply or a server fault,
-// leaves the transfer queued for the next cycle.
+// WHY: the server refuses these the same way on every retry; a server fault defers the transfer, and any other
+// error, such as no reply, ends the cycle's transfers and leaves it queued for the next cycle.
 fn is_refused_for_good(error: &SyncError) -> bool {
     matches!(
         error,
@@ -228,4 +247,8 @@ fn is_refused_for_good(error: &SyncError) -> bool {
 
 fn path(session: &Session, id: &str) -> String {
     format!("/v1/spaces/{}/attachments/{id}", session.space)
+}
+
+fn is_server_fault(error: &SyncError) -> bool {
+    matches!(error, SyncError::Server { status: 500..=599, .. })
 }

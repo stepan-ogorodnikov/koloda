@@ -726,6 +726,13 @@
           "dflt_value": null
         },
         {
+          "name": "is_waiting_for_room",
+          "type": "INTEGER",
+          "notnull": 1,
+          "pk": 0,
+          "dflt_value": "0"
+        },
+        {
           "name": "next_attempt_at",
           "type": "INTEGER",
           "notnull": 1,

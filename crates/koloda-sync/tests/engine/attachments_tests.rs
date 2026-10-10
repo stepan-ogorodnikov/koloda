@@ -164,25 +164,48 @@ fn a_device_that_pulls_before_the_upload_fetches_after_its_backoff() {
         Fault::Reply(error_reply(500, ErrorCode::Internal)),
     );
     let refused = a.engine.sync_now();
+    let deferred = a.queued();
     let b = space.server.join(a);
 
     b.engine.sync_now().expect("B syncs");
     let waiting = (b.image(&images[0]), b.queued());
+    a.execute("UPDATE sync_attachment_queue SET next_attempt_at = 0");
     a.engine.sync_now().expect("A uploads");
     b.engine.sync_now().expect("B syncs before its backoff ends");
     let before_backoff = b.image(&images[0]);
     b.execute("UPDATE sync_attachment_queue SET next_attempt_at = 0");
     b.engine.sync_now().expect("B syncs after its backoff");
 
-    assert!(
-        refused.is_err(),
-        "a server fault ends the cycle with the upload still queued"
-    );
+    assert!(refused.is_ok(), "a server fault on an upload does not stop the cycle");
+    assert_eq!(deferred, (1, 0), "the upload waits out its backoff");
     assert_eq!(waiting, (None, (0, 1)), "B's fetch waits");
     assert_eq!(a.queued(), (0, 0));
     assert_eq!(before_backoff, None);
     assert_eq!(b.image(&images[0]), a.image(&images[0]));
     assert_eq!(b.transfers(Method::Get), 2);
+}
+
+#[test]
+fn an_image_the_server_fails_on_waits_and_the_others_arrive_that_cycle() {
+    let space = Space::new();
+    let a = &space.device;
+    let images = card_with_images(a, 3, 2_000).images;
+    a.engine.sync_now().expect("A syncs");
+    let b = space.server.join(a);
+    b.transport.fault_when(
+        Method::Get,
+        ATTACHMENTS,
+        Fault::Reply(error_reply(500, ErrorCode::Internal)),
+    );
+
+    b.engine.sync_now().expect("B's cycle goes on past the failed fetch");
+
+    let arrived = images.iter().filter(|id| b.image(id).is_some()).count();
+    assert_eq!(arrived, 2, "the other images arrive that cycle");
+    assert_eq!(b.queued(), (0, 1), "the failed fetch waits for its retry");
+    b.execute("UPDATE sync_attachment_queue SET next_attempt_at = 0");
+    b.engine.sync_now().expect("B syncs after the backoff");
+    assert!(images.iter().all(|id| b.image(id).is_some()));
 }
 
 #[test]
@@ -195,7 +218,7 @@ fn an_image_swept_before_its_upload_is_never_sent() {
         ATTACHMENTS,
         Fault::Reply(error_reply(500, ErrorCode::Internal)),
     );
-    a.engine.sync_now().expect_err("the upload fails");
+    a.engine.sync_now().expect("the upload waits out its backoff");
     update_card(
         &a.db,
         UpdateCardData {
@@ -222,6 +245,7 @@ fn an_image_swept_before_its_upload_is_never_sent() {
         },
     )
     .expect("the sweep runs");
+    a.execute("UPDATE sync_attachment_queue SET next_attempt_at = 0");
 
     a.engine.sync_now().expect("A syncs");
 
@@ -282,12 +306,11 @@ fn a_tick_stops_between_transfers_once_its_bytes_are_spent() {
     let images = card_with_images(a, 2, 8_000).images;
     a.engine.sync_now().expect("A syncs");
     let b = space.server.join(a);
-    b.transport.fault_when(
-        Method::Get,
-        ATTACHMENTS,
-        Fault::Reply(error_reply(500, ErrorCode::Internal)),
-    );
-    b.engine.sync_now().expect_err("B's first fetch fails");
+    // WHY: a fetch with no reply after its retries ends the cycle's transfers, so both images wait for the ticks.
+    for _ in 0..4 {
+        b.transport.fault_when(Method::Get, ATTACHMENTS, Fault::LoseReply);
+    }
+    b.engine.sync_now().expect_err("B's first fetch gets no reply");
 
     let first = b
         .engine

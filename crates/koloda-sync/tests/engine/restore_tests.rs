@@ -636,7 +636,7 @@ fn an_image_uploaded_after_the_backup_goes_up_again_even_when_the_first_check_fa
         &pair.library.template,
         &format!("![x](attachment:{image})"),
     );
-    a.engine.sync_now().expect_err("the upload fails");
+    a.engine.sync_now().expect("the upload waits out its backoff");
     let backup = pair.space.server.backup();
     a.execute("UPDATE sync_attachment_queue SET next_attempt_at = 0");
     a.sync();

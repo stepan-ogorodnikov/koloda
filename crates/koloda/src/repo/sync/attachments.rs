@@ -164,8 +164,19 @@ pub fn store_fetched(db: &Database, id: &str, data: &AddAttachmentData) -> Resul
     })
 }
 
-/// Schedules the next attempt of a transfer the server could not serve or take yet: 1 minute, doubling up to 6 hours.
+/// Schedules the next attempt of a transfer the server could not serve yet, or failed on: 1 minute, doubling up to 6
+/// hours.
 pub fn defer_transfer(db: &Database, transfer: &Transfer, now: i64) -> Result<(), AppError> {
+    defer(db, transfer, now, false)
+}
+
+/// Schedules the next attempt of an upload the space had no room for, as `defer_transfer` does; it goes at once when
+/// `release_deferred_uploads` finds room.
+pub fn defer_for_room(db: &Database, transfer: &Transfer, now: i64) -> Result<(), AppError> {
+    defer(db, transfer, now, true)
+}
+
+fn defer(db: &Database, transfer: &Transfer, now: i64, is_waiting_for_room: bool) -> Result<(), AppError> {
     throw_known_error(error_codes::DB_UPDATE, || {
         db.with_transaction(|tx| {
             let direction = transfer.direction.as_sql();
@@ -180,27 +191,27 @@ pub fn defer_transfer(db: &Database, transfer: &Transfer, now: i64) -> Result<()
                 .map_or(LAST_RETRY_MS, |delay| delay.min(LAST_RETRY_MS));
             tx.execute(
                 r#"
-                UPDATE sync_attachment_queue SET attempts = attempts + 1, next_attempt_at = ?3
+                UPDATE sync_attachment_queue
+                SET attempts = attempts + 1, next_attempt_at = ?3, is_waiting_for_room = ?4
                 WHERE id = ?1 AND direction = ?2
                 "#,
-                params![transfer.id, direction, now + delay],
+                params![transfer.id, direction, now + delay, is_waiting_for_room],
             )?;
             Ok(())
         })
     })
 }
 
-/// Makes every deferred upload due at once, with its backoff reset, once the space has room again.
+/// Makes every upload that waits for room due at once, with its backoff reset, once the space has room again.
 ///
-/// WHY: an upload defers only when the server answers `507`, so every deferred upload is one that waited for room.
-/// Fetches wait for another device's upload and keep their backoff.
+/// WHY: an upload the server failed on keeps its backoff, and fetches wait for another device's upload.
 pub fn release_deferred_uploads(db: &Database) -> Result<(), AppError> {
     throw_known_error(error_codes::DB_UPDATE, || {
         db.with_conn(|conn| {
             conn.execute(
                 r#"
-                UPDATE sync_attachment_queue SET attempts = 0, next_attempt_at = 0
-                WHERE direction = 'upload' AND attempts > 0
+                UPDATE sync_attachment_queue SET attempts = 0, next_attempt_at = 0, is_waiting_for_room = 0
+                WHERE direction = 'upload' AND is_waiting_for_room = 1
                 "#,
                 [],
             )?;

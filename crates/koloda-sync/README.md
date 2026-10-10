@@ -63,6 +63,7 @@ A delete that fails then emits `Event::Error` and the call succeeds; a re-attach
 - `src/attachments.rs` — image uploads and fetches after the cycle's rounds: the one check after a restore of the
   images the server lacks, retries and waits, early stops, and the event
   that tells the host which images arrived.
+  A transfer the server fails on waits out its backoff while the others go on.
 - `src/client.rs` — CBOR and zstd bodies, the reply envelope, the skew estimate, retries, the server URL rule, and the
   epoch and the schemas this app writes, both of which every device call names.
 - `src/transport.rs` — `Transport`, one request and its raw reply, and the events socket; `HttpTransport` sends both

@@ -401,12 +401,17 @@ The owner took every recommendation on 2026-10-09.
   Commit: Keep the pairing preview's counts and bytes in counters
   Depends on: 1
 
-- [ ] 14. Defer a transfer the server fails on
+- [x] 14. Defer a transfer the server fails on
   Goal (R11):
   - `upload` and `fetch` in `crates/koloda-sync/src/attachments.rs` defer a transfer the server answers with
     `SyncError::Server` and a `5xx` status, then move to the next.
     `defer` waits 1 minute, doubling up to 6 hours.
   - A transport error still ends the cycle's transfers.
+  - Implementation added client migration `V15__sync_attachment_room.sql`: `sync_attachment_queue.is_waiting_for_room`.
+    `release_deferred_uploads` resets every deferred upload each round the space has room, so without it an upload
+    the server failed on would be sent again every cycle; only a `507` (`defer_for_room`) now marks it.
+    The failed transfer emits `Event::Error`, since only a fix on the server ends its waits.
+    Four engine tests that used a `500` to stall a transfer now reset the backoff or lose the reply instead.
   Done when:
   - an engine test: the server fails one fetch with a `5xx`, for example a blob file removed from its disk, and
     the other images of the batch arrive that cycle;

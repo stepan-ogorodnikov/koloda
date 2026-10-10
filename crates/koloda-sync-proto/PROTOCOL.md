@@ -1662,7 +1662,10 @@ Row sync never waits on an upload; the bytes go up after the push that reported 
 A device that lacks the bytes for a reported id does not queue it, and an upload whose attachment was swept drops.
 An upload answered `507` waits like a fetch the server cannot serve yet (§Download) and does not fail the cycle; the
 status shows the space is over its quota.
-Once a device record shows room, every upload that waited goes in that cycle, with its backoff reset.
+Once a device record shows room, every upload that waited for room goes in that cycle, with its backoff reset.
+An upload or a fetch answered with another `5xx` waits the same way, keeps its backoff when room returns, and the
+cycle moves on to the next image; one blob the server fails on holds back no other.
+A transfer that gets no reply ends the cycle's transfers and stays queued.
 
 ### Download
 

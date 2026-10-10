@@ -117,8 +117,9 @@ remote apply queues a fetch for each linked id the file lacks.
   card scan. The queue pins nothing, so the startup sweep is unchanged.
 - `store_fetched` checks the hash and validates like an add, then writes through `insert_attachment`, the one insert
   that `add_attachment` uses too; bytes still go through `attachment_bytes` only.
-- `release_deferred_uploads` makes every upload a `507` deferred due at once; the engine calls it beside
-  `release_held` when the device record shows room.
+- `release_deferred_uploads` makes every upload deferred by `defer_for_room` (a `507`) due at once; the engine calls
+  it beside `release_held` when the device record shows room.
+  An upload `defer_transfer` deferred after a server fault keeps its backoff (`is_waiting_for_room`).
 
 **Re-stamp** — `restamp_local_cohorts` walks the `local` cohorts in one transaction, one new stamp per cohort.
 
