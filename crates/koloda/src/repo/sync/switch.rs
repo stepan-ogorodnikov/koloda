@@ -16,7 +16,7 @@ use super::outbox::{mark_consumed, settle_item, BatchItem};
 use super::rebase::open_barrier;
 use super::repair::Starter;
 use super::restamp::restamp;
-use super::{protocol_error, Changed};
+use super::{protocol_error, renumber_row, Changed};
 use crate::app::db::Database;
 use crate::app::error::{error_codes, throw_known_error, AppError};
 
@@ -151,24 +151,25 @@ fn classify(conn: &Connection, accepted: &HashSet<Vec<u8>>) -> Result<(), AppErr
 /// Renumbers every pending row from 1 in its old order under `new_device`, out of flight, with the register, origin,
 /// or tombstone it wrote; returns the next free seq. `sync_held` rows were consumed under the old sender and stay.
 fn renumber(conn: &Connection, old: DeviceId, new_device: Uuid) -> Result<i64, AppError> {
-    let seqs: Vec<i64> = conn
-        .prepare("SELECT sender_seq FROM sync_outbox ORDER BY sender_seq")?
-        .query_map([], |row| row.get(0))?
+    let rows: Vec<(i64, String, String)> = conn
+        .prepare("SELECT sender_seq, kind, id FROM sync_outbox ORDER BY sender_seq")?
+        .query_map([], |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)))?
         .collect::<Result<_, _>>()?;
 
     let mut next = 1;
-    for old_seq in seqs {
+    for (old_seq, kind, id) in rows {
         // WHY: rows move down in ascending order, so the seq a row takes is its own or one a moved row left free.
         conn.execute(
             "UPDATE sync_outbox SET sender_seq = ?2, in_flight = 0 WHERE sender_seq = ?1",
             params![old_seq, next],
         )?;
-        for table in ["sync_stamps", "sync_origins", "sync_tombstones"] {
-            conn.execute(
-                &format!("UPDATE {table} SET sender = ?3, sender_seq = ?4 WHERE sender = ?1 AND sender_seq = ?2"),
-                params![old.0.as_slice(), old_seq, new_device.as_bytes().as_slice(), next],
-            )?;
-        }
+        renumber_row(
+            conn,
+            &kind,
+            &id,
+            (old.0.as_slice(), old_seq),
+            (new_device.as_bytes().as_slice(), next),
+        )?;
         next += 1;
     }
     Ok(next)

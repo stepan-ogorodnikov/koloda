@@ -1071,6 +1071,13 @@
       ],
       "indexes": [
         {
+          "name": "sync_outbox_commit_id_idx",
+          "unique": 0,
+          "columns": [
+            "commit_id"
+          ]
+        },
+        {
           "name": "sync_outbox_kind_id_group_name_idx",
           "unique": 0,
           "columns": [

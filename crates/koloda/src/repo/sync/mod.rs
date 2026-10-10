@@ -14,6 +14,8 @@ pub mod authoritative;
 pub mod backfill;
 pub mod capture;
 pub mod heal;
+#[cfg(test)]
+mod index_tests;
 pub mod join;
 pub mod outbox;
 pub mod rebase;
@@ -478,14 +480,38 @@ fn forget_card_reviews(conn: &Connection, card_id: &str) -> Result<(), AppError>
     Ok(())
 }
 
+const EMPTY_COHORT: &str = r#"
+    DELETE FROM sync_cohorts
+    WHERE commit_id = ?1 AND NOT EXISTS (SELECT 1 FROM sync_outbox WHERE commit_id = ?1)
+"#;
+
 fn delete_empty_cohort(conn: &Connection, commit_id: &[u8]) -> Result<(), AppError> {
-    conn.execute(
-        r#"
-        DELETE FROM sync_cohorts
-        WHERE commit_id = ?1 AND NOT EXISTS (SELECT 1 FROM sync_outbox WHERE commit_id = ?1)
-        "#,
-        params![commit_id],
-    )?;
+    conn.execute(EMPTY_COHORT, params![commit_id])?;
+    Ok(())
+}
+
+// INVARIANT: every stamp, origin, and tombstone this device writes lives under its envelope's kind and id, so the
+// kind and id of a pending row find the one it wrote through the primary key.
+const RENUMBER: [&str; 3] = [
+    r#"
+    UPDATE sync_stamps SET sender = ?1, sender_seq = ?2
+    WHERE kind = ?3 AND id = ?4 AND sender = ?5 AND sender_seq = ?6
+    "#,
+    r#"
+    UPDATE sync_origins SET sender = ?1, sender_seq = ?2
+    WHERE kind = ?3 AND id = ?4 AND sender = ?5 AND sender_seq = ?6
+    "#,
+    r#"
+    UPDATE sync_tombstones SET sender = ?1, sender_seq = ?2
+    WHERE kind = ?3 AND id = ?4 AND sender = ?5 AND sender_seq = ?6
+    "#,
+];
+
+/// Moves the stamp, origin, or tombstone that the pending row of `kind` and `id` wrote at `old` to `new`.
+fn renumber_row(conn: &Connection, kind: &str, id: &str, old: (&[u8], i64), new: (&[u8], i64)) -> Result<(), AppError> {
+    for statement in RENUMBER {
+        conn.execute(statement, params![new.0, new.1, kind, id, old.0, old.1])?;
+    }
     Ok(())
 }
 

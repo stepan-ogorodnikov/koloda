@@ -18,7 +18,7 @@ use serde_json::Value;
 use uuid::Uuid;
 
 use super::apply::table;
-use super::{protocol_error, CREATE_GROUP, ROW_GROUP};
+use super::{protocol_error, renumber_row, CREATE_GROUP, ROW_GROUP};
 use crate::app::db::Database;
 use crate::app::error::{error_codes, throw_known_error, AppError};
 use crate::domain::settings::SettingsName;
@@ -646,6 +646,20 @@ impl Write {
     }
 }
 
+pub(super) const IS_LAST_COHORT: &str = r#"
+    SELECT NOT EXISTS (
+        SELECT 1 FROM sync_outbox
+        WHERE commit_id <> ?1
+          AND sender_seq > (SELECT MIN(sender_seq) FROM sync_outbox WHERE commit_id = ?1 AND in_flight = 0)
+    )
+"#;
+
+pub(super) const COHORT_ROWS: &str = r#"
+    SELECT sender_seq, kind, id, length(envelope) FROM sync_outbox
+    WHERE commit_id = ?1 AND in_flight = 0
+    ORDER BY sender_seq
+"#;
+
 /// Seals a batch's writes into one `fixed` cohort at new seqs of this device.
 struct Writer<'c> {
     conn: &'c Connection,
@@ -737,45 +751,29 @@ impl Writer<'_> {
     fn move_cohort(&mut self, commit_id: &[u8]) -> Result<usize, AppError> {
         // WHY: a cohort already behind every other row needs no move. Without this check, an import of N cards would
         // move all N rows each time the scan met one of them.
-        let is_last: bool = self.conn.query_row(
-            r#"
-            SELECT NOT EXISTS (
-                SELECT 1 FROM sync_outbox
-                WHERE commit_id <> ?1
-                  AND sender_seq > (SELECT MIN(sender_seq) FROM sync_outbox WHERE commit_id = ?1 AND in_flight = 0)
-            )
-            "#,
-            params![commit_id],
-            |row| row.get(0),
-        )?;
+        let is_last: bool = self
+            .conn
+            .query_row(IS_LAST_COHORT, params![commit_id], |row| row.get(0))?;
         if is_last {
             return Ok(0);
         }
-        let rows: Vec<(i64, usize)> = self
+        let rows: Vec<(i64, String, String, usize)> = self
             .conn
-            .prepare(
-                r#"
-                SELECT sender_seq, length(envelope) FROM sync_outbox
-                WHERE commit_id = ?1 AND in_flight = 0
-                ORDER BY sender_seq
-                "#,
-            )?
-            .query_map(params![commit_id], |row| Ok((row.get(0)?, row.get(1)?)))?
+            .prepare(COHORT_ROWS)?
+            .query_map(params![commit_id], |row| {
+                Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?))
+            })?
             .collect::<Result<_, _>>()?;
+        let device = self.device.0;
         let mut bytes = 0;
-        for (old_seq, size) in rows {
+        for (old_seq, kind, id, size) in rows {
             let new_seq = self.take_seq();
             self.moved.insert(old_seq);
             self.conn.execute(
                 "UPDATE sync_outbox SET sender_seq = ?2 WHERE sender_seq = ?1",
                 params![old_seq, new_seq],
             )?;
-            for table in ["sync_stamps", "sync_origins", "sync_tombstones"] {
-                self.conn.execute(
-                    &format!("UPDATE {table} SET sender_seq = ?3 WHERE sender = ?1 AND sender_seq = ?2"),
-                    params![self.device.0.as_slice(), old_seq, new_seq],
-                )?;
-            }
+            renumber_row(self.conn, &kind, &id, (&device, old_seq), (&device, new_seq))?;
             bytes += size;
         }
         Ok(bytes)

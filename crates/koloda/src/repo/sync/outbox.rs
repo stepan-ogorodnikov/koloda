@@ -14,7 +14,7 @@ use rusqlite::{params, Connection, OptionalExtension, ToSql};
 use super::apply::{delete_entity, drop_entity};
 use super::attachments;
 use super::repair::Starter;
-use super::{protocol_error, Changed, StampValues};
+use super::{protocol_error, renumber_row, Changed, StampValues};
 use crate::app::db::Database;
 use crate::app::error::{error_codes, throw_known_error, AppError};
 
@@ -346,9 +346,9 @@ pub fn release_held(db: &Database) -> Result<usize, AppError> {
                 )?
                 .query_map([], |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)))?
                 .collect::<Result<_, _>>()?;
-            let pending: Vec<i64> = tx
-                .prepare("SELECT sender_seq FROM sync_outbox WHERE in_flight = 0 ORDER BY sender_seq")?
-                .query_map([], |row| row.get(0))?
+            let pending: Vec<(i64, String, String)> = tx
+                .prepare("SELECT sender_seq, kind, id FROM sync_outbox WHERE in_flight = 0 ORDER BY sender_seq")?
+                .query_map([], |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)))?
                 .collect::<Result<_, _>>()?;
 
             let mut released = 0;
@@ -391,19 +391,14 @@ pub fn release_held(db: &Database) -> Result<usize, AppError> {
                 released += 1;
             }
             if released > 0 {
-                for old_seq in pending {
+                for (old_seq, kind, id) in pending {
                     let new_seq = next;
                     next += 1;
                     tx.execute(
                         "UPDATE sync_outbox SET sender_seq = ?2 WHERE sender_seq = ?1",
                         params![old_seq, new_seq],
                     )?;
-                    for table in ["sync_stamps", "sync_origins", "sync_tombstones"] {
-                        tx.execute(
-                            &format!("UPDATE {table} SET sender_seq = ?3 WHERE sender = ?1 AND sender_seq = ?2"),
-                            params![device, old_seq, new_seq],
-                        )?;
-                    }
+                    renumber_row(tx, &kind, &id, (&device, old_seq), (&device, new_seq))?;
                 }
             }
             tx.execute("UPDATE sync_state SET next_sender_seq = ?1 WHERE id = 1", params![next])?;
@@ -544,6 +539,11 @@ pub fn has_foreign_receipt(db: &Database, receipts: &[(u64, [u8; 32])]) -> Resul
     })
 }
 
+pub(super) const REFUSED_ROWS: &str = r#"
+    UPDATE sync_outbox SET in_flight = 0
+    WHERE commit_id = ?1 AND commit_id IN (SELECT commit_id FROM sync_cohorts WHERE state = 'uncertain')
+"#;
+
 /// Handles an error reply to a push, which consumed nothing (`PROTOCOL.md` §Push outcomes).
 pub fn push_refused(db: &Database, batch: &Batch) -> Result<(), AppError> {
     throw_known_error(error_codes::DB_UPDATE, || {
@@ -551,19 +551,19 @@ pub fn push_refused(db: &Database, batch: &Batch) -> Result<(), AppError> {
             for commit_id in batch_commits(tx, batch)? {
                 // INVARIANT: only a cohort sent for the first time returns to `local`. A fixed cohort's rows stay in
                 // flight, since an earlier lost push may have consumed them.
-                tx.execute(
-                    r#"
-                    UPDATE sync_outbox SET in_flight = 0
-                    WHERE commit_id = ?1 AND commit_id IN (SELECT commit_id FROM sync_cohorts WHERE state = 'uncertain')
-                    "#,
-                    params![commit_id],
-                )?;
+                tx.execute(REFUSED_ROWS, params![commit_id])?;
                 settle_cohort(tx, &commit_id, "local")?;
             }
             Ok(())
         })
     })
 }
+
+pub(super) const UNCONSUMED: &str = r#"
+    SELECT c.commit_id FROM sync_cohorts c
+    WHERE c.state = 'fixed' AND c.has_consumed = 0 AND c.hlc > ?2
+      AND NOT EXISTS (SELECT 1 FROM sync_outbox o WHERE o.commit_id = c.commit_id AND o.sender_seq <= ?1)
+"#;
 
 /// After a push refused for a stamp ahead of the server, returns to `local` every `fixed` cohort stamped above
 /// `ahead_of` that no push consumed, and takes its rows out of flight; returns how many (`PROTOCOL.md` §Cohorts).
@@ -574,18 +574,13 @@ pub fn push_refused(db: &Database, batch: &Batch) -> Result<(), AppError> {
 pub fn unfix_unconsumed(db: &Database, last_sender_seq: u64, ahead_of: Hlc) -> Result<usize, AppError> {
     throw_known_error(error_codes::DB_UPDATE, || {
         db.with_transaction(|tx| {
-            let unconsumed = r#"
-                SELECT c.commit_id FROM sync_cohorts c
-                WHERE c.state = 'fixed' AND c.has_consumed = 0 AND c.hlc > ?2
-                  AND NOT EXISTS (SELECT 1 FROM sync_outbox o WHERE o.commit_id = c.commit_id AND o.sender_seq <= ?1)
-            "#;
             let bound = i64::try_from(ahead_of.raw()).map_err(protocol_error)?;
             tx.execute(
-                &format!("UPDATE sync_outbox SET in_flight = 0 WHERE commit_id IN ({unconsumed})"),
+                &format!("UPDATE sync_outbox SET in_flight = 0 WHERE commit_id IN ({UNCONSUMED})"),
                 params![last_sender_seq, bound],
             )?;
             Ok(tx.execute(
-                &format!("UPDATE sync_cohorts SET state = 'local' WHERE commit_id IN ({unconsumed})"),
+                &format!("UPDATE sync_cohorts SET state = 'local' WHERE commit_id IN ({UNCONSUMED})"),
                 params![last_sender_seq, bound],
             )?)
         })

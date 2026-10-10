@@ -176,7 +176,7 @@ The owner took every recommendation on 2026-10-09.
   Commit: Index the space's heads by version
   Depends on: none
 
-- [ ] 2. Renumber a device's seqs through the primary key
+- [x] 2. Renumber a device's seqs through the primary key
   Goal (R3, I1, per question 3):
   - `renumber` in `switch.rs`, `Writer::move_cohort` in `heal.rs`, and the pending loop of `release_held` in
     `outbox.rs` read `kind` and `id` with each outbox row they move.
@@ -185,6 +185,9 @@ The owner took every recommendation on 2026-10-09.
   - Client migration `V14__sync_outbox_commit.sql` adds `sync_outbox_commit_id_idx ON sync_outbox (commit_id)`.
     It serves `delete_empty_cohort`, `push_refused`, `unfix_unconsumed`, and `move_cohort`.
   - A `koloda` test asserts that none of these statements scans its table, as item 1's test does.
+  - Implementation confirmed the constraint below: every writer stamps under the envelope's own `kind` and `id`.
+    The three loops share one `renumber_row` in `repo/sync/mod.rs`; the test is a unit test in
+    `repo/sync/index_tests.rs`.
   Constraints:
   - First confirm that every writer of an own-device stamp, origin, or tombstone writes it under the envelope's own
     `kind` and `id`: capture, backfill, restamp, held release, heal, and apply.
