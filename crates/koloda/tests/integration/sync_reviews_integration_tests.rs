@@ -333,33 +333,3 @@ fn a_remote_reset_drops_the_pending_local_grade_it_kills() {
     );
     assert_eq!(count(&fixture.db, "SELECT COUNT(*) FROM sync_cohorts"), cohorts - 1);
 }
-
-#[test]
-fn a_remote_review_outside_the_review_bounds_fails_its_page() {
-    let fixture = local_card();
-    let remote = Uuid::now_v7();
-    let Payload::Review(mut invalid) = review(&fixture.card) else {
-        panic!("review() builds a review payload");
-    };
-    invalid.rating = 9;
-    let review_id = "01920000-0000-7000-8000-0000000000e1";
-
-    let error = apply(
-        &fixture.db,
-        &page(
-            Lane::Cold,
-            remote,
-            vec![sealed(
-                review_id,
-                Some(&fixture.card),
-                stamp(remote, NEW_MS),
-                &Payload::Review(invalid),
-            )],
-            1,
-        ),
-    )
-    .unwrap_err();
-
-    assert_eq!(error.code, "validation.reviews.rating");
-    assert!(review_ids(&fixture.db, &fixture.card).is_empty());
-}

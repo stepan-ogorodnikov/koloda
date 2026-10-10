@@ -234,7 +234,7 @@ The owner took every recommendation on 2026-10-09.
   Commit: Bound the rows a heal call scans
   Depends on: none
 
-- [ ] 5. Hold the lane on a payload that breaks a domain rule
+- [x] 5. Hold the lane on a payload that breaks a domain rule
   Goal (R4):
   - `decode` in `apply.rs` also runs the domain checks applying would fail on.
     That covers `review_data` and `validate()` for a review, and the JSON parse of a learning value.
@@ -242,6 +242,9 @@ The owner took every recommendation on 2026-10-09.
   - A failure answers `HoldReason::CorruptEnvelope`, so the lane holds at that seq and the status shows it.
   - A conformance case: a review with an out-of-range rating holds `cold`.
   - `PROTOCOL.md` §Corrupt envelopes: a payload that decodes but breaks a domain rule is corrupt.
+  - Implementation folded the conformance case into the `koloda` corrupt-review table in
+    `sync_holds_integration_tests.rs`, and deleted `a_remote_review_outside_the_review_bounds_fails_its_page`, which
+    pinned the old page failure.
   Constraints:
   - `decode` writes nothing.
   - No wire change (`agents/BACKWARDS-COMPATIBILITY.md`).

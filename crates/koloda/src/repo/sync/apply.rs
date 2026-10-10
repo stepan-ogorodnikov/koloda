@@ -179,6 +179,9 @@ fn decode(lane: Lane, entry: &PageEntry) -> Result<Result<Entry, HoldReason>, Ap
             None => return Ok(Err(HoldReason::CorruptEnvelope)),
         },
     };
+    if breaks_domain_rule(&payload) {
+        return Ok(Err(HoldReason::CorruptEnvelope));
+    }
     let values = StampValues::new(
         envelope.header.stamp,
         DeviceId(*entry.sender.as_bytes()),
@@ -205,6 +208,19 @@ fn unreadable(error: &EnvelopeError) -> HoldReason {
         )
         | EnvelopeError::UnknownKey { .. } => HoldReason::UpdateRequired,
         _ => HoldReason::CorruptEnvelope,
+    }
+}
+
+// INVARIANT: a payload that decodes but breaks a rule applying it checks is corrupt, as bytes that do not decode are.
+// The lane holds at it until an operator drops it, instead of failing the page on every pull (PROTOCOL.md, Corrupt
+// envelopes). Every fallible conversion of a payload field that apply makes is checked here.
+fn breaks_domain_rule(payload: &Payload) -> bool {
+    match payload {
+        Payload::Review(review) => review_data(review).and_then(|data| data.validate()).is_err(),
+        Payload::LearningDailyLimits(group)
+        | Payload::LearningDayStartsAt(group)
+        | Payload::LearningLearnAheadLimit(group) => serde_json::from_str::<Value>(&group.value).is_err(),
+        _ => false,
     }
 }
 

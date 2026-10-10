@@ -87,6 +87,7 @@ removes what only an earlier lease of that bootstrap delivered, sets `cold`'s cu
 
 - A page stops at the first entry this app cannot read: what precedes it applies, the cursor stays just below it,
   and the `Hold` says whether the bytes are corrupt or need an app update.
+  A payload that decodes but breaks a domain rule apply checks is corrupt; `breaks_domain_rule` in `decode` checks it.
   A delete or reset whose payload alone does not decode applies from its header.
 - A remote write that went through one would re-enter the outbox.
 - Repairs of pointers to a dead referent are the exception.

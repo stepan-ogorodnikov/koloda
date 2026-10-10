@@ -8,11 +8,13 @@ use koloda::repo::{cards, decks};
 use koloda_sync::error::SyncError;
 use koloda_sync::status::State;
 use koloda_sync_proto::envelope::Envelope;
+use koloda_sync_proto::payload::{Payload, Review};
 use koloda_sync_proto::registry::Lane;
 use koloda_sync_proto::transport::{ErrorCode, RestoreMode};
+use uuid::Uuid;
 
-use crate::common::{error_reply, Device, Fault, Space, SERVER_URL};
-use crate::fixtures::seed_settings;
+use crate::common::{error_reply, system_ms, Device, Fault, Space, SERVER_URL};
+use crate::fixtures::{review, seed_settings};
 
 /// The envelope with a payload no app version could have written; its header still reads.
 fn unreadable_payload(bytes: &[u8]) -> Vec<u8> {
@@ -250,6 +252,62 @@ fn a_dropped_envelope_releases_the_hold_and_a_dropped_create_ends_deleted_everyw
         );
         assert_eq!(b.reviews(&library.card), reviews, "{case}");
     }
+}
+
+#[test]
+fn a_review_that_breaks_a_domain_rule_holds_cold_until_it_is_dropped() {
+    let space = Space::new();
+    let a = &space.device;
+    let library = a.library();
+    a.engine.sync_now().expect("A pushes its library");
+    let b = space.server.join(a);
+    b.engine.sync_now().expect("B pulls the library");
+    let now = i64::try_from(system_ms()).expect("now fits");
+    let broken = Uuid::now_v7().to_string();
+    let valid = match review(&library.card, now) {
+        Payload::Review(valid) => Some(valid),
+        _ => None,
+    }
+    .expect("the fixture is a review");
+    // The server never reads a payload, so it takes a rating no app writes.
+    space.raw_push(
+        &broken,
+        Some(&library.card),
+        space.raw_stamp(0),
+        &Payload::Review(Review { rating: 7, ..valid }),
+    );
+    space.raw_push(
+        &Uuid::now_v7().to_string(),
+        Some(&library.card),
+        space.raw_stamp(1),
+        &review(&library.card, now),
+    );
+
+    a.update_deck(&library.deck, "Renamed on A", &library.algorithm, &library.template);
+    a.engine.sync_now().expect("A's cycle goes on around the hold");
+
+    let at = space.server.version(space.space_id(), "reviews", &broken, "row");
+    assert_eq!(
+        hold(a),
+        Some(Hold {
+            lane: Lane::Cold,
+            seq: i64::try_from(at.1).expect("seq fits"),
+            reason: HoldReason::CorruptEnvelope,
+        })
+    );
+    assert_eq!(a.reviews(&library.card), 0, "nothing after the held review applies");
+    b.engine.sync_now().expect("B's cycle goes on around the hold");
+    assert_eq!(
+        b.deck(&library.deck).map(|deck| deck.title).as_deref(),
+        Some("Renamed on A"),
+        "A pushed while it held"
+    );
+
+    drop_version(&space, at);
+    a.engine.sync_now().expect("A passes the dropped seq");
+
+    assert_eq!(hold(a), None);
+    assert_eq!(a.reviews(&library.card), 1, "the review after it applies");
 }
 
 #[test]

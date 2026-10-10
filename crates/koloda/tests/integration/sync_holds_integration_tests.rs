@@ -14,7 +14,7 @@ use koloda::repo::decks::{get_deck, update_deck};
 use koloda::repo::lessons::submit_lesson_result;
 use koloda::repo::sync::apply::{apply_page, apply_snapshot_page, Applied, Hold, HoldReason, Page, PageEntry};
 use koloda_sync_proto::envelope::Envelope;
-use koloda_sync_proto::payload::{CardReset, Delete, Payload, Review, SCHEMA};
+use koloda_sync_proto::payload::{CardReset, Delete, Payload, Review, SettingValue, SCHEMA};
 use koloda_sync_proto::registry::{Kind, Lane};
 use uuid::Uuid;
 
@@ -285,39 +285,62 @@ fn a_corrupt_create_or_update_stops_the_hot_page_before_it() {
     }
 }
 
+/// The review with another rating, sealed as its writer would have sealed it.
+fn rated(envelope: &Envelope, rating: i64) -> Vec<u8> {
+    let review = match Payload::decode(&envelope.header, &envelope.payload) {
+        Ok(Payload::Review(review)) => Some(review),
+        _ => None,
+    }
+    .expect("the envelope is a review");
+    let header = &envelope.header;
+    sealed(
+        &header.id,
+        header.parent.as_deref(),
+        header.stamp,
+        &Payload::Review(Review { rating, ..review }),
+    )
+}
+
 #[test]
 fn a_corrupt_review_stops_the_cold_page_before_it() {
-    let (writer, reader) = (replica(), replica());
-    let written = write_deck(&writer);
-    for _ in 0..3 {
-        grade(&writer, &written.first);
+    // WHY: a review that decodes but breaks a domain rule is as corrupt as bytes that do not decode.
+    let cases: [(&str, Damage); 3] = [
+        ("bytes that do not decode", unreadable_payload),
+        ("a rating out of range", |envelope| rated(envelope, 5)),
+        ("a rating past i32", |envelope| rated(envelope, i64::from(i32::MAX) + 1)),
+    ];
+    for (case, damage) in cases {
+        let (writer, reader) = (replica(), replica());
+        let written = write_deck(&writer);
+        for _ in 0..3 {
+            grade(&writer, &written.first);
+        }
+        apply_held(&reader, &whole_page(&writer, Lane::Hot));
+        let middle = outbox(&writer)
+            .into_iter()
+            .filter(|entry| entry.envelope.header.kind == Kind::Reviews)
+            .nth(1)
+            .expect("three reviews are pending")
+            .envelope
+            .header
+            .id;
+        let (page, seq) = page_from(&writer, Lane::Cold, |envelope| envelope.header.id == middle, damage);
+
+        let applied = apply_held(&reader, &page);
+
+        assert_eq!(
+            applied.hold,
+            hold(Lane::Cold, seq, HoldReason::CorruptEnvelope),
+            "{case}"
+        );
+        assert_eq!(seq, 2, "{case}");
+        assert_eq!(cursor(&reader, Lane::Cold), 1, "{case}");
+        assert_eq!(
+            count(&reader, "SELECT COUNT(*) FROM reviews"),
+            1,
+            "{case}: only the review before it applied"
+        );
     }
-    apply_held(&reader, &whole_page(&writer, Lane::Hot));
-    let middle = outbox(&writer)
-        .into_iter()
-        .filter(|entry| entry.envelope.header.kind == Kind::Reviews)
-        .nth(1)
-        .expect("three reviews are pending")
-        .envelope
-        .header
-        .id;
-    let (page, seq) = page_from(
-        &writer,
-        Lane::Cold,
-        |envelope| envelope.header.id == middle,
-        unreadable_payload,
-    );
-
-    let applied = apply_held(&reader, &page);
-
-    assert_eq!(applied.hold, hold(Lane::Cold, seq, HoldReason::CorruptEnvelope));
-    assert_eq!(seq, 2);
-    assert_eq!(cursor(&reader, Lane::Cold), 1);
-    assert_eq!(
-        count(&reader, "SELECT COUNT(*) FROM reviews"),
-        1,
-        "only the review before it applied"
-    );
 }
 
 #[test]
@@ -428,7 +451,7 @@ fn a_corrupt_reset_applies_from_its_header() {
 
 #[test]
 fn an_unreadable_hot_entry_reports_why() {
-    let cases: [(&str, Target, Damage, HoldReason); 9] = [
+    let cases: [(&str, Target, Damage, HoldReason); 10] = [
         (
             "unknown kind",
             |written| (Kind::Decks, written.deck.clone(), "title"),
@@ -495,6 +518,17 @@ fn an_unreadable_hot_entry_reports_why() {
                     created_at: 1_727_000_000_000,
                 });
                 sealed(&Uuid::now_v7().to_string(), None, envelope.header.stamp, &review)
+            },
+            HoldReason::CorruptEnvelope,
+        ),
+        (
+            "a learning value that is not JSON",
+            |written| (Kind::Decks, written.deck.clone(), "title"),
+            |envelope| {
+                let limits = Payload::LearningDailyLimits(SettingValue {
+                    value: "{\"total\":".to_string(),
+                });
+                sealed("learning", None, envelope.header.stamp, &limits)
             },
             HoldReason::CorruptEnvelope,
         ),

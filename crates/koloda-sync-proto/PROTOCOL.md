@@ -1093,6 +1093,8 @@ and so does a schema above the app's own; that is `update_required { lane, seq }
 So does a frame, header, or `refs` key this app lacks, since only a newer app writes one.
 A payload key it lacks is corrupt: a new payload key comes with a schema raise.
 Any other envelope that does not decode, a lane mismatch, or a payload that does not decode is corrupt.
+So is a payload that decodes but breaks a domain rule applying it would check.
+That is a review the app would refuse to record, such as a rating out of range, or a learning value that is not JSON.
 The page applies every entry before the held one in one transaction and sets the lane cursor to the held seq minus
 one.
 Nothing at or after it applies, so every later pull meets it again until an upgrade reads it or a drop removes it.
@@ -1867,6 +1869,7 @@ Every implementation of the engine and the server must pass these.
   converges as a tombstone).
 - Corrupt delete and corrupt reset (still apply from the header).
 - A corrupt review holds `cold` only; a corrupt card create holds both lanes.
+- A review with an out-of-range rating holds `cold` as corrupt; an operator drop releases it.
 - An encoder that loses a field fails the local write and enqueues nothing.
 - Partial push and lost acknowledgement for every consuming outcome.
 - Card create before referent backfill; concurrent delete of two algorithms while others remain.
