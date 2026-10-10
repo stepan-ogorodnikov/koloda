@@ -139,7 +139,7 @@ When the space already holds some of the same items, the data looks like a copy 
 copied database.
 Then the choice says so and recommends Replace: Add keeps both, so the copied decks show twice.
 
-With either choice, the space's learning settings take the place of this device's.
+With either choice, the space's learning settings take the place of this device's, and every screen refreshes.
 Settings that never sync stay as they are (§Core model).
 
 A device waiting for the choice shows it again on Settings → Sync after a restart, without the copy warning.

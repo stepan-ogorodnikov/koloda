@@ -66,6 +66,8 @@ function AcceptRestore({ sync }: AcceptRestoreProps) {
     mutate(undefined, {
       onSuccess: (status) => {
         setIsOpen(false);
+        // WHY: accepting deletes this device's synced rows inside the call, which sends no change event per kind.
+        void queryClient.invalidateQueries();
         queryClient.setQueryData(queryKeys.sync.status(), status);
       },
     });

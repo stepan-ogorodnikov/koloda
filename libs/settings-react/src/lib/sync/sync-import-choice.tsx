@@ -28,6 +28,8 @@ export function SyncImportChoice({ sync }: SyncImportChoiceProps) {
     mutate(mode, {
       onSuccess: (status) => {
         setKnownIds(null);
+        // WHY: Add remints ids and Replace deletes rows inside this call, which sends no change event per kind.
+        void queryClient.invalidateQueries();
         queryClient.setQueryData(queryKeys.sync.status(), status);
       },
     });

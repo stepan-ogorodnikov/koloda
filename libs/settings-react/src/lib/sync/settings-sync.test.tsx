@@ -268,12 +268,13 @@ describe("SettingsSync add or replace", () => {
     expect(importData).toHaveBeenCalledWith("add", expect.anything());
   });
 
-  it("replaces this device's data only once confirmed", async () => {
+  it("replaces this device's data only once confirmed, then refreshes every screen", async () => {
     const importData = vi.fn(async (_mode: ImportMode) => status({ type: "bootstrapping" }));
-    renderSync(status({ type: "importPending" }), {
+    const { queryClient } = renderSync(status({ type: "importPending" }), {
       ...syncQueries(vi.fn()),
       importMutation: () => ({ mutationFn: importData }),
     });
+    queryClient.setQueryData(["decks"], []);
 
     await act(async () => {
       fireEvent.click(screen.getByRole("button", { name: "settings.sync.import.replace" }));
@@ -285,5 +286,6 @@ describe("SettingsSync add or replace", () => {
       fireEvent.click(screen.getByRole("button", { name: "settings.sync.import.replace.confirm" }));
     });
     expect(importData).toHaveBeenCalledWith("replace", expect.anything());
+    expect(queryClient.getQueryState(["decks"])?.isInvalidated).toBe(true);
   });
 });

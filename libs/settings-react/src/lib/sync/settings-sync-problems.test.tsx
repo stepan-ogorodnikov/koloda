@@ -75,13 +75,14 @@ describe("SettingsSyncProblems", () => {
     expect(screen.getByText(message)).not.toBeNull();
   });
 
-  it("offers to accept an authoritative restore only once confirmed, and keeps the status it returns", async () => {
+  it("accepts an authoritative restore only once confirmed, then keeps its status and refreshes every screen", async () => {
     const after = status({ state: { type: "bootstrapping" } });
     const acceptRestore = vi.fn(async () => after);
     const queryClient = renderProblems(
       status({ state: { type: "stopped", stop: { reason: "authoritativeRestore" } } }),
       acceptRestore,
     );
+    queryClient.setQueryData(["decks"], []);
 
     await act(async () => {
       fireEvent.click(screen.getByRole("button", { name: "settings.sync.restore.continue" }));
@@ -94,6 +95,7 @@ describe("SettingsSyncProblems", () => {
     });
     expect(acceptRestore).toHaveBeenCalled();
     expect(queryClient.getQueryData(["sync", "status"])).toBe(after);
+    expect(queryClient.getQueryState(["decks"])?.isInvalidated).toBe(true);
   });
 
   it("asks for an app update on a change this version cannot read", () => {
