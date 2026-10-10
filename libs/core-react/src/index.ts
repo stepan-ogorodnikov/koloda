@@ -20,6 +20,8 @@ export { useTitle } from "./lib/hooks/use-title";
 export { useTimestampFormatter } from "./lib/hooks/use-timestamp-formatter";
 export { queriesAtom } from "./lib/queries";
 export type { Queries } from "./lib/queries";
+export { syncQueriesAtom } from "./lib/sync";
+export type { SyncQueries } from "./lib/sync";
 export { queryKeys } from "./lib/query-keys";
 export { dispatchReducerAction } from "./lib/utility";
 export type { ReducerAction } from "./lib/utility";

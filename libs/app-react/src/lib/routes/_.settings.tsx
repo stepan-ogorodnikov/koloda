@@ -1,9 +1,10 @@
-import { useTitle } from "@koloda/core-react";
+import { syncQueriesAtom, useTitle } from "@koloda/core-react";
 import { NotFound } from "@koloda/ui";
 import { Layout, layoutSidebarItemLink, Link, useMotionSetting, useRouteFocus } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { createFileRoute, Outlet } from "@tanstack/react-router";
+import { useAtomValue } from "jotai";
 
 export const Route = createFileRoute("/_/settings")({
   component: SettingsRoute,
@@ -18,11 +19,15 @@ const LINKS = [
   { id: "ai", t: msg`settings.ai`, url: "ai" },
 ];
 
+const SYNC_LINK = { id: "sync", t: msg`settings.sync`, url: "sync" };
+
 function SettingsRoute() {
   useTitle();
   const ref = useRouteFocus();
   const { _ } = useLingui();
   const isMotionOn = useMotionSetting();
+  const sync = useAtomValue(syncQueriesAtom);
+  const links = sync ? [...LINKS, SYNC_LINK] : LINKS;
 
   return (
     <>
@@ -32,7 +37,7 @@ function SettingsRoute() {
         </Layout.Header>
         <Layout.Container ref={ref} tabIndex={-1}>
           <div className="flex flex-col">
-            {LINKS.map(({ id, t, url }) => (
+            {links.map(({ id, t, url }) => (
               <Layout.SidebarItem key={id}>
                 <Link className={layoutSidebarItemLink} to={`/settings/${url}`} viewTransition={isMotionOn}>
                   <Layout.SidebarItemLinkContent>{_(t)}</Layout.SidebarItemLinkContent>

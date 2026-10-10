@@ -15,7 +15,7 @@ use std::panic::{self, AssertUnwindSafe};
 use std::sync::mpsc::{self, Sender};
 use std::sync::Arc;
 use std::thread;
-use sync::{EventCallback, StarterWire, StatusWire, SyncHost};
+use sync::{CreateSpaceWire, EventCallback, StarterWire, StatusWire, SyncHost};
 
 mod sync;
 
@@ -665,6 +665,15 @@ impl KolodaDb {
         self.run_sync(env, move |sync| {
             let starter: StarterWire = from_wire(starter)?;
             let status = sync.start(starter, on_event).map_err(sync_error)?;
+            to_value(&StatusWire::from(status))
+        })
+    }
+
+    #[napi]
+    pub fn sync_create_space(&self, env: Env, data: serde_json::Value) -> Result<JsObject> {
+        self.run_sync(env, move |sync| {
+            let data: CreateSpaceWire = from_wire(data)?;
+            let status = sync.create_space(data).map_err(sync_error)?;
             to_value(&StatusWire::from(status))
         })
     }

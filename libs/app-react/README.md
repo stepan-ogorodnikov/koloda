@@ -14,6 +14,7 @@ Each app must set `appEntryAtom` before routes render and inject its `Queries` i
 - Shell: `components/app.tsx` — primary/secondary nav; mounts `useGlobalSync` and `useAppHotkeys`.
 - Providers: `app-providers.tsx` — root provider composition (Jotai, TanStack Query, Lingui, router) and i18n activation.
 - Routes: `routes/` — file-based TanStack routes (dashboard, decks, algorithms, templates, AI, settings); `routeTree.gen.ts` is generated.
+  Settings → Sync and its link exist only when the host sets `syncQueriesAtom`.
 - Global sync: `hooks/use-global-sync.ts` — settings → Jotai atoms (theme, motion, defaults, lang).
 - UI preferences: `wire-ui-preferences.ts` — wires scheme/theme/motion into atoms and the document; `ui-preferences-cache.ts` — persists them to `localStorage`.
 - Global hotkeys: `hooks/use-app-hotkeys.ts` — navigation/ui scopes only; feature scopes live in feature components.

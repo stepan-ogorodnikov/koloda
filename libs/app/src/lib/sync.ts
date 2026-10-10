@@ -25,6 +25,13 @@ export type SyncHold = {
   reason: "corruptEnvelope" | "updateRequired";
 };
 
+export type CreateSpaceData = {
+  serverUrl: string;
+  setupToken: string;
+  spaceName: string;
+  deviceName: string;
+};
+
 export type SyncStatus = {
   state: SyncState;
   lastSuccessAt: number | null;

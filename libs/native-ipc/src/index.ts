@@ -26,6 +26,7 @@ import type {
   HotkeysSettings,
   InterfaceSettings,
   LearningSettings,
+  CreateSpaceData,
   SetConversationData,
   SyncStatus,
 } from "@koloda/app";
@@ -234,6 +235,9 @@ export interface DataIpc {
   cmd_sync_start: { args: { starter: SyncStarter }; result: SyncStatus };
   cmd_sync_status: { args: undefined; result: SyncStatus };
   cmd_sync_nudge: { args: undefined; result: void };
+  cmd_sync_create_space: { args: { data: CreateSpaceData }; result: SyncStatus };
+  // The OS host name, which main reads; the default name of this device in a space.
+  cmd_sync_device_name: { args: undefined; result: string };
 }
 
 export type DataChannel = keyof DataIpc;
@@ -248,7 +252,12 @@ type AiChannel = "cmd_ai_list_models" | "cmd_ai_chat_stream" | "cmd_ai_abort";
 type MediaChannel = "cmd_add_attachment_from_url";
 
 /** Channels registered by `sync-ipc.ts`, which hands the engine main's event broadcaster. */
-type SyncChannel = "cmd_sync_start" | "cmd_sync_status" | "cmd_sync_nudge";
+type SyncChannel =
+  | "cmd_sync_start"
+  | "cmd_sync_status"
+  | "cmd_sync_nudge"
+  | "cmd_sync_create_space"
+  | "cmd_sync_device_name";
 
 /** Channels served by the `KolodaDb`-backed handler table in `data-ipc.ts`. */
 export type DataOnlyChannel = Exclude<DataChannel, AiChannel | MediaChannel | SyncChannel>;

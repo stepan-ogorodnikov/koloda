@@ -7,6 +7,7 @@ import {
   appEntryAtom,
   langAtom,
   queriesAtom,
+  syncQueriesAtom,
 } from "@koloda/core-react";
 import type { Queries } from "@koloda/core-react";
 import { wireUiPreferences } from "@koloda/app-react";
@@ -17,6 +18,7 @@ import { createElectronAIRuntime } from "./ai-runtime";
 import { invoke } from "./electron";
 import { activateLanguage, getLanguage } from "./i18n";
 import { queriesFn } from "./queries";
+import { syncQueries } from "./sync-queries";
 
 export const store = createStore();
 export const aiRuntime = createElectronAIRuntime();
@@ -39,6 +41,8 @@ store.set(aiRuntimeAtom as WritableAtom<AIRuntime, [AIRuntime], unknown>, aiRunt
 store.set(aiProvidersAtom, [...AI_PROVIDERS]);
 
 store.set(appEntryAtom, { component: AppEntry });
+
+store.set(syncQueriesAtom, syncQueries);
 
 // WHY: jotai treats a function passed to `set` as an updater, so the function value is returned from one.
 store.set(addAttachmentFromUrlAtom, () => (url: string) => invoke("cmd_add_attachment_from_url", { url }));

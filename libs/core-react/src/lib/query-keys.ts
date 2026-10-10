@@ -56,6 +56,7 @@ export const queryKeys = {
   },
   sync: {
     status: () => ["sync", "status"] as const,
+    deviceName: () => ["sync", "device_name"] as const,
   },
   templates: {
     all: () => ["templates"] as const,

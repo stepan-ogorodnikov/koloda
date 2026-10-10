@@ -18,6 +18,7 @@ import { Route as DashboardRouteImport } from './routes/_.dashboard'
 import { Route as AlgorithmsRouteImport } from './routes/_.algorithms'
 import { Route as AiRouteImport } from './routes/_.ai'
 import { Route as TemplatesTemplateIdRouteImport } from './routes/_.templates.$templateId'
+import { Route as SettingsSyncRouteImport } from './routes/_.settings.sync'
 import { Route as SettingsLearningRouteImport } from './routes/_.settings.learning'
 import { Route as SettingsInterfaceRouteImport } from './routes/_.settings.interface'
 import { Route as SettingsHotkeysRouteImport } from './routes/_.settings.hotkeys'
@@ -69,6 +70,11 @@ const TemplatesTemplateIdRoute = TemplatesTemplateIdRouteImport.update({
   path: '/$templateId',
   getParentRoute: () => TemplatesRoute,
 } as any)
+const SettingsSyncRoute = SettingsSyncRouteImport.update({
+  id: '/sync',
+  path: '/sync',
+  getParentRoute: () => SettingsRoute,
+} as any)
 const SettingsLearningRoute = SettingsLearningRouteImport.update({
   id: '/learning',
   path: '/learning',
@@ -114,6 +120,7 @@ export interface FileRoutesByFullPath {
   '/settings/hotkeys': typeof SettingsHotkeysRoute
   '/settings/interface': typeof SettingsInterfaceRoute
   '/settings/learning': typeof SettingsLearningRoute
+  '/settings/sync': typeof SettingsSyncRoute
   '/templates/$templateId': typeof TemplatesTemplateIdRoute
 }
 export interface FileRoutesByTo {
@@ -130,6 +137,7 @@ export interface FileRoutesByTo {
   '/settings/hotkeys': typeof SettingsHotkeysRoute
   '/settings/interface': typeof SettingsInterfaceRoute
   '/settings/learning': typeof SettingsLearningRoute
+  '/settings/sync': typeof SettingsSyncRoute
   '/templates/$templateId': typeof TemplatesTemplateIdRoute
 }
 export interface FileRoutesById {
@@ -148,6 +156,7 @@ export interface FileRoutesById {
   '/_/settings/hotkeys': typeof SettingsHotkeysRoute
   '/_/settings/interface': typeof SettingsInterfaceRoute
   '/_/settings/learning': typeof SettingsLearningRoute
+  '/_/settings/sync': typeof SettingsSyncRoute
   '/_/templates/$templateId': typeof TemplatesTemplateIdRoute
 }
 export interface FileRouteTypes {
@@ -166,6 +175,7 @@ export interface FileRouteTypes {
     | '/settings/hotkeys'
     | '/settings/interface'
     | '/settings/learning'
+    | '/settings/sync'
     | '/templates/$templateId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -182,6 +192,7 @@ export interface FileRouteTypes {
     | '/settings/hotkeys'
     | '/settings/interface'
     | '/settings/learning'
+    | '/settings/sync'
     | '/templates/$templateId'
   id:
     | '__root__'
@@ -199,6 +210,7 @@ export interface FileRouteTypes {
     | '/_/settings/hotkeys'
     | '/_/settings/interface'
     | '/_/settings/learning'
+    | '/_/settings/sync'
     | '/_/templates/$templateId'
   fileRoutesById: FileRoutesById
 }
@@ -270,6 +282,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/templates/$templateId'
       preLoaderRoute: typeof TemplatesTemplateIdRouteImport
       parentRoute: typeof TemplatesRoute
+    }
+    '/_/settings/sync': {
+      id: '/_/settings/sync'
+      path: '/sync'
+      fullPath: '/settings/sync'
+      preLoaderRoute: typeof SettingsSyncRouteImport
+      parentRoute: typeof SettingsRoute
     }
     '/_/settings/learning': {
       id: '/_/settings/learning'
@@ -343,6 +362,7 @@ interface SettingsRouteChildren {
   SettingsHotkeysRoute: typeof SettingsHotkeysRoute
   SettingsInterfaceRoute: typeof SettingsInterfaceRoute
   SettingsLearningRoute: typeof SettingsLearningRoute
+  SettingsSyncRoute: typeof SettingsSyncRoute
 }
 
 const SettingsRouteChildren: SettingsRouteChildren = {
@@ -350,6 +370,7 @@ const SettingsRouteChildren: SettingsRouteChildren = {
   SettingsHotkeysRoute: SettingsHotkeysRoute,
   SettingsInterfaceRoute: SettingsInterfaceRoute,
   SettingsLearningRoute: SettingsLearningRoute,
+  SettingsSyncRoute: SettingsSyncRoute,
 }
 
 const SettingsRouteWithChildren = SettingsRoute._addFileChildren(

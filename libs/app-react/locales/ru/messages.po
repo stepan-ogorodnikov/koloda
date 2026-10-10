@@ -70,26 +70,31 @@ msgid "route-error.retry"
 msgstr "Попробовать снова"
 
 #: ../../libs/app-react/src/lib/routes/_.settings.ai.tsx:31
-#: ../../libs/app-react/src/lib/routes/_.settings.tsx:18
+#: ../../libs/app-react/src/lib/routes/_.settings.tsx:19
 msgid "settings.ai"
 msgstr "ИИ"
 
 #: ../../libs/app-react/src/lib/routes/_.settings.hotkeys.tsx:32
-#: ../../libs/app-react/src/lib/routes/_.settings.tsx:17
+#: ../../libs/app-react/src/lib/routes/_.settings.tsx:18
 msgid "settings.hotkeys"
 msgstr "Горячие клавиши"
 
 #: ../../libs/app-react/src/lib/routes/_.settings.interface.tsx:26
-#: ../../libs/app-react/src/lib/routes/_.settings.tsx:15
+#: ../../libs/app-react/src/lib/routes/_.settings.tsx:16
 msgid "settings.interface"
 msgstr "Интерфейс"
 
 #: ../../libs/app-react/src/lib/routes/_.settings.learning.tsx:32
-#: ../../libs/app-react/src/lib/routes/_.settings.tsx:16
+#: ../../libs/app-react/src/lib/routes/_.settings.tsx:17
 msgid "settings.learning"
 msgstr "Изучение"
 
-#: ../../libs/app-react/src/lib/routes/_.settings.tsx:31
+#: ../../libs/app-react/src/lib/routes/_.settings.sync.tsx:35
+#: ../../libs/app-react/src/lib/routes/_.settings.tsx:22
+msgid "settings.sync"
+msgstr "Синхронизация"
+
+#: ../../libs/app-react/src/lib/routes/_.settings.tsx:36
 msgid "settings.title"
 msgstr "Настройки"
 
@@ -117,7 +122,7 @@ msgstr "Главная"
 msgid "title.decks"
 msgstr "Колоды"
 
-#: ../../libs/app-react/src/lib/routes/_.settings.tsx:10
+#: ../../libs/app-react/src/lib/routes/_.settings.tsx:11
 msgid "title.settings"
 msgstr "Настройки"
 
@@ -136,6 +141,10 @@ msgstr "Интерфейс"
 #: ../../libs/app-react/src/lib/routes/_.settings.learning.tsx:17
 msgid "title.settings.learning"
 msgstr "Изучение"
+
+#: ../../libs/app-react/src/lib/routes/_.settings.sync.tsx:13
+msgid "title.settings.sync"
+msgstr "Настройки синхронизации"
 
 #: ../../libs/app-react/src/lib/routes/_.templates.tsx:16
 msgid "title.templates"

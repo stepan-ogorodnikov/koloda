@@ -36,6 +36,10 @@ const TS_ONLY_ERROR_CODES = [
   "ai.http.503",
   "ai.http.504",
   "attachments.fetch",
+  "validation.sync.server-url",
+  "validation.sync.setup-token",
+  "validation.sync.name.too-short",
+  "validation.sync.name.too-long",
 ] as const;
 
 const HERE = dirname(fileURLToPath(import.meta.url));

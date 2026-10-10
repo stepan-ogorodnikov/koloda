@@ -70,26 +70,31 @@ msgid "route-error.retry"
 msgstr "Try again"
 
 #: ../../libs/app-react/src/lib/routes/_.settings.ai.tsx:31
-#: ../../libs/app-react/src/lib/routes/_.settings.tsx:18
+#: ../../libs/app-react/src/lib/routes/_.settings.tsx:19
 msgid "settings.ai"
 msgstr "AI"
 
 #: ../../libs/app-react/src/lib/routes/_.settings.hotkeys.tsx:32
-#: ../../libs/app-react/src/lib/routes/_.settings.tsx:17
+#: ../../libs/app-react/src/lib/routes/_.settings.tsx:18
 msgid "settings.hotkeys"
 msgstr "Hotkeys"
 
 #: ../../libs/app-react/src/lib/routes/_.settings.interface.tsx:26
-#: ../../libs/app-react/src/lib/routes/_.settings.tsx:15
+#: ../../libs/app-react/src/lib/routes/_.settings.tsx:16
 msgid "settings.interface"
 msgstr "Interface"
 
 #: ../../libs/app-react/src/lib/routes/_.settings.learning.tsx:32
-#: ../../libs/app-react/src/lib/routes/_.settings.tsx:16
+#: ../../libs/app-react/src/lib/routes/_.settings.tsx:17
 msgid "settings.learning"
 msgstr "Learning"
 
-#: ../../libs/app-react/src/lib/routes/_.settings.tsx:31
+#: ../../libs/app-react/src/lib/routes/_.settings.sync.tsx:35
+#: ../../libs/app-react/src/lib/routes/_.settings.tsx:22
+msgid "settings.sync"
+msgstr "Sync"
+
+#: ../../libs/app-react/src/lib/routes/_.settings.tsx:36
 msgid "settings.title"
 msgstr "Settings"
 
@@ -117,7 +122,7 @@ msgstr "Dashboard"
 msgid "title.decks"
 msgstr "Decks"
 
-#: ../../libs/app-react/src/lib/routes/_.settings.tsx:10
+#: ../../libs/app-react/src/lib/routes/_.settings.tsx:11
 msgid "title.settings"
 msgstr "Settings"
 
@@ -136,6 +141,10 @@ msgstr "Interface"
 #: ../../libs/app-react/src/lib/routes/_.settings.learning.tsx:17
 msgid "title.settings.learning"
 msgstr "Learning"
+
+#: ../../libs/app-react/src/lib/routes/_.settings.sync.tsx:13
+msgid "title.settings.sync"
+msgstr "Sync settings"
 
 #: ../../libs/app-react/src/lib/routes/_.templates.tsx:16
 msgid "title.templates"

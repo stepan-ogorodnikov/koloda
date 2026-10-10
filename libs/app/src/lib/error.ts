@@ -116,6 +116,11 @@ export const ERROR_MESSAGES = {
   "validation.reviews.learning-steps": msg`validation.reviews.learning-steps`,
   "validation.reviews.time": msg`validation.reviews.time`,
   "validation.seed.learning-settings": msg`validation.seed.learning-settings`,
+  "validation.sync.server-url": msg`validation.sync.server-url`,
+  "validation.sync.setup-token": msg`validation.sync.setup-token`,
+  "validation.sync.name.too-short": msg`validation.sync.name.too-short`,
+  "validation.sync.name.too-long": ({ maximum }: any) =>
+    msg`${plural(maximum, { other: "validation.sync.name.too-long" })}`,
   keyring: msg`keyring`,
   "secret-store": msg`secret-store`,
   "windows-credentials": msg`windows-credentials`,

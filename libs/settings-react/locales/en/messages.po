@@ -13,6 +13,22 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
+#: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:44
+msgid "{fetches, plural, other {settings.sync.fetches}}"
+msgstr "{fetches, plural, one {# image waits to download} other {# images wait to download}}"
+
+#: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:37
+msgid "{left, plural, other {settings.sync.download-left}}"
+msgstr "{left, plural, one {# change left to download} other {# changes left to download}}"
+
+#: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:42
+msgid "{pending, plural, other {settings.sync.pending}}"
+msgstr "{pending, plural, one {# change waits to upload} other {# changes wait to upload}}"
+
+#: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:43
+msgid "{uploads, plural, other {settings.sync.uploads}}"
+msgstr "{uploads, plural, one {# image waits to upload} other {# images wait to upload}}"
+
 #: ../../libs/settings-react/src/lib/interface-controls/color-scheme-picker.tsx:29
 msgid "color-scheme-picker.label"
 msgstr "Color scheme"
@@ -293,3 +309,71 @@ msgstr "Unlimited"
 #: ../../libs/settings-react/src/lib/settings-learning.tsx:127
 msgid "settings.learning.limits.untouched"
 msgstr "New"
+
+#: ../../libs/settings-react/src/lib/sync/settings-sync-create-space.tsx:20
+msgid "settings.sync.create"
+msgstr "Create a space"
+
+#: ../../libs/settings-react/src/lib/sync/settings-sync-create-space.tsx:99
+msgid "settings.sync.create.submit"
+msgstr "Create"
+
+#: ../../libs/settings-react/src/lib/sync/settings-sync-create-space.tsx:25
+msgid "settings.sync.create.title"
+msgstr "Create a space"
+
+#: ../../libs/settings-react/src/lib/sync/settings-sync-create-space.tsx:63
+msgid "settings.sync.device-name.label"
+msgstr "This device's name"
+
+#: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:40
+msgid "settings.sync.last-sync {lastSync}"
+msgstr "Last synced {lastSync}"
+
+#: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:40
+msgid "settings.sync.last-sync.none"
+msgstr "Not synced since the app started"
+
+#: ../../libs/settings-react/src/lib/sync/settings-sync.tsx:17
+msgid "settings.sync.not-in-space"
+msgstr "This device doesn't sync. Create a space on your sync server, or join a space another device created."
+
+#: ../../libs/settings-react/src/lib/sync/settings-sync-create-space.tsx:60
+msgid "settings.sync.server-url.label"
+msgstr "Server address"
+
+#: ../../libs/settings-react/src/lib/sync/settings-sync-create-space.tsx:61
+msgid "settings.sync.setup-token.label"
+msgstr "Setup token"
+
+#: ../../libs/settings-react/src/lib/sync/settings-sync-create-space.tsx:62
+msgid "settings.sync.space-name.label"
+msgstr "Space name"
+
+#: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:11
+msgid "settings.sync.state.bootstrapping"
+msgstr "Downloading the space"
+
+#: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:12
+msgid "settings.sync.state.idle"
+msgstr "Up to date"
+
+#: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:10
+msgid "settings.sync.state.import-pending"
+msgstr "Waiting for your choice"
+
+#: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:9
+msgid "settings.sync.state.not-enrolled"
+msgstr "Not syncing"
+
+#: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:14
+msgid "settings.sync.state.stopped"
+msgstr "Sync stopped"
+
+#: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:13
+msgid "settings.sync.state.syncing"
+msgstr "Syncing"
+
+#: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:32
+msgid "settings.sync.sync-now"
+msgstr "Sync now"

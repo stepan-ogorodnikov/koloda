@@ -52,6 +52,15 @@ pub struct StarterWire {
     template: InsertTemplateData,
 }
 
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CreateSpaceWire {
+    server_url: String,
+    setup_token: String,
+    space_name: String,
+    device_name: String,
+}
+
 pub struct SyncHost {
     db: Database,
     engine: OnceLock<Engine>,
@@ -94,6 +103,13 @@ impl SyncHost {
             self.start_runner()?;
         }
         Ok(status)
+    }
+
+    pub fn create_space(&self, data: CreateSpaceWire) -> Result<Status, SyncError> {
+        let engine = self.engine()?;
+        engine.create_space(&data.server_url, &data.setup_token, &data.space_name, &data.device_name)?;
+        self.start_runner()?;
+        engine.status()
     }
 
     pub fn engine(&self) -> Result<&Engine, SyncError> {

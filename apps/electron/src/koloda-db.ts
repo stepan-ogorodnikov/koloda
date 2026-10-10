@@ -10,7 +10,13 @@
 // no data handler can reach them through this interface. Do not add it here,
 // and do not register a renderer `cmd_*` for it.
 import type { AddAIProfileData, AIProfile, RemoveAIProfileData, UpdateAIProfileData } from "@koloda/ai";
-import type { Conversation, DeleteConversationData, SetConversationData, SyncStatus } from "@koloda/app";
+import type {
+  Conversation,
+  CreateSpaceData,
+  DeleteConversationData,
+  SetConversationData,
+  SyncStatus,
+} from "@koloda/app";
 import type { AllowedSettings, PatchSettingsData, SetSettingsData, SettingsName } from "@koloda/settings";
 import type {
   Algorithm,
@@ -133,4 +139,5 @@ export interface KolodaDb {
   syncStart(starter: SyncStarter, onEvent: (event: SyncEngineEvent) => void): Promise<SyncStatus>;
   syncStatus(): Promise<SyncStatus>;
   syncNudge(): Promise<void>;
+  syncCreateSpace(data: CreateSpaceData): Promise<SyncStatus>;
 }

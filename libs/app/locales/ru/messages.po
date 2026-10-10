@@ -21,6 +21,10 @@ msgstr "Заметка не может быть длиннее {maximum, plural,
 msgid "{maximum, plural, other {validation.common.title.too-long}}"
 msgstr "Название не может быть длиннее {maximum, plural, one {# символа} few {# символов} many {# символов} other {# символов}}"
 
+#: ../../libs/app/src/lib/error.ts:123
+msgid "{maximum, plural, other {validation.sync.name.too-long}}"
+msgstr "Имя не может быть длиннее {maximum, plural, one {# символа} few {# символов} many {# символов} other {# символов}}"
+
 #: ../../libs/app/src/lib/error.ts:14
 msgid "ai.aborted"
 msgstr "Провайдер прервал запрос"
@@ -113,7 +117,7 @@ msgstr "Не удалось загрузить данные"
 msgid "db.update"
 msgstr "Не удалось обновить данные"
 
-#: ../../libs/app/src/lib/error.ts:119
+#: ../../libs/app/src/lib/error.ts:124
 msgid "keyring"
 msgstr "Не удалось получить доступ к системному хранилищу ключей"
 
@@ -205,7 +209,7 @@ msgstr "Светлая"
 msgid "scheme.system"
 msgstr "Системная"
 
-#: ../../libs/app/src/lib/error.ts:120
+#: ../../libs/app/src/lib/error.ts:125
 msgid "secret-store"
 msgstr "Хранилище секретов недоступно"
 
@@ -357,67 +361,67 @@ msgstr "Переключить язык"
 msgid "settings.hotkeys.ui.toggle-sidebar-controls"
 msgstr "Переключить боковую панель"
 
-#: ../../libs/app/src/lib/error.ts:127
+#: ../../libs/app/src/lib/error.ts:132
 msgid "sync.already-enrolled"
 msgstr "Это устройство уже синхронизируется с пространством"
 
-#: ../../libs/app/src/lib/error.ts:133
+#: ../../libs/app/src/lib/error.ts:138
 msgid "sync.attached-elsewhere"
 msgstr "Это устройство в другом пространстве. Выйдите из него, прежде чем подключаться к этому"
 
-#: ../../libs/app/src/lib/error.ts:134
+#: ../../libs/app/src/lib/error.ts:139
 msgid "sync.cannot-join"
 msgstr "Это устройство не может подключиться к этому пространству"
 
-#: ../../libs/app/src/lib/error.ts:132
+#: ../../libs/app/src/lib/error.ts:137
 msgid "sync.clock-skew"
 msgstr "Часы этого устройства расходятся с часами сервера синхронизации больше чем на 5 минут"
 
-#: ../../libs/app/src/lib/error.ts:129
+#: ../../libs/app/src/lib/error.ts:134
 msgid "sync.detached"
 msgstr "Это устройство больше не в пространстве"
 
-#: ../../libs/app/src/lib/error.ts:137
+#: ../../libs/app/src/lib/error.ts:142
 msgid "sync.failed"
 msgstr "Синхронизация не удалась"
 
-#: ../../libs/app/src/lib/error.ts:135
+#: ../../libs/app/src/lib/error.ts:140
 msgid "sync.insecure-server-url"
 msgstr "Используйте адрес https, а http — только для сервера на этом компьютере"
 
-#: ../../libs/app/src/lib/error.ts:136
+#: ../../libs/app/src/lib/error.ts:141
 msgid "sync.low-disk"
 msgstr "Недостаточно места на диске, чтобы загрузить пространство"
 
-#: ../../libs/app/src/lib/error.ts:128
+#: ../../libs/app/src/lib/error.ts:133
 msgid "sync.not-enrolled"
 msgstr "Это устройство не синхронизируется с пространством"
 
-#: ../../libs/app/src/lib/error.ts:130
+#: ../../libs/app/src/lib/error.ts:135
 msgid "sync.pair-again"
 msgstr "Сервер синхронизации больше не знает это устройство. Подключитесь к пространству снова с новым кодом"
 
-#: ../../libs/app/src/lib/error.ts:124
+#: ../../libs/app/src/lib/error.ts:129
 msgid "sync.pairing-failed"
 msgstr "Код подключения неверный, истёк или уже использован"
 
-#: ../../libs/app/src/lib/error.ts:125
+#: ../../libs/app/src/lib/error.ts:130
 msgid "sync.rate-limited"
 msgstr "Слишком много попыток. Подождите минуту и попробуйте снова"
 
-#: ../../libs/app/src/lib/error.ts:131
+#: ../../libs/app/src/lib/error.ts:136
 msgid "sync.restore-held"
 msgstr "Сервер синхронизации восстановлен из резервной копии. Подтвердите восстановление, чтобы продолжить синхронизацию"
 
-#: ../../libs/app/src/lib/error.ts:126
+#: ../../libs/app/src/lib/error.ts:131
 msgid "sync.server"
 msgstr "Сервер синхронизации сообщил об ошибке"
 
-#: ../../libs/app/src/lib/error.ts:123
+#: ../../libs/app/src/lib/error.ts:128
 msgid "sync.unauthorized"
 msgstr "Сервер синхронизации не принял токен"
 
-#: ../../libs/app/src/lib/error.ts:122
+#: ../../libs/app/src/lib/error.ts:127
 msgid "sync.unreachable"
 msgstr "Не удалось связаться с сервером синхронизации"
 
@@ -641,6 +645,18 @@ msgstr "Часы должны быть от 0 до 48"
 msgid "validation.settings-learning.learn-ahead-limit.minutes-range"
 msgstr "Минуты должны быть от 0 до 59"
 
+#: ../../libs/app/src/lib/error.ts:121
+msgid "validation.sync.name.too-short"
+msgstr "Имя не может быть пустым"
+
+#: ../../libs/app/src/lib/error.ts:119
+msgid "validation.sync.server-url"
+msgstr "Введите адрес сервера синхронизации"
+
+#: ../../libs/app/src/lib/error.ts:120
+msgid "validation.sync.setup-token"
+msgstr "Введите токен настройки сервера"
+
 #: ../../libs/app/src/lib/error.ts:99
 msgid "validation.templates.delete-default"
 msgstr "Нельзя удалить шаблон по умолчанию"
@@ -685,6 +701,6 @@ msgstr "Раскладка не может быть пустой"
 msgid "validation.templates.update-locked"
 msgstr "Нельзя обновить заблокированный шаблон"
 
-#: ../../libs/app/src/lib/error.ts:121
+#: ../../libs/app/src/lib/error.ts:126
 msgid "windows-credentials"
 msgstr "Не удалось получить доступ к учётным данным Windows"

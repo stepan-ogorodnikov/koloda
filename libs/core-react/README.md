@@ -13,7 +13,7 @@ Web implements `Queries` with `@koloda/db-sqlite`; desktop implements it via Ele
 
 - Query contract: `queries.ts` — `Queries` (settings, conversations, algorithms, templates, decks, cards, lessons, reviews, attachments, AI profiles); `queries-contract.ts` — runtime check that an injected `Queries` implements every method.
 - Query keys: `query-keys.ts` — centralized key builders.
-- Atoms: `atoms.ts` — theme/lang/defaults, `aiProvidersAtom`, `appEntryAtom`, `queriesAtom`; `ai-runtime.ts` — `aiRuntimeAtom` (host-injected `AIRuntime`; the AIRuntime seam); `attachment-from-url.ts` — `addAttachmentFromUrlAtom` (set only by the desktop app).
+- Atoms: `atoms.ts` — theme/lang/defaults, `aiProvidersAtom`, `appEntryAtom`, `queriesAtom`; `ai-runtime.ts` — `aiRuntimeAtom` (host-injected `AIRuntime`; the AIRuntime seam); `attachment-from-url.ts` — `addAttachmentFromUrlAtom` (set only by the desktop app); `sync.ts` — `syncQueriesAtom`, the sync engine's calls (set only by the desktop app).
 - Hotkeys: `hooks/use-app-hotkey.ts`, `use-hotkeys-settings.ts`, `use-hotkeys-status.ts` — scope-aware registration via TanStack Hotkeys.
 - Misc: `hooks/use-title.ts`, `utility.ts` (`dispatchReducerAction`).
 

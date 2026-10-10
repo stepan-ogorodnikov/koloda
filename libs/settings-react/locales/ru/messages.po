@@ -13,6 +13,22 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
+#: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:44
+msgid "{fetches, plural, other {settings.sync.fetches}}"
+msgstr "{fetches, plural, one {# изображение ждёт загрузки} few {# изображения ждут загрузки} many {# изображений ждут загрузки} other {# изображения ждут загрузки}}"
+
+#: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:37
+msgid "{left, plural, other {settings.sync.download-left}}"
+msgstr "{left, plural, one {Осталось загрузить # изменение} few {Осталось загрузить # изменения} many {Осталось загрузить # изменений} other {Осталось загрузить # изменения}}"
+
+#: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:42
+msgid "{pending, plural, other {settings.sync.pending}}"
+msgstr "{pending, plural, one {# изменение ждёт отправки} few {# изменения ждут отправки} many {# изменений ждут отправки} other {# изменения ждут отправки}}"
+
+#: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:43
+msgid "{uploads, plural, other {settings.sync.uploads}}"
+msgstr "{uploads, plural, one {# изображение ждёт отправки} few {# изображения ждут отправки} many {# изображений ждут отправки} other {# изображения ждут отправки}}"
+
 #: ../../libs/settings-react/src/lib/interface-controls/color-scheme-picker.tsx:29
 msgid "color-scheme-picker.label"
 msgstr "Цветовая схема"
@@ -293,3 +309,71 @@ msgstr "Неограниченно"
 #: ../../libs/settings-react/src/lib/settings-learning.tsx:127
 msgid "settings.learning.limits.untouched"
 msgstr "Новые"
+
+#: ../../libs/settings-react/src/lib/sync/settings-sync-create-space.tsx:20
+msgid "settings.sync.create"
+msgstr "Создать пространство"
+
+#: ../../libs/settings-react/src/lib/sync/settings-sync-create-space.tsx:99
+msgid "settings.sync.create.submit"
+msgstr "Создать"
+
+#: ../../libs/settings-react/src/lib/sync/settings-sync-create-space.tsx:25
+msgid "settings.sync.create.title"
+msgstr "Новое пространство"
+
+#: ../../libs/settings-react/src/lib/sync/settings-sync-create-space.tsx:63
+msgid "settings.sync.device-name.label"
+msgstr "Имя этого устройства"
+
+#: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:40
+msgid "settings.sync.last-sync {lastSync}"
+msgstr "Последняя синхронизация: {lastSync}"
+
+#: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:40
+msgid "settings.sync.last-sync.none"
+msgstr "Синхронизации ещё не было с запуска приложения"
+
+#: ../../libs/settings-react/src/lib/sync/settings-sync.tsx:17
+msgid "settings.sync.not-in-space"
+msgstr "Это устройство не синхронизируется. Создайте пространство на своём сервере синхронизации или подключитесь к пространству, созданному на другом устройстве."
+
+#: ../../libs/settings-react/src/lib/sync/settings-sync-create-space.tsx:60
+msgid "settings.sync.server-url.label"
+msgstr "Адрес сервера"
+
+#: ../../libs/settings-react/src/lib/sync/settings-sync-create-space.tsx:61
+msgid "settings.sync.setup-token.label"
+msgstr "Токен настройки"
+
+#: ../../libs/settings-react/src/lib/sync/settings-sync-create-space.tsx:62
+msgid "settings.sync.space-name.label"
+msgstr "Название пространства"
+
+#: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:11
+msgid "settings.sync.state.bootstrapping"
+msgstr "Загрузка пространства"
+
+#: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:12
+msgid "settings.sync.state.idle"
+msgstr "Всё синхронизировано"
+
+#: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:10
+msgid "settings.sync.state.import-pending"
+msgstr "Ждёт вашего выбора"
+
+#: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:9
+msgid "settings.sync.state.not-enrolled"
+msgstr "Синхронизация выключена"
+
+#: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:14
+msgid "settings.sync.state.stopped"
+msgstr "Синхронизация остановлена"
+
+#: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:13
+msgid "settings.sync.state.syncing"
+msgstr "Синхронизация"
+
+#: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:32
+msgid "settings.sync.sync-now"
+msgstr "Синхронизировать"

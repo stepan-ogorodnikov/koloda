@@ -180,7 +180,7 @@ The owner took every recommendation on 2026-10-10, except question 5: no e2e tes
   Commit: Run the sync engine in the desktop app
   Depends on: none
 
-- [ ] 2. Create a sync space from Settings
+- [x] 2. Create a sync space from Settings
   Goal:
   - Settings → Sync: a page in `libs/settings-react`, with its route in `libs/app-react`.
     - Desktop only: the web shows no link, and `/settings/sync` is not found there.
@@ -203,6 +203,14 @@ The owner took every recommendation on 2026-10-10, except question 5: no e2e tes
     - What it is;
     - Core model: server, space, device, and pairing code, with §Relationships;
     - platform availability (absent on the web), creating a space, and status.
+  - Implementation:
+    - the host tells the route by `syncQueriesAtom` in `@koloda/core-react`, as `addAttachmentFromUrlAtom` does, not
+      by a `Queries` member: `Queries` is the contract both hosts fill;
+    - the page lives in `libs/settings-react/src/lib/sync/`;
+    - the form's own checks are TS-only codes `validation.sync.*`; the engine owns the URL rule;
+    - while downloading, the page shows the two lanes' lag as one count of changes left;
+    - the link and route gating is wiring, so it has no test (`agents/TESTING.md`); the spec states it;
+    - the route tree was regenerated with `@tanstack/router-generator` and the renderer's plugin options.
   Constraints:
   - The setup token is never stored; it goes to the server once.
   - The page follows the other settings pages' layout.

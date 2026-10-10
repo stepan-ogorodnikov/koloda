@@ -34,6 +34,7 @@ async function startedSync() {
     }),
     syncStatus: vi.fn(),
     syncNudge: vi.fn(),
+    syncCreateSpace: vi.fn(),
   });
   await electron.handlers.get("cmd_sync_start")?.({}, { starter: {} });
   return (event: SyncEngineEvent) => onEvent(event);
