@@ -1,6 +1,6 @@
 # Sync engine audit fixes
 
-Status: ready
+Status: done
 
 ## Intent
 
@@ -435,4 +435,53 @@ The owner took every recommendation on 2026-10-09.
 
 ## Outcome
 
-<what shipped>
+- R1: space migration `V6__heads_indexes.sql` indexes `heads` by `(lane, seq)` and `(lane, grp, seq)`.
+  Every join of `versions` to `heads`, a lease's items, and a collection pass search one;
+  `src/heads_index_tests.rs` reads their query plans.
+- R3: fork, heal, and held release renumber through one `renumber_row`, by `kind` and `id` on each table's primary
+  key; client migration `V14__sync_outbox_commit.sql` indexes `sync_outbox (commit_id)`.
+  `repo/sync/index_tests.rs` reads the query plans.
+- R5: `push_batch` reads one row per cohort, grouped in SQL, until the batch is full, then the seqs of the cohorts it
+  sends.
+- R12: one heal call scans at most `SCAN_ROWS` (10,000) rows and resumes from the last id it scanned.
+- R4: `decode` in `apply.rs` holds the lane as `corrupt_envelope` on a review that fails `review_data` or `validate()`,
+  and on a learning value that is not JSON (`breaks_domain_rule`).
+- F1: a blank join seeds its settings (`seed_joiner`) and enrolls (`enroll`) in one transaction.
+- F3: a cycle that finds an untouched seed's claim `import_pending` probes and runs Add (`SyncState::is_seed_import`);
+  the status shows `ImportPending` only for a file that needs the host's choice.
+  The join holds the cycle lock from recording the claim through its own Add.
+- P2: `join_mode` reports a file active in another space as `AttachedElsewhere`, and the engine refuses it before
+  the claim.
+- F2: one `forget_secrets` deletes tokens after a commit; a failed delete emits `Event::Error` and the call succeeds.
+  Detach, every enrollment, a re-attach (which also removes the old device's token), and a fork's switch use it.
+- R7: a claim and a space creation check skew on their reply before the file records them; the claim or creation
+  stays pending and finishes on the same device once the clock is back.
+- R6: Add remints cards and their reviews `REMINT_CHUNK` (1,000) cards at a time, keyed by rowid, before decks move.
+- R8: a device call writes `last_seen` only when it is a minute or more from now or `rebase_required` changes, and a
+  pull records its cursor only when it rises.
+- R10: space migration `V7__preview_counters.sql` keeps `space.version_bytes` and `live_entities` by triggers;
+  `log::size` reads only them.
+- R11: an upload or a fetch the server answers with a `5xx` waits out its backoff and the cycle moves on; client
+  migration `V15__sync_attachment_room.sql` marks the uploads that wait for room, so only those go at once when the
+  space has room.
+- R2, P1, R9: `PROTOCOL.md` states the bounded-tick bootstrap limit, the cost of listing a lease's heads, and that
+  receipts are kept for the life of the space.
+  P3 needed nothing; I1 is covered by the query-plan tests and the chunk and scan-cap tests.
+- `PROTOCOL.md` §Topology and server state, §Skew guards, §Devices, §Corrupt envelopes, §Bootstrap, §Modes, §Upload,
+  and §Conformance cases, the four crate READMEs, and `agents/RUST.md` describe the above.
+- Deviations from the plan text, each recorded under its item:
+  - Item 1: `heads_lane_grp` is `(lane, grp, seq)`; with `(lane, grp)` a collection pass read every `hot` head.
+  - Items 1 and 2: the query-plan tests are unit tests inside their crates, since the statements are private.
+  - Item 5: `a_remote_review_outside_the_review_bounds_fails_its_page` was deleted; it pinned the old page failure.
+  - Item 6: `seed_joiner_db` is gone; only tests called the database form after the change.
+  - Item 9: a fork's deletes after its switch follow the same rule.
+  - Item 10: the tests set the clock 6 minutes ahead, since a jump past 10 minutes outlives a creation's nonce.
+  - Item 12: the test counts updates with a test-only trigger; `PRAGMA data_version` misses an unchanged row.
+  - Item 14: client migration `V15` was added, and a failed transfer emits `Event::Error`; four engine tests that
+    stalled a transfer with a `500` now reset the backoff or lose the reply.
+- Follow-ups noticed, not fixed:
+  - A lease end still scans `versions` once per lease (linear, no longer quadratic).
+  - A file with sync state but no settings rows reads as blank to `join_mode`; real files always have settings.
+- Process: every item was committed locally and checked with `bun run check:push`, and the branch was pushed once
+  at the end, with the local gate green on its tip.
+- Manual verify: none — nothing user-visible until the NAPI commands and the desktop UI land.
