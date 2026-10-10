@@ -1,6 +1,6 @@
 # Sync in the desktop app
 
-Status: ready
+Status: done
 
 ## Intent
 
@@ -378,4 +378,17 @@ The owner took every recommendation on 2026-10-10, except question 5: no e2e tes
   Depends on: 7
 
 ## Outcome
+
+Sync runs in the desktop app through the UI alone, with the engine, server, and protocol unchanged.
+
+Shipped, one Plan item per commit:
+
+- The engine runs inside `KolodaDb` on its own `koloda-sync` worker; local writes send change notices; events reach the renderer and invalidate per kind.
+- Settings → Sync: create a space, invite a device with a pairing code, list and revoke devices, leave the space, join from Settings or on first run, and see why sync stopped with what to do.
+- The title bar shows a sync indicator while the file is in a space.
+- `docs/specs/SYNC.md` is new; the first-setup specs point at it.
+
+Checked: `bun run check:push` passed on the tip (exit 0), covering the Rust and TypeScript suites.
+
+Not checked: the Manual verify items in Plan 2–8 (two apps on one `koloda-server`, the stop messages against a stopped server, a join of a few thousand cards) need the human. The e2e tests are out of scope (Open question 5).
 
