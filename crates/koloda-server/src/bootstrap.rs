@@ -30,10 +30,10 @@ pub(crate) const MAX_LEASES: u64 = 4;
 
 // INVARIANT: referents stream before what names them, so a page applies without buffering: a deck create finds
 // every live algorithm and template already local (`PROTOCOL.md` §Bootstrap).
-const HOT_ORDER: &str = "CASE v.kind
+pub(crate) const HOT_ORDER: &str = "CASE v.kind
     WHEN 'algorithms' THEN 0 WHEN 'algorithm_revisions' THEN 1 WHEN 'templates' THEN 2
     WHEN 'decks' THEN 3 WHEN 'cards' THEN 4 ELSE 5 END, v.seq";
-const COLD_ORDER: &str = "v.hlc DESC, v.stamp_device DESC, v.seq DESC";
+pub(crate) const COLD_ORDER: &str = "v.hlc DESC, v.stamp_device DESC, v.seq DESC";
 
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -215,15 +215,7 @@ fn open_lease(server: &Server, caller: &DeviceAuth) -> Result<Snapshot, ApiError
         params![lease, caller.id, expires_at, absolute_expiry, head_hot],
     )?;
     for (lane, order) in [(Lane::Hot, HOT_ORDER), (Lane::Cold, COLD_ORDER)] {
-        tx.execute(
-            &format!(
-                "INSERT INTO lease_items (lease, lane, position, seq)
-                 SELECT ?1, v.lane, row_number() OVER (ORDER BY {order}), v.seq
-                 FROM heads h JOIN versions v ON v.lane = h.lane AND v.seq = h.seq
-                 WHERE h.lane = ?2 AND h.grp <> ?3"
-            ),
-            params![lease, lane.as_wire(), TOMBSTONE],
-        )?;
+        tx.execute(&lease_items(order), params![lease, lane.as_wire(), TOMBSTONE])?;
     }
     let mut statement = tx.prepare(
         "SELECT v.kind, count(*), sum(length(v.bytes)) FROM lease_items i
@@ -253,6 +245,15 @@ fn open_lease(server: &Server, caller: &DeviceAuth) -> Result<Snapshot, ApiError
         expires_at,
         absolute_expiry,
     })
+}
+
+pub(crate) fn lease_items(order: &str) -> String {
+    format!(
+        "INSERT INTO lease_items (lease, lane, position, seq)
+         SELECT ?1, v.lane, row_number() OVER (ORDER BY {order}), v.seq
+         FROM heads h JOIN versions v ON v.lane = h.lane AND v.seq = h.seq
+         WHERE h.lane = ?2 AND h.grp <> ?3"
+    )
 }
 
 /// The caller's lease as of `now`: a lease is live through its `expires_at` millisecond.

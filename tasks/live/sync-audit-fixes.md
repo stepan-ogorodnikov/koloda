@@ -149,10 +149,14 @@ The owner took every recommendation on 2026-10-09.
 
 ## Plan
 
-- [ ] 1. Index the space's heads by version
+- [x] 1. Index the space's heads by version
   Goal (R1, I1):
   - Space migration `crates/koloda-server/src/migrations/space/V6__heads_indexes.sql` adds
     `heads_version ON heads (lane, seq)` and `heads_lane_grp ON heads (lane, grp)`.
+  - Implementation made `heads_lane_grp` `(lane, grp, seq)`.
+    With `(lane, grp)` the planner served a collection pass from `heads_version`, reading every `hot` head below the
+    bound; with `seq` it reads only the tombstones.
+  - The test is a unit test in `src/heads_index_tests.rs`: the statements are private to the crate.
   - Queries that must search one of them instead of scanning `heads`:
     - the pull page read in `pull.rs`;
     - `end_lease`, the reviews of a cascaded card, `cascade_counts`, `live_children`, and `collect_tombstones` in

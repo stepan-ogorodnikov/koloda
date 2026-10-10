@@ -18,6 +18,8 @@ mod bootstrap;
 mod db;
 mod devices;
 mod events;
+#[cfg(test)]
+mod heads_index_tests;
 mod http;
 mod known;
 mod log;

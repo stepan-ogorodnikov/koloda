@@ -119,6 +119,9 @@ No image is published to a registry.
 | `generations/<id>/attachments/<space>/<attachment>` | One attachment's bytes, named by their SHA-256 |
 | `lock` | Held by `serve` for its whole run |
 
+A space database indexes `heads` by `(lane, seq)`, for every read that joins a version to its head.
+It indexes them by `(lane, grp, seq)` too, for a lease's live heads of one lane and a collection pass's tombstones.
+
 ## Architectural Map
 
 - `src/main.rs` — command line: `init`, `serve` over TLS or plain HTTP, `backup`, `restore`, `spaces`, `pair`,
@@ -156,6 +159,8 @@ No image is published to a registry.
   cards link that no device uploaded, card refs,
   and collection of attachments unlinked for 90 days.
 
+- `src/heads_index_tests.rs` — the query plans of the reads of `heads` the space indexes serve, which must search
+  one; a unit test, because the statements are private to the crate.
 - `tests/server/` — one test binary; `common.rs` drives the router in-process on a manual clock, and sends each
   device call with its space's current epoch and this crate's schemas unless a test names others.
 - `Dockerfile` — the server image; `deploy/compose.example.yaml` — the image behind Caddy.

@@ -19,6 +19,10 @@ use crate::http::{query, respond, ApiError};
 use crate::log;
 use crate::server::{lock, Server};
 
+pub(crate) const PAGE: &str = "SELECT v.seq, v.sender, v.sender_seq, v.bytes FROM versions v
+     JOIN heads h ON h.lane = v.lane AND h.seq = v.seq
+     WHERE v.lane = ?1 AND v.seq > ?2 AND v.seq <= ?3 ORDER BY v.seq";
+
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(crate) struct PullQuery {
@@ -81,11 +85,7 @@ fn read_page(
         )));
     }
     let bound = max_seq.map_or(head, |max_seq| max_seq.min(head));
-    let mut statement = conn.prepare(
-        "SELECT v.seq, v.sender, v.sender_seq, v.bytes FROM versions v
-         JOIN heads h ON h.lane = v.lane AND h.seq = v.seq
-         WHERE v.lane = ?1 AND v.seq > ?2 AND v.seq <= ?3 ORDER BY v.seq",
-    )?;
+    let mut statement = conn.prepare(PAGE)?;
     let mut rows = statement.query(params![lane.as_wire(), after, bound])?;
     let mut entries = Vec::new();
     let mut bytes = 0;

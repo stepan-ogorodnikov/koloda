@@ -21,6 +21,35 @@ pub(crate) const TOMBSTONE: &str = "";
 // INVARIANT: compaction and deletes keep every version a bootstrap lease pins; `end_lease` removes it later.
 const UNPINNED: &str = "NOT EXISTS (SELECT 1 FROM lease_items i WHERE i.lane = versions.lane AND i.seq = versions.seq)";
 
+pub(crate) const LIVE_REVIEWS: &str = "SELECT v.id FROM versions v JOIN heads h ON h.lane = v.lane AND h.seq = v.seq
+     WHERE v.kind = 'reviews' AND v.grp = 'row' AND v.parent = ?1";
+
+pub(crate) const LIVE_REVIEW_COUNT: &str =
+    "SELECT count(*) FROM versions v JOIN heads h ON h.lane = v.lane AND h.seq = v.seq
+     WHERE v.kind = 'reviews' AND v.grp = 'row' AND v.parent = ?1";
+
+pub(crate) const LIVE_DECK_CARDS: &str = "SELECT v.id FROM versions v JOIN heads h ON h.lane = v.lane AND h.seq = v.seq
+     WHERE v.kind = 'cards' AND v.grp = 'create' AND v.parent = ?1";
+
+pub(crate) const LIVE_TEMPLATE_CARDS: &str =
+    "SELECT v.id FROM versions v JOIN heads h ON h.lane = v.lane AND h.seq = v.seq
+     WHERE v.kind = 'cards' AND v.grp = 'create' AND v.template_ref = ?1";
+
+pub(crate) const HIGHEST_COLLECTED: &str = "SELECT max(seq) FROM heads WHERE lane = 'hot' AND grp = ?1 AND seq <= ?2";
+
+pub(crate) const COLLECTED: &str = "SELECT seq FROM heads WHERE lane = 'hot' AND grp = ?1 AND seq <= ?2";
+
+pub(crate) const COLLECT_HEADS: &str = "DELETE FROM heads WHERE lane = 'hot' AND grp = ?1 AND seq <= ?2";
+
+pub(crate) const LEASE_ONLY_VERSIONS: &str = "DELETE FROM versions
+     WHERE EXISTS (
+         SELECT 1 FROM lease_items i WHERE i.lease = ?1 AND i.lane = versions.lane AND i.seq = versions.seq
+     )
+     AND NOT EXISTS (SELECT 1 FROM heads h WHERE h.lane = versions.lane AND h.seq = versions.seq)
+     AND NOT EXISTS (
+         SELECT 1 FROM lease_items o WHERE o.lease <> ?1 AND o.lane = versions.lane AND o.seq = versions.seq
+     )";
+
 /// One pushed envelope with what the server read from it. `group` is `None` for a delete.
 pub(crate) struct Entry<'a> {
     pub(crate) header: &'a Header,
@@ -83,10 +112,7 @@ pub(crate) fn delete(tx: &Connection, entry: &Entry<'_>) -> Result<Outcome, ApiE
     }
     let cards = cascaded_cards(tx, header.kind, &header.id)?;
     for card in &cards {
-        let mut statement = tx.prepare(
-            "SELECT v.id FROM versions v JOIN heads h ON h.lane = v.lane AND h.seq = v.seq
-             WHERE v.kind = 'reviews' AND v.grp = 'row' AND v.parent = ?1",
-        )?;
+        let mut statement = tx.prepare(LIVE_REVIEWS)?;
         let reviews = statement
             .query_map(params![card], |row| row.get::<_, String>(0))?
             .collect::<Result<Vec<_>, _>>()?;
@@ -115,12 +141,7 @@ pub(crate) fn cascade_counts(conn: &Connection, kind: Kind, id: &str) -> Result<
     let cards = cascaded_cards(conn, kind, id)?;
     let mut reviews = 0;
     for card in &cards {
-        reviews += conn.query_row(
-            "SELECT count(*) FROM versions v JOIN heads h ON h.lane = v.lane AND h.seq = v.seq
-             WHERE v.kind = 'reviews' AND v.grp = 'row' AND v.parent = ?1",
-            params![card],
-            |row| row.get::<_, u64>(0),
-        )?;
+        reviews += conn.query_row(LIVE_REVIEW_COUNT, params![card], |row| row.get::<_, u64>(0))?;
     }
     Ok((
         u64::try_from(cards.len()).map_err(|error| ApiError::internal(error.to_string()))?,
@@ -239,25 +260,15 @@ pub(crate) fn collect_tombstones(tx: &Connection, device_floor: Option<u64>) -> 
     let lease_floor: Option<u64> = tx.query_row("SELECT min(head_hot) FROM leases", [], |row| row.get(0))?;
     let (head_hot, _) = lane_heads(tx)?;
     let bound = device_floor.into_iter().chain(lease_floor).min().unwrap_or(head_hot);
-    let removed: Option<u64> = tx.query_row(
-        "SELECT max(seq) FROM heads WHERE lane = 'hot' AND grp = ?1 AND seq <= ?2",
-        params![TOMBSTONE, bound],
-        |row| row.get(0),
-    )?;
+    let removed: Option<u64> = tx.query_row(HIGHEST_COLLECTED, params![TOMBSTONE, bound], |row| row.get(0))?;
     let Some(removed) = removed else {
         return Ok(());
     };
     tx.execute(
-        &format!(
-            "DELETE FROM versions WHERE lane = 'hot'
-             AND seq IN (SELECT seq FROM heads WHERE lane = 'hot' AND grp = ?1 AND seq <= ?2) AND {UNPINNED}"
-        ),
+        &format!("DELETE FROM versions WHERE lane = 'hot' AND seq IN ({COLLECTED}) AND {UNPINNED}"),
         params![TOMBSTONE, bound],
     )?;
-    tx.execute(
-        "DELETE FROM heads WHERE lane = 'hot' AND grp = ?1 AND seq <= ?2",
-        params![TOMBSTONE, bound],
-    )?;
+    tx.execute(COLLECT_HEADS, params![TOMBSTONE, bound])?;
     tx.execute(
         "UPDATE lanes SET gc_horizon = max(gc_horizon, ?1) WHERE lane = 'hot'",
         params![removed],
@@ -406,19 +417,16 @@ fn fence(tx: &Connection, kind: Kind, id: &str) -> Result<(), ApiError> {
 /// The live cards a tombstone of `(kind, id)` removes with it.
 fn cascaded_cards(conn: &Connection, kind: Kind, id: &str) -> Result<Vec<String>, ApiError> {
     Ok(match kind {
-        Kind::Decks => live_children(conn, "parent", id)?,
-        Kind::Templates => live_children(conn, "template_ref", id)?,
+        Kind::Decks => live_children(conn, LIVE_DECK_CARDS, id)?,
+        Kind::Templates => live_children(conn, LIVE_TEMPLATE_CARDS, id)?,
         Kind::Cards => vec![id.to_string()],
         Kind::Algorithms | Kind::Reviews | Kind::AlgorithmRevisions | Kind::SettingsLearning => Vec::new(),
     })
 }
 
-/// Live cards whose create names `id` in `column` (`parent` for their deck, `template_ref` for their template).
-fn live_children(conn: &Connection, column: &str, id: &str) -> Result<Vec<String>, ApiError> {
-    let mut statement = conn.prepare(&format!(
-        "SELECT v.id FROM versions v JOIN heads h ON h.lane = v.lane AND h.seq = v.seq
-         WHERE v.kind = 'cards' AND v.grp = 'create' AND v.{column} = ?1"
-    ))?;
+/// Live cards whose create names `id` as their deck or template, as `query` asks.
+fn live_children(conn: &Connection, query: &str, id: &str) -> Result<Vec<String>, ApiError> {
+    let mut statement = conn.prepare(query)?;
     let cards = statement
         .query_map(params![id], |row| row.get::<_, String>(0))?
         .collect::<Result<Vec<_>, _>>()?;
@@ -560,17 +568,7 @@ fn install(tx: &Connection, entry: &Entry<'_>, replaced: Option<Head>) -> Result
 
 /// Ends a lease and removes the versions only it kept: no head references them and no other lease pins them.
 pub(crate) fn end_lease(tx: &Connection, lease: Uuid) -> Result<(), ApiError> {
-    tx.execute(
-        "DELETE FROM versions
-         WHERE EXISTS (
-             SELECT 1 FROM lease_items i WHERE i.lease = ?1 AND i.lane = versions.lane AND i.seq = versions.seq
-         )
-         AND NOT EXISTS (SELECT 1 FROM heads h WHERE h.lane = versions.lane AND h.seq = versions.seq)
-         AND NOT EXISTS (
-             SELECT 1 FROM lease_items o WHERE o.lease <> ?1 AND o.lane = versions.lane AND o.seq = versions.seq
-         )",
-        params![lease],
-    )?;
+    tx.execute(LEASE_ONLY_VERSIONS, params![lease])?;
     tx.execute("DELETE FROM lease_items WHERE lease = ?1", params![lease])?;
     tx.execute("DELETE FROM leases WHERE id = ?1", params![lease])?;
     Ok(())

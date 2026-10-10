@@ -15,6 +15,11 @@ use crate::http::ApiError;
 use crate::log::{self, Entry, TOMBSTONE};
 use crate::server::{lock, Server};
 
+pub(crate) const DROP_HEAD: &str = "DELETE FROM heads WHERE lane = ?1 AND seq = ?2";
+
+pub(crate) const CARD_CREATE: &str = "SELECT v.bytes FROM heads h JOIN versions v ON v.lane = h.lane AND v.seq = h.seq
+     WHERE h.kind = 'cards' AND h.id = ?1 AND h.grp = 'create'";
+
 /// A stored version an operator asked to drop, as `describe_drop` read it.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Dropping {
@@ -94,10 +99,7 @@ impl Server {
         if version.group == Group::Create.as_wire() || version.group == TOMBSTONE {
             tombstone(&tx, &version, now)?;
         } else {
-            let was_head = tx.execute(
-                "DELETE FROM heads WHERE lane = ?1 AND seq = ?2",
-                params![lane, dropping.seq],
-            )? > 0;
+            let was_head = tx.execute(DROP_HEAD, params![lane, dropping.seq])? > 0;
             // WHY: a superseded version kept only by a lease is no head; the live head's attachments stay linked.
             if was_head && version.kind == Kind::Cards.as_wire() && version.group == Group::Content.as_wire() {
                 relink_to_create(&tx, &version.id, now)?;
@@ -178,14 +180,7 @@ fn tombstone(tx: &Connection, version: &Version, now_ms: u64) -> Result<(), ApiE
 
 /// Links a card's attachments through its create again, once its content head is gone (`PROTOCOL.md` §Attachments).
 fn relink_to_create(tx: &Connection, card: &str, now_ms: u64) -> Result<(), ApiError> {
-    let create: Option<Vec<u8>> = tx
-        .query_row(
-            "SELECT v.bytes FROM heads h JOIN versions v ON v.lane = h.lane AND v.seq = h.seq
-             WHERE h.kind = 'cards' AND h.id = ?1 AND h.grp = 'create'",
-            params![card],
-            |row| row.get(0),
-        )
-        .optional()?;
+    let create: Option<Vec<u8>> = tx.query_row(CARD_CREATE, params![card], |row| row.get(0)).optional()?;
     // WHY: a create that does not decode links nothing; the server never guesses a ref.
     let ids = create
         .and_then(|bytes| Envelope::decode(&bytes).ok())
