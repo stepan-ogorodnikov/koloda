@@ -32,7 +32,8 @@ Normally booted by `nx run @koloda/electron:serve`; runs standalone in a browser
 - Setup: `src/app/setup.ts` — database status, seeding via IPC, and the starter content sync repair shares.
 - Close coordination: `src/app/electron-close-coordination.ts` — durable interrupt and flush before window destroy.
 - Store wiring: `src/app/store.ts` — jotai store, UI preferences, navigator locale detection.
-- Chrome: `src/components/` — app entry with the blank-database setup gate, setup screen, titlebar.
+- Chrome: `src/components/` — app entry with the blank-database setup gate, setup screen (start fresh or join a sync
+  space), titlebar with the sync indicator.
 
 ### Does NOT own (prevent scope creep)
 

@@ -14,7 +14,9 @@ The Zod registry stays in `@koloda/settings`; this package owns the forms that e
 - Learning: `settings-learning.tsx` — defaults, limits, and day-boundary form.
 - Hotkeys: `settings-hotkeys.tsx`, `settings-hotkeys-hotkey.tsx` — scoped hotkey editor.
 - AI profiles: `settings-ai.tsx` plus add/edit/delete/models dialogs; `ai-providers/` per-provider forms; `ai-profile-models-allowlist.ts`.
-- Sync (desktop only): `sync/` — Settings → Sync: space creation and status, over the host's `syncQueriesAtom`.
+- Sync (desktop only): `sync/` — over the host's `syncQueriesAtom`: Settings → Sync (create, join with Add or Replace,
+  invite, devices, status, and why sync stopped), the first-run join `SyncFirstRunJoin`, and the title bar's
+  `SyncIndicator`.
 
 ### Does NOT own (prevent scope creep)
 
