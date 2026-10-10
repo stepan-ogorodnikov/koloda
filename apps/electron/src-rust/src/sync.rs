@@ -283,7 +283,7 @@ impl SyncHost {
         Ok(())
     }
 
-    // INVARIANT: the runner never runs on a file in no space; there every cycle fails and emits an `Error`.
+    // INVARIANT: the runner is never started on a file in no space; there every cycle fails and emits an `Error`.
     fn start_runner(&self) -> Result<(), SyncError> {
         let (Some(engine), Some(sink)) = (self.engine.get(), self.sink.get()) else {
             return Ok(());
