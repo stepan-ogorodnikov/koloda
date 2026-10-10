@@ -312,17 +312,14 @@ pub(crate) fn receipts(conn: &Connection, sender: Uuid, after: u64, through: u64
         .collect()
 }
 
-/// Live entities per kind and the bytes of every stored version, for the pairing preview.
+/// Live entities per kind and the bytes of every stored version, for the pairing preview. Triggers keep both
+/// counters (`V7__preview_counters.sql`).
 pub(crate) fn size(conn: &Connection) -> Result<(BTreeMap<String, u64>, u64), ApiError> {
-    let mut statement = conn.prepare("SELECT kind, count(DISTINCT id) FROM heads WHERE grp <> ?1 GROUP BY kind")?;
+    let mut statement = conn.prepare("SELECT kind, count FROM live_entities WHERE count > 0")?;
     let counts = statement
-        .query_map(params![TOMBSTONE], |row| {
-            Ok((row.get::<_, String>(0)?, row.get::<_, u64>(1)?))
-        })?
+        .query_map([], |row| Ok((row.get::<_, String>(0)?, row.get::<_, u64>(1)?)))?
         .collect::<Result<BTreeMap<_, _>, _>>()?;
-    let bytes = conn.query_row("SELECT coalesce(sum(length(bytes)), 0) FROM versions", [], |row| {
-        row.get(0)
-    })?;
+    let bytes = conn.query_row("SELECT version_bytes FROM space WHERE id = 1", [], |row| row.get(0))?;
     Ok((counts, bytes))
 }
 

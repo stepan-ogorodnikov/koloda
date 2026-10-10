@@ -1,12 +1,18 @@
+use std::collections::BTreeMap;
 use std::net::SocketAddr;
 
 use axum::http::StatusCode;
+use koloda_sync_proto::registry::{Group, Kind, Lane};
 use koloda_sync_proto::transport::{
-    DeviceInfo, ErrorCode, IssuePairing, Pairing, PairingClaim, PairingPreview, PreviewPairing, MAX_HINT_BYTES,
+    DeviceInfo, ErrorCode, IssuePairing, Outcome, Pairing, PairingClaim, PairingPreview, PreviewPairing, MAX_HINT_BYTES,
 };
+use rusqlite::Connection;
 use uuid::Uuid;
 
-use crate::common::{claim_request, nonce, token, uuid, Enrolled, Harness, START_MS};
+use crate::common::{
+    card_create, child, claim_request, nonce, outcomes, stamp, token, tombstone, uuid, write, Enrolled, Harness,
+    START_MS,
+};
 
 const CODE_TTL_MS: u64 = 10 * 60 * 1000;
 
@@ -308,4 +314,103 @@ async fn an_operator_code_enrolls_a_device_over_http() {
             .code(),
         ErrorCode::UnknownSpace
     );
+}
+
+/// Fails unless the preview's counts and bytes are what a scan of the space's log finds.
+async fn assert_preview_matches_the_log(harness: &Harness, home: &Enrolled, code: &str, step: &str) {
+    let preview = harness
+        .post("/v1/pairings/preview")
+        .body(&PreviewPairing { code: code.to_string() })
+        .send::<PairingPreview>()
+        .await
+        .ok();
+    let log = Connection::open(
+        harness
+            .generation_dir()
+            .join("spaces")
+            .join(format!("{}.db", uuid(home.space_id))),
+    )
+    .expect("the space database opens");
+    let counts: BTreeMap<String, u64> = log
+        .prepare("SELECT kind, count(DISTINCT id) FROM heads WHERE grp <> '' GROUP BY kind")
+        .expect("the count prepares")
+        .query_map([], |row| Ok((row.get(0)?, row.get(1)?)))
+        .expect("the count runs")
+        .collect::<Result<_, _>>()
+        .expect("the counts read");
+    let bytes: u64 = log
+        .query_row("SELECT coalesce(sum(length(bytes)), 0) FROM versions", [], |row| {
+            row.get(0)
+        })
+        .expect("the bytes read");
+    assert_eq!((preview.counts, preview.bytes), (counts, bytes), "{step}");
+}
+
+#[tokio::test]
+async fn the_preview_counts_what_the_log_holds_after_every_kind_of_write() {
+    const DECK: &str = "01920000-0000-7000-8000-0000000000d1";
+    const OTHER_DECK: &str = "01920000-0000-7000-8000-0000000000d2";
+    const TEMPLATE: &str = "01920000-0000-7000-8000-0000000000e1";
+    const FIRST: &str = "01920000-0000-7000-8000-0000000000c1";
+    const SECOND: &str = "01920000-0000-7000-8000-0000000000c2";
+    let harness = Harness::new();
+    let home = harness.create_space("Home").await;
+    let code = issue(&harness, &home, &home.token, None).await.code;
+
+    let pushed = harness
+        .push(
+            &home,
+            vec![
+                (1, write(Kind::Templates, TEMPLATE, Group::Create, stamp(0, 0, 1))),
+                (2, write(Kind::Decks, DECK, Group::Create, stamp(0, 1, 1))),
+                (3, write(Kind::Decks, OTHER_DECK, Group::Create, stamp(0, 2, 1))),
+                (4, card_create(FIRST, DECK, TEMPLATE, stamp(0, 3, 1))),
+                (5, card_create(SECOND, DECK, TEMPLATE, stamp(0, 4, 1))),
+                (6, child(Kind::Reviews, "r1", FIRST, Group::Row, stamp(1, 0, 1))),
+                (7, child(Kind::Reviews, "r2", SECOND, Group::Row, stamp(1, 1, 1))),
+                (8, write(Kind::Decks, DECK, Group::Title, stamp(2, 0, 1))),
+                (9, write(Kind::Decks, DECK, Group::Title, stamp(2, 1, 1))),
+            ],
+        )
+        .await
+        .ok();
+    assert!(outcomes(pushed)
+        .iter()
+        .all(|(_, outcome, _)| *outcome == Outcome::Applied));
+    assert_preview_matches_the_log(&harness, &home, &code, "pushes, the second title compacting the first").await;
+
+    let space = Uuid::from_bytes(home.space_id);
+    let create = Connection::open(harness.generation_dir().join("spaces").join(format!("{space}.db")))
+        .expect("the space database opens")
+        .query_row(
+            "SELECT seq FROM versions WHERE kind = 'cards' AND id = ?1 AND grp = 'create'",
+            [FIRST],
+            |row| row.get(0),
+        )
+        .expect("the card create is stored");
+    let dropping = harness
+        .server
+        .describe_drop(space, Lane::Hot, create)
+        .expect("the create is described");
+    harness
+        .server
+        .drop_envelope(space, &dropping)
+        .expect("the create is dropped");
+    assert_preview_matches_the_log(&harness, &home, &code, "a dropped create and its server tombstone").await;
+
+    harness
+        .push(&home, vec![(10, tombstone(Kind::Decks, DECK, None, stamp(3, 0, 1)))])
+        .await
+        .ok();
+    assert_preview_matches_the_log(&harness, &home, &code, "a delete that cascades to cards and reviews").await;
+
+    let head = harness.pull(&home, "lane=hot&after=0").await.ok().scanned_through;
+    harness.pull(&home, &format!("lane=hot&after={head}")).await.ok();
+    harness.server.collect_garbage().expect("a collection pass");
+    let tombstones: u64 = Connection::open(harness.generation_dir().join("spaces").join(format!("{space}.db")))
+        .expect("the space database opens")
+        .query_row("SELECT count(*) FROM heads WHERE grp = ''", [], |row| row.get(0))
+        .expect("the tombstones count");
+    assert_eq!(tombstones, 0, "the pass collected every tombstone");
+    assert_preview_matches_the_log(&harness, &home, &code, "collected tombstones").await;
 }

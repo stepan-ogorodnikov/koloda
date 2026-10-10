@@ -121,6 +121,7 @@ No image is published to a registry.
 
 A space database indexes `heads` by `(lane, seq)`, for every read that joins a version to its head.
 It indexes them by `(lane, grp, seq)` too, for a lease's live heads of one lane and a collection pass's tombstones.
+Triggers keep its live entities per kind and the bytes of its versions, which the pairing preview reads.
 
 ## Architectural Map
 

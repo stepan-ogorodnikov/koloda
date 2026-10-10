@@ -382,7 +382,7 @@ The owner took every recommendation on 2026-10-09.
   Commit: Write a device's last seen and cursors only when they move
   Depends on: none
 
-- [ ] 13. Keep the pairing preview's counts and bytes in counters
+- [x] 13. Keep the pairing preview's counts and bytes in counters
   Goal (R10):
   - Space migration `V7__preview_counters.sql`:
     - `space.version_bytes`, kept by triggers on `versions` insert and delete, as `V5__attachment_bytes.sql` does;
