@@ -123,7 +123,8 @@ The language and color scheme chosen on the first-run screen become its interfac
 interface setting and hotkey starts at its default.
 
 After the join, the screen stays until the space's first download ends, and shows how many changes are left.
-If the download stops, the screen says why and sync keeps retrying on its own; quitting the app is the only way out.
+If the download stops, or waits at a change the app cannot read, the screen says why (§When sync stops) and sync
+keeps retrying on its own; quitting the app is the only way out.
 Once the download ends, the app opens on the space's data.
 A device quit during its first download opens normally next time, and the download goes on in the background.
 

@@ -1,5 +1,5 @@
 import { formatAppError } from "@koloda/app";
-import type { SyncStatus } from "@koloda/app";
+import type { SyncHold, SyncStatus } from "@koloda/app";
 import { queryKeys, useTimestampFormatter } from "@koloda/core-react";
 import type { SyncQueries } from "@koloda/core-react";
 import { Button, Dialog, ErrorMessage } from "@koloda/ui";
@@ -27,19 +27,20 @@ export function SettingsSyncProblems({ status, sync }: SettingsSyncProblemsProps
           <AcceptRestore sync={sync} />
         </div>
       )}
-      {hold?.reason === "updateRequired" && <p>{_(msg`settings.sync.hold.update-required`)}</p>}
-      {hold?.reason === "corruptEnvelope" && <CorruptEnvelope lane={hold.lane} seq={hold.seq} />}
+      {hold && <SyncHoldMessage hold={hold} />}
       {isOverQuota && <p>{_(msg`settings.sync.over-quota`)}</p>}
       {resumesAt && <p>{_(msg`settings.sync.push-waits ${resumesAt}`)}</p>}
     </>
   );
 }
 
-type CorruptEnvelopeProps = { lane: string; seq: number };
+export type SyncHoldMessageProps = { hold: SyncHold };
 
-function CorruptEnvelope({ lane, seq }: CorruptEnvelopeProps) {
+export function SyncHoldMessage({ hold }: SyncHoldMessageProps) {
   const { _ } = useLingui();
+  const { lane, seq } = hold;
 
+  if (hold.reason === "updateRequired") return <p>{_(msg`settings.sync.hold.update-required`)}</p>;
   return (
     <div className="flex flex-col gap-1">
       <p>{_(msg`settings.sync.hold.corrupt ${lane} ${seq}`)}</p>

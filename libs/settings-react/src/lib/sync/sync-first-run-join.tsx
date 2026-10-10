@@ -4,6 +4,7 @@ import { msg, plural } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
+import { SyncHoldMessage } from "./settings-sync-problems";
 import { JoinFlow } from "./settings-sync-join";
 import { useSyncStopMessage } from "./sync-messages";
 
@@ -38,6 +39,7 @@ function FirstDownload({ sync, onReady }: FirstDownloadProps) {
       <p>{_(msg`settings.sync.first-run.downloading`)}</p>
       {left > 0 && <p className="fg-level-2">{_(msg`${plural(left, { other: "settings.sync.download-left" })}`)}</p>}
       {status && state?.type === "stopped" && <p className="fg-level-2">{stopMessage(status)}</p>}
+      {status?.hold && <SyncHoldMessage hold={status.hold} />}
     </Dialog.Content>
   );
 }

@@ -106,6 +106,22 @@ describe("SyncFirstRunJoin", () => {
     await vi.waitFor(() => expect(onReady).toHaveBeenCalled());
   });
 
+  it("says why the download waits at a change this app cannot read", async () => {
+    const onReady = vi.fn();
+    const queryClient = renderFirstRun(onReady);
+    await join();
+
+    await act(async () => {
+      queryClient.setQueryData(
+        ["sync", "status"],
+        status({ type: "bootstrapping" }, { hold: { lane: "hot", seq: 4, reason: "updateRequired" } }),
+      );
+    });
+
+    expect(await screen.findByText("settings.sync.hold.update-required")).not.toBeNull();
+    expect(onReady).not.toHaveBeenCalled();
+  });
+
   it("keeps waiting through a stop, and says why it stopped", async () => {
     const onReady = vi.fn();
     const queryClient = renderFirstRun(onReady);
