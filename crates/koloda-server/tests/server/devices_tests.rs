@@ -4,6 +4,7 @@ use koloda_sync_proto::transport::{
     DeviceInfo, DeviceList, Empty, Enrollment, ErrorCode, ForkDevice, IssuePairing, Outcome, Pairing, PairingClaim,
     PairingPreview, Platform, PreviewPairing, Snapshot, SpaceList,
 };
+use rusqlite::Connection;
 
 use crate::common::{
     claim_request, encode, nonce, outcomes, stamp, token, uuid, write, Call, Enrolled, Harness, START_MS,
@@ -17,7 +18,7 @@ fn device_path(space: [u8; 16], device: [u8; 16]) -> String {
 async fn a_device_reads_its_record_with_device_meta() {
     let harness = Harness::new();
     let home = harness.create_space("Home").await;
-    harness.clock.advance(5_000);
+    harness.clock.advance(60_000);
 
     let answer = harness
         .get(device_path(home.space_id, home.device_id))
@@ -31,16 +32,78 @@ async fn a_device_reads_its_record_with_device_meta() {
     assert_eq!(device.created_at, START_MS);
     assert_eq!(
         device.last_seen,
-        START_MS + 5_000,
-        "every authenticated request updates last_seen"
+        START_MS + 60_000,
+        "a request a minute after the last updates last_seen"
     );
-    assert_eq!(meta.server_time_ms, START_MS + 5_000);
+    assert_eq!(meta.server_time_ms, START_MS + 60_000);
     assert_eq!(meta.epoch, Some(home.epoch));
     let device_meta = meta.device.expect("a device call carries device meta");
     let kinds: Vec<_> = device_meta.write_schema.into_iter().collect();
     let mut expected: Vec<_> = Kind::ALL.iter().map(|kind| (kind.as_wire().to_string(), 1)).collect();
     expected.sort();
     assert_eq!(kinds, expected, "a new space accepts schema 1 of every kind");
+}
+
+/// The updates of `devices` rows since `count_device_updates`, which a test-only trigger counts.
+fn device_updates(conn: &Connection) -> i64 {
+    conn.query_row("SELECT n FROM device_updates", [], |row| row.get(0))
+        .expect("the count reads")
+}
+
+fn count_device_updates(conn: &Connection) {
+    // WHY: an update that leaves a row as it was writes no page, so only a trigger sees the write transaction.
+    conn.execute_batch(
+        "CREATE TABLE device_updates (n integer NOT NULL);
+         INSERT INTO device_updates (n) VALUES (0);
+         CREATE TRIGGER device_updated AFTER UPDATE ON devices BEGIN UPDATE device_updates SET n = n + 1; END;",
+    )
+    .expect("the trigger is created");
+}
+
+#[tokio::test]
+async fn device_calls_write_last_seen_a_minute_apart_and_cursors_only_when_they_rise() {
+    let harness = Harness::new();
+    let home = harness.create_space("Home").await;
+    let phone = harness.pair(&home, "Phone").await;
+    harness
+        .push(
+            &home,
+            vec![(1, write(Kind::Decks, "deck", Group::Create, stamp(0, 0, 1)))],
+        )
+        .await
+        .ok();
+    harness.clock.advance(60_000);
+    harness.pull(&phone, "lane=hot&after=1").await.ok();
+    let server_db = Connection::open(harness.generation_dir().join("server.db")).expect("server.db opens");
+    count_device_updates(&server_db);
+    let last_seen = |conn: &Connection| -> u64 {
+        conn.query_row(
+            "SELECT last_seen FROM devices WHERE id = ?1",
+            [uuid::Uuid::from_bytes(phone.device_id)],
+            |row| row.get(0),
+        )
+        .expect("last_seen reads")
+    };
+
+    harness.clock.advance(59_999);
+    harness.pull(&phone, "lane=hot&after=0").await.ok();
+
+    assert_eq!(
+        device_updates(&server_db),
+        0,
+        "a page below the stored cursor, within a minute of the last call, writes nothing"
+    );
+    assert_eq!(last_seen(&server_db), START_MS + 60_000);
+
+    harness.clock.advance(1);
+    harness.pull(&phone, "lane=hot&after=0").await.ok();
+
+    assert_eq!(
+        device_updates(&server_db),
+        1,
+        "a call a minute after the last write moves it"
+    );
+    assert_eq!(last_seen(&server_db), START_MS + 120_000);
 }
 
 #[tokio::test]

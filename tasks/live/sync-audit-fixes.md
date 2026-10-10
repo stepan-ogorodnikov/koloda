@@ -364,12 +364,14 @@ The owner took every recommendation on 2026-10-09.
   Commit: Remint cards and their reviews a chunk at a time
   Depends on: none
 
-- [ ] 12. Write a device's last seen and cursors only when they move
+- [x] 12. Write a device's last seen and cursors only when they move
   Goal (R8):
   - `auth.rs`: the `devices` update runs only when `last_seen` is a minute or more old, or `rebase_required`
     changes.
   - `record_cursor` in `pull.rs` writes only when the cursor rises.
   - `PROTOCOL.md` §Devices: `last_seen` has a minute's resolution, if the text implies more.
+  - Implementation: the test counts updates of `devices` with a test-only trigger.
+    An update that leaves the row as it was writes no page, so `PRAGMA data_version` does not see its transaction.
   Constraints:
   - Staleness, at 90 days, reads `last_seen` and is unchanged.
   Done when:

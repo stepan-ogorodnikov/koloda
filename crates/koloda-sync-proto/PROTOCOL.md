@@ -747,6 +747,8 @@ Rules:
   A stale device is `rebase_required`, and it no longer pins GC.
 - A request marks its device stale when the stored `last_seen` is past that window.
   It reads `last_seen` before the request refreshes it, and the flag persists.
+- `last_seen` has a minute's resolution: a request moves it only once it is a minute or more from server now.
+  A pull records its cursor only when the cursor rises.
 - The server refuses every push from a device that is `rebase_required` or whose cursor is below a GC horizon
   (`cursor_too_old`).
   The refusal consumes nothing, replays included.

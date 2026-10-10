@@ -14,7 +14,7 @@ use rusqlite::{params, Connection};
 use serde::Deserialize;
 use uuid::Uuid;
 
-use crate::auth;
+use crate::auth::{self, DeviceAuth};
 use crate::http::{query, respond, ApiError};
 use crate::log;
 use crate::server::{lock, Server};
@@ -56,7 +56,7 @@ pub(crate) async fn pull(
             tx.commit()?;
             page
         };
-        record_cursor(server, caller.id, lane, params.after)?;
+        record_cursor(server, &caller, lane, params.after)?;
         Ok(page)
     })
     .await
@@ -124,14 +124,18 @@ fn read_page(
     })
 }
 
-fn record_cursor(server: &Server, device: Uuid, lane: Lane, after: u64) -> Result<(), ApiError> {
-    let column = match lane {
-        Lane::Hot => "cursor_hot",
-        Lane::Cold => "cursor_cold",
+// WHY: a pull page below the stored cursor writes nothing, so pages do not serialize on the one `server.db` connection.
+fn record_cursor(server: &Server, caller: &DeviceAuth, lane: Lane, after: u64) -> Result<(), ApiError> {
+    let (column, stored) = match lane {
+        Lane::Hot => ("cursor_hot", caller.cursor_hot),
+        Lane::Cold => ("cursor_cold", caller.cursor_cold),
     };
+    if after <= stored {
+        return Ok(());
+    }
     server.server_db()?.execute(
         &format!("UPDATE devices SET {column} = max({column}, ?1) WHERE id = ?2"),
-        params![after, device],
+        params![after, caller.id],
     )?;
     Ok(())
 }

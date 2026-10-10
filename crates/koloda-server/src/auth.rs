@@ -17,13 +17,17 @@ use crate::server::{lock, Server};
 
 const TOKEN_BYTES: usize = 32;
 const BEARER: &str = "Bearer ";
+// WHY: every device call reads its device row, and a write on each would serialize the calls of every space on the
+// one `server.db` connection. `last_seen` moves once it is this far from now (PROTOCOL.md, Devices).
+const LAST_SEEN_RESOLUTION_MS: u64 = 60 * 1000;
 
 pub(crate) struct DeviceAuth {
     pub(crate) id: Uuid,
     pub(crate) space: Uuid,
     pub(crate) is_rebase_required: bool,
-    /// The `hot` cursor of the device's last pull, as the server recorded it.
+    /// The cursors of the device's last pulls, as the server recorded them.
     pub(crate) cursor_hot: u64,
+    pub(crate) cursor_cold: u64,
 }
 
 struct TokenRow {
@@ -33,6 +37,7 @@ struct TokenRow {
     last_seen: u64,
     is_flagged: bool,
     cursor_hot: u64,
+    cursor_cold: u64,
     is_forked_from: bool,
 }
 
@@ -114,7 +119,7 @@ pub(crate) fn require_device(
     let device: Option<TokenRow> = match bearer(headers) {
         Some(token) => conn
             .query_row(
-                "SELECT d.id, d.space_id, d.revoked_at, d.last_seen, d.rebase_required, d.cursor_hot,
+                "SELECT d.id, d.space_id, d.revoked_at, d.last_seen, d.rebase_required, d.cursor_hot, d.cursor_cold,
                         EXISTS (SELECT 1 FROM devices f WHERE f.forked_from = d.id)
                  FROM devices d WHERE d.token_hash = ?1",
                 params![token_hash(token).to_vec()],
@@ -126,7 +131,8 @@ pub(crate) fn require_device(
                         last_seen: row.get(3)?,
                         is_flagged: row.get(4)?,
                         cursor_hot: row.get(5)?,
-                        is_forked_from: row.get(6)?,
+                        cursor_cold: row.get(6)?,
+                        is_forked_from: row.get(7)?,
                     })
                 },
             )
@@ -140,6 +146,7 @@ pub(crate) fn require_device(
         last_seen,
         is_flagged,
         cursor_hot,
+        cursor_cold,
         is_forked_from,
     }) = device
     else {
@@ -170,10 +177,12 @@ pub(crate) fn require_device(
     // a device back from a long absence re-bootstraps before it pushes (PROTOCOL.md, Devices).
     let now = server.now_ms();
     let is_rebase_required = is_flagged || devices::is_stale(last_seen, is_forked_from, now);
-    conn.execute(
-        "UPDATE devices SET last_seen = ?1, rebase_required = ?2 WHERE id = ?3",
-        params![now, is_rebase_required, id],
-    )?;
+    if now.abs_diff(last_seen) >= LAST_SEEN_RESOLUTION_MS || is_rebase_required != is_flagged {
+        conn.execute(
+            "UPDATE devices SET last_seen = ?1, rebase_required = ?2 WHERE id = ?3",
+            params![now, is_rebase_required, id],
+        )?;
+    }
     drop(conn);
     scope.space = Some(device_space);
     scope.device = Some(id);
@@ -197,6 +206,7 @@ pub(crate) fn require_device(
         space: device_space,
         is_rebase_required,
         cursor_hot,
+        cursor_cold,
     })
 }
 
