@@ -1,6 +1,6 @@
 # Sync in the desktop app
 
-Status: draft
+Status: ready
 
 ## Intent
 
@@ -32,9 +32,8 @@ In:
 - `libs/settings-react` and `libs/app-react`: Settings → Sync and its route, shown only on the desktop.
 - `libs/app`: `sync.*` error messages.
 - The `en` and `ru` locales of every package touched.
-- `docs/specs/SYNC.md`, new.
+- `docs/specs/SYNC.md`, new; `INTERFACE-SETTINGS.md` and `LEARNING-SETTINGS.md` point at it for first setup.
 - `crates/koloda-sync/README.md`, which says no app calls the engine yet.
-- `apps/electron-e2e`: one spec against a real server on loopback (question 5).
 
 Out:
 
@@ -48,10 +47,14 @@ Out:
 - `koloda-sync`, `koloda`, `koloda-server`, and `koloda-sync-proto`: no change expected.
   If the host needs one, stop and record it under Open questions.
 - The two follow-ups `sync-audit-fixes` noticed: a lease end's scan, and a file with sync state but no settings rows.
+- E2e tests (question 5): the human checks each item from its Manual verify brief (`agents/VERIFY.md`).
+- `agents/INDEX.md`: agents do not load it, so routing tasks to `SYNC.md` there is the owner's.
 
 ## Open questions
 
-- [ ] 1. Area guides? — open
+The owner took every recommendation on 2026-10-10, except question 5: no e2e tests in this task.
+
+- [x] 1. Area guides?
   - Proposed: `agents/TASKS.md`, `agents/IMPLEMENTATION-PLAN.md`, `agents/MARKDOWN.md`,
     `agents/CODE-DOCUMENTATION.md`, `agents/CODE-STYLE.md`, `agents/TESTING.md`, and `agents/RUST.md`.
   - For the new spec and screens: `agents/FUNCTIONAL-SPECIFICATIONS.md`, `agents/I18N.md`, `agents/LAYOUT.md`, and
@@ -59,8 +62,14 @@ Out:
   - `agents/VERIFY.md` for the manual checks, and `agents/REVIEW.md` for self-review.
   - Also `apps/electron/IPC.md`, `docs/decisions/APP-ROLES.md`, `crates/koloda-sync/README.md`, and
     `crates/koloda-sync-proto/PROTOCOL.md`.
-  - The plan was drafted without the UI guides, so items may change once they are read.
-- [ ] 2. Which thread runs the engine's host calls? — open
+  - Answer: the set proposed.
+    Read on 2026-10-10, they changed the draft:
+    - agents start no app and no server (`agents/VERIFY.md`), so each manual check is a Manual verify brief for the
+      human;
+    - `SYNC.md` opens with Scope, What it is, and Core model, and the first-setup specs point at it
+      (`agents/FUNCTIONAL-SPECIFICATIONS.md`);
+    - tests that only check wiring are dropped (`agents/TESTING.md`).
+- [x] 2. Which thread runs the engine's host calls?
   - Every `Engine` call blocks until its network work is done.
     On the `koloda-db` worker, it would hold every read the UI makes behind the network.
   - Recommended: one more FIFO worker, `koloda-sync`, with the promise pattern of `KolodaDb::run`.
@@ -70,34 +79,41 @@ Out:
     Calls may then overlap; the engine already runs one cycle at a time.
   - Either way the engine shares the app's `Database`.
     A bootstrap page holds the connection for one transaction, and UI reads wait behind it.
-    Item 9's manual check looks at that on a space of a few thousand cards.
-- [ ] 3. Where does the engine's `Starter` come from? — open
+    Item 5's Manual verify looks at that on a space of a few thousand cards.
+  - Answer: the recommendation, one FIFO `koloda-sync` worker.
+- [x] 3. Where does the engine's `Starter` come from?
   - When no algorithm or template is live, repair creates one from `Starter`, title included.
   - Recommended: the renderer passes it in `cmd_sync_start`, built as `seedDB` builds the seed, with the translated
     title.
   - Alternative: main builds it from the `@koloda/srs` defaults; main has no i18n, so the title is not translated.
-- [ ] 4. What does the first-run screen show while a blank file joins? — open
+  - Answer: the recommendation, the renderer passes it.
+- [x] 4. What does the first-run screen show while a blank file joins?
   - A blank joiner's database reads as set up once its settings are seeded, before any algorithm or template arrives.
   - Recommended: the setup screen stays until the first bootstrap leaves `Bootstrapping`.
     It shows progress and errors from the status, and the engine retries on its own.
     The only way out is quitting the app.
   - Alternative: the app opens at once and fills in.
     Forms that need an algorithm or a template fail until they arrive.
-- [ ] 5. Does a test run two apps against a real server? — open
-  - Recommended: yes, item 9, one `electron-e2e` spec.
+  - Answer: the recommendation, the setup screen waits for the first bootstrap.
+- [x] 5. Does a test run two apps against a real server?
+  - Recommended: yes, one `electron-e2e` spec.
     The e2e target builds `koloda-server`, and the spec runs `serve --insecure-http` on a loopback port.
     `check:push` does not run `electron-e2e`, so the item's `Done when` names `nx run electron-e2e:e2e`.
     `apps/web-e2e` gets no mirror, and the e2e README notes the exception.
   - Alternative: the manual checks only.
-- [ ] 6. The spec in one item first, or with each item? — open
+  - Answer: no e2e tests in this task (owner).
+    The drafted item 9 is dropped, and its manual check of a large join moved to item 5.
+- [x] 6. The spec in one item first, or with each item?
   - Recommended: each item writes the `SYNC.md` sections it makes true (`agents/IMPLEMENTATION-PLAN.md` §Sizing).
     This plan fixes the screens now, so approving it approves them.
   - Alternative: a docs-only item 1 with the whole spec, reviewed before any screen.
-- [ ] 7. Does sync show outside Settings? — open
+  - Answer: the recommendation, each item writes its sections.
+- [x] 7. Does sync show outside Settings?
   - Recommended: a title bar indicator while the file is in a space (item 8).
     It shows syncing, idle with the last sync in its tooltip, and a stop that needs the user.
     Clicking it opens Settings → Sync.
   - Alternative: Settings only; a stopped sync goes unnoticed until the user looks there.
+  - Answer: the recommendation, a title bar indicator.
 
 ## Plan
 
@@ -145,15 +161,12 @@ Out:
   - Quitting does not wait for a cycle; the protocol makes a lost reply safe.
   Done when:
   - `koloda-db.test.ts` passes with the new methods mirrored;
-  - a main test: each `cmd_sync_*` handler calls its method, and events reach every window;
-  - a renderer test: a `Changed` event for each kind invalidates its keys;
+  - a main test: an `Error` event is logged and reaches no window, and every other event reaches every window;
+  - a renderer test: a `Changed` event invalidates the queries that show its kind, cards' lessons included;
   - a Rust test in the addon for the error and status wire mapping;
-  - manual: the app starts on a new file and on a used one, with no sync error in the console;
+  - Manual verify: none — no file can enroll until item 2;
   - `bun run check:push` green.
-  Commit:
-  - a. Run the sync engine in the desktop app
-  - b. Host the sync engine in the desktop addon and carry its events to the renderer
-  - c. Start the sync engine with the desktop app
+  Commit: Run the sync engine in the desktop app
   Depends on: none
 
 - [ ] 2. Create a sync space from Settings
@@ -174,19 +187,24 @@ Out:
     - while downloading, how far each lane is behind;
     - a "Sync now" button, which nudges;
     - a stop, as one line with its message until item 7.
-  - `docs/specs/SYNC.md`: what sync is, the core model (server, space, device, pairing code), platform availability
-    (absent on the web), creating a space, and status.
+  - `docs/specs/SYNC.md`, per `agents/FUNCTIONAL-SPECIFICATIONS.md`:
+    - Scope, naming the specs it leaves out;
+    - What it is;
+    - Core model: server, space, device, and pairing code, with §Relationships;
+    - platform availability (absent on the web), creating a space, and status.
   Constraints:
   - The setup token is never stored; it goes to the server once.
   - The page follows the other settings pages' layout.
+  - Strings follow `agents/I18N.md`, in `en` and `ru`.
   Done when:
-  - component tests: the form validates and submits; each state renders; the web's queries hide the link;
-  - manual: against `koloda-server serve --insecure-http` on this machine, create a space;
-    the status reaches idle, and `koloda-server spaces` lists the space;
+  - component tests: the form refuses an insecure URL and shows each server error; each state renders its copy;
+    without the host's sync support, the link and the route are absent;
+  - Manual verify, with `koloda-server serve --insecure-http` running on the same machine:
+    - Settings → Sync → create a space → the status reaches idle, and `koloda-server spaces` lists the space;
+    - an `http` URL to another machine → the form refuses it;
+    - the web app → Settings shows no Sync;
   - `bun run check:push` green.
-  Commit:
-  - a. Create a sync space from Settings
-  - b. Add Settings → Sync with space creation and status
+  Commit: Create a sync space from Settings
   Depends on: 1
 
 - [ ] 3. Invite a device with a pairing code
@@ -198,10 +216,10 @@ Out:
   - `SYNC.md` §Inviting a device.
   Done when:
   - component tests: the countdown, expiry, and a new code;
+  - Manual verify: Settings → Sync → Invite a device → a code with 10 minutes left; after they pass, it shows as
+    expired;
   - `bun run check:push` green.
-  Commit:
-  - a. Invite a device with a pairing code
-  - b. Issue pairing codes from Settings → Sync
+  Commit: Invite a device with a pairing code
   Depends on: 2
 
 - [ ] 4. List, revoke, and leave the space's devices
@@ -215,11 +233,10 @@ Out:
   - `SYNC.md` §Devices and §Leaving a space.
   Done when:
   - component tests: the list, both confirmations, and the error;
-  - manual: leave the space; the status says the device is in no space, and its decks stay;
+  - Manual verify: Settings → Sync → Leave the space → confirm → the status says the device is in no space, and its
+    decks stay;
   - `bun run check:push` green.
-  Commit:
-  - a. List, revoke, and leave the space's devices
-  - b. Manage the space's devices from Settings → Sync
+  Commit: List, revoke, and leave the space's devices
   Depends on: 2
 
 - [ ] 5. Join a space from Settings
@@ -238,12 +255,13 @@ Out:
   - `SYNC.md` §Joining a space and §Add or Replace.
   Done when:
   - component tests: each mode, the copy warning, the Replace confirmation, and the refusal;
-  - manual: a second app with its own user data joins item 2's space;
-    Add of unrelated decks shows every deck on both apps;
+  - Manual verify, with a second app on its own user data:
+    - the second app → Settings → Sync → Join a space with a code from the first → the preview names the space;
+      Join → Add → every deck shows on both apps;
+    - a deck added on one app shows on the other within seconds;
+    - a join of a space of a few thousand cards → the app stays usable during the download (question 2);
   - `bun run check:push` green.
-  Commit:
-  - a. Join a space from Settings
-  - b. Join a sync space, with Add or Replace for a used database
+  Commit: Join a space from Settings
   Depends on: 3
 
 - [ ] 6. Join a space on first run
@@ -255,13 +273,14 @@ Out:
     The engine seeds the blank file and enrolls it in one transaction.
   - The screen then waits as question 4 decides.
   - `SYNC.md` §First run.
+  - `INTERFACE-SETTINGS.md` §First Setup and `LEARNING-SETTINGS.md` point at `SYNC.md` for a join, whose starter
+    content and learning settings come from the space.
   Done when:
   - component tests: both choices, the wait, and an error during it;
-  - manual: a new app joins item 2's space from the setup screen and opens on its decks;
+  - Manual verify: a new app → Join existing → a code from an app in the space → the setup screen waits, then the
+    app opens on the space's decks;
   - `bun run check:push` green.
-  Commit:
-  - a. Join a space on first run
-  - b. Offer Join existing on the setup screen
+  Commit: Join a space on first run
   Depends on: 5
 
 - [ ] 7. Explain why sync stopped
@@ -283,10 +302,10 @@ Out:
   - `SYNC.md` §When sync stops.
   Done when:
   - component tests: each stop and hold renders its message and action;
+  - Manual verify: stop the server → Sync now → the page says the server is out of reach and retries on its own;
+    start it again → the status returns to idle;
   - `bun run check:push` green.
-  Commit:
-  - a. Explain why sync stopped
-  - b. Show each sync stop with what to do about it
+  Commit: Explain why sync stopped
   Depends on: 5
 
 - [ ] 8. Show sync in the title bar
@@ -298,33 +317,10 @@ Out:
   - `SYNC.md` §Status names the indicator.
   Done when:
   - component tests: each state, and nothing for a file in no space;
+  - Manual verify: a file in a space → the title bar shows the indicator → click → Settings → Sync opens;
   - `bun run check:push` green.
-  Commit:
-  - a. Show sync in the title bar
-  - b. Add a sync indicator to the title bar
+  Commit: Show sync in the title bar
   Depends on: 7
-
-- [ ] 9. Sync two desktop apps end to end
-  Goal (per question 5):
-  - The e2e target builds `koloda-server`.
-  - A fixture runs `koloda-server init` and `serve --insecure-http` on a free loopback port with a fresh data dir.
-    It reads the setup token from `init`, and stops the server after the test.
-  - The spec:
-    - app A starts fresh, creates a space, and issues a code;
-    - app B, with its own user data, joins on first run;
-    - a deck and a card with an image added on A show on B;
-    - a grade on B reaches A;
-    - A removes B, and B shows that it is in no space;
-    - A leaves the space, so no token stays in the OS keyring.
-  - `apps/electron-e2e/README.md` lists the spec, and notes that `web-e2e` has no mirror.
-  Done when:
-  - `nx run electron-e2e:e2e` passes;
-  - manual: join a space of a few thousand cards; the UI stays usable during the download (question 2);
-  - `bun run check:push` green.
-  Commit:
-  - a. Sync two desktop apps end to end
-  - b. Test sync between two desktop apps against a real server
-  Depends on: 6, 8
 
 ## Outcome
 
