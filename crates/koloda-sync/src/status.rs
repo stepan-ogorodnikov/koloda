@@ -139,7 +139,7 @@ impl Shared {
             })
         } else if state.is_restore_held {
             State::Stopped(Stop::AuthoritativeRestore)
-        } else if state.is_import_pending {
+        } else if state.is_import_pending && !state.is_seed_import {
             State::ImportPending
         } else if run.is_syncing && (state.is_bootstrapping || state.is_rebasing) {
             State::Bootstrapping

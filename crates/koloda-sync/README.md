@@ -23,10 +23,10 @@ A pending claim or creation keeps its nonce in `koloda`'s `sync_enrolling`, writ
 - `src/lib.rs` — crate root.
 - `src/engine.rs` — `Engine`: the runtime, host calls, space creation, the claim or creation kept pending until the
   file records it, the session a cycle uses, and running the cycle again on a restored epoch.
-- `src/cycle.rs` — the cycle: the device record and the behind check, re-bootstrap when the server left the file
-  behind, held writes and waiting uploads released once the space has room, push, `hot` to head, `cold` to the
-  recorded head, a lane held at an envelope this app cannot read, the skew pause, a push refused as ahead
-  (re-stamped once, then waiting for server time), and repair after catch-up.
+- `src/cycle.rs` — the cycle: the Add an untouched seed's join left unfinished, the device record and the behind
+  check, re-bootstrap when the server left the file behind, held writes and waiting uploads released once the space
+  has room, push, `hot` to head, `cold` to the recorded head, a lane held at an envelope this app cannot read, the
+  skew pause, a push refused as ahead (re-stamped once, then waiting for server time), and repair after catch-up.
 - `src/push.rs` — pushing the outbox in batches and handing each reply, loss, or refusal to `koloda`; heal and
   backfill top the outbox up before each batch, and a reply that moves skew past the tolerance stops the push once it
   is settled.

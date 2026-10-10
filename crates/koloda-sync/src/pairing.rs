@@ -371,6 +371,9 @@ impl Shared {
             .await?;
 
         let (space, base) = (session.space, session.base.clone());
+        // INVARIANT: no cycle runs between the claim's record and an untouched seed's Add, so a cycle only finishes
+        // an Add that a failed probe left.
+        let _cycle = self.cycle.lock().await;
         if mode == JoinMode::Blank {
             // INVARIANT: the settings and the enrollment commit together. A stop before the commit leaves the file
             // blank with its claim pending, so the next join with the code joins it as blank on the same device.
@@ -419,7 +422,7 @@ impl Shared {
     }
 
     /// Asks the space which of the file's ids it holds, a chunk at a time (`PROTOCOL.md` §Joining).
-    async fn probe(self: &Arc<Self>, session: &Session) -> Result<HashMap<String, Known>, SyncError> {
+    pub(crate) async fn probe(self: &Arc<Self>, session: &Session) -> Result<HashMap<String, Known>, SyncError> {
         let mut known = HashMap::new();
         let mut after: Option<(Kind, String)> = None;
         loop {

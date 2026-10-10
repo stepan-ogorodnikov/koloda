@@ -221,6 +221,9 @@ pub struct SyncState {
     pub is_clock_paused: bool,
     /// A claim waits for the user to pick Add or Replace; nothing syncs meanwhile.
     pub is_import_pending: bool,
+    /// The pending claim is of a file that holds only the untouched first-run seed. Such a file never asks the user:
+    /// the cycle runs its Add.
+    pub is_seed_import: bool,
     /// The device was revoked or detached itself; the file sends nothing until it re-attaches.
     pub is_detached: bool,
     /// An authoritative restore waits for the host to accept it; the file sends nothing meanwhile.
@@ -255,6 +258,7 @@ pub fn sync_state(db: &Database) -> Result<Option<SyncState>, AppError> {
                             cursor_cold: row.get(4)?,
                             is_bootstrapping: row.get(5)?,
                             is_import_pending: row.get(6)?,
+                            is_seed_import: false,
                             is_detached: row.get(7)?,
                             is_rebasing: row.get(8)?,
                             is_clock_paused: row.get(9)?,
@@ -273,6 +277,7 @@ pub fn sync_state(db: &Database) -> Result<Option<SyncState>, AppError> {
                     epoch: epoch
                         .map(|epoch| Uuid::from_slice(&epoch).map_err(protocol_error))
                         .transpose()?,
+                    is_seed_import: state.is_import_pending && join::holds_only_untouched_seed(conn)?,
                     ..state
                 })
             })

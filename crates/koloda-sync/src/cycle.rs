@@ -6,6 +6,7 @@ use std::sync::Arc;
 use koloda::app::utility::get_current_timestamp;
 use koloda::repo::sync::apply::{apply_page, Hold, Page, PageEntry};
 use koloda::repo::sync::attachments::release_deferred_uploads;
+use koloda::repo::sync::join::add_to_space;
 use koloda::repo::sync::outbox::{
     has_foreign_receipt, highest_pending_hlc, pending_count, release_held, standing, unfix_unconsumed, Standing,
 };
@@ -33,13 +34,22 @@ impl Shared {
         session: &mut Session,
         changed: &mut Vec<Kind>,
     ) -> Result<(), SyncError> {
-        let state = self
+        let mut state = self
             .blocking(|shared| koloda::repo::sync::sync_state(&shared.db))
             .await?
             .ok_or(SyncError::NotEnrolled)?;
         // INVARIANT: a used file waiting for Add or Replace pushes, pulls, and captures nothing (PROTOCOL.md, Joining).
+        // A file that held only the untouched seed never asks, so the Add its join left after a failed probe runs here.
         if state.is_import_pending {
-            return Ok(());
+            if !state.is_seed_import {
+                return Ok(());
+            }
+            let known = self.probe(session).await?;
+            self.blocking(move |shared| add_to_space(&shared.db, &known)).await?;
+            state = self
+                .blocking(|shared| koloda::repo::sync::sync_state(&shared.db))
+                .await?
+                .ok_or(SyncError::NotEnrolled)?;
         }
         // INVARIANT: a file holding an authoritative restore sends nothing until its host accepts it.
         if state.is_restore_held {

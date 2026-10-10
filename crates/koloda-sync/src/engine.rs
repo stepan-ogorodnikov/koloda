@@ -53,7 +53,7 @@ pub(crate) struct Shared {
     pub(crate) starter: Starter,
     pub(crate) skew: Skew,
     // INVARIANT: one cycle runs at a time, whether the runner, `sync_now`, or `tick` started it.
-    cycle: tokio::sync::Mutex<()>,
+    pub(crate) cycle: tokio::sync::Mutex<()>,
     pub(crate) triggers: Triggers,
     run_state: Mutex<RunState>,
     sink: Mutex<Option<Arc<dyn EventSink>>>,

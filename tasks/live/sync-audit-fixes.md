@@ -273,7 +273,7 @@ The owner took every recommendation on 2026-10-09.
   Commit: Seed a blank joiner and enroll it in one transaction
   Depends on: none
 
-- [ ] 7. Finish an interrupted untouched-seed join without asking
+- [x] 7. Finish an interrupted untouched-seed join without asking
   Goal (F3, per question 7):
   - A cycle that finds the file `import_pending` with only the untouched first-run seed runs Add, as
     `import(ImportMode::Add)` does, then continues.
@@ -284,6 +284,8 @@ The owner took every recommendation on 2026-10-09.
   - `PROTOCOL.md` §Joining: an untouched-seed join interrupted after its claim finishes its Add on the next cycle.
   Constraints:
   - The join itself still runs Add right away; the cycle only finishes what a failed probe left.
+  - Implementation: the join holds the cycle lock from recording the claim through Add, so a runner cycle cannot run
+    the same Add beside it. `SyncState::is_seed_import` tells the cycle and the status apart from a used file.
   Done when:
   - an engine test: an untouched-seed join whose probe fails by transport leaves `import_pending`; the status does
     not show `ImportPending`, and the next cycle adds, bootstraps, and syncs;

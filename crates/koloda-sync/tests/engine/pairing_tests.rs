@@ -2,7 +2,8 @@ use koloda::app::init::{get_db_status, seed_db, DbStatus};
 use koloda::domain::seed_ids::{SEED_ALGORITHM_SIMPLE_ID, SEED_TEMPLATE_TYPE_ID};
 use koloda::repo::sync::join::JoinMode;
 use koloda_sync::error::SyncError;
-use koloda_sync::pairing::{IssuedPairing, Joined};
+use koloda_sync::pairing::{ImportMode, IssuedPairing, Joined};
+use koloda_sync::status::State;
 use koloda_sync::transport::Method;
 use koloda_sync_proto::envelope::Envelope;
 use koloda_sync_proto::payload::{Delete, Payload};
@@ -144,6 +145,71 @@ fn an_untouched_seed_drops_the_seed_rows_the_space_does_not_hold() {
         .filter(|envelope| [SEED_ALGORITHM_SIMPLE_ID, SEED_TEMPLATE_TYPE_ID].contains(&envelope.header.id.as_str()))
         .collect();
     assert!(seeds.is_empty(), "no seed id is ever pushed: {seeds:?}");
+}
+
+const IMPORT_PENDING: &str = "SELECT COUNT(*) FROM sync_state WHERE join_phase = 'import_pending'";
+
+/// Makes every attempt of the next probe lose its reply, so the join stops after its claim is recorded.
+fn lose_the_probe(device: &Device) {
+    for _ in 0..4 {
+        device.transport.fault_on("/ids/known", Fault::LoseReply);
+    }
+}
+
+fn shown(device: &Device) -> State {
+    device.engine.status().expect("status reads").state
+}
+
+#[test]
+fn an_untouched_seed_whose_probe_failed_finishes_its_add_on_the_next_cycle() {
+    let space = Space::with(|device| seed_db(&device.db, seed_data(77)).expect("A starts fresh"));
+    space.device.engine.sync_now().expect("A backfills its seed rows");
+    let issued = issue(&space, None);
+    let b = space.server.device();
+    seed_db(&b.db, seed_data(100)).expect("B starts fresh");
+    lose_the_probe(&b);
+
+    assert!(join(&b, &issued.code).is_err(), "the probe fails");
+    assert_eq!(b.count(IMPORT_PENDING), 1, "the claim is recorded and Add has not run");
+    assert_ne!(
+        shown(&b),
+        State::ImportPending,
+        "a file that held only the seed never asks"
+    );
+
+    b.engine.sync_now().expect("the next cycle adds, bootstraps, and syncs");
+
+    assert_eq!(b.count(IMPORT_PENDING), 0);
+    assert_eq!(shown(&b), State::Idle);
+    assert_eq!(
+        b.ids("algorithms"),
+        space.device.ids("algorithms"),
+        "the space's seed algorithm overlays B's"
+    );
+    assert_eq!(
+        b.count("SELECT json_extract(content, '$.dailyLimits.total') FROM settings WHERE name = 'learning'"),
+        77,
+        "the space's learning settings overlay B's"
+    );
+}
+
+#[test]
+fn a_used_file_whose_probe_failed_still_waits_for_import() {
+    let space = Space::new();
+    space.device.engine.sync_now().expect("A syncs");
+    let issued = issue(&space, None);
+    let b = space.server.device();
+    seed_db(&b.db, seed_data(100)).expect("B starts fresh");
+    b.add_deck(SEED_ALGORITHM_SIMPLE_ID, SEED_TEMPLATE_TYPE_ID, "Mine");
+    lose_the_probe(&b);
+    assert!(join(&b, &issued.code).is_err(), "the probe fails");
+
+    b.engine.sync_now().expect("the cycle does nothing");
+
+    assert_eq!(b.count(IMPORT_PENDING), 1, "no Add without the host's choice");
+    assert_eq!(shown(&b), State::ImportPending);
+    b.engine.import(ImportMode::Add).expect("the host picks Add");
+    assert_eq!(b.count(IMPORT_PENDING), 0);
 }
 
 #[test]

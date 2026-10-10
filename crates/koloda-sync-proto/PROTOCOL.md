@@ -1478,6 +1478,7 @@ Every save sets it, even one that changes nothing.
 A file was in this space when its sync state is active there; a file still in `import_pending` is judged by its rows.
 A file holding only the untouched first-run seed goes through the same claim, probe, and Add as a used file.
 It joins without asking the user, and only Add's seed-row rules change it.
+A join of such a file interrupted after its claim, by a failed probe or a stop, finishes its Add on the next cycle.
 
 Every mode claims the code, receives an active token, and runs the normal cycle with a union bootstrap.
 The claim records the server URL and the epoch with the new device id.

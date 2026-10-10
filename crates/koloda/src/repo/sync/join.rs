@@ -78,7 +78,7 @@ pub fn join_mode(db: &Database, space_id: Uuid) -> Result<JoinMode, AppError> {
 
 // WHY: every save sets `updated_at`, so a NULL one is the only sign of an unmodified row that Rust can read; the
 // first-run content comes from the TS host. Revisions outlive a deleted algorithm, so they are counted on their own.
-fn holds_only_untouched_seed(conn: &Connection) -> Result<bool, AppError> {
+pub(super) fn holds_only_untouched_seed(conn: &Connection) -> Result<bool, AppError> {
     let is_untouched = conn.query_row(
         r#"
         SELECT (SELECT COUNT(*) FROM algorithms) = 1
