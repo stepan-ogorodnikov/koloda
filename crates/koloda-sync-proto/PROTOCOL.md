@@ -84,6 +84,8 @@ What the server stores per space, in one database per space:
 - `snapshots` plus `snapshot_items`: short-lived bootstrap leases (§Transport).
 - `sender_progress` and `sender_receipts`: per-sender high-water and the immutable outcome of every consumed
   `(sender, sender_seq)`.
+  v1 keeps receipts for the life of the space; no pass collects them.
+  Below a collected floor, the server could no longer tell a same-digest retry from a reused seq.
 - `write_schema` per kind, and the accumulated restore points.
 - `attachment_refs`: which attachment ids each live card links (§Attachments).
 
@@ -1251,6 +1253,8 @@ Space-wide caps limit concurrent leases and pinned bytes.
 Opening a second lease for a device releases its first.
 The TTL is 5 minutes, and a heartbeat extends it, never past the absolute lifetime of 24 hours.
 A space serves at most 4 open leases; a fifth gets `429 rate_limited`.
+Opening a lease lists every live head under the space's writer lock, so pushes wait while it opens.
+v1 accepts that cost, at most four leases at a time, over pinning versions by seq.
 A space over its quota opens no lease (§Quotas).
 An expired or released lease answers `410 lease_expired`, and only the device that opened a lease may read it.
 Revoke, restore, and absolute expiry cancel a lease.
@@ -1300,6 +1304,9 @@ A create only that lease delivered is absent when the bootstrap finishes.
 A repeated insert is still safe.
 A lease that lapses once its pages are applied is released all the same; it does not restart a finished bootstrap.
 `429 rate_limited` waits for the next cycle.
+A bounded tick that spends its budget mid-snapshot starts over on its next lease: opening one ends the device's
+earlier lease, and the stream starts from the first position.
+So a snapshot larger than one tick's budget needs an unbounded run; v1 accepts that limit.
 
 ### Metered networks
 

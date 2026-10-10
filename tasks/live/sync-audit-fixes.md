@@ -419,7 +419,7 @@ The owner took every recommendation on 2026-10-09.
   Commit: Defer a transfer the server fails on
   Depends on: none
 
-- [ ] 15. State the sync limits v1 accepts
+- [x] 15. State the sync limits v1 accepts
   Goal (R2, P1, R9, per questions 2, 4, and 5):
   - `PROTOCOL.md` §Bootstrap: a bounded tick that ends mid-snapshot starts over on its next lease.
     A snapshot larger than one tick's budget needs an unbounded run.
