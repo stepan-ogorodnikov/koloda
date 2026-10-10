@@ -35,12 +35,6 @@ pub struct Settled {
     pub is_behind: bool,
 }
 
-struct Cohort {
-    commit_id: Vec<u8>,
-    seqs: Vec<u64>,
-    bytes: usize,
-}
-
 pub fn push_batch(db: &Database, max_items: usize, max_bytes: usize) -> Result<Batch, AppError> {
     throw_known_error(error_codes::DB_UPDATE, || {
         db.with_transaction(|tx| {
@@ -54,20 +48,15 @@ pub fn push_batch(db: &Database, max_items: usize, max_bytes: usize) -> Result<B
                 [],
             )?;
 
-            let mut picked = Vec::new();
-            let (mut items, mut bytes) = (0, 0);
-            for cohort in cohorts(tx)? {
-                // INVARIANT: a push never splits a cohort. A cohort past either cap still goes alone, so every
-                // batch makes progress.
-                if !picked.is_empty() && (items + cohort.seqs.len() > max_items || bytes + cohort.bytes > max_bytes) {
-                    break;
-                }
-                items += cohort.seqs.len();
-                bytes += cohort.bytes;
-                picked.push(cohort);
+            let picked = cohorts(tx, max_items, max_bytes)?;
+            let mut seqs: Vec<u64> = Vec::new();
+            for commit_id in &picked {
+                let cohort_seqs = tx
+                    .prepare("SELECT sender_seq FROM sync_outbox WHERE commit_id = ?1")?
+                    .query_map(params![commit_id], |row| row.get(0))?
+                    .collect::<Result<Vec<u64>, _>>()?;
+                seqs.extend(cohort_seqs);
             }
-
-            let mut seqs: Vec<u64> = picked.iter().flat_map(|cohort| cohort.seqs.iter().copied()).collect();
             seqs.sort_unstable();
             let mut batch = Vec::with_capacity(seqs.len());
             for sender_seq in seqs {
@@ -82,10 +71,10 @@ pub fn push_batch(db: &Database, max_items: usize, max_bytes: usize) -> Result<B
                 )?;
                 batch.push(BatchItem { sender_seq, envelope });
             }
-            for cohort in &picked {
+            for commit_id in &picked {
                 tx.execute(
                     "UPDATE sync_cohorts SET state = 'uncertain' WHERE commit_id = ?1 AND state = 'local'",
-                    params![cohort.commit_id],
+                    params![commit_id],
                 )?;
             }
             Ok(Batch { items: batch })
@@ -93,28 +82,31 @@ pub fn push_batch(db: &Database, max_items: usize, max_bytes: usize) -> Result<B
     })
 }
 
+/// The commit ids of the cohorts the next batch takes, read one row per cohort until the batch is full.
 // WHY: rows already in flight come first, so a lost reply's bytes go out again before anything new.
-fn cohorts(conn: &Connection) -> Result<Vec<Cohort>, AppError> {
-    let rows: Vec<(u64, Vec<u8>, usize)> = conn
-        .prepare("SELECT sender_seq, commit_id, length(envelope) FROM sync_outbox ORDER BY in_flight DESC, sender_seq")?
-        .query_map([], |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)))?
-        .collect::<Result<_, _>>()?;
-
-    let mut cohorts: Vec<Cohort> = Vec::new();
-    for (sender_seq, commit_id, bytes) in rows {
-        match cohorts.iter_mut().find(|cohort| cohort.commit_id == commit_id) {
-            Some(cohort) => {
-                cohort.seqs.push(sender_seq);
-                cohort.bytes += bytes;
-            }
-            None => cohorts.push(Cohort {
-                commit_id,
-                seqs: vec![sender_seq],
-                bytes,
-            }),
+fn cohorts(conn: &Connection, max_items: usize, max_bytes: usize) -> Result<Vec<Vec<u8>>, AppError> {
+    let mut statement = conn.prepare(
+        r#"
+        SELECT commit_id, COUNT(*), SUM(length(envelope)) FROM sync_outbox
+        GROUP BY commit_id
+        ORDER BY MAX(in_flight) DESC, MIN(sender_seq)
+        "#,
+    )?;
+    let mut rows = statement.query([])?;
+    let mut picked = Vec::new();
+    let (mut items, mut bytes) = (0, 0);
+    while let Some(row) = rows.next()? {
+        let (cohort_items, cohort_bytes): (usize, usize) = (row.get(1)?, row.get(2)?);
+        // INVARIANT: a push never splits a cohort. A cohort past either cap still goes alone, so every batch makes
+        // progress.
+        if !picked.is_empty() && (items + cohort_items > max_items || bytes + cohort_bytes > max_bytes) {
+            break;
         }
+        items += cohort_items;
+        bytes += cohort_bytes;
+        picked.push(row.get(0)?);
     }
-    Ok(cohorts)
+    Ok(picked)
 }
 
 /// Applies a push reply: one outcome per item, in item order, ending early at `seq_reused`.

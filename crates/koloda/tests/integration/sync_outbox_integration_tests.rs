@@ -23,6 +23,17 @@ fn three_commits() -> (Database, Vec<Commit>) {
     let template = add_template(&db, "Basic");
     add_deck(&db, &algorithm, &template, "Spanish");
 
+    let commits = commits(&db);
+    assert_eq!(
+        commits.iter().map(|commit| commit.seqs.len()).collect::<Vec<_>>(),
+        vec![2, 1, 3],
+        "the fixture's cohorts"
+    );
+    (db, commits)
+}
+
+/// The outbox's cohorts in the order of their lowest seq.
+fn commits(db: &Database) -> Vec<Commit> {
     let rows: Vec<(u64, Vec<u8>, usize)> = db
         .with_conn(|conn| {
             let rows = conn
@@ -42,13 +53,7 @@ fn three_commits() -> (Database, Vec<Commit>) {
             _ => commits.push((commit_id, Commit { seqs: vec![seq], bytes })),
         }
     }
-    let commits: Vec<Commit> = commits.into_iter().map(|(_, commit)| commit).collect();
-    assert_eq!(
-        commits.iter().map(|commit| commit.seqs.len()).collect::<Vec<_>>(),
-        vec![2, 1, 3],
-        "the fixture's cohorts"
-    );
-    (db, commits)
+    commits.into_iter().map(|(_, commit)| commit).collect()
 }
 
 /// The item and byte caps a case pushes with, given the fixture's cohorts.
@@ -156,6 +161,61 @@ fn a_row_left_in_flight_goes_out_first_and_fixes_its_cohort() {
         count(&db, "SELECT COUNT(*) FROM sync_outbox"),
         6,
         "nothing leaves the outbox"
+    );
+}
+
+#[test]
+fn cohorts_in_flight_go_first_and_the_rest_follow_by_lowest_seq() {
+    let db = replica();
+    let algorithm = add_algorithm(&db, "FSRS");
+    for title in ["Spanish", "French", "German"] {
+        let template = add_template(&db, title);
+        add_deck(&db, &algorithm, &template, title);
+    }
+    let commits = commits(&db);
+    assert_eq!(
+        commits.iter().map(|commit| commit.seqs.len()).collect::<Vec<_>>(),
+        vec![2, 1, 3, 1, 3, 1, 3],
+        "the fixture's cohorts"
+    );
+    // Two decks in flight above rows that are not, as `unfix_unconsumed` leaves the outbox when it returns a lower
+    // cohort to `local`.
+    for index in [2, 4] {
+        for seq in &commits[index].seqs {
+            db.with_conn(|conn| {
+                conn.execute("UPDATE sync_outbox SET in_flight = 1 WHERE sender_seq = ?1", [seq])?;
+                Ok(())
+            })
+            .expect("the row goes in flight");
+        }
+    }
+
+    let mut batches = Vec::new();
+    while count(&db, "SELECT COUNT(*) FROM sync_outbox") > 0 {
+        let batch = push_batch(&db, 6, 1 << 20).expect("a batch is picked");
+        batches.push(batch.items.iter().map(|item| item.sender_seq).collect::<Vec<_>>());
+        let outcomes: Vec<PushOutcome> = batch
+            .items
+            .iter()
+            .map(|item| PushOutcome {
+                sender_seq: item.sender_seq,
+                outcome: Outcome::Applied,
+                replayed: false,
+                missing_attachments: Vec::new(),
+            })
+            .collect();
+        settle_push(&db, &batch, &outcomes, &starter()).expect("the reply settles");
+    }
+
+    let seqs = |indexes: &[usize]| -> Vec<u64> {
+        let mut seqs: Vec<u64> = indexes.iter().flat_map(|&index| commits[index].seqs.clone()).collect();
+        seqs.sort_unstable();
+        seqs
+    };
+    assert_eq!(
+        batches,
+        vec![seqs(&[2, 4]), seqs(&[0, 1, 3, 5]), seqs(&[6])],
+        "in-flight cohorts first, then whole cohorts by their lowest seq until the item cap"
     );
 }
 

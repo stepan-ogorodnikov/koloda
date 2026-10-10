@@ -201,7 +201,7 @@ The owner took every recommendation on 2026-10-09.
   Commit: Renumber a device's seqs through the primary key
   Depends on: none
 
-- [ ] 3. Group the outbox into cohorts in SQL
+- [x] 3. Group the outbox into cohorts in SQL
   Goal (R5):
   - `cohorts` in `outbox.rs` reads one row per cohort, grouped by `commit_id`, with what `push_batch` chooses by.
   - `push_batch` then reads the seqs of the cohorts it sends, not every outbox row.
