@@ -1,4 +1,4 @@
-import type { JoinData, JoinedSpace, SpacePreview, ZodIssue } from "@koloda/app";
+import type { JoinData, SpacePreview, ZodIssue } from "@koloda/app";
 import { formatAppError } from "@koloda/app";
 import { queryKeys } from "@koloda/core-react";
 import type { SyncQueries } from "@koloda/core-react";
@@ -6,8 +6,9 @@ import { Button, Dialog, ErrorMessage, Label, TextField, useAppForm } from "@kol
 import { msg, plural } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useSetAtom } from "jotai";
 import { useState } from "react";
-import { SyncImportChoice } from "./sync-import-choice";
+import { syncKnownIdsAtom } from "./sync-import-choice";
 import { joinSchema } from "./sync-forms";
 import { useFormatBytes } from "./sync-messages";
 
@@ -43,7 +44,7 @@ export function JoinFlow({ sync, onDone, onCancel }: JoinFlowProps) {
   const queryClient = useQueryClient();
   const [request, setRequest] = useState<JoinData | null>(null);
   const [preview, setPreview] = useState<SpacePreview | null>(null);
-  const [joined, setJoined] = useState<JoinedSpace | null>(null);
+  const setKnownIds = useSetAtom(syncKnownIdsAtom);
   const previewMutation = useMutation(sync.previewMutation());
   const joinMutation = useMutation(sync.joinMutation());
 
@@ -56,20 +57,13 @@ export function JoinFlow({ sync, onDone, onCancel }: JoinFlowProps) {
     if (!request) return;
     joinMutation.mutate(request, {
       onSuccess: (result) => {
+        // INVARIANT: a used database's status waits for Add or Replace; the page asks, with this count.
+        setKnownIds(result.mode === "used" ? result.knownIds : null);
         queryClient.setQueryData(queryKeys.sync.status(), result.status);
-        if (result.mode === "used") setJoined(result);
-        else onDone();
+        onDone();
       },
     });
   };
-
-  if (joined) {
-    return (
-      <Dialog.Content>
-        <SyncImportChoice sync={sync} knownIds={joined.knownIds} onDone={onDone} />
-      </Dialog.Content>
-    );
-  }
 
   if (preview) {
     return (

@@ -116,33 +116,6 @@ describe("SettingsSyncJoin", () => {
     expect(screen.queryByRole("button", { name: "settings.sync.join.submit" })).toBeNull();
   });
 
-  it("asks a used database to add or replace, recommending Replace for a likely copy", async () => {
-    const importData = vi.fn(async () => STATUS);
-    renderJoin({ join: async () => joined("used", 3), importData });
-    await previewSpace();
-
-    await press("settings.sync.join.submit");
-
-    expect(screen.getByText("settings.sync.import.copy")).not.toBeNull();
-    expect(screen.getByRole("button", { name: "settings.sync.import.replace.recommended" })).not.toBeNull();
-    await press("settings.sync.import.add");
-    expect(importData).toHaveBeenCalledWith("add", expect.anything());
-  });
-
-  it("replaces this device's data only once confirmed", async () => {
-    const importData = vi.fn(async () => STATUS);
-    renderJoin({ join: async () => joined("used"), importData });
-    await previewSpace();
-    await press("settings.sync.join.submit");
-
-    await press("settings.sync.import.replace");
-    expect(screen.getByText("settings.sync.import.replace.message")).not.toBeNull();
-    expect(importData).not.toHaveBeenCalled();
-
-    await press("settings.sync.import.replace.confirm");
-    expect(importData).toHaveBeenCalledWith("replace", expect.anything());
-  });
-
   it("shows why a join was refused and keeps the preview", async () => {
     renderJoin({
       join: async () => {

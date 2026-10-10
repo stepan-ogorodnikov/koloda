@@ -6,28 +6,29 @@ import { Button, ErrorMessage } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { atom, useAtom } from "jotai";
 import { useState } from "react";
 
-export type SyncImportChoiceProps = {
-  sync: SyncQueries;
-  // WHY: the probe's count exists only right after the join; a choice shown after a restart has none.
-  knownIds?: number;
-  onDone?: () => void;
-};
+// WHY: the join's probe count reaches the choice through here: the join dialog closes once the status says the choice
+// waits. It exists only in the session that joined; a choice shown after a restart has none.
+export const syncKnownIdsAtom = atom<number | null>(null);
+
+export type SyncImportChoiceProps = { sync: SyncQueries };
 
 // INVARIANT: a used database that joined syncs nothing until the user picks Add or Replace (`SYNC.md` §Add or Replace).
-export function SyncImportChoice({ sync, knownIds = 0, onDone }: SyncImportChoiceProps) {
+export function SyncImportChoice({ sync }: SyncImportChoiceProps) {
   const { _ } = useLingui();
   const queryClient = useQueryClient();
+  const [knownIds, setKnownIds] = useAtom(syncKnownIdsAtom);
   const [isConfirmingReplace, setIsConfirmingReplace] = useState(false);
   const { mutate, error, isPending } = useMutation(sync.importMutation());
-  const isCopy = knownIds > 0;
+  const isCopy = (knownIds ?? 0) > 0;
 
   const handleImport = (mode: ImportMode) => {
     mutate(mode, {
       onSuccess: (status) => {
+        setKnownIds(null);
         queryClient.setQueryData(queryKeys.sync.status(), status);
-        onDone?.();
       },
     });
   };

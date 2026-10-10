@@ -1,8 +1,10 @@
 import { AppError } from "@koloda/app";
-import type { CreateSpaceData, SyncStatus } from "@koloda/app";
+import type { CreateSpaceData, ImportMode, JoinedSpace, SyncStatus } from "@koloda/app";
+import { langAtom } from "@koloda/core-react";
 import type { SyncQueries } from "@koloda/core-react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { act, fireEvent, render, screen } from "@testing-library/react";
+import { createStore, Provider as JotaiProvider } from "jotai";
 import type { PropsWithChildren } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { SettingsSync } from "./settings-sync";
@@ -60,12 +62,32 @@ function syncQueries(createSpace: (data: CreateSpaceData) => Promise<SyncStatus>
   };
 }
 
-function renderSync(current: SyncStatus, sync: SyncQueries) {
+function wrapper() {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
+  // WHY: a fresh store per test keeps one test's join count out of the next; sizes format in the set language.
+  const store = createStore();
+  store.set(langAtom, "en");
   function Wrapper({ children }: PropsWithChildren) {
-    return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
+    return (
+      <QueryClientProvider client={queryClient}>
+        <JotaiProvider store={store}>{children}</JotaiProvider>
+      </QueryClientProvider>
+    );
   }
+  return { queryClient, Wrapper };
+}
+
+function renderSync(current: SyncStatus, sync: SyncQueries) {
+  const { queryClient, Wrapper } = wrapper();
   return { queryClient, ...render(<SettingsSync status={current} sync={sync} />, { wrapper: Wrapper }) };
+}
+
+type PageProps = { sync: SyncQueries };
+
+// WHY: the route renders the page from the status query, so a status the join leaves re-renders it as in the app.
+function Page({ sync }: PageProps) {
+  const { data } = useQuery(sync.getStatusQuery());
+  return data ? <SettingsSync status={data} sync={sync} /> : null;
 }
 
 async function openCreateDialog() {
@@ -203,5 +225,65 @@ describe("SettingsSync create a space", () => {
 
     expect(await screen.findByText("sync.insecure-server-url")).not.toBeNull();
     expect(screen.queryByRole("button", { name: "settings.sync.create.submit" })).not.toBeNull();
+  });
+});
+
+describe("SettingsSync add or replace", () => {
+  it("asks a used database that joined to add or replace, recommending Replace for a likely copy", async () => {
+    const pending = status({ type: "importPending" });
+    const joined: JoinedSpace = { mode: "used", knownIds: 3, status: pending };
+    const importData = vi.fn(async (_mode: ImportMode) => status({ type: "bootstrapping" }));
+    const sync: SyncQueries = {
+      ...syncQueries(vi.fn()),
+      getStatusQuery: () => ({
+        queryKey: ["sync", "status"],
+        queryFn: async () => status({ type: "notEnrolled" }),
+        staleTime: Infinity,
+      }),
+      previewMutation: () => ({ mutationFn: async () => ({ spaceName: "Study", counts: {}, bytes: 0 }) }),
+      joinMutation: () => ({ mutationFn: async () => joined }),
+      importMutation: () => ({ mutationFn: importData }),
+    };
+    const { Wrapper } = wrapper();
+    render(<Page sync={sync} />, { wrapper: Wrapper });
+
+    await act(async () => {
+      fireEvent.click(await screen.findByRole("button", { name: "settings.sync.join" }));
+    });
+    await screen.findByDisplayValue("laptop");
+    fill("settings.sync.server-url.label", "https://sync.example.test");
+    fill("settings.sync.invite.code", "ABCDE12345");
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "settings.sync.join.continue" }));
+    });
+    await act(async () => {
+      fireEvent.click(await screen.findByRole("button", { name: "settings.sync.join.submit" }));
+    });
+
+    expect(await screen.findByText("settings.sync.import.copy")).not.toBeNull();
+    expect(screen.getByRole("button", { name: "settings.sync.import.replace.recommended" })).not.toBeNull();
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "settings.sync.import.add" }));
+    });
+    expect(importData).toHaveBeenCalledWith("add", expect.anything());
+  });
+
+  it("replaces this device's data only once confirmed", async () => {
+    const importData = vi.fn(async (_mode: ImportMode) => status({ type: "bootstrapping" }));
+    renderSync(status({ type: "importPending" }), {
+      ...syncQueries(vi.fn()),
+      importMutation: () => ({ mutationFn: importData }),
+    });
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "settings.sync.import.replace" }));
+    });
+    expect(screen.getByText("settings.sync.import.replace.message")).not.toBeNull();
+    expect(importData).not.toHaveBeenCalled();
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "settings.sync.import.replace.confirm" }));
+    });
+    expect(importData).toHaveBeenCalledWith("replace", expect.anything());
   });
 });
