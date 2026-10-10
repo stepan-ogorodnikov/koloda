@@ -36,10 +36,10 @@ export function SettingsSyncJoin({ sync }: SettingsSyncJoinProps) {
   );
 }
 
-export type JoinFlowProps = { sync: SyncQueries; onDone: () => void };
+export type JoinFlowProps = { sync: SyncQueries; onDone: () => void; onCancel?: () => void };
 
 // INVARIANT: the preview never uses the code; only Join does, so a user who backs out can still use it elsewhere.
-export function JoinFlow({ sync, onDone }: JoinFlowProps) {
+export function JoinFlow({ sync, onDone, onCancel }: JoinFlowProps) {
   const queryClient = useQueryClient();
   const [request, setRequest] = useState<JoinData | null>(null);
   const [preview, setPreview] = useState<SpacePreview | null>(null);
@@ -91,6 +91,7 @@ export function JoinFlow({ sync, onDone }: JoinFlowProps) {
       sync={sync}
       initial={request}
       onSubmit={handlePreview}
+      onCancel={onCancel}
       isPending={previewMutation.isPending}
       error={previewMutation.error}
     />
@@ -101,11 +102,12 @@ type JoinFormProps = {
   sync: SyncQueries;
   initial: JoinData | null;
   onSubmit: (data: JoinData) => void;
+  onCancel?: () => void;
   isPending: boolean;
   error: Error | null;
 };
 
-function JoinForm({ sync, initial, onSubmit, isPending, error }: JoinFormProps) {
+function JoinForm({ sync, initial, onSubmit, onCancel, isPending, error }: JoinFormProps) {
   const { _ } = useLingui();
   const { data: deviceName } = useQuery(sync.getDeviceNameQuery());
 
@@ -152,6 +154,11 @@ function JoinForm({ sync, initial, onSubmit, isPending, error }: JoinFormProps) 
         {error && <ErrorMessage {...formatAppError(error, _)} layout="inline" />}
       </Dialog.Content>
       <Dialog.Footer>
+        {onCancel && (
+          <Button variants={{ style: "ghost" }} onPress={onCancel} isDisabled={isPending}>
+            {_(msg`settings.sync.back`)}
+          </Button>
+        )}
         <div className="grow" />
         <Button variants={{ style: "primary" }} type="submit" isDisabled={isPending}>
           {_(msg`settings.sync.join.continue`)}

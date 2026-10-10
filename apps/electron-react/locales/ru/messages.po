@@ -21,10 +21,14 @@ msgstr "По умолчанию"
 msgid "app.setup.header"
 msgstr "Настройка базы данных"
 
-#: src/components/setup.tsx:54
-msgid "app.setup.message"
-msgstr "Похоже, это первый запуск приложения. Давайте создадим базу данных."
+#: src/components/setup.tsx:70
+msgid "app.setup.join"
+msgstr "Подключиться к пространству"
 
-#: src/components/setup.tsx:60
+#: src/components/setup.tsx:58
+msgid "app.setup.message"
+msgstr "Похоже, это первый запуск приложения. Создайте новую базу данных или подключитесь к пространству синхронизации, которое используете на другом устройстве."
+
+#: src/components/setup.tsx:66
 msgid "app.setup.submit"
 msgstr "Начать работу"

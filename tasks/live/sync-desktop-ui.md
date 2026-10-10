@@ -299,7 +299,7 @@ The owner took every recommendation on 2026-10-10, except question 5: no e2e tes
   Commit: Join a space from Settings
   Depends on: 3
 
-- [ ] 6. Join a space on first run
+- [x] 6. Join a space on first run
   Goal:
   - The setup screen offers "Start fresh", today's seed, and "Join existing".
   - "Join existing" reuses item 5's form and preview.
@@ -310,6 +310,13 @@ The owner took every recommendation on 2026-10-10, except question 5: no e2e tes
   - `SYNC.md` §First run.
   - `INTERFACE-SETTINGS.md` §First Setup and `LEARNING-SETTINGS.md` point at `SYNC.md` for a join, whose starter
     content and learning settings come from the space.
+  - Implementation:
+    - the start button keeps "Get started", which the e2e suites press; the new one is "Join a space";
+    - the join and its wait are `SyncFirstRunJoin` in `settings-react`, where component tests run; `setup.tsx` only
+      places it;
+    - the desktop's `createSyncQueries` reads the language and scheme atoms the setup screen's pickers set, for any
+      join; only a blank database uses them;
+    - the wait ends when the status is idle or syncing: a joiner reads as bootstrapping from its enrollment on.
   Done when:
   - component tests: both choices, the wait, and an error during it;
   - Manual verify: a new app → Join existing → a code from an app in the space → the setup screen waits, then the

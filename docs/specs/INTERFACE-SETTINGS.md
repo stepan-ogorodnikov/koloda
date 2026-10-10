@@ -134,6 +134,7 @@ Relative labels, such as the conversation list's "3 days ago", do not follow the
 ## First Setup
 
 First setup asks for language and color scheme before the app's data is created.
+On the desktop it can also join a sync space instead; that device's data comes from the space (SYNC.md (§First run)).
 The pickers there change the look and text of the setup screen itself but save nothing to the database yet.
 Browser-local mirrors follow the live choice, including implicit ones.
 

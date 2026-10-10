@@ -46,6 +46,7 @@ The default template cannot be deleted while it remains the default.
 The default algorithm cannot be deleted while it remains the default.
 
 On first setup, defaults are pointed at the seeded algorithm and template.
+A device that joins a sync space on first setup takes the space's learning settings instead (SYNC.md (§First run)).
 
 ## Daily Limits
 

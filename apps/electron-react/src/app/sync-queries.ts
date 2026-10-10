@@ -1,10 +1,11 @@
-import type { CreateSpaceData, ImportMode, JoinData, PreviewRequest } from "@koloda/app";
+import type { CreateSpaceData, ImportMode, InterfaceSettings, JoinData, PreviewRequest } from "@koloda/app";
 import { queryKeys } from "@koloda/core-react";
 import type { SyncQueries } from "@koloda/core-react";
 import { invoke } from "./electron";
 import { seedSettings } from "./setup";
 
-export const syncQueries: SyncQueries = {
+// WHY: a blank database joins with the language and color scheme its setup screen shows; a used one keeps its own.
+export const createSyncQueries = (getInterface: () => Partial<InterfaceSettings>): SyncQueries => ({
   getStatusQuery: () => ({
     queryKey: queryKeys.sync.status(),
     queryFn: () => invoke("cmd_sync_status", undefined),
@@ -33,10 +34,11 @@ export const syncQueries: SyncQueries = {
     mutationFn: (data: PreviewRequest) => invoke("cmd_sync_preview", { data }),
   }),
   joinMutation: () => ({
-    mutationFn: (data: JoinData) => invoke("cmd_sync_join", { data: { ...data, settings: seedSettings({}) } }),
+    mutationFn: (data: JoinData) =>
+      invoke("cmd_sync_join", { data: { ...data, settings: seedSettings(getInterface()) } }),
   }),
   importMutation: () => ({
     mutationFn: (mode: ImportMode) => invoke("cmd_sync_import", { mode }),
   }),
   nudge: () => invoke("cmd_sync_nudge", undefined),
-};
+});

@@ -3,7 +3,9 @@
 ## Scope
 
 Covers keeping one person's data the same on their desktop devices through a sync server they run.
-That is spaces, devices, creating, joining, and leaving a space, inviting and managing devices, and sync status.
+That is spaces, devices, creating, joining, and leaving a space, joining on first run, inviting and managing devices,
+and sync status.
+First setup without sync is in INTERFACE-SETTINGS.md (§First Setup).
 How each kind of data behaves on its own is in its spec: CARDS.md, DECKS.md, TEMPLATES.md, ALGORITHMS.md,
 LEARNING-SETTINGS.md, and MEDIA.md.
 How two devices' edits to the same thing merge is the sync protocol's rule, not this spec's.
@@ -109,6 +111,21 @@ If the join fails, the dialog says why:
 - there were too many wrong codes, so the server waits a minute before trying another;
 - the server cannot be reached, or its address is not https and not on this computer;
 - this device's clock is more than 5 minutes off the server's.
+
+## First run
+
+The desktop app's first-run screen offers "Get started", which seeds the starter content, and "Join a space".
+"Join a space" asks for the same things as §Joining a space and shows the same preview; "Back" returns to the first
+choice.
+
+A device that joins on first run takes its starter content and learning settings from the space.
+The language and color scheme chosen on the first-run screen become its interface settings, and every other
+interface setting and hotkey starts at its default.
+
+After the join, the screen stays until the space's first download ends, and shows how many changes are left.
+If the download stops, the screen says why and sync keeps retrying on its own; quitting the app is the only way out.
+Once the download ends, the app opens on the space's data.
+A device quit during its first download opens normally next time, and the download goes on in the background.
 
 ## Add or Replace
 
