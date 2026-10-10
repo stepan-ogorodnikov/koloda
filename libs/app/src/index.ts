@@ -84,6 +84,19 @@ export {
   objectEntries,
 } from "./lib/utility";
 export type { DeepPartial, Modify, ObjectPropertiesMapping, UpdateData } from "./lib/utility";
-export type { CreateSpaceData, IssuedPairing, SyncDevice, SyncHold, SyncState, SyncStatus, SyncStop } from "./lib/sync";
+export type {
+  CreateSpaceData,
+  ImportMode,
+  IssuedPairing,
+  JoinData,
+  JoinedSpace,
+  PreviewRequest,
+  SpacePreview,
+  SyncDevice,
+  SyncHold,
+  SyncState,
+  SyncStatus,
+  SyncStop,
+} from "./lib/sync";
 export { formatTimestamp, timeFieldFormatOptions } from "./lib/timestamp-format";
 export type { TimestampFormatter, TimestampKind } from "./lib/timestamp-format";

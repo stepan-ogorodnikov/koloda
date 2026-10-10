@@ -13,6 +13,14 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
+#: ../../libs/settings-react/src/lib/sync/settings-sync-join.tsx:190
+msgid "{cards, plural, other {settings.sync.join.preview.cards}}"
+msgstr "{cards, plural, one {# карточка} few {# карточки} many {# карточек} other {# карточки}}"
+
+#: ../../libs/settings-react/src/lib/sync/settings-sync-join.tsx:189
+msgid "{decks, plural, other {settings.sync.join.preview.decks}}"
+msgstr "{decks, plural, one {# колода} few {# колоды} many {# колод} other {# колоды}}"
+
 #: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:46
 msgid "{fetches, plural, other {settings.sync.fetches}}"
 msgstr "{fetches, plural, one {# изображение ждёт загрузки} few {# изображения ждут загрузки} many {# изображений ждут загрузки} other {# изображения ждут загрузки}}"
@@ -24,6 +32,10 @@ msgstr "{left, plural, one {Осталось загрузить # изменен
 #: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:44
 msgid "{pending, plural, other {settings.sync.pending}}"
 msgstr "{pending, plural, one {# изменение ждёт отправки} few {# изменения ждут отправки} many {# изменений ждут отправки} other {# изменения ждут отправки}}"
+
+#: ../../libs/settings-react/src/lib/sync/settings-sync-join.tsx:191
+msgid "{reviews, plural, other {settings.sync.join.preview.reviews}}"
+msgstr "{reviews, plural, one {# повторение} few {# повторения} many {# повторений} other {# повторения}}"
 
 #: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:45
 msgid "{uploads, plural, other {settings.sync.uploads}}"
@@ -310,6 +322,11 @@ msgstr "Неограниченно"
 msgid "settings.learning.limits.untouched"
 msgstr "Новые"
 
+#: ../../libs/settings-react/src/lib/sync/settings-sync-join.tsx:197
+#: ../../libs/settings-react/src/lib/sync/sync-import-choice.tsx:45
+msgid "settings.sync.back"
+msgstr "Назад"
+
 #: ../../libs/settings-react/src/lib/sync/settings-sync-devices.tsx:100
 #: ../../libs/settings-react/src/lib/sync/settings-sync-devices.tsx:145
 msgid "settings.sync.cancel"
@@ -328,6 +345,7 @@ msgid "settings.sync.create.title"
 msgstr "Новое пространство"
 
 #: ../../libs/settings-react/src/lib/sync/settings-sync-create-space.tsx:63
+#: ../../libs/settings-react/src/lib/sync/settings-sync-join.tsx:121
 msgid "settings.sync.device-name.label"
 msgstr "Имя этого устройства"
 
@@ -355,11 +373,40 @@ msgstr "Удалить {name} из пространства? Устройств�
 msgid "settings.sync.devices.this-device"
 msgstr "Это устройство"
 
+#: ../../libs/settings-react/src/lib/sync/sync-import-choice.tsx:62
+msgid "settings.sync.import.add"
+msgstr "Добавить"
+
+#: ../../libs/settings-react/src/lib/sync/sync-import-choice.tsx:54
+msgid "settings.sync.import.copy"
+msgstr "Данные этого устройства похожи на копию данных, которые уже есть в пространстве. Замените их данными пространства. При добавлении останутся обе копии, и скопированные колоды появятся дважды."
+
+#: ../../libs/settings-react/src/lib/sync/sync-import-choice.tsx:54
+msgid "settings.sync.import.message"
+msgstr "На этом устройстве уже есть данные. Добавьте их в пространство или замените данными пространства."
+
+#: ../../libs/settings-react/src/lib/sync/sync-import-choice.tsx:69
+msgid "settings.sync.import.replace"
+msgstr "Заменить"
+
+#: ../../libs/settings-react/src/lib/sync/sync-import-choice.tsx:42
+msgid "settings.sync.import.replace.confirm"
+msgstr "Удалить и заменить"
+
+#: ../../libs/settings-react/src/lib/sync/sync-import-choice.tsx:38
+msgid "settings.sync.import.replace.message"
+msgstr "Колоды, карточки, прогресс, шаблоны и алгоритмы этого устройства будут удалены и заменены данными пространства."
+
+#: ../../libs/settings-react/src/lib/sync/sync-import-choice.tsx:69
+msgid "settings.sync.import.replace.recommended"
+msgstr "Заменить (рекомендуется)"
+
 #: ../../libs/settings-react/src/lib/sync/settings-sync-invite.tsx:27
 msgid "settings.sync.invite"
 msgstr "Пригласить устройство"
 
 #: ../../libs/settings-react/src/lib/sync/settings-sync-invite.tsx:79
+#: ../../libs/settings-react/src/lib/sync/settings-sync-join.tsx:120
 msgid "settings.sync.invite.code"
 msgstr "Код подключения"
 
@@ -392,6 +439,30 @@ msgstr "Новый код"
 msgid "settings.sync.invite.title"
 msgstr "Пригласить устройство"
 
+#: ../../libs/settings-react/src/lib/sync/settings-sync-join.tsx:22
+msgid "settings.sync.join"
+msgstr "Подключиться к пространству"
+
+#: ../../libs/settings-react/src/lib/sync/settings-sync-join.tsx:157
+msgid "settings.sync.join.continue"
+msgstr "Продолжить"
+
+#: ../../libs/settings-react/src/lib/sync/settings-sync-join.tsx:192
+msgid "settings.sync.join.preview.size {size}"
+msgstr "Нужно загрузить около {size}"
+
+#: ../../libs/settings-react/src/lib/sync/settings-sync-join.tsx:188
+msgid "settings.sync.join.preview.space {name}"
+msgstr "Пространство «{name}»"
+
+#: ../../libs/settings-react/src/lib/sync/settings-sync-join.tsx:201
+msgid "settings.sync.join.submit"
+msgstr "Подключиться"
+
+#: ../../libs/settings-react/src/lib/sync/settings-sync-join.tsx:27
+msgid "settings.sync.join.title"
+msgstr "Подключиться к пространству"
+
 #: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:42
 msgid "settings.sync.last-sync {lastSync}"
 msgstr "Последняя синхронизация: {lastSync}"
@@ -412,16 +483,17 @@ msgstr "Выйти"
 msgid "settings.sync.leave.message"
 msgstr "Это устройство перестанет синхронизироваться. Его данные останутся, а позже оно сможет снова подключиться к пространству."
 
-#: ../../libs/settings-react/src/lib/sync/settings-sync.tsx:27
+#: ../../libs/settings-react/src/lib/sync/settings-sync.tsx:32
 msgid "settings.sync.left"
 msgstr "Это устройство не в пространстве: оно вышло из него, или его удалило другое устройство. Данные остались здесь. Подключитесь к пространству, чтобы снова синхронизироваться."
 
-#: ../../libs/settings-react/src/lib/sync/settings-sync.tsx:21
+#: ../../libs/settings-react/src/lib/sync/settings-sync.tsx:23
 msgid "settings.sync.not-in-space"
 msgstr "Это устройство не синхронизируется. Создайте пространство на своём сервере синхронизации или подключитесь к пространству, созданному на другом устройстве."
 
 #: ../../libs/settings-react/src/lib/sync/settings-sync-create-space.tsx:60
 #: ../../libs/settings-react/src/lib/sync/settings-sync-invite.tsx:84
+#: ../../libs/settings-react/src/lib/sync/settings-sync-join.tsx:119
 msgid "settings.sync.server-url.label"
 msgstr "Адрес сервера"
 

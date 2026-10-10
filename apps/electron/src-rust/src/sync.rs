@@ -3,11 +3,13 @@
 //!
 //! INVARIANT: host calls run on the sync worker, never on the database worker: they wait on the network.
 
+use std::collections::BTreeMap;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, OnceLock};
 
 use koloda::app::db::Database;
 use koloda::app::error::{error_codes, AppError};
+use koloda::app::init::SeedSettings;
 use koloda::app::secrets::get_secret_store;
 use koloda::domain::algorithms::InsertAlgorithmData;
 use koloda::domain::templates::InsertTemplateData;
@@ -18,6 +20,7 @@ use koloda_sync::devices::DeviceSummary;
 use koloda_sync::disk::SystemDisk;
 use koloda_sync::engine::Engine;
 use koloda_sync::error::SyncError;
+use koloda_sync::pairing::ImportMode;
 use koloda_sync::runner::{Event, EventSink, TokioTimer};
 use koloda_sync::status::{State, Status, Stop};
 use koloda_sync::transport::HttpTransport;
@@ -95,6 +98,45 @@ impl From<DeviceSummary> for DeviceWire {
     }
 }
 
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PreviewRequestWire {
+    server_url: String,
+    code: String,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PreviewWire {
+    space_name: String,
+    counts: BTreeMap<String, u64>,
+    bytes: u64,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct JoinWire {
+    server_url: String,
+    code: String,
+    device_name: String,
+    settings: SeedSettings,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct JoinedWire {
+    mode: &'static str,
+    known_ids: usize,
+    status: StatusWire,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum ImportModeWire {
+    Add,
+    Replace,
+}
+
 pub struct SyncHost {
     db: Database,
     engine: OnceLock<Engine>,
@@ -142,7 +184,37 @@ impl SyncHost {
     pub fn create_space(&self, data: CreateSpaceWire) -> Result<Status, SyncError> {
         let engine = self.engine()?;
         engine.create_space(&data.server_url, &data.setup_token, &data.space_name, &data.device_name)?;
-        self.start_runner()?;
+        self.sync_soon()?;
+        engine.status()
+    }
+
+    pub fn preview(&self, data: PreviewRequestWire) -> Result<PreviewWire, SyncError> {
+        let preview = self.engine()?.preview(&data.server_url, &data.code)?;
+        Ok(PreviewWire {
+            space_name: preview.name,
+            counts: preview.counts,
+            bytes: preview.bytes,
+        })
+    }
+
+    pub fn join(&self, data: JoinWire) -> Result<JoinedWire, SyncError> {
+        let engine = self.engine()?;
+        let joined = engine.join(&data.server_url, &data.code, &data.device_name, data.settings)?;
+        self.sync_soon()?;
+        Ok(JoinedWire {
+            mode: join_mode_wire(joined.mode),
+            known_ids: joined.known_ids,
+            status: engine.status()?.into(),
+        })
+    }
+
+    pub fn import(&self, mode: ImportModeWire) -> Result<Status, SyncError> {
+        let engine = self.engine()?;
+        engine.import(match mode {
+            ImportModeWire::Add => ImportMode::Add,
+            ImportModeWire::Replace => ImportMode::Replace,
+        })?;
+        self.sync_soon()?;
         engine.status()
     }
 
@@ -196,6 +268,13 @@ impl SyncHost {
         }
     }
 
+    // WHY: enrolling, joining, and importing start no cycle; a runner that already ran would wait for its next poll.
+    fn sync_soon(&self) -> Result<(), SyncError> {
+        self.start_runner()?;
+        self.nudge();
+        Ok(())
+    }
+
     // INVARIANT: the runner never runs on a file in no space; there every cycle fails and emits an `Error`.
     fn start_runner(&self) -> Result<(), SyncError> {
         let (Some(engine), Some(sink)) = (self.engine.get(), self.sink.get()) else {
@@ -205,6 +284,16 @@ impl SyncHost {
             engine.start_runner(Arc::clone(sink), Arc::new(TokioTimer))?;
         }
         Ok(())
+    }
+}
+
+fn join_mode_wire(mode: JoinMode) -> &'static str {
+    match mode {
+        JoinMode::Blank => "blank",
+        JoinMode::UntouchedSeed => "untouchedSeed",
+        JoinMode::Used => "used",
+        JoinMode::Reattach => "reattach",
+        JoinMode::AttachedElsewhere => "attachedElsewhere",
     }
 }
 

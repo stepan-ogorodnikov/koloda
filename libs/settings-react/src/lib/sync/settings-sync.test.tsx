@@ -52,6 +52,9 @@ function syncQueries(createSpace: (data: CreateSpaceData) => Promise<SyncStatus>
     getDevicesQuery: () => ({ queryKey: ["sync", "devices"], queryFn: async () => [] }),
     revokeDeviceMutation: () => ({ mutationFn: vi.fn() }),
     detachMutation: () => ({ mutationFn: vi.fn() }),
+    previewMutation: () => ({ mutationFn: vi.fn() }),
+    joinMutation: () => ({ mutationFn: vi.fn() }),
+    importMutation: () => ({ mutationFn: vi.fn() }),
     nudge: vi.fn(async () => {}),
   };
 }
@@ -100,6 +103,13 @@ describe("SettingsSync", () => {
     expect(screen.getByText("settings.sync.left")).not.toBeNull();
     expect(screen.queryByRole("button", { name: "settings.sync.sync-now" })).toBeNull();
     expect(screen.queryByRole("button", { name: "settings.sync.create" })).toBeNull();
+  });
+
+  it("asks a database that joined with its own data to add or replace it, also after a restart", () => {
+    renderSync(status({ type: "importPending" }), syncQueries(vi.fn()));
+
+    expect(screen.getByText("settings.sync.import.message")).not.toBeNull();
+    expect(screen.queryByRole("button", { name: "settings.sync.sync-now" })).toBeNull();
   });
 
   it("shows what is left to download across both lanes while downloading", () => {

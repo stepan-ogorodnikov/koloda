@@ -118,6 +118,7 @@ export const ERROR_MESSAGES = {
   "validation.seed.learning-settings": msg`validation.seed.learning-settings`,
   "validation.sync.server-url": msg`validation.sync.server-url`,
   "validation.sync.setup-token": msg`validation.sync.setup-token`,
+  "validation.sync.pairing-code": msg`validation.sync.pairing-code`,
   "validation.sync.name.too-short": msg`validation.sync.name.too-short`,
   "validation.sync.name.too-long": ({ maximum }: any) =>
     msg`${plural(maximum, { other: "validation.sync.name.too-long" })}`,

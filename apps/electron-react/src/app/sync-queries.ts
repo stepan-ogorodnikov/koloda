@@ -1,7 +1,8 @@
-import type { CreateSpaceData } from "@koloda/app";
+import type { CreateSpaceData, ImportMode, JoinData, PreviewRequest } from "@koloda/app";
 import { queryKeys } from "@koloda/core-react";
 import type { SyncQueries } from "@koloda/core-react";
 import { invoke } from "./electron";
+import { seedSettings } from "./setup";
 
 export const syncQueries: SyncQueries = {
   getStatusQuery: () => ({
@@ -27,6 +28,15 @@ export const syncQueries: SyncQueries = {
   }),
   detachMutation: () => ({
     mutationFn: () => invoke("cmd_sync_detach", undefined),
+  }),
+  previewMutation: () => ({
+    mutationFn: (data: PreviewRequest) => invoke("cmd_sync_preview", { data }),
+  }),
+  joinMutation: () => ({
+    mutationFn: (data: JoinData) => invoke("cmd_sync_join", { data: { ...data, settings: seedSettings({}) } }),
+  }),
+  importMutation: () => ({
+    mutationFn: (mode: ImportMode) => invoke("cmd_sync_import", { mode }),
   }),
   nudge: () => invoke("cmd_sync_nudge", undefined),
 };

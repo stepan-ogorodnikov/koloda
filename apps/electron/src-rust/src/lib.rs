@@ -15,7 +15,9 @@ use std::panic::{self, AssertUnwindSafe};
 use std::sync::mpsc::{self, Sender};
 use std::sync::Arc;
 use std::thread;
-use sync::{CreateSpaceWire, EventCallback, StarterWire, StatusWire, SyncHost};
+use sync::{
+    CreateSpaceWire, EventCallback, ImportModeWire, JoinWire, PreviewRequestWire, StarterWire, StatusWire, SyncHost,
+};
 
 mod sync;
 
@@ -706,6 +708,37 @@ impl KolodaDb {
     pub fn sync_detach(&self, env: Env) -> Result<JsObject> {
         self.run_sync(env, move |sync| {
             let status = sync.detach().map_err(sync_error)?;
+            to_value(&StatusWire::from(status))
+        })
+    }
+
+    #[napi]
+    pub fn sync_preview(&self, env: Env, data: serde_json::Value) -> Result<JsObject> {
+        self.run_sync(env, move |sync| {
+            let data: PreviewRequestWire = from_wire(data)?;
+            let preview = sync.preview(data).map_err(sync_error)?;
+            to_value(&preview)
+        })
+    }
+
+    #[napi]
+    pub fn sync_join(&self, env: Env, data: serde_json::Value) -> Result<JsObject> {
+        self.run_sync(env, move |sync| {
+            let data: JoinWire = from_wire(data)?;
+            let joined = sync.join(data).map_err(sync_error)?;
+            to_value(&joined)
+        })
+    }
+
+    #[napi]
+    pub fn sync_import(&self, env: Env, params: serde_json::Value) -> Result<JsObject> {
+        self.run_sync(env, move |sync| {
+            #[derive(serde::Deserialize)]
+            struct P {
+                mode: ImportModeWire,
+            }
+            let p: P = from_wire(params)?;
+            let status = sync.import(p.mode).map_err(sync_error)?;
             to_value(&StatusWire::from(status))
         })
     }

@@ -267,7 +267,7 @@ The owner took every recommendation on 2026-10-10, except question 5: no e2e tes
   Commit: List, revoke, and leave the space's devices
   Depends on: 2
 
-- [ ] 5. Join a space from Settings
+- [x] 5. Join a space from Settings
   Goal:
   - "Join a space" asks for the server URL, the pairing code, and this device's name.
   - It shows the preview first (`cmd_sync_preview`): the space's name, its decks, cards, and reviews, and its size.
@@ -281,6 +281,13 @@ The owner took every recommendation on 2026-10-10, except question 5: no e2e tes
   - A file waiting for Add or Replace shows the same choice on the page after a restart, until it is made.
   - A file that was revoked, or left, joins again through the same form.
   - `SYNC.md` §Joining a space and §Add or Replace.
+  - Implementation:
+    - `cmd_sync_join` returns the status with the mode, and a Settings join sends default seed settings, which only a
+      blank database uses; `seedSettings` in `setup.ts` builds them for `seedDB` too;
+    - creating, joining, and importing start the runner if needed and nudge it: none of them starts a cycle;
+    - the flow is `JoinFlow` in `settings-sync-join.tsx`, and the choice `SyncImportChoice`, which the page also shows
+      to a database still waiting for it;
+    - the preview's size is the space's log; images are not counted.
   Done when:
   - component tests: each mode, the copy warning, the Replace confirmation, and the refusal;
   - Manual verify, with a second app on its own user data:

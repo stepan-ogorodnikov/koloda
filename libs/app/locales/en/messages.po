@@ -21,7 +21,7 @@ msgstr "Note can't be longer than {maximum, plural, other {# characters}}"
 msgid "{maximum, plural, other {validation.common.title.too-long}}"
 msgstr "Title can't be longer than {maximum, plural, other {# characters}}"
 
-#: ../../libs/app/src/lib/error.ts:123
+#: ../../libs/app/src/lib/error.ts:124
 msgid "{maximum, plural, other {validation.sync.name.too-long}}"
 msgstr "Name can't be longer than {maximum, plural, other {# characters}}"
 
@@ -117,7 +117,7 @@ msgstr "Failed to load data"
 msgid "db.update"
 msgstr "Failed to update data"
 
-#: ../../libs/app/src/lib/error.ts:124
+#: ../../libs/app/src/lib/error.ts:125
 msgid "keyring"
 msgstr "Failed to access the system keyring"
 
@@ -209,7 +209,7 @@ msgstr "Light"
 msgid "scheme.system"
 msgstr "System"
 
-#: ../../libs/app/src/lib/error.ts:125
+#: ../../libs/app/src/lib/error.ts:126
 msgid "secret-store"
 msgstr "Secret store is unavailable"
 
@@ -361,67 +361,67 @@ msgstr "Toggle language"
 msgid "settings.hotkeys.ui.toggle-sidebar-controls"
 msgstr "Toggle sidebar"
 
-#: ../../libs/app/src/lib/error.ts:132
+#: ../../libs/app/src/lib/error.ts:133
 msgid "sync.already-enrolled"
 msgstr "This device already syncs with a space"
 
-#: ../../libs/app/src/lib/error.ts:138
+#: ../../libs/app/src/lib/error.ts:139
 msgid "sync.attached-elsewhere"
 msgstr "This device is in another space. Leave it before joining this one"
 
-#: ../../libs/app/src/lib/error.ts:139
+#: ../../libs/app/src/lib/error.ts:140
 msgid "sync.cannot-join"
 msgstr "This device can't join that space"
 
-#: ../../libs/app/src/lib/error.ts:137
+#: ../../libs/app/src/lib/error.ts:138
 msgid "sync.clock-skew"
 msgstr "This device's clock is more than 5 minutes off the sync server's"
 
-#: ../../libs/app/src/lib/error.ts:134
+#: ../../libs/app/src/lib/error.ts:135
 msgid "sync.detached"
 msgstr "This device is no longer in the space"
 
-#: ../../libs/app/src/lib/error.ts:142
+#: ../../libs/app/src/lib/error.ts:143
 msgid "sync.failed"
 msgstr "Sync failed"
 
-#: ../../libs/app/src/lib/error.ts:140
+#: ../../libs/app/src/lib/error.ts:141
 msgid "sync.insecure-server-url"
 msgstr "Use an https address, or http only for a server on this computer"
 
-#: ../../libs/app/src/lib/error.ts:141
+#: ../../libs/app/src/lib/error.ts:142
 msgid "sync.low-disk"
 msgstr "Not enough free disk space to download the space"
 
-#: ../../libs/app/src/lib/error.ts:133
+#: ../../libs/app/src/lib/error.ts:134
 msgid "sync.not-enrolled"
 msgstr "This device doesn't sync with a space"
 
-#: ../../libs/app/src/lib/error.ts:135
+#: ../../libs/app/src/lib/error.ts:136
 msgid "sync.pair-again"
 msgstr "The sync server no longer knows this device. Join the space again with a new pairing code"
 
-#: ../../libs/app/src/lib/error.ts:129
+#: ../../libs/app/src/lib/error.ts:130
 msgid "sync.pairing-failed"
 msgstr "The pairing code is wrong, expired, or already used"
 
-#: ../../libs/app/src/lib/error.ts:130
+#: ../../libs/app/src/lib/error.ts:131
 msgid "sync.rate-limited"
 msgstr "Too many attempts. Wait a minute and try again"
 
-#: ../../libs/app/src/lib/error.ts:136
+#: ../../libs/app/src/lib/error.ts:137
 msgid "sync.restore-held"
 msgstr "The sync server was restored from a backup. Confirm the restore to keep syncing"
 
-#: ../../libs/app/src/lib/error.ts:131
+#: ../../libs/app/src/lib/error.ts:132
 msgid "sync.server"
 msgstr "The sync server reported an error"
 
-#: ../../libs/app/src/lib/error.ts:128
+#: ../../libs/app/src/lib/error.ts:129
 msgid "sync.unauthorized"
 msgstr "The sync server didn't accept the token"
 
-#: ../../libs/app/src/lib/error.ts:127
+#: ../../libs/app/src/lib/error.ts:128
 msgid "sync.unreachable"
 msgstr "Couldn't reach the sync server"
 
@@ -645,9 +645,13 @@ msgstr "Hours must be between 0 and 48"
 msgid "validation.settings-learning.learn-ahead-limit.minutes-range"
 msgstr "Minutes must be between 0 and 59"
 
-#: ../../libs/app/src/lib/error.ts:121
+#: ../../libs/app/src/lib/error.ts:122
 msgid "validation.sync.name.too-short"
 msgstr "Name can't be empty"
+
+#: ../../libs/app/src/lib/error.ts:121
+msgid "validation.sync.pairing-code"
+msgstr "Enter the pairing code"
 
 #: ../../libs/app/src/lib/error.ts:119
 msgid "validation.sync.server-url"
@@ -701,6 +705,6 @@ msgstr "There has to be at least one layout item"
 msgid "validation.templates.update-locked"
 msgstr "Cannot update locked template"
 
-#: ../../libs/app/src/lib/error.ts:126
+#: ../../libs/app/src/lib/error.ts:127
 msgid "windows-credentials"
 msgstr "Failed to access Windows credentials"

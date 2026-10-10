@@ -14,8 +14,13 @@ import type {
   Conversation,
   CreateSpaceData,
   DeleteConversationData,
+  ImportMode,
   IssuedPairing,
+  JoinData,
+  JoinedSpace,
+  PreviewRequest,
   SetConversationData,
+  SpacePreview,
   SyncDevice,
   SyncStatus,
 } from "@koloda/app";
@@ -146,4 +151,7 @@ export interface KolodaDb {
   syncDevices(): Promise<SyncDevice[]>;
   syncRevokeDevice(params: { id: string }): Promise<void>;
   syncDetach(): Promise<SyncStatus>;
+  syncPreview(data: PreviewRequest): Promise<SpacePreview>;
+  syncJoin(data: JoinData & { settings: SeedDbData["settings"] }): Promise<JoinedSpace>;
+  syncImport(params: { mode: ImportMode }): Promise<SyncStatus>;
 }

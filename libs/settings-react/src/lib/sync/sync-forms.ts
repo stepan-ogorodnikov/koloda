@@ -16,3 +16,9 @@ export const createSpaceSchema = z.object({
   spaceName: nameSchema,
   deviceName: nameSchema,
 });
+
+export const joinSchema = z.object({
+  serverUrl: z.string().trim().min(1, "validation.sync.server-url"),
+  code: z.string().trim().min(1, "validation.sync.pairing-code"),
+  deviceName: nameSchema,
+});

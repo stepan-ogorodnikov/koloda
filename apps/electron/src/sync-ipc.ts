@@ -15,6 +15,9 @@ type SyncDb = Pick<
   | "syncDevices"
   | "syncRevokeDevice"
   | "syncDetach"
+  | "syncPreview"
+  | "syncJoin"
+  | "syncImport"
 >;
 
 function broadcast(event: SyncEvent) {
@@ -64,6 +67,18 @@ export function registerSyncIpc(db: SyncDb) {
   ipcMain.handle("cmd_sync_detach", (event) => {
     assertAppSender(event);
     return db.syncDetach();
+  });
+  ipcMain.handle("cmd_sync_preview", (event, { data }: IpcArgs<"cmd_sync_preview">) => {
+    assertAppSender(event);
+    return db.syncPreview(data);
+  });
+  ipcMain.handle("cmd_sync_join", (event, { data }: IpcArgs<"cmd_sync_join">) => {
+    assertAppSender(event);
+    return db.syncJoin(data);
+  });
+  ipcMain.handle("cmd_sync_import", (event, args: IpcArgs<"cmd_sync_import">) => {
+    assertAppSender(event);
+    return db.syncImport(args);
   });
   ipcMain.handle("cmd_sync_device_name", (event) => {
     assertAppSender(event);

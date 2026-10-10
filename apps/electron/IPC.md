@@ -96,6 +96,14 @@ writes capture nothing and do not.
   and `isSelf`.
 - `cmd_sync_revoke_device` `{ id }` — revokes another device of the space.
 - `cmd_sync_detach` — revokes this device and detaches the database; rows stay. Returns the status.
+- `cmd_sync_preview` `{ data: { serverUrl, code } }` — the space a code would join: `spaceName`, `counts` per synced
+  kind, and `bytes`. Does not use the code.
+- `cmd_sync_join` `{ data: { serverUrl, code, deviceName, settings } }` — uses the code and joins, then starts the
+  runner and syncs.
+  `settings` seed a blank database only.
+  Returns `mode` (`blank`, `untouchedSeed`, `used`, or `reattach`), `knownIds`, and the status;
+  a `used` database waits for `cmd_sync_import`.
+- `cmd_sync_import` `{ mode }` — `add` or `replace` for a used database that joined; returns the status.
 - `cmd_sync_device_name` — the OS host name, which main reads; the default name of this device.
 - Engine events stream on `SYNC_EVENT_CHANNEL` (`sync:event`) to every window as a `SyncEvent`:
   - `changed` `{ kinds }` — rows of these kinds changed; the renderer refreshes the queries each kind feeds;

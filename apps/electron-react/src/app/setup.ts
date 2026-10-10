@@ -23,17 +23,22 @@ export function starterContent(t: I18nContext["_"]): SyncStarter {
   };
 }
 
+// INVARIANT: a blank database gets the same settings whether it is seeded or joins a space.
+export function seedSettings(settings: Partial<InterfaceSettings>): SeedDbData["settings"] {
+  return {
+    interface: { ...DEFAULT_INTERFACE_SETTINGS, ...settings },
+    learning: DEFAULT_LEARNING_SETTINGS,
+    hotkeys: DEFAULT_HOTKEYS_SETTINGS,
+  };
+}
+
 export async function seedDB({ t, ...settings }: seedParams): Promise<void> {
   const status = await getStatus();
   if (status === "ok") return;
 
   const data: SeedDbData = {
     ...starterContent(t),
-    settings: {
-      interface: { ...DEFAULT_INTERFACE_SETTINGS, ...settings },
-      learning: DEFAULT_LEARNING_SETTINGS,
-      hotkeys: DEFAULT_HOTKEYS_SETTINGS,
-    },
+    settings: seedSettings(settings),
   };
   await invoke("seed_db", { data });
 }

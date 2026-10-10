@@ -27,7 +27,12 @@ import type {
   InterfaceSettings,
   LearningSettings,
   CreateSpaceData,
+  ImportMode,
   IssuedPairing,
+  JoinData,
+  JoinedSpace,
+  PreviewRequest,
+  SpacePreview,
   SetConversationData,
   SyncDevice,
   SyncStatus,
@@ -242,6 +247,10 @@ export interface DataIpc {
   cmd_sync_devices: { args: undefined; result: SyncDevice[] };
   cmd_sync_revoke_device: { args: { id: string }; result: void };
   cmd_sync_detach: { args: undefined; result: SyncStatus };
+  cmd_sync_preview: { args: { data: PreviewRequest }; result: SpacePreview };
+  // `settings` seed a blank database only; a used one keeps its own.
+  cmd_sync_join: { args: { data: JoinData & { settings: SeedDbData["settings"] } }; result: JoinedSpace };
+  cmd_sync_import: { args: { mode: ImportMode }; result: SyncStatus };
   // The OS host name, which main reads; the default name of this device in a space.
   cmd_sync_device_name: { args: undefined; result: string };
 }
@@ -267,6 +276,9 @@ type SyncChannel =
   | "cmd_sync_devices"
   | "cmd_sync_revoke_device"
   | "cmd_sync_detach"
+  | "cmd_sync_preview"
+  | "cmd_sync_join"
+  | "cmd_sync_import"
   | "cmd_sync_device_name";
 
 /** Channels served by the `KolodaDb`-backed handler table in `data-ipc.ts`. */

@@ -39,6 +39,29 @@ export type IssuedPairing = {
   serverUrl: string;
 };
 
+export type PreviewRequest = {
+  serverUrl: string;
+  code: string;
+};
+
+/** What a pairing code would join, before the code is used; `counts` is keyed by synced kind. */
+export type SpacePreview = {
+  spaceName: string;
+  counts: Partial<Record<string, number>>;
+  bytes: number;
+};
+
+export type JoinData = PreviewRequest & { deviceName: string };
+
+/** `used` means the device waits for `ImportMode`; `knownIds` counts its ids the space already holds. */
+export type JoinedSpace = {
+  mode: "blank" | "untouchedSeed" | "used" | "reattach";
+  knownIds: number;
+  status: SyncStatus;
+};
+
+export type ImportMode = "add" | "replace";
+
 export type SyncDevice = {
   id: string;
   name: string;

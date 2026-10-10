@@ -3,7 +3,7 @@
 ## Scope
 
 Covers keeping one person's data the same on their desktop devices through a sync server they run.
-That is spaces, devices, creating a space, inviting a device, managing devices, leaving a space, and sync status.
+That is spaces, devices, creating, joining, and leaving a space, inviting and managing devices, and sync status.
 How each kind of data behaves on its own is in its spec: CARDS.md, DECKS.md, TEMPLATES.md, ALGORITHMS.md,
 LEARNING-SETTINGS.md, and MEDIA.md.
 How two devices' edits to the same thing merge is the sync protocol's rule, not this spec's.
@@ -79,6 +79,53 @@ The dialog counts down the time left.
 Once the code expires, the dialog says so and offers a new code.
 If no code can be issued, as when the server cannot be reached, the dialog shows why and offers to try again.
 Closing the dialog does not cancel the code; it still expires on its own.
+
+## Joining a space
+
+A device joins a space from Settings → Sync with "Join a space".
+It needs a pairing code from a device already in the space (§Inviting a device).
+The user enters the server's address, the pairing code, and a name for this device, which starts as the computer's
+name.
+
+First the dialog shows what the code would join: the space's name, how many decks, cards, and reviews it holds, and
+its size.
+Showing this does not use the code.
+"Back" returns to the form with what was entered; "Join" uses the code.
+
+What happens then depends on what the device holds:
+
+- only the starter content of its first run: it joins, and the space's starter algorithm and template take the place
+  of its own;
+- data of its own: it asks whether to add that data or replace it (§Add or Replace);
+- it was in this space before, and left or was removed: it joins again with its data, and changes made while it was
+  out of the space sync too;
+- it is in another space: the join is refused before the code is used, and the user leaves that space first.
+
+The space then downloads in the background; the status shows it (§Status).
+
+If the join fails, the dialog says why:
+
+- the code is wrong, expired, or already used;
+- there were too many wrong codes, so the server waits a minute before trying another;
+- the server cannot be reached, or its address is not https and not on this computer;
+- this device's clock is more than 5 minutes off the server's.
+
+## Add or Replace
+
+A device that joins with data of its own asks what to do with it, and syncs nothing until the user picks:
+
+- **Add** keeps this device's decks and adds them to the space, so every device has both.
+- **Replace** deletes this device's decks, cards, progress, templates, and algorithms, and takes the space's instead.
+  It asks again before deleting.
+
+When the space already holds some of the same items, the data looks like a copy of what the space holds, as with a
+copied database.
+Then the choice says so and recommends Replace: Add keeps both, so the copied decks show twice.
+
+With either choice, the space's learning settings take the place of this device's.
+Settings that never sync stay as they are (§Core model).
+
+A device waiting for the choice shows it again on Settings → Sync after a restart, without the copy warning.
 
 ## Devices
 

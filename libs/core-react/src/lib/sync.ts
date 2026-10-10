@@ -1,4 +1,15 @@
-import type { AppError, CreateSpaceData, IssuedPairing, SyncDevice, SyncStatus } from "@koloda/app";
+import type {
+  AppError,
+  CreateSpaceData,
+  ImportMode,
+  IssuedPairing,
+  JoinData,
+  JoinedSpace,
+  PreviewRequest,
+  SpacePreview,
+  SyncDevice,
+  SyncStatus,
+} from "@koloda/app";
 import type { UseMutationOptions } from "@tanstack/react-query";
 import { atom } from "jotai";
 import type { AppQueryOptions } from "./queries";
@@ -11,6 +22,9 @@ export type SyncQueries = {
   getDevicesQuery: () => AppQueryOptions<SyncDevice[]>;
   revokeDeviceMutation: () => UseMutationOptions<void, AppError, { id: string }>;
   detachMutation: () => UseMutationOptions<SyncStatus, AppError, void>;
+  previewMutation: () => UseMutationOptions<SpacePreview, AppError, PreviewRequest>;
+  joinMutation: () => UseMutationOptions<JoinedSpace, AppError, JoinData>;
+  importMutation: () => UseMutationOptions<SyncStatus, AppError, ImportMode>;
   nudge: () => Promise<void>;
 };
 
