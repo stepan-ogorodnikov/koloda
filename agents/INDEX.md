@@ -51,6 +51,7 @@ The listed files are relative to the repo root.
 | Learning settings (defaults, daily limits, day boundary, learn-ahead limit) | `docs/specs/LEARNING-SETTINGS.md` |
 | Database schema change | `agents/DB.md`, `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md` |
 | Card media storage (attachments, hash ids, byte store) | `docs/decisions/MEDIA-STORAGE.md`, `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md` |
+| Sync modules in `crates/koloda` (`src/repo/sync/`: capture, apply, push, restore, join, backfill) | `crates/koloda/src/repo/sync/README.md`, `crates/koloda-sync-proto/PROTOCOL.md`, `agents/RUST.md` |
 | Change inside `crates/koloda` (Rust domain, repos, settings slices, FSRS, reviews) | `agents/RUST.md`, `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md` |
 | Sync wire protocol (envelope, field-group registry, clock, codecs; `crates/koloda-sync-proto`) | `crates/koloda-sync-proto/PROTOCOL.md`, `crates/koloda-sync-proto/README.md` |
 | Sync engine on native devices (`crates/koloda-sync`: cycle, runner, pairing, fork, restore, attachments) | `crates/koloda-sync/README.md`, `crates/koloda-sync-proto/PROTOCOL.md` |
@@ -96,6 +97,7 @@ Then add the same guides the author used for that change type, so the reviewer a
 | Learning settings diff | `docs/specs/LEARNING-SETTINGS.md` |
 | Schema change diff | `agents/DB.md`, `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md` |
 | Card media storage diff | `docs/decisions/MEDIA-STORAGE.md`, `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md` |
+| Sync modules diff (`crates/koloda/src/repo/sync/`) | `crates/koloda/src/repo/sync/README.md`, `crates/koloda-sync-proto/PROTOCOL.md`, `agents/RUST.md` |
 | `crates/koloda` / `koloda` crate diff | `agents/RUST.md`, `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md` |
 | `crates/koloda-sync-proto` diff | `crates/koloda-sync-proto/PROTOCOL.md`, `crates/koloda-sync-proto/README.md` |
 | `crates/koloda-sync` diff | `crates/koloda-sync/README.md`, `crates/koloda-sync-proto/PROTOCOL.md` |
