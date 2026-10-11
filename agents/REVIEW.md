@@ -78,7 +78,7 @@ Raise Blocking for:
   - Remote apply writing through a capturing repo path instead of its own SQL:
     `crates/koloda/src/repo/sync/README.md` (Remote apply).
   - An `unsafe` block with no `// SAFETY:` comment directly above it:
-    `agents/CODE-DOCUMENTATION.md` (§4 Rust `// SAFETY:` Comments).
+    `agents/CODE-DOCUMENTATION.md` (§4. Rust `// SAFETY:` Comments).
 - Missing `// WHY` / `// INVARIANT` / `// WORKAROUND` on non-obvious inline code (see `agents/CODE-DOCUMENTATION.md`).
   Module/type orientation docs that state ownership, mappings,
   or do-not-interpret rules are allowed; do not demand tags on those.
