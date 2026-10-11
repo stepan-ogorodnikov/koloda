@@ -15,6 +15,11 @@ When the diff includes a file under `docs/specs/`,
 also read `agents/FUNCTIONAL-SPECIFICATIONS.md` and `agents/MARKDOWN.md`.
 Spec quality findings cite those guides.
 
+When the diff includes a file under `crates/`,
+also read `agents/RUST.md` (§Non-negotiables, §Per-task notes).
+For sync modules (`crates/koloda/src/repo/sync/`), also read `crates/koloda/src/repo/sync/README.md`.
+The Rust Blocking rules below cite those sections.
+
 The prompt additionally lists the task-specific specs, decisions, and playbooks that apply to that diff.
 Read those too.
 Do not load specs, decisions, or playbooks the prompt did not list;
@@ -65,6 +70,15 @@ Raise Blocking for:
   or a "Do not reintroduce" line in `agents/ASSISTANT-MAP.md`.
 - TS ↔ Rust out of sync: provider enum, theme ids, schema, or any field both sides must agree on.
   See `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md`.
+- Rust rules in a `crates/*` diff:
+  - `domain/` importing `rusqlite` or `repo/`: `agents/RUST.md` (§Non-negotiables).
+  - A new review writer that does not go through `insert_review`: `agents/RUST.md` (§Per-task notes, Review writes).
+  - A product write path that does not open `Capture::begin` in its transaction:
+    `crates/koloda/src/repo/sync/README.md` (Sync capture).
+  - Remote apply writing through a capturing repo path instead of its own SQL:
+    `crates/koloda/src/repo/sync/README.md` (Remote apply).
+  - An `unsafe` block with no `// SAFETY:` comment directly above it:
+    `agents/CODE-DOCUMENTATION.md` (§4 Rust `// SAFETY:` Comments).
 - Missing `// WHY` / `// INVARIANT` / `// WORKAROUND` on non-obvious inline code (see `agents/CODE-DOCUMENTATION.md`).
   Module/type orientation docs that state ownership, mappings,
   or do-not-interpret rules are allowed; do not demand tags on those.
