@@ -1,20 +1,26 @@
 # @koloda/ui
 
-Design system and layout shell: Tailwind/RAC primitives, responsive layout zones, color themes, hotkey widgets, and async query-state components.
-No routing, feature screens, or data fetching — form/overlay chrome and query-error UI may still call app hotkey hooks and domain error catalogs.
+Design system and layout shell: Tailwind/RAC primitives, responsive layout zones,
+color themes, hotkey widgets, and async query-state components.
+No routing, feature screens,
+or data fetching — form/overlay chrome and query-error UI may still call app hotkey hooks and domain error catalogs.
 
 ## Where it sits
 
-Consumed by `@koloda/app-react`, `@koloda/srs-react`, `@koloda/assistant-react`, `@koloda/settings-react`, and app entry components.
-Depends on `@koloda/app` (`ERROR_MESSAGES`, form error types) and `@koloda/core-react` (settings-backed hotkeys for Dialog, Form controls, Select, titlebar).
+Consumed by `@koloda/app-react`, `@koloda/srs-react`, `@koloda/assistant-react`,
+`@koloda/settings-react`, and app entry components.
+Depends on `@koloda/app` (`ERROR_MESSAGES`, form error types) and
+`@koloda/core-react` (settings-backed hotkeys for Dialog, Form controls, Select, titlebar).
 That edge is intentional.
 Do not "fix" it by splitting widgets or injecting binders unless a new decision says so (`agents/DECISIONS.md`).
 
 ## Architectural Map
 
-- Styles: `styles/` — `global.css` (Tailwind `@theme`, `--breakpoint-wd`), light/dark scheme files, `themes/*.css` (palette/accent only), `base.css`, `utilities.css`.
+- Styles: `styles/` — `global.css` (Tailwind `@theme`, `--breakpoint-wd`),
+  light/dark scheme files, `themes/*.css` (palette/accent only), `base.css`, `utilities.css`.
 - Layout: `layout/` — `layout.tsx` composition plus nav, sidebar, drawer, content, header, header-scroll.
-- Form & overlay primitives: `primitives/form/`, `primitives/overlay/` — RAC-backed controls, dialogs, popovers, tooltips.
+- Form & overlay primitives: `primitives/form/`,
+  `primitives/overlay/` — RAC-backed controls, dialogs, popovers, tooltips.
 - Table & misc primitives: `primitives/table/`, tabs, select, search-field, link, dnd, animations.
 - Core helpers: `core/focus.ts`, `core/hotkeys.ts` — focus and keyboard matching.
 - Icons: `icons/` — `cards-icon`, `check-icon`, `circular-progress`.

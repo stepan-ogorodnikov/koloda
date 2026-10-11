@@ -7,7 +7,8 @@ It is also the home for what rendered markdown may contain, wherever the app ren
 Does not cover deck or template management, lesson flow, the FSRS algorithm itself, or AI card generation.
 Images in card content (inserting, formats, where they show) are covered by MEDIA.md.
 Accepting generated cards into a deck is covered; how those cards are generated is not.
-Deck, template, lesson, algorithm, and AI card generation behavior are covered by the decks, templates, lessons, algorithms, and assistant card generation specs.
+Deck, template, lesson, algorithm, and AI card generation behavior are covered by the decks,
+templates, lessons, algorithms, and assistant card generation specs.
 
 ## What it is
 
@@ -115,7 +116,8 @@ Other cards in the batch with valid templates still succeed.
 ## Editing Cards
 
 The card details view shows the card's editable content and its state.
-If the card has been graded, it also shows the due time, the visible scheduling numbers, review history, and a reset action.
+If the card has been graded, it also shows the due time,
+the visible scheduling numbers, review history, and a reset action.
 It always shows creation and update timestamps and a delete action.
 
 Editing only changes the content.
@@ -153,7 +155,8 @@ The card's content stays the same; only its scheduling is wiped.
 
 - Every scheduling field is reset to its default value.
 - The card's full review history is removed.
-- The card becomes indistinguishable from a freshly added card, except for its creation time, its update time, and its content.
+- The card becomes indistinguishable from a freshly added card,
+  except for its creation time, its update time, and its content.
 
 Reset is only available on cards that have been graded.
 Reset does not ask for confirmation.
@@ -161,7 +164,8 @@ Reset does not ask for confirmation.
 ## Card Preview
 
 The user can preview a card without saving any changes.
-Preview renders the card against its template the same way a lesson does — field operations, submit, reveal, and typed-answer comparison behave as in a lesson.
+Preview renders the card against its template the same way a lesson does — field operations,
+submit, reveal, and typed-answer comparison behave as in a lesson.
 
 Preview does not grade the card, does not save content typed in the preview, and does not create a review.
 

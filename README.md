@@ -1,6 +1,7 @@
 # Koloda
 
-Local-first spaced repetition software powered by the [FSRS](https://github.com/open-spaced-repetition/ts-fsrs) algorithm.
+Local-first spaced repetition software powered by the
+[FSRS](https://github.com/open-spaced-repetition/ts-fsrs) algorithm.
 
 [Live demo](https://stepan-ogorodnikov.github.io/koloda)
 

@@ -121,7 +121,8 @@ writes capture nothing and do not.
 Channel names below are exported as `WINDOW_*_CHANNEL` constants from `@koloda/native-ipc` — both
 processes import them instead of repeating the literals.
 
-- `window:maximize` (toggle) — the only window-control channel the renderer invokes; native overlay buttons and traffic lights handle minimize and close
+- `window:maximize` (toggle) — the only window-control channel the renderer invokes;
+  native overlay buttons and traffic lights handle minimize and close
 - `window:set-title-bar-overlay` `{ color, symbolColor, height }` — non-macOS only; persists colors to `ui-prefs.json`
 - `window:set-window-button-position` `{ titlebarHeight }` — macOS traffic lights
 - Close handshake (`src/window-close-coordinator.ts`; channel names in `@koloda/native-ipc`):

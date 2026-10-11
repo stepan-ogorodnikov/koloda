@@ -69,8 +69,10 @@ const user = { isAdmin: true, isVerified: true };
 Prefer top-level `import type { … }` over inline `import { type … }`.
 
 Oxlint enforces this with:
-- `typescript/consistent-type-imports` (`fixStyle: "separate-type-imports"`) — type-only value imports become `import type`
-- `import/consistent-type-specifier-style` (`prefer-top-level`) — inline `type` specifiers move to a separate `import type` line
+- `typescript/consistent-type-imports` (`fixStyle: "separate-type-imports"`) —
+  type-only value imports become `import type`
+- `import/consistent-type-specifier-style` (`prefer-top-level`) —
+  inline `type` specifiers move to a separate `import type` line
 
 Bad:
 
@@ -158,7 +160,8 @@ Do not add defensive `?.`, `try/catch`, or swallowed errors where the surroundin
 Surface failures the way neighbors do.
 
 Keep changes one concern.
-If a task needs both a behavior change and a refactor, do the refactor as a separately described step so the human can review them apart.
+If a task needs both a behavior change and a refactor,
+do the refactor as a separately described step so the human can review them apart.
 
 Prefer extending the file named in the playbook over creating a new file.
 Match the import style of that exact file, including type import flavor.

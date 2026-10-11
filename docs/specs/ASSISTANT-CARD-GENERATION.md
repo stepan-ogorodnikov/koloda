@@ -2,7 +2,8 @@
 
 ## Scope
 
-Covers how the AI proposes flashcard content during chat, how proposed cards are displayed, selected, and added to a deck, and how invalid proposals are handled.
+Covers how the AI proposes flashcard content during chat, how proposed cards are displayed,
+selected, and added to a deck, and how invalid proposals are handled.
 Does not cover the conversation list, runs, assistant settings editing, or the streaming transport layer.
 The list, naming, clone, and delete are covered by ASSISTANT-CONVERSATION-LIST.md.
 Runs are covered by ASSISTANT-CONVERSATIONS.md.
@@ -97,7 +98,8 @@ The unavailable notice replaces the add button.
 If no cards were accepted, the review table is not shown.
 
 The message copy action includes the cards.
-It serializes every card on the run in the conversation-history format below, then appends any leftover assistant text — the same order the turn renders.
+It serializes every card on the run in the conversation-history format below,
+then appends any leftover assistant text — the same order the turn renders.
 Copy is independent of the selection checkboxes and per-card statuses.
 The action appears whenever the turn has cards or text, including cards-only turns.
 If the template fields are unavailable, copy falls back to the text alone.
@@ -126,14 +128,16 @@ Only cards in idle status are selectable.
 Cards that are pending, succeeded, or errored cannot be toggled.
 
 The select-all checkbox in the header reflects the selection state of idle rows:
-it is checked when all idle rows are selected, indeterminate when some are selected, and unchecked when none are selected.
+it is checked when all idle rows are selected,
+indeterminate when some are selected, and unchecked when none are selected.
 The select-all checkbox is hidden when there are no idle rows.
 
 Initially, all generated cards are selected.
 
 ## Adding Cards to Deck
 
-When the user presses the add button, the selected cards are sent to the write-target deck with the write-target template.
+When the user presses the add button,
+the selected cards are sent to the write-target deck with the write-target template.
 
 That deck and template are the ones from the proposal.
 If either write target is missing, add is disabled.
@@ -161,7 +165,8 @@ ASSISTANT-CONVERSATIONS.md (§Conversation History) owns which cards are sent to
 It also owns their order relative to the turn's text.
 This section owns their format.
 
-The cards are serialized in markdown format: each card becomes a heading `## Card N` followed by `**Field Title**: value` lines.
+The cards are serialized in markdown format:
+each card becomes a heading `## Card N` followed by `**Field Title**: value` lines.
 
 ## Retry
 

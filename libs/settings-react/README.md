@@ -5,7 +5,8 @@ Global settings screens: interface, learning, hotkeys, AI profiles, and the setu
 ## Where it sits
 
 Consumed by `@koloda/app-react` routes and by `apps/web` / `apps/electron-react` setup screens.
-Depends on `@koloda/settings`, `@koloda/app`, `@koloda/ai`, `@koloda/ai-react`, `@koloda/core-react`, `@koloda/srs-react`, and `@koloda/ui`.
+Depends on `@koloda/settings`, `@koloda/app`, `@koloda/ai`, `@koloda/ai-react`,
+`@koloda/core-react`, `@koloda/srs-react`, and `@koloda/ui`.
 The Zod registry stays in `@koloda/settings`; this package owns the forms that edit those rows.
 
 ## Architectural Map
@@ -13,7 +14,8 @@ The Zod registry stays in `@koloda/settings`; this package owns the forms that e
 - Interface: `settings-interface.tsx`, `interface-controls/` — language, scheme, theme, and motion controls.
 - Learning: `settings-learning.tsx` — defaults, limits, and day-boundary form.
 - Hotkeys: `settings-hotkeys.tsx`, `settings-hotkeys-hotkey.tsx` — scoped hotkey editor.
-- AI profiles: `settings-ai.tsx` plus add/edit/delete/models dialogs; `ai-providers/` per-provider forms; `ai-profile-models-allowlist.ts`.
+- AI profiles: `settings-ai.tsx` plus add/edit/delete/models dialogs;
+  `ai-providers/` per-provider forms; `ai-profile-models-allowlist.ts`.
 - Sync (desktop only): `sync/` — over the host's `syncQueriesAtom`: Settings → Sync (create, join with Add or Replace,
   invite, devices, status, and why sync stopped), the first-run join `SyncFirstRunJoin`, and the title bar's
   `SyncIndicator`.

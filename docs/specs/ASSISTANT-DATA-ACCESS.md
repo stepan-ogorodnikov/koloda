@@ -2,7 +2,8 @@
 
 ## Scope
 
-Covers what user data the assistant reads, when that data is fetched and sent, what is recorded, and how retry treats it.
+Covers what user data the assistant reads, when that data is fetched and sent,
+what is recorded, and how retry treats it.
 Does not cover the run lifecycle, retry availability, or revert.
 Those are covered by ASSISTANT-CONVERSATIONS.md.
 Clone is covered by ASSISTANT-CONVERSATION-LIST.md (§Clone).
@@ -31,17 +32,21 @@ The model can inspect existing cards through a tool before it proposes new ones.
 
 - **Reach** — the app reads user data locally, when a tool runs
 - **Egress** — the tool result leaves the machine toward the provider, in the same run
-- **Tools** — `list_decks`, `list_templates`, `list_algorithms`, `get_deck`, `get_template`, `get_deck_cards`, `add_deck`, and `propose_cards`
+- **Tools** — `list_decks`, `list_templates`, `list_algorithms`, `get_deck`,
+  `get_template`, `get_deck_cards`, `add_deck`, and `propose_cards`
 - **Tool activity** — the visible record of tool calls, kept on the run
   Reasoning rows share that list; see ASSISTANT-MESSAGES.md (§Message Content).
-- **Budgets** — caps on tool output: 200 cards per deck list, 8,000 serialized characters, 200 accepted cards per proposal
+- **Budgets** — caps on tool output: 200 cards per deck list,
+  8,000 serialized characters, 200 accepted cards per proposal
 
 ### Relationships
 
 - Data access is always on; every provider behaves the same.
 - Discovery happens by tool calls during the run — never by system-prompt injection or submit-time snapshots.
 - Tool activity lives on the run, not in the history; see ASSISTANT-CONVERSATIONS.md (§Conversation History).
-- Persistence is not part of data access. Card content follows ASSISTANT-CARD-GENERATION.md. Empty-deck create is the named mutation in Resources.
+- Persistence is not part of data access.
+  Card content follows ASSISTANT-CARD-GENERATION.md.
+  Empty-deck create is the named mutation in Resources.
 
 ## Resources
 
@@ -49,7 +54,8 @@ The assistant reads decks, templates, and algorithms (presets).
 
 Templates are a first-class readable resource.
 The assistant may list templates and fetch one template by id.
-Deck tools may still surface template title and field titles; that is not a substitute for full field metadata (types, required, field ids) when the model needs it.
+Deck tools may still surface template title and field titles;
+that is not a substitute for full field metadata (types, required, field ids) when the model needs it.
 
 - It can list every deck: its id, name, card count, template title, and field titles.
 - It can fetch one deck's structural summary: its id, name, card count, template title, and field titles.
@@ -89,10 +95,12 @@ It may call them to read data, create an empty deck, or propose cards.
 - `list_templates` — every template's id, title, and field titles, plus the template's notes when present.
 - `list_algorithms` — every preset's id, title, and FSRS settings, plus the preset's notes when present.
   Users call algorithms presets.
-- `get_deck` — one deck's id, name, card count, template title, and field titles, identified by the id from `list_decks`.
+- `get_deck` — one deck's id, name, card count, template title,
+  and field titles, identified by the id from `list_decks`.
   It also returns the deck's full notes.
   It does not return card bodies.
-- `get_template` — one template's full field metadata, identified by the id from `list_templates` (or another tool result that returned that id).
+- `get_template` — one template's full field metadata,
+  identified by the id from `list_templates` (or another tool result that returned that id).
   It also returns the template's full notes.
   It does not return decks or card bodies.
 - `get_deck_cards` — the existing cards of one deck, identified by the id from the list.
@@ -146,7 +154,8 @@ The app enforces only what each tool does with a call, as listed above.
 
 Tool traffic is visible in the chat feed as compact rows on that assistant message.
 
-- `list_decks`, `list_templates`, `list_algorithms`, `get_deck`, `get_template`, `get_deck_cards`, `add_deck`, and `propose_cards` show a translated label.
+- `list_decks`, `list_templates`, `list_algorithms`, `get_deck`, `get_template`,
+  `get_deck_cards`, `add_deck`, and `propose_cards` show a translated label.
 - Any other tool shows the protocol id.
 - A running call is marked as running.
 - A failed call is marked failed.

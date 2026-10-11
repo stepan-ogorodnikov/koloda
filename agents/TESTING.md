@@ -3,7 +3,8 @@
 This guide defines which tests to write when implementing a change.
 It covers unit and integration tests across `libs/`, `apps/`, and `crates/koloda`.
 The Playwright e2e suites are out of scope; they follow their own specs in `apps/web-e2e` and `apps/electron-e2e`.
-The two suites deliberately mirror each other flow for flow; keep the platform transports separate, and push shared logic into `libs/e2e` only when drift between the copies starts costing.
+The two suites deliberately mirror each other flow for flow; keep the platform transports separate,
+and push shared logic into `libs/e2e` only when drift between the copies starts costing.
 Agents do not run them to prove a change; see `agents/VERIFY.md`.
 
 ## The survival question
@@ -35,12 +36,14 @@ When the answer is non-obvious, record it in the change description or task note
 | Integration | Persistence constraints: FK, cascade, rollback, transactions, SQL semantics | `crates/koloda/tests/integration/<entity>_integration_tests.rs`, `libs/db-sqlite/src/lib/*.integration.test.ts` |
 | E2e | User flows | `apps/web-e2e`, `apps/electron-e2e` |
 
-- Every entity keeps at least one full-field roundtrip at the integration layer: write every column, read it back, compare field-by-field.
+- Every entity keeps at least one full-field roundtrip at the integration layer: write every column,
+  read it back, compare field-by-field.
   This is the only check that catches SQL↔struct column-mapping drift — validators and unit tests never see it.
   Trimming CRUD permutations must never remove an entity's last roundtrip.
 - Do not add a unit test that shadows a Playwright spec; the flow belongs to e2e.
 - Rust file pairs follow `agents/RUST.md` (Entity CRUD notes).
-  New files go under `tests/domain/` or `tests/integration/` and must be listed in `tests/domain/main.rs` or `tests/integration/main.rs`.
+  New files go under `tests/domain/` or `tests/integration/`
+  and must be listed in `tests/domain/main.rs` or `tests/integration/main.rs`.
 
 ## One home per behavior
 
@@ -89,7 +92,9 @@ Do not write:
   Write one table-driven test per DTO instead.
 - Passthrough assertions: a function returning its input unchanged.
 - Constants or defaults asserted to equal themselves.
-  Exception: a persisted default is a wire contract. Pin it against a literal written in the test when stored rows or payloads depend on it staying stable — do not "pin" it by importing and comparing the same constant.
+Exception: a persisted default is a wire contract.
+Pin it against a literal written in the test when stored rows or payloads depend on it
+staying stable — do not "pin" it by importing and comparing the same constant.
 - Full prompt-string equality.
   Use phrase presence plus negative guards; see `libs/ai/src/lib/prompts.test.ts`.
 - Export and public-surface inventories.
@@ -149,7 +154,8 @@ If a file's tests differ only by a cosmetic input, collapse them.
 Name test files after what they actually test: serde shape tests do not belong in `*_validation_tests.rs`.
 A test's name must describe its assertion: if the body does not verify what the name claims, fix whichever is wrong.
 
-When replacing existing tests with a table-driven version, write the replacement and delete the replaced tests in the same change.
+When replacing existing tests with a table-driven version,
+write the replacement and delete the replaced tests in the same change.
 Deleting first leaves a coverage hole if the replacement stalls; keeping both recreates the per-cell noise banned above.
 Coverage must never dip between two commits.
 
@@ -165,10 +171,14 @@ Match these files when the shape fits:
 - `libs/assistant-react/src/lib/persistence/conversation-restore.test.ts` — wire-compat restore scenarios.
 - `apps/electron/src/window-close-coordinator.test.ts` — state-machine race coverage.
 - `libs/ai/src/lib/prompts.test.ts` — prose-prompt guards.
-- `crates/koloda/tests/domain/reviews_validation_tests.rs` — shared-baseline reject/boundary tables asserting per-field error codes.
-- `libs/assistant-react/src/lib/state/assistant-conversation-store.test.ts` — typed it.each negative-case table with per-row setup hooks.
-- `crates/koloda/tests/domain/cards_serde_tests.rs` — NAPI wire pins: exact JSON shape, null-vs-omitted keys, serde round-trip.
-- `libs/app/src/lib/error-parity.test.ts` — parses Rust `error_codes` from source vs `ERROR_MESSAGES` keys (`ai.*` TS-only allow-list).
+- `crates/koloda/tests/domain/reviews_validation_tests.rs` —
+  shared-baseline reject/boundary tables asserting per-field error codes.
+- `libs/assistant-react/src/lib/state/assistant-conversation-store.test.ts` —
+  typed it.each negative-case table with per-row setup hooks.
+- `crates/koloda/tests/domain/cards_serde_tests.rs` — NAPI wire pins: exact JSON shape,
+  null-vs-omitted keys, serde round-trip.
+- `libs/app/src/lib/error-parity.test.ts` — parses Rust `error_codes` from source
+  vs `ERROR_MESSAGES` keys (`ai.*` TS-only allow-list).
 
 ## Running
 

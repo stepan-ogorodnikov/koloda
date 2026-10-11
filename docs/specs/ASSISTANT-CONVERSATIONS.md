@@ -60,7 +60,8 @@ This includes:
 
 A chat response that proposed cards is sent as those serialized cards, then any leftover assistant text from that run.
 Failed or canceled card outputs are not included in the history, even when the table stayed on screen.
-Interrupted cards are included: the interruption is environmental (shutdown/crash), not a model failure or user rejection, and the proposal completed before the stream stopped.
+Interrupted cards are included: the interruption is environmental (shutdown/crash),
+not a model failure or user rejection, and the proposal completed before the stream stopped.
 See ASSISTANT-CARD-GENERATION.md (§Conversation History) for the markdown serialization.
 Tool activity is not included in the history.
 See ASSISTANT-DATA-ACCESS.md (§Visibility).
@@ -127,7 +128,8 @@ Conversations do not have a selected deck.
 Each run keeps its own write target, so later turns may propose for a different deck.
 Add uses that write target.
 
-How a proposal sets the write target, including an accepted list of 0 cards, is in ASSISTANT-CARD-GENERATION.md (§How Cards Are Proposed).
+How a proposal sets the write target, including an accepted list of 0 cards,
+is in ASSISTANT-CARD-GENERATION.md (§How Cards Are Proposed).
 Field titles reach the model through tools, not the system prompt; see ASSISTANT-DATA-ACCESS.md.
 
 ## AI Profile State
@@ -147,7 +149,8 @@ When the user has no AI profiles, the picker still opens and shows an add-profil
 
 ### Global AI Profile State
 
-In addition to the per-conversation values, the app tracks a single **global AI profile state** shared across all conversations.
+In addition to the per-conversation values,
+the app tracks a single **global AI profile state** shared across all conversations.
 The global record holds the same three fields: profile, model, and model parameters.
 The global record is persisted across sessions.
 
@@ -158,10 +161,12 @@ Those values are copied onto the conversation when it receives an id.
 From that point on, the conversation's own values take over and can diverge from the global one.
 
 **Loading** — on app load, the global record is read from storage.
-If no value is stored yet, the global is reconciled to defaults: the newest available profile, no model, and empty parameters.
+If no value is stored yet, the global is reconciled to defaults: the newest available profile,
+no model, and empty parameters.
 If a stored value is present but its profile is no longer available, the global is reconciled to defaults the same way.
 If a stored value is present and its profile is available, it is used as-is.
-When a model is missing or no longer in the provider's list, the first available model for that profile is used once the list loads.
+When a model is missing or no longer in the provider's list,
+the first available model for that profile is used once the list loads.
 
 **Empty chat with no profiles** — when the conversation has no messages and the user has no AI profiles,
 the messages area shows an empty state with a short message and an add-profile button.
@@ -172,7 +177,8 @@ Once a profile exists, these empty states are no longer shown.
 **When it is updated** — the global record is updated in two cases:
 
 1. When the user starts a run by submitting a prompt in any conversation.
-2. When the user changes any of the three AI profile state values (profile, model, or model parameters) in any conversation.
+2. When the user changes any of the three AI profile state values
+   (profile, model, or model parameters) in any conversation.
 
 ## Persistence
 
@@ -263,8 +269,10 @@ How retry fetches data is in ASSISTANT-DATA-ACCESS.md (§Retry).
 
 ### AI Profile State on Retry
 
-Retry uses the conversation's **current** AI profile state — profile, model, and model parameters — not the values that were in effect when the original request was made.
-This lets the user fix a failed run by switching profile, model, or parameters and then retrying, without having to send a new message.
+Retry uses the conversation's **current** AI profile state — profile, model,
+and model parameters — not the values that were in effect when the original request was made.
+This lets the user fix a failed run by switching profile, model,
+or parameters and then retrying, without having to send a new message.
 
 If the user has not changed anything, retry behaves the same as the original request.
 
@@ -282,7 +290,8 @@ Reloading the app clears the revert state.
 
 - The conversation history sent to the next run is filtered by the revert state — hidden messages are not included.
 - Run write targets and deck contents are not affected by revert.
-- A conversation that looks empty because of revert is still saved, since the messages are still in the conversation state.
+- A conversation that looks empty because of revert is still saved,
+  since the messages are still in the conversation state.
 - Cloning while reverted is covered by ASSISTANT-CONVERSATION-LIST.md (§Cloning a Reverted Conversation).
 
 ### Deletion on New Prompt

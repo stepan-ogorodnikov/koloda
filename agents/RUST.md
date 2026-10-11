@@ -37,9 +37,11 @@ This file only tells you where to start.
 
 - Types and validation in `src/domain/<entity>.rs`.
 - SQL and error wrapping in `src/repo/<entity>.rs`.
-- Test pair: `tests/domain/<entity>_tests.rs` (domain, no DB) and `tests/integration/<entity>_integration_tests.rs` (repo).
+- Test pair: `tests/domain/<entity>_tests.rs` (domain, no DB)
+  and `tests/integration/<entity>_integration_tests.rs` (repo).
   Larger entities split these by concern.
-  Register new modules in `tests/domain/main.rs` / `tests/integration/main.rs`; do not add a new `tests/*.rs` crate root.
+  Register new modules in `tests/domain/main.rs` / `tests/integration/main.rs`;
+  do not add a new `tests/*.rs` crate root.
 - Register the command in `apps/electron/src-rust/src/lib.rs`.
 - Expose it as `ipcMain.handle("cmd_*", …)` in `apps/electron/src/data-ipc.ts` —
   the `#[napi]` method alone is not reachable from the renderer.

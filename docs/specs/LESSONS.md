@@ -2,7 +2,8 @@
 
 ## Scope
 
-Covers lessons overview, today's progress on that screen, starting a lesson, amount selection, studying, grading, learn-ahead, session progress, result persistence, completion, early termination, and lesson hotkeys.
+Covers lessons overview, today's progress on that screen, starting a lesson, amount selection, studying,
+grading, learn-ahead, session progress, result persistence, completion, early termination, and lesson hotkeys.
 Does not cover deck or template editing, FSRS algorithm internals, or hotkey binding configuration.
 Does not define daily limits, the learning-day window, or how today's review totals are counted.
 Those are LEARNING-SETTINGS.md.
@@ -28,7 +29,8 @@ Closing the dialog clears the session.
 - **Available counts** — cards of each type ready to study now, per deck and across all decks
 - **Amounts** — how many cards of each type the user chose for this lesson
 - **Daily limits** — caps for the current learning day; defined in LEARNING-SETTINGS.md (§Daily Limits)
-- **Today's review totals** — how many of each type have been studied in the current learning day; defined in LEARNING-SETTINGS.md (§Learning Day)
+- **Today's review totals** — how many of each type have been studied in the current learning day;
+  defined in LEARNING-SETTINGS.md (§Learning Day)
 - **Progress** — how many cards of each type are done versus still pending in this session
 - **Upload queue** — graded results waiting to be saved, one at a time
 - **Phase** — closed, preparing, configuring, loading-cards, studying, or finished
@@ -113,7 +115,8 @@ A lesson moves through six phases: closed, preparing, configuring, loading-cards
   The user edits the amounts for the lesson.
 - **loading-cards** — the user pressed Start and the cards for the chosen amounts are being loaded.
 - **studying** — the cards are shown and graded one by one.
-- **finished** — every card in the session has been graded, or the session ended with nothing to study; the completion screen is shown.
+- **finished** — every card in the session has been graded,
+  or the session ended with nothing to study; the completion screen is shown.
 
 Escape, the "Close popover" hotkey, and the dialog close control all close or interrupt the lesson.
 The effect depends on the phase.
@@ -166,7 +169,8 @@ Manual edits are not re-clamped to daily limits — only to the available count 
 ## Studying
 
 When the user starts the lesson, cards are loaded for the chosen amounts and filters.
-If the load succeeds but matches no cards — for example because cards were removed after init — the lesson skips studying and shows the completion screen immediately.
+If the load succeeds but matches no cards — for example because cards were removed after init —
+the lesson skips studying and shows the completion screen immediately.
 No current card is shown in that case.
 
 Cards are included in this order:
@@ -180,7 +184,8 @@ The layout is an ordered list of fields.
 Each field has an operation that controls how it appears during study.
 
 While a card is active, the header shows progress amounts and progress dots.
-The footer shows either the "Continue" button or the grade buttons, depending on whether the card has been submitted yet.
+The footer shows either the "Continue" button or the grade buttons,
+depending on whether the card has been submitted yet.
 
 ### Field Operations
 
@@ -293,7 +298,8 @@ The confirmation offers "Continue studying" or "Close".
 "Continue studying" dismisses the confirmation and leaves the current card as it was.
 "Close" ends the lesson immediately.
 
-In the preparing, configuring, and finished phases, close, Escape, and "Close popover" end the lesson without that confirmation.
+In the preparing, configuring, and finished phases, close, Escape,
+and "Close popover" end the lesson without that confirmation.
 
 Ending a lesson mid-study does not undo grades that already uploaded successfully.
 Cards that were graded but not yet uploaded are discarded with the cleared session state.

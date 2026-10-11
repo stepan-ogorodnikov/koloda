@@ -222,7 +222,8 @@ Flip Status to `ready`.
    - Never resolve overlap silently.
    - Do not grep `tasks/live` on `main`.
    - In-flight files are not there.
-   - For the task you pick up, read its `Guides:` line and load those guides; route again in `agents/INDEX.md` only if scope changed.
+   - For the task you pick up, read its `Guides:` line and load those guides;
+     route again in `agents/INDEX.md` only if scope changed.
 2. Record open questions as they appear.
    - Do not guess answers.
 3. Before ending a session, update Open questions and Plan on the task branch.

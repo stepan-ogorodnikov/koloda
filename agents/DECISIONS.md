@@ -41,7 +41,9 @@ A decision that disagrees with the code is worse than no decision.
 **Existence means active.**
 If the file is in the tree, its Ruling still constrains work.
 Do not keep `deprecated`, `superseded`, or `archive/` copies in the live tree.
-When the ruling no longer applies, delete the file (or rewrite it into the new ruling) and remove every INDEX / review / playbook pointer to it in that same change.
+When the ruling no longer applies,
+delete the file (or rewrite it into the new ruling)
+and remove every INDEX / review / playbook pointer to it in that same change.
 
 **Topic filename, not a serial number.**
 Name the file after the decision: `TS-RUST-DOMAIN-MIRRORING.md`, not `0001-…`.

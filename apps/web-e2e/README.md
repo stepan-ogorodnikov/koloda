@@ -12,7 +12,8 @@ Unit tests live in the app projects (`@koloda/web:test-unit`), not here.
 ## How to run
 
 - `nx run web-e2e:e2e` — full suite (boots the web dev server on port 4300; reuses a running one outside CI)
-- Chromium once: `bunx playwright install chromium`. The pages deploy installs it, with system libraries, before the suite.
+- Chromium once: `bunx playwright install chromium`.
+  The pages deploy installs it, with system libraries, before the suite.
 - `nx run web-e2e:typecheck` — typecheck only
 - Also reachable as `nx run @koloda/web:test`. The pages deploy runs it via `check:web-all`.
 

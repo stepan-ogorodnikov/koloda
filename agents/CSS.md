@@ -16,7 +16,9 @@ Pick a styling approach by following these steps in order:
 
 ## Color and design tokens
 
-Class names like `bg-button-primary`, `fg-level-1`, `border-input`, `shadow-button-pressed`, `outline-focus-ring` are **tokens**, not arbitrary Tailwind palettes. Reach for them; do not reach for Tailwind's built-in colors.
+Class names like `bg-button-primary`, `fg-level-1`, `border-input`, `shadow-button-pressed`,
+`outline-focus-ring` are **tokens**, not arbitrary Tailwind palettes.
+Reach for them; do not reach for Tailwind's built-in colors.
 
 ```tsx
 // ❌ BAD — built-in palette bypasses theming, breaks light/dark
@@ -26,13 +28,17 @@ Class names like `bg-button-primary`, `fg-level-1`, `border-input`, `shadow-butt
 <button className="bg-button-primary fg-level-1 border-button-bordered" />
 ```
 
-Tokens cover more than colors — borders, shadows, focus rings, fonts (`font-sans`), transitions, and container/breakpoint sizing are all token-driven. The full list lives in `@theme` in `libs/ui/src/lib/styles/global.css`.
+Tokens cover more than colors — borders, shadows, focus rings, fonts (`font-sans`),
+transitions, and container/breakpoint sizing are all token-driven.
+The full list lives in `@theme` in `libs/ui/src/lib/styles/global.css`.
 
 ### Adding a new token
 
 If no existing token fits, add one end-to-end. All three layers are required, or the class won't exist:
 
-1. **Both scheme files** — `libs/ui/src/lib/styles/scheme-light.css` and `scheme-dark.css`, under the component's section. Derive from lower-level tokens with `color-mix(in oklab, ...)` rather than hardcoding a literal.
+1. **Both scheme files** — `libs/ui/src/lib/styles/scheme-light.css` and `scheme-dark.css`,
+   under the component's section.
+   Derive from lower-level tokens with `color-mix(in oklab, ...)` rather than hardcoding a literal.
    ```css
    /* scheme-light.css */
    --bg-widget: color-mix(in oklab, var(--fg-level-1) 5%, var(--bg-level-1));
@@ -43,28 +49,43 @@ If no existing token fits, add one end-to-end. All three layers are required, or
    ```css
    --color-bg-widget: var(--bg-widget);
    ```
-3. Use it: `bg-widget`. Per-prefix conventions: `bg-*`, `fg-*`, `border-*`, `outline-*` map to background / foreground / border-color / outline-color; `--shadow-*` maps to `shadow-*`; pair `--color-*` with the matching prefix.
+3. Use it: `bg-widget`.
+   Per-prefix conventions: `bg-*`, `fg-*`, `border-*`, `outline-*`
+   map to background / foreground / border-color / outline-color;
+   `--shadow-*` maps to `shadow-*`; pair `--color-*` with the matching prefix.
 
 Never declare a one-off CSS variable inside a component. Token classes are the only sanctioned way to color things.
 
 ### Opacity modifiers
 
-Token utilities support `/50`-style opacity via `color-mix`, not Tailwind's alpha channel — so `bg-button-hover/40` works on custom tokens the same as on built-in colors.
+Token utilities support `/50`-style opacity via `color-mix`,
+not Tailwind's alpha channel — so `bg-button-hover/40` works on custom tokens the same as on built-in colors.
 
 ### Light/dark is automatic
 
-The scheme layer swaps every token under `:root.dark`, so a class like `bg-button-primary` already renders correctly in both modes. Do **not** add `dark:` variants in components for token-driven differences. Reserve `dark:` for genuinely non-tokenized layout or behavior swaps.
+The scheme layer swaps every token under `:root.dark`,
+so a class like `bg-button-primary` already renders correctly in both modes.
+Do **not** add `dark:` variants in components for token-driven differences.
+Reserve `dark:` for genuinely non-tokenized layout or behavior swaps.
 
 ### Behavioral utilities
 
 Prefer these over hand-rolled equivalents. Defined in `libs/ui/src/lib/styles/utilities.css`:
 
-- `focus-ring` — the only sanctioned focus ring. Composes `data-focus-visible` so it only shows on keyboard nav. Variants: `group-focus-ring` (ring on the group's focused child), `drag-focus-ring` (ring while dragging), `error-ring` (error-colored ring), `no-focus-ring` (suppress).
-- `animate-colors` — the shared color transition (`transition-colors duration-250 ease-in-out`). Put it in a recipe's `base` so hover/press shifts stay consistent; don't write ad-hoc transitions.
-- `animate-shimmer` — mask sweep for mixed icon+text rows. Use `animate-shimmer-text--fg-level-4/fg-level-1` for text-only (pending labels). Use `animate-shimmer-icon` on a second copy of an icon stacked on a solid base when the label is `TextSwap`; do not put `animate-shimmer` on that label's ancestor.
+- `focus-ring` — the only sanctioned focus ring.
+  Composes `data-focus-visible` so it only shows on keyboard nav.
+  Variants: `group-focus-ring` (ring on the group's focused child),
+  `drag-focus-ring` (ring while dragging), `error-ring` (error-colored ring), `no-focus-ring` (suppress).
+- `animate-colors` — the shared color transition (`transition-colors duration-250 ease-in-out`).
+  Put it in a recipe's `base` so hover/press shifts stay consistent; don't write ad-hoc transitions.
+- `animate-shimmer` — mask sweep for mixed icon+text rows.
+  Use `animate-shimmer-text--fg-level-4/fg-level-1` for text-only (pending labels).
+  Use `animate-shimmer-icon` on a second copy of an icon stacked on a solid base when the label is `TextSwap`;
+  do not put `animate-shimmer` on that label's ancestor.
 - `numbers-text` — shared "large number" label style.
 
-Reference: `libs/ui/src/lib/primitives/form/button.tsx` (tokens + `focus-ring` + `animate-colors`), `scheme-light.css` (scheme shape).
+Reference: `libs/ui/src/lib/primitives/form/button.tsx` (tokens + `focus-ring` + `animate-colors`),
+`scheme-light.css` (scheme shape).
 
 ## Conditional styling with `tailwind-variants`
 
@@ -135,7 +156,12 @@ export const tableHeadCellContent = tv({
   Do this for any variant that has a non-empty default.
   Callers can then omit optional props without ending up with `undefined` slots in the class string.
 - **Pass extra classes via `class`, never `join`.**
-  A `tv()` recipe accepts a `class` option that merges the caller's classes with the recipe's own (respecting variant composition), instead of just appending them as a sibling. This should be the default way to add one-off classes to a recipe call. Do not concatenate with `Array.prototype.join`, and do not extract a single class string into a variable just to combine it with a recipe result.
+A `tv()` recipe accepts a `class` option that merges the caller's classes
+with the recipe's own (respecting variant composition),
+instead of just appending them as a sibling.
+This should be the default way to add one-off classes to a recipe call.
+Do not concatenate with `Array.prototype.join`,
+and do not extract a single class string into a variable just to combine it with a recipe result.
 
   ```tsx
   // ❌ BAD — joined alongside the recipe

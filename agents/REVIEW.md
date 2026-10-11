@@ -4,15 +4,21 @@ This guide defines how LLM reviewers review diffs in this repository.
 It is not an authoring guide.
 The authoring guides are `agents/CODE-STYLE.md`, `agents/CSS.md`, `agents/CODE-DOCUMENTATION.md`, and the playbooks.
 
-Always read this file plus `agents/CODE-STYLE.md`, `agents/CSS.md`, and `agents/CODE-DOCUMENTATION.md` for any review, even if the prompt did not list them.
-These three define the standing rules you enforce — for example, missing `// WHY` / `// INVARIANT` / `// WORKAROUND` on non-obvious code is a Blocking finding per `agents/CODE-DOCUMENTATION.md`.
+Always read this file plus `agents/CODE-STYLE.md`, `agents/CSS.md`,
+and `agents/CODE-DOCUMENTATION.md` for any review, even if the prompt did not list them.
+These three define the standing rules you enforce — for example,
+missing `// WHY` / `// INVARIANT` / `// WORKAROUND` on non-obvious code
+is a Blocking finding per `agents/CODE-DOCUMENTATION.md`.
 If you have not loaded them, you cannot raise Blocking findings that cite them.
 
-When the diff includes a file under `docs/specs/`, also read `agents/FUNCTIONAL-SPECIFICATIONS.md` and `agents/MARKDOWN.md`.
+When the diff includes a file under `docs/specs/`,
+also read `agents/FUNCTIONAL-SPECIFICATIONS.md` and `agents/MARKDOWN.md`.
 Spec quality findings cite those guides.
 
 The prompt additionally lists the task-specific specs, decisions, and playbooks that apply to that diff.
-Read those too. Do not load specs, decisions, or playbooks the prompt did not list; those are task-scoped and loading unlisted ones causes whole-repo auditing noise.
+Read those too.
+Do not load specs, decisions, or playbooks the prompt did not list;
+those are task-scoped and loading unlisted ones causes whole-repo auditing noise.
 
 ## Scope
 
@@ -55,11 +61,13 @@ It must be fixed before merge.
 Raise Blocking for:
 
 - Correctness errors, broken invariants, or behavior that contradicts a spec.
-- Layer boundary violations: cite a README "Does NOT own" line, or a "Do not reintroduce" line in `agents/ASSISTANT-MAP.md`.
+- Layer boundary violations: cite a README "Does NOT own" line,
+  or a "Do not reintroduce" line in `agents/ASSISTANT-MAP.md`.
 - TS ↔ Rust out of sync: provider enum, theme ids, schema, or any field both sides must agree on.
   See `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md`.
 - Missing `// WHY` / `// INVARIANT` / `// WORKAROUND` on non-obvious inline code (see `agents/CODE-DOCUMENTATION.md`).
-  Module/type orientation docs that state ownership, mappings, or do-not-interpret rules are allowed; do not demand tags on those.
+  Module/type orientation docs that state ownership, mappings,
+  or do-not-interpret rules are allowed; do not demand tags on those.
 - Rules named in `agents/CODE-STYLE.md` or `agents/CSS.md` that are not lint-enforced. For example:
   - Boolean names missing a verb prefix.
   - Props type inlined in the function signature instead of a named `*Props` type.
@@ -67,8 +75,10 @@ Raise Blocking for:
   - A bare-adjective boolean variant instead of a verb-prefixed one.
   - A barrel that only forwards other modules (the compound component assignment is an exception, see below).
 - A change that needs a decision but does not include one (see `agents/DECISIONS.md`).
-- A user-visible behavior change that does not update the spec that owns it (see `agents/FUNCTIONAL-SPECIFICATIONS.md`, Living document).
-- A spec hunk that violates `agents/FUNCTIONAL-SPECIFICATIONS.md`: restated invariants, an "Edge Cases" section, code or persistence field names, UI chrome, or a Core model that recaps later sections.
+- A user-visible behavior change that does not update the spec that owns it
+  (see `agents/FUNCTIONAL-SPECIFICATIONS.md`, Living document).
+- A spec hunk that violates `agents/FUNCTIONAL-SPECIFICATIONS.md`: restated invariants, an "Edge Cases" section,
+  code or persistence field names, UI chrome, or a Core model that recaps later sections.
 
 ### Nit (optional, never required)
 
@@ -97,13 +107,21 @@ Raising them wastes the human reviewer's time and signals the reviewer did not r
 - Do not flag FSRS staying TypeScript-side as a bug, or suggest moving it into Rust.
   The source of truth is TS. See `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md`.
 - Do not flag provider HTTP calls living in `libs/ai` instead of the store. See `libs/ai/README.md`.
-- Do not flag `Select.Root = SelectRoot` style assignment as a reexport. It is the allowed compound component exception. See `agents/CODE-STYLE.md`.
-- Do not request i18n for theme labels. Labels are plain strings in the theme registries. See `agents/ADD-COLOR-THEME.md`.
-- Do not propose a "cleaner" code shape that contradicts a spec. Specs are the source of truth. If code and spec disagree, raise the discrepancy as Blocking and stop.
+- Do not flag `Select.Root = SelectRoot` style assignment as a reexport.
+  It is the allowed compound component exception.
+  See `agents/CODE-STYLE.md`.
+- Do not request i18n for theme labels.
+  Labels are plain strings in the theme registries.
+  See `agents/ADD-COLOR-THEME.md`.
+- Do not propose a "cleaner" code shape that contradicts a spec.
+  Specs are the source of truth.
+  If code and spec disagree, raise the discrepancy as Blocking and stop.
 - Do not demand a new spec, extra sibling specs, or an "Edge Cases" section. Cite `agents/FUNCTIONAL-SPECIFICATIONS.md`.
 - Do not flag a pointer (`FILE.md (§Section)`) as missing detail. One home per rule is the point.
-- Do not suggest adding optional parameters or future-proofing branches. See Change Discipline in `agents/CODE-STYLE.md`.
-- Do not propose renaming or reformatting adjacent code the task did not touch. See Change Discipline in `agents/CODE-STYLE.md`.
+- Do not suggest adding optional parameters or future-proofing branches.
+  See Change Discipline in `agents/CODE-STYLE.md`.
+- Do not propose renaming or reformatting adjacent code the task did not touch.
+  See Change Discipline in `agents/CODE-STYLE.md`.
 - Do not propose running the Playwright suites in the CI `checks` job or the push gate.
   They run on the web deploy by design. See `agents/VERIFY.md`.
 - Do not flag a product-only feature, or a demo gap such as missing export, backup, or multi-tab safety.

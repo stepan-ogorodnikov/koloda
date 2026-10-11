@@ -13,7 +13,8 @@ The TS/Rust mirroring rationale is `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md`.
 
 ## How to run
 
-- `nx run @koloda/electron:serve` — dev: boots the renderer dev server, builds the Rust addon, compiles the preload, launches Electron
+- `nx run @koloda/electron:serve` — dev: boots the renderer dev server,
+  builds the Rust addon, compiles the preload, launches Electron
 - `nx run @koloda/electron:build` — packaged installer via electron-builder into `dist-pack/`
 - `nx run @koloda/electron:build-rust` — `cargo build` of the addon plus copy into `dist/`
 - `nx run @koloda/electron:test` — unit + renderer unit + e2e; `-c unit` / `-c e2e` select a subset
@@ -34,9 +35,12 @@ The TS/Rust mirroring rationale is `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md`.
 - Media IPC: `src/media-ipc.ts` — fetches a pasted image URL in main and stores it as an attachment. See `IPC.md`.
 - Sync IPC: `src/sync-ipc.ts` — the sync engine's commands, its events forwarded to every window, a nudge on resume.
   See `IPC.md`.
-- Close handshake: `src/window-close-coordinator.ts` — bounded 2500 ms shutdown request/ack so the renderer flushes before destroy.
-- Preload: `src/preload.ts` — `contextBridge` exposes `electronAPI`: generic `invoke`/`on` plus `webFrame` zoom controls.
-- Rust addon: `src-rust/` — `koloda-electron` cdylib; `KolodaDb` NAPI façade over `koloda` (SQLite at `<userData>/koloda.db`).
+- Close handshake: `src/window-close-coordinator.ts` — bounded 2500 ms shutdown request/ack
+  so the renderer flushes before destroy.
+- Preload: `src/preload.ts` — `contextBridge` exposes `electronAPI`:
+  generic `invoke`/`on` plus `webFrame` zoom controls.
+- Rust addon: `src-rust/` — `koloda-electron` cdylib;
+  `KolodaDb` NAPI façade over `koloda` (SQLite at `<userData>/koloda.db`).
   Methods return Promises and run on one dedicated database thread, in call order.
   `src-rust/src/sync.rs` runs the `koloda-sync` engine on the same database; its host calls run on a sync thread
   of their own, and product writes tell it to sync.

@@ -1,6 +1,7 @@
 # @koloda/app
 
-Framework-agnostic app foundation: shared error codes, the app-shell settings schemas (interface / learning / hotkeys), conversation DTOs, locale helpers, and generic utilities.
+Framework-agnostic app foundation: shared error codes, the app-shell settings schemas (interface / learning / hotkeys),
+conversation DTOs, locale helpers, and generic utilities.
 No React, no DB drivers, no domain scheduling.
 
 ## Where it sits
@@ -11,9 +12,13 @@ Desktop mirrors live in `crates/koloda/src/domain/` (settings, hotkeys, conversa
 
 ## Architectural Map
 
-- Errors: `error.ts` — `AppError`, `throwKnownError`, and the Lingui error-code catalog (`db.*`, `validation.*`, `ai.*`, `not-found.*`, `sync.*`). The AIError→AppError bridge lives in `@koloda/ai`'s `./app-error` subpath.
-- Settings slices: `settings-interface.ts`, `settings-learning.ts`, `settings-hotkeys.ts` — defaults, labels, zod validation.
-- Conversations: `conversations.ts` — `Conversation` / `ConversationListItem` types and active-conversation `localStorage` helpers.
+- Errors: `error.ts` — `AppError`, `throwKnownError`,
+  and the Lingui error-code catalog (`db.*`, `validation.*`, `ai.*`, `not-found.*`, `sync.*`).
+  The AIError→AppError bridge lives in `@koloda/ai`'s `./app-error` subpath.
+- Settings slices: `settings-interface.ts`, `settings-learning.ts`,
+  `settings-hotkeys.ts` — defaults, labels, zod validation.
+- Conversations: `conversations.ts` — `Conversation` / `ConversationListItem` types
+  and active-conversation `localStorage` helpers.
 - Environment: `environment.ts` — `getAppPlatform()`, `LOCALES`, `getLanguageCode()`.
 - Shared shapes: `db.ts` (`Timestamps`), `utility.ts` (`DeepPartial`, `deepMerge`, form helpers, id helpers).
 - Sync: `sync.ts` — `SyncStatus` as the desktop sync engine reports it; only the desktop syncs.

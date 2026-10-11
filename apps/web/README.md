@@ -24,8 +24,10 @@ See `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md` (§Persistence owners).
 ## Architectural Map
 
 - Entry: `src/main.tsx` — mounts `AppProviders` from `@koloda/app-react` with the store and i18n.
-- Store wiring: `src/app/store.ts` — jotai store, UI preferences, locale detection (stored lang, then navigator), web AI runtime.
-- Database: `src/app/db.ts` — `wa-sqlite` + `IDBBatchAtomicVFS` at IndexedDB `koloda`, applying `crates/koloda/src/migrations`.
+- Store wiring: `src/app/store.ts` — jotai store, UI preferences,
+  locale detection (stored lang, then navigator), web AI runtime.
+- Database: `src/app/db.ts` — `wa-sqlite` + `IDBBatchAtomicVFS` at IndexedDB `koloda`,
+  applying `crates/koloda/src/migrations`.
 - Queries: `src/app/queries.ts` — the `Queries` contract implemented in-process via `@koloda/db-sqlite`.
 - Setup: `src/app/setup.ts` — status check, migrations, and the one-transaction first setup with seed content.
 - Seed content: `src/app/seed/<locale>/` — starter algorithms, templates, and decks per language.

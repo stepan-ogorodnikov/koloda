@@ -51,7 +51,8 @@ Put failure, empty, cancel, restore, and "does not happen" next to the happy pat
 Do not collect them in an "Edge Cases" section at the end.
 
 **Scenarios over abstractions.**
-Instead of "the system handles errors gracefully," describe: "if the stream fails mid-way, the error is displayed and the partial content is preserved."
+Instead of "the system handles errors gracefully," describe: "if the stream fails mid-way,
+the error is displayed and the partial content is preserved."
 
 **No chrome.**
 Name a control when the user must find it ("the conversation menu").
@@ -131,7 +132,8 @@ Do not start a new file for a small addition to a covered concept.
 Give it a Scope that names its siblings.
 Update those siblings so they point here instead of describing the new concept.
 
-**Split** when one spec is the home for two unrelated models, or when INDEX cannot pick a single primary spec for a typical task.
+**Split** when one spec is the home for two unrelated models,
+or when INDEX cannot pick a single primary spec for a typical task.
 
 After any of those, grep for restated copies of the moved rules and replace them with pointers.
 

@@ -9,7 +9,8 @@ Depends on `@koloda/app`, `@koloda/srs`, `@koloda/core-react`, and `@koloda/ui`.
 
 ## Architectural Map
 
-- Algorithms / templates / decks / cards / lessons: folders under `src/lib/` — CRUD screens, pickers, editors, lesson session UI.
+- Algorithms / templates / decks / cards / lessons: folders under `src/lib/` — CRUD screens,
+  pickers, editors, lesson session UI.
 - Dashboard widget: `components/learned-today.tsx`.
 
 ### Does NOT own (prevent scope creep)

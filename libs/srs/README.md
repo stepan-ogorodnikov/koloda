@@ -1,20 +1,24 @@
 # @koloda/srs
 
-SRS domain logic: zod schemas, FSRS integration, lesson/review rules, markdown helpers, and pure transforms from AI card output to insert DTOs.
+SRS domain logic: zod schemas, FSRS integration, lesson/review rules,
+markdown helpers, and pure transforms from AI card output to insert DTOs.
 Framework-agnostic — no React, no DB access, no conversation state.
 
 ## Where it sits
 
-Consumed by `@koloda/db-sqlite` (repo validation), `@koloda/srs-react`, `@koloda/assistant-react`, `@koloda/core-react` (query types), and app query layers.
+Consumed by `@koloda/db-sqlite` (repo validation), `@koloda/srs-react`,
+`@koloda/assistant-react`, `@koloda/core-react` (query types), and app query layers.
 Depends on `@koloda/app`, `@koloda/settings`, and `@koloda/ai`.
 Desktop mirrors live in `crates/koloda/src/domain/`; keep TS and Rust aligned when fields change.
 
 ## Architectural Map
 
-- Algorithms: `algorithms.ts` — entity schemas and CRUD/clone DTOs; `algorithms-fsrs.ts` — FSRS params, `createFSRSAlgorithm()`, learning-step units/grades (`ts-fsrs`).
+- Algorithms: `algorithms.ts` — entity schemas and CRUD/clone DTOs; `algorithms-fsrs.ts` — FSRS params,
+  `createFSRSAlgorithm()`, learning-step units/grades (`ts-fsrs`).
 - Templates & decks: `templates.ts`, `decks.ts` — fields/layout validation and entity DTOs.
 - Cards: `cards.ts` — content schema from template fields, FSRS state fields, insert/update/delete DTOs.
-- Reviews & lessons: `reviews.ts` — review logs and daily-limit helpers; `lessons.ts` — lesson types, filters, session DTOs.
+- Reviews & lessons: `reviews.ts` — review logs and daily-limit helpers;
+  `lessons.ts` — lesson types, filters, session DTOs.
 - Progress: `progress.ts` — shared progress-field bounds, error-code maps, and validation for cards and reviews.
 - Attachments: `attachments.ts` — attachment meta and add schemas, magic-byte format sniffing, size cap, ref pattern.
 - Markdown: `markdown.ts` — `markdownToHtml` (marked + DOMPurify); attachment refs render as `<img data-attachment-id>`.

@@ -1,6 +1,7 @@
 # electron-e2e
 
-Playwright suite for the desktop app: launches the real Electron shell with the real Rust core and a fresh database per test.
+Playwright suite for the desktop app:
+launches the real Electron shell with the real Rust core and a fresh database per test.
 One spec file per user flow; no app code is mocked except the AI provider.
 
 ## Where it sits
@@ -19,7 +20,8 @@ The web counterpart is `apps/web-e2e`; the spec sets mirror each other flow for 
 ## Architectural Map
 
 - Config: `playwright.config.ts` — single worker, serial specs, `en-US` / light scheme, failure-only artifacts.
-- Fixtures: `src/fixtures.ts` — `_electron.launch` per test with a throwaway `KOLODA_USER_DATA` temp dir (isolated SQLite),
+- Fixtures: `src/fixtures.ts` — `_electron.launch` per test with a throwaway
+  `KOLODA_USER_DATA` temp dir (isolated SQLite),
   `KOLODA_E2E=1`, and the first window as `page`.
 - Helpers: `src/helpers.ts` — re-exports the shared UI flows from `libs/e2e` (`@koloda/e2e`) and wraps this
   suite's platform points: defaults written into the already-loaded window followed by a reload, and the

@@ -30,9 +30,11 @@ Pick one before editing code.
    - Writes immediately after title, template, and algorithm validate. A failed validation leaves no row.
    - Does not invent cards and does not set a propose write target.
    - Undo is the existing product action (the user deletes the deck the same way as one they created by hand).
-   - The write is invisible to a mounted list until the same React Query keys as the hand-created mutation are invalidated.
+   - The write is invisible to a mounted list until the same React Query keys as the
+     hand-created mutation are invalidated.
    - `add_deck` does that from the app shell (`add-deck-query-invalidation.ts`), not from `libs/ai` or the host binders.
-   - Needs a product rule in `docs/specs/ASSISTANT-DATA-ACCESS.md` (§Resources), host methods on `AssistantToolDataSource`, an executor branch, and an activity label.
+   - Needs a product rule in `docs/specs/ASSISTANT-DATA-ACCESS.md` (§Resources),
+     host methods on `AssistantToolDataSource`, an executor branch, and an activity label.
 
 4. **Tool that needs new UI**:
    - Same as the matching kind above, plus new activity rendering and/or a new message surface.
@@ -71,7 +73,9 @@ Keep these invariants:
 - Data access is always on for every provider.
 - Discovery is tool calls during the run, not submit-time snapshots.
 - Card bodies are field-title → text pairs by default; do not ship card ids unless the user explicitly requires them.
-- Card content never persists without review; other assistant-driven writes need a named product spec with undo and validation (`docs/specs/ASSISTANT-DATA-ACCESS.md`, `docs/specs/ASSISTANT-CARD-GENERATION.md`).
+- Card content never persists without review;
+  other assistant-driven writes need a named product spec with undo and validation
+  (`docs/specs/ASSISTANT-DATA-ACCESS.md`, `docs/specs/ASSISTANT-CARD-GENERATION.md`).
 - Tool activity lives on the run, not in follow-up history.
 
 Also update the data-access / tools row in `agents/ASSISTANT-MAP.md` if the primary files change.
@@ -164,11 +168,14 @@ Follow `propose_cards`:
 
 Follow `add_deck`:
 
-- Validate template and algorithm before calling the host write. A missing template, a missing requested algorithm, or a missing default algorithm fails the call and does not create a deck.
+- Validate template and algorithm before calling the host write.
+  A missing template, a missing requested algorithm,
+  or a missing default algorithm fails the call and does not create a deck.
 - When the caller omits the algorithm, store `getDefaultAlgorithmId()`, the same default as manual deck create.
 - Do not map the result onto run cards or write targets.
 - On recorded success, invalidate the same query keys as the hand-created mutation.
-- `add_deck` does that in `invalidateDeckQueriesAfterAddDeck` (`add-deck-query-invalidation.ts`), called from `useAssistantEngineHost` after the reducer records the tool result.
+- `add_deck` does that in `invalidateDeckQueriesAfterAddDeck` (`add-deck-query-invalidation.ts`),
+  called from `useAssistantEngineHost` after the reducer records the tool result.
 - Host binders and `libs/ai` have no `QueryClient` — Electron runs the write in the main process.
 - Activity row shows the translated label and, on success, the created title.
 
@@ -206,7 +213,8 @@ Minimum coverage:
 - [ ] Wire names still derived from `ASSISTANT_TOOL_SPECS` (or intentional subset documented)
 - [ ] Activity label / i18n (and propose_*, direct-write, or new-UI paths if applicable)
 - [ ] Direct writes name the host methods, validate before the write, and leave undo to the existing product action
-- [ ] Direct writes invalidate the same React Query keys as the hand-created mutation, from the app shell on recorded success (`add-deck-query-invalidation.ts`)
+- [ ] Direct writes invalidate the same React Query keys as the hand-created mutation,
+  from the app shell on recorded success (`add-deck-query-invalidation.ts`)
 - [ ] Prompts updated when the model must prefer the tool
 - [ ] Budgets and “no card ids by default” respected
 - [ ] Unit tests; e2e when host wiring changed

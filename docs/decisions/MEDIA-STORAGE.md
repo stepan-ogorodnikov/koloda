@@ -26,7 +26,8 @@ Data URLs bloat every card read and make the text unusable to edit.
 Remote URLs break offline review, leave caching to the network, and leak each review to another site.
 A content hash gives deduplication and stable cache keys without bookkeeping, and refs survive any move of the bytes.
 Keeping bytes in the database keeps them atomic with card writes and inside one backup.
-Splitting metadata from bytes lets large media (audio, video) pick another store by size later without a content migration.
+Splitting metadata from bytes lets large media (audio, video) pick another store by size later
+without a content migration.
 
 ## Applies when
 

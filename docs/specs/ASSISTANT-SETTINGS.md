@@ -45,7 +45,8 @@ Choosing Default does not erase a saved custom prompt.
 The assistant uses the live built-in prompt, including later product updates to that text.
 
 Custom shows the saved custom prompt and is editable.
-If the user has never saved a custom prompt, switching to Custom copies the current built-in prompt into the editor as a starting point.
+If the user has never saved a custom prompt,
+switching to Custom copies the current built-in prompt into the editor as a starting point.
 Switching back to Default leaves that custom text in place.
 
 A custom prompt that happens to equal today's built-in text stays Custom.
@@ -69,7 +70,8 @@ Default sends the current built-in prompt after trimming.
 Custom sends the saved custom text after trimming.
 
 The built-in prompt tells the model to invent cards through `propose_cards` and not to ask the user for field titles.
-When the user asks to create a deck and fill it, the prompt tells the model to call `list_templates`, then `add_deck`, then `propose_cards` in the same turn, and to omit the algorithm id unless the user asked for one.
+When the user asks to create a deck and fill it, the prompt tells the model to call `list_templates`,
+then `add_deck`, then `propose_cards` in the same turn, and to omit the algorithm id unless the user asked for one.
 
 Tool descriptions carry their own guidance with either prompt; see ASSISTANT-DATA-ACCESS.md (§Tool guidance).
 

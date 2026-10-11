@@ -9,13 +9,20 @@ Not an npm package — consumed by Electron (NAPI) command layer.
 Consumed by `apps/electron`.
 TS apps reach it through `invoke("cmd_*")` in their `queries.ts`.
 Mirrors `@koloda/srs` + `@koloda/app` domain types and the repo surface of `@koloda/db-sqlite`.
-Deliberate divergence: `get_conversations` returns full rows including opaque `state` where `@koloda/db-sqlite` returns trimmed list items — `hasTurns` derives from `state` in TS only (`libs/app` invariant), so each sidebar query ships every state over NAPI+IPC to the renderer.
+Deliberate divergence: `get_conversations` returns full rows including opaque `state`
+where `@koloda/db-sqlite` returns trimmed list items — `hasTurns` derives from `state` in TS only
+(`libs/app` invariant),
+so each sidebar query ships every state over NAPI+IPC to the renderer.
 Rust is the source of truth for the AI provider enum and secrets redaction; `@koloda/ai` mirrors those.
 
 ## Architectural Map
 
-- Domain: `domain/` — cards (`CardState`), shared FSRS progress validators (`progress`), decks, templates, algorithms/`AlgorithmFSRS`, lessons, reviews, conversations (opaque `state`), settings slices (`LearningDefaults`, `DailyLimits`), `ai`, attachments (format sniffing, size cap), timestamp serde (`time`).
-- Repos: `repo/` — SQLite repos parallel to `@koloda/db-sqlite` (plus AI secrets redaction/reconstruction). Owns `rusqlite` adapters (e.g. `FromSql` for `SettingsName`).
+- Domain: `domain/` — cards (`CardState`), shared FSRS progress validators (`progress`), decks,
+  templates, algorithms/`AlgorithmFSRS`, lessons, reviews,
+  conversations (opaque `state`), settings slices (`LearningDefaults`, `DailyLimits`),
+  `ai`, attachments (format sniffing, size cap), timestamp serde (`time`).
+- Repos: `repo/` — SQLite repos parallel to `@koloda/db-sqlite` (plus AI secrets redaction/reconstruction).
+  Owns `rusqlite` adapters (e.g. `FromSql` for `SettingsName`).
   `repo/attachment_bytes.rs` is the only reader and writer of `attachment_bytes` (`docs/decisions/MEDIA-STORAGE.md`).
   `repo/sync/` owns the `sync_*` tables; `mod.rs` enrolls the device, and keeps a claim or a space creation sent
   but not recorded in `sync_enrolling` until the transaction that records it.
@@ -45,8 +52,10 @@ Rust is the source of truth for the AI provider enum and secrets redaction; `@ko
   tables so the file bootstraps from the backup.
   `index_tests.rs` checks that the statements renumbering pending rows, or finding a cohort's rows, search an index.
   It is a unit test, because those statements are private to the module.
-- App runtime: `app/` — DB connection (`parse_json_column` for JSON TEXT columns), init/seed, keyring secrets, clock/UUID helpers.
-- Shared errors: `app::error` (`AppError` + `error_codes`) is the intentional crate-wide error type. Domain validation returns it so codes stay aligned with `@koloda/app`; domain must not import `rusqlite`.
+- App runtime: `app/` — DB connection (`parse_json_column` for JSON TEXT columns),
+  init/seed, keyring secrets, clock/UUID helpers.
+- Shared errors: `app::error` (`AppError` + `error_codes`) is the intentional crate-wide error type.
+  Domain validation returns it so codes stay aligned with `@koloda/app`; domain must not import `rusqlite`.
 - Migrations: `migrations/` — owned Refinery SQL embedded via `embed_migrations!`.
   Product SQL source for both hosts (`agents/DB.md`).
 

@@ -2,7 +2,8 @@
 
 Rules for every change.
 Guides for a specific change are routed from `agents/INDEX.md`.
-Run that routing yourself, load only the guides it lists, and record a task's set on its `Guides:` line (`agents/TASKS.md`).
+Run that routing yourself, load only the guides it lists,
+and record a task's set on its `Guides:` line (`agents/TASKS.md`).
 Later sessions read that line instead of routing again.
 
 ## Git

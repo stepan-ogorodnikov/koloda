@@ -5,19 +5,27 @@ Assistant chat React layer: conversation store, session/`RunController`, persist
 ## Where it sits
 
 Consumed by `@koloda/app-react` and `apps/electron-react` (graceful shutdown).
-Depends on `@koloda/app`, `@koloda/srs`, `@koloda/ai`, `@koloda/ai-react`, `@koloda/assistant`, `@koloda/core-react`, and `@koloda/ui`.
-Provider HTTP stays in `@koloda/ai`; run execution lifetime and stream transport live in `@koloda/assistant`; this package owns conversation policy and React hosts.
+Depends on `@koloda/app`, `@koloda/srs`, `@koloda/ai`, `@koloda/ai-react`,
+`@koloda/assistant`, `@koloda/core-react`, and `@koloda/ui`.
+Provider HTTP stays in `@koloda/ai`; run execution lifetime and stream transport live in `@koloda/assistant`;
+this package owns conversation policy and React hosts.
 
 **Task routing:** `agents/ASSISTANT-MAP.md`.
 This README owns the package boundary.
 
 ## Architectural Map
 
-- Layout under `src/lib/`: `state/` (reducer, store, actions, selectors, messages), `runs/` (engine host adapter, session/`RunController`, orchestration, `build-stream-request`), `persistence/` (restore, save write adapter, coerce/normalize), `ui/` (chat shell, lists, settings, renderers); profile cascade hooks at `src/lib/` root (`use-assistant-profile-selection.ts`, `use-global-ai-profile-state.ts`, `use-assistant-runtime-config.ts`).
+- Layout under `src/lib/`: `state/` (reducer, store, actions, selectors, messages), `runs/`
+  (engine host adapter, session/`RunController`, orchestration, `build-stream-request`),
+  `persistence/` (restore, save write adapter, coerce/normalize),
+  `ui/` (chat shell, lists, settings, renderers);
+  profile cascade hooks at `src/lib/` root
+  (`use-assistant-profile-selection.ts`, `use-global-ai-profile-state.ts`, `use-assistant-runtime-config.ts`).
 
 ### Does NOT own (prevent scope creep)
 
-- Framework-free run orchestration, persistence scheduling, AbortController lifetime, graceful shutdown — `@koloda/assistant` (wired via `useAssistantEngineHost`)
+- Framework-free run orchestration, persistence scheduling, AbortController lifetime,
+  graceful shutdown — `@koloda/assistant` (wired via `useAssistantEngineHost`)
 - Provider HTTP / client factory — `@koloda/ai`
 - Presentational chat chrome and AI UI primitives — `@koloda/ai-react`
 - App routing, global hotkeys, application-shell assistant host mount — `@koloda/app-react`

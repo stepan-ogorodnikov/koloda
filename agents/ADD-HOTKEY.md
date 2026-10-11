@@ -16,7 +16,8 @@ mount plus per-hotkey `enabled`. Don't assume global.
 ## Workflow
 
 1. **Determine location and runtime scope**:
-   - Ask user: "Does this hotkey apply globally or only in a specific component, and which runtime scope gates it (`navigation` | `grades` | `form` | always-on)?"
+   - Ask user: "Does this hotkey apply globally or only in a specific component,
+     and which runtime scope gates it (`navigation` | `grades` | `form` | always-on)?"
    - Global → use-app-hotkeys.ts
    - Specific → Find the component that renders when that runtime scope is active
 
@@ -34,7 +35,8 @@ mount plus per-hotkey `enabled`. Don't assume global.
    - Add category to ui hotkey duplicate check
    - Add category to fill_defaults()
 
-4. **Add tests** (`libs/app/src/lib/settings-hotkeys.test.ts` and `crates/koloda/tests/domain/settings_hotkeys_tests.rs`):
+4. **Add tests** (`libs/app/src/lib/settings-hotkeys.test.ts`
+   and `crates/koloda/tests/domain/settings_hotkeys_tests.rs`):
    - Update first test case to include new category/key
    - Update the twin key-list pins in both files (must change together when a key is added)
    - Add test cases for new hotkey if needed

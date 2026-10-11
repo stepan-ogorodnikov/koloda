@@ -107,7 +107,8 @@ Learn-ahead is an hours-and-minutes duration from now.
 Hours may be from 0 through 48.
 Minutes may be from 0 through 59.
 
-After a card is graded in a lesson, it may be appended back into that lesson when its new due time falls before now plus this duration.
+After a card is graded in a lesson,
+it may be appended back into that lesson when its new due time falls before now plus this duration.
 Session details are covered by the lessons spec.
 
 Setting both hours and minutes to zero means only cards whose new due time is already in the past can re-enter.

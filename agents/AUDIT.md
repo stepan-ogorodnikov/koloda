@@ -34,7 +34,8 @@ Also load, when the target needs them:
 - `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md` — the target crosses TypeScript and Rust, or includes persistence
 - `apps/electron/IPC.md` — desktop IPC
 - the playbook for a half-finished recipe:
-  `agents/ADD-AI-PROVIDER.md`, `agents/ADD-ASSISTANT-TOOL.md`, `agents/ADD-HOTKEY.md`, `agents/ADD-COLOR-THEME.md`, `agents/DB.md`
+  `agents/ADD-AI-PROVIDER.md`, `agents/ADD-ASSISTANT-TOOL.md`,
+  `agents/ADD-HOTKEY.md`, `agents/ADD-COLOR-THEME.md`, `agents/DB.md`
 
 The prompt lists the owning spec and area guides.
 If those are missing, ask for them before starting.
@@ -86,7 +87,8 @@ This list is the point of the audit:
 - Host desync — web SQLite vs desktop SQLite / Refinery columns or behavior disagree.
   See `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md` (§Persistence owners) and `agents/DB.md`.
 - IPC drift — `apps/electron/IPC.md` vs main or renderer.
-- Layer leaks — a package does work that its README `Does NOT own`, or that `agents/ASSISTANT-MAP.md` (§Do not reintroduce) forbids.
+- Layer leaks — a package does work that its README `Does NOT own`,
+  or that `agents/ASSISTANT-MAP.md` (§Do not reintroduce) forbids.
 - Missing trap comments — non-obvious code without `// WHY` / `// INVARIANT` / `// WORKAROUND`.
 - Leftover shims — deprecated wrappers, adapters, unused exports (`agents/BACKWARDS-COMPATIBILITY.md`).
 - One-call-site helpers and future-proof optional params (`agents/CODE-STYLE.md`, Change Discipline).

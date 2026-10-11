@@ -13,7 +13,8 @@ Developers and LLMs can read code.
 - Bad: `// Loops through the text stream and calls onChunk`
 - Bad: `// Returns the conversation name truncated to 48 characters`
 
-Do not write JSDoc or block comments for simple functions, getters, or standard UI components unless they have hidden complexity.
+Do not write JSDoc or block comments for simple functions, getters,
+or standard UI components unless they have hidden complexity.
 
 ## What TO Document (The "Traps")
 
@@ -103,12 +104,14 @@ if (streamedTextCards.length > 0) {
 
 #### 1. Complex Logic
 
-You may write a comment without a tag inside a function body to explain highly complex, non-obvious algorithm steps (e.g., a complex regex or data transformation pipeline).
+You may write a comment without a tag inside a function body to explain highly complex,
+non-obvious algorithm steps (e.g., a complex regex or data transformation pipeline).
 Even then, only comment the steps, not the obvious lines.
 
 #### 2. Module / Type Orientation (LLM Observability)
 
-Short crate/module rustdoc (`//!`) and rare type-level docs (`///` / block docs) may state **ownership boundaries**, **cross-system mappings**, or **do-not-interpret** rules.
+Short crate/module rustdoc (`//!`) and rare type-level docs (`///` / block docs) may state **ownership boundaries**,
+**cross-system mappings**, or **do-not-interpret** rules.
 That way an agent that opened the file without the README still lands correctly.
 
 Allowed:

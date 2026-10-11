@@ -46,9 +46,11 @@ When modifying database schema:
    Web snapshots the same directory at Vite build time (`import.meta.glob` in `libs/db-sqlite/src/lib/migrate.ts`) —
    rebuild `@koloda/db-sqlite` (or `nx reset`) after adding a migration so a stale cached bundle does not ship
    without the new file.
-3. **Update domain types** in `libs/srs` / `@koloda/app` / `@koloda/settings` (Zod) and `crates/koloda/src/domain/` (Rust).
+3. **Update domain types** in `libs/srs` / `@koloda/app` / `@koloda/settings` (Zod)
+   and `crates/koloda/src/domain/` (Rust).
 4. **Update both repo stacks** (`crates/koloda/src/repo/` and `libs/db-sqlite/src/lib/`).
-5. **Update the inventory snapshot** at `crates/koloda/src/migrations/schema-inventory.json` if columns, indexes, or FKs changed.
+5. **Update the inventory snapshot** at `crates/koloda/src/migrations/schema-inventory.json` if columns,
+   indexes, or FKs changed.
    Regenerate from a migrated desktop DB with
    `cargo test -p koloda --test integration write_schema_inventory_snapshot -- --ignored`.
 6. **Verify**.

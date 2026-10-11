@@ -44,7 +44,8 @@ Do not use red for an incoherent slice.
 
 ## Procedure
 
-1. Confirm the task's `Guides:` line covers the affected area; if it does not, route the change in `agents/INDEX.md` and update the line.
+1. Confirm the task's `Guides:` line covers the affected area; if it does not,
+   route the change in `agents/INDEX.md` and update the line.
 2. For an audit report, triage first: fix, skip, or needs-decision per finding.
 3. Put skips and open questions in the task file's Scope and Open questions sections, never into plan items.
 4. Ask the human every question whose answer changes the split — scope, priorities, approach forks; never guess.
@@ -69,7 +70,8 @@ a. <commit message candidate>
 b. <commit message candidate>
 ```
 
-One numbered line per plan item, in item order, with the lettered candidates directly beneath it and a blank line between items.
+One numbered line per plan item, in item order,
+with the lettered candidates directly beneath it and a blank line between items.
 Output it inside a fenced code block, so each line survives markdown rendering on its own line.
 Item details — Goal, Constraints, Done when, Green — stay in the task file; name its path when presenting.
 The human picks per item by letter, or supplies their own message.

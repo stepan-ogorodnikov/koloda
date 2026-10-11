@@ -12,7 +12,8 @@ Runs are covered by ASSISTANT-CONVERSATIONS.md.
 An AI provider is an external service or self-hosted server that hosts language models the app can talk to.
 The app ships with a fixed set of built-in providers.
 Each provider has a display name, an endpoint shape, and a fixed set of secrets it requires.
-Users create a profile for a provider, supply credentials, pick a model, and the app sends requests through that profile.
+Users create a profile for a provider, supply credentials,
+pick a model, and the app sends requests through that profile.
 
 Providers differ in how they authenticate and which models they expose.
 The app presents one consistent interface regardless of provider.
@@ -95,7 +96,8 @@ Removing the last profile for a provider does not affect that provider's availab
 
 ### Profile List
 
-In AI settings, each profile is a row with its title (or placeholder), provider display name, a models button, an edit button, and a delete button.
+In AI settings, each profile is a row with its title (or placeholder),
+provider display name, a models button, an edit button, and a delete button.
 The models button opens the model allowlist dialog for that profile.
 If there are no profiles, AI settings shows an empty-state message.
 
@@ -149,7 +151,8 @@ On save, the app also rejects:
 Optional profile titles are trimmed.
 A title that is empty or contains only whitespace is stored as absent (no title).
 
-Whitespace-only secret values are treated as absent on store, so a partial update cannot clear a stored key with whitespace.
+Whitespace-only secret values are treated as absent on store,
+so a partial update cannot clear a stored key with whitespace.
 Empty optional fields are allowed on save so partial updates do not fail.
 If form validation passes but save rejects, the error is shown in the form.
 
@@ -159,11 +162,14 @@ Each provider exposes a list of models fetched at runtime.
 
 ### Fetching
 
-The app fetches models when the user opens the model picker in a conversation, and whenever else the list is needed for that profile.
+The app fetches models when the user opens the model picker in a conversation,
+and whenever else the list is needed for that profile.
 The list is sorted alphabetically by display name.
 
-If the fetch fails or the response is malformed, the error is surfaced to the user in the model picker: the profile section shows an error row with a retry action.
-A conversation adds no separate banner for this failure; sending is disabled while the profile's model list has not loaded successfully.
+If the fetch fails or the response is malformed,
+the error is surfaced to the user in the model picker: the profile section shows an error row with a retry action.
+A conversation adds no separate banner for this failure;
+sending is disabled while the profile's model list has not loaded successfully.
 
 ### Allowlist
 
@@ -195,7 +201,8 @@ Allowlist entries are non-empty strings; an empty entry is rejected by validatio
 
 The model picker shows only allowlisted models.
 If the allowlist is unset, the picker shows every catalog model.
-If the currently selected model is not in the filtered list, it stays visible so a catalog change cannot strand the selection.
+If the currently selected model is not in the filtered list,
+it stays visible so a catalog change cannot strand the selection.
 A selected model that is not in the catalog at all is shown as a placeholder.
 
 The allowlist is per profile.
@@ -223,8 +230,10 @@ The app learns the supported levels and the default for a model by a fixed rule 
   When the catalog has no row for the provider or the ID, known model families fall back to fixed built-in levels.
   A model the catalog lists without effort levels gets no picker.
 - OpenAI joins the models.dev catalog by model ID. A matching effort list enables the picker; otherwise it stays hidden.
-- DeepSeek joins the models.dev catalog by model ID. A matching effort list enables the picker; an exact catalog row without effort levels leaves it hidden.
-  When the catalog is unavailable or the ID is missing, known DeepSeek model families fall back to fixed built-in levels.
+- DeepSeek joins the models.dev catalog by model ID.
+  A matching effort list enables the picker; an exact catalog row without effort levels leaves it hidden.
+  When the catalog is unavailable or the ID is missing,
+  known DeepSeek model families fall back to fixed built-in levels.
 
 The reasoning-effort picker in the conversation UI lists those levels.
 If no rule yields levels for the model, the picker is hidden.
@@ -243,8 +252,12 @@ See the conversation and card-generation specs for run lifecycle, prompts, strea
 Provider-facing details that matter here:
 
 - The request carries the chosen model and any applicable model parameters.
-- If the model supports reasoning effort and the user set a level, the run sends that stored level except where a provider's API uses a different vocabulary (see DeepSeek below).
+- If the model supports reasoning effort and the user set a level,
+  the run sends that stored level except where a provider's API uses a different vocabulary (see DeepSeek below).
 - If the user did not set a level, the provider's default still applies.
-- DeepSeek accepts only low, high, and max on the wire. The UI and catalog still use the generic levels low, medium, high, and xhigh (fallback families default to medium). When sending a run, the app maps minimal and low to low; medium and high to high; xhigh, max, and ultra to max. Any other stored value is passed through unchanged.
+- DeepSeek accepts only low, high, and max on the wire.
+  The UI and catalog still use the generic levels low, medium, high, and xhigh (fallback families default to medium).
+  When sending a run, the app maps minimal and low to low; medium and high to high; xhigh, max, and ultra to max.
+  Any other stored value is passed through unchanged.
 - All providers stream responses.
 - An unreachable self-hosted base URL surfaces as a network error on first use.

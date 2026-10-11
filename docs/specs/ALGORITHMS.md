@@ -5,7 +5,8 @@
 Covers algorithm presets: parameters, adding, cloning, editing, deleting with a successor, and parameter history.
 Does not cover FSRS scheduling math, how grades update card state, or learning settings UI.
 How decks pick an algorithm is covered lightly; deck management itself is not.
-Grade-to-card-state updates are covered by the cards spec and learning settings by the learning settings spec; the FSRS scheduling math has no product spec.
+Grade-to-card-state updates are covered by the cards spec and learning settings by the learning settings spec;
+the FSRS scheduling math has no product spec.
 
 ## What it is
 

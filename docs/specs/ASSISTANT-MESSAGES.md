@@ -2,7 +2,8 @@
 
 ## Scope
 
-Covers message types, message metadata, how messages are displayed, message states and status indicators, and user interactions with messages.
+Covers message types, message metadata, how messages are displayed,
+message states and status indicators, and user interactions with messages.
 Does not cover the conversation list, runs, persistence, or the streaming transport layer.
 The list, naming, clone, and delete are covered by ASSISTANT-CONVERSATION-LIST.md.
 Runs, persistence, and retry are covered by ASSISTANT-CONVERSATIONS.md.
@@ -73,7 +74,8 @@ Assistant messages:
   tool activity, then the review table, then leftover streamed text, then status.
   Leftover text appears below the table, not above it.
   Once cards are on screen, the pending status is not shown on the table.
-  It attaches below the table while the run is still streaming, leftover text has not arrived, and no tool or thinking row is still running.
+  It attaches below the table while the run is still streaming,
+  leftover text has not arrived, and no tool or thinking row is still running.
   Tool activity, if any, appears above the table even when there is no leftover text.
 - **error**: a failed status indicator and a retry button are shown.
 
@@ -95,7 +97,8 @@ The message state maps to the run state:
 
 - **pending/streaming**: text is empty or partial.
   A pending indicator means the turn still owes a reply and nothing else already shows that.
-  It is shown for an empty turn, for cards with no leftover text yet, and for settled tool or thinking rows with no text yet.
+  It is shown for an empty turn, for cards with no leftover text yet,
+  and for settled tool or thinking rows with no text yet.
   It is hidden while a tool or thinking row is still running, and once assistant text is streaming.
 - **success**: full content is displayed.
   An elapsed time indicator is shown.
@@ -105,7 +108,8 @@ The message state maps to the run state:
   A canceled status indicator is shown.
 - **interrupted**: partial content is preserved.
   An interrupted status indicator with a retry button is shown.
-  Elapsed time is included when a duration was saved; crash restore does not count downtime. See ASSISTANT-CONVERSATIONS.md (§Restore).
+Elapsed time is included when a duration was saved; crash restore does not count downtime.
+See ASSISTANT-CONVERSATIONS.md (§Restore).
 
 For a mixed chat turn, content is the tool rows, the proposed cards, and leftover text together.
 
@@ -126,7 +130,8 @@ The text accumulated so far is kept.
 
 ### Retrying a Run
 
-See ASSISTANT-CONVERSATIONS.md (§Retry) for when retry is available, which run it reuses, and which AI profile state it uses.
+See ASSISTANT-CONVERSATIONS.md (§Retry) for when retry is available,
+which run it reuses, and which AI profile state it uses.
 
 Retry of an error marker rewrites it to a chat-text message so the new stream can render as a mixed turn.
 
