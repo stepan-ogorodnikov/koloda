@@ -2,8 +2,9 @@
 
 ## Scope
 
-Covers the keyboard shortcut system: categories, scopes, bindings, conflict resolution, configuration, and validation.
-Does not cover specific hotkey actions.
+Covers the keyboard shortcut system: categories, the catalog of hotkeys, scopes, bindings, conflict resolution,
+configuration, and validation.
+What an action does beyond the one line in the catalog is covered by the spec of the feature it acts on.
 
 Desktop zoom (ctrl/cmd `+`/`-`/`0`, ctrl+wheel) intentionally lives outside this system:
 it is not configurable, not scope-gated, and fires while text inputs are focused.
@@ -46,6 +47,85 @@ The following categories exist:
 - **navigation** — route navigation
 - **grades** — card grading actions
 - **ai** — assistant chat actions
+
+## Catalog
+
+Each table lists the hotkeys of one category, under the name shown in settings.
+The default is the binding a fresh install ships with.
+A hotkey with the default none is unbound until the user configures it.
+
+### Forms
+
+The **form** runtime scope gates these hotkeys.
+
+| Action | Default | Effect |
+| --- | --- | --- |
+| Save | `Mod+S` | Submits the open form. Does nothing while the form cannot be submitted. |
+| Discard | `Mod+D` | Restores the form's last saved values. Does nothing while the form is unchanged. |
+
+### Interface
+
+No runtime scope gates these hotkeys.
+
+| Action | Default | Effect |
+| --- | --- | --- |
+| Submit text field | `Mod+E` | Submits the add-card dialog, sends the assistant prompt, or submits a typed lesson answer. |
+| Focus forward | `Alt+J` | Moves focus to the next control, or to the next option in an open select. |
+| Focus backward | `Alt+K` | Moves focus to the previous control, or to the previous option in an open select. |
+| Go to next tab | `J` | Moves to the next tab or radio option while focus is on a tab or radio group. |
+| Go to previous tab | `K` | Moves to the previous tab or radio option while focus is on a tab or radio group. |
+| Close popover | `Alt+C` | Closes the open dialog or popover, the same as Escape. |
+| Toggle sidebar | `Mod+B` | Opens or closes the sidebar. |
+| Toggle color scheme | none | Cycles Light, Dark, and System, and saves the choice. |
+| Toggle language | none | Cycles the offered languages and saves the choice. |
+
+Submit text field only acts while a text field is focused.
+The tab hotkeys do not fire while a text field is focused.
+The other hotkeys in this category also work there.
+
+### Navigation
+
+The **navigation** runtime scope gates these hotkeys.
+Each one opens a screen.
+
+| Action | Default | Screen |
+| --- | --- | --- |
+| Dashboard | `H` | Dashboard |
+| Decks | `D` | Decks |
+| Presets | `P` | Algorithm presets |
+| Templates | `T` | Templates |
+| Settings | `Mod+,` | Settings |
+| Assistant | `A` | Assistant |
+
+### Grade Selection
+
+The **grades** runtime scope gates these hotkeys.
+Each one grades the submitted card in an open lesson, when the key is released.
+
+| Action | Default | Grade |
+| --- | --- | --- |
+| Again | `1` | Again |
+| Hard | `2` | Hard |
+| Normal | `3` | Good |
+| Easy | `4` | Easy |
+
+### AI
+
+No runtime scope gates these hotkeys.
+They act on the assistant chat and work while its text field is focused.
+
+| Action | Default | Effect |
+| --- | --- | --- |
+| Interrupt | `Mod+Shift+I` | Cancels the active run. Available only while a run is active. |
+| Focus chat input | `Mod+L` | Moves focus to the chat input. |
+| Open AI model picker | `Mod+Shift+M` | Opens the model picker. |
+| New conversation | none | Starts a new conversation, when the new conversation button is available. |
+| Previous conversation | none | Opens the previous conversation in the list. |
+| Next conversation | none | Opens the next conversation in the list. |
+| Scroll up | none | Scrolls the messages up. |
+| Scroll down | none | Scrolls the messages down. |
+| Scroll to top | none | Scrolls to the first message. |
+| Scroll to bottom | none | Scrolls to the latest message. |
 
 ## Runtime Scopes
 
@@ -142,7 +222,7 @@ If duplicate-binding validation fails, the save is rejected and the user sees an
 
 ### Default Bindings
 
-Each hotkey ships with a default binding.
+The default of each hotkey is in §Catalog.
 Some hotkeys have no default binding and must be configured by the user to be usable.
 
 ## Persistence
