@@ -2,7 +2,7 @@
 
 ## Scope
 
-Covers lessons overview, today's progress on that screen, starting a lesson, amount selection, studying,
+Covers the lessons overview and today's progress on the Dashboard, starting a lesson, amount selection, studying,
 grading, learn-ahead, session progress, result persistence, completion, early termination, and lesson hotkeys.
 Does not cover deck or template editing, FSRS algorithm internals, or hotkey binding configuration.
 Does not define daily limits, the learning-day window, or how today's review totals are counted.
@@ -39,13 +39,13 @@ Closing the dialog clears the session.
 
 - Available counts come from the user's decks and due times.
 - Amounts are chosen at init, then used to load lesson data.
-- Today's review totals and daily limits appear on the lessons screen and at init; see §Today's Progress.
+- Today's review totals and daily limits appear on the Dashboard and at init; see §Today's Progress.
 - Each card in the session uses its deck's template and algorithm.
 - Grading a card queues its result to be saved and advances to the next card.
 
 ## Lessons Overview
 
-The lessons screen lists every deck with available counts for "New", "Learn", "Review", and "Total".
+The Dashboard lists every deck with available counts for "New", "Learn", "Review", and "Total".
 A first row aggregates the same counts across all decks.
 
 Each count is a badge.
@@ -54,7 +54,7 @@ A badge with zero is disabled and shows "0".
 
 ## Today's Progress
 
-The lessons screen shows how many cards of each type have already been studied today, against that type's daily limit.
+The Dashboard shows how many cards of each type have already been studied today, against that type's daily limit.
 New, Learn, Review, and Total are each shown.
 The same figures are shown at lesson init; see §Init.
 
