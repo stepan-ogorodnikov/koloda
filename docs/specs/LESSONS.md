@@ -32,8 +32,8 @@ Closing the dialog clears the session.
 - **Today's review totals** — how many of each type have been studied in the current learning day;
   defined in LEARNING-SETTINGS.md (§Learning Day)
 - **Progress** — how many cards of each type are done versus still pending in this session
-- **Upload queue** — graded results waiting to be saved, one at a time
-- **Phase** — closed, preparing, configuring, loading-cards, studying, or finished
+- **Pending results** — graded results waiting to be saved, one at a time
+- **Phase** — closed, preparing, configuring, loading cards, studying, or finished
 
 ### Relationships
 
@@ -41,7 +41,7 @@ Closing the dialog clears the session.
 - Amounts are chosen at init, then used to load lesson data.
 - Today's review totals and daily limits appear on the lessons screen and at init; see §Today's Progress.
 - Each card in the session uses its deck's template and algorithm.
-- Grading a card enqueues a result for persistence and advances to the next card.
+- Grading a card queues its result to be saved and advances to the next card.
 
 ## Lessons Overview
 
@@ -105,7 +105,7 @@ Overlapping a configurable hotkey with a system key is HOTKEYS.md.
 
 ## Phases
 
-A lesson moves through six phases: closed, preparing, configuring, loading-cards, studying, and finished.
+A lesson moves through six phases: closed, preparing, configuring, loading cards, studying, and finished.
 
 - **closed** — no lesson is open.
   It is the resting state before opening and after closing.
@@ -113,7 +113,7 @@ A lesson moves through six phases: closed, preparing, configuring, loading-cards
   The dialog shows its title and no content yet.
 - **configuring** — the init screen is shown with the loaded counts.
   The user edits the amounts for the lesson.
-- **loading-cards** — the user pressed Start and the cards for the chosen amounts are being loaded.
+- **loading cards** — the user pressed Start and the cards for the chosen amounts are being loaded.
 - **studying** — the cards are shown and graded one by one.
 - **finished** — every card in the session has been graded,
   or the session ended with nothing to study; the completion screen is shown.
@@ -123,7 +123,7 @@ The effect depends on the phase.
 
 - In **preparing** and **configuring**, the dialog closes immediately.
   The lesson does not start.
-- In **loading-cards** and **studying**, the dialog asks for confirmation before closing.
+- In **loading cards** and **studying**, the dialog asks for confirmation before closing.
 - In **finished**, the dialog closes immediately.
 
 ## Init
@@ -233,7 +233,7 @@ Choosing a grade:
 
 1. Records how long the card was on screen, capped at one hour
 2. Builds the updated card schedule and a review entry from the chosen grade
-3. Queues that result for persistence
+3. Queues that result to be saved
 4. Advances to the next card, or finishes the lesson if none remain
 
 Grade hotkeys fire on key release while studying.
@@ -244,7 +244,7 @@ They use the configured "Again", "Hard", "Good", and "Easy" bindings.
 After a grade, the updated card may be appended back onto the end of the current lesson.
 That happens when learn-ahead is configured and the card's new due time falls before the cutoff from now.
 
-The appended card is studied later in the same session, after cards already queued.
+The appended card is studied later in the same session, after the cards already in the session.
 Learn-ahead can make the session longer than the amounts chosen at init.
 If learn-ahead is unset, the card has no due time, or the due is at or after the cutoff, it is not appended.
 
@@ -259,7 +259,7 @@ Progress dots represent every card currently in the session, including cards app
 The current card is highlighted.
 Progress counts follow each card's scheduling state when it appears in the session list.
 
-Each finished card's dot reflects upload status:
+Each finished card's dot reflects save status:
 
 - success when the result was saved
 - error when saving failed
@@ -267,15 +267,15 @@ Each finished card's dot reflects upload status:
 
 ## Persisting Results
 
-Graded results upload one at a time from a queue.
-A successful upload removes the item from the queue and marks that card's progress dot as success.
-A failed upload also removes the item from the queue and marks the dot as error.
-There is no automatic retry of a failed upload from the lesson UI.
+Graded results are saved one at a time.
+A successful save marks that card's progress dot as success.
+A failed save marks the dot as error.
+A failed save is not retried automatically.
 
-Already-uploaded results remain saved even if the user later abandons the lesson.
+Results already saved stay saved even if the user later abandons the lesson.
 
-Closing the lesson clears the in-memory queue and upload log.
-It does not roll back results that already succeeded.
+Closing the lesson discards results that were graded but not yet saved.
+It does not roll back results that were already saved.
 
 ## Completion
 
@@ -301,5 +301,5 @@ The confirmation offers "Continue studying" or "Close".
 In the preparing, configuring, and finished phases, close, Escape,
 and "Close popover" end the lesson without that confirmation.
 
-Ending a lesson mid-study does not undo grades that already uploaded successfully.
-Cards that were graded but not yet uploaded are discarded with the cleared session state.
+Ending a lesson mid-study does not undo grades that were already saved.
+What happens to results not yet saved is in §Persisting Results.
