@@ -72,8 +72,8 @@ See ASSISTANT-DATA-ACCESS.md (§Budgets) for the cap.
 If the tool accepts 0 cards, that message asks the model to call `propose_cards` again with those titles.
 The run itself is not failed by an empty or invalid proposal.
 
-Common title mismatches still accept when the text can be matched.
-That includes missing field wrappers, values wrapped as text objects, case-insensitive titles, or field ids.
+A field title that does not match exactly is still accepted when it can be matched,
+for example when it differs only in letter case.
 The first accepted proposal on a run sets that run's write target and field titles.
 A later proposal for a different deck is ignored for the table.
 A later proposal for the same deck appends more cards.
