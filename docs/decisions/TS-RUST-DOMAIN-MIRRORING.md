@@ -44,14 +44,10 @@ These numeric/serde edges are deliberately not mirrored; do not re-flag them as 
 - FSRS learning-step amounts are `i64` in Rust vs the safe-integer bound (2^53) in Zod
   (`learningStepValidation` in `libs/srs/src/lib/algorithms-fsrs.ts`).
   Step durations can never approach either limit.
-- Desktop repos also write sync bookkeeping (`sync_*` tables) in the same transaction as each product write,
-  backfill rows written before enrollment, join an existing space, settle push outcomes,
-  push again what the server held once a space has room, apply envelopes other devices captured,
-  queue and store image transfers, re-stamp pending writes, clean up after a re-bootstrap,
-  switch a file to a new device id, re-push what a restored server lacks,
-  and discard local data for an authoritative restore; the web repos do none of this,
-  because the web host does not sync (`docs/decisions/APP-ROLES.md`).
+- Desktop repos write sync bookkeeping (`sync_*` tables) in the same transaction as each product write.
+  Web repos do not, because the web host does not sync (`docs/decisions/APP-ROLES.md`).
   The `sync_*` tables still exist on both hosts through the shared migration series.
+  What the bookkeeping covers is in `crates/koloda/README.md`.
 - Rust `Option<T>` accepts an explicit JSON `null` where the TS twin uses `.optional()`
   (which rejects `null`, accepting only absence).
   Renderer payloads never carry explicit nulls (`toWire` drops `undefined`),
