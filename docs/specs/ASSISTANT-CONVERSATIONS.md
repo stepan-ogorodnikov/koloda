@@ -29,7 +29,7 @@ The model may propose cards during that run.
 - **AI profile state** — the profile, model, and model parameters; stored per conversation and once globally
 - **Write target** — the deck and template an accepted proposal targeted; kept per run
 - **Prompt input** — the unsent composer text for this conversation
-- **Revert state** — in-memory only; hides messages from a past user message onward
+- **Revert state** — not saved, cleared when the app reloads; hides messages from a past user message onward
 
 ### Relationships
 
@@ -65,8 +65,6 @@ not a model failure or user rejection, and the proposal completed before the str
 See ASSISTANT-CARD-GENERATION.md (§Conversation History) for the markdown serialization.
 Tool activity is not included in the history.
 See ASSISTANT-DATA-ACCESS.md (§Visibility).
-Messages that don't belong to any run are also excluded.
-Naming is covered by ASSISTANT-CONVERSATION-LIST.md (§Conversation Name).
 
 ## Runs
 
@@ -160,7 +158,7 @@ Changing the profile, model, or model parameters there updates the global record
 Those values are copied onto the conversation when it receives an id.
 From that point on, the conversation's own values take over and can diverge from the global one.
 
-**Loading** — on app load, the global record is read from storage.
+**Loading** — on app load, the global record is restored.
 If no value is stored yet, the global is reconciled to defaults: the newest available profile,
 no model, and empty parameters.
 If a stored value is present but its profile is no longer available, the global is reconciled to defaults the same way.
@@ -239,7 +237,7 @@ The partial content generated before the failure remains visible.
 
 ### Save Errors
 
-If saving to the database fails, a dismissible save error panel appears.
+If saving fails, a dismissible save error panel appears.
 If the user switches to a different conversation before the save error is displayed, the error is silently discarded.
 It belongs to the old conversation.
 
@@ -257,7 +255,7 @@ The user can retry a failed, canceled, or interrupted run.
 Successful runs are not retryable.
 Retry re-executes the same prompt as a chat request with tools.
 
-- The run ID is reused — the existing message pair is overwritten
+- The retry reuses the same run — the existing message pair is overwritten
 - Previous response text, cards, and tool rows are cleared and replaced with the new stream
 - The conversation history sent to the AI is rebuilt from the current state, including all previously successful runs
 
