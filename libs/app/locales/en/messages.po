@@ -299,7 +299,7 @@ msgstr "Hard"
 
 #: ../../libs/app/src/lib/settings-hotkeys.ts:41
 msgid "settings.hotkeys.grades.normal"
-msgstr "Normal"
+msgstr "Good"
 
 #: ../../libs/app/src/lib/settings-hotkeys.ts:35
 msgid "settings.hotkeys.navigation.ai"

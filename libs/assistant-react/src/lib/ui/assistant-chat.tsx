@@ -91,6 +91,7 @@ export function AssistantChat({
   const scroll = useAutoScroll({ messages, isLoading: isProcessing });
 
   const openAddProfile = useCallback(() => setIsAddProfileOpen(true), []);
+  const toggleSettings = useCallback(() => setAreSettingsOpen((prev) => !prev), []);
 
   const {
     profileId,
@@ -172,6 +173,7 @@ export function AssistantChat({
     handleNewConversation,
     scroll,
     modelProfilePickerRef,
+    onToggleSettings: toggleSettings,
     onPrevConversation,
     onNextConversation,
   });
@@ -248,7 +250,7 @@ export function AssistantChat({
         )}
         <div className="grow min-w-3" />
         {contextUsage != null && <AIChatContextUsage usage={contextUsage} contextLength={contextLength} />}
-        <AIChatSettingsToggle isOpen={areSettingsOpen} onOpenChange={() => setAreSettingsOpen((prev) => !prev)} />
+        <AIChatSettingsToggle isOpen={areSettingsOpen} onOpenChange={toggleSettings} />
       </AIChatFooter>
     </section>
   );

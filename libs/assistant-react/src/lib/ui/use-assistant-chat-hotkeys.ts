@@ -9,6 +9,7 @@ export type UseAssistantChatHotkeysOptions = {
   handleNewConversation: () => void;
   scroll: UseAutoScrollReturn;
   modelProfilePickerRef: RefObject<HTMLButtonElement | null>;
+  onToggleSettings: () => void;
   onPrevConversation?: () => void;
   onNextConversation?: () => void;
 };
@@ -18,6 +19,7 @@ export function useAssistantChatHotkeys({
   handleNewConversation,
   scroll,
   modelProfilePickerRef,
+  onToggleSettings,
   onPrevConversation,
   onNextConversation,
 }: UseAssistantChatHotkeysOptions) {
@@ -36,6 +38,7 @@ export function useAssistantChatHotkeys({
   useAppHotkey(ai.openModelPicker, () => modelProfilePickerRef.current?.click(), "", {
     ignoreInputs: false,
   });
+  useAppHotkey(ai.toggleSettings, onToggleSettings, "", { ignoreInputs: false });
   useAppHotkey(ai.previousConversation, () => onPrevConversation?.(), "", { ignoreInputs: false });
   useAppHotkey(ai.nextConversation, () => onNextConversation?.(), "", { ignoreInputs: false });
   useAppHotkey(ai.scrollUp, scroll.handleScrollUp, "", { ignoreInputs: false });

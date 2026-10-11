@@ -18,7 +18,7 @@ test("validates conflicts and resets the hotkeys settings form", async ({ page }
   const initialNavDecks = await getHotkeyByLabel(page, "Decks").kbd.first().innerText();
   const initialGradesAgain = await getHotkeyByLabel(page, "Again").kbd.first().innerText();
   const initialGradesHard = await getHotkeyByLabel(page, "Hard").kbd.first().innerText();
-  const initialGradesNormal = await getHotkeyByLabel(page, "Normal").kbd.first().innerText();
+  const initialGradesGood = await getHotkeyByLabel(page, "Good").kbd.first().innerText();
 
   await editHotkey(page, "Dashboard", "Control+x");
   await editHotkey(page, "Decks", "Control+x");
@@ -41,7 +41,7 @@ test("validates conflicts and resets the hotkeys settings form", async ({ page }
   await editHotkey(page, "Decks", "Control+d");
   await editHotkey(page, "Again", "Control+1");
   await editHotkey(page, "Hard", "Control+2");
-  await editHotkey(page, "Normal", "Control+3");
+  await editHotkey(page, "Good", "Control+3");
 
   const discardButton = page.locator("form").getByRole("button", { name: "Discard", exact: true });
   await expect(discardButton).toBeVisible();
@@ -52,5 +52,5 @@ test("validates conflicts and resets the hotkeys settings form", async ({ page }
   await expect(getHotkeyByLabel(page, "Decks").kbd.first()).toHaveText(initialNavDecks);
   await expect(getHotkeyByLabel(page, "Again").kbd.first()).toHaveText(initialGradesAgain);
   await expect(getHotkeyByLabel(page, "Hard").kbd.first()).toHaveText(initialGradesHard);
-  await expect(getHotkeyByLabel(page, "Normal").kbd.first()).toHaveText(initialGradesNormal);
+  await expect(getHotkeyByLabel(page, "Good").kbd.first()).toHaveText(initialGradesGood);
 });

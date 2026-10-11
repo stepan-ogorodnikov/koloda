@@ -9,6 +9,7 @@ import { useAssistantChatHotkeys } from "./use-assistant-chat-hotkeys";
 
 const registrations = vi.hoisted(() => ({
   newConversation: { enabled: undefined as boolean | undefined },
+  toggleSettings: { callback: undefined as (() => void) | undefined },
 }));
 
 const aiKeys = vi.hoisted(() => ({
@@ -17,6 +18,7 @@ const aiKeys = vi.hoisted(() => ({
   openModelPicker: ["Mod+Shift+M"],
   previousConversation: [],
   nextConversation: [],
+  toggleSettings: ["Mod+Shift+S"],
   scrollUp: [],
   scrollDown: [],
   scrollToTop: [],
@@ -28,9 +30,12 @@ vi.mock("@koloda/core-react", async (importOriginal) => {
   return {
     ...actual,
     useHotkeysSettings: () => ({ ai: aiKeys }),
-    useAppHotkey: (hotkeys: unknown, _callback: unknown, _scope: string, options?: { enabled?: boolean }) => {
+    useAppHotkey: (hotkeys: unknown, callback: () => void, _scope: string, options?: { enabled?: boolean }) => {
       if (hotkeys === aiKeys.newConversation) {
         registrations.newConversation.enabled = options?.enabled;
+      }
+      if (hotkeys === aiKeys.toggleSettings) {
+        registrations.toggleSettings.callback = callback;
       }
     },
   };
@@ -40,7 +45,7 @@ const scroll = {
   resetScroll: vi.fn(),
 } as unknown as UseAutoScrollReturn;
 
-function renderWithStore(store: ReturnType<typeof createStore>) {
+function renderWithStore(store: ReturnType<typeof createStore>, onToggleSettings = vi.fn()) {
   const wrapper = ({ children }: PropsWithChildren) => <Provider store={store}>{children}</Provider>;
   return renderHook(
     () =>
@@ -49,6 +54,7 @@ function renderWithStore(store: ReturnType<typeof createStore>) {
         handleNewConversation: vi.fn(),
         scroll,
         modelProfilePickerRef: { current: null },
+        onToggleSettings,
       }),
     { wrapper },
   );
@@ -71,5 +77,15 @@ describe("useAssistantChatHotkeys", () => {
     renderWithStore(store);
 
     expect(registrations.newConversation.enabled).toBe(false);
+  });
+
+  it("routes the toggle-settings hotkey to onToggleSettings", () => {
+    const store = createStore();
+    const onToggleSettings = vi.fn();
+
+    renderWithStore(store, onToggleSettings);
+    registrations.toggleSettings.callback?.();
+
+    expect(onToggleSettings).toHaveBeenCalledTimes(1);
   });
 });
