@@ -46,6 +46,12 @@ They do not restate it.
 A pointer looks like `TEMPLATES.md (§Locking)`.
 If you are about to copy a sentence that already exists elsewhere, replace the copy with a pointer.
 
+One exception is deliberate.
+DECKS.md, TEMPLATES.md, and ALGORITHMS.md each repeat the same small field rules:
+the title rule, the notes rule, and the add-dialog success link.
+Each of those specs is loaded alone, and a pointer to a sibling would cost more than the repeat.
+Change all three together.
+
 **Edge cases live with the concept.**
 Put failure, empty, cancel, restore, and "does not happen" next to the happy path they qualify.
 Do not collect them in an "Edge Cases" section at the end.
