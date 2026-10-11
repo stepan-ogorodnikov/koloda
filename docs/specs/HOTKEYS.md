@@ -11,7 +11,6 @@ it is not configurable, not scope-gated, and fires while text inputs are focused
 Lesson dialog keys (`Escape`, `Enter`, `Space`) also live outside this system:
 they are not configurable and are not checked for conflicts.
 They are gated to the open lesson dialog; see LESSONS.md (§Hotkeys).
-Avoid binding a configurable hotkey to `Escape`, `Enter`, or `Space` when lessons are used.
 When a configurable hotkey and a lesson system key share the same binding, both actions fire.
 
 ## What it is
@@ -52,8 +51,8 @@ The following categories exist:
 
 A runtime scope determines when its hotkeys are active, distinct from the settings category.
 The following runtime scopes exist: `navigation`, `grades`, `form`.
-The `ui` and `ai` categories have no runtime scope — their hotkeys register always-on
-and gate via component mount plus per-hotkey `enabled` instead.
+The `ui` and `ai` categories have no runtime scope.
+Their hotkeys are active while the part of the interface they act on is on screen.
 
 ## Scope Activation
 
@@ -108,8 +107,7 @@ Only the one that fires first (based on scope activation order) will trigger.
 
 ### Conflict Behavior
 
-Some hotkeys are registered with a conflict-allowing behavior.
-These hotkeys can coexist with other hotkeys on the same key.
+Some hotkeys can coexist with other hotkeys on the same key.
 When the key is pressed, both hotkeys fire.
 
 This is used for hotkeys that should work in specific contexts regardless of conflicts.
@@ -149,11 +147,10 @@ Some hotkeys have no default binding and must be configured by the user to be us
 
 ## Persistence
 
-Hotkey settings are saved to the database.
-They persist across sessions.
+Hotkey settings persist across sessions.
 
-If a save fails, the in-memory bindings revert to the last saved state.
-If the stored settings are corrupted, both hosts report an error instead of silently falling back to defaults.
+If a save fails, the bindings revert to the last saved state.
+If the stored settings are corrupted, the app reports an error instead of silently falling back to defaults.
 Corrupted settings must never look the same as missing settings.
 Otherwise safety checks could pass when they should fail.
 
