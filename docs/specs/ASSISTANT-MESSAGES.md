@@ -21,7 +21,7 @@ Together they form a single turn in the conversation, tied to one AI run.
 - **Assistant message** — the AI's response; created empty at run start and filled by the stream
 - **Turn** — one user message and its assistant message, tied to a single run
 - **Metadata kind** — chat-text or error; decides how an assistant message renders
-- **Revert point** — the user message a revert targets; in-memory, at most one per conversation
+- **Revert point** — the user message a revert targets; at most one per conversation, cleared when the app reloads
 
 ### Relationships
 
@@ -53,7 +53,7 @@ There are two kinds:
 - **chat-text** — a chat response from the AI.
   The same turn may also show tool activity and a review table when that run proposed cards.
 - **error** — a synthesized error marker.
-  Created when a run fails or when restoring a failed run from the database.
+  Created when a run fails or when a failed run is restored.
   The message text is cleared to empty.
 
 The metadata kind determines how the message is rendered.
@@ -133,7 +133,7 @@ The text accumulated so far is kept.
 See ASSISTANT-CONVERSATIONS.md (§Retry) for when retry is available,
 which run it reuses, and which AI profile state it uses.
 
-Retry of an error marker rewrites it to a chat-text message so the new stream can render as a mixed turn.
+Retrying an error marker replaces it with the new response, which can render as a mixed turn.
 
 ### Reverting the Conversation
 
@@ -183,8 +183,7 @@ Sending the pre-filled prompt — edited or as-is — does two things in order:
 1. Permanently removes the hidden messages and their runs from the conversation state.
 2. Creates a new user message with the submitted text and starts a fresh run.
 
-The fresh run uses a new run ID.
-It is a new run, not a retry.
+The fresh run is a new run, not a retry.
 The conversation history sent to the AI is rebuilt from the now-shorter message list.
 
 ## Message Content
@@ -209,8 +208,8 @@ Empty reasoning is not shown.
 Reasoning is not included in conversation history.
 See ASSISTANT-CONVERSATIONS.md (§Conversation History).
 Tool calls expand and collapse the same way; see ASSISTANT-DATA-ACCESS.md (§Visibility).
-Other non-text parts are shown as metadata lines, except step boundaries, which are hidden.
+Other non-text content is shown as metadata lines.
 Proposed cards stay in the review table; leftover markdown does not become cards.
 
-When extracting text for display or history, all text parts are joined with double newlines.
+Separate text segments of a response read as separate paragraphs, on screen and in the history sent to the AI.
 Leading and trailing whitespace is trimmed.
