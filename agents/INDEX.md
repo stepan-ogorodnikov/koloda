@@ -53,6 +53,12 @@ The listed files are relative to the repo root.
 | Card media storage (attachments, hash ids, byte store) | `docs/decisions/MEDIA-STORAGE.md`, `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md` |
 | Change inside `crates/koloda` (Rust domain, repos, settings slices, FSRS, reviews) | `agents/RUST.md`, `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md` |
 | Sync wire protocol (envelope, field-group registry, clock, codecs; `crates/koloda-sync-proto`) | `crates/koloda-sync-proto/PROTOCOL.md`, `crates/koloda-sync-proto/README.md` |
+| Sync engine on native devices (`crates/koloda-sync`: cycle, runner, pairing, fork, restore, attachments) | `crates/koloda-sync/README.md`, `crates/koloda-sync-proto/PROTOCOL.md` |
+| Desktop Rust addon (`apps/electron/src-rust`, hosts the sync engine) | `apps/electron/README.md`; add `apps/electron/IPC.md` when a channel changes |
+| Sync server (`crates/koloda-server`: routes, envelope log, pairing, quotas, backup, restore, CLI) | `crates/koloda-server/README.md`, `crates/koloda-sync-proto/PROTOCOL.md` |
+| Sync server database (`crates/koloda-server/src/migrations/server/`, `space/`; not the desktop series, so not `DB.md`) | `crates/koloda-server/README.md` (§Data directory); add `crates/koloda-sync-proto/PROTOCOL.md` when devices see the change |
+| Docker image or compose example (`crates/koloda-server/Dockerfile`, `deploy/`, `.dockerignore`) | `crates/koloda-server/README.md` (§Docker) |
+| Sync screens, sync status, joining and leaving a space (desktop only) | `docs/specs/SYNC.md`, `agents/I18N.md` |
 | Add a color theme | `agents/ADD-COLOR-THEME.md`, `docs/specs/INTERFACE-SETTINGS.md` |
 | Interface settings change (language, scheme, themes, motion) | `docs/specs/INTERFACE-SETTINGS.md`, `agents/I18N.md` |
 | App shell layout (narrow/wide, drawer, nav) | `agents/LAYOUT.md`, `agents/CSS.md`; add `docs/specs/INTERFACE-SETTINGS.md` when the change is an interface setting |
@@ -61,6 +67,11 @@ The listed files are relative to the repo root.
 | Write or update a functional spec | `agents/FUNCTIONAL-SPECIFICATIONS.md`, `agents/MARKDOWN.md` |
 | Write or update a decision | `agents/DECISIONS.md`, `agents/MARKDOWN.md` |
 | Write or update any markdown | `agents/MARKDOWN.md` |
+| Playwright e2e suites (`apps/web-e2e`, `apps/electron-e2e`, `libs/e2e`) | `apps/web-e2e/README.md` or `apps/electron-e2e/README.md`, `libs/e2e/README.md`, `agents/VERIFY.md` |
+| Desktop IPC channel (renderer ↔ main; `libs/native-ipc`) | `apps/electron/IPC.md`, `libs/native-ipc/README.md` |
+| CI workflows, push gate, landing (`.github/workflows/`, `tools/land.ts`, `tools/check-push.ts`) | No guide yet. `AGENTS.md` (§Landing) is always loaded; the workflow files and `tools/` are the reference |
+| Workspace dependency layers (`tools/workspace-deps/`, `bun run check:workspace-deps`) | No guide yet. `tools/workspace-deps/layers.ts` is the table; each lib's `README.md` "Where it sits" and "Does NOT own" give its boundaries |
+| Other `tools/` files (pre-commit hook, vitest config, theme-boot Vite plugin) | No guide yet. The files are the reference; the theme-boot `SURFACE` map is in `agents/ADD-COLOR-THEME.md` |
 
 ## Reviewing
 
@@ -87,12 +98,19 @@ Then add the same guides the author used for that change type, so the reviewer a
 | Card media storage diff | `docs/decisions/MEDIA-STORAGE.md`, `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md` |
 | `crates/koloda` / `koloda` crate diff | `agents/RUST.md`, `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md` |
 | `crates/koloda-sync-proto` diff | `crates/koloda-sync-proto/PROTOCOL.md`, `crates/koloda-sync-proto/README.md` |
+| `crates/koloda-sync` diff | `crates/koloda-sync/README.md`, `crates/koloda-sync-proto/PROTOCOL.md` |
+| `crates/koloda-server` diff (incl. its migrations and Dockerfile) | `crates/koloda-server/README.md`, `crates/koloda-sync-proto/PROTOCOL.md` |
+| Desktop Rust addon diff (`apps/electron/src-rust`) | `apps/electron/README.md`, `apps/electron/IPC.md` |
+| Sync spec diff | `docs/specs/SYNC.md`, `agents/I18N.md` |
 | Theme diff | `agents/ADD-COLOR-THEME.md`, `docs/specs/INTERFACE-SETTINGS.md` |
 | Interface settings diff | `docs/specs/INTERFACE-SETTINGS.md` |
 | App shell layout diff | `agents/LAYOUT.md`, `agents/CSS.md`; add `docs/specs/INTERFACE-SETTINGS.md` when the diff changes an interface setting |
 | User-visible behavior diff (UI copy, flows, settings the user touches) | area primary spec (or `agents/ASSISTANT-MAP.md` for assistant), `agents/VERIFY.md`, plus the usual CODE-STYLE / CODE-DOCUMENTATION as for any TS/React edit |
 | Hotkey diff | `agents/ADD-HOTKEY.md`, `docs/specs/HOTKEYS.md`, `agents/I18N.md` |
 | Functional spec diff | `agents/FUNCTIONAL-SPECIFICATIONS.md`, `agents/MARKDOWN.md` |
+| Desktop IPC diff | `apps/electron/IPC.md`, `libs/native-ipc/README.md` |
+| Playwright e2e diff | `agents/VERIFY.md`, plus the touched suite's README |
+| CI, Docker, or `tools/` diff | `AGENTS.md` (§Landing); no other guide yet. Docker diffs also take `crates/koloda-server/README.md` (§Docker) |
 
 ## Auditing
 
