@@ -6,8 +6,9 @@ Covers the keyboard shortcut system: categories, the catalog of hotkeys, scopes,
 configuration, and validation.
 What an action does beyond the one line in the catalog is covered by the spec of the feature it acts on.
 
-Desktop zoom (ctrl/cmd `+`/`-`/`0`, ctrl+wheel) intentionally lives outside this system:
+Desktop zoom intentionally lives outside this system:
 it is not configurable, not scope-gated, and fires while text inputs are focused.
+Its keys are in INTERFACE-SETTINGS.md (§Desktop Zoom).
 
 Lesson dialog keys (`Escape`, `Enter`, `Space`) also live outside this system:
 they are not configurable and are not checked for conflicts.

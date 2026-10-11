@@ -3,6 +3,7 @@
 ## Scope
 
 Covers interface settings: language, color scheme, color themes, motion, and date and time formats.
+It also covers desktop zoom, which is not a setting.
 Does not cover hotkeys, assistant settings, learning settings, or adding new themes.
 Those are covered by HOTKEYS.md, ASSISTANT-SETTINGS.md, and LEARNING-SETTINGS.md.
 Adding a theme is covered by the color theme guide.
@@ -128,6 +129,24 @@ A preview under each select always shows the current date and time in the chosen
 An invalid custom pattern is rejected on save: nothing is written, the previous format stays in effect, and the
 field shows an error.
 Relative labels, such as the conversation list's "3 days ago", do not follow these settings.
+
+## Desktop Zoom
+
+On the desktop the user can zoom the interface in and out.
+Zoom is not on the interface settings screen, and its keys are not configurable; see HOTKEYS.md (§Scope).
+
+The zoom keys and wheel:
+
+- Ctrl or Cmd with `+` or `=` zooms in
+- Ctrl or Cmd with `-` zooms out
+- Ctrl or Cmd with `0` resets to the default size
+- Ctrl or Cmd with the mouse wheel zooms in when scrolling up and out when scrolling down
+
+Zoom works while a text field is focused.
+It changes in steps within a fixed range.
+The last zoom level is remembered on this device across restarts.
+It is not part of the saved interface settings.
+The web app leaves zoom to the browser.
 
 ## First Setup
 
