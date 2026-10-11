@@ -77,42 +77,8 @@ The listed files are relative to the repo root.
 ## Reviewing
 
 Always include `agents/REVIEW.md`.
-Then add the same guides the author used for that change type, so the reviewer applies the same rules.
-
-| Review target | Add to `agents/REVIEW.md` |
-| --- | --- |
-| Any diff | `agents/CODE-STYLE.md`, `agents/CODE-DOCUMENTATION.md` |
-| Diff adds or changes tests | add `agents/TESTING.md` |
-| Diff touches `className` | add `agents/CSS.md` |
-| Add AI provider diff | `agents/ADD-AI-PROVIDER.md`, `docs/specs/AI-PROVIDERS.md`, `agents/I18N.md`, `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md` |
-| Add assistant tool diff | `agents/ADD-ASSISTANT-TOOL.md`, `docs/specs/ASSISTANT-DATA-ACCESS.md`, `agents/I18N.md` |
-| Assistant conversation list diff | `docs/specs/ASSISTANT-CONVERSATION-LIST.md`, `agents/ASSISTANT-MAP.md` |
-| Assistant chat diff | `agents/ASSISTANT-MAP.md` (+ the one spec it names) |
-| Cards diff | `docs/specs/CARDS.md` |
-| Card images diff | `docs/specs/MEDIA.md` |
-| Decks diff | `docs/specs/DECKS.md` |
-| Lessons diff | `docs/specs/LESSONS.md` |
-| Templates diff | `docs/specs/TEMPLATES.md` |
-| Algorithms diff | `docs/specs/ALGORITHMS.md` |
-| Learning settings diff | `docs/specs/LEARNING-SETTINGS.md` |
-| Schema change diff | `agents/DB.md`, `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md` |
-| Card media storage diff | `docs/decisions/MEDIA-STORAGE.md`, `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md` |
-| Sync modules diff (`crates/koloda/src/repo/sync/`) | `crates/koloda/src/repo/sync/README.md`, `crates/koloda-sync-proto/PROTOCOL.md`, `agents/RUST.md` |
-| `crates/koloda` / `koloda` crate diff | `agents/RUST.md`, `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md` |
-| `crates/koloda-sync-proto` diff | `crates/koloda-sync-proto/PROTOCOL.md`, `crates/koloda-sync-proto/README.md` |
-| `crates/koloda-sync` diff | `crates/koloda-sync/README.md`, `crates/koloda-sync-proto/PROTOCOL.md` |
-| `crates/koloda-server` diff (incl. its migrations and Dockerfile) | `crates/koloda-server/README.md`, `crates/koloda-sync-proto/PROTOCOL.md` |
-| Desktop Rust addon diff (`apps/electron/src-rust`) | `apps/electron/README.md`, `apps/electron/IPC.md` |
-| Sync spec diff | `docs/specs/SYNC.md`, `agents/I18N.md` |
-| Theme diff | `agents/ADD-COLOR-THEME.md`, `docs/specs/INTERFACE-SETTINGS.md` |
-| Interface settings diff | `docs/specs/INTERFACE-SETTINGS.md` |
-| App shell layout diff | `agents/LAYOUT.md`, `agents/CSS.md`; add `docs/specs/INTERFACE-SETTINGS.md` when the diff changes an interface setting |
-| User-visible behavior diff (UI copy, flows, settings the user touches) | area primary spec (or `agents/ASSISTANT-MAP.md` for assistant), `agents/VERIFY.md`, plus the usual CODE-STYLE / CODE-DOCUMENTATION as for any TS/React edit |
-| Hotkey diff | `agents/ADD-HOTKEY.md`, `docs/specs/HOTKEYS.md`, `agents/I18N.md` |
-| Functional spec diff | `agents/FUNCTIONAL-SPECIFICATIONS.md`, `agents/MARKDOWN.md` |
-| Desktop IPC diff | `apps/electron/IPC.md`, `libs/native-ipc/README.md` |
-| Playwright e2e diff | `agents/VERIFY.md`, plus the touched suite's README |
-| CI, Docker, or `tools/` diff | `AGENTS.md` (§Landing); no other guide yet. Docker diffs also take `crates/koloda-server/README.md` (§Docker) |
+Then add the guides the Authoring table lists for the change type, so the reviewer applies the same rules as the author.
+For a diff that spans several change types, take the union of their rows.
 
 ## Auditing
 
