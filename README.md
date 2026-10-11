@@ -34,6 +34,14 @@ nx serve electron
 nx build electron
 ```
 
+Desktop data lives in the per-platform user-data directory (`~/.local/share/koloda` on Linux).
+Set `KOLODA_USER_DATA` to use another directory.
+
+### Sync server
+
+Devices on the desktop app can sync through a self-hosted server.
+Setup, Docker, and the CLI are in [`crates/koloda-server/README.md`](crates/koloda-server/README.md).
+
 ## Tech Stack
 
 - Nx monorepo with Bun as package manager
@@ -56,7 +64,14 @@ nx run @koloda/electron:test:e2e
 # Web Playwright e2e (also runs on the pages deploy)
 nx run web-e2e:e2e
 
-# Rust (workspace: koloda + Electron NAPI crate)
+# Repo checks: format (dprint), markdown line length, workspace layers, TS and Rust gates
+bun run check:format
+bun run check:markdown
+bun run check:workspace-deps
+bun run check:ts
+bun run check:rust
+
+# Rust (workspace: koloda, koloda-sync-proto, koloda-server, koloda-sync + Electron NAPI crate)
 cargo test
 ```
 
@@ -89,6 +104,13 @@ crates/
   koloda/                 # Desktop Rust backend (domain, repos, SQLite/Refinery, keyring)
   koloda-server/          # Sync server (spaces, devices, envelope log)
   koloda-sync/            # Sync engine on native devices (server calls, sync cycle)
+  koloda-sync-proto/      # Sync wire protocol shared by devices and the server
+docs/
+  specs/                  # Functional specs (user-visible behavior)
+  decisions/              # Architecture decisions
+agents/                   # Guides for coding agents; routing starts at INDEX.md
+tasks/                    # Task files for planned work
+tools/                    # Repo checks and scripts (landing, push gate, workspace layers, markdown)
 ```
 
 Agent routing starts at `agents/INDEX.md`.
