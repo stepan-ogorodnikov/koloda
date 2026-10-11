@@ -4,7 +4,7 @@
 
 Covers interface settings: language, color scheme, color themes, motion, and date and time formats.
 Does not cover hotkeys, assistant settings, learning settings, or adding new themes.
-Those are covered by the hotkeys, assistant settings, and learning settings specs.
+Those are covered by HOTKEYS.md, ASSISTANT-SETTINGS.md, and LEARNING-SETTINGS.md.
 Adding a theme is covered by the color theme guide.
 
 ## What it is
@@ -47,11 +47,9 @@ Changing the language switches all interface text immediately.
 The choice is saved with the interface settings.
 The document language follows the active locale for assistive tools.
 
-At startup the app does not read the saved language back.
-Startup picks the locale itself.
-It uses the last choice remembered on this device, otherwise the device language, otherwise English.
-The web and desktop apps both remember the last choice locally.
-The saved value records the choice; it does not restore it.
+Language is remembered per device.
+At startup the app uses the language last chosen on this device, otherwise the device language, otherwise English.
+The language saved with the interface settings does not override that choice.
 
 ## Color Scheme
 
@@ -135,8 +133,8 @@ Relative labels, such as the conversation list's "3 days ago", do not follow the
 
 First setup asks for language and color scheme before the app's data is created.
 On the desktop it can also join a sync space instead; that device's data comes from the space (SYNC.md (§First Run)).
-The pickers there change the look and text of the setup screen itself but save nothing to the database yet.
-Browser-local mirrors follow the live choice, including implicit ones.
+The pickers there change the look and text of the setup screen itself but save no settings yet.
+The device remembers the live choice, including implicit ones.
 
 On submit, the chosen language and scheme become the interface settings.
 Every field not chosen at setup starts at its default.
@@ -157,11 +155,9 @@ The pickers only offer valid values.
 A value outside the known sets is rejected on write.
 A rejected or failed write leaves the previous settings unchanged.
 
-## Startup and Caching
+## Startup
 
-The saved settings record is the source of truth.
-Scheme, themes, and motion are also mirrored to a lightweight local cache.
-The cache lets the app paint with the last-used look before the database loads.
-Before styles load, the last-used scheme and surface color are painted to avoid a flash of wrong colors.
-Once the saved settings load, they take precedence over the cached values.
-Failures to write the cache do not affect saving to the database.
+The app starts with the scheme, themes, and motion it last used on this device.
+This avoids a flash of wrong colors before the saved settings load.
+Once the saved settings load, they take precedence.
+Language is the exception; see §Language.
