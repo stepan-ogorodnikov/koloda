@@ -4,11 +4,10 @@
 
 Covers card content, scheduling state, adding, editing, deleting, resetting progress, preview, and card views.
 It is also the home for what rendered markdown may contain, wherever the app renders it.
-Does not cover deck or template management, lesson flow, the FSRS algorithm itself, or AI card generation.
+Does not cover deck management (DECKS.md), template management (TEMPLATES.md), lesson flow (LESSONS.md),
+the FSRS algorithm itself (ALGORITHMS.md), or AI card generation (ASSISTANT-CARD-GENERATION.md).
 Images in card content (inserting, formats, where they show) are covered by MEDIA.md.
 Accepting generated cards into a deck is covered; how those cards are generated is not.
-Deck, template, lesson, algorithm, and AI card generation behavior are covered by the decks,
-templates, lessons, algorithms, and assistant card generation specs.
 
 ## What it is
 
