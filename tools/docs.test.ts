@@ -91,6 +91,22 @@ describe("functional specs", () => {
     expect(headings).toEqual(["## Scope", "## What it is", "## Core model"]);
   });
 
+  // WHY: heading text is the pointer id, so one case convention keeps pointers predictable.
+  it.each(specs)("%s uses Title Case headings", (spec) => {
+    const lowercase = new Set(["a", "an", "the", "and", "or", "but", "on", "to", "of", "in", "for", "at", "by"]);
+    const mandated = new Set(["What it is", "Core model"]);
+    const headings = [...withoutFences(read(spec)).matchAll(/^#{2,6} (.+)$/gm)]
+      .map((match) => match[1].trim())
+      .filter((heading) => !mandated.has(heading));
+    const miscased = headings.filter((heading) =>
+      heading.split(" ").some((word, index) => {
+        if (!/^[a-z]/.test(word)) return false;
+        return index === 0 || !lowercase.has(word);
+      }),
+    );
+    expect(miscased).toEqual([]);
+  });
+
   it.each(specs)("%s has a Relationships section inside Core model", (spec) => {
     const markdown = read(spec);
     const core = markdown.indexOf("\n## Core model\n");

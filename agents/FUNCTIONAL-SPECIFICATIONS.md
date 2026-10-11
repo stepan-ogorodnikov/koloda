@@ -80,6 +80,11 @@ Cross-references use the sibling filename and the section heading: `CARDS.md (§
 Do not invent HTML anchors.
 Heading text is the stable id.
 
+Headings use Title Case.
+Lowercase only these words, except as the first word: a, an, the, and, or, but, on, to, of, in, for, at, by.
+The mandated `What it is` and `Core model` keep their exact wording.
+Renaming a heading means updating every pointer to it.
+
 ## Structure
 
 Every spec opens with these three sections, in this order, under these exact headings:
