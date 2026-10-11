@@ -15,6 +15,24 @@ Later sessions read that line instead of routing again.
   - Landing still needs an explicit ask.
 - Do not open pull requests.
 - Do not push to `main` by hand.
+- Commit messages have a short subject line.
+  - A body is optional; add one when the why is not obvious from the diff.
+  - Planned work's candidate subjects are in `agents/IMPLEMENTATION-PLAN.md`.
+
+## Session start
+
+- On a `task/*` branch, read `tasks/live/<slug>.md` and `agents/TASKS.md` before any other work.
+- The session protocol in `agents/TASKS.md` says what to check first.
+
+## Verification
+
+- Never start the app or Playwright unless the human asks for that command.
+- `agents/VERIFY.md` says how to check a change.
+
+## Scratch
+
+- Use `tmp/` for scratch and generated output.
+- `tmp/` is gitignored and ephemeral.
 
 ## Landing
 
