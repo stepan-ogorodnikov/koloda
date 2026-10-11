@@ -35,7 +35,7 @@ The app presents one consistent interface regardless of provider.
 - The model and model parameters for a run are chosen per conversation.
   The request itself goes through the profile's secrets.
 
-## Platform availability
+## Platform Availability
 
 Not every built-in provider works in the browser.
 The desktop app supports every built-in provider.
@@ -65,7 +65,7 @@ A profile is the unit of AI configuration the user manages.
 ### Adding a Profile
 
 The user opens the add-profile dialog from AI settings.
-When there are no profiles add-profile dialog can be opened from assistant chat.
+When there are no profiles, the add-profile dialog can be opened from assistant chat.
 They pick a provider from a dropdown.
 The dialog shows the secret fields that provider requires.
 

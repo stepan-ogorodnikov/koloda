@@ -56,7 +56,7 @@ Writing cards as a markdown table does not create cards.
 The model chooses which tools to call and in what order.
 The tool descriptions and the built-in prompt ask it to fetch ids and field titles itself and propose in the same turn.
 That includes a request to create a deck and fill it.
-See ASSISTANT-DATA-ACCESS.md (§Tool guidance).
+See ASSISTANT-DATA-ACCESS.md (§Tool Guidance).
 If the model answers in text or asks the user instead, no cards are created.
 
 Each proposed card is a map of exact template field title to invented text.

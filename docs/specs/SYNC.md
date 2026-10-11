@@ -37,7 +37,7 @@ Changes made offline sync once the device can reach the server again.
   and images.
 - These stay on each device: interface settings, hotkeys, AI profiles and their keys, and assistant conversations.
 
-## Platform availability
+## Platform Availability
 
 Sync is in the desktop app only.
 The web demo has no Sync settings and never syncs.
@@ -112,7 +112,7 @@ If the join fails, the dialog says why:
 - the server cannot be reached, or its address is not https and not on this computer;
 - this device's clock is more than 5 minutes off the server's.
 
-## First run
+## First Run
 
 The desktop app's first-run screen offers "Get started", which seeds the starter content, and "Join a space".
 "Join a space" asks for the same things as §Joining a space and shows the same preview; "Back" returns to the first
@@ -123,7 +123,7 @@ The language and color scheme chosen on the first-run screen become its interfac
 interface setting and hotkey starts at its default.
 
 After the join, the screen stays until the space's first download ends, and shows how many changes are left.
-If the download stops, or waits at a change the app cannot read, the screen says why (§When sync stops) and sync
+If the download stops, or waits at a change the app cannot read, the screen says why (§When Sync Stops) and sync
 keeps retrying on its own; quitting the app is the only way out.
 Once the download ends, the app opens on the space's data.
 A device quit during its first download opens normally next time, and the download goes on in the background.
@@ -178,7 +178,7 @@ Settings → Sync shows, for a device in a space:
 - how many images wait to upload, and how many wait to download;
 - while the space downloads, how many changes are left.
 
-A stopped sync shows why it stopped (§When sync stops).
+A stopped sync shows why it stopped (§When Sync Stops).
 
 The title bar shows a sync indicator on every screen: syncing, up to date, or needs attention.
 Its tooltip gives the last sync, or why sync needs attention; clicking it opens Settings → Sync.
@@ -197,7 +197,7 @@ Sync also runs by itself:
 A change made on one device usually shows on the others within seconds.
 Screens that show synced data refresh as changes arrive.
 
-## When sync stops
+## When Sync Stops
 
 Settings → Sync says why sync stopped and what the user can do.
 Unless a reason below needs the user, sync retries on its own.

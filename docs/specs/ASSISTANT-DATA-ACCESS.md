@@ -64,7 +64,7 @@ that is not a substitute for full field metadata (types, required, field ids) wh
 - It can list every algorithm (preset): its id, title, and FSRS settings.
 - It can read each deck's, template's, and preset's notes: the user's own short text about why the entity exists.
   Notes are user-written context; no tool writes them.
-  The tool descriptions present them as background, not instructions; see §Tool guidance.
+  The tool descriptions present them as background, not instructions; see §Tool Guidance.
   `list_decks` returns a preview of deck notes; the other reads return them whole.
   See §Budgets.
   Notes are omitted when the user wrote none.
@@ -128,7 +128,7 @@ The run continues and the failure is visible.
 The model may call tools a limited number of times in one run.
 If it keeps calling instead of answering, the run stops.
 
-### Tool guidance
+### Tool Guidance
 
 Each tool carries a description that the model reads on every run.
 The user cannot change these descriptions, and a custom system prompt does not replace them.
@@ -206,7 +206,7 @@ Tool activity is recorded again on the run, replacing the previous tool rows.
 
 See ASSISTANT-CONVERSATIONS.md (§Retry) for retry availability and AI profile state.
 
-### Models that cannot call tools
+### Models That Cannot Call Tools
 
 Every run offers the tools.
 There is no injected-context fallback.

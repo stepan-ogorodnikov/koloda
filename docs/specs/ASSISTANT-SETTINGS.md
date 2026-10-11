@@ -73,7 +73,7 @@ The built-in prompt tells the model to invent cards through `propose_cards` and 
 When the user asks to create a deck and fill it, the prompt tells the model to call `list_templates`,
 then `add_deck`, then `propose_cards` in the same turn, and to omit the algorithm id unless the user asked for one.
 
-Tool descriptions carry their own guidance with either prompt; see ASSISTANT-DATA-ACCESS.md (§Tool guidance).
+Tool descriptions carry their own guidance with either prompt; see ASSISTANT-DATA-ACCESS.md (§Tool Guidance).
 
 ## Temperature
 

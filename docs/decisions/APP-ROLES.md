@@ -17,7 +17,7 @@ Each app has one role:
   It ships in the product apps, and the demo leaves it out.
 - When apps differ, the owning spec states what each app without the feature does instead:
   the feature is absent, or shown disabled with a note.
-  `docs/specs/AI-PROVIDERS.md` (§Platform availability) is the model.
+  `docs/specs/AI-PROVIDERS.md` (§Platform Availability) is the model.
 - Behavior offered in more than one app is the same in each, unless the owning spec names the difference.
 - A demo app makes no durability promise.
   Missing export, backup, sync, or multi-tab safety there is not a gap to fix.
