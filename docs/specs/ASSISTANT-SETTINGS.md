@@ -8,8 +8,8 @@ Does not cover runs, card proposal handling, or the streaming transport layer.
 The conversation list is covered by ASSISTANT-CONVERSATION-LIST.md.
 AI profiles are covered by the AI providers spec.
 Runs are covered by ASSISTANT-CONVERSATIONS.md.
-Message display is covered by the messages spec.
-Card proposals are covered by the card-generation spec.
+Message display is covered by ASSISTANT-MESSAGES.md.
+Card proposals are covered by ASSISTANT-CARD-GENERATION.md.
 
 ## What it is
 
@@ -32,7 +32,7 @@ Whether settings are open is not remembered across reloads.
 ### Relationships
 
 - Saved settings are global; every conversation reads the same values.
-- Profile, model, and model parameters stay per conversation; see the conversations spec.
+- Profile, model, and model parameters stay per conversation; see ASSISTANT-CONVERSATIONS.md.
 - Deck data is not injected into the prompt; see ASSISTANT-DATA-ACCESS.md.
 
 ## Prompt Template

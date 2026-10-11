@@ -182,7 +182,7 @@ Follow `add_deck`:
 **Tools that need new UI**
 
 - Extend activity rendering and/or add a message renderer under `libs/assistant-react/src/lib/ui/`.
-- Keep tool traffic off follow-up model history (conversations spec).
+- Keep tool traffic off follow-up model history (`docs/specs/ASSISTANT-CONVERSATIONS.md`).
 
 ### 7. Prompts
 

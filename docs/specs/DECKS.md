@@ -49,7 +49,7 @@ A new deck has no notes.
 ## Editing Decks
 
 Each deck has two tabs: **Cards** and **Details**.
-**Cards** is the default tab and is covered by the cards spec.
+**Cards** is the default tab and is covered by CARDS.md.
 **Details** edits the deck itself.
 
 On Details the user can change:

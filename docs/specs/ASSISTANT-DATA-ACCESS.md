@@ -7,8 +7,8 @@ what is recorded, and how retry treats it.
 Does not cover the run lifecycle, retry availability, or revert.
 Those are covered by ASSISTANT-CONVERSATIONS.md.
 Clone is covered by ASSISTANT-CONVERSATION-LIST.md (§Clone).
-Card proposal display, selection, and add are covered by the card-generation spec.
-Prompt template editing is covered by the assistant settings spec.
+Card proposal display, selection, and add are covered by ASSISTANT-CARD-GENERATION.md.
+Prompt template editing is covered by ASSISTANT-SETTINGS.md.
 
 ## What it is
 
@@ -178,7 +178,7 @@ Reasoning uses the same activity list; see ASSISTANT-MESSAGES.md (§Message Cont
 Follow-up requests do not replay prior tool results as history.
 To see current data again, the model has to call the tools again.
 
-Successful cards are serialized into history as the conversations spec requires.
+Successful cards are serialized into history as ASSISTANT-CONVERSATIONS.md requires.
 See ASSISTANT-CARD-GENERATION.md (§Conversation History) for the markdown format.
 
 ### Budgets

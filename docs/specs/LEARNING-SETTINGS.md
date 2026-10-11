@@ -109,7 +109,7 @@ Minutes may be from 0 through 59.
 
 After a card is graded in a lesson,
 it may be appended back into that lesson when its new due time falls before now plus this duration.
-Session details are covered by the lessons spec.
+Session details are covered by LESSONS.md.
 
 Setting both hours and minutes to zero means only cards whose new due time is already in the past can re-enter.
 That effectively turns learn-ahead off for cards scheduled into the future.

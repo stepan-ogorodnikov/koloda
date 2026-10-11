@@ -58,7 +58,7 @@ Reordering fields does not reorder layout items, and the reverse is also true.
 Layout items can be reordered.
 Their operations can be changed at any time, including when the template is locked.
 
-How operations behave during study is covered by the lessons spec.
+How operations behave during study is covered by LESSONS.md.
 A template must keep at least one layout item.
 Every layout item must reference an existing field.
 

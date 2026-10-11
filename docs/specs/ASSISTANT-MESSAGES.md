@@ -7,7 +7,7 @@ message states and status indicators, and user interactions with messages.
 Does not cover the conversation list, runs, persistence, or the streaming transport layer.
 The list, naming, clone, and delete are covered by ASSISTANT-CONVERSATION-LIST.md.
 Runs, persistence, and retry are covered by ASSISTANT-CONVERSATIONS.md.
-Card selection and add are covered by the card-generation spec.
+Card selection and add are covered by ASSISTANT-CARD-GENERATION.md.
 
 ## What it is
 

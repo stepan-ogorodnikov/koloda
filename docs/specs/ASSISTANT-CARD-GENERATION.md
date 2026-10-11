@@ -7,8 +7,8 @@ selected, and added to a deck, and how invalid proposals are handled.
 Does not cover the conversation list, runs, assistant settings editing, or the streaming transport layer.
 The list, naming, clone, and delete are covered by ASSISTANT-CONVERSATION-LIST.md.
 Runs are covered by ASSISTANT-CONVERSATIONS.md.
-Prompt templates and temperature are covered by the assistant settings spec.
-How the model reads decks and cards is covered by the data-access spec.
+Prompt templates and temperature are covered by ASSISTANT-SETTINGS.md.
+How the model reads decks and cards is covered by ASSISTANT-DATA-ACCESS.md.
 
 ## What it is
 

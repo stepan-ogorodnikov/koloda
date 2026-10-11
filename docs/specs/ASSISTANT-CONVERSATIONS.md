@@ -6,11 +6,11 @@ Covers runs, conversation history, AI profile state, persistence, restore, error
 Does not cover creating a conversation, the list, naming, working and unread indicators, clone, or delete.
 Those are covered by ASSISTANT-CONVERSATION-LIST.md.
 Does not cover deck management, AI provider configuration, or assistant settings (prompt templates and temperature).
-Those prompt and temperature preferences are covered by the assistant settings spec.
+Those prompt and temperature preferences are covered by ASSISTANT-SETTINGS.md.
 Does not cover the streaming transport layer.
-Card proposal display, selection, and add are covered by the card-generation spec.
-How the model reads decks is covered by the data-access spec.
-Message display is covered by the messages spec.
+Card proposal display, selection, and add are covered by ASSISTANT-CARD-GENERATION.md.
+How the model reads decks is covered by ASSISTANT-DATA-ACCESS.md.
+Message display is covered by ASSISTANT-MESSAGES.md.
 
 ## What it is
 
@@ -46,7 +46,7 @@ The model may propose cards during that run.
 
 Every user message is paired with an assistant message.
 The user types a prompt, the AI responds — that's one exchange, tied to a single run.
-How a turn displays is covered by the messages spec.
+How a turn displays is covered by ASSISTANT-MESSAGES.md.
 
 ### Conversation History
 
