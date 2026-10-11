@@ -18,6 +18,7 @@
     "typecheck": "tsc -b --pretty false",
     "check:commit": "bun run lint && nx run koloda:lint && nx run koloda-sync-proto:lint && nx run koloda-server:lint && nx run koloda-sync:lint",
     "check:format": "dprint check",
+    "check:markdown": "bun run tools/check-markdown.ts",
     "check:push": "bun run tools/check-push.ts",
     "land": "bun run tools/land.ts",
     "check:rust": "nx run koloda:lint && nx run koloda-sync-proto:lint && nx run koloda-server:lint && nx run koloda-sync:lint",
