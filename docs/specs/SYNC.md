@@ -48,7 +48,7 @@ A device reaches its sync server over https.
 Plain http is accepted only for a server on the same computer, such as a local proxy in front of the real server.
 Any other address is refused before anything is sent.
 
-## Creating a space
+## Creating a Space
 
 The user creates a space from Settings → Sync, on a device that has never been in a space.
 They enter the server's address, its setup token, a name for the space, and a name for this device.
@@ -65,7 +65,7 @@ If the server refuses, the form stays open with what the user entered and shows 
 - the setup token is wrong;
 - the server cannot be reached.
 
-## Inviting a device
+## Inviting a Device
 
 A device in a space invites another one from Settings → Sync with "Invite a device".
 It shows a pairing code and the server's address; the other device enters both to join.
@@ -82,10 +82,10 @@ Once the code expires, the dialog says so and offers a new code.
 If no code can be issued, as when the server cannot be reached, the dialog shows why and offers to try again.
 Closing the dialog does not cancel the code; it still expires on its own.
 
-## Joining a space
+## Joining a Space
 
 A device joins a space from Settings → Sync with "Join a space".
-It needs a pairing code from a device already in the space (§Inviting a device).
+It needs a pairing code from a device already in the space (§Inviting a Device).
 The user enters the server's address, the pairing code, and a name for this device, which starts as the computer's
 name.
 
@@ -115,7 +115,7 @@ If the join fails, the dialog says why:
 ## First Run
 
 The desktop app's first-run screen offers "Get started", which seeds the starter content, and "Join a space".
-"Join a space" asks for the same things as §Joining a space and shows the same preview; "Back" returns to the first
+"Join a space" asks for the same things as §Joining a Space and shows the same preview; "Back" returns to the first
 choice.
 
 A device that joins on first run takes its starter content and learning settings from the space.
@@ -158,7 +158,7 @@ The removed device stops syncing the next time it reaches the server, and keeps 
 It can join a space again with a new pairing code.
 A device does not remove itself; it leaves instead.
 
-## Leaving a space
+## Leaving a Space
 
 "Leave the space" asks first, then takes this device out of the space.
 Its data stays, and it stops syncing.
@@ -205,7 +205,7 @@ Unless a reason below needs the user, sync retries on its own.
 - This device's clock is more than 5 minutes off the server's: nothing syncs until the clock is right, then sync
   resumes by itself.
   Changes made meanwhile keep their order.
-- The device left the space, or another device removed it: see §Leaving a space.
+- The device left the space, or another device removed it: see §Leaving a Space.
 - The server was restored from a backup made before this device joined, or every device's access was reset: the
   device is out of the space and joins it again with a new pairing code.
   Its data stays, and its changes sync after the join.
