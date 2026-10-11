@@ -152,7 +152,12 @@ There is no "task" whose untouched neighbors are off limits.
 Write the report to `tmp/audits/<slug>.md`, creating the directory if needed.
 The slug names the target, for example `assistant-messages` or `core-dead-code`.
 `tmp/` is gitignored; the report is ephemeral.
-Accepted work becomes a task file later, per `agents/TASKS.md` and `agents/IMPLEMENTATION-PLAN.md`.
+The report's only durable form is the task file that triages it,
+per `agents/TASKS.md` and `agents/IMPLEMENTATION-PLAN.md`.
+That task file must carry every finding, fixed, skipped, or needs-decision,
+with its number, classification, severity, and `file:line`.
+See `agents/TASKS.md` §Audit-sourced tasks.
+A finding left out of the task file is lost when the report is gone.
 The audit session does not create that file and does not implement.
 
 Structure, in this order:

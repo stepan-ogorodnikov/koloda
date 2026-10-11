@@ -212,6 +212,21 @@ After approval, write each picked message as that item's `Commit:` line.
 Drop the other candidates.
 Flip Status to `ready`.
 
+## Audit-sourced tasks
+
+A task that triages an audit report keeps the report's findings in its task file.
+`tmp/audits/<slug>.md` is gitignored, so the task file is the report's only durable form.
+Do not commit the report.
+It would add a second file under `live/` that the Archive gate does not move.
+
+- Intent names the audited commit and the report path, for provenance only.
+- Scope or Plan carries every finding, numbered as in the report.
+  - Each entry has its classification, severity, `file:line`,
+    and the decision: fixed, skipped with reason, or needs-decision.
+  - Skipped and needs-decision entries stay in the file after Archive, under Outcome.
+- Restate evidence in the task file, not as a pointer to `tmp/`.
+  - The next session and the archive reader must not need the report.
+
 ## Session protocol
 
 1. Before starting work, list `task/*` branches.
