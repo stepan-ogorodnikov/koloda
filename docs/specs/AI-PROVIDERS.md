@@ -144,16 +144,13 @@ Failed validation shows an error per field and prevents the request from being s
 
 On save, the app also rejects:
 
-- Profiles that cannot be identified.
 - Titles longer than 128 characters.
 - Required secret fields that are empty or whitespace-only on create.
 
 Optional profile titles are trimmed.
 A title that is empty or contains only whitespace is stored as absent (no title).
 
-Whitespace-only secret values are treated as absent on store,
-so a partial update cannot clear a stored key with whitespace.
-Empty optional fields are allowed on save so partial updates do not fail.
+Whitespace-only secret values are treated as absent, so they never overwrite a stored key.
 If form validation passes but save rejects, the error is shown in the form.
 
 ## Models
@@ -174,9 +171,9 @@ sending is disabled while the profile's model list has not loaded successfully.
 ### Allowlist
 
 A profile can restrict which of its models are available.
-The restriction is a list of model IDs stored on the profile.
-An unset allowlist allows every catalog model.
-A present array is the allowlist; an empty array allows no models.
+By default there is no restriction, and every catalog model is available.
+Once a restriction is set, only the models on its list are available.
+An empty list allows no models.
 
 The user edits the allowlist from AI settings through the models button on the profile row.
 The dialog has two modes: all and selected.
@@ -194,13 +191,12 @@ It does not copy the catalog into the selection.
 IDs that were allowed but no longer appear in the catalog stay in the list and stay checked.
 The user can deselect them.
 
-Saving in "all" mode clears the stored allowlist.
-Saving in "selected" mode stores the checked IDs.
-An empty selection stores an empty allowlist, which allows no models.
-Allowlist entries are non-empty strings; an empty entry is rejected by validation.
+Saving in "all" mode removes the restriction.
+Saving in "selected" mode saves the checked models as the list.
+An empty selection saves an empty list, which allows no models.
 
 The model picker shows only allowlisted models.
-If the allowlist is unset, the picker shows every catalog model.
+If there is no restriction, the picker shows every catalog model.
 If the currently selected model is not in the filtered list,
 it stays visible so a catalog change cannot strand the selection.
 A selected model that is not in the catalog at all is shown as a placeholder.
@@ -247,7 +243,8 @@ If a stored model ID is no longer in the provider's list, the first available mo
 ## Sending Requests
 
 Chat runs go through the selected profile's secrets.
-See the conversation and card-generation specs for run lifecycle, prompts, streaming UI, cancellation, and errors.
+Run lifecycle, prompts, streaming UI, cancellation, and errors are covered by ASSISTANT-CONVERSATIONS.md.
+Card generation is covered by ASSISTANT-CARD-GENERATION.md.
 
 Provider-facing details that matter here:
 
