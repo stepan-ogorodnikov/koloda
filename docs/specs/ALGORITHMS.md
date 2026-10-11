@@ -85,7 +85,7 @@ Cloning a missing source fails and creates nothing.
 ## Editing Algorithms
 
 The algorithm editor shows timestamps, title, notes, parameters, and actions.
-Saving persists title, notes, and parameters together.
+Saving applies title, notes, and parameters together.
 Discard restores the last saved values.
 
 Notes are optional.
@@ -126,7 +126,7 @@ It does not delete the algorithm's history; see §History.
 ## History
 
 Every algorithm keeps a history of its parameters.
-History is recorded only; nothing in the product shows it yet.
+The app does not display it.
 
 A revision is recorded when:
 
@@ -134,12 +134,10 @@ A revision is recorded when:
 - a save changes any parameter, with the parameters after the save
 
 Each revision holds the full set of parameters, not only the ones that changed.
-It also records when it was recorded and who made the change.
-The user is the only author of changes for now.
+It also records when it was recorded and who made the change, which is the user.
 
 A save that changes only the title or notes records nothing.
 A save that changes nothing records nothing.
 A rejected save records nothing.
 
 History survives deleting its algorithm.
-Algorithms that existed before history was introduced have no revisions until their next parameter change.
