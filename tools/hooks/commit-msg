@@ -1,0 +1,18 @@
+#!/bin/sh
+# Wired via core.hooksPath (set by the "prepare" script in package.json).
+#
+# On a task/<slug> branch every commit carries `Task: <slug>`, so the trailer
+# is checked here, at commit time. `bun run land` checks the whole train.
+# Escape hatch: git commit --no-verify (land still rejects the train).
+
+branch=$(git symbolic-ref --quiet --short HEAD) || exit 0
+case "$branch" in
+  task/*) ;;
+  *) exit 0 ;;
+esac
+
+slug=${branch#task/}
+if ! grep -qxF "Task: $slug" "$1"; then
+  echo "commit-msg: commits on $branch need the trailer 'Task: $slug'." >&2
+  exit 1
+fi

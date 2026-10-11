@@ -9,6 +9,9 @@
  * A failed check stops the run; fix, commit, and run it again.
  * On a flake, rerun the failed job (`gh run rerun <id> --failed`), then run it again.
  *
+ * A task's commits must pass the task gate before they are pushed (see `taskGateProblems`).
+ * The human's ask to land is not checked here.
+ *
  * Usage: bun run land
  */
 import { spawnSync } from "node:child_process";
@@ -33,7 +36,15 @@ export type CheckState =
   | { kind: "success"; url: string }
   | { kind: "failure"; url: string; conclusion: string };
 
+// changes: one `git show --name-status` line per file, as "A tasks/live/x.md".
+export type TaskCommit = {
+  trailers: readonly string[];
+  changes: readonly string[];
+};
+
 type Result = { code: number; stdout: string; stderr: string };
+
+const TASK_BRANCH = /^task\/(.+)$/;
 
 export function landingBranch(current: string | null, sha: string): string {
   if (current == null || current === "main") return `land/${sha.slice(0, 8)}`;
@@ -47,6 +58,39 @@ export function checkState(runs: readonly CheckRun[]): CheckState {
   if (checkRun.status !== "completed") return { kind: "pending", url };
   if (checkRun.conclusion === "success") return { kind: "success", url };
   return { kind: "failure", url, conclusion: checkRun.conclusion ?? "unknown" };
+}
+
+export function taskSlug(current: string | null, commits: readonly TaskCommit[]): string | null {
+  const branchSlug = current?.match(TASK_BRANCH)?.[1];
+  if (branchSlug != null) return branchSlug;
+  return commits.flatMap((commit) => commit.trailers)[0] ?? null;
+}
+
+export function taskGateProblems(slug: string, commits: readonly TaskCommit[], archive: string | null): string[] {
+  const problems: string[] = [];
+  commits.forEach((commit, index) => {
+    const isTagged = commit.trailers.length === 1 && commit.trailers[0] === slug;
+    if (!isTagged) problems.push(`commit ${index + 1} must carry exactly one \`Task: ${slug}\` trailer`);
+  });
+
+  const live = `tasks/live/${slug}.md`;
+  const archived = `tasks/archive/${slug}.md`;
+  if (!commits.at(0)?.changes.includes(`A ${live}`)) {
+    problems.push(`the oldest commit must be the Add commit and add ${live}`);
+  }
+  const newest = commits.at(-1);
+  if (!(newest?.changes.includes(`A ${archived}`) && newest.changes.includes(`D ${live}`))) {
+    problems.push(`the newest commit must be the Archive commit and move ${live} to ${archived}`);
+  }
+
+  if (archive == null) {
+    problems.push(`${archived} is missing at the tip`);
+  } else {
+    if (!/^Status: done$/m.test(archive)) problems.push(`${archived} must have \`Status: done\``);
+    const outcome = archive.split(/^## Outcome$/m)[1]?.trim() ?? "";
+    if (outcome === "") problems.push(`${archived} must fill in Outcome`);
+  }
+  return problems;
 }
 
 function fail(message: string): never {
@@ -100,6 +144,32 @@ function fetchCheckRuns(sha: string): CheckRun[] | null {
   return JSON.parse(result.stdout) as CheckRun[];
 }
 
+function taskCommits(): TaskCommit[] {
+  return git("rev-list", "--reverse", "origin/main..HEAD")
+    .split("\n")
+    .map((sha) => ({
+      trailers: [...git("show", "-s", "--format=%B", sha).matchAll(/^Task: (\S+)$/gm)].map((match) => match[1]),
+      changes: git("show", "--no-renames", "--name-status", "--format=", sha)
+        .split("\n")
+        .map((line) => line.replace("\t", " ")),
+    }));
+}
+
+function tipArchive(slug: string): string | null {
+  const result = run("git", ["show", `HEAD:tasks/archive/${slug}.md`]);
+  return result.code === 0 ? result.stdout : null;
+}
+
+function checkTaskGate(current: string | null): void {
+  const commits = taskCommits();
+  const slug = taskSlug(current, commits);
+  if (slug == null) return;
+  const problems = taskGateProblems(slug, commits, tipArchive(slug));
+  if (problems.length > 0) {
+    fail(`the task gate for ${slug} failed:\n${problems.map((problem) => `- ${problem}`).join("\n")}`);
+  }
+}
+
 async function waitForChecks(sha: string): Promise<void> {
   const started = Date.now();
   let shown = false;
@@ -142,6 +212,7 @@ export async function land(): Promise<void> {
     if (git("rev-list", "--count", "origin/main..HEAD") === "0") {
       fail("nothing to land; HEAD is already on origin/main.");
     }
+    checkTaskGate(current);
 
     console.log(`land: pushing ${short(sha)} to ${branch}`);
     git("push", "--quiet", "--force-with-lease", "origin", `HEAD:refs/heads/${branch}`);
