@@ -42,7 +42,9 @@ The branch holds the commit train until the human asks to land.
    - `git log origin/main..HEAD` must be empty.
    - Push or stash unrelated work first.
    - Then run `git checkout -b task/<slug> origin/main`.
-2. Add `tasks/live/<slug>.md` with `Status: draft`.
+2. Add `tasks/live/<slug>.md` with `Status: draft` and its `Guides:` line.
+   - Route the work in `agents/INDEX.md` and list the guides it needs on that line.
+   - Include the guides the Plan will need, not only the first change's.
 3. Push the branch.
 
 The branch and its task file are the scheduled unit of work.
@@ -162,6 +164,7 @@ The only move is `live/` → `archive/` on `done`.
 # <short title>
 
 Status: draft
+Guides: <comma-separated repo paths from agents/INDEX.md, or none>
 
 ## Intent
 
@@ -191,6 +194,11 @@ Out: <explicit non-goals>
 <what shipped>
 ```
 
+`Guides:` sits on the line right under `Status:`.
+It is one line of comma-separated repo paths, the set `agents/INDEX.md` routed for the whole task.
+It is not an open question: do not record "area guides?" there.
+When scope changes the set, update the line in the same commit.
+
 Omit `Green` unless the item is red.
 Then add `Green: no — restored by item N`.
 When `Green` is `no`, `Done when` is not the test suite.
@@ -214,6 +222,7 @@ Flip Status to `ready`.
    - Never resolve overlap silently.
    - Do not grep `tasks/live` on `main`.
    - In-flight files are not there.
+   - For the task you pick up, read its `Guides:` line and load those guides; route again in `agents/INDEX.md` only if scope changed.
 2. Record open questions as they appear.
    - Do not guess answers.
 3. Before ending a session, update Open questions and Plan on the task branch.

@@ -1,8 +1,7 @@
 # Agent Guide Index
 
-Human-only routing table.
-Do not paste this file into a prompt.
-It exists so you can pick the minimal set of guides for a narrow task without bloating the model's context.
+Routing table for agents.
+Pick the minimal set of guides for a task, so a narrow change does not load the whole area.
 
 `AGENTS.md` holds only the rules every change needs, such as how changes reach `main`.
 Agents load it on their own.
@@ -13,13 +12,14 @@ This file tells you which those are.
 ## How to use
 
 Find your change type in the table.
-Paste the listed guides into the prompt, plus the task description.
+Read the listed guides, plus the task description.
 Nothing else.
 For an audit, use the Auditing section, not the Authoring table alone.
+A task file's `Guides:` line records the set it was routed to; re-route here only when its scope changes.
 
 Before routing a change, list in-flight tasks: `git ls-remote --heads origin 'task/*'`.
 Task files live on their `task/<slug>` branch, not on `main`.
-If a task's Intent or Scope overlaps the intended work, also paste its `tasks/live/<slug>.md` and `agents/TASKS.md`.
+If a task's Intent or Scope overlaps the intended work, also read its `tasks/live/<slug>.md` and `agents/TASKS.md`.
 
 Load one primary spec, not a cluster.
 If the task crosses that spec's stated out-of-scope, add the sibling it names.
@@ -136,7 +136,7 @@ Planning work from a finished audit report is still the Authoring row for a mult
 
 ## Always-available background
 
-Do not paste these unless the task touches them.
+Read these only when the task touches them.
 Consult them yourself when a change crosses a boundary.
 
 - `agents/BACKWARDS-COMPATIBILITY.md` — deletion policy, no shims.

@@ -44,7 +44,7 @@ Do not use red for an incoherent slice.
 
 ## Procedure
 
-1. Confirm the area guides are in the prompt, and ask for the guides covering the affected area if they are not.
+1. Confirm the task's `Guides:` line covers the affected area; if it does not, route the change in `agents/INDEX.md` and update the line.
 2. For an audit report, triage first: fix, skip, or needs-decision per finding.
 3. Put skips and open questions in the task file's Scope and Open questions sections, never into plan items.
 4. Ask the human every question whose answer changes the split — scope, priorities, approach forks; never guess.
