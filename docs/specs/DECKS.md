@@ -5,7 +5,7 @@
 Covers decks: creating with defaults, editing title, notes, algorithm, and template, and cascade delete.
 It also covers how decks relate to cards, lessons, and the assistant.
 Does not cover card browsing, reset progress, preview, lesson session flow, algorithm or template editing.
-Those are covered by the cards, lessons, algorithms, templates, and assistant specs.
+Those are covered by CARDS.md, LESSONS.md, ALGORITHMS.md, TEMPLATES.md, and ASSISTANT-DATA-ACCESS.md.
 
 ## What it is
 
@@ -59,7 +59,7 @@ On Details the user can change:
 - **Algorithm**
 - **Template**
 
-Saving persists title, notes, algorithm, and template together.
+Saving applies title, notes, algorithm, and template together.
 Discard restores the last saved values.
 
 Notes are optional.
@@ -79,7 +79,7 @@ See CARDS.md (§Relationships) for existing cards.
 Invalid values are rejected on save.
 The previous saved deck remains unchanged.
 
-Opening a missing or invalid deck id shows not found.
+Opening a missing or invalid deck link shows not found.
 
 ## Deleting Decks
 
@@ -97,7 +97,7 @@ Delete is always available for an existing deck.
 There is no “last deck” or default-deck protection.
 
 Deleting a deck does not rewrite assistant conversations.
-Persisted run write targets or tool inputs may still mention its id.
+Past conversations may still refer to the deleted deck.
 Lesson counts for a deleted deck disappear with the deck; other decks are unaffected.
 
 Deleting a deck does not delete algorithms or templates.
