@@ -4,7 +4,7 @@
 //! how days between reviews are counted, is `docs/decisions/FSRS-OPTIMIZER.md`.
 
 use std::collections::BTreeMap;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, PoisonError};
 
 use chrono::{DateTime, NaiveDate};
 use fsrs::{compute_parameters, CombinedProgressState, ComputeParametersInput, FSRSError, FSRSItem, FSRSReview, FSRS};
@@ -169,12 +169,27 @@ pub enum OptimizationOutcome {
     Cancelled,
 }
 
+/// Shared with a running `optimize`, so another thread can read its progress or cancel it.
+/// Keeps the `fsrs` crate an implementation detail of this module.
+pub type OptimizationProgress = Arc<Mutex<CombinedProgressState>>;
+
+pub fn new_progress() -> OptimizationProgress {
+    CombinedProgressState::new_shared()
+}
+
+pub fn request_abort(progress: &OptimizationProgress) {
+    progress.lock().unwrap_or_else(PoisonError::into_inner).want_abort = true;
+}
+
+/// Training steps done and planned; `(0, 0)` before training starts.
+pub fn progress_counts(progress: &OptimizationProgress) -> (usize, usize) {
+    let state = progress.lock().unwrap_or_else(PoisonError::into_inner);
+    (state.current(), state.total())
+}
+
 /// Trains on the input and scores the current and the found weights on the same items.
-/// Setting `want_abort` on `progress` cancels the run.
-pub fn optimize(
-    input: &OptimizationInput,
-    progress: &Arc<Mutex<CombinedProgressState>>,
-) -> Result<OptimizationOutcome, AppError> {
+/// `request_abort` on `progress` cancels the run.
+pub fn optimize(input: &OptimizationInput, progress: &OptimizationProgress) -> Result<OptimizationOutcome, AppError> {
     let set = build_training_set(&input.reviews);
     let based_on = input.content.clone();
     if set.items.is_empty() {
@@ -242,11 +257,7 @@ pub fn optimize(
     }
 }
 
-fn score(
-    weights: &[f32],
-    items: &[FSRSItem],
-    progress: &Arc<Mutex<CombinedProgressState>>,
-) -> Result<FitScores, FSRSError> {
+fn score(weights: &[f32], items: &[FSRSItem], progress: &OptimizationProgress) -> Result<FitScores, FSRSError> {
     let evaluation = FSRS::new(weights)?.evaluate(items.to_vec(), |_| !is_aborted(progress))?;
     Ok(FitScores {
         log_loss: f64::from(evaluation.log_loss),
@@ -255,7 +266,7 @@ fn score(
 }
 
 // WHY: a poisoned lock means a panic mid-run; stopping is the only safe reading.
-fn is_aborted(progress: &Arc<Mutex<CombinedProgressState>>) -> bool {
+fn is_aborted(progress: &OptimizationProgress) -> bool {
     progress.lock().map_or(true, |state| state.want_abort)
 }
 

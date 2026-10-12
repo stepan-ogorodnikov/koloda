@@ -27,6 +27,8 @@ import type {
 import type { AllowedSettings, PatchSettingsData, SetSettingsData, SettingsName } from "@koloda/settings";
 import type {
   Algorithm,
+  AlgorithmOptimization,
+  ApplyAlgorithmOptimizationData,
   Attachment,
   Card,
   CloneAlgorithmData,
@@ -64,6 +66,7 @@ import type {
   AttachmentContentWire,
   DbStatus,
   GetLessonsParams,
+  OptimizerProgressEvent,
   SeedDbData,
   SyncEvent,
   SyncStarter,
@@ -71,6 +74,10 @@ import type {
 
 /** What the engine sends the `syncStart` callback: main logs `error` and forwards the rest as a `SyncEvent`. */
 export type SyncEngineEvent = SyncEvent | { type: "error"; message: string };
+
+type OptimizeAlgorithmParams = { requestId: string; id: string };
+
+type OnOptimizerProgress = (event: OptimizerProgressEvent) => void;
 
 export interface KolodaDb {
   // Lifecycle
@@ -96,6 +103,7 @@ export interface KolodaDb {
   updateAlgorithm(data: UpdateAlgorithmData): Promise<Algorithm>;
   deleteAlgorithm(data: DeleteAlgorithmData): Promise<void>;
   getAlgorithmDecks(params: { id: string }): Promise<DeckWithOnlyTitle[]>;
+  applyAlgorithmOptimization(data: ApplyAlgorithmOptimizationData): Promise<Algorithm>;
 
   // Decks
   getDecks(): Promise<Deck[]>;
@@ -155,4 +163,9 @@ export interface KolodaDb {
   syncJoin(data: JoinData & { settings: SeedDbData["settings"] }): Promise<JoinedSpace>;
   syncImport(params: { mode: ImportMode }): Promise<SyncStatus>;
   syncAcceptRestore(): Promise<SyncStatus>;
+
+  // FSRS optimizer: runs queue on a thread of their own; `onProgress` gets this run's training progress.
+  optimizeAlgorithm(params: OptimizeAlgorithmParams, onProgress: OnOptimizerProgress): Promise<AlgorithmOptimization>;
+  // Synchronous: it only flags the run, which then resolves as cancelled.
+  cancelAlgorithmOptimization(params: { requestId: string }): void;
 }

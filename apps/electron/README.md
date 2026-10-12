@@ -35,6 +35,8 @@ The TS/Rust mirroring rationale is `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md`.
 - Media IPC: `src/media-ipc.ts` — fetches a pasted image URL in main and stores it as an attachment. See `IPC.md`.
 - Sync IPC: `src/sync-ipc.ts` — the sync engine's commands, its events forwarded to every window, a nudge on resume.
   See `IPC.md`.
+- Optimizer IPC: `src/optimizer-ipc.ts` — FSRS optimization runs and cancels, progress to the requesting window.
+  See `IPC.md`.
 - Close handshake: `src/window-close-coordinator.ts` — bounded 2500 ms shutdown request/ack
   so the renderer flushes before destroy.
 - Preload: `src/preload.ts` — `contextBridge` exposes `electronAPI`:
@@ -44,6 +46,7 @@ The TS/Rust mirroring rationale is `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md`.
   Methods return Promises and run on one dedicated database thread, in call order.
   `src-rust/src/sync.rs` runs the `koloda-sync` engine on the same database; its host calls run on a sync thread
   of their own, and product writes tell it to sync.
+  `src-rust/src/optimizer.rs` runs FSRS optimization on a thread of its own and reports its progress.
 - Bundling scripts: `scripts/` —
   - `bundle-main.ts` — rolldown bundle of `src/main.ts` to a single CJS `dist/main.cjs` for the release asar
     (AI SDK deps inlined; `import.meta` remapped to CJS equivalents)

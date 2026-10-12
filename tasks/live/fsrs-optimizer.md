@@ -191,10 +191,11 @@ Out:
   Commit: Apply optimized weights as an optimizer revision
   Depends on: 3
 
-- [ ] 5. Run the FSRS optimizer from the desktop app
+- [x] 5. Run the FSRS optimizer from the desktop app
   Goal: the addon (`apps/electron/src-rust/src/lib.rs`) gains `optimize_algorithm({ requestId, id })`,
   `cancel_algorithm_optimization({ requestId })`, and `apply_algorithm_optimization(data)`.
-  Optimize loads its input on the database thread, then trains on a dedicated optimizer thread.
+  Optimize loads its input and trains on a dedicated optimizer thread, reading through its own handle to the one
+  connection as the sync host does.
   It never blocks the database or sync threads.
   Runs queue on that thread in order.
   Progress (current, total), polled from the crate's progress state, is pushed to JS keyed by `requestId`.
@@ -202,8 +203,9 @@ Out:
   Apply is a product write: it runs through the database thread's write path and tells the sync engine a local
   commit happened, as other writes do.
   Main: new `apps/electron/src/optimizer-ipc.ts`, modelled on `sync-ipc.ts`.
-  It handles `cmd_optimize_algorithm`, `cmd_cancel_algorithm_optimization`, and `cmd_apply_algorithm_optimization`,
-  and forwards progress to the requesting window on `OPTIMIZER_PROGRESS_CHANNEL`.
+  It handles `cmd_optimize_algorithm` and `cmd_cancel_algorithm_optimization`, forwards progress to the requesting
+  window on `OPTIMIZER_PROGRESS_CHANNEL`, and cancels a run whose window closes.
+  `cmd_apply_algorithm_optimization` is a plain data command in `data-ipc.ts`.
   The new methods go in the `KolodaDb` mirror (`src/koloda-db.ts`).
   `libs/native-ipc`: the three channels in `DataIpc`, the channel constant, and the progress event type.
   `libs/core-react`: an `OptimizerQueries` type and an `optimizerQueriesAtom` (null by default), like

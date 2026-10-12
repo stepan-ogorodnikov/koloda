@@ -1,7 +1,8 @@
 // Machine-checked contract for the full desktop renderer<->main command surface:
 // data commands (`apps/electron/src/data-ipc.ts`), AI commands
-// (`src/ai-ipc.ts`), sync commands (`src/sync-ipc.ts`), and the `AI_STREAM_CHANNEL`
-// and `SYNC_EVENT_CHANNEL` push channels, all consumed by the renderer through `invoke`.
+// (`src/ai-ipc.ts`), sync commands (`src/sync-ipc.ts`), optimizer commands (`src/optimizer-ipc.ts`),
+// and the `AI_STREAM_CHANNEL`, `SYNC_EVENT_CHANNEL`, and `OPTIMIZER_PROGRESS_CHANNEL` push channels,
+// all consumed by the renderer through `invoke`.
 //
 // Each channel maps to `{ args; result }` — the shapes crossing
 // `window.electronAPI.invoke` before `toWire`/`fromWire` coercion. Data-command
@@ -41,6 +42,8 @@ import type { AllowedSettings, PatchSettingsData, SetSettingsData, SettingsName 
 import type {
   AddAttachmentData,
   Algorithm,
+  AlgorithmOptimization,
+  ApplyAlgorithmOptimizationData,
   Attachment,
   Card,
   CloneAlgorithmData,
@@ -126,6 +129,9 @@ export const AI_STREAM_CHANNEL = "ai:stream";
 /** Main-to-renderer push channel for sync engine events (see `SyncEvent`). */
 export const SYNC_EVENT_CHANNEL = "sync:event";
 
+/** Main-to-renderer push channel for FSRS optimization progress (see `OptimizerProgressEvent`). */
+export const OPTIMIZER_PROGRESS_CHANNEL = "optimizer:progress";
+
 /**
  * Window-close handshake channels (see `apps/electron/src/window-close-coordinator.ts`
  * and `apps/electron-react/src/app/electron-close-coordination.ts`).
@@ -166,6 +172,12 @@ export type SyncEvent =
   | { type: "status"; status: SyncStatus }
   | { type: "attachmentsFetched"; ids: string[] };
 
+/**
+ * Training progress of one `cmd_optimize_algorithm` run, sent on `OPTIMIZER_PROGRESS_CHANNEL`
+ * to the window that started it. `current` counts up to `total` training steps.
+ */
+export type OptimizerProgressEvent = { requestId: string; current: number; total: number };
+
 export interface DataIpc {
   get_db_status: { args: undefined; result: DbStatus };
   seed_db: { args: { data: SeedDbData }; result: true };
@@ -186,6 +198,7 @@ export interface DataIpc {
   cmd_update_algorithm: { args: { data: UpdateAlgorithmData }; result: Algorithm };
   cmd_delete_algorithm: { args: { data: DeleteAlgorithmData }; result: void };
   cmd_get_algorithm_decks: { args: { id: string }; result: DeckWithOnlyTitle[] };
+  cmd_apply_algorithm_optimization: { args: { data: ApplyAlgorithmOptimizationData }; result: Algorithm };
 
   cmd_get_decks: { args: undefined; result: Deck[] };
   cmd_get_deck: { args: { id: string }; result: Deck | null };
@@ -254,6 +267,11 @@ export interface DataIpc {
   cmd_sync_accept_restore: { args: undefined; result: SyncStatus };
   // The OS host name, which main reads; the default name of this device in a space.
   cmd_sync_device_name: { args: undefined; result: string };
+
+  // Optimizer commands (`optimizer-ipc.ts`). A run resolves with its result when it ends, cancelled or not;
+  // meanwhile its progress streams on `OPTIMIZER_PROGRESS_CHANNEL`, keyed by `requestId`.
+  cmd_optimize_algorithm: { args: { requestId: string; id: string }; result: AlgorithmOptimization };
+  cmd_cancel_algorithm_optimization: { args: { requestId: string }; result: void };
 }
 
 export type DataChannel = keyof DataIpc;
@@ -283,8 +301,11 @@ type SyncChannel =
   | "cmd_sync_accept_restore"
   | "cmd_sync_device_name";
 
+/** Channels registered by `optimizer-ipc.ts`, which sends progress to the window that started the run. */
+type OptimizerChannel = "cmd_optimize_algorithm" | "cmd_cancel_algorithm_optimization";
+
 /** Channels served by the `KolodaDb`-backed handler table in `data-ipc.ts`. */
-export type DataOnlyChannel = Exclude<DataChannel, AiChannel | MediaChannel | SyncChannel>;
+export type DataOnlyChannel = Exclude<DataChannel, AiChannel | MediaChannel | SyncChannel | OptimizerChannel>;
 
 export type IpcArgs<C extends DataChannel> = DataIpc[C]["args"];
 

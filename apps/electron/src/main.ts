@@ -3,6 +3,7 @@ import { createRequire } from "node:module";
 import { join } from "node:path";
 import { registerDataIpc } from "./data-ipc";
 import { registerMediaIpc } from "./media-ipc";
+import { registerOptimizerIpc } from "./optimizer-ipc";
 import { registerSyncIpc } from "./sync-ipc";
 import { appDir, isDev } from "./env";
 import type { KolodaDb } from "./koloda-db";
@@ -42,6 +43,7 @@ app.whenReady().then(() => {
   registerDataIpc(db);
   registerMediaIpc(db);
   registerSyncIpc(db);
+  registerOptimizerIpc(db);
   createWindow();
 });
 

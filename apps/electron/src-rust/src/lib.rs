@@ -10,6 +10,7 @@ use napi::bindgen_prelude::*;
 use napi::threadsafe_function::ThreadSafeCallContext;
 use napi::{Env, JsFunction, JsObject};
 use napi_derive::napi;
+use optimizer::{OptimizerHost, ProgressCallback};
 use std::num::NonZeroU32;
 use std::panic::{self, AssertUnwindSafe};
 use std::sync::mpsc::{self, Sender};
@@ -19,6 +20,7 @@ use sync::{
     CreateSpaceWire, EventCallback, ImportModeWire, JoinWire, PreviewRequestWire, StarterWire, StatusWire, SyncHost,
 };
 
+mod optimizer;
 mod sync;
 
 fn to_napi_error(err: AppError) -> Error {
@@ -131,11 +133,14 @@ where
 // INVARIANT: one FIFO worker — jobs run in call order, exactly as the synchronous calls did,
 // so a read issued after a write always sees it. Do not move this onto the libuv pool.
 // Sync host calls wait on the network, so they queue on a second FIFO worker of their own.
+// FSRS optimization runs for seconds, so it queues on a third.
 #[napi]
 pub struct KolodaDb {
     jobs: Sender<Job<Database>>,
     sync: Arc<SyncHost>,
     sync_jobs: Sender<Job<Arc<SyncHost>>>,
+    optimizer: Arc<OptimizerHost>,
+    optimizer_jobs: Sender<Job<Arc<OptimizerHost>>>,
 }
 
 impl KolodaDb {
@@ -177,10 +182,13 @@ impl KolodaDb {
     pub fn new(db_path: String) -> Result<Self> {
         let db = Database::init(db_path).map_err(to_napi_error)?;
         let sync = Arc::new(SyncHost::new(db.clone()));
+        let optimizer = Arc::new(OptimizerHost::new(db.clone()));
         Ok(Self {
             jobs: spawn_worker("koloda-db", db)?,
             sync_jobs: spawn_worker("koloda-sync-host", Arc::clone(&sync))?,
             sync,
+            optimizer_jobs: spawn_worker("koloda-optimizer", Arc::clone(&optimizer))?,
+            optimizer,
         })
     }
 
@@ -330,6 +338,53 @@ impl KolodaDb {
         self.run_write(env, move |db| {
             let data = from_wire(data)?;
             repo::algorithms::delete_algorithm(db, data).map_err(to_napi_error)
+        })
+    }
+
+    #[napi]
+    pub fn optimize_algorithm(&self, env: Env, params: serde_json::Value, on_progress: JsFunction) -> Result<JsObject> {
+        #[derive(serde::Deserialize)]
+        #[serde(rename_all = "camelCase")]
+        struct P {
+            request_id: String,
+            id: String,
+        }
+        let P { request_id, id } = from_wire(params)?;
+        let on_progress: ProgressCallback = on_progress
+            .create_threadsafe_function(0, |ctx: ThreadSafeCallContext<serde_json::Value>| Ok(vec![ctx.value]))?;
+        let progress = self.optimizer.register(&request_id);
+        queue(
+            env,
+            &self.optimizer_jobs,
+            "Optimizer",
+            move |optimizer: &Arc<OptimizerHost>| {
+                let outcome = optimizer
+                    .run(&request_id, &id, &progress, &on_progress)
+                    .map_err(to_napi_error)?;
+                to_value(&outcome)
+            },
+        )
+    }
+
+    // WHY: synchronous on purpose — it only flags the run, and must not wait behind the run it cancels.
+    #[napi]
+    pub fn cancel_algorithm_optimization(&self, params: serde_json::Value) -> Result<()> {
+        #[derive(serde::Deserialize)]
+        #[serde(rename_all = "camelCase")]
+        struct P {
+            request_id: String,
+        }
+        let P { request_id } = from_wire(params)?;
+        self.optimizer.cancel(&request_id);
+        Ok(())
+    }
+
+    #[napi]
+    pub fn apply_algorithm_optimization(&self, env: Env, data: serde_json::Value) -> Result<JsObject> {
+        self.run_write(env, move |db| {
+            let data = from_wire(data)?;
+            let algorithm = repo::algorithms::apply_algorithm_optimization(db, data).map_err(to_napi_error)?;
+            to_value(&algorithm)
         })
     }
 

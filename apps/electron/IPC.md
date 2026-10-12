@@ -32,7 +32,8 @@ The full method list lives in `src-rust/src/lib.rs`.
 - Cards: `cmd_get_cards`, `cmd_get_card`, `cmd_add_card`, `cmd_add_cards`, `cmd_update_card`,
   `cmd_delete_card`, `cmd_delete_cards`, `cmd_reset_card_progress`
 - Presets (algorithms): `cmd_get_algorithms`, `cmd_get_algorithm`, `cmd_get_algorithm_decks`,
-  `cmd_add_algorithm`, `cmd_clone_algorithm`, `cmd_update_algorithm`, `cmd_delete_algorithm`
+  `cmd_add_algorithm`, `cmd_clone_algorithm`, `cmd_update_algorithm`, `cmd_delete_algorithm`,
+  `cmd_apply_algorithm_optimization` (see §FSRS Optimizer)
 - Decks: `cmd_get_decks`, `cmd_get_deck`, `cmd_add_deck`, `cmd_update_deck`, `cmd_delete_deck`
 - Templates: `cmd_get_templates`, `cmd_get_template`, `cmd_get_template_decks`,
   `cmd_add_template`, `cmd_clone_template`, `cmd_update_template`, `cmd_delete_template`
@@ -115,6 +116,23 @@ writes capture nothing and do not.
 - An engine `error` event goes to main's log only; the status already says why sync stopped.
 - Failures cross as `{ code, details }` with a `sync.*` code (`sync_error_codes` in `src-rust/src/sync.rs`), or the
   `koloda` code of a local failure.
+
+## FSRS Optimizer (`src/optimizer-ipc.ts`)
+
+The addon fits FSRS weights on a thread of its own, never the database or sync thread
+(`docs/decisions/FSRS-OPTIMIZER.md`).
+Runs queue on that thread in call order.
+
+- `cmd_optimize_algorithm` `{ requestId, id }` — resolves when the run ends, with an `AlgorithmOptimization`
+  (`@koloda/srs`): `notEnoughData`, `noImprovement`, `improved` with the new weights, or `cancelled`.
+  - While it trains, `{ requestId, current, total }` progress goes on `OPTIMIZER_PROGRESS_CHANNEL`
+    (`optimizer:progress`) to the window that started it, and to no other.
+  - Closing that window cancels the run.
+- `cmd_cancel_algorithm_optimization` `{ requestId }` — flags the run and returns at once; the run resolves as
+  `cancelled`. An unknown or finished `requestId` is ignored.
+- `cmd_apply_algorithm_optimization` `{ data: { id, basedOn, weights } }` — a data command: replaces only the weights
+  and records a revision by the optimizer.
+  It fails with `algorithms.optimizer.stale` when the stored parameters no longer equal `basedOn`.
 
 ## Window and Lifecycle
 

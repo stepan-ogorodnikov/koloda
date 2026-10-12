@@ -36,6 +36,8 @@ const dataHandlers = {
   cmd_update_algorithm: (db, { data }: IpcArgs<"cmd_update_algorithm">) => db.updateAlgorithm(data),
   cmd_delete_algorithm: (db, { data }: IpcArgs<"cmd_delete_algorithm">) => db.deleteAlgorithm(data),
   cmd_get_algorithm_decks: (db, args: IpcArgs<"cmd_get_algorithm_decks">) => db.getAlgorithmDecks(args),
+  cmd_apply_algorithm_optimization: (db, { data }: IpcArgs<"cmd_apply_algorithm_optimization">) =>
+    db.applyAlgorithmOptimization(data),
 
   cmd_get_decks: (db) => db.getDecks(),
   cmd_get_deck: (db, args: IpcArgs<"cmd_get_deck">) => db.getDeck(args),

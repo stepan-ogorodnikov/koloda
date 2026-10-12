@@ -6,6 +6,7 @@ import {
   aiRuntimeAtom,
   appEntryAtom,
   langAtom,
+  optimizerQueriesAtom,
   queriesAtom,
   schemeAtom,
   syncQueriesAtom,
@@ -18,6 +19,7 @@ import { AppEntry } from "../components/app-entry";
 import { createElectronAIRuntime } from "./ai-runtime";
 import { invoke } from "./electron";
 import { activateLanguage, getLanguage } from "./i18n";
+import { createOptimizerQueries } from "./optimizer-queries";
 import { queriesFn } from "./queries";
 import { createSyncQueries } from "./sync-queries";
 
@@ -47,6 +49,8 @@ store.set(
   syncQueriesAtom,
   createSyncQueries(() => ({ language: store.get(langAtom), scheme: store.get(schemeAtom) })),
 );
+
+store.set(optimizerQueriesAtom, createOptimizerQueries());
 
 // WHY: jotai treats a function passed to `set` as an updater, so the function value is returned from one.
 store.set(addAttachmentFromUrlAtom, () => (url: string) => invoke("cmd_add_attachment_from_url", { url }));

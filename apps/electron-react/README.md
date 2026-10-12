@@ -29,6 +29,8 @@ Normally booted by `nx run @koloda/electron:serve`; runs standalone in a browser
 - Sync: `src/app/use-sync-engine.ts` starts the engine once the database status is known and nudges it on focus and
   when the network returns; `src/app/sync-events.ts` refreshes the queries each synced kind feeds.
 - Queries: `src/app/queries.ts` — the `Queries` contract as `cmd_*` invokes against the Rust core.
+- Optimizer: `src/app/optimizer-queries.ts` — FSRS optimization runs with progress and cancel, set as
+  `optimizerQueriesAtom`, which only the desktop provides.
 - Setup: `src/app/setup.ts` — database status, seeding via IPC, and the starter content sync repair shares.
 - Close coordination: `src/app/electron-close-coordination.ts` — durable interrupt and flush before window destroy.
 - Store wiring: `src/app/store.ts` — jotai store, UI preferences, navigator locale detection.

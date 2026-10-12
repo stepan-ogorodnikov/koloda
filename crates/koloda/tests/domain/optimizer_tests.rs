@@ -1,9 +1,8 @@
-use std::sync::{Arc, Mutex};
-
-use fsrs::CombinedProgressState;
 use koloda::domain::algorithms_fsrs::AlgorithmFSRS;
 use koloda::domain::cards::CardState;
-use koloda::domain::optimizer::{optimize, FitScores, OptimizationInput, OptimizationOutcome, ReviewRecord};
+use koloda::domain::optimizer::{
+    new_progress, optimize, request_abort, FitScores, OptimizationInput, OptimizationOutcome, ReviewRecord,
+};
 use serde_json::json;
 
 use crate::common::fsrs_algorithm_content;
@@ -63,10 +62,6 @@ fn forgetful_history() -> Vec<ReviewRecord> {
     reviews
 }
 
-fn progress() -> Arc<Mutex<CombinedProgressState>> {
-    CombinedProgressState::new_shared()
-}
-
 #[test]
 fn improved_weights_validate_and_score_better_than_current() {
     let input = OptimizationInput {
@@ -74,7 +69,7 @@ fn improved_weights_validate_and_score_better_than_current() {
         reviews: forgetful_history(),
     };
 
-    let outcome = optimize(&input, &progress()).expect("optimization should run");
+    let outcome = optimize(&input, &new_progress()).expect("optimization should run");
 
     let OptimizationOutcome::Improved {
         review_count,
@@ -114,7 +109,7 @@ fn weights_already_found_are_no_improvement() {
             content: overconfident_content(),
             reviews: reviews.clone(),
         },
-        &progress(),
+        &new_progress(),
     )
     .expect("optimization should run");
     let OptimizationOutcome::Improved { weights, .. } = first else {
@@ -128,7 +123,7 @@ fn weights_already_found_are_no_improvement() {
         },
         reviews,
     };
-    let outcome = optimize(&again, &progress()).expect("optimization should run");
+    let outcome = optimize(&again, &new_progress()).expect("optimization should run");
 
     let OptimizationOutcome::NoImprovement { current, optimized, .. } = outcome else {
         panic!("expected no improvement, got {outcome:?}");
@@ -166,7 +161,7 @@ fn histories_without_a_later_day_are_not_enough_data() {
             content: fsrs_algorithm_content(),
             reviews,
         };
-        let outcome = optimize(&input, &progress()).expect("optimization should run");
+        let outcome = optimize(&input, &new_progress()).expect("optimization should run");
         assert_eq!(
             outcome,
             OptimizationOutcome::NotEnoughData {
@@ -184,8 +179,8 @@ fn abort_requested_before_the_run_cancels_it() {
         content: overconfident_content(),
         reviews: forgetful_history(),
     };
-    let progress = progress();
-    progress.lock().expect("progress lock").want_abort = true;
+    let progress = new_progress();
+    request_abort(&progress);
 
     let outcome = optimize(&input, &progress).expect("a cancelled run is not an error");
 
