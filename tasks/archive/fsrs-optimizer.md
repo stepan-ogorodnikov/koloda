@@ -1,6 +1,6 @@
 # FSRS parameter optimization
 
-Status: ready
+Status: done
 Guides: agents/IMPLEMENTATION-PLAN.md, agents/TASKS.md, docs/specs/ALGORITHMS.md, agents/FUNCTIONAL-SPECIFICATIONS.md, agents/DECISIONS.md, agents/MARKDOWN.md, docs/decisions/TS-RUST-DOMAIN-MIRRORING.md, docs/decisions/APP-ROLES.md, agents/RUST.md, apps/electron/README.md, apps/electron/IPC.md, libs/native-ipc/README.md, agents/CODE-STYLE.md, agents/CODE-DOCUMENTATION.md, agents/TESTING.md, agents/CSS.md, agents/I18N.md, agents/VERIFY.md
 Flow: local
 
@@ -251,4 +251,36 @@ Out:
 
 ## Outcome
 
-<what shipped>
+Desktop users can fit a preset's FSRS weights to their own reviews and apply them; the web demo offers nothing.
+
+Shipped, one Plan item per commit:
+
+- ALGORITHMS.md gained §Optimization and the optimizer as a revision author.
+- `koloda` pins `fsrs = "=6.6.2"` (FSRS-6, 21 weights, no Burn) and builds training items from review history.
+  Day gaps are UTC calendar dates, as ts-fsrs counts them.
+- `optimize` trains, scores the current and the found weights on the same items, and offers weights only when their
+  log loss is lower; results are `notEnoughData`, `noImprovement`, `improved`, or `cancelled`.
+- `apply_algorithm_optimization` replaces only the weights, refuses stale `basedOn` with `algorithms.optimizer.stale`,
+  and records a `{"kind":"optimizer"}` revision captured for sync; no protocol change.
+- The addon trains on a `koloda-optimizer` thread with progress and cancel; main forwards progress to the requesting
+  window and cancels a run whose window closes; the renderer gets `optimizerQueriesAtom`, set only on desktop.
+- The preset editor has Optimize with a progress bar, the three results, Apply, Discard, and Try again.
+- `docs/decisions/FSRS-OPTIMIZER.md` is new; the mirroring decision and `agents/INDEX.md` point at it.
+
+Deviations from the Plan text, recorded in the items:
+the optimizer reads through its own database handle, as the sync host does, not on the database thread;
+`cmd_apply_algorithm_optimization` is a plain data command;
+a `cancelled` outcome carries no review count or `basedOn`;
+koloda exposes progress helpers, so the addon does not depend on `fsrs`.
+Research correction: the published `fsrs` 6.6.2 trains FSRS-6 only; FSRS-7 is the default only on its unreleased
+`main`.
+
+Checked: `bun run check:push` passed on item 6's tip (exit 0); the later commit changed markdown only and
+`bun run check:markdown` passes.
+
+Not checked: the Manual verify paths in item 6 need the human.
+The "disabled while unsaved" rule is one prop from the form's dirty state and has no automated test.
+
+Follow-ups noticed:
+recomputing stored stability and difficulty when weights are applied (Scope → Out);
+FSRS-7 once ts-fsrs 6 is stable.
