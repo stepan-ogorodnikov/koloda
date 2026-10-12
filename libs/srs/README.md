@@ -13,7 +13,8 @@ Desktop mirrors live in `crates/koloda/src/domain/`; keep TS and Rust aligned wh
 
 ## Architectural Map
 
-- Algorithms: `algorithms.ts` — entity schemas and CRUD/clone DTOs; `algorithms-fsrs.ts` — FSRS params,
+- Algorithms: `algorithms.ts` — entity schemas and CRUD/clone DTOs, plus the desktop optimizer's result and apply
+  types (`docs/decisions/FSRS-OPTIMIZER.md`); `algorithms-fsrs.ts` — FSRS params,
   `createFSRSAlgorithm()`, learning-step units/grades (`ts-fsrs`).
 - Templates & decks: `templates.ts`, `decks.ts` — fields/layout validation and entity DTOs.
 - Cards: `cards.ts` — content schema from template fields, FSRS state fields, insert/update/delete DTOs.

@@ -7,9 +7,8 @@
   The optimizer never schedules cards and never rewrites card or review rows.
 - The only handoff between the two is an algorithm's weights string.
   It holds exactly `FSRS6_WEIGHT_COUNT` numbers, the model ts-fsrs schedules with.
-- The crate is pinned to an exact version.
-  Its next releases train FSRS-7 (34 weights) by default, so a bump must keep requesting FSRS-6
-  until the scheduler moves.
+- The crate is pinned to an exact version, because a bump can change the fitted weights or the model it trains.
+  A bump must keep training FSRS-6 until the scheduler moves.
 - Days between reviews are counted the way ts-fsrs counts elapsed days: differences of UTC calendar dates.
   They are not counted by the learning day (`dayStartsAt`).
 - Moving to another FSRS model is one change across the crate pin, ts-fsrs, the weight count on both sides,
