@@ -1,6 +1,6 @@
 # FSRS parameter optimization
 
-Status: draft
+Status: ready
 Guides: agents/IMPLEMENTATION-PLAN.md, agents/TASKS.md, docs/specs/ALGORITHMS.md, agents/FUNCTIONAL-SPECIFICATIONS.md, agents/DECISIONS.md, agents/MARKDOWN.md, docs/decisions/TS-RUST-DOMAIN-MIRRORING.md, docs/decisions/APP-ROLES.md, agents/RUST.md, apps/electron/README.md, apps/electron/IPC.md, libs/native-ipc/README.md, agents/CODE-STYLE.md, agents/CODE-DOCUMENTATION.md, agents/TESTING.md, agents/CSS.md, agents/I18N.md, agents/VERIFY.md
 Flow: local
 
@@ -66,18 +66,42 @@ Out:
   Not the learning day from `dayStartsAt`; the fitted model must match the scheduler that uses it.
 - [x] When are new weights offered? — only when their log loss on the same reviews is lower than the current
   weights' (Anki's rule); otherwise the result says the current weights already fit best.
-- [ ] What does the web algorithm editor show? — open.
-  Recommendation: nothing, as the web shows no Sync settings; the spec states that.
-- [ ] Spec placement? — open.
-  Recommendation: with the UI in item 5, so the spec never describes behavior the app lacks.
-  The alternative is its own first commit, as `algorithm-history` did.
-- [ ] Show training progress? — open.
-  Recommendation: yes, a progress bar fed by a push channel, with Cancel.
-  Without it, item 4 drops the push channel and the dialog shows only a busy state with Cancel.
+- [x] What does the web algorithm editor show? — nothing, as the web shows no Sync settings (human, 2026-10-12).
+- [x] Spec placement? — its own first commit, ahead of the code that makes it true (human, 2026-10-12).
+- [x] Show training progress? — yes, a progress bar fed by a push channel, with Cancel (human, 2026-10-12).
 
 ## Plan
 
-- [ ] 1. Build FSRS training items from review history
+- [ ] 1. Specify FSRS optimization
+  Goal: `docs/specs/ALGORITHMS.md` describes optimization, ahead of the code that makes it true.
+  Scope mentions optimization.
+  Core model gains the term **Optimization**.
+  A new Optimization section states the rules below.
+  The user optimizes one algorithm from its editor, on the desktop only.
+  The web app offers no optimization and shows nothing in its place, per `docs/decisions/APP-ROLES.md`.
+  Optimization learns from the review history of the cards in decks that use the algorithm now.
+  It runs on the saved parameters, so it is unavailable while the editor has unsaved changes.
+  While it runs, the user sees progress and can cancel; closing the dialog cancels too, and nothing changes.
+  It ends in one of three results:
+  no reviews to learn from;
+  the current weights already fit best;
+  new weights that predict those reviews better.
+  The last two show how many reviews were used and how well the current and the new weights fit them.
+  Only new weights can be applied; the user applies or discards them.
+  Applying changes only the weights, so it affects later grades like any parameter change (§Editing Algorithms).
+  If the algorithm's parameters changed after the run started, applying is refused and the user can run again.
+  Optimization never changes cards, reviews, title, or notes.
+  History: a revision records who made the change, which is the user or the optimizer.
+  A revision is also recorded when optimized weights are applied.
+  Constraints: follow `agents/FUNCTIONAL-SPECIFICATIONS.md`; behavior only, with no crate, metric formula, model
+  version, table, or type names; one home per rule.
+  Done when: the spec reads coherently on its own; `bun run check:markdown` is green, and so are the spec tests
+  that check headings and section pointers.
+  Manual verify: none — docs only.
+  Commit: Specify FSRS optimization
+  Depends on: none
+
+- [ ] 2. Build FSRS training items from review history
   Goal: `crates/koloda` gains the `fsrs` crate and turns one algorithm's review history into FSRS-6 training items.
   Add `fsrs = "=6.6.2"` to `crates/koloda/Cargo.toml`.
   New Rust-only domain module `src/domain/optimizer.rs`, with no TS twin; its module doc points at
@@ -114,22 +138,22 @@ Out:
   `cargo test -p koloda`, `bun run check:rust`, and `bun run check:markdown` are green.
   `cargo tree -p koloda` shows `fsrs v6.6.2` and no `burn`.
   Commit: Build FSRS training items from review history
-  Depends on: none
+  Depends on: 1
 
-- [ ] 2. Optimize algorithm weights and score them against the current ones
+- [ ] 3. Optimize algorithm weights and score them against the current ones
   Goal: a pure `optimize` in `src/domain/optimizer.rs` takes the loaded input and an
   `Arc<Mutex<fsrs::CombinedProgressState>>`, and returns an outcome.
   With no training items, the outcome is `notEnoughData` with the review count.
   Otherwise call `compute_parameters` with `model_version: ComputeParametersVersion::Fsrs6`,
   `enable_short_term: true`, `num_relearning_steps` set to the algorithm's relearning step count, and the card
-  indices from item 1.
+  indices from item 2.
   Reject output that is not exactly `FSRS6_WEIGHT_COUNT` finite numbers with `algorithms.optimizer.invalid-output`.
   Score the current and the new weights on the same items with `FSRS::new(..)?.evaluate(..)`: log loss and RMSE.
   When the new log loss is not lower, the outcome is `noImprovement` with both scores.
   Otherwise it is `improved` with both scores and the new weights.
   The weights are formatted to 4 decimals and joined with `", "`, as the defaults are,
   and pass `AlgorithmFSRS::validate`.
-  Every outcome carries `reviewCount` and `basedOn`, the stored content the run read, for the stale check in item 3.
+  Every outcome carries `reviewCount` and `basedOn`, the stored content the run read, for the stale check in item 4.
   The crate's `Interrupted` error, raised after `want_abort` is set, becomes a `cancelled` outcome.
   Other crate errors map to `algorithms.optimizer.failed`.
   Outcome types serialize camelCase, tagged by `status`.
@@ -141,9 +165,9 @@ Out:
   Empty input returns `notEnoughData`; setting `want_abort` before the call returns `cancelled`.
   `cargo test -p koloda`, `bun run check:rust`, and the `libs/app` error-parity test are green.
   Commit: Optimize algorithm weights against review history
-  Depends on: 1
+  Depends on: 2
 
-- [ ] 3. Apply optimized weights as an optimizer revision
+- [ ] 4. Apply optimized weights as an optimizer revision
   Goal: `AlgorithmRevisionActor` gains `Optimizer` (`{"kind":"optimizer"}`) in
   `crates/koloda/src/domain/algorithms.rs`, and its TS twin in `libs/srs/src/lib/algorithms.ts` gains the same kind.
   `insert_algorithm_revision` in `src/repo/algorithms.rs` takes the actor; existing callers pass `User`.
@@ -163,9 +187,9 @@ Out:
   Title and notes stay as they were.
   `cargo test -p koloda`, `bun run check:rust`, and `bun run typecheck` are green.
   Commit: Apply optimized weights as an optimizer revision
-  Depends on: 2
+  Depends on: 3
 
-- [ ] 4. Run the FSRS optimizer from the desktop app
+- [ ] 5. Run the FSRS optimizer from the desktop app
   Goal: the addon (`apps/electron/src-rust/src/lib.rs`) gains `optimize_algorithm({ requestId, id })`,
   `cancel_algorithm_optimization({ requestId })`, and `apply_algorithm_optimization(data)`.
   Optimize loads its input on the database thread, then trains on a dedicated optimizer thread.
@@ -188,11 +212,11 @@ Out:
   Done when: `apps/electron` unit tests, modelled on `sync-ipc.test.ts`, cover routing, progress forwarding, and
   cancel.
   `bunx nx run @koloda/electron:test -c unit`, `bun run typecheck`, and `bun run check:rust` are green.
-  Manual verify: none — no UI reaches it until item 5.
+  Manual verify: none — no UI reaches it until item 6.
   Commit: Run the FSRS optimizer from the desktop app
-  Depends on: 3
+  Depends on: 4
 
-- [ ] 5. Add FSRS optimization to the algorithm editor
+- [ ] 6. Add FSRS optimization to the algorithm editor
   Goal: `libs/srs-react/src/lib/algorithms/` gains `optimize-algorithm.tsx`, an Optimize action in the editor's
   actions next to Clone and Delete.
   It renders only when `optimizerQueriesAtom` is set, so the web shows nothing.
@@ -205,11 +229,6 @@ Out:
   Apply calls the apply mutation, then refreshes the algorithm queries and resets the form as a save does.
   A stale refusal says the parameters changed since the run and offers to run again.
   Closing the dialog while running cancels the run.
-  `docs/specs/ALGORITHMS.md` gains an Optimization section: what it uses, the three results, applying, cancel,
-  unsaved changes, and desktop only (web absent, per `docs/decisions/APP-ROLES.md`).
-  Core model gains the term **Optimization**.
-  History says a revision's author is the user or the optimizer.
-  Scope mentions optimization.
   Strings in `en` and `ru`, extracted and compiled per `agents/I18N.md`.
   Constraints: the optimizer does not touch card scheduling numbers; follow `agents/CSS.md` for classes.
   Done when: component tests, modelled on `delete-algorithm.test.tsx`, cover these cases:
@@ -218,12 +237,13 @@ Out:
   improved → Apply calls the mutation with `basedOn` and the weights;
   `noImprovement` and `notEnoughData` offer no Apply;
   Cancel calls cancel.
-  `bun run check:push` and `bun run check:markdown` are green.
+  The dialog matches `docs/specs/ALGORITHMS.md` (§Optimization).
+  `bun run check:push` is green.
   Manual verify (desktop): open a preset with reviewed cards, Optimize, Apply → the weights field shows the new
   weights; Optimize on a preset with no reviews shows no reviews to learn from; edit the title without saving →
   Optimize is disabled.
   Commit: Add FSRS optimization to the algorithm editor
-  Depends on: 4
+  Depends on: 5
 
 ## Outcome
 
