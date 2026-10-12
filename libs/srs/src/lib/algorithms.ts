@@ -63,8 +63,15 @@ export type AlgorithmOptimization =
     }
   | { status: "cancelled" };
 
+/** Applies an optimization's weights (Rust twin: `ApplyAlgorithmOptimizationData`). */
+export type ApplyAlgorithmOptimizationData = {
+  id: Algorithm["id"];
+  basedOn: AlgorithmFSRS;
+  weights: string;
+};
+
 /** Who changed an algorithm's parameters, stored as JSON tagged by `kind` (Rust twin: `AlgorithmRevisionActor`). */
-export type AlgorithmRevisionActor = { kind: "user" };
+export type AlgorithmRevisionActor = { kind: "user" } | { kind: "optimizer" };
 
 export type DeleteAlgorithmData = {
   id: Algorithm["id"];

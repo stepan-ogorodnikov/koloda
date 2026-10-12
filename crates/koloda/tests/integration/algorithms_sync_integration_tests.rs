@@ -1,6 +1,7 @@
 use koloda::domain::algorithms::{
     CloneAlgorithmData, DeleteAlgorithmData, InsertAlgorithmData, UpdateAlgorithmData, UpdateAlgorithmValues,
 };
+use koloda::domain::optimizer::ApplyAlgorithmOptimizationData;
 use koloda::repo::algorithms;
 use koloda_sync_proto::payload::{DeckAlgorithm, Delete, Payload};
 use koloda_sync_proto::registry::{Group, Kind};
@@ -137,4 +138,46 @@ fn deleting_an_algorithm_reassigns_its_decks_then_tombstones_it_with_the_success
     assert!(entries
         .iter()
         .all(|entry| entry.envelope.header.commit_id == entries[0].envelope.header.commit_id));
+}
+
+#[test]
+fn applying_an_optimization_records_the_new_content_and_an_optimizer_revision() {
+    let db = test_db();
+    let algorithm = add_algorithm(&db, "FSRS");
+    enroll(&db);
+    let data = ApplyAlgorithmOptimizationData {
+        id: algorithm,
+        based_on: fsrs_algorithm_content(),
+        weights: "0.212, 1.2931, 2.3065, 8.2956, 6.4133, 0.8334, 3.0194, 0.001, 1.8722, 0.1666, 0.796, 1.4835, \
+                  0.0614, 0.2629, 1.6483, 0.6014, 1.8729, 0.5425, 0.0912, 0.0658, 0.1542"
+            .to_string(),
+    };
+
+    let mut stale = data.clone();
+    stale.based_on.retention = 85.0;
+    algorithms::apply_algorithm_optimization(&db, stale).expect_err("stale weights are refused");
+    assert!(outbox(&db).is_empty(), "a refused apply captures nothing");
+
+    algorithms::apply_algorithm_optimization(&db, data).unwrap();
+
+    let entries = outbox(&db);
+    let targets: Vec<_> = entries
+        .iter()
+        .map(|entry| (entry.envelope.header.kind, entry.envelope.header.group))
+        .collect();
+    assert_eq!(
+        targets,
+        vec![
+            (Kind::Algorithms, Some(Group::Content)),
+            (Kind::AlgorithmRevisions, Some(Group::Row)),
+        ]
+    );
+    let Payload::AlgorithmRevision(row) = &entries[1].payload else {
+        panic!("expected a revision, got {:?}", entries[1].payload);
+    };
+    assert_eq!(row.actor, r#"{"kind":"optimizer"}"#);
+    assert_eq!(
+        entries[0].envelope.header.commit_id,
+        entries[1].envelope.header.commit_id
+    );
 }

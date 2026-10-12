@@ -26,6 +26,15 @@ pub struct ReviewRecord {
     pub created_at: i64,
 }
 
+/// Applies an optimization's weights (TS twin: `ApplyAlgorithmOptimizationData` in `@koloda/srs`).
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ApplyAlgorithmOptimizationData {
+    pub id: String,
+    pub based_on: AlgorithmFSRS,
+    pub weights: String,
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct OptimizationInput {
     pub content: AlgorithmFSRS,

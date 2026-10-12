@@ -15,6 +15,7 @@ use crate::domain::algorithms::{
 };
 use crate::domain::algorithms_fsrs::AlgorithmFSRS;
 use crate::domain::common::{normalize_optional_notes, normalize_required_title};
+use crate::domain::optimizer::ApplyAlgorithmOptimizationData;
 use crate::repo::settings;
 use crate::repo::sync::capture::Capture;
 
@@ -111,7 +112,7 @@ pub(crate) fn insert_algorithm(
         "#,
         params![id, title, content, now],
     )?;
-    let revision = insert_algorithm_revision(conn, &id, &content, now)?;
+    let revision = insert_algorithm_revision(conn, &id, &content, AlgorithmRevisionActor::User, now)?;
 
     let mut capture = Capture::begin(conn)?;
     capture.write(&id, None, &create_payload(conn, &id)?)?;
@@ -165,10 +166,11 @@ fn insert_algorithm_revision(
     conn: &Connection,
     algorithm_id: &str,
     content: &str,
+    actor: AlgorithmRevisionActor,
     now: i64,
 ) -> Result<InsertedRevision, AppError> {
     let id = minted_uuidv7(None);
-    let actor = serde_json::to_string(&AlgorithmRevisionActor::User)?;
+    let actor = serde_json::to_string(&actor)?;
     conn.execute(
         r#"
         INSERT INTO algorithm_revisions (id, algorithm_id, content, actor, created_at)
@@ -243,7 +245,7 @@ pub fn update_algorithm(db: &Database, data: UpdateAlgorithmData) -> Result<Algo
             // WHY: title and notes are not parameters, so only a content change is a revision.
             // Twin of TS `updateAlgorithm`.
             if existing_content != data.values.content {
-                let revision = insert_algorithm_revision(tx, &data.id, &content, now)?;
+                let revision = insert_algorithm_revision(tx, &data.id, &content, AlgorithmRevisionActor::User, now)?;
                 capture.write(
                     &data.id,
                     None,
@@ -252,6 +254,68 @@ pub fn update_algorithm(db: &Database, data: UpdateAlgorithmData) -> Result<Algo
                 capture.write(&revision.id, None, &Payload::AlgorithmRevision(revision.payload))?;
             }
 
+            Ok(())
+        })?;
+
+        get_algorithm(db, &data.id)?.ok_or_else(|| AppError::new(error_codes::DB_UPDATE, None))
+    })
+}
+
+/// Replaces only the weights, as a revision by the optimizer. Rust-only; see `docs/decisions/FSRS-OPTIMIZER.md`.
+pub fn apply_algorithm_optimization(
+    db: &Database,
+    data: ApplyAlgorithmOptimizationData,
+) -> Result<Algorithm, AppError> {
+    throw_known_error(error_codes::DB_UPDATE, || {
+        let now = get_current_timestamp()?;
+
+        db.with_transaction(|tx| {
+            let stored = tx
+                .query_row(
+                    "SELECT content FROM algorithms WHERE id = ?1",
+                    params![data.id],
+                    |row| {
+                        let content: String = row.get(0)?;
+                        parse_json_column::<AlgorithmFSRS>(0, &content)
+                    },
+                )
+                .optional()?
+                .ok_or_else(|| {
+                    AppError::new(
+                        error_codes::NOT_FOUND_ALGORITHMS_OPTIMIZE_ALGORITHM,
+                        Some(format!("Algorithm id: {}", data.id)),
+                    )
+                })?;
+            // INVARIANT: the weights were fitted for these parameters; any later change makes them stale.
+            if stored != data.based_on {
+                return Err(AppError::new(error_codes::ALGORITHMS_OPTIMIZER_STALE, None));
+            }
+
+            let content = AlgorithmFSRS {
+                weights: data.weights.clone(),
+                ..stored.clone()
+            };
+            content.validate()?;
+            if content == stored {
+                return Ok(());
+            }
+
+            let content = serde_json::to_string(&content)?;
+            tx.execute(
+                "UPDATE algorithms SET content = ?1, updated_at = ?2 WHERE id = ?3",
+                params![content, now, data.id],
+            )?;
+            let revision = insert_algorithm_revision(tx, &data.id, &content, AlgorithmRevisionActor::Optimizer, now)?;
+            let mut capture = Capture::begin(tx)?;
+            capture.write(
+                &data.id,
+                None,
+                &Payload::AlgorithmContent(wire::JsonContent {
+                    content,
+                    updated_at: Some(now),
+                }),
+            )?;
+            capture.write(&revision.id, None, &Payload::AlgorithmRevision(revision.payload))?;
             Ok(())
         })?;
 

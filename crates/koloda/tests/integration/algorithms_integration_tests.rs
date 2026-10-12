@@ -4,6 +4,7 @@ use koloda::domain::algorithms::{
     CloneAlgorithmData, DeleteAlgorithmData, InsertAlgorithmData, UpdateAlgorithmData, UpdateAlgorithmValues,
 };
 use koloda::domain::algorithms_fsrs::AlgorithmFSRS;
+use koloda::domain::optimizer::ApplyAlgorithmOptimizationData;
 use koloda::domain::settings::SettingsName;
 use koloda::repo::algorithms;
 
@@ -442,4 +443,75 @@ fn delete_algorithm_keeps_history() {
     .expect("delete should succeed");
 
     assert_eq!(revisions(&db, &algorithm_id).len(), 1);
+}
+
+const FOUND_WEIGHTS: &str = "0.212, 1.2931, 2.3065, 8.2956, 6.4133, 0.8334, 3.0194, 0.001, 1.8722, 0.1666, 0.796, \
+                             1.4835, 0.0614, 0.2629, 1.6483, 0.6014, 1.8729, 0.5425, 0.0912, 0.0658, 0.1542";
+
+fn apply_data(id: &str) -> ApplyAlgorithmOptimizationData {
+    ApplyAlgorithmOptimizationData {
+        id: id.to_string(),
+        based_on: fsrs_algorithm_content(),
+        weights: FOUND_WEIGHTS.to_string(),
+    }
+}
+
+#[test]
+fn applying_an_optimization_replaces_only_weights_as_an_optimizer_revision() {
+    let db = test_db();
+    let algorithm_id = add_algorithm(&db, "FSRS");
+    let expected = AlgorithmFSRS {
+        weights: FOUND_WEIGHTS.to_string(),
+        ..fsrs_algorithm_content()
+    };
+
+    let applied =
+        algorithms::apply_algorithm_optimization(&db, apply_data(&algorithm_id)).expect("apply should succeed");
+
+    assert_eq!(applied.title, "FSRS");
+    assert_eq!(applied.content, expected);
+    let revisions = revisions(&db, &algorithm_id);
+    assert_eq!(revisions.len(), 2);
+    assert_eq!(revisions[1].content, expected);
+    // Actor JSON is a wire contract shared with TS.
+    assert_eq!(revisions[1].actor, r#"{"kind":"optimizer"}"#);
+    assert_eq!(Some(revisions[1].created_at), applied.updated_at);
+}
+
+#[test]
+fn applying_an_optimization_is_refused_without_writing_anything() {
+    type Change = fn(&mut ApplyAlgorithmOptimizationData);
+    let cases: [(&str, Change, &str); 3] = [
+        (
+            "parameters changed after the run",
+            |data| data.based_on.retention = 85.0,
+            error_codes::ALGORITHMS_OPTIMIZER_STALE,
+        ),
+        (
+            "weights the scheduler cannot take",
+            |data| data.weights = "1, 2, 3".to_string(),
+            error_codes::VALIDATION_ALGORITHM_FSRS_WEIGHTS,
+        ),
+        (
+            "a missing algorithm",
+            |data| data.id = "missing".to_string(),
+            error_codes::NOT_FOUND_ALGORITHMS_OPTIMIZE_ALGORITHM,
+        ),
+    ];
+
+    for (case, change, code) in cases {
+        let db = test_db();
+        let algorithm_id = add_algorithm(&db, "FSRS");
+        let mut data = apply_data(&algorithm_id);
+        change(&mut data);
+
+        let error = algorithms::apply_algorithm_optimization(&db, data).expect_err(case);
+
+        assert_eq!(error.code, code, "{case}");
+        let stored = algorithms::get_algorithm(&db, &algorithm_id)
+            .unwrap()
+            .expect("algorithm stays");
+        assert_eq!(stored.content, fsrs_algorithm_content(), "{case}");
+        assert_eq!(revisions(&db, &algorithm_id).len(), 1, "{case}");
+    }
 }

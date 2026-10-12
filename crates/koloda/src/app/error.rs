@@ -118,6 +118,7 @@ pub mod error_codes {
 
     pub const ALGORITHMS_OPTIMIZER_FAILED: &str = "algorithms.optimizer.failed";
     pub const ALGORITHMS_OPTIMIZER_INVALID_OUTPUT: &str = "algorithms.optimizer.invalid-output";
+    pub const ALGORITHMS_OPTIMIZER_STALE: &str = "algorithms.optimizer.stale";
 
     pub const KEYRING: &str = "keyring";
     pub const SECRET_STORE: &str = "secret-store";

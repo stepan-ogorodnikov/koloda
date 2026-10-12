@@ -72,6 +72,8 @@ pub struct DeleteAlgorithmData {
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum AlgorithmRevisionActor {
     User,
+    /// Weights an optimization found and the user applied (`docs/decisions/FSRS-OPTIMIZER.md`).
+    Optimizer,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

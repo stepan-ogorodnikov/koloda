@@ -10,6 +10,7 @@ export type {
   AlgorithmFitScores,
   AlgorithmOptimization,
   AlgorithmRevisionActor,
+  ApplyAlgorithmOptimizationData,
   CloneAlgorithmData,
   DeleteAlgorithmData,
   InsertAlgorithmData,

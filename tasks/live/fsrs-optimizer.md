@@ -169,7 +169,7 @@ Out:
   Commit: Optimize algorithm weights against review history
   Depends on: 2
 
-- [ ] 4. Apply optimized weights as an optimizer revision
+- [x] 4. Apply optimized weights as an optimizer revision
   Goal: `AlgorithmRevisionActor` gains `Optimizer` (`{"kind":"optimizer"}`) in
   `crates/koloda/src/domain/algorithms.rs`, and its TS twin in `libs/srs/src/lib/algorithms.ts` gains the same kind.
   `insert_algorithm_revision` in `src/repo/algorithms.rs` takes the actor; existing callers pass `User`.
