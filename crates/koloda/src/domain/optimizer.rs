@@ -4,11 +4,14 @@
 //! how days between reviews are counted, is `docs/decisions/FSRS-OPTIMIZER.md`.
 
 use std::collections::BTreeMap;
+use std::sync::{Arc, Mutex};
 
 use chrono::{DateTime, NaiveDate};
-use fsrs::{FSRSItem, FSRSReview};
+use fsrs::{compute_parameters, CombinedProgressState, ComputeParametersInput, FSRSError, FSRSItem, FSRSReview, FSRS};
+use serde::{Deserialize, Serialize};
 
-use crate::domain::algorithms_fsrs::AlgorithmFSRS;
+use crate::app::error::{error_codes, AppError};
+use crate::domain::algorithms_fsrs::{AlgorithmFSRS, FSRS6_WEIGHT_COUNT};
 use crate::domain::cards::CardState;
 
 /// One review as the optimizer reads it.
@@ -121,4 +124,156 @@ fn card_items<'a>(history: &[&'a ReviewRecord], card_index: i64) -> Option<Vec<D
 /// learning day (`dayStartsAt`), so the fitted model matches the scheduler that uses it.
 fn utc_date(created_at: i64) -> Option<NaiveDate> {
     DateTime::from_timestamp_millis(created_at).map(|time| time.date_naive())
+}
+
+/// How well weights predict the reviews they were scored on; lower is better.
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FitScores {
+    pub log_loss: f64,
+    pub rmse: f64,
+}
+
+/// Result of one optimization run (TS twin: `AlgorithmOptimization` in `@koloda/srs`).
+///
+/// `based_on` is the saved content the run read; applying is refused once the stored content differs from it.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "status", rename_all = "camelCase", rename_all_fields = "camelCase")]
+pub enum OptimizationOutcome {
+    NotEnoughData {
+        review_count: usize,
+        based_on: AlgorithmFSRS,
+    },
+    NoImprovement {
+        review_count: usize,
+        based_on: AlgorithmFSRS,
+        current: FitScores,
+        optimized: FitScores,
+    },
+    Improved {
+        review_count: usize,
+        based_on: AlgorithmFSRS,
+        current: FitScores,
+        optimized: FitScores,
+        weights: String,
+    },
+    Cancelled,
+}
+
+/// Trains on the input and scores the current and the found weights on the same items.
+/// Setting `want_abort` on `progress` cancels the run.
+pub fn optimize(
+    input: &OptimizationInput,
+    progress: &Arc<Mutex<CombinedProgressState>>,
+) -> Result<OptimizationOutcome, AppError> {
+    let set = build_training_set(&input.reviews);
+    let based_on = input.content.clone();
+    if set.items.is_empty() {
+        return Ok(OptimizationOutcome::NotEnoughData {
+            review_count: set.review_count,
+            based_on,
+        });
+    }
+    if is_aborted(progress) {
+        return Ok(OptimizationOutcome::Cancelled);
+    }
+
+    let trained = compute_parameters(ComputeParametersInput {
+        train_set: set.items.clone(),
+        card_ids: Some(set.card_indices.clone()),
+        progress: Some(Arc::clone(progress)),
+        enable_short_term: true,
+        num_relearning_steps: Some(input.content.relearning_steps.len()),
+        training_config: None,
+    });
+    let trained = match trained {
+        Ok(trained) => trained,
+        Err(FSRSError::Interrupted) => return Ok(OptimizationOutcome::Cancelled),
+        Err(err) => return Err(optimizer_failed(&err)),
+    };
+    // INVARIANT: the scheduler takes exactly FSRS6_WEIGHT_COUNT weights (docs/decisions/FSRS-OPTIMIZER.md).
+    if trained.len() != FSRS6_WEIGHT_COUNT || trained.iter().any(|weight| !weight.is_finite()) {
+        return Err(AppError::new(
+            error_codes::ALGORITHMS_OPTIMIZER_INVALID_OUTPUT,
+            Some(format!("{} weights: {:?}", trained.len(), trained)),
+        ));
+    }
+
+    let weights = format_weights(&trained);
+    let current = parse_weights(&input.content.weights)?;
+    // WHY: score the weights as they will be stored, after rounding, not the raw training output.
+    let found = parse_weights(&weights)?;
+    let (current, optimized) = match (
+        score(&current, &set.items, progress),
+        score(&found, &set.items, progress),
+    ) {
+        (Ok(current), Ok(optimized)) => (current, optimized),
+        (Err(FSRSError::Interrupted), _) | (_, Err(FSRSError::Interrupted)) => {
+            return Ok(OptimizationOutcome::Cancelled)
+        }
+        (Err(err), _) | (_, Err(err)) => return Err(optimizer_failed(&err)),
+    };
+
+    let review_count = set.review_count;
+    if optimized.log_loss < current.log_loss {
+        Ok(OptimizationOutcome::Improved {
+            review_count,
+            based_on,
+            current,
+            optimized,
+            weights,
+        })
+    } else {
+        Ok(OptimizationOutcome::NoImprovement {
+            review_count,
+            based_on,
+            current,
+            optimized,
+        })
+    }
+}
+
+fn score(
+    weights: &[f32],
+    items: &[FSRSItem],
+    progress: &Arc<Mutex<CombinedProgressState>>,
+) -> Result<FitScores, FSRSError> {
+    let evaluation = FSRS::new(weights)?.evaluate(items.to_vec(), |_| !is_aborted(progress))?;
+    Ok(FitScores {
+        log_loss: f64::from(evaluation.log_loss),
+        rmse: f64::from(evaluation.rmse_bins),
+    })
+}
+
+// WHY: a poisoned lock means a panic mid-run; stopping is the only safe reading.
+fn is_aborted(progress: &Arc<Mutex<CombinedProgressState>>) -> bool {
+    progress.lock().map_or(true, |state| state.want_abort)
+}
+
+fn optimizer_failed(err: &FSRSError) -> AppError {
+    AppError::new(error_codes::ALGORITHMS_OPTIMIZER_FAILED, Some(format!("{err:?}")))
+}
+
+fn parse_weights(weights: &str) -> Result<Vec<f32>, AppError> {
+    weights
+        .split(',')
+        .map(|weight| weight.trim().parse::<f32>())
+        .collect::<Result<Vec<_>, _>>()
+        .map_err(|err| AppError::new(error_codes::ALGORITHMS_OPTIMIZER_FAILED, Some(err.to_string())))
+}
+
+/// Four decimals without trailing zeros, joined like the built-in defaults (`0.212, 1.2931, …`).
+fn format_weights(weights: &[f32]) -> String {
+    weights
+        .iter()
+        .map(|weight| {
+            let fixed = format!("{weight:.4}");
+            let trimmed = fixed.trim_end_matches('0').trim_end_matches('.');
+            match trimmed {
+                "" | "-" | "-0" => "0".to_string(),
+                value => value.to_string(),
+            }
+        })
+        .collect::<Vec<_>>()
+        .join(", ")
 }

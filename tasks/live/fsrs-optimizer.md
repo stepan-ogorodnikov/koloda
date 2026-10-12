@@ -141,7 +141,7 @@ Out:
   Commit: Build FSRS training items from review history
   Depends on: 1
 
-- [ ] 3. Optimize algorithm weights and score them against the current ones
+- [x] 3. Optimize algorithm weights and score them against the current ones
   Goal: a pure `optimize` in `src/domain/optimizer.rs` takes the loaded input and an
   `Arc<Mutex<fsrs::CombinedProgressState>>`, and returns an outcome.
   With no training items, the outcome is `notEnoughData` with the review count.
@@ -154,7 +154,8 @@ Out:
   Otherwise it is `improved` with both scores and the new weights.
   The weights are formatted to 4 decimals and joined with `", "`, as the defaults are,
   and pass `AlgorithmFSRS::validate`.
-  Every outcome carries `reviewCount` and `basedOn`, the stored content the run read, for the stale check in item 4.
+  Every outcome but `cancelled` carries `reviewCount` and `basedOn`, the stored content the run read,
+  for the stale check in item 4.
   The crate's `Interrupted` error, raised after `want_abort` is set, becomes a `cancelled` outcome.
   Other crate errors map to `algorithms.optimizer.failed`.
   Outcome types serialize camelCase, tagged by `status`.

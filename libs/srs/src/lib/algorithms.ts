@@ -2,6 +2,7 @@ import type { UpdateData } from "@koloda/app";
 import { timestampsValidation } from "@koloda/app";
 import { z } from "zod";
 import { algorithmFSRSValidation } from "./algorithms-fsrs";
+import type { AlgorithmFSRS } from "./algorithms-fsrs";
 import { optionalEntityNotesSchema, requiredEntityTitleSchema } from "@koloda/app";
 
 export const algorithmValidation = z.object({
@@ -35,6 +36,32 @@ export type CloneAlgorithmData = z.infer<typeof cloneAlgorithmSchema>;
 export const cloneAlgorithmSchema = insertAlgorithmSchema.pick({ title: true }).extend({
   sourceId: algorithmValidation.shape.id,
 });
+
+/** How well weights predict the reviews they were scored on; lower is better (Rust twin: `FitScores`). */
+export type AlgorithmFitScores = { logLoss: number; rmse: number };
+
+/**
+ * One optimization run's result (Rust twin: `OptimizationOutcome`, desktop only; docs/decisions/FSRS-OPTIMIZER.md).
+ * `basedOn` is the saved content the run read; applying is refused once the stored content differs from it.
+ */
+export type AlgorithmOptimization =
+  | { status: "notEnoughData"; reviewCount: number; basedOn: AlgorithmFSRS }
+  | {
+      status: "noImprovement";
+      reviewCount: number;
+      basedOn: AlgorithmFSRS;
+      current: AlgorithmFitScores;
+      optimized: AlgorithmFitScores;
+    }
+  | {
+      status: "improved";
+      reviewCount: number;
+      basedOn: AlgorithmFSRS;
+      current: AlgorithmFitScores;
+      optimized: AlgorithmFitScores;
+      weights: string;
+    }
+  | { status: "cancelled" };
 
 /** Who changed an algorithm's parameters, stored as JSON tagged by `kind` (Rust twin: `AlgorithmRevisionActor`). */
 export type AlgorithmRevisionActor = { kind: "user" };

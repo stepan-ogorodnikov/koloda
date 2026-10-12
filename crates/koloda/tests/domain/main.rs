@@ -23,6 +23,7 @@ mod lessons_amounts_tests;
 mod lessons_result_tests;
 mod lessons_serde_tests;
 mod lessons_validation_tests;
+mod optimizer_tests;
 mod optimizer_training_tests;
 mod reviews_serde_tests;
 mod reviews_totals_tests;

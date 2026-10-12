@@ -123,6 +123,8 @@ export const ERROR_MESSAGES = {
   "validation.sync.name.too-short": msg`validation.sync.name.too-short`,
   "validation.sync.name.too-long": ({ maximum }: any) =>
     msg`${plural(maximum, { other: "validation.sync.name.too-long" })}`,
+  "algorithms.optimizer.failed": msg`algorithms.optimizer.failed`,
+  "algorithms.optimizer.invalid-output": msg`algorithms.optimizer.invalid-output`,
   keyring: msg`keyring`,
   "secret-store": msg`secret-store`,
   "windows-credentials": msg`windows-credentials`,

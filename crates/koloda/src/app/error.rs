@@ -116,6 +116,9 @@ pub mod error_codes {
 
     pub const VALIDATION_SEED_LEARNING_SETTINGS: &str = "validation.seed.learning-settings";
 
+    pub const ALGORITHMS_OPTIMIZER_FAILED: &str = "algorithms.optimizer.failed";
+    pub const ALGORITHMS_OPTIMIZER_INVALID_OUTPUT: &str = "algorithms.optimizer.invalid-output";
+
     pub const KEYRING: &str = "keyring";
     pub const SECRET_STORE: &str = "secret-store";
     pub const WINDOWS_CREDENTIALS: &str = "windows-credentials";
