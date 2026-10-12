@@ -4,6 +4,7 @@
   "namedInputs": {
     "default": [
       "{projectRoot}/**/*",
+      "!{projectRoot}/**/*.md",
       "sharedGlobals"
     ],
     "production": [
@@ -18,7 +19,8 @@
       "{workspaceRoot}/Cargo.lock",
       "{workspaceRoot}/rust-toolchain.toml",
       "{workspaceRoot}/clippy.toml",
-      "{projectRoot}/**/*"
+      "{projectRoot}/**/*",
+      "!{projectRoot}/**/*.md"
     ]
   },
   "plugins": [

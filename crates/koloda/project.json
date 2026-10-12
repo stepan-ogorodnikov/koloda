@@ -11,7 +11,8 @@
       "inputs": [
         "rust",
         "{workspaceRoot}/crates/koloda-sync-proto/**/*",
-        "{workspaceRoot}/apps/electron/src-rust/**/*"
+        "{workspaceRoot}/apps/electron/src-rust/**/*",
+        "!{workspaceRoot}/crates/koloda-sync-proto/**/*.md"
       ],
       "options": {
         "command": "cargo clippy --workspace --all-targets -- -D warnings",
@@ -24,7 +25,11 @@
     "test": {
       "executor": "nx:run-commands",
       "cache": true,
-      "inputs": ["rust", "{workspaceRoot}/crates/koloda-sync-proto/**/*"],
+      "inputs": [
+        "rust",
+        "{workspaceRoot}/crates/koloda-sync-proto/**/*",
+        "!{workspaceRoot}/crates/koloda-sync-proto/**/*.md"
+      ],
       "options": {
         "command": "cargo test -p koloda",
         "forwardAllArgs": false,

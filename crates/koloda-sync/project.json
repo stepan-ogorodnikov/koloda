@@ -12,7 +12,10 @@
         "rust",
         "{workspaceRoot}/crates/koloda/**/*",
         "{workspaceRoot}/crates/koloda-sync-proto/**/*",
-        "{workspaceRoot}/crates/koloda-server/**/*"
+        "{workspaceRoot}/crates/koloda-server/**/*",
+        "!{workspaceRoot}/crates/koloda/**/*.md",
+        "!{workspaceRoot}/crates/koloda-sync-proto/**/*.md",
+        "!{workspaceRoot}/crates/koloda-server/**/*.md"
       ],
       "options": {
         "command": "cargo clippy -p koloda-sync --all-targets -- -D warnings",
@@ -29,7 +32,10 @@
         "rust",
         "{workspaceRoot}/crates/koloda/**/*",
         "{workspaceRoot}/crates/koloda-sync-proto/**/*",
-        "{workspaceRoot}/crates/koloda-server/**/*"
+        "{workspaceRoot}/crates/koloda-server/**/*",
+        "!{workspaceRoot}/crates/koloda/**/*.md",
+        "!{workspaceRoot}/crates/koloda-sync-proto/**/*.md",
+        "!{workspaceRoot}/crates/koloda-server/**/*.md"
       ],
       "options": {
         "command": "cargo test -p koloda-sync",

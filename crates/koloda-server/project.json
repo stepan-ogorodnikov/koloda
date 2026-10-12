@@ -8,7 +8,11 @@
     "lint": {
       "executor": "nx:run-commands",
       "cache": true,
-      "inputs": ["rust", "{workspaceRoot}/crates/koloda-sync-proto/**/*"],
+      "inputs": [
+        "rust",
+        "{workspaceRoot}/crates/koloda-sync-proto/**/*",
+        "!{workspaceRoot}/crates/koloda-sync-proto/**/*.md"
+      ],
       "options": {
         "command": "cargo clippy -p koloda-server --all-targets -- -D warnings",
         "forwardAllArgs": false,
@@ -20,7 +24,11 @@
     "test": {
       "executor": "nx:run-commands",
       "cache": true,
-      "inputs": ["rust", "{workspaceRoot}/crates/koloda-sync-proto/**/*"],
+      "inputs": [
+        "rust",
+        "{workspaceRoot}/crates/koloda-sync-proto/**/*",
+        "!{workspaceRoot}/crates/koloda-sync-proto/**/*.md"
+      ],
       "options": {
         "command": "cargo test -p koloda-server",
         "forwardAllArgs": false,
