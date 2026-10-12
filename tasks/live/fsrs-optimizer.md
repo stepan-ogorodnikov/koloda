@@ -60,8 +60,9 @@ Out:
 - [x] Recompute existing cards' memory states on apply? — no, later (human, 2026-10-12).
 - [x] Where does fitting run? — Rust `fsrs` crate in `koloda`, on desktop; scheduling stays in TypeScript.
   The reviews already live in Rust-owned SQLite, and the crate no longer depends on Burn.
-- [x] Which model? — FSRS-6, requested explicitly.
-  `fsrs` 6.6.2 trains FSRS-7 (34 weights) by default; ts-fsrs 5 schedules FSRS-6 (21 weights).
+- [x] Which model? — FSRS-6, the model ts-fsrs 5 schedules with (21 weights).
+  The published `fsrs` 6.6.2 trains FSRS-6 only; its unreleased `main` trains FSRS-7 (34 weights) by default.
+  The exact pin and the 21-weight check guard the handoff.
 - [x] How are day gaps counted? — as ts-fsrs counts elapsed days: the difference of UTC calendar dates.
   Not the learning day from `dayStartsAt`; the fitted model must match the scheduler that uses it.
 - [x] When are new weights offered? — only when their log loss on the same reviews is lower than the current
@@ -101,7 +102,7 @@ Out:
   Commit: Specify FSRS optimization
   Depends on: none
 
-- [ ] 2. Build FSRS training items from review history
+- [x] 2. Build FSRS training items from review history
   Goal: `crates/koloda` gains the `fsrs` crate and turns one algorithm's review history into FSRS-6 training items.
   Add `fsrs = "=6.6.2"` to `crates/koloda/Cargo.toml`.
   New Rust-only domain module `src/domain/optimizer.rs`, with no TS twin; its module doc points at
@@ -144,9 +145,9 @@ Out:
   Goal: a pure `optimize` in `src/domain/optimizer.rs` takes the loaded input and an
   `Arc<Mutex<fsrs::CombinedProgressState>>`, and returns an outcome.
   With no training items, the outcome is `notEnoughData` with the review count.
-  Otherwise call `compute_parameters` with `model_version: ComputeParametersVersion::Fsrs6`,
-  `enable_short_term: true`, `num_relearning_steps` set to the algorithm's relearning step count, and the card
-  indices from item 2.
+  Otherwise call `compute_parameters` with `enable_short_term: true`, `num_relearning_steps` set to the algorithm's
+  relearning step count, and the card indices from item 2.
+  The pinned 6.6.2 trains FSRS-6 only and has no model-version field.
   Reject output that is not exactly `FSRS6_WEIGHT_COUNT` finite numbers with `algorithms.optimizer.invalid-output`.
   Score the current and the new weights on the same items with `FSRS::new(..)?.evaluate(..)`: log loss and RMSE.
   When the new log loss is not lower, the outcome is `noImprovement` with both scores.

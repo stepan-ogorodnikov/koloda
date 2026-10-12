@@ -26,13 +26,16 @@ Product tables and columns stay structurally equivalent on both hosts.
 | --- | --- | --- |
 | AI provider identity and secrets redaction | Rust (`koloda` domain + repo) | `@koloda/ai` catalog and secrets schemas |
 | FSRS scheduling | TypeScript (`@koloda/srs`, lesson flow in `@koloda/srs-react`) | Backends persist client-computed card/review results; they do not re-schedule |
+| FSRS weight fitting | Rust (`koloda`, desktop only; `docs/decisions/FSRS-OPTIMIZER.md`) | No TS twin; the renderer shows results and applies weights |
 | Shared product entities (cards, decks, templates, settings, …) | Both sides must agree | Update Zod (`libs/srs`, `libs/app`) and Rust domain together |
 
 When a field or invariant changes, update every owning layer in the same change.
 Prefer deleting and reshaping call sites over compatibility shims (`agents/BACKWARDS-COMPATIBILITY.md`).
 
 Schema and domain edits are multi-package by default (TS libs + `koloda`, including web SQLite repos).
-Do not remove Rust validation, move FSRS into Rust, or invent adapter layers unless that is an explicit new decision.
+Do not remove Rust validation, move FSRS scheduling into Rust, or invent adapter layers
+unless that is an explicit new decision.
+Fitting FSRS weights is that decision: `docs/decisions/FSRS-OPTIMIZER.md`.
 
 ### Accepted divergences
 

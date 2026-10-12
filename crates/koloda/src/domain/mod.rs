@@ -17,6 +17,7 @@ pub mod conversations;
 pub mod decks;
 pub mod learning_day;
 pub mod lessons;
+pub mod optimizer;
 pub mod progress;
 pub mod reviews;
 pub mod seed_ids;

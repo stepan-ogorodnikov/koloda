@@ -12,6 +12,7 @@ pub mod error_codes {
     pub const NOT_FOUND_ALGORITHMS_CLONE_SOURCE: &str = "not-found.algorithms.clone.source";
     pub const NOT_FOUND_ALGORITHMS_UPDATE_ALGORITHM: &str = "not-found.algorithms.update.algorithm";
     pub const NOT_FOUND_ALGORITHMS_DELETE_SUCCESSOR: &str = "not-found.algorithms.delete.successor";
+    pub const NOT_FOUND_ALGORITHMS_OPTIMIZE_ALGORITHM: &str = "not-found.algorithms.optimize.algorithm";
     pub const NOT_FOUND_TEMPLATES_CLONE_SOURCE: &str = "not-found.templates.clone.source";
     pub const NOT_FOUND_TEMPLATES_UPDATE_TEMPLATE: &str = "not-found.templates.update.template";
     pub const NOT_FOUND_CARDS_ADD_DECK: &str = "not-found.cards.add.deck";

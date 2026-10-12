@@ -12,6 +12,7 @@ pub mod conversations;
 pub mod decks;
 pub mod fsrs_sql;
 pub mod lessons;
+pub mod optimizer;
 pub mod reviews;
 pub mod settings;
 pub mod sync;

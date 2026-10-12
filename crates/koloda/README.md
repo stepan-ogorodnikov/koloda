@@ -18,7 +18,8 @@ Rust is the source of truth for the AI provider enum and secrets redaction; `@ko
 ## Architectural Map
 
 - Domain: `domain/` — cards (`CardState`), shared FSRS progress validators (`progress`), decks,
-  templates, algorithms/`AlgorithmFSRS`, lessons, reviews,
+  templates, algorithms/`AlgorithmFSRS`, lessons, reviews, FSRS weight optimization (`optimizer`, Rust-only;
+  `docs/decisions/FSRS-OPTIMIZER.md`),
   conversations (opaque `state`), settings slices (`LearningDefaults`, `DailyLimits`),
   `ai`, attachments (format sniffing, size cap), timestamp serde (`time`).
 - Repos: `repo/` — SQLite repos parallel to `@koloda/db-sqlite` (plus AI secrets redaction/reconstruction).

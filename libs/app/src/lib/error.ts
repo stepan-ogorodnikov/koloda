@@ -34,6 +34,7 @@ export const ERROR_MESSAGES = {
   "not-found.algorithms.clone.source": msg`not-found.algorithms.clone.source`,
   "not-found.algorithms.update.algorithm": msg`not-found.algorithms.update.algorithm`,
   "not-found.algorithms.delete.successor": msg`not-found.algorithms.delete.successor`,
+  "not-found.algorithms.optimize.algorithm": msg`not-found.algorithms.optimize.algorithm`,
   "not-found.templates.clone.source": msg`not-found.templates.clone.source`,
   "not-found.templates.update.template": msg`not-found.templates.update.template`,
   "not-found.cards.add.deck": msg`not-found.cards.add.deck`,

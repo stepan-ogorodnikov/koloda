@@ -53,6 +53,7 @@ When a row names the file without a section, find the headings that match the ch
 | Lessons (overview, today's progress, session, amounts, grading, learn-ahead) | `docs/specs/LESSONS.md` |
 | Templates (fields, layout, locking) | `docs/specs/TEMPLATES.md` |
 | Algorithms / presets | `docs/specs/ALGORITHMS.md` |
+| FSRS optimizer (fitting weights to reviews; `optimizer` modules in `crates/koloda`) | `docs/decisions/FSRS-OPTIMIZER.md`, `docs/specs/ALGORITHMS.md`, `agents/RUST.md` |
 | Learning settings (defaults, daily limits, day boundary, learn-ahead limit) | `docs/specs/LEARNING-SETTINGS.md` |
 | Database schema change | `agents/DB.md`, `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md` |
 | Card media storage (attachments, hash ids, byte store) | `docs/decisions/MEDIA-STORAGE.md`, `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md` |
