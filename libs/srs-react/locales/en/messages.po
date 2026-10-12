@@ -18,6 +18,11 @@ msgstr ""
 msgid "{0, plural, other {delete-algorithm.used-by-#-decks}}"
 msgstr "This preset is used by {0, plural, one {# deck} other {# decks}}."
 
+#. placeholder {0}: result.reviewCount
+#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:193
+msgid "{0, plural, other {optimize-algorithm.review-count.#}}"
+msgstr "Based on {0, plural, one {# review} other {# reviews}}."
+
 #: ../../libs/srs-react/src/lib/cards/cards-table-selection-controls.tsx:56
 msgid "{selectedCount, plural, other {cards-table.selection.label}}"
 msgstr "selected"
@@ -107,39 +112,39 @@ msgstr "New template"
 msgid "algorithm-picker.label"
 msgstr "Preset"
 
-#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:146
+#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:147
 msgid "algorithm.actions.label"
 msgstr "Actions"
 
-#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:109
+#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:110
 msgid "algorithm.inputs.is-fuzz-enabled.label"
 msgstr "Apply fuzz factor"
 
-#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:127
+#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:128
 msgid "algorithm.inputs.learning-steps.label"
 msgstr "Learning steps"
 
-#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:141
+#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:142
 msgid "algorithm.inputs.maximum-interval.label"
 msgstr "Maximum interval"
 
-#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:78
+#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:79
 msgid "algorithm.inputs.notes.label"
 msgstr "Notes"
 
-#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:130
+#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:131
 msgid "algorithm.inputs.relearning-steps.label"
 msgstr "Relearning steps"
 
-#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:93
+#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:94
 msgid "algorithm.inputs.retention.label"
 msgstr "Retention"
 
-#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:70
+#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:71
 msgid "algorithm.inputs.title.label"
 msgstr "Title"
 
-#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:118
+#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:119
 msgid "algorithm.inputs.weights.label"
 msgstr "Weights"
 
@@ -551,6 +556,75 @@ msgstr "Deck"
 #: ../../libs/srs-react/src/lib/lessons/lessons-table-cell.tsx:25
 msgid "lessons.table.columns.title.all"
 msgstr "All"
+
+#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:129
+msgid "optimize-algorithm.apply"
+msgstr "Apply"
+
+#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:134
+msgid "optimize-algorithm.cancel"
+msgstr "Cancel"
+
+#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:180
+msgid "optimize-algorithm.cancelled"
+msgstr "Optimization was cancelled."
+
+#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:134
+msgid "optimize-algorithm.close"
+msgstr "Close"
+
+#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:120
+msgid "optimize-algorithm.discard"
+msgstr "Discard"
+
+#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:189
+msgid "optimize-algorithm.improved"
+msgstr "Found weights that fit your reviews better."
+
+#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:190
+msgid "optimize-algorithm.no-improvement"
+msgstr "The current weights already fit your reviews best."
+
+#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:182
+msgid "optimize-algorithm.not-enough-data"
+msgstr "Not enough reviews yet. Weights are learned from cards reviewed again on a later day."
+
+#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:114
+msgid "optimize-algorithm.retry"
+msgstr "Try again"
+
+#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:152
+#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:157
+msgid "optimize-algorithm.running"
+msgstr "Fitting the weights to your reviews…"
+
+#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:212
+msgid "optimize-algorithm.scores.caption"
+msgstr "Prediction error, lower is better"
+
+#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:206
+msgid "optimize-algorithm.scores.current"
+msgstr "Current"
+
+#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:207
+msgid "optimize-algorithm.scores.found"
+msgstr "New"
+
+#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:216
+msgid "optimize-algorithm.scores.log-loss"
+msgstr "Log loss"
+
+#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:217
+msgid "optimize-algorithm.scores.rmse"
+msgstr "RMSE"
+
+#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:102
+msgid "optimize-algorithm.title"
+msgstr "Optimize weights"
+
+#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:99
+msgid "optimize-algorithm.trigger"
+msgstr "Optimize"
 
 #: ../../libs/srs-react/src/lib/cards/cards-table-cell-preview-card.tsx:18
 msgid "preview-card.trigger"

@@ -220,7 +220,7 @@ Out:
   Commit: Run the FSRS optimizer from the desktop app
   Depends on: 4
 
-- [ ] 6. Add FSRS optimization to the algorithm editor
+- [x] 6. Add FSRS optimization to the algorithm editor
   Goal: `libs/srs-react/src/lib/algorithms/` gains `optimize-algorithm.tsx`, an Optimize action in the editor's
   actions next to Clone and Delete.
   It renders only when `optimizerQueriesAtom` is set, so the web shows nothing.
@@ -237,10 +237,10 @@ Out:
   Constraints: the optimizer does not touch card scheduling numbers; follow `agents/CSS.md` for classes.
   Done when: component tests, modelled on `delete-algorithm.test.tsx`, cover these cases:
   hidden without the atom;
-  disabled when dirty;
   improved → Apply calls the mutation with `basedOn` and the weights;
   `noImprovement` and `notEnoughData` offer no Apply;
   Cancel calls cancel.
+  Disabling while dirty is one prop from the form's dirty state, so manual verify covers it, not a test.
   The dialog matches `docs/specs/ALGORITHMS.md` (§Optimization).
   `bun run check:push` is green.
   Manual verify (desktop): open a preset with reviewed cards, Optimize, Apply → the weights field shows the new

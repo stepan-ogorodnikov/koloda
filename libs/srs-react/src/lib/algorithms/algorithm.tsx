@@ -12,6 +12,7 @@ import { useEffect } from "react";
 import { AlgorithmLearningSteps } from "./algorithm-learning-steps";
 import { CloneAlgorithm } from "./clone-algorithm";
 import { DeleteAlgorithm } from "./delete-algorithm";
+import { OptimizeAlgorithm } from "./optimize-algorithm";
 
 type AlgorithmProps = { id: AlgorithmType["id"] };
 
@@ -146,6 +147,12 @@ export function Algorithm({ id }: AlgorithmProps) {
       <FormLayout.Section term={_(msg`algorithm.actions.label`)}>
         <div className="flex flex-row flex-wrap items-center gap-2">
           <CloneAlgorithm id={id} />
+          {/* WHY: optimization runs on the saved parameters, so unsaved edits disable it (ALGORITHMS.md). */}
+          <form.Subscribe selector={(state) => state.isDirty}>
+            {(isDirty) => (
+              <OptimizeAlgorithm id={id} isDisabled={isDirty} onApplied={(algorithm) => form.reset(algorithm)} />
+            )}
+          </form.Subscribe>
           <DeleteAlgorithm id={id} />
         </div>
       </FormLayout.Section>

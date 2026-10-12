@@ -18,6 +18,11 @@ msgstr ""
 msgid "{0, plural, other {delete-algorithm.used-by-#-decks}}"
 msgstr "{0, plural, one {# колода использует} few {# колоды используют} many {# колод используют} other {# колоды используют} } этот алгоритм"
 
+#. placeholder {0}: result.reviewCount
+#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:193
+msgid "{0, plural, other {optimize-algorithm.review-count.#}}"
+msgstr "На основе {0, plural, one {# повторения} few {# повторений} many {# повторений} other {# повторения}}."
+
 #: ../../libs/srs-react/src/lib/cards/cards-table-selection-controls.tsx:56
 msgid "{selectedCount, plural, other {cards-table.selection.label}}"
 msgstr "{selectedCount, plural, one {выбрана} few {выбраны} many {выбрано} other {выбрано} }"
@@ -107,39 +112,39 @@ msgstr "Новый шаблон"
 msgid "algorithm-picker.label"
 msgstr "Алгоритм"
 
-#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:146
+#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:147
 msgid "algorithm.actions.label"
 msgstr "Действия"
 
-#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:109
+#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:110
 msgid "algorithm.inputs.is-fuzz-enabled.label"
 msgstr "Добавить случайный разброс"
 
-#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:127
+#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:128
 msgid "algorithm.inputs.learning-steps.label"
 msgstr "Интервалы заучивания"
 
-#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:141
+#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:142
 msgid "algorithm.inputs.maximum-interval.label"
 msgstr "Максимальный интервал"
 
-#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:78
+#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:79
 msgid "algorithm.inputs.notes.label"
 msgstr "Заметки"
 
-#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:130
+#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:131
 msgid "algorithm.inputs.relearning-steps.label"
 msgstr "Интервалы переучивания"
 
-#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:93
+#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:94
 msgid "algorithm.inputs.retention.label"
 msgstr "Коэфициент"
 
-#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:70
+#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:71
 msgid "algorithm.inputs.title.label"
 msgstr "Название"
 
-#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:118
+#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:119
 msgid "algorithm.inputs.weights.label"
 msgstr "Веса"
 
@@ -551,6 +556,75 @@ msgstr "Название"
 #: ../../libs/srs-react/src/lib/lessons/lessons-table-cell.tsx:25
 msgid "lessons.table.columns.title.all"
 msgstr "Все"
+
+#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:129
+msgid "optimize-algorithm.apply"
+msgstr "Применить"
+
+#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:134
+msgid "optimize-algorithm.cancel"
+msgstr "Отмена"
+
+#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:180
+msgid "optimize-algorithm.cancelled"
+msgstr "Оптимизация отменена."
+
+#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:134
+msgid "optimize-algorithm.close"
+msgstr "Закрыть"
+
+#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:120
+msgid "optimize-algorithm.discard"
+msgstr "Отказаться"
+
+#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:189
+msgid "optimize-algorithm.improved"
+msgstr "Найдены веса, которые лучше подходят к вашим повторениям."
+
+#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:190
+msgid "optimize-algorithm.no-improvement"
+msgstr "Текущие веса уже лучше всего подходят к вашим повторениям."
+
+#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:182
+msgid "optimize-algorithm.not-enough-data"
+msgstr "Пока недостаточно повторений. Веса подбираются по карточкам, которые повторяли снова в другой день."
+
+#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:114
+msgid "optimize-algorithm.retry"
+msgstr "Попробовать снова"
+
+#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:152
+#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:157
+msgid "optimize-algorithm.running"
+msgstr "Подбираем веса по вашим повторениям…"
+
+#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:212
+msgid "optimize-algorithm.scores.caption"
+msgstr "Ошибка предсказания, чем меньше, тем лучше"
+
+#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:206
+msgid "optimize-algorithm.scores.current"
+msgstr "Текущие"
+
+#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:207
+msgid "optimize-algorithm.scores.found"
+msgstr "Новые"
+
+#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:216
+msgid "optimize-algorithm.scores.log-loss"
+msgstr "Log loss"
+
+#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:217
+msgid "optimize-algorithm.scores.rmse"
+msgstr "RMSE"
+
+#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:102
+msgid "optimize-algorithm.title"
+msgstr "Оптимизация весов"
+
+#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:99
+msgid "optimize-algorithm.trigger"
+msgstr "Оптимизировать"
 
 #: ../../libs/srs-react/src/lib/cards/cards-table-cell-preview-card.tsx:18
 msgid "preview-card.trigger"
