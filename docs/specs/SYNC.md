@@ -114,7 +114,9 @@ If the join fails, the dialog says why:
 
 ## First Run
 
-The desktop app's first-run screen offers "Get started", which seeds the starter content, and "Join a space".
+The desktop app's first-run screen offers two choices, each with a line saying what it does.
+"Start fresh" seeds the starter content.
+"Join a space" needs a code from a device already in the space, and its line says so.
 "Join a space" asks for the same things as §Joining a Space and shows the same preview; "Back" returns to the first
 choice.
 

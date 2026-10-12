@@ -3,10 +3,10 @@ import { ColorSchemePicker, LanguagePicker, SyncFirstRunJoin } from "@koloda/set
 import { langAtom, schemeAtom, syncQueriesAtom } from "@koloda/core-react";
 import {
   Button,
+  ChevronRightIcon,
   ErrorMessage,
   overlayFrame,
   OverlayFrameContent,
-  OverlayFrameFooter,
   OverlayFrameHeader,
   OverlayFrameTitle,
   RefreshIcon,
@@ -17,7 +17,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useMutation } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useAtomValue } from "jotai";
-import { useCallback, useState } from "react";
+import { useCallback, useId, useState } from "react";
 import { appSetupMutationOptions } from "../app/queries";
 
 export function Setup() {
@@ -43,35 +43,34 @@ export function Setup() {
 
   return (
     <div className="grow flex flex-col gap-4 items-center justify-center">
-      <div className={overlayFrame({ class: "flex-col rounded-xl w-84" })}>
-        <OverlayFrameHeader variants={{ class: "justify-center" }}>
-          <OverlayFrameTitle>{_(msg`app.setup.header`)}</OverlayFrameTitle>
+      <div className={overlayFrame({ class: "flex-col rounded-xl w-96" })}>
+        <OverlayFrameHeader variants={{ class: "" }}>
+          <OverlayFrameTitle>{isJoining ? _(msg`app.setup.join`) : _(msg`app.setup.header`)}</OverlayFrameTitle>
         </OverlayFrameHeader>
         {isJoining && sync ? (
           <SyncFirstRunJoin sync={sync} onReady={openApp} onCancel={() => setIsJoining(false)} />
         ) : (
-          <>
-            <OverlayFrameContent variants={{ class: "justify-center gap-4 min-h-32 text-center" }}>
-              {setupError ? (
+          <div className="flex flex-col">
+            {setupError && (
+              <OverlayFrameContent>
                 <ErrorMessage message={setupError.message} details={setupError.details} />
-              ) : (
-                <p>{_(msg`app.setup.message`)}</p>
-              )}
-            </OverlayFrameContent>
-            <OverlayFrameFooter variants={{ class: "justify-center flex-wrap" }}>
-              <Button variants={{ style: "primary" }} onClick={handleClick} isDisabled={isPending}>
-                {isPending && (
-                  <RefreshIcon className="size-5 min-w-5 animate-spin" strokeWidth={1.75} aria-hidden="true" />
-                )}
-                {_(msg`app.setup.submit`)}
-              </Button>
-              {sync && (
-                <Button variants={{ style: "bordered" }} onPress={() => setIsJoining(true)} isDisabled={isPending}>
-                  {_(msg`app.setup.join`)}
-                </Button>
-              )}
-            </OverlayFrameFooter>
-          </>
+              </OverlayFrameContent>
+            )}
+            <SetupOption
+              title={_(msg`app.setup.submit`)}
+              description={_(msg`app.setup.fresh-message`)}
+              onPress={handleClick}
+              isPending={isPending}
+            />
+            {sync && (
+              <SetupOption
+                title={_(msg`app.setup.join`)}
+                description={_(msg`app.setup.join-message`)}
+                onPress={() => setIsJoining(true)}
+                isDisabled={isPending}
+              />
+            )}
+          </div>
         )}
       </div>
       <div className="flex flex-row gap-2">
@@ -79,5 +78,48 @@ export function Setup() {
         <LanguagePicker buttonVariants={{ style: "ghost" }} showChevron={false} isPersisted={false} />
       </div>
     </div>
+  );
+}
+
+// WHY: the row runs edge to edge inside a frame that clips overflow, so the focus ring is drawn inside it.
+const setupOption = [
+  "group w-full justify-between gap-4 px-4 py-3 rounded-none text-left whitespace-normal",
+  "not-first:border-t-2 border-main -outline-offset-4",
+].join(" ");
+
+export type SetupOptionProps = {
+  title: string;
+  description: string;
+  onPress: () => void;
+  isDisabled?: boolean;
+  isPending?: boolean;
+};
+
+function SetupOption({ title, description, onPress, isDisabled, isPending }: SetupOptionProps) {
+  const titleId = useId();
+  const descriptionId = useId();
+
+  return (
+    <Button
+      variants={{ style: "ghost", size: "none", class: setupOption }}
+      onPress={onPress}
+      isDisabled={isDisabled}
+      aria-labelledby={titleId}
+      aria-describedby={descriptionId}
+    >
+      <span className="flex flex-col gap-1">
+        <span id={titleId} className="fg-level-1 group-disabled:fg-disabled">
+          {title}
+        </span>
+        <span id={descriptionId} className="font-normal fg-level-3 group-disabled:fg-disabled">
+          {description}
+        </span>
+      </span>
+      {isPending ? (
+        <RefreshIcon className="size-5 min-w-5 animate-spin" strokeWidth={1.75} aria-hidden="true" />
+      ) : (
+        <ChevronRightIcon className="size-5 min-w-5" strokeWidth={2} aria-hidden="true" />
+      )}
+    </Button>
   );
 }

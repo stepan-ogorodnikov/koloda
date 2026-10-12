@@ -48,7 +48,7 @@ msgstr "У вас нет ни одного профиля ИИ"
 msgid "ai.chat.no-profiles.add"
 msgstr "Добавить профиль"
 
-#: ../../libs/assistant-react/src/lib/ui/assistant-chat.tsx:198
+#: ../../libs/assistant-react/src/lib/ui/assistant-chat.tsx:200
 msgid "ai.chat.restoring"
 msgstr "Загрузка"
 

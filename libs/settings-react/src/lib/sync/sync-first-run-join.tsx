@@ -37,6 +37,7 @@ function FirstDownload({ sync, onReady }: FirstDownloadProps) {
     <Dialog.Content variants={{ class: "flex flex-col items-center gap-4 text-center" }}>
       <RefreshIcon className="size-6 min-w-6 animate-spin" strokeWidth={1.75} aria-hidden="true" />
       <p>{_(msg`settings.sync.first-run.downloading`)}</p>
+      <p className="fg-level-2">{_(msg`settings.sync.first-run.safe-to-close`)}</p>
       {left > 0 && <p className="fg-level-2">{_(msg`${plural(left, { other: "settings.sync.download-left" })}`)}</p>}
       {status && state?.type === "stopped" && <p className="fg-level-2">{stopMessage(status)}</p>}
       {status?.hold && <SyncHoldMessage hold={status.hold} />}

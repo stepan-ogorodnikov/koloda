@@ -7,5 +7,5 @@ export async function setupPageDefaults(page: Page) {
 
 export async function setupWeb(page: Page) {
   await page.goto("/");
-  await bootstrapApp(page, "Setting up a demo");
+  await bootstrapApp(page, "Setting up a demo", "Get started");
 }

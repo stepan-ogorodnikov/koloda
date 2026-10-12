@@ -25,7 +25,7 @@ The web counterpart is `apps/web-e2e`; the spec sets mirror each other flow for 
   `KOLODA_E2E=1`, and the first window as `page`.
 - Helpers: `src/helpers.ts` — re-exports the shared UI flows from `libs/e2e` (`@koloda/e2e`) and wraps this
   suite's platform points: defaults written into the already-loaded window followed by a reload, and the
-  desktop bootstrap copy ("Setting up your database").
+  desktop bootstrap copy ("How do you want to start?") and its "Start fresh" button.
 - AI mock: `src/mock-openai-compatible.ts` — a real Node HTTP server, not `page.route` interception,
   built on the shared protocol in `libs/e2e`.
   AI HTTP runs in the Electron main process, invisible to renderer route interception;

@@ -26,7 +26,7 @@ msgid "{fetches, plural, other {settings.sync.fetches}}"
 msgstr "{fetches, plural, one {# image waits to download} other {# images wait to download}}"
 
 #: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:40
-#: ../../libs/settings-react/src/lib/sync/sync-first-run-join.tsx:40
+#: ../../libs/settings-react/src/lib/sync/sync-first-run-join.tsx:41
 msgid "{left, plural, other {settings.sync.download-left}}"
 msgstr "{left, plural, one {# change left to download} other {# changes left to download}}"
 
@@ -383,6 +383,10 @@ msgstr "This device"
 #: ../../libs/settings-react/src/lib/sync/sync-first-run-join.tsx:39
 msgid "settings.sync.first-run.downloading"
 msgstr "Downloading the space. The app opens when it's done."
+
+#: ../../libs/settings-react/src/lib/sync/sync-first-run-join.tsx:40
+msgid "settings.sync.first-run.safe-to-close"
+msgstr "Closing the app is safe. The download picks up next time."
 
 #: ../../libs/settings-react/src/lib/sync/settings-sync-problems.tsx:46
 msgid "settings.sync.hold.corrupt {lane} {seq}"

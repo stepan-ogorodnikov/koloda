@@ -185,11 +185,11 @@ msgstr "Time period for relearning step number {0}"
 msgid "card.action.reset-progress"
 msgstr "Reset progress"
 
-#: ../../libs/srs-react/src/lib/cards/card-content-text-area.tsx:188
+#: ../../libs/srs-react/src/lib/cards/card-content-text-area.tsx:192
 msgid "card.content.embed-image"
 msgstr "Embed image"
 
-#: ../../libs/srs-react/src/lib/cards/card-content-text-area.tsx:182
+#: ../../libs/srs-react/src/lib/cards/card-content-text-area.tsx:185
 msgid "card.content.insert-image"
 msgstr "Insert image"
 

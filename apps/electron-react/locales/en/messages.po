@@ -17,18 +17,23 @@ msgstr ""
 msgid "app.setup.default-title"
 msgstr "Default"
 
+#: src/components/setup.tsx:61
+msgid "app.setup.fresh-message"
+msgstr "A new database on this device"
+
 #: src/components/setup.tsx:48
 msgid "app.setup.header"
-msgstr "Setting up your database"
+msgstr "How do you want to start?"
 
-#: src/components/setup.tsx:70
+#: src/components/setup.tsx:48
+#: src/components/setup.tsx:67
 msgid "app.setup.join"
 msgstr "Join a space"
 
-#: src/components/setup.tsx:58
-msgid "app.setup.message"
-msgstr "Looks like this is your first run. Get started with a new database, or join a sync space you use on another device."
+#: src/components/setup.tsx:68
+msgid "app.setup.join-message"
+msgstr "Connect to existing database"
 
-#: src/components/setup.tsx:66
+#: src/components/setup.tsx:60
 msgid "app.setup.submit"
-msgstr "Get started"
+msgstr "Start fresh"

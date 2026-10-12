@@ -17,18 +17,23 @@ msgstr ""
 msgid "app.setup.default-title"
 msgstr "По умолчанию"
 
+#: src/components/setup.tsx:61
+msgid "app.setup.fresh-message"
+msgstr "Новая база данных на этом устройстве"
+
 #: src/components/setup.tsx:48
 msgid "app.setup.header"
-msgstr "Настройка базы данных"
+msgstr "Как вы хотите начать?"
 
-#: src/components/setup.tsx:70
+#: src/components/setup.tsx:48
+#: src/components/setup.tsx:67
 msgid "app.setup.join"
 msgstr "Подключиться к пространству"
 
-#: src/components/setup.tsx:58
-msgid "app.setup.message"
-msgstr "Похоже, это первый запуск приложения. Создайте новую базу данных или подключитесь к пространству синхронизации, которое используете на другом устройстве."
+#: src/components/setup.tsx:68
+msgid "app.setup.join-message"
+msgstr "База данных на сервере"
 
-#: src/components/setup.tsx:66
+#: src/components/setup.tsx:60
 msgid "app.setup.submit"
-msgstr "Начать работу"
+msgstr "Старт с нуля"

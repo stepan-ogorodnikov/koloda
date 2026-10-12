@@ -6,5 +6,5 @@ export async function setupPageDefaults(page: Page) {
 }
 
 export async function setupApp(page: Page) {
-  await bootstrapApp(page, "Setting up your database");
+  await bootstrapApp(page, "How do you want to start?", "Start fresh");
 }

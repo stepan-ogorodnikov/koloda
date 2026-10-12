@@ -32,14 +32,15 @@ export async function applyPageDefaults(page: Page, when: "before-load" | "after
 }
 
 /**
- * Drive the first-setup screen: confirm the bootstrap copy, click "Get started",
- * and wait for the dashboard. `bootstrapText` differs per suite ("Setting up a
- * demo" on web, "Setting up your database" on desktop).
+ * Drive the first-setup screen: confirm the bootstrap copy, click the start button,
+ * and wait for the dashboard. `bootstrapText` and `startLabel` differ per suite
+ * ("Setting up a demo" and "Get started" on web; "How do you want to start?" and
+ * "Start fresh" on desktop).
  */
-export async function bootstrapApp(page: Page, bootstrapText: string) {
+export async function bootstrapApp(page: Page, bootstrapText: string, startLabel: string) {
   await expect(page.getByText(bootstrapText, { exact: true })).toBeVisible();
 
-  const startButton = page.getByRole("button", { name: "Get started", exact: true });
+  const startButton = page.getByRole("button", { name: startLabel, exact: true });
   await expect(startButton).toBeVisible();
   await startButton.click();
 
