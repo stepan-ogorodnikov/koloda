@@ -99,6 +99,23 @@ export function createWindow() {
     });
   }
 
+  // WHY: Without browser chrome nothing binds the platform history keys, so the window binds them itself.
+  // Navigating webContents history fires popstate, so route blockers still apply.
+  win.webContents.on("before-input-event", (event, input) => {
+    if (input.type !== "keyDown" || input.control || input.shift) return;
+    const isMac = process.platform === "darwin";
+    const hasModifier = isMac ? input.meta && !input.alt : input.alt && !input.meta;
+    if (!hasModifier) return;
+    const history = win.webContents.navigationHistory;
+    if (input.code === (isMac ? "BracketLeft" : "ArrowLeft")) {
+      event.preventDefault();
+      if (history.canGoBack()) history.goBack();
+    } else if (input.code === (isMac ? "BracketRight" : "ArrowRight")) {
+      event.preventDefault();
+      if (history.canGoForward()) history.goForward();
+    }
+  });
+
   if (target.kind === "dev") {
     win.loadURL(target.origin);
   } else {

@@ -10,6 +10,8 @@ Desktop zoom intentionally lives outside this system:
 it is not configurable, not scope-gated, and fires while text inputs are focused.
 Its keys are in INTERFACE-SETTINGS.md (§Desktop Zoom).
 
+Desktop history keys also live outside this system; see §Desktop History Keys.
+
 Lesson dialog keys (`Escape`, `Enter`, `Space`) also live outside this system:
 they are not configurable and are not checked for conflicts.
 They are gated to the open lesson dialog; see LESSONS.md (§Hotkeys).
@@ -128,6 +130,18 @@ They act on the assistant chat and work while its text field is focused.
 | Scroll down | none | Scrolls the messages down. |
 | Scroll to top | none | Scrolls to the first message. |
 | Scroll to bottom | none | Scrolls to the latest message. |
+
+## Desktop History Keys
+
+On the desktop the user can move back and forward through visited screens from the keyboard.
+These keys are not configurable, not scope-gated, and fire while text inputs are focused.
+
+- Back is `Alt+Left` on Windows and Linux, and `Cmd+[` on macOS.
+- Forward is `Alt+Right` on Windows and Linux, and `Cmd+]` on macOS.
+
+They act like the titlebar back and forward buttons.
+With no screen to go back or forward to, the key does nothing.
+In the browser the browser's own history keys apply instead.
 
 ## Runtime Scopes
 
