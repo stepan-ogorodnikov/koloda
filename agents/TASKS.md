@@ -34,6 +34,21 @@ Parallel tasks are parallel branches.
 Do not serialize work on `main` to keep commits contiguous.
 The branch holds the commit train until the human asks to land.
 
+### Flow
+
+Each task has a `Flow:` line, `local` or `remote`.
+`local` is the default.
+
+- `local`: commits stay on the branch on this machine.
+  Nothing is pushed until Done, where `bun run land` pushes it.
+  Other machines cannot see the branch until then.
+- `remote`: push after each commit, so CI `checks` runs on every push.
+  Use it when the work must be visible elsewhere or needs per-commit CI.
+
+The human picks the flow when the task is scheduled.
+To switch, the human asks; update the line in the same commit.
+Switching to `remote` pushes the branch at the next commit.
+
 ### Schedule (create)
 
 1. Sync, then branch from `origin/main`.
@@ -42,10 +57,10 @@ The branch holds the commit train until the human asks to land.
    - `git log origin/main..HEAD` must be empty.
    - Push or stash unrelated work first.
    - Then run `git checkout -b task/<slug> origin/main`.
-2. Add `tasks/live/<slug>.md` with `Status: draft` and its `Guides:` line.
+2. Add `tasks/live/<slug>.md` with `Status: draft`, its `Guides:` line, and its `Flow:` line (default `local`).
    - Route the work in `agents/INDEX.md` and list the guides it needs on that line.
    - Include the guides the Plan will need, not only the first change's.
-3. Push the branch.
+3. Push the branch only if `Flow` is `remote`.
 
 The branch and its task file are the scheduled unit of work.
 Find scheduled and in-flight work by listing `task/*` branches (§Session protocol), not by grepping `main`.
@@ -76,8 +91,9 @@ When the human asks to implement.
    - The slug is the identity.
    - The folder is not the identity.
 3. Tick each Plan checkbox when that commit exists.
-4. Push the branch as commits are made.
+4. If `Flow` is `remote`, push the branch as commits are made.
    - Each push runs the CI job `checks` on the tip.
+   - If `Flow` is `local`, do not push.
 5. Keep history linear.
    - Never create a merge commit.
    - Never run `git merge`.
@@ -99,7 +115,8 @@ It is not the human's approval.
    - Update Plan checkboxes if scope changed.
    - Then self-review again.
 3. When self-review passes, required checks on the tip must be green.
-   - That is the CI job `checks` on the pushed tip, or `bun run check:push` locally.
+   - That is `bun run check:push` on the tip.
+     For `remote`, also the CI job `checks` on the pushed tip.
    - On a flake, re-run the checks.
 4. Then report to the human and wait.
    - Do not archive yet; that is Done.
@@ -130,6 +147,7 @@ On the task branch, once self-review has passed and the tip is green:
 3. Move `tasks/live/<slug>.md` to `tasks/archive/<slug>.md` and commit it as Archive.
 4. Run `bun run land`.
    - It rebases onto `origin/main`, pushes the branch, and waits for `checks` on that exact tip.
+   - For `local`, this is the branch's first push.
    - Then it fast-forwards `main` to the tip and deletes the remote branch.
    - If `main` moved meanwhile, it rebases and checks again.
    - If `checks` fails, it stops; fix as in §Fix after Archive.
@@ -165,6 +183,7 @@ The only move is `live/` → `archive/` on `done`.
 
 Status: draft
 Guides: <comma-separated repo paths from agents/INDEX.md, or none>
+Flow: local
 
 ## Intent
 
@@ -186,7 +205,7 @@ Out: <explicit non-goals>
   Goal: <self-contained description; the entire prompt the implementer receives>
   Constraints: <scope; files or areas to touch or avoid>
   Done when: <observable checks — test commands, manual steps>
-  Commit: <one message; candidates during planning, the pick after approval>
+  Commit: <one-line subject; the agent writes it, the human may edit it at approval>
   Depends on: <plan item numbers, or none>
 
 ## Outcome
@@ -198,6 +217,7 @@ Out: <explicit non-goals>
 It is one line of comma-separated repo paths, the set `agents/INDEX.md` routed for the whole task.
 It is not an open question: do not record "area guides?" there.
 When scope changes the set, update the line in the same commit.
+`Flow:` sits under `Guides:`, as described in §Flow.
 
 Omit `Green` unless the item is red.
 Then add `Green: no — restored by item N`.
@@ -207,10 +227,9 @@ This file is the task.
 Each Plan line is one commit.
 Never call a Plan line a task.
 
-How to split work, present commit-message candidates, and get approval is `agents/IMPLEMENTATION-PLAN.md`.
-After approval, write each picked message as that item's `Commit:` line.
-Drop the other candidates.
-Flip Status to `ready`.
+How to split work and get approval is `agents/IMPLEMENTATION-PLAN.md`.
+Each item's `Commit:` line is its commit message.
+After approval, flip Status to `ready`.
 
 ## Audit-sourced tasks
 
@@ -235,6 +254,7 @@ It would add a second file under `live/` that the Archive gate does not move.
    - Check Intent and Scope.
    - If any overlap, surface it to the human.
    - Never resolve overlap silently.
+   - A `local` task is visible only on the machine that holds it; say so when overlap cannot be ruled out.
    - Do not grep `tasks/live` on `main`.
    - In-flight files are not there.
    - For the task you pick up, read its `Guides:` line and load those guides;
@@ -245,7 +265,7 @@ It would add a second file under `live/` that the Archive gate does not move.
    - The next session starts from the file.
 4. After self-review passes on a green tip, report to the human and wait (§Self-review).
 5. When the human asks to land, follow §Done.
-6. To abandon, delete the branch locally and on `origin`.
+6. To abandon, delete the branch locally, and on `origin` if it was pushed.
 
 A new session starts from the task file on its branch.
 It does not start from memory or chat history.

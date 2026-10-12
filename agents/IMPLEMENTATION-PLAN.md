@@ -52,47 +52,20 @@ Do not use red for an incoherent slice.
 5. Order plan items by their dependencies, placing the riskiest uncertainty as early as those allow.
 6. Write the plan into the task file's Plan section.
    Item shape is in `agents/TASKS.md`.
-7. Present the plan in the presentation format below, list the open questions, and stop.
+7. Summarize the plan in chat: each item's title and `Commit:` subject, plus the open questions.
+   Name the task file path for the rest, and stop.
 
-## Presentation
+## Commit messages
 
-Present the plan in chat as plain text, never as a table or a rendered list.
-Use exactly this shape:
-
-```
-1. <plan item title>
-a. <commit message candidate>
-b. <commit message candidate>
-c. <commit message candidate>
-
-2. <plan item title>
-a. <commit message candidate>
-b. <commit message candidate>
-```
-
-One numbered line per plan item, in item order,
-with the lettered candidates directly beneath it and a blank line between items.
-Output it inside a fenced code block, so each line survives markdown rendering on its own line.
-Item details — Goal, Constraints, Done when, Green — stay in the task file; name its path when presenting.
-The human picks per item by letter, or supplies their own message.
-
-## Commit message candidates
-
-- Offer two or three candidates per plan item.
-- Candidates differ where a real choice exists — emphasis, scope, framing — not rewordings of each other.
-- If there is only one honest message, offer one and say so.
+- Write one message per plan item, as its `Commit:` line.
 - Match the repo's commit style: imperative subject, no type prefix, no trailing period (see recent `git log`).
+- If the message's framing is a real choice (emphasis, scope), record it as an open question instead.
+  Do not offer alternatives.
 
 ## Approval
 
-The plan is approved only when the human has both:
-
-1. Accepted the plan, with any edits incorporated.
-2. Picked one commit message for every plan item, from the candidates or their own.
-
-On approval, write each picked message as the item's single `Commit:` line.
-Drop the other candidates.
+The plan is approved when the human accepts it, with any edits incorporated.
+Edits include changes to a `Commit:` line.
 Follow `agents/TASKS.md` (flip to `ready`).
 Approval is not an instruction to implement.
 Do not start executing unless the human explicitly asks to implement.
-Never start executing with unpicked messages.

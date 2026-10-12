@@ -11,13 +11,14 @@ Later sessions read that line instead of routing again.
 - Make changes in the working tree only.
 - Commit, push, and land only when the human explicitly asks for that step.
 - Asking for one step is not asking for the next.
-- Exception: task work under `agents/TASKS.md` commits and pushes its task branch as that guide says.
+- Exception: task work under `agents/TASKS.md` commits its task branch as that guide says.
+  - It pushes only when the task's `Flow` is `remote`; the default is `local`.
   - Landing still needs an explicit ask.
 - Do not open pull requests.
 - Do not push to `main` by hand.
 - Commit messages have a short subject line.
   - A body is optional; add one when the why is not obvious from the diff.
-  - Planned work's candidate subjects are in `agents/IMPLEMENTATION-PLAN.md`.
+  - Planned work's subjects are the `Commit:` lines in its task file.
 
 ## Session start
 
