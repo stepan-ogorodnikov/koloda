@@ -2,7 +2,8 @@
 
 ## Scope
 
-Covers algorithm presets: parameters, adding, cloning, editing, deleting with a successor, and parameter history.
+Covers algorithm presets: parameters, adding, cloning, editing, optimizing weights, deleting with a successor,
+and parameter history.
 Does not cover FSRS scheduling math, how grades update card state, or learning settings UI.
 How decks pick an algorithm is covered lightly; deck management itself is not.
 Grade-to-card-state updates are covered by CARDS.md and learning settings by LEARNING-SETTINGS.md;
@@ -16,12 +17,14 @@ The product lists these under Presets.
 Each deck points at one algorithm.
 Editing an algorithm, or pointing a deck at a different algorithm, changes the parameters used for later grades.
 It does not rewrite existing card scheduling numbers until those cards are graded again.
+Its weights can be fitted to the user's own reviews; see §Optimization.
 
 ## Core model
 
 - **Algorithm** — a titled FSRS preset
 - **Notes** — optional text the user writes about the algorithm
 - **Parameters** — retention, weights, fuzz, learning steps, relearning steps, and maximum interval
+- **Optimization** — fitting an algorithm's weights to the review history of the cards that use it
 - **Successor** — another algorithm that takes over decks when one is deleted
 - **Revision** — a recorded set of parameters, with when it was recorded and who made the change
 - **History** — the revisions of one algorithm, oldest first
@@ -101,6 +104,50 @@ A save that changes parameters adds a revision; see §History.
 The learning settings default algorithm can be edited while it remains the default.
 See LEARNING-SETTINGS.md (§Defaults).
 
+## Optimization
+
+Optimization fits an algorithm's weights to the user's own review history.
+Only the weights change.
+Retention, fuzz, learning steps, relearning steps, and maximum interval stay as they are.
+
+The desktop app offers optimization from the algorithm editor.
+The web app offers no optimization and shows nothing in its place.
+
+Optimization learns from every review of the cards in decks that use the algorithm when it starts.
+That includes reviews made while a card's deck used another algorithm.
+
+It starts from the saved parameters.
+It is unavailable while the editor has unsaved changes.
+
+While it runs, the user sees its progress and can cancel it.
+Closing the optimization dialog also cancels it.
+A cancelled optimization changes nothing.
+
+An optimization ends with one of these results:
+
+- **Not enough reviews** — the cards have no reviews it can learn from yet
+- **Already the best fit** — the current weights predict the reviews at least as well as the weights it found
+- **New weights** — the weights it found predict the reviews better than the current ones
+
+The last two results show how many reviews were used.
+They also show how well the current and the found weights fit those reviews, as two error scores.
+A lower score is a better fit.
+
+Only new weights can be applied.
+The user applies or discards them.
+Discarding changes nothing.
+
+Applying replaces the algorithm's weights.
+It leaves the other parameters, the title, and the notes unchanged.
+Applied weights affect later grades like any other parameter change; see §Editing Algorithms.
+Applying records a revision; see §History.
+
+If the algorithm's parameters changed after the optimization started, applying is refused.
+The weights stay as they are, and the user can optimize again.
+
+Optimization does not change cards or reviews.
+There is no automatic optimization; it runs only when the user starts it.
+
 ## Deleting Algorithms
 
 Delete asks for confirmation.
@@ -132,9 +179,11 @@ A revision is recorded when:
 
 - an algorithm is added, cloned, or created during first setup, with its starting parameters
 - a save changes any parameter, with the parameters after the save
+- optimized weights are applied, with the parameters after applying
 
 Each revision holds the full set of parameters, not only the ones that changed.
-It also records when it was recorded and who made the change, which is the user.
+It also records when it was recorded and who made the change.
+That is the optimizer for applied optimized weights, and the user otherwise.
 
 A save that changes only the title or notes records nothing.
 A save that changes nothing records nothing.

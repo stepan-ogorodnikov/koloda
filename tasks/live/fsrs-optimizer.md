@@ -72,7 +72,7 @@ Out:
 
 ## Plan
 
-- [ ] 1. Specify FSRS optimization
+- [x] 1. Specify FSRS optimization
   Goal: `docs/specs/ALGORITHMS.md` describes optimization, ahead of the code that makes it true.
   Scope mentions optimization.
   Core model gains the term **Optimization**.
