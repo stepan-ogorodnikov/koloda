@@ -1859,7 +1859,7 @@ Propose one again only with a new decision (§Rulings).
 - No soft-delete column in the product schema (§Deletes).
 - No stamp columns on entity tables.
   Stamps live in the sync tables (§Client state).
-- No deck or template id in any card update group (§Cascades by ancestry and header refs, ruling 4).
+- No deck or template id in any card update group, per ruling 4 (§Cascades by ancestry and header refs).
 - No per-card tombstones on deck delete.
   Deletes cascade by the deck and template recorded at each card's create (`docs/decisions/FIXED-CARD-PARENTS.md`).
 - No payload merge on the server, and no server-assigned entity ids.
@@ -1879,7 +1879,7 @@ Propose one again only with a new decision (§Rulings).
 - Own-device entries are not returned by incremental pull.
   `scanned_through` still covers them (§Pull cursor).
 - No attachment bytes in envelopes.
-  No tombstones or fences for attachments; they are collected by reference (§Attachments, ruling 17).
+  No tombstones or fences for attachments; they are collected by reference, per ruling 17 (§Attachments).
 - No server-side provisional enrollment, import reservation, or join plan.
   A used file waits locally for the user's choice (§Joining).
 - No correction endpoint and no poison report.
