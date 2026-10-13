@@ -1,7 +1,7 @@
 # Sync modules (`src/repo/sync/`)
 
 How each sync path in the desktop crate captures, applies, pushes, and recovers.
-The module map is in `crates/koloda/README.md` (§Architectural Map).
+The module map is the `mod.rs` rustdoc.
 The wire rules, field-group merge, and clocks are in `crates/koloda-sync-proto/PROTOCOL.md`.
 Cite its sections from here.
 
