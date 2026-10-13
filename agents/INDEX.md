@@ -76,7 +76,7 @@ When a row names the file without a section, find the headings that match the ch
 | Write or update any markdown | `agents/MARKDOWN.md` |
 | Playwright e2e suites (`apps/web-e2e`, `apps/electron-e2e`, `libs/e2e`) | `apps/web-e2e/README.md` or `apps/electron-e2e/README.md`, `libs/e2e/README.md`, `agents/VERIFY.md` |
 | Desktop IPC channel (renderer ↔ main; `libs/native-ipc`) | `apps/electron/IPC.md`, `libs/native-ipc/README.md` |
-| CI workflows, push gate, landing (`.github/workflows/`, `tools/land.ts`, `tools/check-push.ts`) | No guide yet. `AGENTS.md` (§Landing) is always loaded; the workflow files and `tools/` are the reference |
+| CI workflows, push gate, landing (`.github/workflows/`, `tools/land.ts`, `tools/check-push.ts`) | No guide yet. `AGENTS.md` (§Landing) is always loaded; add `agents/TASKS.md` (§Done) when the change touches the task gate in `tools/land.ts`. The workflow files and `tools/` are the reference |
 | Workspace dependency layers (`tools/workspace-deps/`, `bun run check:workspace-deps`) | No guide yet. `tools/workspace-deps/layers.ts` is the table; each lib's `README.md` "Where it sits" and "Does NOT own" give its boundaries |
 | Other `tools/` files (pre-commit hook, vitest config, theme-boot Vite plugin) | No guide yet. The files are the reference; the theme-boot `SURFACE` map is in `agents/ADD-COLOR-THEME.md` |
 
