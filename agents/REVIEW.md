@@ -4,12 +4,11 @@ This guide defines how LLM reviewers review diffs in this repository.
 It is not an authoring guide.
 The authoring guides are `agents/CODE-STYLE.md`, `agents/CSS.md`, `agents/CODE-DOCUMENTATION.md`, and the playbooks.
 
-Always read this file plus `agents/CODE-STYLE.md`, `agents/CSS.md`,
-and `agents/CODE-DOCUMENTATION.md` for any review, even if the prompt did not list them.
-These three define the standing rules you enforce — for example,
-missing `// WHY` / `// INVARIANT` / `// WORKAROUND` on non-obvious code
-is a Blocking finding per `agents/CODE-DOCUMENTATION.md`.
-If you have not loaded them, you cannot raise Blocking findings that cite them.
+Always read this file plus `agents/CODE-DOCUMENTATION.md` for any review, even if the prompt did not list it.
+It defines the comment rules you enforce in every language — for example,
+missing `// WHY` / `// INVARIANT` / `// WORKAROUND` on non-obvious code is a Blocking finding.
+The other guides come from the diff's Authoring rows, as `agents/INDEX.md` (§Reviewing) says.
+If you have not loaded a guide, you cannot raise Blocking findings that cite it.
 
 When the diff includes a file under `docs/specs/`,
 also read `agents/FUNCTIONAL-SPECIFICATIONS.md` and `agents/MARKDOWN.md`.

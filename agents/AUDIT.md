@@ -28,6 +28,7 @@ Always load these, even if the prompt omitted them:
 Also load, when the target needs them:
 
 - `agents/CSS.md` — UI / `className`
+- `agents/LAYOUT.md` — app-shell layout, the drawer, or the wide breakpoint
 - `agents/I18N.md` — user-visible strings
 - `agents/FUNCTIONAL-SPECIFICATIONS.md` — any spec is in the audited surface
 - `agents/ASSISTANT-MAP.md` — assistant
@@ -37,7 +38,7 @@ Also load, when the target needs them:
   `agents/ADD-AI-PROVIDER.md`, `agents/ADD-ASSISTANT-TOOL.md`,
   `agents/ADD-HOTKEY.md`, `agents/ADD-COLOR-THEME.md`, `agents/DB.md`
 
-The prompt lists the owning spec and area guides.
+The prompt lists the owning spec and the area guides that the `agents/INDEX.md` Authoring table routes for the target.
 If those are missing, ask for them before starting.
 Do not load specs the target does not need.
 If you have not loaded a spec, you cannot raise a spec-violation finding against it.

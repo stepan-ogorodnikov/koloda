@@ -17,9 +17,7 @@ Nothing else.
 For an audit, use the Auditing section, not the Authoring table alone.
 A task file's `Guides:` line records the set it was routed to; re-route here only when its scope changes.
 
-Before routing a change, list in-flight tasks: `git ls-remote --heads origin 'task/*'`.
-Task files live on their `task/<slug>` branch, not on `main`.
-If a task's Intent or Scope overlaps the intended work, also read its `tasks/live/<slug>.md` and `agents/TASKS.md`.
+Before routing a change, check in-flight tasks for overlap: `agents/TASKS.md` (§Session protocol), step 1.
 
 Load one primary spec, not a cluster.
 If the task crosses that spec's stated out-of-scope, add the sibling it names.
@@ -90,23 +88,8 @@ For a diff that spans several change types, take the union of their rows.
 
 ## Auditing
 
-Always include `agents/AUDIT.md` and the standing authoring guides:
-`agents/CODE-STYLE.md`, `agents/CODE-DOCUMENTATION.md`, `agents/TESTING.md`, `agents/BACKWARDS-COMPATIBILITY.md`.
-Then add the Authoring-table guides for the target, the same way Reviewing does.
-
-Also add:
-
-- `agents/FUNCTIONAL-SPECIFICATIONS.md` when a spec is in scope
-- `agents/CSS.md` when UI is in scope
-- `agents/LAYOUT.md` when the target includes app-shell layout, the drawer, or the wide breakpoint
-- `agents/I18N.md` when user-visible strings are in scope
-- `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md` when the target crosses TypeScript and Rust, or includes persistence
-- `agents/ASSISTANT-MAP.md` for assistant
-- the package README for each package in scope
-- `apps/electron/IPC.md` when the target includes desktop IPC
-
-One primary spec, one package, or one named cross-cutting question per audit.
-If the target spans more than one primary spec without a single cross-cutting question, split it.
+Include `agents/AUDIT.md`.
+It lists the other guides an audit loads and how to bound its target: `agents/AUDIT.md` (§Target and inputs).
 
 Planning work from a finished audit report is still the Authoring row for a multi-commit plan.
 
