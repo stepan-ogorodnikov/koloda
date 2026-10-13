@@ -1,43 +1,33 @@
 # Agents
 
 Rules for every change.
-Guides for a specific change are routed from `agents/INDEX.md`.
-Run that routing yourself, load only the guides it lists,
-and record a task's set on its `Guides:` line (`agents/TASKS.md`).
-Later sessions read that line instead of routing again.
+Everything else is routed from `agents/INDEX.md`; run that routing yourself.
 
 ## Git
 
 - Make changes in the working tree only.
 - Commit, push, and land only when the human explicitly asks for that step.
-- Asking for one step is not asking for the next.
-- Exception: task work under `agents/TASKS.md` commits its task branch as that guide says.
-  - It pushes only when the task's `Flow` is `remote`; the default is `local`.
-  - Landing still needs an explicit ask.
+  - Asking for one step is not asking for the next.
+  - Exception: task branches commit and push as `agents/TASKS.md` says.
 - Do not open pull requests.
-- Do not push to `main` by hand.
-- Commit messages have a short subject line.
-  - A body is optional; add one when the why is not obvious from the diff.
-  - Planned work's subjects are the `Commit:` lines in its task file.
+- Commit subjects are one short line; add a body only when the why is not obvious from the diff.
 
 ## Session start
 
-- On a `task/*` branch, read `tasks/live/<slug>.md` and `agents/TASKS.md` before any other work.
-- The session protocol in `agents/TASKS.md` says what to check first.
+On a `task/*` branch, read `tasks/live/<slug>.md` and `agents/TASKS.md` first, and follow its session protocol.
 
 ## Verification
 
-- Never start the app or Playwright unless the human asks for that command.
-- `agents/VERIFY.md` says how to check a change.
+Never start the app or Playwright unless the human asks for that command.
+`agents/VERIFY.md` says how to check a change.
 
 ## Scratch
 
-- Use `tmp/` for scratch and generated output.
-- `tmp/` is gitignored and ephemeral.
+Use `tmp/` (gitignored, ephemeral) for scratch and generated output.
+Durable files and commit messages must not cite `tmp/` or other ephemeral paths.
+Later sessions cannot open them, so restate what they need.
 
 ## Landing
 
-- `main` moves only through `bun run land`.
-- It rebases onto `origin/main`, waits for CI `checks` on that exact commit, and fast-forwards `main`.
-- If `land` stops on a failed check, report it and wait.
-- Do not work around the gate.
+- `main` moves only through `bun run land`; never push to it by hand.
+- If `land` stops on a failed check, report it and wait. Do not work around the gate.
