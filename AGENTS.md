@@ -19,6 +19,7 @@ On a `task/*` branch, read `tasks/live/<slug>.md` and `agents/TASKS.md` first, a
 ## Verification
 
 Never start the app or Playwright unless the human asks for that command.
+An audit may run the e2e suites, as `agents/AUDIT.md` (§Method) says.
 `agents/VERIFY.md` says how to check a change.
 
 ## Scratch

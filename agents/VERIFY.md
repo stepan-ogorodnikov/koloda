@@ -25,8 +25,14 @@ Do not treat either suite as the agent's proof loop.
 ## Agents must not
 
 - Start `apps/web`, the Electron shell, or any long-lived app process.
-- Run `nx run web-e2e:e2e`, `nx run electron-e2e:e2e`, or a filtered Playwright spec.
-  The only exception is a human who explicitly asked for that command in this session.
+- Run a command that includes a Playwright suite.
+  The exceptions are a human who explicitly asked for that command in this session,
+  and an audit's e2e run, as `agents/AUDIT.md` (§Method) says.
+  These commands include a suite:
+  - `nx run web-e2e:e2e`, `nx run electron-e2e:e2e`, or a filtered Playwright spec.
+  - `nx run @koloda/web:test` or `nx run web-e2e:test`, which run the web suite.
+  - `nx run @koloda/electron:test` without `-c unit`, which also runs the desktop suite.
+  - `bun run check:web-all`, or `nx run-many` or `nx affected` over `test` without a lib filter.
 - Claim the UI works because unit tests passed.
 - Ask the human to "test the assistant" or "check settings" without concrete paths.
 

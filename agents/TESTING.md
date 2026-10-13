@@ -187,6 +187,9 @@ A full `bun run test:libs` is not required to justify a unit change.
 
 - All TS lib tests: `bun run test:libs`.
 - One TS lib: `bunx vitest run --config libs/<name>/vitest.config.mjs --configLoader runner [filter]`.
+- App unit tests: `bun run test:app-unit`.
+  It runs `nx run @koloda/web:test-unit` and `nx run @koloda/electron:test:unit`.
+  The apps' plain `test` targets run Playwright; see `agents/VERIFY.md`.
 - Rust: `cargo test -p koloda`.
   Domain vs persistence: `cargo test -p koloda --test domain` / `--test integration`.
   The integration harness is self-contained (in-memory SQLite); no external services.
