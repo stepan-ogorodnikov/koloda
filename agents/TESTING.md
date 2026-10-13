@@ -1,7 +1,7 @@
 # Testing Guide for AI Agents
 
 This guide defines which tests to write when implementing a change.
-It covers unit and integration tests across `libs/`, `apps/`, and `crates/koloda`.
+It covers unit and integration tests across `libs/`, `apps/`, and the Rust crates.
 The Playwright e2e suites are out of scope; they follow their own specs in `apps/web-e2e` and `apps/electron-e2e`.
 The two suites deliberately mirror each other flow for flow; keep the platform transports separate,
 and push shared logic into `libs/e2e` only when drift between the copies starts costing.
@@ -180,6 +180,24 @@ Match these files when the shape fits:
 - `libs/app/src/lib/error-parity.test.ts` — parses Rust `error_codes` from source
   vs `ERROR_MESSAGES` keys (`ai.*` TS-only allow-list).
 
+## Sync crates
+
+The rules above apply unchanged; this section names the home of each sync behavior.
+Harness mechanics (`common.rs`, clocks, fakes) are in each crate's README.
+
+| Behavior | Home |
+| --- | --- |
+| Envelope bytes, codecs, HLC, field-group registry | `crates/koloda-sync-proto/tests/protocol/` |
+| Device-side sync SQL: capture, apply, settle, heal, join | `crates/koloda/tests/integration/sync_*`, two replicas through `FakeSpace` |
+| What the server stores and decides: push outcomes, quotas, GC, restore | `crates/koloda-server/tests/server/` |
+| Device and server together: cycle, fork, bootstrap, recovery | `crates/koloda-sync/tests/engine/`, against the real server in process |
+
+- Test a rule in the lowest suite that can see it.
+  An engine test of a rule the server suite already pins is a second door (§One home per behavior).
+- Time comes from the injected clocks and timers, never from real sleeps.
+- `crates/koloda-sync-proto/fixtures/` changes only for an intended wire change;
+  `crates/koloda-sync-proto/PROTOCOL.md` (§Schema versions) says when that needs a schema bump.
+
 ## Running
 
 Agents run scoped commands for touched packages only.
@@ -193,6 +211,9 @@ A full `bun run test:libs` is not required to justify a unit change.
 - Rust: `cargo test -p koloda`.
   Domain vs persistence: `cargo test -p koloda --test domain` / `--test integration`.
   The integration harness is self-contained (in-memory SQLite); no external services.
+- Sync crates: `cargo test -p koloda-sync-proto`, `-p koloda-server`, or `-p koloda-sync`.
+  The engine tests run against `koloda` and `koloda-server`, so a change in either also runs `-p koloda-sync`.
+- All Rust crates: `bun run test:rust`.
 
 ### Runner constraints
 
