@@ -53,7 +53,8 @@ Stable identity is the topic name, same as specs.
 State what must and must not stay true **now**.
 A short Why is enough.
 Do not write Context / Decision / Consequences essays unless the tradeoff is still contested.
-Drop Rejected alternatives once the debate is settled.
+Keep a rejected design only when agents would otherwise propose it again.
+Then it is a prohibition, not an open option: name the design and why it lost, in one line.
 
 **One home per ruling.**
 Do not restate the same architecture rule in multiple decision files.
@@ -88,14 +89,14 @@ Route from `agents/INDEX.md` by topic (when the change type needs it), never by 
 - <change types / packages / INDEX rows that must load this file>
 - <what does *not* need this file>
 
-## Rejected alternatives
+## Rejected designs
 
-<!-- Optional. Only while the tradeoff is still contested. Delete this section once settled. -->
+<!-- Optional. Prohibitions agents would otherwise propose again, not open options. -->
 
-- <alternative> — rejected because <one line>
+- No <design> — <one line why>
 ```
 
-Omit Rejected alternatives when there is nothing live to argue.
+Omit Rejected designs when no rejected design is likely to come back.
 
 ## Checklist
 
