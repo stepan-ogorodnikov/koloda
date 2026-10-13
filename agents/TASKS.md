@@ -55,7 +55,7 @@ Switching to `remote` pushes the branch at the next commit.
    - Run `git fetch origin`.
    - `git status --porcelain` must be empty.
    - `git log origin/main..HEAD` must be empty.
-   - Push or stash unrelated work first.
+   - If either is not empty, ask the human how to clear that work. Do not push it.
    - Then run `git checkout -b task/<slug> origin/main`.
 2. Add `tasks/live/<slug>.md` with `Status: draft`, its `Guides:` line, and its `Flow:` line (default `local`).
    - Route the work in `agents/INDEX.md` and list the guides it needs on that line.
@@ -150,7 +150,7 @@ On the task branch, once self-review has passed and the tip is green:
    - For `local`, this is the branch's first push.
    - Then it fast-forwards `main` to the tip and deletes the remote branch.
    - If `main` moved meanwhile, it rebases and checks again.
-   - If `checks` fails, it stops; fix as in §Fix after Archive.
+   - If `checks` fails, it stops; report it and wait for the human before fixing as in §Fix after Archive.
 
 After landing, the archive file is on `main` and the live path is gone.
 Commits on `main` may interleave across tasks.
