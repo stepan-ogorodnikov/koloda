@@ -31,6 +31,7 @@ The listed files are relative to the repo root.
 Long guides are routed by section.
 When a row or another guide cites a section (`§Name`), load only that section: its heading and the text up to the next heading of the same level.
 `crates/koloda-sync-proto/PROTOCOL.md` is the main case, and it is too long to load whole.
+A change that loads any part of it also loads its §Rejected designs.
 When a row names the file without a section, find the headings that match the change, read those, and stay out of the rest.
 
 ## Authoring
@@ -57,6 +58,7 @@ When a row names the file without a section, find the headings that match the ch
 | Learning settings (defaults, daily limits, day boundary, learn-ahead limit) | `docs/specs/LEARNING-SETTINGS.md` |
 | Database schema change | `agents/DB.md`, `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md` |
 | Card media storage (attachments, hash ids, byte store) | `docs/decisions/MEDIA-STORAGE.md`, `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md` |
+| Add a persisted setting, store, cache, or table; add a syncable kind or field group; add a host that persists data; choose global vs device-local | `docs/decisions/STORAGE-BUCKETS.md` |
 | Sync modules in `crates/koloda` (`src/repo/sync/`: capture, apply, push, restore, join, backfill) | `crates/koloda/src/repo/sync/README.md`, `crates/koloda-sync-proto/PROTOCOL.md`, `agents/RUST.md` |
 | Change inside `crates/koloda` (Rust domain, repos, settings slices, FSRS, reviews) | `agents/RUST.md`, `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md` |
 | Sync wire protocol (envelope, field-group registry, clock, codecs; `crates/koloda-sync-proto`) | `crates/koloda-sync-proto/PROTOCOL.md`, `crates/koloda-sync-proto/README.md` |

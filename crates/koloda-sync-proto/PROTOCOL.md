@@ -283,6 +283,7 @@ Who writes what:
   The remote device's revision arrives as its own envelope.
 - An edit form that saves several columns emits only the groups whose values changed.
   A save that changes nothing emits nothing.
+  An unchanged group is never re-sent, so it cannot overwrite another device's concurrent edit.
 
 ### Classes
 
@@ -1825,6 +1826,7 @@ Change one only by a new decision, not by editing rules in passing.
 14. Joining with a used database probes the space for ids it already holds.
     The user then picks Add (remint only known ids, with dependents) or Replace.
 15. There are no deletion bundles; a future restore-deleted feature covers deletes made after it ships.
+    Bundles had no consumer yet, and they dominated the cost of a delete and its quota check.
 16. The header stays plaintext under E2EE, including `parent` and `refs`.
     Attachment ids on the wire become `HMAC(space_key, sha256)`.
 17. Attachments sync outside the envelope log, linked by soft header refs.
@@ -1838,6 +1840,50 @@ Change one only by a new decision, not by editing rules in passing.
 23. The stale-device threshold is 90 days; skew tolerance is 5 minutes.
 24. Bulk transfers above 20 MB pause on metered networks; tiny incremental sync never does.
 25. Break-glass pairing goes through the setup token.
+
+## Rejected designs
+
+These are prohibitions, not open options.
+Each was weighed in the design and rejected.
+Propose one again only with a new decision (§Rulings).
+
+- No generic CRDT library over the whole dataset.
+  Merge is per field group, last-writer-wins by HLC (§Field groups and merge).
+- No replicated-database product that replaces or dual-writes the local SQLite file.
+  The local database stays the product store.
+  Sync moves only the global bucket (`docs/decisions/STORAGE-BUCKETS.md`).
+- No web sync client.
+  Clients are native only (top of this file).
+- No SQLite triggers for client capture.
+  Each write path captures the groups it writes (`crates/koloda/src/repo/sync/README.md`, Sync capture).
+- No soft-delete column in the product schema (§Deletes).
+- No stamp columns on entity tables.
+  Stamps live in the sync tables (§Client state).
+- No deck or template id in any card update group (§Cascades by ancestry and header refs, ruling 4).
+- No per-card tombstones on deck delete.
+  Deletes cascade by the deck and template recorded at each card's create (`docs/decisions/FIXED-CARD-PARENTS.md`).
+- No payload merge on the server, and no server-assigned entity ids.
+  The server reads the header and never the payload.
+  Entity ids are client-minted (§Primary keys).
+- No accounts, and no email or OAuth sign-in.
+  Devices join with pairing codes (§Constraints).
+- No pairing code in a URL path.
+  Codes travel only in request bodies (§Endpoints).
+- No buffering of a pulled envelope until a missing row arrives (§Pull cursor).
+  An arrival whose row is absent resolves on the spot (§Arrivals).
+  Push holds are a separate mechanism (§Push outcomes).
+- No re-stamping of single rows, and no re-stamping of a cohort a push may have consumed.
+  Re-stamp walks only `local` cohorts; a cohort fixed from `uncertain` keeps its original stamp (§Cohorts).
+- No generic acknowledgement for a consumed sender sequence.
+  A repeat with the same digest returns its stored outcome with `replayed = true` (§Sender sequence).
+- Own-device entries are not returned by incremental pull.
+  `scanned_through` still covers them (§Pull cursor).
+- No attachment bytes in envelopes.
+  No tombstones or fences for attachments; they are collected by reference (§Attachments, ruling 17).
+- No server-side provisional enrollment, import reservation, or join plan.
+  A used file waits locally for the user's choice (§Joining).
+- No correction endpoint and no poison report.
+  A corrupt envelope holds the pull, except that a corrupt delete or reset applies from its header (ruling 9).
 
 ## Conformance cases
 
