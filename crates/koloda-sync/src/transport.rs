@@ -133,7 +133,10 @@ impl HttpTransport {
             .connect_timeout(CONNECT_TIMEOUT)
             .timeout(REQUEST_TIMEOUT)
             .build()
-            .map_err(|error| SyncError::Transport(error.to_string()))?;
+            .map_err(|error| SyncError::Transport {
+                status: None,
+                message: error.to_string(),
+            })?;
         Ok(HttpTransport { client })
     }
 }

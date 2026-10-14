@@ -7,7 +7,7 @@ use koloda_sync_proto::payload::{Delete, Payload, Title};
 use koloda_sync_proto::registry::{Group, Kind, Lane};
 use koloda_sync_proto::transport::ErrorCode;
 
-use crate::common::{error_reply, Fault, Space};
+use crate::common::{error_reply, proxy_page, Fault, Space};
 use crate::fixtures::Library;
 
 /// The first try and 3 retries.
@@ -216,7 +216,7 @@ fn a_lost_reply_is_settled_by_the_same_bytes_once_a_reply_arrives() {
 
         let lost = space.device.engine.sync_now();
 
-        assert!(matches!(lost, Err(SyncError::Transport(_))), "{name}: {lost:?}");
+        assert!(matches!(lost, Err(SyncError::Transport { .. })), "{name}: {lost:?}");
         assert!(
             space.device.outbox().iter().all(|row| row.in_flight),
             "{name}: the rows stay in flight"
@@ -241,6 +241,32 @@ fn a_lost_reply_is_settled_by_the_same_bytes_once_a_reply_arrives() {
         assert_eq!(resent, lost_body, "{name}: the same bytes go out again");
         assert_settled(&space, name, &check);
     }
+}
+
+#[test]
+fn a_push_a_proxy_refuses_without_a_sync_reply_counts_as_lost() {
+    let space = Space::new();
+    space.device.library();
+    for _ in 0..ATTEMPTS {
+        space.device.transport.fault_on("/push", Fault::Reply(proxy_page(413)));
+    }
+
+    let lost = space.device.engine.sync_now();
+
+    // WHY: a proxy may pass a request on before it fails, so only a sync reply proves the server consumed nothing.
+    assert!(
+        matches!(lost, Err(SyncError::Transport { status: Some(413), .. })),
+        "{lost:?}"
+    );
+    assert!(
+        space.device.outbox().iter().all(|row| row.in_flight),
+        "the rows stay in flight"
+    );
+    let states = space.device.cohort_states();
+    assert!(
+        !states.is_empty() && states.iter().all(|state| state == "fixed"),
+        "every cohort is fixed: {states:?}"
+    );
 }
 
 fn assert_settled(space: &Space, name: &str, check: &Check) {

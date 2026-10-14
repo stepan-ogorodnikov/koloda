@@ -24,7 +24,7 @@ const MAX_RETRIES: usize = 3;
 
 const ZSTD_ABOVE_BYTES: usize = 1024;
 const ZSTD_LEVEL: i32 = 3;
-const OK: u16 = 200;
+pub(crate) const OK: u16 = 200;
 
 /// Server time minus local time when the last reply arrived, in milliseconds.
 #[derive(Default)]
@@ -91,17 +91,18 @@ impl Client<'_> {
             ..self.request(method, path, token)
         };
 
-        let mut lost = TransportError(String::new());
+        let mut lost = (None, String::new());
         for _ in 0..=MAX_RETRIES {
             match self.transport.send(request.clone()).await {
                 Ok(response) => match self.read(&response) {
                     Ok(answer) => return answer,
-                    Err(error) => lost = error,
+                    Err(TransportError(message)) => lost = (Some(response.status), message),
                 },
-                Err(error) => lost = error,
+                Err(TransportError(message)) => lost = (None, message),
             }
         }
-        Err(SyncError::Transport(lost.0))
+        let (status, message) = lost;
+        Err(SyncError::Transport { status, message })
     }
 
     /// A request with no body, as `call` sends it before adding one.

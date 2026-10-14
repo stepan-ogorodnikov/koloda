@@ -11,7 +11,7 @@ use koloda_sync::runner::{Budget, Event};
 use koloda_sync::transport::Method;
 use koloda_sync_proto::transport::ErrorCode;
 
-use crate::common::{error_reply, Device, Fault, Space, TestServer, SERVER_URL};
+use crate::common::{error_reply, proxy_page, Device, Fault, Space, TestServer, SERVER_URL};
 use crate::fixtures::{links, seed_data, seed_settings, Library, BACK, FRONT};
 use crate::runner_support::{channel_sink, wait_for, ManualTimer};
 
@@ -206,6 +206,31 @@ fn an_image_the_server_fails_on_waits_and_the_others_arrive_that_cycle() {
     b.execute("UPDATE sync_attachment_queue SET next_attempt_at = 0");
     b.engine.sync_now().expect("B syncs after the backoff");
     assert!(images.iter().all(|id| b.image(id).is_some()));
+}
+
+#[test]
+fn an_upload_a_proxy_refuses_waits_and_a_proxy_that_cannot_reach_the_server_ends_the_transfers() {
+    // WHY: `call` retries a reply that is not a sync reply with the same bytes before it gives up.
+    const ATTEMPTS: usize = 4;
+    let cases = [("413", 413, true, 2), ("502", 502, false, 0)];
+    for (name, status, is_cycle_ok, uploaded) in cases {
+        let space = Space::new();
+        let a = &space.device;
+        let images = card_with_images(a, 3, 2_000).images;
+        for _ in 0..ATTEMPTS {
+            a.transport
+                .fault_when(Method::Put, ATTACHMENTS, Fault::Reply(proxy_page(status)));
+        }
+
+        let synced = a.engine.sync_now();
+
+        assert_eq!(synced.is_ok(), is_cycle_ok, "{name}: {synced:?}");
+        assert_eq!(a.queued(), (3 - uploaded, 0), "{name}: the refused upload stays queued");
+        let witness = space.server.join(a);
+        witness.engine.sync_now().expect("the witness syncs");
+        let arrived = images.iter().filter(|id| witness.image(id).is_some()).count();
+        assert_eq!(arrived, uploaded, "{name}: the other images went up that cycle");
+    }
 }
 
 #[test]

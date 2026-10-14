@@ -1678,7 +1678,8 @@ status shows the space is over its quota.
 Once a device record shows room, every upload that waited for room goes in that cycle, with its backoff reset.
 An upload or a fetch answered with another `5xx` waits the same way, keeps its backoff when room returns, and the
 cycle moves on to the next image; one blob the server fails on holds back no other.
-A transfer that gets no reply ends the cycle's transfers and stays queued.
+An upload refused with a `4xx` that is not a sync reply waits the same way, as when a proxy limits request bodies.
+A transfer that gets no reply, or a `5xx` that is not a sync reply, ends the cycle's transfers and stays queued.
 
 ### Download
 

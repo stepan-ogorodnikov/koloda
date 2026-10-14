@@ -128,7 +128,7 @@ fn a_creation_that_lost_every_reply_makes_one_space_on_the_next_call() {
     let device = server.device();
     lose_every_reply(&device);
     let result = create(&server, &device);
-    assert!(matches!(result, Err(SyncError::Transport(_))), "{result:?}");
+    assert!(matches!(result, Err(SyncError::Transport { .. })), "{result:?}");
     assert_eq!(spaces(&server).len(), 1, "the creation landed");
 
     let relaunched = server.relaunch(&device);

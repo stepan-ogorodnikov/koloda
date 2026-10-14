@@ -345,7 +345,7 @@ fn error_code(error: &SyncError) -> &'static str {
     use sync_error_codes as codes;
     match error {
         SyncError::Local(_) => error_codes::UNKNOWN,
-        SyncError::Transport(_) => codes::UNREACHABLE,
+        SyncError::Transport { .. } => codes::UNREACHABLE,
         SyncError::Server {
             code: ErrorCode::Unauthorized,
             ..
@@ -636,7 +636,13 @@ mod tests {
             message: String::new(),
         };
         let cases = [
-            (SyncError::Transport("refused".to_string()), "sync.unreachable"),
+            (
+                SyncError::Transport {
+                    status: None,
+                    message: "refused".to_string(),
+                },
+                "sync.unreachable",
+            ),
             (server(ErrorCode::Unauthorized), "sync.unauthorized"),
             (server(ErrorCode::PairingFailed), "sync.pairing-failed"),
             (server(ErrorCode::RateLimited), "sync.rate-limited"),

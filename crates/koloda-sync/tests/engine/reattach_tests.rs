@@ -230,7 +230,7 @@ fn a_re_attach_that_fails_after_its_claim_finishes_on_the_next_join_with_the_sam
 
     let result = a.engine.join(SERVER_URL, &code, "Laptop", seed_settings());
 
-    assert!(matches!(result, Err(SyncError::Transport(_))), "{result:?}");
+    assert!(matches!(result, Err(SyncError::Transport { .. })), "{result:?}");
     assert_eq!(device_id(a), old, "the file has not switched");
     let claimed: Vec<Uuid> = pair
         .b

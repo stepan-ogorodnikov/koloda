@@ -960,6 +960,15 @@ fn decode<T: DeserializeOwned>(response: &Response) -> Reply<T> {
     ciborium::from_reader(bytes.as_slice()).expect("every response is a CBOR reply")
 }
 
+/// A reverse proxy's own error page, which is not a sync reply, as nginx sends one.
+pub fn proxy_page(status: u16) -> Response {
+    Response {
+        status,
+        body: format!("<html><body><h1>{status}</h1><hr><center>nginx</center></body></html>").into_bytes(),
+        is_zstd: false,
+    }
+}
+
 /// An error reply shaped as the server sends one, for a fault to answer with.
 pub fn error_reply(status: u16, code: ErrorCode) -> Response {
     let reply: Reply<Empty> = Reply {

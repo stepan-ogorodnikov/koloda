@@ -149,7 +149,9 @@ impl Shared {
                     .await?;
             }
             Err(error) if is_refused_for_good(&error) => self.drop_refused(transfer, &error).await?,
-            Err(error) if is_server_fault(&error) => self.defer_faulted(transfer, &error).await?,
+            Err(error) if is_server_fault(&error) || is_refused_by_proxy(&error) => {
+                self.defer_faulted(transfer, &error).await?;
+            }
             Err(error) => return Err(error),
         }
         Ok(size)
@@ -251,4 +253,17 @@ fn path(session: &Session, id: &str) -> String {
 
 fn is_server_fault(error: &SyncError) -> bool {
     matches!(error, SyncError::Server { status: 500..=599, .. })
+}
+
+// WHY: a proxy refuses a body over its own limit with a `4xx` that is not a sync reply, and refuses it again on every
+// retry, so the upload waits like one the server failed on and holds back no other image. A `5xx` that is not a sync
+// reply is a proxy that cannot reach the server, which is no reply (PROTOCOL.md, Upload).
+fn is_refused_by_proxy(error: &SyncError) -> bool {
+    matches!(
+        error,
+        SyncError::Transport {
+            status: Some(400..=499),
+            ..
+        }
+    )
 }

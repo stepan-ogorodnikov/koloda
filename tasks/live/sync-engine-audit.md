@@ -309,7 +309,7 @@ Out:
   Commit: Let the runner wait without errors while the file cannot sync
   Depends on: none
 
-- [ ] 4. Defer an upload a proxy refuses without a sync reply
+- [x] 4. Defer an upload a proxy refuses without a sync reply
   Goal (finding 4, per question 4):
   - `crates/koloda-server/README.md`, beside line 44: a proxy must accept request bodies of 16 MiB, the protocol's
     cap (`MAX_BODY_BYTES`).

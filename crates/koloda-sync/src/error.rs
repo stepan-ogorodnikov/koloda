@@ -7,8 +7,12 @@ use koloda_sync_proto::transport::{ErrorCode, Restore};
 
 #[derive(Debug)]
 pub enum SyncError {
-    /// No complete reply: the connection failed, timed out, or answered with a body that is not a reply.
-    Transport(String),
+    /// No sync reply: the connection failed or timed out, or a reply arrived that is not a sync reply, such as a
+    /// proxy's own error page. `status` is that reply's, and `None` when no reply arrived.
+    Transport {
+        status: Option<u16>,
+        message: String,
+    },
     /// The server answered with an error reply.
     Server {
         status: u16,
@@ -97,7 +101,7 @@ impl From<AppError> for SyncError {
 impl fmt::Display for SyncError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            SyncError::Transport(message) => write!(f, "no reply from the sync server: {message}"),
+            SyncError::Transport { message, .. } => write!(f, "no reply from the sync server: {message}"),
             SyncError::Server { status, code, message } => {
                 write!(f, "the sync server answered {status} {code:?}: {message}")
             }

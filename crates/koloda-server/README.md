@@ -42,6 +42,9 @@ A pair that does not load keeps the old one, so a certbot renewal needs no resta
 With `--insecure-http` it speaks plain HTTP, on `127.0.0.1:8080` unless `--listen` names another address.
 That is for a TLS reverse proxy in front of it, or for `tailscale serve --bg 8080`.
 A proxy must pass WebSocket upgrades on `/v1/spaces/{space}/events`, which tells devices when to sync.
+It must also accept request bodies of 16 MiB, the protocol's cap; nginx's `client_max_body_size` defaults to 1 MiB.
+A device resends a push the proxy refused, since it cannot tell whether the server took it.
+A lower limit then stalls sync until the proxy accepts the body.
 Below `--min-free-disk` free bytes (1 GiB by default) it holds growing writes as if every space were over its quota,
 and below `--reserve-disk` (64 MiB) it refuses every push; on a platform without `statvfs` both are off.
 A request that runs out of disk anyway is refused with `507` and consumes nothing.

@@ -103,7 +103,7 @@ impl Shared {
                     let sent = Arc::clone(&batch);
                     // INVARIANT: only a missing reply can hide a consumed push. A refusal and a local failure to
                     // send both consumed nothing.
-                    let is_lost = matches!(error, SyncError::Transport(_));
+                    let is_lost = matches!(error, SyncError::Transport { .. });
                     self.blocking(move |shared| {
                         if is_lost {
                             push_lost(&shared.db, &sent)

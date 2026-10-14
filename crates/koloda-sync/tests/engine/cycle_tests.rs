@@ -221,7 +221,7 @@ fn a_seq_the_file_dropped_is_not_taken_for_another_copy() {
         space.device.transport.fault_on("/push", Fault::LoseReply);
     }
     let lost = space.device.engine.sync_now();
-    assert!(matches!(lost, Err(SyncError::Transport(_))), "{lost:?}");
+    assert!(matches!(lost, Err(SyncError::Transport { .. })), "{lost:?}");
 
     let error = space.device.engine.sync_now().err();
 

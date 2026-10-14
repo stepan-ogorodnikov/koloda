@@ -56,7 +56,7 @@ fn a_reply_that_is_not_a_sync_reply_is_a_transport_failure() {
         .engine
         .create_space(SERVER_URL, &server.setup_token, "Study", "Laptop");
 
-    assert!(matches!(result, Err(SyncError::Transport(_))), "{result:?}");
+    assert!(matches!(result, Err(SyncError::Transport { .. })), "{result:?}");
     assert_eq!(
         device.transport.sent().len(),
         ATTEMPTS,

@@ -18,7 +18,7 @@ use koloda_sync_proto::transport::{DeviceInfo, DeviceMeta, ErrorCode, PullPage, 
 use uuid::Uuid;
 
 use crate::bootstrap::{Bootstrap, OpenLease};
-use crate::client::local_error;
+use crate::client::{local_error, OK};
 use crate::engine::{merge, Session, Shared};
 use crate::error::SyncError;
 use crate::transport::Method;
@@ -421,8 +421,10 @@ pub(crate) struct Heads {
 
 impl Heads {
     fn from_meta(meta: Option<&DeviceMeta>) -> Result<Heads, SyncError> {
-        let meta =
-            meta.ok_or_else(|| SyncError::Transport("a device call's reply carries no device meta".to_string()))?;
+        let meta = meta.ok_or_else(|| SyncError::Transport {
+            status: Some(OK),
+            message: "a device call's reply carries no device meta".to_string(),
+        })?;
         Ok(Heads {
             head_hot: meta.head_hot,
             head_cold: meta.head_cold,
