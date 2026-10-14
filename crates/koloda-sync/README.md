@@ -45,6 +45,8 @@ A delete that fails then emits `Event::Error` and the call succeeds; a re-attach
   nonce and token; only `pairing_failed` drops it.
 - `src/runner.rs` — the background runner: triggers, coalescing, the poll and how long it waits while the events
   socket is open, backoff, events, and tick budgets.
+  A file in no space, holding an authoritative restore, or unknown to the server waits for a trigger: no poll, no
+  backoff, and no `Error` event.
   A push waiting on server time cuts the idle sleep short: the runner wakes when the wait ends, not at the next poll.
 - `src/events.rs` — the events socket while the runner runs: the session it listens with, reconnects, and nudges
   that start a cycle, held back while one runs.

@@ -336,7 +336,9 @@ impl Shared {
             self.emit(Event::Changed { kinds: changed.clone() });
         }
         if let Err(error) = &result {
-            if !matches!(error, SyncError::BudgetSpent | SyncError::Metered { .. }) {
+            // WHY: a spent budget and a metered pause are limits, not faults, and a waiting file's status already
+            // says why it stopped; an error per trigger would repeat it.
+            if !matches!(error, SyncError::BudgetSpent | SyncError::Metered { .. }) && !error.is_waiting() {
                 self.emit(Event::Error(error.to_string()));
             }
         }

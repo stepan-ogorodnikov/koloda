@@ -283,7 +283,7 @@ impl SyncHost {
         Ok(())
     }
 
-    // INVARIANT: the runner is never started on a file in no space; there every cycle fails and emits an `Error`.
+    // WHY: a file in no space has nothing to sync; the join or the space creation that gives it one starts the runner.
     fn start_runner(&self) -> Result<(), SyncError> {
         let (Some(engine), Some(sink)) = (self.engine.get(), self.sink.get()) else {
             return Ok(());

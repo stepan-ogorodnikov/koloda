@@ -1,10 +1,12 @@
-use std::sync::mpsc::channel;
+use std::sync::mpsc::{channel, Receiver};
 use std::sync::Arc;
 use std::time::Duration;
 
+use koloda::app::secrets::SecretStore;
 use koloda_sync::runner::{Budget, Event};
 use koloda_sync_proto::payload::{CardCreate, CardScheduling, Payload, Title};
 use koloda_sync_proto::registry::Kind;
+use koloda_sync_proto::transport::RestoreMode;
 use uuid::Uuid;
 
 use crate::common::{system_ms, Device, Space};
@@ -83,6 +85,104 @@ fn triggers_during_a_cycle_run_exactly_one_more() {
         2,
         "the first cycle, and one more for every trigger during it"
     );
+}
+
+/// Builds a space and returns a file whose next cycle finds it unable to sync until the user or the host acts.
+type Arrange = fn(&Space) -> Device;
+
+/// Reads one cycle's events, which end with its second status, and fails on an `Error` among them.
+fn quiet_cycle(events: &Receiver<Event>, name: &str) {
+    let mut statuses = 0;
+    while statuses < 2 {
+        let event = wait_for(events, |_| true);
+        assert!(
+            !matches!(event, Event::Error(_)),
+            "{name}: the runner reported {event:?}"
+        );
+        if matches!(event, Event::Status(_)) {
+            statuses += 1;
+        }
+    }
+}
+
+#[test]
+fn a_file_that_cannot_sync_waits_for_a_trigger_without_errors_or_a_socket() {
+    let cases: [(&str, Arrange, usize); 4] = [
+        (
+            "revoked",
+            |space| {
+                let b = space.server.join(&space.device);
+                let id = b.state().expect("enrolled").device_id;
+                space.device.engine.revoke_device(id).expect("the device is revoked");
+                b
+            },
+            0,
+        ),
+        (
+            "left the space",
+            |space| {
+                let b = space.server.join(&space.device);
+                b.engine.detach().expect("the device leaves");
+                b
+            },
+            0,
+        ),
+        (
+            "holding an authoritative restore",
+            |space| {
+                let b = space.server.join(&space.device);
+                let backup = space.server.backup();
+                space.server.restore(&backup, RestoreMode::Authoritative);
+                b
+            },
+            0,
+        ),
+        (
+            "unknown to the server",
+            |space| {
+                let copy = space.server.copy(&space.device);
+                let id = copy.state().expect("enrolled").device_id;
+                copy.secrets
+                    .set(&format!("sync.token.{id}"), "a token no device holds")
+                    .expect("the token is replaced");
+                copy
+            },
+            1,
+        ),
+    ];
+
+    for (name, arrange, requests_per_cycle) in cases {
+        let space = Space::new();
+        let device = arrange(&space);
+        device.transport.serve_events();
+        let timer = ManualTimer::default();
+        let (sink, events) = channel_sink();
+        device
+            .engine
+            .start_runner(sink, Arc::new(timer.clone()))
+            .expect("the runner starts");
+        quiet_cycle(&events, name);
+        let sent = device.transport.sent().len();
+
+        // WHY: a runner that polled or backed off would start a cycle once this much time passed.
+        timer.advance(POLL);
+        device.engine.nudge();
+        quiet_cycle(&events, name);
+
+        assert_eq!(
+            device.transport.sent().len() - sent,
+            requests_per_cycle,
+            "{name}: the nudge runs one cycle"
+        );
+        assert!(
+            !device
+                .transport
+                .sent()
+                .iter()
+                .any(|request| request.url.ends_with("/events")),
+            "{name}: no events socket opens"
+        );
+    }
 }
 
 #[test]

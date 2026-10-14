@@ -284,7 +284,7 @@ Out:
   Commit: Leave a space while an authoritative restore is held
   Depends on: none
 
-- [ ] 3. Let the runner wait without errors while the file cannot sync
+- [x] 3. Let the runner wait without errors while the file cannot sync
   Goal (finding 5, per question 5):
   - Waiting results: `Detached`, `NotEnrolled`, `RestoreHeld`, `UnknownDevice`, `Revoked`, and `PairAgain`.
   - `run_cycle` (`engine.rs:338-342`) emits no `Event::Error` for them; the status event already says why.

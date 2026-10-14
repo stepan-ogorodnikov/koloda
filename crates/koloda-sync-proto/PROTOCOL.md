@@ -955,6 +955,7 @@ A device sends nothing but control frames; a socket that sends data is closed.
 
 A device keeps one socket open while its runner runs and the file may send.
 It opens none while the file is detached, waits for Add or Replace, or holds an authoritative restore.
+Nor does it after the server answered `401 unknown_device` on the epoch the device sent, until a cycle passes.
 A bounded tick opens none either, so a device that only ticks syncs by polling.
 Heads past the last ones a reply reported start a cycle (§Cycle).
 A nudge during a cycle waits for it to end: the cycle's own push moves the heads too.
@@ -1181,6 +1182,8 @@ A device polls every 5 minutes while its events socket is open, and every 60 sec
 A grade reaches another live device in about a second.
 Without the socket, as behind a proxy that passes no WebSocket upgrades, it takes up to a minute.
 One cycle runs at a time; triggers during a cycle run one more after it, and errors back off up to 60 seconds.
+A file that cannot sync until the user or the host acts neither polls nor backs off, and waits for a trigger.
+It is detached or in no space, holds an authoritative restore, or the server no longer knows its device.
 
 Attachment transfers run after the rounds, one at a time, uploads and fetches alike.
 They carry no stamps, so they also run when the rounds stop for clock skew or a file that is behind.

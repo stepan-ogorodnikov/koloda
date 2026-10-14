@@ -72,6 +72,22 @@ pub enum SyncError {
     },
 }
 
+impl SyncError {
+    /// The file cannot sync until the user or the host acts: it is in no space, holds an authoritative restore, or
+    /// the server no longer knows its device. Its status says so, and every such act fires a trigger.
+    pub(crate) fn is_waiting(&self) -> bool {
+        matches!(
+            self,
+            SyncError::NotEnrolled
+                | SyncError::Detached
+                | SyncError::Revoked
+                | SyncError::PairAgain
+                | SyncError::RestoreHeld
+                | SyncError::UnknownDevice
+        )
+    }
+}
+
 impl From<AppError> for SyncError {
     fn from(error: AppError) -> Self {
         SyncError::Local(error)

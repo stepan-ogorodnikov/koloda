@@ -126,13 +126,16 @@ impl Triggers {
         self.notify.notify_one();
     }
 
-    /// Returns once a trigger arrived after `seen`, or `duration` elapsed.
-    async fn wait(&self, seen: u64, timer: &dyn Timer, duration: Duration) {
+    /// Returns once a trigger arrived after `seen`, or `duration` elapsed; with no `duration`, only a trigger ends it.
+    async fn wait(&self, seen: u64, timer: &dyn Timer, duration: Option<Duration>) {
         // INVARIANT: the sleep starts only once no trigger is waiting, so a runner that sleeps is idle.
         if self.generation.load(Ordering::SeqCst) != seen {
             return;
         }
-        let sleep = timer.sleep(duration);
+        let sleep: Sleeping = match duration {
+            Some(duration) => timer.sleep(duration),
+            None => Box::pin(std::future::pending()),
+        };
         tokio::pin!(sleep);
         loop {
             if self.generation.load(Ordering::SeqCst) != seen {
@@ -151,10 +154,10 @@ impl Triggers {
 impl Shared {
     pub(crate) async fn run_forever(self: Arc<Self>, timer: Arc<dyn Timer>) {
         let mut seen = self.triggers.generation.load(Ordering::SeqCst);
-        let mut wait = Duration::ZERO;
+        let mut wait = Some(Duration::ZERO);
         let mut backoff = FIRST_BACKOFF;
         loop {
-            if !wait.is_zero() {
+            if wait.is_none_or(|wait| !wait.is_zero()) {
                 self.triggers.wait(seen, timer.as_ref(), wait).await;
             }
             if self.triggers.is_local.swap(false, Ordering::SeqCst) {
@@ -173,12 +176,18 @@ impl Shared {
                     };
                     // WHY: a push waiting on server time goes once the wait ends, not at the next poll; a trigger
                     // still ends the sleep sooner. A wait that cannot be read leaves the poll.
-                    self.push_wait_left().ok().flatten().map_or(poll, |left| left.min(poll))
+                    Some(self.push_wait_left().ok().flatten().map_or(poll, |left| left.min(poll)))
+                }
+                // WHY: a waiting file fails the same way until the user or the host acts, and each such act fires a
+                // trigger; a poll or a backoff would only call the server, or fail, again (PROTOCOL.md, Cycle).
+                Err(error) if error.is_waiting() => {
+                    backoff = FIRST_BACKOFF;
+                    None
                 }
                 Err(_) => {
                     let after = backoff;
                     backoff = (backoff * 2).min(POLL);
-                    after
+                    Some(after)
                 }
             };
         }
