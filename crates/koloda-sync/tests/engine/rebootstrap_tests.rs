@@ -1,7 +1,10 @@
 //! Re-bootstrap of a device the server left behind (`crates/koloda-sync-proto/PROTOCOL.md` §Cycle, §Re-bootstrap).
 
+use std::time::Duration;
+
 use koloda::domain::decks::DeleteDeckData;
 use koloda::repo::decks::delete_deck;
+use koloda_sync::runner::Budget;
 use koloda_sync::transport::Method;
 use koloda_sync_proto::payload::{Delete, Payload};
 use koloda_sync_proto::registry::Kind;
@@ -274,4 +277,64 @@ fn a_restarted_re_bootstrap_drops_what_only_the_lapsed_lease_delivered() {
     assert!(!a.has_card(&away.doomed_card), "and its card");
     assert!(a.deck(&away.deck).is_some(), "a deck both leases deliver stays");
     assert_eq!(opens(a), 2, "a second lease");
+}
+
+fn is_release(request: &str) -> bool {
+    request.starts_with("Delete") && request.contains("/bootstrap/")
+}
+
+#[test]
+fn a_re_bootstrap_heartbeats_its_lease_between_the_last_page_and_the_absence_cleanup() {
+    let away = away();
+    let a = &away.space.device;
+    away.space.server.backdate(device_id(a), 91 * DAY_MS);
+    let before = requests(a).len();
+
+    a.engine.sync_now().expect("A re-bootstraps and syncs");
+
+    let sent = requests(a).split_off(before);
+    let last_page = sent.iter().rposition(|request| request.contains("lane=cold"));
+    let heartbeat = sent.iter().position(|request| request.ends_with("/heartbeat"));
+    let release = sent.iter().position(|request| is_release(request));
+    assert!(
+        last_page.is_some() && heartbeat > last_page && release > heartbeat,
+        "{sent:?}"
+    );
+}
+
+#[test]
+fn a_re_bootstrap_whose_tick_the_last_page_spends_releases_and_does_not_run_again() {
+    let away = away();
+    let a = &away.space.device;
+    // WHY: many reviews make the `cold` snapshot one page far larger than the `hot` one, so the budget lasts through
+    // `hot` and its catch-up, and the `cold` page spends it.
+    for _ in 0..1_000 {
+        a.grade(&away.doomed_card);
+    }
+    a.engine.sync_now().expect("A pushes the reviews");
+    away.space.server.backdate(device_id(a), 91 * DAY_MS);
+    let before = requests(a).len();
+
+    let ticked = a
+        .engine
+        .tick(Budget {
+            wall: Duration::from_secs(60),
+            body_bytes: 8 * 1024,
+        })
+        .expect("the tick runs");
+
+    let sent = requests(a).split_off(before);
+    assert!(!ticked.is_done, "the budget ran out");
+    assert!(
+        sent.iter().any(|request| request.contains("lane=cold")),
+        "the budget lasted to the cold page: {sent:?}"
+    );
+    assert!(
+        sent.last().is_some_and(|request| is_release(request)),
+        "the release goes out, and the spent budget stops what follows: {sent:?}"
+    );
+    assert_eq!(away.space.server.count_leases(away.space.space_id()), 0);
+
+    a.engine.sync_now().expect("A syncs");
+    assert_eq!(opens(a), 1, "the server cleared the flag, so no second re-bootstrap");
 }

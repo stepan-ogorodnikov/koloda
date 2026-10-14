@@ -355,7 +355,7 @@ Out:
   Commit: Keep the old device's token when a copy forks
   Depends on: none
 
-- [ ] 6. Release a re-bootstrap's lease after a slow cleanup or a spent tick
+- [x] 6. Release a re-bootstrap's lease after a slow cleanup or a spent tick
   Goal (finding 7):
   - Before `finish_rebase` (`bootstrap.rs:129-132`), the bootstrap heartbeats the lease once, whatever its remaining
     TTL, so the absence cleanup starts with a full TTL.

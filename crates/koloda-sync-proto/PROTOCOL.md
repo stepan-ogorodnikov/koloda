@@ -1359,7 +1359,7 @@ A cycle that finds the barrier open resumes it before anything else, as a joiner
    or dropped the create as a duplicate.
 3. Catch up incrementally to a head observed after the lease, marking the same way.
    `cold` resumes from the lease's cold head, as in a join bootstrap.
-4. Clean up absence in one transaction.
+4. Heartbeat the lease, so the cleanup has a whole TTL before the release, then clean up absence in one transaction.
    An algorithm, template, deck, or card whose create origin has no mark of this generation is absent on the server.
    The exception is a create still in the outbox, in flight or not, or held: the server never took it.
    - Absent rows are deleted with their descendants, registers, origins, and pending writes, as an applied
@@ -1375,6 +1375,8 @@ A cycle that finds the barrier open resumes it before anything else, as a joiner
 
    It then sets the `cold` cursor and closes the barrier.
 5. Release the lease, then push what remains.
+   Releasing clears `rebase_required`, so a lapsed or skipped release costs a second re-bootstrap.
+   The heartbeat and the release spend no tick budget.
    Already-accepted envelopes replay; losers come back `stale`; a create the server fenced comes back `fenced`.
 
 Marks carry the generation, so nothing clears the marks of an earlier re-bootstrap.

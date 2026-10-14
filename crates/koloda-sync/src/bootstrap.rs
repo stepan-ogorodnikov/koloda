@@ -13,7 +13,7 @@ use koloda_sync_proto::registry::{Kind, Lane};
 use koloda_sync_proto::transport::{Empty, ErrorCode, Lease, Snapshot, SnapshotPage};
 use uuid::Uuid;
 
-use crate::client::local_error;
+use crate::client::{local_error, Client};
 use crate::engine::{merge, Session, Shared};
 use crate::error::SyncError;
 use crate::transport::Method;
@@ -119,7 +119,7 @@ impl Shared {
         };
 
         // WHY: the flag clears before the release, so a failed release costs a lingering lease, not a second bootstrap.
-        // A re-bootstrap's server flag clears only on release, so a failed release there costs a second one.
+        // A re-bootstrap's server flag clears only on release, so a release that gets no reply costs a second one.
         let cursor_cold = snapshot.head_cold;
         let removed = match kind {
             Bootstrap::Join => {
@@ -127,6 +127,10 @@ impl Shared {
                     .await?
             }
             Bootstrap::Rebase => {
+                // WHY: the absence cleanup can outlast what is left of the TTL, and a lease that lapses there makes
+                // the release a lapse, which leaves the server flag set. Like the release, this spends no tick
+                // budget: a refused heartbeat would start the re-bootstrap over on the next tick.
+                self.heartbeat(self.device_client(session), session, &mut lease).await?;
                 self.blocking(move |shared| finish_rebase(&shared.db, cursor_cold, &shared.starter))
                     .await?
             }
@@ -162,9 +166,11 @@ impl Shared {
         Ok(cursor_hot)
     }
 
+    // INVARIANT: the release spends no tick budget. A re-bootstrap's server flag clears only on release, so a release
+    // that a spent budget refused would start the re-bootstrap over on the next tick.
     async fn release(&self, session: &Session, lease: &OpenLease) -> Result<(), SyncError> {
         let released = self
-            .cycle_client(session)
+            .device_client(session)
             .call::<(), Empty>(
                 Method::Delete,
                 &format!("/v1/spaces/{}/bootstrap/{}", session.space, lease.id),
@@ -246,8 +252,11 @@ impl Shared {
         if lease.server_ms.saturating_add(lease.ttl_ms / 2) < lease.expires_at {
             return Ok(());
         }
-        let answer = self
-            .cycle_client(session)
+        self.heartbeat(self.cycle_client(session), session, lease).await
+    }
+
+    async fn heartbeat(&self, client: Client<'_>, session: &Session, lease: &mut OpenLease) -> Result<(), SyncError> {
+        let answer = client
             .call::<(), Lease>(
                 Method::Post,
                 &format!("/v1/spaces/{}/bootstrap/{}/heartbeat", session.space, lease.id),
