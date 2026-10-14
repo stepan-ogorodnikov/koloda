@@ -809,6 +809,7 @@ A file that is behind:
 3. Forks: `POST .../devices/fork` carries a nonce and the token the file minted, and returns a fresh device id.
    The file writes that token to the secret store under `sync.pending_token.{nonce}` before it stores the nonce.
    It reuses both until the switch, then removes the pending key.
+   The old device's token stays: a copy of the file on the same machine may share the secret store.
    A stored nonce whose key is gone is replaced by a new nonce and token.
    The same nonce and token from the same device return the same new device and write nothing.
    A different token for that nonce is `400 bad_request` and writes nothing.

@@ -19,6 +19,7 @@ A fork's, a claim's, or a space creation's token waits under `sync.pending_token
 new device, and nowhere else.
 A pending claim or creation keeps its nonce in `koloda`'s `sync_enrolling`, written after the token.
 Once the file records an enrollment, a device switch, or a detach, it deletes the tokens that no longer apply.
+A fork keeps the old device's token: another copy of the file on the machine may share the secret store and use it.
 A delete that fails then emits `Event::Error` and the call succeeds; a re-attach also removes the old device's token.
 
 ## Architectural Map

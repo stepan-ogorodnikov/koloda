@@ -108,7 +108,7 @@ fn two_live_copies_both_keep_syncing_and_a_write_on_the_copy_reaches_the_space()
     let library = space.device.library();
     space.device.engine.sync_now().expect("the library is pushed");
     let original = device_id(&space.device);
-    let copy = space.server.copy(&space.device);
+    let copy = space.server.copy_beside(&space.device);
     rename(&space.device, &library, "Original");
     space.device.engine.sync_now().expect("the original pushes");
     rename(&copy, &library, "Copy");
@@ -134,6 +134,12 @@ fn two_live_copies_both_keep_syncing_and_a_write_on_the_copy_reaches_the_space()
         copy.has_card(&card) && space.device.has_card(&other),
         "both keep syncing"
     );
+    space
+        .server
+        .relaunch(&space.device)
+        .engine
+        .sync_now()
+        .expect("the original still finds its token after a relaunch");
     assert_eq!(
         copy.engine.devices().expect("devices list").len(),
         3,

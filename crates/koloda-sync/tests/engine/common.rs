@@ -151,19 +151,15 @@ impl TestServer {
 
     /// A blank file with its own engine and transport.
     pub fn device(&self) -> Device {
-        self.device_on(
-            Database::in_memory().expect("in-memory database"),
-            MemorySecrets::default(),
-        )
+        self.device_on(Database::in_memory().expect("in-memory database"), Arc::default())
     }
 
     /// A blank file on disk at `path`, so the free-disk preflight reads it.
     pub fn device_at(&self, path: &Path) -> Device {
-        self.device_on(Database::init(path).expect("a database file"), MemorySecrets::default())
+        self.device_on(Database::init(path).expect("a database file"), Arc::default())
     }
 
-    fn device_on(&self, db: Database, secrets: MemorySecrets) -> Device {
-        let secrets = Arc::new(secrets);
+    fn device_on(&self, db: Database, secrets: Arc<MemorySecrets>) -> Device {
         let transport = Arc::new(RouterTransport::new(Arc::clone(&self.routes)));
         let disk = Arc::new(TestDisk(AtomicU64::new(u64::MAX)));
         let engine = Engine::start(
@@ -213,11 +209,21 @@ impl TestServer {
 
     /// A new engine on the same file and token, as after the app restarts.
     pub fn relaunch(&self, device: &Device) -> Device {
-        self.device_on(device.db.clone(), device.secrets.copy())
+        self.device_on(device.db.clone(), Arc::new(device.secrets.copy()))
     }
 
     /// A copy of the device's file with the same token, as a restored backup or a copied file holds.
     pub fn copy(&self, device: &Device) -> Device {
+        self.copy_with(device, Arc::new(device.secrets.copy()))
+    }
+
+    /// A copy of the device's file in another data directory on the same machine, sharing its secret store, as every
+    /// data directory of one OS user shares the desktop keyring.
+    pub fn copy_beside(&self, device: &Device) -> Device {
+        self.copy_with(device, Arc::clone(&device.secrets))
+    }
+
+    fn copy_with(&self, device: &Device, secrets: Arc<MemorySecrets>) -> Device {
         let mut conn = Connection::open_in_memory().expect("in-memory database");
         device
             .db
@@ -228,7 +234,7 @@ impl TestServer {
             .expect("the file copies");
         conn.pragma_update(None, "foreign_keys", "ON")
             .expect("foreign keys turn on");
-        self.device_on(Database::new(conn), device.secrets.copy())
+        self.device_on(Database::new(conn), secrets)
     }
 
     /// Moves a device's `last_seen` back by `ms`, as if it had made no request for that long.

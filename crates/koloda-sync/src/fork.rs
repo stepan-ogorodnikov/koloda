@@ -51,8 +51,10 @@ impl Shared {
             .await?;
         merge(changed, settled);
 
-        self.forget_secrets(vec![token_key(session.device), pending_token_key(&nonce)])
-            .await;
+        // INVARIANT: the old device's token stays. On the desktop every copy of the file on one machine shares the
+        // secret store, keyed by device id, so the other copy may still sync with it (PROTOCOL.md, Behind its own
+        // record). A rolled-back file leaves one unused secret behind.
+        self.forget_secrets(vec![pending_token_key(&nonce)]).await;
         session.device = device;
         session.token = token;
         Ok(())

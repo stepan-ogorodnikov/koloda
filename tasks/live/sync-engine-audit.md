@@ -335,7 +335,7 @@ Out:
   Commit: Defer an upload a proxy refuses without a sync reply
   Depends on: none
 
-- [ ] 5. Keep the old device's token when a copy forks
+- [x] 5. Keep the old device's token when a copy forks
   Goal (finding 3):
   - `fork` (`fork.rs:54-55`) removes only `sync.pending_token.<nonce>` after the switch.
     It leaves `sync.token.<old device>`, which another copy of the file may read from the same keyring.
