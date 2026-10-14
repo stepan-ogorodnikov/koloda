@@ -186,6 +186,37 @@ fn a_refused_upgrade_starts_one_cycle_and_retries_with_backoff() {
 }
 
 #[test]
+fn a_socket_closed_at_once_backs_off_and_one_that_delivered_a_nudge_reconnects_after_a_second() {
+    let space = Space::new();
+    let (library, timer, _events) = listening(&space);
+    nudge_while_listening(&space.device, &timer);
+    let (cycle_starts, socket_opens) = starts(&space.device);
+    // Drops the socket, waits out the cycle the close starts, then for the socket's reconnect wait.
+    let drop_and_wait = |wait: Duration| {
+        space.device.transport.drop_sockets();
+        next(&cycle_starts);
+        timer.wait_for_sleep(POLL);
+        timer.wait_for_sleep(wait);
+    };
+
+    for wait in [FIRST_RETRY, FIRST_RETRY * 2, FIRST_RETRY * 4] {
+        drop_and_wait(wait);
+        timer.advance(wait);
+        next(&socket_opens);
+        timer.wait_for_sleep(SILENT_FOR);
+    }
+    space.raw_push(
+        &library.deck,
+        None,
+        space.raw_stamp(1_000),
+        &Payload::DeckTitle(renamed_elsewhere()),
+    );
+    next(&cycle_starts);
+
+    drop_and_wait(FIRST_RETRY);
+}
+
+#[test]
 fn the_runner_polls_less_while_the_socket_is_up_and_cycles_when_it_drops() {
     let space = Space::new();
     let (_library, timer, _events) = listening(&space);

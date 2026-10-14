@@ -21,8 +21,8 @@ const SILENT_FOR: Duration = Duration::from_secs(75);
 
 /// How one try at the socket ended.
 enum Listened {
-    /// The socket opened, then closed.
-    Closed,
+    /// The socket opened, then closed; `has_lasted` once it delivered a frame past its first.
+    Closed { has_lasted: bool },
     /// The server answered the upgrade with an error reply.
     Refused,
     /// No connection, or no complete answer to the upgrade.
@@ -52,8 +52,13 @@ impl Shared {
                     is_refusal_reported = false;
                     continue;
                 }
-                Listened::Closed => {
-                    retry = FIRST_RETRY;
+                Listened::Closed { has_lasted } => {
+                    // WHY: a socket closed at once, by a proxy that closes upgrades or by another engine on the same
+                    // device id, keeps doubling the wait; it would otherwise reconnect, and start a cycle, every
+                    // second (PROTOCOL.md, Events).
+                    if has_lasted {
+                        retry = FIRST_RETRY;
+                    }
                     is_refusal_reported = false;
                 }
                 Listened::Refused => {
@@ -99,27 +104,35 @@ impl Shared {
             Err(_) => return Listened::Unreachable,
         };
         self.is_listening.store(true, Ordering::SeqCst);
+        // WHY: the server sends the heads as every socket's first frame, so only a later one, a ping every 30 seconds
+        // or a nudge, shows that the socket lasted.
+        let mut frames = 0;
         let listened = loop {
             let silence = timer.sleep(SILENT_FOR);
             tokio::select! {
-                delivery = events.next() => match delivery {
-                    Some(Delivery::Heads(heads)) => {
-                        // WHY: a run state that cannot be read costs at most one more cycle.
-                        if self.note_nudge(heads).unwrap_or(true) {
-                            self.triggers.fire(false);
-                        }
+                delivery = events.next() => {
+                    if delivery.is_some() {
+                        frames += 1;
                     }
-                    Some(Delivery::Alive) => {}
-                    None => break Listened::Closed,
-                },
-                () = silence => break Listened::Closed,
+                    match delivery {
+                        Some(Delivery::Heads(heads)) => {
+                            // WHY: a run state that cannot be read costs at most one more cycle.
+                            if self.note_nudge(heads).unwrap_or(true) {
+                                self.triggers.fire(false);
+                            }
+                        }
+                        Some(Delivery::Alive) => {}
+                        None => break Listened::Closed { has_lasted: frames > 1 },
+                    }
+                }
+                () = silence => break Listened::Closed { has_lasted: frames > 1 },
                 _ = target.changed() => break Listened::Retargeted,
             }
         };
         self.is_listening.store(false, Ordering::SeqCst);
         // WHY: the runner may be waiting out the longer poll it picked while the socket was up; a cycle now has it
         // poll at the shorter interval from here on.
-        if matches!(listened, Listened::Closed) {
+        if matches!(listened, Listened::Closed { .. }) {
             self.triggers.fire(false);
         }
         listened

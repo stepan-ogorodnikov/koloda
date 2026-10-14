@@ -392,7 +392,7 @@ Out:
   Commit: Report a tick as not done while transfers or rounds remain
   Depends on: none
 
-- [ ] 8. Keep the events socket's backoff across closes that come at once
+- [x] 8. Keep the events socket's backoff across closes that come at once
   Goal (finding 6):
   - `listen_forever` (`events.rs:54-57`) resets `retry` to 1 s after a close only when the socket delivered heads,
     or stayed open for `SILENT_FOR` (75 s).
@@ -400,12 +400,15 @@ Out:
   - A close still fires a cycle (`events.rs:121-123`).
     With the wait doubling, a socket closed at once costs one cycle per wait, not one per second.
   - `PROTOCOL.md` §Events (line 962): the wait resets once a socket delivered heads or stayed open 75 seconds.
+  - Implementation reset the wait only after a frame past a socket's first, a ping or a nudge.
+    The server sends the heads as every socket's first frame, so "delivered heads" held for every socket.
+    The server's ping every 30 seconds stands in for staying open 75 seconds, with no second timer.
   Constraints:
   - A retarget still reconnects at once and resets the wait.
   Done when:
   - an events test: a server that closes every socket as soon as it opens sees reconnects after 1, 2, then 4 s
     (`ManualTimer` sleeps);
-  - an events test: a socket that delivered heads, then closed, reconnects after 1 s;
+  - an events test: a socket that delivered a nudge, then closed, reconnects after 1 s;
   - `bun run check:push` green.
   Commit: Keep the events socket's backoff across closes that come at once
   Depends on: none

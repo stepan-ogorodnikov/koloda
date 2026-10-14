@@ -963,6 +963,8 @@ A nudge during a cycle waits for it to end: the cycle's own push moves the heads
 The heads its last reply reports tell whether another device moved them as well.
 A refused upgrade starts one cycle, which applies a restore or detaches as for any other call.
 The device reconnects after a close or an error, waiting 1 second and doubling up to 60.
+The wait goes back to 1 second only after a socket that delivered a frame past its first, a ping or a nudge.
+So a socket closed at once, as by a proxy or by another engine on the same device id, keeps doubling it.
 It reconnects at once when a cycle changes the file's device, token, or epoch.
 A socket that delivers nothing for 75 seconds counts as closed, and losing the socket starts a cycle.
 
