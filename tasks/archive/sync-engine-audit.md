@@ -1,6 +1,6 @@
 # Sync engine audit fixes
 
-Status: ready
+Status: done
 Guides: agents/IMPLEMENTATION-PLAN.md, agents/TASKS.md, crates/koloda-sync/README.md, crates/koloda-sync-proto/PROTOCOL.md, crates/koloda/src/repo/sync/README.md, agents/RUST.md, agents/DB.md, docs/decisions/TS-RUST-DOMAIN-MIRRORING.md, crates/koloda-server/README.md, apps/electron/README.md, agents/TESTING.md, agents/CODE-DOCUMENTATION.md, agents/BACKWARDS-COMPATIBILITY.md, agents/MARKDOWN.md, agents/VERIFY.md, agents/REVIEW.md
 Flow: local
 
@@ -464,4 +464,46 @@ Out:
 
 ## Outcome
 
-<what shipped>
+Every finding of the audit is settled: 1 and 3 to 11 are fixed, and 2 is settled by narrowing `PROTOCOL.md`.
+Nothing was skipped or left for a decision.
+
+Shipped, one Plan item per commit:
+
+- 1: client migration `V16` records why a file detached (`revoked` or `pair_again`).
+  The status reads it, so "pair again" outlives later cycles and a relaunch.
+- 11: `detach` revokes through `call_across_restore`, now in `restore.rs`.
+  A file holding an authoritative restore leaves with its rows and its hold, and a re-attach meets the hold again.
+- 5: `Detached`, `NotEnrolled`, `RestoreHeld`, `UnknownDevice`, `Revoked`, and `PairAgain` make the runner wait
+  for a trigger, with no poll, no backoff, and no `Error` event.
+  An unknown device opens no events socket.
+- 4: `SyncError::Transport` carries the status of a reply that is not a sync reply.
+  An upload refused with such a `4xx` defers while the other images go on; pushes still count it as lost.
+  The server README states the 16 MiB proxy body limit.
+- 3: a fork keeps the old device's token; the engine harness gained `copy_beside`, a copy sharing the secret store.
+- 7: a re-bootstrap heartbeats its lease before the absence cleanup, and the heartbeat and the release use
+  `device_client`, outside the tick budget.
+- 8: `tick` reports `is_done: false` when the rounds ran out or transfers are still due.
+- 6: the socket's reconnect wait resets only after a socket that delivered a frame past its first.
+- 10: `Opened::Refused` is a unit variant, and `HttpTransport::listen` no longer reads the refusal's body.
+- 9: tests pin the runner's error backoff, `MAX_LEASES`, and `MAX_RESTORES`.
+- 2: `PROTOCOL.md` §Skew guards says a re-attach's claim records without a skew check.
+
+Deviation from the Plan text, recorded in item 8: the server sends heads as every socket's first frame.
+So "delivered heads" would have reset the wait for every socket; a later frame, a ping or a nudge, resets it instead.
+In item 1 the stored reason replaced the report's "keep the stop on a `Detached` cycle".
+Self-review added one docs commit that states when the socket opens again after an unknown device.
+
+Checked: `bun run check:push` passed on every item's tip and on the final tip.
+`cargo test -p koloda-sync` runs 166 tests, up from 153.
+`cargo test -p koloda-electron` and `bunx nx test @koloda/db-sqlite` passed.
+Each new test failed with its fix reverted, checked by hand once.
+
+Not checked, for the human (desktop):
+
+- After a restore from a backup that predates this desktop, Settings → Sync asks to pair again, also after a minute
+  and after a relaunch.
+- After `koloda-server restore <backup> --authoritative --yes`, "Leave the space" works while the restore waits, and
+  the cards stay.
+- After leaving, the main-process log shows no sync error every minute.
+
+Follow-ups noticed: `koloda`'s `due_transfers` reads every due queue row per call (Scope), for a `koloda` sync audit.
