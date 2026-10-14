@@ -15,7 +15,7 @@ use koloda::repo::sync::apply::Hold;
 use koloda::repo::sync::repair::Starter;
 use koloda::repo::sync::restamp::pause_clock;
 use koloda::repo::sync::{
-    enroll_device, enrolled_device, store_enrolling, stored_enrolling, sync_state, Enrolling, SpaceRole,
+    enroll_device, enrolled_device, store_enrolling, stored_enrolling, sync_state, DetachReason, Enrolling, SpaceRole,
 };
 use koloda_sync_proto::registry::{Kind, Lane};
 use koloda_sync_proto::transport::{CreateSpace, Enrollment, ErrorCode, Heads, Platform};
@@ -303,7 +303,7 @@ impl Shared {
                 code: ErrorCode::Revoked,
                 ..
             }) => {
-                self.detach_locally().await?;
+                self.detach_locally(DetachReason::Revoked).await?;
                 Err(SyncError::Revoked)
             }
             // WHY: a cycle is settled once inside its host call and once more around it; the file detaches once.
@@ -311,9 +311,9 @@ impl Shared {
                 let is_detached = self
                     .blocking(|shared| sync_state(&shared.db))
                     .await?
-                    .is_some_and(|state| state.is_detached);
+                    .is_some_and(|state| state.detached.is_some());
                 if !is_detached {
-                    self.detach_locally().await?;
+                    self.detach_locally(DetachReason::PairAgain).await?;
                 }
                 Err(SyncError::PairAgain)
             }
@@ -544,7 +544,7 @@ impl Shared {
             })
             .await?
             .ok_or(SyncError::NotEnrolled)?;
-        if state.is_detached {
+        if state.detached.is_some() {
             return Err(SyncError::Detached);
         }
         let (Some(base), Some(token), Some(epoch)) = (state.server_url, token, state.epoch) else {

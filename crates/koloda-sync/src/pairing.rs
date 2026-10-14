@@ -206,7 +206,7 @@ impl Shared {
             .ok_or(SyncError::NotEnrolled)?;
         // INVARIANT: the refusal comes before the claim, so the code stays usable by another device. An attached file
         // has nothing to re-attach to.
-        if !state.is_detached {
+        if state.detached.is_none() {
             return Err(SyncError::CannotJoin(JoinMode::Reattach));
         }
         let stored = state.epoch.ok_or(SyncError::NotEnrolled)?;

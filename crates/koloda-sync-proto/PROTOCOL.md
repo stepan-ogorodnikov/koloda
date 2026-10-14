@@ -760,7 +760,7 @@ Rules:
   are applied.
 - The space carries an `epoch`: an opaque generation UUID that changes on every server restore.
 
-Detaching on the device records when, then deletes the token.
+Detaching on the device records when and why, then deletes the token.
 A stop or a failed delete between the two still leaves a detached file that can re-attach.
 Rows and sync tables stay, and capture keeps recording, for a later re-attach.
 A file whose token is gone detaches without a server call.
@@ -769,6 +769,7 @@ A `401 revoked` reply to any call detaches the file this way; `detach` revokes t
 A `401 revoked` or `401 unknown_device` whose epoch is not the one the device sent means a restore predates the
 device, or rotated every token (§Server restore).
 The file detaches the same way, and its status asks for a new pairing rather than reporting a revocation.
+The reason it records keeps the status asking after a relaunch.
 A `401 unknown_device` on the epoch the device sent stops the engine.
 The file stays attached until the user detaches it; `detach` then treats that reply as `revoked`.
 
@@ -1779,7 +1780,7 @@ Only native hosts write them; they are device-local runtime state, never synced.
 
 | Table | Key | Holds |
 | --- | --- | --- |
-| `sync_state` | Singleton | `device_id`, `space_id`, `epoch`, join phase, cursors, last HLC, stable high-water, `next_sender_seq`, last observed server seq, skew, role (creator or joiner), backfill phase stamps and watermark, rebase generation and barrier flag, fork nonce, clock pause, heal scan step and watermark, an authoritative restore waiting for the host, the image check a restore asks for |
+| `sync_state` | Singleton | `device_id`, `space_id`, `epoch`, join phase, cursors, last HLC, stable high-water, `next_sender_seq`, last observed server seq, skew, role (creator or joiner), backfill phase stamps and watermark, rebase generation and barrier flag, fork nonce, clock pause, heal scan step and watermark, an authoritative restore waiting for the host, the image check a restore asks for, when and why the file detached |
 | `sync_enrolling` | Singleton | A claim or space creation sent and not recorded: kind, nonce, and for a claim the code's hash, space id, and server URL; its token waits in the secret store |
 | `sync_stamps` | `(kind, id, group)` | LWW register (§Field groups and merge) |
 | `sync_origins` | `(kind, id, group)` | Stamp and sender of immutable rows; legacy timestamp floor for creates; the re-bootstrap generation that last delivered a create |

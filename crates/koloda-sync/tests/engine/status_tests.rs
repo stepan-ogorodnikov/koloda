@@ -147,3 +147,18 @@ fn status_names_why_the_last_cycle_stopped() {
         assert!(is_expected(&shown), "{name}: {shown:?}");
     }
 }
+
+#[test]
+fn a_revoked_file_still_shows_the_revocation_after_another_cycle_and_a_relaunch() {
+    let space = Space::new();
+    let b = joiner(&space, |_| {});
+    let id = b.state().expect("enrolled").device_id;
+    space.device.engine.revoke_device(id).expect("the device is revoked");
+    b.engine.sync_now().expect_err("the revoke detaches the file");
+
+    b.engine.sync_now().expect_err("a detached file does not sync");
+    let relaunched = space.server.relaunch(&b);
+
+    assert_eq!(state(&b), State::Stopped(Stop::Revoked));
+    assert_eq!(state(&relaunched), State::Stopped(Stop::Revoked));
+}

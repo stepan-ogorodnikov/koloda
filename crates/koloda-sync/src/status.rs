@@ -5,7 +5,7 @@ use std::sync::Arc;
 use koloda::repo::sync::apply::Hold;
 use koloda::repo::sync::attachments::transfer_counts;
 use koloda::repo::sync::outbox::{held_count, pending_count};
-use koloda::repo::sync::sync_state;
+use koloda::repo::sync::{sync_state, DetachReason};
 use koloda_sync_proto::transport::ErrorCode;
 
 use crate::engine::Shared;
@@ -132,10 +132,12 @@ impl Shared {
                 push_resumes_at_ms: None,
             });
         };
-        let shown = if state.is_detached {
-            State::Stopped(match run.stop {
-                Some(Stop::Restored) => Stop::Restored,
-                _ => Stop::Revoked,
+        // INVARIANT: a detached file shows the reason it recorded, never `run.stop`; every later cycle fails with
+        // `Detached`, and a relaunch starts with no run state (PROTOCOL.md, Devices).
+        let shown = if let Some(reason) = state.detached {
+            State::Stopped(match reason {
+                DetachReason::Revoked => Stop::Revoked,
+                DetachReason::PairAgain => Stop::Restored,
             })
         } else if state.is_restore_held {
             State::Stopped(Stop::AuthoritativeRestore)

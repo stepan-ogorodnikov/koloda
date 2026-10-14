@@ -60,6 +60,32 @@ impl SpaceRole {
     }
 }
 
+/// Why the file left its space; the status shows a revocation or asks for a new pairing (PROTOCOL.md, Devices).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum DetachReason {
+    /// The server revoked the device, or the user left the space.
+    Revoked,
+    /// A restore predates the device or rotated every token, so the file pairs again.
+    PairAgain,
+}
+
+impl DetachReason {
+    fn as_sql(self) -> &'static str {
+        match self {
+            DetachReason::Revoked => "revoked",
+            DetachReason::PairAgain => "pair_again",
+        }
+    }
+
+    fn from_sql(value: &str) -> Result<DetachReason, AppError> {
+        match value {
+            "revoked" => Ok(DetachReason::Revoked),
+            "pair_again" => Ok(DetachReason::PairAgain),
+            other => Err(protocol_error(format!("unknown detach reason {other}"))),
+        }
+    }
+}
+
 pub fn enroll_device(
     db: &Database,
     device_id: Uuid,
@@ -224,8 +250,8 @@ pub struct SyncState {
     /// The pending claim is of a file that holds only the untouched first-run seed. Such a file never asks the user:
     /// the cycle runs its Add.
     pub is_seed_import: bool,
-    /// The device was revoked or detached itself; the file sends nothing until it re-attaches.
-    pub is_detached: bool,
+    /// Why the file left its space, `None` while attached; a detached file sends nothing until it re-attaches.
+    pub detached: Option<DetachReason>,
     /// An authoritative restore waits for the host to accept it; the file sends nothing meanwhile.
     pub is_restore_held: bool,
     /// After a restore, the file asks the server once which linked images it lacks.
@@ -241,14 +267,15 @@ pub fn sync_state(db: &Database) -> Result<Option<SyncState>, AppError> {
                 .query_row(
                     r#"
                     SELECT device_id, space_id, server_url, cursor_hot, cursor_cold, is_bootstrapping,
-                           join_phase = 'import_pending', detached_at IS NOT NULL, is_rebasing,
+                           join_phase = 'import_pending', detach_reason, is_rebasing,
                            is_clock_paused, epoch, authoritative_epoch IS NOT NULL, is_checking_attachments,
                            heal_step IS NOT NULL OR backfill_step IS NOT NULL
                     FROM sync_state WHERE id = 1
                     "#,
                     [],
                     |row| {
-                        let ids: (Vec<u8>, Vec<u8>, Option<Vec<u8>>) = (row.get(0)?, row.get(1)?, row.get(10)?);
+                        let raw: (Vec<u8>, Vec<u8>, Option<Vec<u8>>, Option<String>) =
+                            (row.get(0)?, row.get(1)?, row.get(10)?, row.get(7)?);
                         let state = SyncState {
                             device_id: Uuid::nil(),
                             space_id: Uuid::nil(),
@@ -259,24 +286,25 @@ pub fn sync_state(db: &Database) -> Result<Option<SyncState>, AppError> {
                             is_bootstrapping: row.get(5)?,
                             is_import_pending: row.get(6)?,
                             is_seed_import: false,
-                            is_detached: row.get(7)?,
+                            detached: None,
                             is_rebasing: row.get(8)?,
                             is_clock_paused: row.get(9)?,
                             is_restore_held: row.get(11)?,
                             is_checking_attachments: row.get(12)?,
                             is_scanning: row.get(13)?,
                         };
-                        Ok((ids, state))
+                        Ok((raw, state))
                     },
                 )
                 .optional()?;
-            row.map(|((device_id, space_id, epoch), state)| {
+            row.map(|((device_id, space_id, epoch, detached), state)| {
                 Ok(SyncState {
                     device_id: Uuid::from_slice(&device_id).map_err(protocol_error)?,
                     space_id: Uuid::from_slice(&space_id).map_err(protocol_error)?,
                     epoch: epoch
                         .map(|epoch| Uuid::from_slice(&epoch).map_err(protocol_error))
                         .transpose()?,
+                    detached: detached.as_deref().map(DetachReason::from_sql).transpose()?,
                     is_seed_import: state.is_import_pending && join::holds_only_untouched_seed(conn)?,
                     ..state
                 })
@@ -286,11 +314,14 @@ pub fn sync_state(db: &Database) -> Result<Option<SyncState>, AppError> {
     })
 }
 
-/// Records that the file left its space at `now`; its rows and sync tables stay.
-pub fn detach(db: &Database, now: i64) -> Result<(), AppError> {
+/// Records that the file left its space at `now`, and why; its rows and sync tables stay.
+pub fn detach(db: &Database, now: i64, reason: DetachReason) -> Result<(), AppError> {
     throw_known_error(error_codes::DB_UPDATE, || {
         db.with_conn(|conn| {
-            conn.execute("UPDATE sync_state SET detached_at = ?1 WHERE id = 1", params![now])?;
+            conn.execute(
+                "UPDATE sync_state SET detached_at = ?1, detach_reason = ?2 WHERE id = 1",
+                params![now, reason.as_sql()],
+            )?;
             Ok(())
         })
     })

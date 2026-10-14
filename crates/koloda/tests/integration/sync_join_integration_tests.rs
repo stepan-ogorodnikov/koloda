@@ -19,7 +19,9 @@ use koloda::repo::sync::backfill::{backfill_batch, Backfill};
 use koloda::repo::sync::join::{
     add_to_space, begin_import, join_mode, probe_ids, replace_with_space, JoinMode, Known, REMINT_CHUNK,
 };
-use koloda::repo::sync::{detach, enroll_device, store_enrolling, stored_enrolling, Enrolling, SpaceRole};
+use koloda::repo::sync::{
+    detach, enroll_device, store_enrolling, stored_enrolling, DetachReason, Enrolling, SpaceRole,
+};
 use koloda::repo::templates::{delete_template, get_template, update_template};
 use koloda_sync_proto::registry::Kind;
 use rusqlite::types::Value;
@@ -231,7 +233,7 @@ fn join_mode_follows_the_files_rows_and_space() {
                 let db = seeded_db();
                 enroll_device(&db, Uuid::now_v7(), OTHER_SPACE, SpaceRole::Joiner, EPOCH, SERVER_URL)
                     .expect("database enrolls");
-                detach(&db, 1).expect("database detaches");
+                detach(&db, 1, DetachReason::Revoked).expect("database detaches");
                 db
             },
             JoinMode::UntouchedSeed,

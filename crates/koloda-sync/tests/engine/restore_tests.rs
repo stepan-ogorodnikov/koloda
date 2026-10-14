@@ -22,7 +22,7 @@ use koloda_sync_proto::registry::{Group, Kind, Lane};
 use koloda_sync_proto::transport::{ErrorCode, IssuePairing, Outcome, Pairing, RestoreMode};
 use uuid::Uuid;
 
-use crate::common::{error_reply, system_ms, Device, Fault, Space, SERVER_URL};
+use crate::common::{error_reply, system_ms, Device, Fault, Space, TestServer, SERVER_URL};
 use crate::fixtures::{seed_settings, Library, BACK, FRONT};
 
 const MINUTE_MS: i64 = 60 * 1000;
@@ -482,9 +482,15 @@ fn reattach(device: &Device, code: &str, url: &str) {
     assert_eq!(joined.mode, JoinMode::Reattach);
 }
 
-fn is_told_to_pair_again(device: &Device) -> bool {
+/// Whether the next cycle tells `device` to pair again, and the status still asks after another cycle and a relaunch.
+fn is_told_to_pair_again(server: &TestServer, device: &Device) -> bool {
+    let is_asking =
+        |device: &Device| device.engine.status().expect("status reads").state == State::Stopped(Stop::Restored);
     matches!(device.engine.sync_now(), Err(SyncError::PairAgain))
-        && device.engine.status().expect("status reads").state == State::Stopped(Stop::Restored)
+        && is_asking(device)
+        && matches!(device.engine.sync_now(), Err(SyncError::Detached))
+        && is_asking(device)
+        && is_asking(&server.relaunch(device))
 }
 
 #[test]
@@ -500,7 +506,7 @@ fn a_device_enrolled_after_the_backup_pairs_again_and_its_writes_reach_the_space
     pair.space.server.restore(&backup, RestoreMode::Heal);
     a.sync();
 
-    assert!(is_told_to_pair_again(&late));
+    assert!(is_told_to_pair_again(&pair.space.server, &late));
     assert!(late.state().is_some() && late.count("SELECT detached_at IS NOT NULL FROM sync_state") == 1);
     let code = a.engine.issue_pairing(None).expect("A issues a code").code;
     reattach(&late, &code, SERVER_URL);
@@ -529,7 +535,7 @@ fn rotated_tokens_make_every_device_pair_again_without_losing_a_write() {
     );
 
     for device in [a, &pair.b] {
-        assert!(is_told_to_pair_again(device));
+        assert!(is_told_to_pair_again(&pair.space.server, device));
         reattach(device, &break_glass_code(&pair.space), SERVER_URL);
         device.sync();
     }
@@ -548,7 +554,7 @@ fn a_re_attach_after_an_authoritative_restore_holds_then_converges() {
 
     pair.space.server.restore(&backup, RestoreMode::Authoritative);
     accept(a);
-    assert!(is_told_to_pair_again(&late));
+    assert!(is_told_to_pair_again(&pair.space.server, &late));
     let code = a.engine.issue_pairing(None).expect("A issues a code").code;
     reattach(&late, &code, SERVER_URL);
 

@@ -1250,6 +1250,13 @@
           "dflt_value": "0"
         },
         {
+          "name": "detach_reason",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0,
+          "dflt_value": null
+        },
+        {
           "name": "detached_at",
           "type": "INTEGER",
           "notnull": 0,

@@ -4,7 +4,7 @@
 use std::sync::Arc;
 
 use koloda::app::utility::get_current_timestamp;
-use koloda::repo::sync::{detach, enrolled_device};
+use koloda::repo::sync::{detach, enrolled_device, DetachReason};
 use koloda_sync_proto::transport::{DeviceList, Empty, ErrorCode, Platform};
 use uuid::Uuid;
 
@@ -74,7 +74,7 @@ impl Shared {
             Err(SyncError::NotEnrolled) => {
                 let is_enrolled = self.blocking(|shared| enrolled_device(&shared.db)).await?.is_some();
                 return if is_enrolled {
-                    self.detach_locally().await
+                    self.detach_locally(DetachReason::Revoked).await
                 } else {
                     Err(SyncError::NotEnrolled)
                 };
@@ -97,13 +97,13 @@ impl Shared {
             | Err(SyncError::Server {
                 code: ErrorCode::Revoked | ErrorCode::UnknownDevice,
                 ..
-            }) => self.detach_locally().await,
+            }) => self.detach_locally(DetachReason::Revoked).await,
             Err(error) => Err(error),
         }
     }
 
-    /// Marks the file detached, then forgets its token; rows and sync tables stay for a later re-attach.
-    pub(crate) async fn detach_locally(self: &Arc<Self>) -> Result<(), SyncError> {
+    /// Marks the file detached for `reason`, then forgets its token; rows and sync tables stay for a later re-attach.
+    pub(crate) async fn detach_locally(self: &Arc<Self>, reason: DetachReason) -> Result<(), SyncError> {
         self.stop_listening();
         let device = self
             .blocking(|shared| enrolled_device(&shared.db))
@@ -111,7 +111,7 @@ impl Shared {
             .ok_or(SyncError::NotEnrolled)?;
         // INVARIANT: the mark comes before the token goes, so a stop or a failed delete between them leaves a
         // detached file that pairs again, never an attached one with no token. A re-attach removes a token left.
-        self.blocking(move |shared| detach(&shared.db, get_current_timestamp()?))
+        self.blocking(move |shared| detach(&shared.db, get_current_timestamp()?, reason))
             .await?;
         self.forget_secrets(vec![token_key(device)]).await;
         Ok(())

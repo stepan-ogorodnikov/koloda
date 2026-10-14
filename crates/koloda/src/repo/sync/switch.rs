@@ -49,7 +49,7 @@ pub fn switch_device(
                 r#"
                 UPDATE sync_state
                 SET device_id = ?1, next_sender_seq = ?2, last_observed_server_seq = 0, detached_at = NULL,
-                    fork_nonce = NULL, server_url = COALESCE(?3, server_url)
+                    detach_reason = NULL, fork_nonce = NULL, server_url = COALESCE(?3, server_url)
                 WHERE id = 1
                 "#,
                 params![new_device.as_bytes().as_slice(), next_sender_seq, server_url],

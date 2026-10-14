@@ -228,7 +228,7 @@ Out:
 
 ## Plan
 
-- [ ] 1. Keep the pair-again status across cycles and relaunches
+- [x] 1. Keep the pair-again status across cycles and relaunches
   Goal (finding 1):
   - Client migration `crates/koloda/src/migrations/V16__sync_detach_reason.sql` adds `sync_state.detach_reason`
     (`text`): `revoked` or `pair_again`.

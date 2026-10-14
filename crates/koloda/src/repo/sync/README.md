@@ -92,9 +92,10 @@ host accepts it.
 - `next_sender_seq` and `last_observed_server_seq` rise to the server's record, so the reset file is neither a seq
   reuser nor read as behind.
 
-**Detach** — `detach` records when the file left its space; the engine sends nothing for a detached file, and
-capture keeps recording for a later re-attach.
+**Detach** — `detach` records when the file left its space, and why; the engine sends nothing for a detached file,
+and capture keeps recording for a later re-attach.
 
+- The reason is `revoked` or `pair_again`, and the engine's status shows it; `switch_device` clears it with the time.
 - The engine records the detach before it deletes the token, so a failed delete still leaves the file detached.
   That delete emits `Event::Error` and the detach succeeds; a re-attach removes the token it left.
 
