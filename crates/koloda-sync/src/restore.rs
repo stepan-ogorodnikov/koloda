@@ -6,10 +6,12 @@ use std::sync::Arc;
 use koloda::repo::sync::authoritative::{hold_authoritative, reset_for_authoritative};
 use koloda::repo::sync::heal::begin_heal;
 use koloda_sync_proto::transport::{Restore, RestoreMode};
+use serde::de::DeserializeOwned;
 use uuid::Uuid;
 
-use crate::engine::Shared;
+use crate::engine::{Session, Shared};
 use crate::error::SyncError;
+use crate::transport::Method;
 
 impl Shared {
     /// Applies a restore the server reported and returns the epoch the file is on now. An authoritative restore is
@@ -37,6 +39,37 @@ impl Shared {
                 self.blocking(move |shared| hold_authoritative(&shared.db, epoch, last_sender_seq))
                     .await?;
                 Err(SyncError::RestoreHeld)
+            }
+        }
+    }
+
+    /// One device call that a re-attach or a detach makes across server restores. A `Restored` answer is applied, the
+    /// session moves to that epoch, and the call is repeated. An authoritative restore is held and the call still
+    /// repeats, so the switch or the revoke can finish.
+    pub(crate) async fn call_across_restore<T: DeserializeOwned>(
+        self: &Arc<Self>,
+        session: &mut Session,
+        method: Method,
+        path: &str,
+    ) -> Result<T, SyncError> {
+        loop {
+            match self
+                .device_client(session)
+                .call::<(), T>(method, path, Some(&session.token), None)
+                .await
+            {
+                Ok(reply) => return Ok(reply.ok),
+                Err(SyncError::Restored {
+                    restore,
+                    last_sender_seq,
+                }) => {
+                    let epoch = Uuid::from_bytes(restore.epoch);
+                    match self.apply_restore(restore, last_sender_seq).await {
+                        Ok(_) | Err(SyncError::RestoreHeld) => session.epoch = epoch,
+                        Err(error) => return Err(error),
+                    }
+                }
+                Err(error) => return Err(error),
             }
         }
     }

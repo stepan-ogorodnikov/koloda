@@ -16,7 +16,6 @@ use koloda_sync_proto::transport::{
     code_hash, ClaimPairing, DeviceInfo, EntityId, ErrorCode, IssuePairing, KnownIds, KnownState, Pairing,
     PairingClaim, PairingPreview, PreviewPairing, Receipt, Receipts, MAX_KNOWN_IDS, MAX_RECEIPT_RANGE,
 };
-use serde::de::DeserializeOwned;
 use uuid::Uuid;
 
 use crate::client::{local_error, server_url};
@@ -263,36 +262,6 @@ impl Shared {
             hint: claim.hint,
             known_ids: 0,
         })
-    }
-
-    /// One call during a re-attach. A `Restored` answer is applied, the session moves to that epoch, and the call
-    /// is repeated. An authoritative restore is held and the call still repeats, so the switch can finish.
-    async fn call_across_restore<T: DeserializeOwned>(
-        self: &Arc<Self>,
-        session: &mut Session,
-        method: Method,
-        path: &str,
-    ) -> Result<T, SyncError> {
-        loop {
-            match self
-                .device_client(session)
-                .call::<(), T>(method, path, Some(&session.token), None)
-                .await
-            {
-                Ok(reply) => return Ok(reply.ok),
-                Err(SyncError::Restored {
-                    restore,
-                    last_sender_seq,
-                }) => {
-                    let epoch = Uuid::from_bytes(restore.epoch);
-                    match self.apply_restore(restore, last_sender_seq).await {
-                        Ok(_) | Err(SyncError::RestoreHeld) => session.epoch = epoch,
-                        Err(error) => return Err(error),
-                    }
-                }
-                Err(error) => return Err(error),
-            }
-        }
     }
 
     /// The old sender's receipts for pending seqs at or below `last_sender_seq`, across a restore on any page.

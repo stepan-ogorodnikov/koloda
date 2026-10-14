@@ -1458,6 +1458,7 @@ Tombstones are terminal, so a re-pushed delete kills a restored live row whateve
 Examples: a mass delete, a bad import, a device gone wrong.
 A client on the old epoch first records the restore and sends nothing until its host accepts it.
 The host warns before it starts, and a relaunch keeps the record.
+The file can still leave the space meanwhile: its revoke names the restored epoch, and the record stays.
 A heal or bootstrap in progress gives way to it.
 Accepting deletes every product row and every sync table but the sync state and a pending claim.
 Settings, conversations, and attachments stay; `learning` stays at stamp zero for the space's document to overlay.

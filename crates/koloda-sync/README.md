@@ -35,6 +35,7 @@ A delete that fails then emits `Event::Error` and the call succeeds; a re-attach
   is settled.
 - `src/restore.rs` — a server restore the server reported: heal starts the re-push scan; an authoritative restore is
   held until the host calls `accept_restore`, which discards local data so the next cycle bootstraps.
+  A re-attach's and a detach's calls apply a restore they meet and repeat on its epoch.
 - `src/fork.rs` — a file behind its own record forks to a new device id: the pending token and nonce, stored before
   the call, receipts, and the switch.
 - `src/pairing.rs` — pairing codes, preview, and joining a space: blank, seed-only, a used file through Add or
@@ -51,8 +52,8 @@ A delete that fails then emits `Event::Error` and the call succeeds; a re-attach
   host among the reasons), the lane held at an envelope this app cannot read, whether the space is over its quota,
   whether bulk transfers wait on a metered network, when a push waiting for server time resumes, and how far behind
   each lane is.
-- `src/devices.rs` — the device list, revoking another device, and detaching this file, also when its token is gone
-  or the server no longer knows it.
+- `src/devices.rs` — the device list, revoking another device, and detaching this file, also when its token is gone,
+  the server no longer knows it, or an authoritative restore waits for the host.
 - `src/metered.rs` — bulk transfers on a metered network: the network the host reports, the bootstrap and outbox
   checks, the allowance counted work spends, and the call that lifts the pause.
   The push's top-up records the pause whenever it finds the allowance spent with heal or backfill rows left, so a

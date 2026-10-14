@@ -463,6 +463,36 @@ fn a_held_restore_survives_a_relaunch_and_deletes_nothing() {
     assert_eq!(relaunched.count("SELECT COUNT(*) FROM sync_outbox"), 1);
 }
 
+#[test]
+fn a_device_holding_an_authoritative_restore_leaves_with_its_rows_and_re_attaches_into_the_hold() {
+    let pair = pair();
+    let a = pair.a();
+    let backup = pair.space.server.backup();
+    let waiting = a.add_card(&pair.library.deck, &pair.library.template, "waiting");
+    pair.space.server.restore(&backup, RestoreMode::Authoritative);
+    a.engine.sync_now().expect_err("the restore waits for the host");
+    let own = a.state().expect("enrolled").device_id;
+
+    a.engine.detach().expect("the device leaves while the restore waits");
+
+    assert!(a.has_card(&waiting), "leaving keeps the rows");
+    assert_eq!(a.count("SELECT COUNT(*) FROM sync_outbox"), 1, "and the pending write");
+    assert_eq!(
+        a.engine.status().expect("status reads").state,
+        State::Stopped(Stop::Revoked)
+    );
+    accept(&pair.b);
+    let listed = pair.b.engine.devices().expect("the list reads");
+    let record = listed.iter().find(|device| device.id == own).expect("A is listed");
+    assert!(record.revoked_at.is_some(), "the revoke reached the restored space");
+
+    reattach(a, &break_glass_code(&pair.space), SERVER_URL);
+    assert!(is_held(a), "the re-attach meets the same restore");
+    accept(a);
+    assert!(!a.has_card(&waiting), "the write after the backup is gone");
+    assert_eq!(a.ids("cards"), pair.b.ids("cards"));
+}
+
 /// A code for `device`'s space from the setup token, as `koloda-server pair` gives one when no device can.
 fn break_glass_code(space: &Space) -> String {
     let (status, reply) = space.server.post::<_, Pairing>(

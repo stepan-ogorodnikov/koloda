@@ -260,7 +260,7 @@ Out:
   Commit: Keep the pair-again status across cycles and relaunches
   Depends on: none
 
-- [ ] 2. Leave a space while an authoritative restore is held
+- [x] 2. Leave a space while an authoritative restore is held
   Goal (finding 11, per question 2):
   - `detach` (`devices.rs:84-102`) sends its revoke through `call_across_restore` (`pairing.rs:270-296`).
     Move that helper where both modules use it, or make it `pub(crate)`.

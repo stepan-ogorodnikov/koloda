@@ -67,7 +67,7 @@ impl Shared {
 
     /// Revokes this file's own device, then detaches the file.
     pub(crate) async fn detach(self: &Arc<Self>) -> Result<(), SyncError> {
-        let session = match self.session().await {
+        let mut session = match self.session().await {
             Ok(session) => session,
             // WHY: an attached file whose token is gone can make no server call; nothing else could detach it or let
             // it pair again.
@@ -81,14 +81,12 @@ impl Shared {
             }
             Err(error) => return Err(error),
         };
+        // INVARIANT: leaving works while an authoritative restore waits for the host. The revoke repeats on the restored
+        // epoch, and the hold stays, so a later re-attach to this space takes the same path (PROTOCOL.md, Server
+        // restore).
+        let path = format!("/v1/spaces/{}/devices/{}", session.space, session.device);
         let revoked = self
-            .device_client(&session)
-            .call::<(), Empty>(
-                Method::Delete,
-                &format!("/v1/spaces/{}/devices/{}", session.space, session.device),
-                Some(&session.token),
-                None,
-            )
+            .call_across_restore::<Empty>(&mut session, Method::Delete, &path)
             .await;
         match revoked {
             // WHY: a device another one revoked first is detached all the same. So is one the server no longer knows
