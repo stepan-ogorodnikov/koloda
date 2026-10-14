@@ -64,7 +64,8 @@ pub struct Budget {
     pub body_bytes: usize,
 }
 
-/// What a tick did; a tick that ran out of budget leaves the rest for the next one, which resumes from the cursors.
+/// What a tick did. A tick that ran out of budget or rounds, or left transfers due, is not done; the next one resumes
+/// from the cursors and the queue.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Ticked {
     pub changed: Vec<Kind>,
@@ -167,7 +168,7 @@ impl Shared {
             let (_, result) = self.run_cycle(None).await;
             wait = match result {
                 // WHY: a bootstrap paused on a metered network waits for the host, not for a retry.
-                Ok(()) | Err(SyncError::BudgetSpent | SyncError::Metered { .. }) => {
+                Ok(_) | Err(SyncError::BudgetSpent | SyncError::Metered { .. }) => {
                     backoff = FIRST_BACKOFF;
                     let poll = if self.is_listening.load(Ordering::SeqCst) {
                         POLL_LISTENING

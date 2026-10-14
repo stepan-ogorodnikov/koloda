@@ -9,7 +9,7 @@ use koloda_sync_proto::registry::Kind;
 use koloda_sync_proto::transport::RestoreMode;
 use uuid::Uuid;
 
-use crate::common::{system_ms, Device, Space};
+use crate::common::{system_ms, Device, Fault, Space};
 use crate::fixtures::{review, FRONT};
 use crate::runner_support::{channel_sink, wait_for, ManualTimer, COALESCE, POLL};
 
@@ -285,6 +285,57 @@ fn a_tick_stops_between_pages_once_its_bytes_are_spent() {
 
     assert!(second.is_done, "the next tick finishes");
     assert_eq!(space.device.reviews(&card), 1, "it resumes from the `cold` cursor");
+}
+
+#[test]
+fn a_tick_whose_rounds_run_out_before_catch_up_is_not_done() {
+    // WHY: the cycle's round limit (`MAX_ROUNDS`); a later round would catch up.
+    const ROUNDS: usize = 8;
+    let space = Space::new();
+    let library = space.device.library();
+    space.device.engine.sync_now().expect("the library is pushed");
+    let now = i64::try_from(system_ms()).expect("now fits");
+    let review_item = || {
+        (
+            Uuid::now_v7().to_string(),
+            Some(library.card.clone()),
+            space.raw_stamp(0),
+            review(&library.card, now),
+        )
+    };
+    let (status, _) = space
+        .server
+        .request::<koloda_sync_proto::transport::PushReply>(space.raw_request(vec![review_item()]));
+    assert_eq!(status, 200, "a review waits in `cold`, so the first round pulls it");
+    // WHY: during each round's `hot` pull another device renames the deck and grades, so the `cold` pull after it
+    // reports a `hot` head past the cursor, and the next round has `cold` to pull again.
+    for round in 0..ROUNDS {
+        let rename = Payload::DeckTitle(Title {
+            title: format!("Renamed {round}"),
+            updated_at: Some(now),
+        });
+        let push = space.raw_request(vec![
+            (library.deck.clone(), None, space.raw_stamp(0), rename),
+            review_item(),
+        ]);
+        space.device.transport.fault_on("lane=hot", Fault::After(vec![push]));
+    }
+    let budget = Budget {
+        wall: Duration::from_secs(60),
+        body_bytes: usize::MAX,
+    };
+
+    let before = space.device.transport.sent().len();
+    let first = space.device.engine.tick(budget).expect("the tick runs");
+    let hot_pulls = space.device.transport.sent()[before..]
+        .iter()
+        .filter(|request| request.url.contains("lane=hot"))
+        .count();
+    let second = space.device.engine.tick(budget).expect("the tick runs");
+
+    assert_eq!(hot_pulls, ROUNDS, "every round pulled `hot` and found more");
+    assert!(!first.is_done, "the rounds ran out before catch-up");
+    assert!(second.is_done, "the next tick catches up");
 }
 
 #[test]

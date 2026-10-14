@@ -1191,6 +1191,7 @@ They carry no stamps, so they also run when the rounds stop for clock skew or a 
 They stop early when a trigger arrives, so the rows a local change wrote go out first, and after 64 MiB of bodies.
 When transfers are still due, the next cycle starts at once instead of waiting for the poll.
 A bounded tick spends its byte budget on transfer bodies as on pull pages.
+It is not done while its budget, its rounds, or the transfer limits left work for the next tick.
 
 ### Outbox
 

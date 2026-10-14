@@ -157,7 +157,7 @@ impl Engine {
     pub fn sync_now(&self) -> Result<Vec<Kind>, SyncError> {
         self.run(|shared| async move {
             let (changed, result) = shared.run_cycle(None).await;
-            result.map(|()| changed)
+            result.map(|_| changed)
         })
     }
 
@@ -165,7 +165,7 @@ impl Engine {
     pub fn tick(&self, budget: Budget) -> Result<Ticked, SyncError> {
         self.run(|shared| async move {
             match shared.run_cycle(Some(budget)).await {
-                (changed, Ok(())) => Ok(Ticked { changed, is_done: true }),
+                (changed, Ok(is_done)) => Ok(Ticked { changed, is_done }),
                 (changed, Err(SyncError::BudgetSpent)) => Ok(Ticked {
                     changed,
                     is_done: false,
@@ -325,9 +325,9 @@ impl Shared {
         }
     }
 
-    /// Runs one cycle under the cycle lock, records how it ended, and tells the host. The kinds changed before an
-    /// error still come back, since their rows changed all the same.
-    pub(crate) async fn run_cycle(self: &Arc<Self>, budget: Option<Budget>) -> (Vec<Kind>, Result<(), SyncError>) {
+    /// Runs one cycle under the cycle lock, records how it ended, and tells the host; `Ok(false)` when work is left.
+    /// The kinds changed before an error still come back, since their rows changed all the same.
+    pub(crate) async fn run_cycle(self: &Arc<Self>, budget: Option<Budget>) -> (Vec<Kind>, Result<bool, SyncError>) {
         let _cycle = self.cycle.lock().await;
         let mut changed = Vec::new();
         let result = self.recorded_cycle(budget, &mut changed).await;
@@ -350,7 +350,7 @@ impl Shared {
         self: &Arc<Self>,
         budget: Option<Budget>,
         changed: &mut Vec<Kind>,
-    ) -> Result<(), SyncError> {
+    ) -> Result<bool, SyncError> {
         *self.lock(&self.spending)? = budget.map(Spending::new);
         self.lock(&self.run_state)?.is_syncing = true;
         self.emit_status().await;
@@ -369,7 +369,7 @@ impl Shared {
             self.triggers.fire(false);
         }
         match &result {
-            Ok(()) => {
+            Ok(_) => {
                 run.stop = None;
                 run.last_success_ms = get_current_timestamp().ok();
             }
@@ -383,7 +383,8 @@ impl Shared {
         result
     }
 
-    async fn sync(self: &Arc<Self>, changed: &mut Vec<Kind>) -> Result<(), SyncError> {
+    /// Runs the cycle, then the transfers; `Ok(false)` when the rounds ran out or transfers are still due.
+    async fn sync(self: &Arc<Self>, changed: &mut Vec<Kind>) -> Result<bool, SyncError> {
         let mut session = self.session().await?;
         let mut result = self.cycle(&mut session, changed).await;
         // INVARIANT: a restore is applied before the file sends anything else on the new epoch; the cycle then starts
@@ -406,20 +407,20 @@ impl Shared {
         }
         // WHY: transfers carry no stamps, so they run while push and apply pause for the clock (PROTOCOL.md, Cycle).
         let result = match result {
-            Ok(()) => self.check_missing_attachments(&session).await,
+            Ok(is_caught_up) => self.check_missing_attachments(&session).await.map(|()| is_caught_up),
             other => other,
         };
         let transferred = match &result {
-            Ok(()) | Err(SyncError::ClockSkew { .. }) => self.transfer(&session).await,
+            Ok(_) | Err(SyncError::ClockSkew { .. }) => self.transfer(&session).await,
             Err(_) => Ok(false),
         };
         match (result, transferred) {
-            (Err(error), _) | (Ok(()), Err(error)) => Err(error),
-            (Ok(()), Ok(is_pending)) => {
+            (Err(error), _) | (Ok(_), Err(error)) => Err(error),
+            (Ok(is_caught_up), Ok(is_pending)) => {
                 if is_pending {
                     self.triggers.fire(false);
                 }
-                Ok(())
+                Ok(is_caught_up && !is_pending)
             }
         }
     }

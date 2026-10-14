@@ -376,7 +376,7 @@ Out:
   Commit: Release a re-bootstrap's lease after a slow cleanup or a spent tick
   Depends on: none
 
-- [ ] 7. Report a tick as not done while transfers or rounds remain
+- [x] 7. Report a tick as not done while transfers or rounds remain
   Goal (finding 8):
   - `sync` (`engine.rs:384-423`) reports whether work is left.
     Either transfers are still due (cut at `CYCLE_BYTES` or by a trigger, `attachments.rs:96-98`), or the cycle's

@@ -28,12 +28,12 @@ const MAX_ROUNDS: usize = 8;
 
 impl Shared {
     /// Bootstraps a joining file, or resumes a re-bootstrap, first. Then runs rounds until the outbox is empty and both
-    /// cursors are at head, and repairs dangling learning defaults.
+    /// cursors are at head, and repairs dangling learning defaults. Returns `false` when the rounds ran out first.
     pub(crate) async fn cycle(
         self: &Arc<Self>,
         session: &mut Session,
         changed: &mut Vec<Kind>,
-    ) -> Result<(), SyncError> {
+    ) -> Result<bool, SyncError> {
         let mut state = self
             .blocking(|shared| koloda::repo::sync::sync_state(&shared.db))
             .await?
@@ -42,7 +42,7 @@ impl Shared {
         // A file that held only the untouched seed never asks, so the Add its join left after a failed probe runs here.
         if state.is_import_pending {
             if !state.is_seed_import {
-                return Ok(());
+                return Ok(true);
             }
             let known = self.probe(session).await?;
             self.blocking(move |shared| add_to_space(&shared.db, &known)).await?;
@@ -192,17 +192,17 @@ impl Shared {
             // WHY: before catch-up, a referent a default names may still be on its way; after it, a missing one
             // is dead or never existed (PROTOCOL.md, Referents are not parents). A `hot` hold is not catch-up.
             if is_hot_held {
-                return Ok(());
+                return Ok(true);
             }
             let repaired = self
                 .blocking(|shared| repair_dangling_defaults(&shared.db, &shared.starter))
                 .await?;
             merge(changed, repaired);
             if is_push_held || self.blocking(|shared| pending_count(&shared.db)).await? == 0 {
-                return Ok(());
+                return Ok(true);
             }
         }
-        Ok(())
+        Ok(false)
     }
 
     async fn is_behind(self: &Arc<Self>, session: &Session, last_sender_seq: u64) -> Result<bool, SyncError> {

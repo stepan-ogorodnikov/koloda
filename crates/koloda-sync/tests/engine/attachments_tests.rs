@@ -325,6 +325,48 @@ fn a_trigger_during_transfers_hands_the_rest_to_the_next_cycle() {
 }
 
 #[test]
+fn a_tick_whose_transfers_a_trigger_cut_short_is_not_done() {
+    let space = Space::new();
+    let a = &space.device;
+    let images = card_with_images(a, 2, 2_000).images;
+    a.engine.sync_now().expect("A syncs");
+    let b = space.server.join(a);
+    let (reached, on_reached) = channel();
+    let (resume, on_resume) = channel::<()>();
+    let mut is_first = true;
+    b.transport.observe(move |request| {
+        if is_first && request.method == Method::Get && request.url.contains(ATTACHMENTS) {
+            is_first = false;
+            reached.send(()).expect("the test listens");
+            on_resume.recv().expect("the test resumes the fetch");
+        }
+    });
+    let budget = Budget {
+        wall: std::time::Duration::from_secs(60),
+        body_bytes: usize::MAX,
+    };
+
+    let first = std::thread::scope(|scope| {
+        let ticking = scope.spawn(|| b.engine.tick(budget));
+        on_reached.recv().expect("B fetches its first image");
+        b.engine.nudge();
+        resume.send(()).expect("the fetch resumes");
+        ticking.join().expect("the tick returns")
+    })
+    .expect("the tick runs");
+    let held_after_first = images.iter().filter(|id| b.image(id).is_some()).count();
+    let second = b.engine.tick(budget).expect("the tick runs");
+
+    assert_eq!(
+        held_after_first, 1,
+        "the trigger stopped the transfers after the first image"
+    );
+    assert!(!first.is_done, "the second image is still due");
+    assert!(second.is_done);
+    assert!(images.iter().all(|id| b.image(id).is_some()));
+}
+
+#[test]
 fn a_tick_stops_between_transfers_once_its_bytes_are_spent() {
     let space = Space::new();
     let a = &space.device;
