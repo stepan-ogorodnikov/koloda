@@ -428,7 +428,7 @@ Out:
   Commit: Drop the reply a refused events upgrade carried
   Depends on: none
 
-- [ ] 10. Pin the runner backoff and the lease and restore caps in tests
+- [x] 10. Pin the runner backoff and the lease and restore caps in tests
   Goal (finding 9):
   - A `ManualTimer` runner test: three cycles get no reply, then one succeeds.
     The runner sleeps 1, 2, then 4 s, then `POLL`; a later failure waits 1 s again.

@@ -12,6 +12,8 @@ use tokio::sync::Notify;
 pub const POLL: Duration = Duration::from_secs(60);
 pub const POLL_LISTENING: Duration = Duration::from_secs(5 * 60);
 pub const COALESCE: Duration = Duration::from_millis(300);
+/// The runner's first wait after a failed cycle; it doubles up to `POLL`.
+pub const FIRST_BACKOFF: Duration = Duration::from_secs(1);
 /// The socket waits this long for a frame while it is open, so a sleep of it shows the socket is open.
 pub const SILENT_FOR: Duration = Duration::from_secs(75);
 pub const FIRST_RETRY: Duration = Duration::from_secs(1);

@@ -447,6 +447,48 @@ fn a_device_offline_across_an_authoritative_then_a_heal_restore_takes_the_author
 }
 
 #[test]
+fn a_cycle_runs_again_across_three_restores_and_stops_at_a_fourth() {
+    for (restores, is_finished) in [(3, true), (4, false)] {
+        let space = Space::new();
+        let a = &space.device;
+        a.library();
+        a.sync();
+        let backup = space.server.backup();
+        let (reached, on_reached) = std::sync::mpsc::channel();
+        let (resume, on_resume) = std::sync::mpsc::channel::<()>();
+        let mut left = restores;
+        a.transport.observe(move |request| {
+            if left > 0 && request.url.contains("/devices/") {
+                left -= 1;
+                reached.send(()).expect("the test listens");
+                on_resume.recv().expect("the test resumes the call");
+            }
+        });
+
+        // WHY: each restore lands just before a cycle's device record, so the cycle meets it and starts again.
+        let result = std::thread::scope(|scope| {
+            let syncing = scope.spawn(|| a.engine.sync_now());
+            for _ in 0..restores {
+                on_reached.recv().expect("the cycle reads its device record");
+                space.server.restore(&backup, RestoreMode::Heal);
+                resume.send(()).expect("the call goes on");
+            }
+            syncing.join().expect("the cycle returns")
+        });
+
+        assert_eq!(result.is_ok(), is_finished, "{restores} restores: {result:?}");
+        let current = space
+            .server
+            .current_epoch(&format!("/v1/spaces/{}/push", space.space_id()));
+        assert_eq!(Some(a.epoch()), current, "{restores} restores: each one was applied");
+        if !is_finished {
+            assert!(matches!(result, Err(SyncError::Restored { .. })), "{result:?}");
+            a.sync();
+        }
+    }
+}
+
+#[test]
 fn a_held_restore_survives_a_relaunch_and_deletes_nothing() {
     let pair = pair();
     let a = pair.a();

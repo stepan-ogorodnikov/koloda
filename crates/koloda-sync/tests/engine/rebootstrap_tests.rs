@@ -4,6 +4,7 @@ use std::time::Duration;
 
 use koloda::domain::decks::DeleteDeckData;
 use koloda::repo::decks::delete_deck;
+use koloda_sync::error::SyncError;
 use koloda_sync::runner::Budget;
 use koloda_sync::transport::Method;
 use koloda_sync_proto::payload::{Delete, Payload};
@@ -205,6 +206,45 @@ fn a_lapsed_lease_restarts_the_stream_under_the_same_barrier() {
     assert_eq!(generation(a), 3, "one barrier, and one mark generation per lease");
     assert!(a.deck(&away.doomed).is_none());
     assert!(!is_rebasing(a));
+}
+
+#[test]
+fn a_re_bootstrap_takes_at_most_three_leases_a_call_and_the_next_call_starts_again() {
+    for (lapses, is_finished) in [(2, true), (3, false)] {
+        let away = away();
+        let a = &away.space.device;
+        away.space.server.backdate(device_id(a), 91 * DAY_MS);
+        for _ in 0..lapses {
+            a.transport.fault_when(
+                Method::Get,
+                "/bootstrap/",
+                Fault::Reply(error_reply(410, ErrorCode::LeaseExpired)),
+            );
+        }
+
+        let result = a.engine.sync_now();
+
+        assert_eq!(opens(a), 3, "{lapses} lapses: three leases");
+        assert_eq!(result.is_ok(), is_finished, "{lapses} lapses: {result:?}");
+        if !is_finished {
+            assert!(
+                matches!(
+                    result,
+                    Err(SyncError::Server {
+                        code: ErrorCode::LeaseExpired,
+                        ..
+                    })
+                ),
+                "{result:?}"
+            );
+            assert!(is_rebasing(a), "the barrier waits for the next call");
+            a.engine
+                .sync_now()
+                .expect("the next call re-bootstraps from a new lease");
+            assert_eq!(opens(a), 4);
+        }
+        assert!(!is_rebasing(a), "{lapses} lapses: the re-bootstrap finished");
+    }
 }
 
 #[test]

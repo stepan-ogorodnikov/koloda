@@ -11,7 +11,9 @@ use uuid::Uuid;
 
 use crate::common::{system_ms, Device, Fault, Space};
 use crate::fixtures::{review, FRONT};
-use crate::runner_support::{channel_sink, wait_for, ManualTimer, COALESCE, POLL};
+use crate::runner_support::{
+    channel_sink, wait_for, ManualTimer, COALESCE, FIRST_BACKOFF, POLL, POLL_LISTENING, SILENT_FOR,
+};
 
 /// Cycles the device ran, counted by the device record each one reads first.
 fn cycles(device: &Device) -> usize {
@@ -183,6 +185,42 @@ fn a_file_that_cannot_sync_waits_for_a_trigger_without_errors_or_a_socket() {
             "{name}: no events socket opens"
         );
     }
+}
+
+#[test]
+fn failed_cycles_back_off_from_one_second_doubling_and_a_success_resets_the_backoff() {
+    // WHY: `call` sends each request this many times before it reports no reply.
+    const ATTEMPTS: usize = 4;
+    let space = Space::new();
+    space.device.transport.serve_events();
+    let timer = ManualTimer::default();
+    let (sink, _events) = channel_sink();
+    space
+        .device
+        .engine
+        .start_runner(sink, Arc::new(timer.clone()))
+        .expect("the runner starts");
+    // WHY: with the socket open and its first heads already seen, only the runner sleeps for seconds, and no nudge
+    // ends a backoff early.
+    timer.wait_for_sleep(SILENT_FOR);
+    timer.wait_for_any_sleep(&[POLL, POLL_LISTENING]);
+    let lose_cycles = |count: usize| {
+        for _ in 0..count * ATTEMPTS {
+            space.device.transport.fault_on("/devices/", Fault::LoseReply);
+        }
+    };
+
+    lose_cycles(3);
+    space.device.engine.nudge();
+    for wait in [FIRST_BACKOFF, FIRST_BACKOFF * 2, FIRST_BACKOFF * 4] {
+        timer.wait_for_sleep(wait);
+        timer.advance(wait);
+    }
+    timer.wait_for_sleep(POLL_LISTENING);
+    lose_cycles(1);
+    space.device.engine.nudge();
+
+    timer.wait_for_sleep(FIRST_BACKOFF);
 }
 
 #[test]
