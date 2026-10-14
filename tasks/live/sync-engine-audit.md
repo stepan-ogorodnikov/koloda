@@ -448,7 +448,7 @@ Out:
   Commit: Pin the runner backoff and the lease and restore caps in tests
   Depends on: 3 (it changes which errors back off)
 
-- [ ] 11. Say a re-attach's claim records without a skew check
+- [x] 11. Say a re-attach's claim records without a skew check
   Goal (finding 2, per question 1):
   - `PROTOCOL.md` §Skew guards (lines 621-624): the check covers a claim that enrolls the file and a space creation.
     Both reserve backfill stamps on the local clock.
