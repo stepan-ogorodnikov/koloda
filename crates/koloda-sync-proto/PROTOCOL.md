@@ -958,7 +958,7 @@ A device sends nothing but control frames; a socket that sends data is closed.
 
 A device keeps one socket open while its runner runs and the file may send.
 It opens none while the file is detached, waits for Add or Replace, or holds an authoritative restore.
-Nor does it after the server answered `401 unknown_device` on the epoch the device sent, until a cycle passes.
+Nor does it once a cycle stopped on `401 unknown_device` for the epoch it sent, until a later cycle ends otherwise.
 A bounded tick opens none either, so a device that only ticks syncs by polling.
 Heads past the last ones a reply reported start a cycle (§Cycle).
 A nudge during a cycle waits for it to end: the cycle's own push moves the heads too.
