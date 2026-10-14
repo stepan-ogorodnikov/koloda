@@ -804,7 +804,7 @@ impl Transport for RouterTransport {
         Box::pin(async move {
             self.record(&request);
             match self.take_fault(&request) {
-                Some(Fault::Reply(response)) => return Ok(Opened::Refused(response)),
+                Some(Fault::Reply(_)) => return Ok(Opened::Refused),
                 Some(Fault::LoseReply | Fault::After(_)) => {
                     return Err(TransportError("the upgrade was lost".to_string()))
                 }
@@ -844,7 +844,7 @@ impl Transport for RouterTransport {
                 .await
                 .map_err(|error| TransportError(error.to_string()))?;
             if response.status() != StatusCode::SWITCHING_PROTOCOLS {
-                return Ok(Opened::Refused(read(response.map(Body::new)).await));
+                return Ok(Opened::Refused);
             }
             let upgraded = hyper::upgrade::on(response)
                 .await

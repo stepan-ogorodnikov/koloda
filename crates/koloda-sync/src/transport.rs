@@ -79,8 +79,8 @@ pub type Opening<'a> = Pin<Box<dyn Future<Output = Result<Opened, TransportError
 
 pub enum Opened {
     Socket(Box<dyn Events>),
-    /// The server answered the upgrade with this reply instead.
-    Refused(Response),
+    /// The server answered the upgrade with a reply instead.
+    Refused,
 }
 
 /// What the events socket delivered.
@@ -192,7 +192,7 @@ impl Transport for HttpTransport {
                 .await
                 .map_err(transport_error)?;
             if response.status() != StatusCode::SWITCHING_PROTOCOLS {
-                return Ok(Opened::Refused(read(response).await?));
+                return Ok(Opened::Refused);
             }
             let accept = derive_accept_key(key.as_bytes());
             if response

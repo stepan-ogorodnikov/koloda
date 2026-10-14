@@ -100,7 +100,7 @@ impl Shared {
         };
         let mut events = match opened {
             Ok(Opened::Socket(events)) => events,
-            Ok(Opened::Refused(_)) => return Listened::Refused,
+            Ok(Opened::Refused) => return Listened::Refused,
             Err(_) => return Listened::Unreachable,
         };
         self.is_listening.store(true, Ordering::SeqCst);

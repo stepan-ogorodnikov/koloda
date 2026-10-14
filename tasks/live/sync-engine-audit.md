@@ -413,7 +413,7 @@ Out:
   Commit: Keep the events socket's backoff across closes that come at once
   Depends on: none
 
-- [ ] 9. Drop the reply a refused events upgrade carried
+- [x] 9. Drop the reply a refused events upgrade carried
   Goal (finding 10):
   - `Opened::Refused` (`transport.rs:80-84`) becomes a unit variant.
   - `HttpTransport::listen` (`transport.rs:191-192`) returns it without reading the body.
