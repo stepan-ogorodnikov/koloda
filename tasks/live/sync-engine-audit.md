@@ -1,6 +1,6 @@
 # Sync engine audit fixes
 
-Status: draft
+Status: ready
 Guides: agents/IMPLEMENTATION-PLAN.md, agents/TASKS.md, crates/koloda-sync/README.md, crates/koloda-sync-proto/PROTOCOL.md, crates/koloda/src/repo/sync/README.md, agents/RUST.md, agents/DB.md, docs/decisions/TS-RUST-DOMAIN-MIRRORING.md, crates/koloda-server/README.md, apps/electron/README.md, agents/TESTING.md, agents/CODE-DOCUMENTATION.md, agents/BACKWARDS-COMPATIBILITY.md, agents/MARKDOWN.md, agents/VERIFY.md, agents/REVIEW.md
 Flow: local
 
@@ -210,20 +210,21 @@ Out:
   Fix 1 and 3 to 11; for 2, narrow the `PROTOCOL.md` sentence instead.
 - [x] 2. Finding 11: does leaving work while a restore is held? — yes (human, 2026-10-14).
 - [x] 3. Flow? — `local` (human, 2026-10-14).
-- [ ] 4. Finding 4: which replies that are not sync replies defer an upload? — open.
-  Recommendation: a `4xx` only, which is the proxy refusing this request.
+- [x] 4. Finding 4: which replies that are not sync replies defer an upload? — a `4xx` only (human, 2026-10-14).
+  The recommendation: a `4xx` only, which is the proxy refusing this request.
   A `5xx` that is not a sync reply, such as a proxy's `502` while the server is down, keeps ending the cycle's
   transfers, as no reply does.
   Deferring any such reply would defer every queued image one by one when the server goes down mid-transfer, each
   with its own backoff and `Error` event.
-  Item 4 follows the recommendation.
-- [ ] 5. Finding 5: which results make the runner wait, and does the socket close too? — open.
-  Recommendation: the report's four (`Detached`, `NotEnrolled`, `RestoreHeld`, `UnknownDevice`).
+  Item 4 follows it.
+- [x] 5. Finding 5: which results make the runner wait, and does the socket close too? — as recommended (human,
+  2026-10-14).
+  The recommendation: the report's four (`Detached`, `NotEnrolled`, `RestoreHeld`, `UnknownDevice`).
   Add `Revoked` and `PairAgain`, which detach the file in the cycle that returns them.
   Also open no events socket while the last cycle stopped on `UnknownDevice`.
   The socket otherwise retries the server every 60 s, and §Devices says that reply stops the engine.
   A local change or a nudge still runs one cycle, so an unknown device then calls the server once per trigger.
-  Item 3 follows the recommendation.
+  Item 3 follows it.
 
 ## Plan
 
