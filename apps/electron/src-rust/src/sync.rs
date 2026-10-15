@@ -1,7 +1,8 @@
 //! The sync engine on the desktop: the one `Engine` a `KolodaDb` starts, its background runner, and the wire shapes
 //! and `sync.*` error codes the renderer reads (`apps/electron/IPC.md` §Sync).
 //!
-//! INVARIANT: host calls run on the sync worker, never on the database worker: they wait on the network.
+//! INVARIANT: host calls that wait on the network run on the sync worker, never on the database worker. The status
+//! only reads, and a nudge only fires a trigger, so they do not queue there (`KolodaDb` in `lib.rs`).
 
 use std::collections::BTreeMap;
 use std::sync::atomic::{AtomicBool, Ordering};

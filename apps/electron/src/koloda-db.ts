@@ -152,7 +152,9 @@ export interface KolodaDb {
 
   // Sync (a worker of its own; host calls wait on the network)
   syncStart(starter: SyncStarter, onEvent: (event: SyncEngineEvent) => void): Promise<SyncStatus>;
+  // On the database worker: it only reads.
   syncStatus(): Promise<SyncStatus>;
+  // Synchronous: it only fires a trigger, so it never waits behind a call on the network.
   syncNudge(): void;
   syncCreateSpace(data: CreateSpaceData): Promise<SyncStatus>;
   syncIssuePairing(): Promise<IssuedPairing>;
