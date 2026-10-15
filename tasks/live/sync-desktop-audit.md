@@ -319,6 +319,10 @@ Out:
   - a test: Replace with no reply from the server fails, deletes nothing, and the status still shows `ImportPending`;
   - `cargo test -p koloda-sync` passes;
   - `bun run check:push` green.
+  Deviation: the device-record `GET` goes through `device_client`, not `device_record`.
+  That one uses `cycle_client`, which only the cycle may use, and records heads and quota.
+  `PROTOCOL.md` §Joining gained a sentence on it, and self-review added `SYNC.md` §Add or Replace: both choices need
+  the server.
   Commit: Confirm the device with the server before Replace deletes rows
   Depends on: none
 
@@ -364,6 +368,9 @@ Out:
     `cmd_sync_start` again and shows its status, and later fetches call `cmd_sync_status`;
   - the electron-react vitest suite passes;
   - `bun run check:push` green.
+  Deviation: `createSyncStart` in `sync-queries.ts` holds the starter, which `useSyncEngine` provides once the database
+  status is known; a status fetch before then waits for it.
+  So `createSyncQueries` takes no starter, and nothing starts the engine earlier than before.
   Commit: Show a failed sync start and retry it from the status
   Depends on: none
 
@@ -395,6 +402,8 @@ Out:
   - a `settings-sync-status` test: `pending: 2, held: 3` shows 5 changes waiting; `pending: 0, held: 3` shows 3;
   - the settings-react vitest suite passes;
   - `bun run check:push` green.
+  Deviation: the test macro mock's `plural` drops the count, so the test spies on it to read the count the message
+  receives (self-review).
   Commit: Count held changes as waiting to upload
   Depends on: none
 
@@ -429,6 +438,7 @@ Out:
   - a `sync-first-run-join.test.tsx` case: the callback fires when the join succeeds, and not on cancel;
   - the settings-react and electron-react vitest suites pass;
   - `bun run check:push` green.
+  Deviation: the negative case checks that the preview does not report a join; cancel calls only `onCancel`.
   Commit: Hide the first-run pickers once the join succeeds
   Depends on: none
 
