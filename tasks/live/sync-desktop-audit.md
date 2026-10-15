@@ -1,6 +1,6 @@
 # Desktop sync audit fixes
 
-Status: draft
+Status: ready
 Guides: agents/IMPLEMENTATION-PLAN.md, agents/TASKS.md, docs/specs/SYNC.md, agents/CODE-STYLE.md, agents/CODE-DOCUMENTATION.md, agents/TESTING.md, agents/I18N.md, agents/CSS.md, agents/VERIFY.md, agents/FUNCTIONAL-SPECIFICATIONS.md, agents/MARKDOWN.md, agents/BACKWARDS-COMPATIBILITY.md, agents/REVIEW.md, apps/electron/README.md, apps/electron/IPC.md, crates/koloda-sync/README.md, crates/koloda-sync-proto/PROTOCOL.md
 Flow: local
 
@@ -228,16 +228,17 @@ Out:
   5, hide the pickers once the join succeeds (interface settings seed and diverge);
   11, offer Leave beside the choice;
   12, added from the walk through 11, and fixed.
-- [ ] 2. Finding 10: its own task, not an item here? — open; recommended: its own task.
+- [x] 2. Finding 10: its own task, not an item here? — its own task, as recommended (human, 2026-10-15).
   It needs a keyring seam, a server launcher, and two app instances (Scope, finding 10).
   Only a human runs the suite, so this task's gate would not check it.
-- [ ] 3. Finding 9: a named stop for a server out of reach, not a code on every stop? — open; recommended: yes.
+- [x] 3. Finding 9: a named stop for a server out of reach, not a code on every stop? — yes, as recommended (human,
+  2026-10-15).
   The report's code-on-the-stop cannot work as written (Scope, finding 9).
   A server out of reach is the stop users meet; it gets its own engine stop and a translated message.
   Every other unnamed stop shows a translated line, with the engine's text as details on Settings → Sync only.
   Carrying a classified cause for all of them would add an engine-side classification the host mirrors.
   That is more surface than the remaining rare stops earn.
-- [ ] 4. Flow? — open; recommended: `local`, the default.
+- [x] 4. Flow? — `local` (human, 2026-10-15).
 
 ## Plan
 
