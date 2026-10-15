@@ -100,7 +100,8 @@ What happens then depends on what the device holds:
   of its own;
 - data of its own: it asks whether to add that data or replace it (§Add or Replace);
 - it was in this space before, and left or was removed: it joins again with its data, and changes made while it was
-  out of the space sync too;
+  out of the space sync too.
+  A device that left while it waited for the Add or Replace choice was never in the space, so it is asked again;
 - it is in another space: the join is refused before the code is used, and the user leaves that space first.
 
 The space then downloads in the background; the status shows it (§Status).
@@ -146,6 +147,9 @@ With either choice, the space's learning settings take the place of this device'
 Settings that never sync stay as they are (§Core model).
 
 A device waiting for the choice shows it again on Settings → Sync after a restart, without the copy warning.
+
+Instead of choosing, the device can leave the space (§Leaving a Space).
+Nothing it holds has reached the space.
 
 ## Devices
 

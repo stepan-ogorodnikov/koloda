@@ -322,7 +322,7 @@ Out:
   Commit: Confirm the device with the server before Replace deletes rows
   Depends on: none
 
-- [ ] 4. Offer Leave while the Add or Replace choice waits
+- [x] 4. Offer Leave while the Add or Replace choice waits
   Goal (finding 11):
   - `libs/settings-react/src/lib/sync/settings-sync.tsx:53`: render `SyncLeaveSpace` beside `SyncImportChoice` in the
     `importPending` branch.

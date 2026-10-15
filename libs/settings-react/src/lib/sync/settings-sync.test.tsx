@@ -277,6 +277,7 @@ describe("SettingsSync add or replace", () => {
       fireEvent.click(screen.getByRole("button", { name: "settings.sync.import.replace" }));
     });
     expect(screen.getByText("settings.sync.import.replace.message")).not.toBeNull();
+    expect(screen.queryByRole("button", { name: "settings.sync.leave" })).toBeNull();
     expect(importData).not.toHaveBeenCalled();
 
     await act(async () => {
@@ -284,5 +285,26 @@ describe("SettingsSync add or replace", () => {
     });
     expect(importData).toHaveBeenCalledWith("replace", expect.anything());
     expect(queryClient.getQueryState(["decks"])?.isInvalidated).toBe(true);
+  });
+
+  it("lets a device waiting for the choice leave the space instead", async () => {
+    const left = status({ type: "stopped", stop: { reason: "revoked" } });
+    const detach = vi.fn(async () => left);
+    const { queryClient } = renderSync(status({ type: "importPending" }), {
+      ...syncQueries(vi.fn()),
+      detachMutation: () => ({ mutationFn: detach }),
+    });
+    expect(screen.getByRole("button", { name: "settings.sync.import.add" })).not.toBeNull();
+    expect(screen.getByRole("button", { name: "settings.sync.import.replace" })).not.toBeNull();
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "settings.sync.leave" }));
+    });
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "settings.sync.leave.confirm" }));
+    });
+
+    expect(detach).toHaveBeenCalled();
+    expect(queryClient.getQueryData(["sync", "status"])).toBe(left);
   });
 });
