@@ -1,8 +1,10 @@
 use koloda::app::init::seed_db;
 use koloda::repo::sync::join::JoinMode;
+use koloda_sync::error::SyncError;
 use koloda_sync::pairing::{ImportMode, Joined};
+use koloda_sync::status::{State, Stop};
 
-use crate::common::{Device, TestServer, SERVER_URL};
+use crate::common::{Device, Fault, TestServer, SERVER_URL};
 use crate::fixtures::{seed_data, seed_settings, Library};
 
 const SYNCED_TABLES: [&str; 6] = [
@@ -108,6 +110,39 @@ fn replace_leaves_the_joiner_with_exactly_the_space_rows() {
         assert_eq!(b.ids(table), a.ids(table), "{table}");
     }
     assert!(!b.has_card(&b_library.card), "B's own rows are gone");
+}
+
+#[test]
+fn replace_on_a_file_another_device_removed_while_it_waited_keeps_its_rows() {
+    let server = TestServer::new();
+    let (a, _) = creator(&server);
+    let (b, b_library) = used_file(&server);
+    join(&a, &b);
+    let b_id = b.state().expect("B is enrolled").device_id;
+    a.engine.revoke_device(b_id).expect("A removes B");
+
+    let replaced = b.engine.import(ImportMode::Replace);
+
+    assert!(matches!(replaced, Err(SyncError::Revoked)), "{replaced:?}");
+    assert!(b.has_card(&b_library.card), "B's own rows stay");
+    assert_eq!(b.engine.status().expect("status").state, State::Stopped(Stop::Revoked));
+}
+
+#[test]
+fn replace_with_no_reply_from_the_server_deletes_nothing_and_keeps_the_choice() {
+    let server = TestServer::new();
+    let (a, _) = creator(&server);
+    let (b, b_library) = used_file(&server);
+    join(&a, &b);
+    for _ in 0..4 {
+        b.transport.fault(Fault::LoseReply);
+    }
+
+    let replaced = b.engine.import(ImportMode::Replace);
+
+    assert!(matches!(replaced, Err(SyncError::Transport { .. })), "{replaced:?}");
+    assert!(b.has_card(&b_library.card), "B's own rows stay");
+    assert_eq!(b.engine.status().expect("status").state, State::ImportPending);
 }
 
 #[test]

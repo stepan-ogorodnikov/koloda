@@ -1569,6 +1569,8 @@ Their creates for shared ids then collapse into one (`stale`), and their edits m
 duplicating.
 
 **Replace** deletes every product row, then joins as a blank file.
+It first reads this device's record, since a waiting file calls the server for nothing else.
+A device revoked while the choice waited then detaches with its rows instead of deleting them.
 It keeps the settings rows, conversations, and attachments.
 `learning` stays at stamp zero, so the space's document overlays it.
 Cards that arrive from the space reuse local attachment bytes; the startup sweep removes images no card references.

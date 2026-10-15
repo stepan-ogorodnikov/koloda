@@ -301,7 +301,7 @@ Out:
   Commit: Name an unreachable server as its own sync stop
   Depends on: none
 
-- [ ] 3. Confirm the device with the server before Replace deletes rows
+- [x] 3. Confirm the device with the server before Replace deletes rows
   Goal (finding 12):
   - In `import` (`crates/koloda-sync/src/pairing.rs:389-399`), the `Replace` arm makes one authenticated call before
     `replace_with_space`.

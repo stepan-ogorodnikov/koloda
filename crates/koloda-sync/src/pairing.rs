@@ -394,7 +394,20 @@ impl Shared {
                 let known = self.probe(&session).await?;
                 self.blocking(move |shared| add_to_space(&shared.db, &known)).await
             }
-            ImportMode::Replace => self.blocking(|shared| replace_with_space(&shared.db)).await,
+            ImportMode::Replace => {
+                // INVARIANT: a file waiting for the choice calls the server for nothing else, so Replace asks it
+                // first whether this device is still in the space; a removed one detaches with its rows kept.
+                let session = self.session().await?;
+                self.device_client(&session)
+                    .call::<(), DeviceInfo>(
+                        Method::Get,
+                        &format!("/v1/spaces/{}/devices/{}", session.space, session.device),
+                        Some(&session.token),
+                        None,
+                    )
+                    .await?;
+                self.blocking(|shared| replace_with_space(&shared.db)).await
+            }
         }
     }
 
