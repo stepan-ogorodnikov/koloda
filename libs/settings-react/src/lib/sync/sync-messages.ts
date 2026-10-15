@@ -51,10 +51,11 @@ export function useSyncStopMessage() {
           const code = stop.code;
           return _(msg`settings.sync.stop.push-refused ${code}`);
         }
-        case "error": {
-          const message = stop.message;
-          return _(msg`settings.sync.stop.error ${message}`);
-        }
+        case "unreachable":
+          return _(msg`settings.sync.stop.unreachable`);
+        // WHY: the engine's text is a developer's English diagnostic; Settings → Sync shows it as details.
+        case "error":
+          return _(msg`settings.sync.stop.error`);
       }
     },
     [_, formatBytes],

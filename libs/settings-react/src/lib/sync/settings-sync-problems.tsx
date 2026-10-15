@@ -17,11 +17,12 @@ export function SettingsSyncProblems({ status, sync }: SettingsSyncProblemsProps
   const stopMessage = useSyncStopMessage()(status);
   const { state, hold, isOverQuota, pushResumesAt } = status;
   const isRestoreHeld = state.type === "stopped" && state.stop.reason === "authoritativeRestore";
+  const stopDetails = state.type === "stopped" && state.stop.reason === "error" ? state.stop.message : undefined;
   const resumesAt = pushResumesAt === null ? null : formatTimestamp(new Date(pushResumesAt), "time");
 
   return (
     <>
-      {stopMessage && <p>{stopMessage}</p>}
+      {stopMessage && <ErrorMessage message={stopMessage} details={stopDetails} layout="inline" color="inherit" />}
       {isRestoreHeld && (
         <div>
           <AcceptRestore sync={sync} />

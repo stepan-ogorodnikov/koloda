@@ -448,6 +448,7 @@ enum StopWire {
     Restored,
     PushRefused { code: ErrorCode },
     LowDisk { needed: u64, free: u64 },
+    Unreachable,
     Error { message: String },
 }
 
@@ -461,6 +462,7 @@ impl From<Stop> for StopWire {
             Stop::Restored => StopWire::Restored,
             Stop::PushRefused(code) => StopWire::PushRefused { code },
             Stop::LowDisk { needed, free } => StopWire::LowDisk { needed, free },
+            Stop::Unreachable => StopWire::Unreachable,
             Stop::Error(message) => StopWire::Error { message },
         }
     }
@@ -584,9 +586,10 @@ mod tests {
                 Stop::LowDisk { needed: 900, free: 100 },
                 json!({ "reason": "lowDisk", "needed": 900, "free": 100 }),
             ),
+            (Stop::Unreachable, json!({ "reason": "unreachable" })),
             (
-                Stop::Error("no reply".to_string()),
-                json!({ "reason": "error", "message": "no reply" }),
+                Stop::Error("the sync server answered 500".to_string()),
+                json!({ "reason": "error", "message": "the sync server answered 500" }),
             ),
         ];
         for (stop, expected) in cases {

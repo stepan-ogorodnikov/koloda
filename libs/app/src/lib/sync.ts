@@ -9,6 +9,7 @@ export type SyncStop =
   | { reason: "restored" }
   | { reason: "pushRefused"; code: string }
   | { reason: "lowDisk"; needed: number; free: number }
+  | { reason: "unreachable" }
   | { reason: "error"; message: string };
 
 export type SyncState =

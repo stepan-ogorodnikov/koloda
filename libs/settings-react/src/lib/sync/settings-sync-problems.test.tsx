@@ -68,11 +68,24 @@ describe("SettingsSyncProblems", () => {
     [{ reason: "authoritativeRestore" }, "settings.sync.stop.authoritative-restore"],
     [{ reason: "lowDisk", needed: 2_500_000_000, free: 300_000_000 }, "settings.sync.stop.low-disk 2.5 GB 300 MB"],
     [{ reason: "pushRefused", code: "stamp_ahead" }, "settings.sync.stop.push-refused stamp_ahead"],
-    [{ reason: "error", message: "no reply" }, "settings.sync.stop.error no reply"],
+    [{ reason: "unreachable" }, "settings.sync.stop.unreachable"],
+    [{ reason: "error", message: "the sync server answered 500" }, "settings.sync.stop.error"],
   ])("says why sync stopped for %o", (stop, message) => {
     renderProblems(status({ state: { type: "stopped", stop }, skewMs: 7 * 60_000 }));
 
     expect(screen.getByText(message)).not.toBeNull();
+  });
+
+  it("keeps the engine's text for any other stop behind its details", async () => {
+    const stop: SyncStop = { reason: "error", message: "the sync server answered 500" };
+    renderProblems(status({ state: { type: "stopped", stop } }));
+    expect(screen.queryByText("the sync server answered 500")).toBeNull();
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "error.details" }));
+    });
+
+    expect(screen.getByText("the sync server answered 500")).not.toBeNull();
   });
 
   it("accepts an authoritative restore only once confirmed, then keeps its status and refreshes every screen", async () => {

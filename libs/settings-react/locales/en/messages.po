@@ -334,7 +334,7 @@ msgid "settings.sync.back"
 msgstr "Back"
 
 #: ../../libs/settings-react/src/lib/sync/settings-sync-devices.tsx:101
-#: ../../libs/settings-react/src/lib/sync/settings-sync-problems.tsx:90
+#: ../../libs/settings-react/src/lib/sync/settings-sync-problems.tsx:91
 #: ../../libs/settings-react/src/lib/sync/sync-leave-space.tsx:47
 msgid "settings.sync.cancel"
 msgstr "Cancel"
@@ -388,15 +388,15 @@ msgstr "Downloading the space. The app opens when it's done."
 msgid "settings.sync.first-run.safe-to-close"
 msgstr "Closing the app is safe. The download picks up next time."
 
-#: ../../libs/settings-react/src/lib/sync/settings-sync-problems.tsx:46
+#: ../../libs/settings-react/src/lib/sync/settings-sync-problems.tsx:47
 msgid "settings.sync.hold.corrupt {lane} {seq}"
 msgstr "The space holds a damaged change this app can't read ({lane} {seq}), so downloads wait at it. Uploads go on. To drop the change, run on the sync server:"
 
-#: ../../libs/settings-react/src/lib/sync/settings-sync-problems.tsx:48
+#: ../../libs/settings-react/src/lib/sync/settings-sync-problems.tsx:49
 msgid "settings.sync.hold.corrupt.spaces"
 msgstr "koloda-server spaces lists the server's space ids."
 
-#: ../../libs/settings-react/src/lib/sync/settings-sync-problems.tsx:43
+#: ../../libs/settings-react/src/lib/sync/settings-sync-problems.tsx:44
 msgid "settings.sync.hold.update-required"
 msgstr "Another device synced a change this version of the app can't read, so downloads wait at it. Update the app, and sync resumes from there. Uploads go on."
 
@@ -523,23 +523,23 @@ msgstr "This device is in no space: it left its space, or another device removed
 msgid "settings.sync.not-in-space"
 msgstr "This device doesn't sync. Create a space on your sync server, or join a space another device created."
 
-#: ../../libs/settings-react/src/lib/sync/settings-sync-problems.tsx:31
+#: ../../libs/settings-react/src/lib/sync/settings-sync-problems.tsx:32
 msgid "settings.sync.over-quota"
 msgstr "The space is full, so new changes wait to upload. Deleting decks or cards frees room."
 
-#: ../../libs/settings-react/src/lib/sync/settings-sync-problems.tsx:32
+#: ../../libs/settings-react/src/lib/sync/settings-sync-problems.tsx:33
 msgid "settings.sync.push-waits {resumesAt}"
 msgstr "This device's clock was ahead of the server's, so its changes wait to upload until {resumesAt}."
 
-#: ../../libs/settings-react/src/lib/sync/settings-sync-problems.tsx:87
+#: ../../libs/settings-react/src/lib/sync/settings-sync-problems.tsx:88
 msgid "settings.sync.restore.confirm"
 msgstr "Replace"
 
-#: ../../libs/settings-react/src/lib/sync/settings-sync-problems.tsx:79
+#: ../../libs/settings-react/src/lib/sync/settings-sync-problems.tsx:80
 msgid "settings.sync.restore.continue"
 msgstr "Continue"
 
-#: ../../libs/settings-react/src/lib/sync/settings-sync-problems.tsx:83
+#: ../../libs/settings-react/src/lib/sync/settings-sync-problems.tsx:84
 msgid "settings.sync.restore.message"
 msgstr "Replace this device's data with the backup's? Changes made here since the backup are lost."
 
@@ -588,9 +588,9 @@ msgstr "Syncing"
 msgid "settings.sync.stop.authoritative-restore"
 msgstr "The sync server was restored from a backup that replaces this device's data. Changes made here since the backup will be lost."
 
-#: ../../libs/settings-react/src/lib/sync/sync-messages.ts:56
-msgid "settings.sync.stop.error {message}"
-msgstr "{message}. Sync retries on its own."
+#: ../../libs/settings-react/src/lib/sync/sync-messages.ts:58
+msgid "settings.sync.stop.error"
+msgstr "Sync stopped because of an error and retries on its own."
 
 #: ../../libs/settings-react/src/lib/sync/sync-messages.ts:48
 msgid "settings.sync.stop.low-disk {needed} {free}"
@@ -607,6 +607,10 @@ msgstr "The sync server refused this device's changes ({code}). Sync retries on 
 #: ../../libs/settings-react/src/lib/sync/sync-messages.ts:40
 msgid "settings.sync.stop.unknown-device"
 msgstr "The sync server no longer knows this device. Leave the space here, then join it again with a new pairing code. This device's data stays."
+
+#: ../../libs/settings-react/src/lib/sync/sync-messages.ts:55
+msgid "settings.sync.stop.unreachable"
+msgstr "The sync server can't be reached. Sync retries on its own."
 
 #: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:34
 msgid "settings.sync.sync-now"

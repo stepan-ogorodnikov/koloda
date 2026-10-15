@@ -4,7 +4,7 @@ use koloda_sync::status::{State, Stop};
 use koloda_sync_proto::registry::Kind;
 use koloda_sync_proto::transport::ErrorCode;
 
-use crate::common::{Device, Fault, Space, SERVER_URL};
+use crate::common::{error_reply, Device, Fault, Space, SERVER_URL};
 use crate::fixtures::{seed_data, seed_settings};
 
 fn state(device: &Device) -> State {
@@ -79,7 +79,7 @@ type Expect = fn(&State) -> bool;
 
 #[test]
 fn status_names_why_the_last_cycle_stopped() {
-    let cases: [(&str, Arrange, Expect); 5] = [
+    let cases: [(&str, Arrange, Expect); 6] = [
         (
             "clock skew",
             |space| {
@@ -124,12 +124,22 @@ fn status_names_why_the_last_cycle_stopped() {
             |state| *state == State::Stopped(Stop::PushRefused(ErrorCode::SchemaReadOnly)),
         ),
         (
-            "error",
+            "unreachable",
             |space| {
                 let copy = space.server.copy(&space.device);
                 for _ in 0..4 {
                     copy.transport.fault(Fault::LoseReply);
                 }
+                copy
+            },
+            |state| *state == State::Stopped(Stop::Unreachable),
+        ),
+        (
+            "error",
+            |space| {
+                let copy = space.server.copy(&space.device);
+                copy.transport
+                    .fault(Fault::Reply(error_reply(500, ErrorCode::Internal)));
                 copy
             },
             |state| matches!(state, State::Stopped(Stop::Error(_))),

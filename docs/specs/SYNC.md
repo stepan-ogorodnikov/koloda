@@ -220,7 +220,9 @@ Unless a reason below needs the user, sync retries on its own.
 - The space's download needs more free disk space than there is: the message says how much it needs and how much is
   free.
 - The server refused this device's changes: the message shows the server's reason code.
-- Anything else, such as a server out of reach: the message says what failed.
+- The server cannot be reached, or does not answer: the message says so.
+- Anything else: the message says an error stopped sync.
+  On Settings → Sync, its details say what failed.
 
 Some problems leave the rest of sync running:
 

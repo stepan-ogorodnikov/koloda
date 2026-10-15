@@ -158,12 +158,9 @@ describe("SettingsSync", () => {
   });
 
   it("shows why a stopped sync failed", () => {
-    renderSync(
-      status({ type: "stopped", stop: { reason: "error", message: "no reply from the sync server" } }),
-      syncQueries(vi.fn()),
-    );
+    renderSync(status({ type: "stopped", stop: { reason: "unreachable" } }), syncQueries(vi.fn()));
 
-    expect(screen.getByText("settings.sync.stop.error no reply from the sync server")).not.toBeNull();
+    expect(screen.getByText("settings.sync.stop.unreachable")).not.toBeNull();
   });
 });
 

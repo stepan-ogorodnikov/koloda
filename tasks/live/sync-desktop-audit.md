@@ -269,7 +269,7 @@ Out:
   Commit: Show an image that arrives while its card is on screen
   Depends on: none
 
-- [ ] 2. Name an unreachable server as its own sync stop
+- [x] 2. Name an unreachable server as its own sync stop
   Goal (finding 9, per question 3):
   - `crates/koloda-sync/src/status.rs`: add `Stop::Unreachable`, and map `SyncError::Transport` to it in `Stop::of`
     (`:72-85`).

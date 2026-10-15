@@ -58,7 +58,11 @@ describe("SyncIndicator", () => {
     [status({ type: "idle" }), "settings.sync.state.idle"],
     [status({ type: "syncing" }), "settings.sync.state.syncing"],
     [status({ type: "bootstrapping" }), "settings.sync.state.bootstrapping"],
-    [status({ type: "stopped", stop: { reason: "error", message: "no reply" } }), "settings.sync.stop.error no reply"],
+    [status({ type: "stopped", stop: { reason: "unreachable" } }), "settings.sync.stop.unreachable"],
+    [
+      status({ type: "stopped", stop: { reason: "error", message: "the sync server answered 500" } }),
+      "settings.sync.stop.error",
+    ],
     [status({ type: "stopped", stop: { reason: "restored" } }), "settings.sync.stop.pair-again"],
     [status({ type: "importPending" }), "settings.sync.indicator.attention"],
     [status({ type: "idle" }, { isOverQuota: true }), "settings.sync.indicator.attention"],

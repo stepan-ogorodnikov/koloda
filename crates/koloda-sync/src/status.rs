@@ -64,6 +64,8 @@ pub enum Stop {
         needed: u64,
         free: u64,
     },
+    /// No sync reply: the server is down or out of reach, or a proxy in front of it answered instead.
+    Unreachable,
     Error(String),
 }
 
@@ -80,6 +82,7 @@ impl Stop {
                 needed: *needed,
                 free: *free,
             },
+            SyncError::Transport { .. } => Stop::Unreachable,
             other => Stop::Error(other.to_string()),
         }
     }
