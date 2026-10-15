@@ -445,7 +445,7 @@ Out:
   Commit: Say on first run that joining needs a pairing code
   Depends on: none
 
-- [ ] 11. Count sync names in characters, as the server does
+- [x] 11. Count sync names in characters, as the server does
   Goal (finding 8):
   - `libs/settings-react/src/lib/sync/sync-forms.ts:6-10`: the 100 limit counts code points, for example a
     refinement on `[...name].length`, with the same `validation.sync.name.too-long` message.
