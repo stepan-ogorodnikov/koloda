@@ -242,7 +242,7 @@ Out:
 
 ## Plan
 
-- [ ] 1. Show an image that arrives while its card is on screen
+- [x] 1. Show an image that arrives while its card is on screen
   Goal (finding 1):
   - Add an atom to `libs/core-react` holding the ids of the latest `attachmentsFetched` batch, a new value per batch.
   - `applySyncEvent` (`apps/electron-react/src/app/sync-events.ts:26-27`) sets it instead of invalidating

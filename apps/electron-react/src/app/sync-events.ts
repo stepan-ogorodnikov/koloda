@@ -1,6 +1,9 @@
-import { queryKeys } from "@koloda/core-react";
+import { fetchedAttachmentsAtom, queryKeys } from "@koloda/core-react";
 import type { SyncEvent, SyncKind } from "@koloda/native-ipc";
 import type { QueryClient, QueryKey } from "@tanstack/react-query";
+import type { createStore } from "jotai";
+
+type JotaiStore = ReturnType<typeof createStore>;
 
 const LESSONS: readonly QueryKey[] = [queryKeys.lessons.all(), ["lesson_data"], queryKeys.lessons.todayReviewTotals()];
 
@@ -16,7 +19,7 @@ export const SYNC_KIND_QUERY_KEYS: Record<SyncKind, readonly QueryKey[]> = {
   "settings.learning": [queryKeys.settings.detail("learning"), ...LESSONS],
 };
 
-export function applySyncEvent(queryClient: QueryClient, event: SyncEvent) {
+export function applySyncEvent(queryClient: QueryClient, store: JotaiStore, event: SyncEvent) {
   switch (event.type) {
     case "changed": {
       const keys = new Set(event.kinds.flatMap((kind) => SYNC_KIND_QUERY_KEYS[kind]));
@@ -24,7 +27,7 @@ export function applySyncEvent(queryClient: QueryClient, event: SyncEvent) {
       return;
     }
     case "attachmentsFetched":
-      for (const id of event.ids) void queryClient.invalidateQueries({ queryKey: queryKeys.attachments.detail(id) });
+      store.set(fetchedAttachmentsAtom, event.ids);
       return;
     case "status":
       queryClient.setQueryData(queryKeys.sync.status(), event.status);

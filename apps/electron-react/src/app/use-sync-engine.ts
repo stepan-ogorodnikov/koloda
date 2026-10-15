@@ -3,6 +3,7 @@ import { SYNC_EVENT_CHANNEL } from "@koloda/native-ipc";
 import type { SyncEvent } from "@koloda/native-ipc";
 import { useLingui } from "@lingui/react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useStore } from "jotai";
 import { useEffect } from "react";
 import { invoke } from "./electron";
 import { starterContent } from "./setup";
@@ -12,11 +13,12 @@ import { applySyncEvent } from "./sync-events";
 // Starting again, as a reload does, only reads the status.
 export function useSyncEngine(isDatabaseKnown: boolean) {
   const queryClient = useQueryClient();
+  const store = useStore();
   const { _ } = useLingui();
 
   useEffect(
-    () => window.electronAPI.on(SYNC_EVENT_CHANNEL, (event) => applySyncEvent(queryClient, event as SyncEvent)),
-    [queryClient],
+    () => window.electronAPI.on(SYNC_EVENT_CHANNEL, (event) => applySyncEvent(queryClient, store, event as SyncEvent)),
+    [queryClient, store],
   );
 
   useEffect(() => {

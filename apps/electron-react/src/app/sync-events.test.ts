@@ -1,9 +1,10 @@
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { queryKeys } from "@koloda/core-react";
+import { fetchedAttachmentsAtom, queryKeys } from "@koloda/core-react";
 import { QueryClient } from "@tanstack/react-query";
 import type { QueryKey } from "@tanstack/react-query";
+import { createStore } from "jotai";
 import { describe, expect, it } from "vitest";
 import { applySyncEvent, SYNC_KIND_QUERY_KEYS } from "./sync-events";
 
@@ -45,7 +46,7 @@ describe("applySyncEvent", () => {
     const decks = queryKeys.decks.all();
     const queryClient = clientWith([deckCards, lessons, totals, conversations, decks]);
 
-    applySyncEvent(queryClient, { type: "changed", kinds: ["cards"] });
+    applySyncEvent(queryClient, createStore(), { type: "changed", kinds: ["cards"] });
 
     expect(isInvalidated(queryClient, deckCards)).toBe(true);
     expect(isInvalidated(queryClient, lessons)).toBe(true);
@@ -54,14 +55,14 @@ describe("applySyncEvent", () => {
     expect(isInvalidated(queryClient, decks)).toBe(false);
   });
 
-  it("refreshes a fetched image and no other", () => {
-    const fetched = queryKeys.attachments.detail("aa");
-    const other = queryKeys.attachments.detail("bb");
-    const queryClient = clientWith([fetched, other]);
+  it("hands each batch of fetched images to the screens that show them", () => {
+    const store = createStore();
+    const seen: (readonly string[])[] = [];
+    store.sub(fetchedAttachmentsAtom, () => seen.push(store.get(fetchedAttachmentsAtom)));
 
-    applySyncEvent(queryClient, { type: "attachmentsFetched", ids: ["aa"] });
+    applySyncEvent(new QueryClient(), store, { type: "attachmentsFetched", ids: ["aa"] });
+    applySyncEvent(new QueryClient(), store, { type: "attachmentsFetched", ids: ["aa"] });
 
-    expect(isInvalidated(queryClient, fetched)).toBe(true);
-    expect(isInvalidated(queryClient, other)).toBe(false);
+    expect(seen).toEqual([["aa"], ["aa"]]);
   });
 });
