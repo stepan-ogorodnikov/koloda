@@ -398,7 +398,7 @@ Out:
   Commit: Count held changes as waiting to upload
   Depends on: none
 
-- [ ] 8. Say why sync needs attention in the indicator tooltip
+- [x] 8. Say why sync needs attention in the indicator tooltip
   Goal (finding 4):
   - `sync-indicator.tsx:45-46`: when no stop message applies, the label names the reason.
     The Add or Replace choice: a short line, for example "Sync waits for you to choose Add or Replace."

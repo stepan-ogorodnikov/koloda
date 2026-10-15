@@ -64,11 +64,11 @@ describe("SyncIndicator", () => {
       "settings.sync.stop.error",
     ],
     [status({ type: "stopped", stop: { reason: "restored" } }), "settings.sync.stop.pair-again"],
-    [status({ type: "importPending" }), "settings.sync.indicator.attention"],
-    [status({ type: "idle" }, { isOverQuota: true }), "settings.sync.indicator.attention"],
+    [status({ type: "importPending" }), "settings.sync.indicator.choice"],
+    [status({ type: "idle" }, { isOverQuota: true }), "settings.sync.over-quota"],
     [
       status({ type: "idle" }, { hold: { lane: "hot", seq: 3, reason: "updateRequired" } }),
-      "settings.sync.indicator.attention",
+      "settings.sync.indicator.held",
     ],
   ])("names the state of %o", async (current, label) => {
     await renderIndicator(current);

@@ -38,19 +38,25 @@ export function SyncIndicator({ sync, onOpen }: SyncIndicatorProps) {
 
   if (!status || !isShown(status)) return null;
 
-  const { state, lastSuccessAt } = status;
+  const { state, lastSuccessAt, hold, isOverQuota } = status;
   const isAttention = needsAttention(status);
   const isBusy = state.type === "syncing" || state.type === "bootstrapping";
   const lastSync = lastSuccessAt === null ? null : formatTimestamp(new Date(lastSuccessAt), "datetime");
-  const label = isAttention
-    ? (stopMessage(status) ?? _(msg`settings.sync.indicator.attention`))
-    : state.type === "syncing"
-      ? _(msg`settings.sync.state.syncing`)
-      : state.type === "bootstrapping"
-        ? _(msg`settings.sync.state.bootstrapping`)
-        : lastSync === null
-          ? _(msg`settings.sync.state.idle`)
-          : _(msg`settings.sync.last-sync ${lastSync}`);
+  const label =
+    stopMessage(status) ??
+    (state.type === "importPending"
+      ? _(msg`settings.sync.indicator.choice`)
+      : hold !== null
+        ? _(msg`settings.sync.indicator.held`)
+        : isOverQuota
+          ? _(msg`settings.sync.over-quota`)
+          : state.type === "syncing"
+            ? _(msg`settings.sync.state.syncing`)
+            : state.type === "bootstrapping"
+              ? _(msg`settings.sync.state.bootstrapping`)
+              : lastSync === null
+                ? _(msg`settings.sync.state.idle`)
+                : _(msg`settings.sync.last-sync ${lastSync}`));
   const Icon = isAttention ? AlertIcon : isBusy ? RefreshIcon : SuccessIcon;
 
   return (
