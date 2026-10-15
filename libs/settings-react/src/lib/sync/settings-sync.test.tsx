@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-quer
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { createStore, Provider as JotaiProvider } from "jotai";
 import type { PropsWithChildren } from "react";
+import * as macro from "@lingui/core/macro";
 import { describe, expect, it, vi } from "vitest";
 import { SettingsSync } from "./settings-sync";
 
@@ -152,13 +153,22 @@ describe("SettingsSync", () => {
   });
 
   it.each([
-    [{ pending: 2, held: 0 }, true],
-    [{ pending: 0, held: 3 }, true],
-    [{ pending: 0, held: 0 }, false],
-  ])("counts changes held while the space is full as waiting to upload: %o", (counts, isShown) => {
+    [{ pending: 2, held: 3 }, 5],
+    [{ pending: 0, held: 3 }, 3],
+    [{ pending: 2, held: 0 }, 2],
+  ])("counts changes held while the space is full as waiting to upload: %o", (counts, waiting) => {
+    // WHY: the macro mock's `plural` drops the count, so the test reads the count the message receives.
+    const plural = vi.spyOn(macro, "plural");
     renderSync(status({ type: "idle" }, { ...counts, isOverQuota: counts.held > 0 }), syncQueries(vi.fn()));
 
-    expect(screen.queryByText("settings.sync.pending") !== null).toBe(isShown);
+    expect(screen.getByText("settings.sync.pending")).not.toBeNull();
+    expect(plural).toHaveBeenCalledWith(waiting, { other: "settings.sync.pending" });
+  });
+
+  it("shows no changes waiting when none wait", () => {
+    renderSync(status({ type: "idle" }), syncQueries(vi.fn()));
+
+    expect(screen.queryByText("settings.sync.pending")).toBeNull();
   });
 
   it("shows what is left to download across both lanes while downloading", () => {
