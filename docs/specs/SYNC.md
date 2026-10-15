@@ -147,6 +147,7 @@ Then the choice says so and recommends Replace: Add keeps both, so the copied de
 With either choice, the space's learning settings take the place of this device's, and every screen refreshes.
 Settings that never sync stay as they are (§Core model).
 
+Both choices need the server: while it cannot be reached, the choice fails, says why, deletes nothing, and waits.
 A device waiting for the choice shows it again on Settings → Sync after a restart, without the copy warning.
 
 Instead of choosing, the device can leave the space (§Leaving a Space).
