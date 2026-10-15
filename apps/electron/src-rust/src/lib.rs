@@ -132,7 +132,8 @@ where
 // window. Each method now queues its body on one dedicated thread and returns a Promise.
 // INVARIANT: one FIFO worker — jobs run in call order, exactly as the synchronous calls did,
 // so a read issued after a write always sees it. Do not move this onto the libuv pool.
-// Sync host calls wait on the network, so they queue on a second FIFO worker of their own.
+// Sync host calls wait on the network, so they queue on a second FIFO worker of their own; the sync status, which
+// only reads, queues on the first, and a nudge does not queue.
 // FSRS optimization runs for seconds, so it queues on a third.
 #[napi]
 pub struct KolodaDb {
@@ -806,20 +807,20 @@ impl KolodaDb {
         })
     }
 
+    // WHY: it only reads the database, so it queues there and never waits behind a sync call on the network.
     #[napi]
     pub fn sync_status(&self, env: Env) -> Result<JsObject> {
-        self.run_sync(env, move |sync| {
+        let sync = Arc::clone(&self.sync);
+        self.run(env, move |_| {
             let status = sync.engine().and_then(|engine| engine.status()).map_err(sync_error)?;
             to_value(&StatusWire::from(status))
         })
     }
 
+    // WHY: synchronous on purpose — it only fires a trigger, and must not wait behind a sync call on the network.
     #[napi]
-    pub fn sync_nudge(&self, env: Env) -> Result<JsObject> {
-        self.run_sync(env, move |sync| {
-            sync.nudge();
-            Ok(())
-        })
+    pub fn sync_nudge(&self) {
+        self.sync.nudge();
     }
 }
 

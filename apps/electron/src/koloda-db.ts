@@ -153,7 +153,7 @@ export interface KolodaDb {
   // Sync (a worker of its own; host calls wait on the network)
   syncStart(starter: SyncStarter, onEvent: (event: SyncEngineEvent) => void): Promise<SyncStatus>;
   syncStatus(): Promise<SyncStatus>;
-  syncNudge(): Promise<void>;
+  syncNudge(): void;
   syncCreateSpace(data: CreateSpaceData): Promise<SyncStatus>;
   syncIssuePairing(): Promise<IssuedPairing>;
   syncDevices(): Promise<SyncDevice[]>;

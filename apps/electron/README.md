@@ -44,8 +44,8 @@ The TS/Rust mirroring rationale is `docs/decisions/TS-RUST-DOMAIN-MIRRORING.md`.
 - Rust addon: `src-rust/` — `koloda-electron` cdylib;
   `KolodaDb` NAPI façade over `koloda` (SQLite at `<userData>/koloda.db`).
   Methods return Promises and run on one dedicated database thread, in call order.
-  `src-rust/src/sync.rs` runs the `koloda-sync` engine on the same database; its host calls run on a sync thread
-  of their own, and product writes tell it to sync.
+  `src-rust/src/sync.rs` runs the `koloda-sync` engine on the same database; its host calls that wait on the
+  network run on a sync thread of their own, and product writes tell it to sync.
   `src-rust/src/optimizer.rs` runs FSRS optimization on a thread of its own and reports its progress.
 - Bundling scripts: `scripts/` —
   - `bundle-main.ts` — rolldown bundle of `src/main.ts` to a single CJS `dist/main.cjs` for the release asar

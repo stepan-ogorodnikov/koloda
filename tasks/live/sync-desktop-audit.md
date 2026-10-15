@@ -367,7 +367,7 @@ Out:
   Commit: Show a failed sync start and retry it from the status
   Depends on: none
 
-- [ ] 6. Keep sync nudges and status reads off the network worker
+- [x] 6. Keep sync nudges and status reads off the network worker
   Goal (finding 6):
   - `sync_nudge` (`apps/electron/src-rust/src/lib.rs:818-823`) becomes synchronous, as
     `cancel_algorithm_optimization` is for the same reason (`:369-378`).

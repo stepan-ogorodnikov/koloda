@@ -78,6 +78,7 @@ over `KolodaDb`, streaming tool events back on the same channel.
 
 The `koloda-sync` engine runs inside the addon on the app's database (`src-rust/src/sync.rs`).
 Its host calls wait on the network, so they run on a sync thread of their own, never on the database thread.
+`cmd_sync_status` only reads, so it runs on the database thread; `cmd_sync_nudge` waits on neither.
 Every product write command tells the engine a local commit happened; conversations, AI profiles, and attachment
 writes capture nothing and do not.
 

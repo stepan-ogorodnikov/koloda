@@ -91,6 +91,6 @@ export function registerSyncIpc(db: SyncDb) {
   });
 
   powerMonitor.on("resume", () => {
-    void db.syncNudge();
+    db.syncNudge();
   });
 }
