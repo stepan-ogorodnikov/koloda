@@ -343,7 +343,7 @@ Out:
   Commit: Offer Leave while the Add or Replace choice waits
   Depends on: none
 
-- [ ] 5. Show a failed sync start and retry it from the status
+- [x] 5. Show a failed sync start and retry it from the status
   Goal (finding 7):
   - The status query starts the engine while it has not started in this renderer.
     Its fetch calls `cmd_sync_start` until one succeeds, then `cmd_sync_status`

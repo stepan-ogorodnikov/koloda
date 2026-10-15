@@ -86,6 +86,7 @@ writes capture nothing and do not.
     The first-run seed builds the same content.
   - The background runner starts once the database is in a space; a database in no space runs nothing.
   - A later call, as after a renderer reload, only returns the status.
+  - A call after a failed start starts again; until one succeeds, every other sync command fails.
 - `cmd_sync_status` — the current `SyncStatus` (`@koloda/app`).
 - `cmd_sync_nudge` — asks the runner to sync now; main also nudges when the system resumes.
 - `cmd_sync_create_space` `{ data: { serverUrl, setupToken, spaceName, deviceName } }` — creates a space on the
