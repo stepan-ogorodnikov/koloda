@@ -21,7 +21,9 @@ export type SettingsSyncStatusProps = { status: SyncStatus; sync: SyncQueries };
 export function SettingsSyncStatus({ status, sync }: SettingsSyncStatusProps) {
   const { _ } = useLingui();
   const formatTimestamp = useTimestampFormatter();
-  const { state, lastSuccessAt, pending, uploads, fetches } = status;
+  const { state, lastSuccessAt, uploads, fetches } = status;
+  // WHY: changes the full space refused wait in a hold of their own; to the user they wait to upload all the same.
+  const pending = status.pending + status.held;
   // WHY: the two lanes are an engine detail; the user sees one download.
   const left = (status.lagHot ?? 0) + (status.lagCold ?? 0);
   const lastSync = lastSuccessAt === null ? null : formatTimestamp(new Date(lastSuccessAt), "datetime");

@@ -385,7 +385,7 @@ Out:
   Commit: Keep sync nudges and status reads off the network worker
   Depends on: none
 
-- [ ] 7. Count held changes as waiting to upload
+- [x] 7. Count held changes as waiting to upload
   Goal (finding 2):
   - `libs/settings-react/src/lib/sync/settings-sync-status.tsx:24`, `:45`: the changes-waiting line counts
     `pending + held`.

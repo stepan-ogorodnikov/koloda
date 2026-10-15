@@ -151,6 +151,16 @@ describe("SettingsSync", () => {
     expect(screen.queryByRole("button", { name: "settings.sync.sync-now" })).toBeNull();
   });
 
+  it.each([
+    [{ pending: 2, held: 0 }, true],
+    [{ pending: 0, held: 3 }, true],
+    [{ pending: 0, held: 0 }, false],
+  ])("counts changes held while the space is full as waiting to upload: %o", (counts, isShown) => {
+    renderSync(status({ type: "idle" }, { ...counts, isOverQuota: counts.held > 0 }), syncQueries(vi.fn()));
+
+    expect(screen.queryByText("settings.sync.pending") !== null).toBe(isShown);
+  });
+
   it("shows what is left to download across both lanes while downloading", () => {
     renderSync(status({ type: "bootstrapping" }, { lagHot: 40, lagCold: 2 }), syncQueries(vi.fn()));
 
