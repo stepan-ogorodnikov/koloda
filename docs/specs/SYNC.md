@@ -122,8 +122,9 @@ The desktop app's first-run screen offers two choices, each with a line saying w
 choice.
 
 A device that joins on first run takes its starter content and learning settings from the space.
-The language and color scheme chosen on the first-run screen become its interface settings, and every other
-interface setting and hotkey starts at its default.
+The language and color scheme chosen on the first-run screen before the join become its interface settings, and
+every other interface setting and hotkey starts at its default.
+The download screen after the join offers neither; they change in the interface settings once the app opens.
 
 After the join, the screen stays until the space's first download ends, and shows how many changes are left.
 If the download stops, or waits at a change the app cannot read, the screen says why (§When Sync Stops) and sync

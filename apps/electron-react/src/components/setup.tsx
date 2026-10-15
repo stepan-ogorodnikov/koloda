@@ -29,6 +29,7 @@ export function Setup() {
   const scheme = useAtomValue(schemeAtom);
   const sync = useAtomValue(syncQueriesAtom);
   const [isJoining, setIsJoining] = useState(false);
+  const [hasJoined, setHasJoined] = useState(false);
   const setupError = isError && error ? formatAppError(error, _, ERROR_MESSAGES.unknown) : null;
 
   const openApp = useCallback(() => {
@@ -48,7 +49,12 @@ export function Setup() {
           <OverlayFrameTitle>{isJoining ? _(msg`app.setup.join`) : _(msg`app.setup.header`)}</OverlayFrameTitle>
         </OverlayFrameHeader>
         {isJoining && sync ? (
-          <SyncFirstRunJoin sync={sync} onReady={openApp} onCancel={() => setIsJoining(false)} />
+          <SyncFirstRunJoin
+            sync={sync}
+            onJoined={() => setHasJoined(true)}
+            onReady={openApp}
+            onCancel={() => setIsJoining(false)}
+          />
         ) : (
           <div className="flex flex-col">
             {setupError && (
@@ -73,10 +79,13 @@ export function Setup() {
           </div>
         )}
       </div>
-      <div className="flex flex-row gap-2">
-        <ColorSchemePicker buttonVariants={{ style: "ghost" }} showChevron={false} isPersisted={false} />
-        <LanguagePicker buttonVariants={{ style: "ghost" }} showChevron={false} isPersisted={false} />
-      </div>
+      {/* WHY: the join seeds the interface settings from these once; after it, a change here would not be kept. */}
+      {!hasJoined && (
+        <div className="flex flex-row gap-2">
+          <ColorSchemePicker buttonVariants={{ style: "ghost" }} showChevron={false} isPersisted={false} />
+          <LanguagePicker buttonVariants={{ style: "ghost" }} showChevron={false} isPersisted={false} />
+        </div>
+      )}
     </div>
   );
 }

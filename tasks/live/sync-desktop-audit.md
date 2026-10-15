@@ -415,7 +415,7 @@ Out:
   Commit: Say why sync needs attention in the indicator tooltip
   Depends on: 2 (both edit the indicator's test table)
 
-- [ ] 9. Hide the first-run pickers once the join succeeds
+- [x] 9. Hide the first-run pickers once the join succeeds
   Goal (finding 5):
   - `SyncFirstRunJoin` reports a successful join upward, for example an `onJoined` prop called where `JoinFlow`'s
     `onDone` sets `hasJoined` (`libs/settings-react/src/lib/sync/sync-first-run-join.tsx:16-19`).

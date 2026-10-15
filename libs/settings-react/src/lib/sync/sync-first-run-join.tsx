@@ -8,15 +8,25 @@ import { SyncHoldMessage } from "./settings-sync-problems";
 import { JoinFlow } from "./settings-sync-join";
 import { useSyncStopMessage } from "./sync-messages";
 
-export type SyncFirstRunJoinProps = { sync: SyncQueries; onReady: () => void; onCancel: () => void };
+export type SyncFirstRunJoinProps = {
+  sync: SyncQueries;
+  onJoined: () => void;
+  onReady: () => void;
+  onCancel: () => void;
+};
 
 // INVARIANT: a blank database that joined opens the app only once its first download ends; before that it has no
 // algorithm or template for the screens that need one (`SYNC.md` §First run).
-export function SyncFirstRunJoin({ sync, onReady, onCancel }: SyncFirstRunJoinProps) {
+export function SyncFirstRunJoin({ sync, onJoined, onReady, onCancel }: SyncFirstRunJoinProps) {
   const [hasJoined, setHasJoined] = useState(false);
 
+  const handleDone = () => {
+    setHasJoined(true);
+    onJoined();
+  };
+
   if (hasJoined) return <FirstDownload sync={sync} onReady={onReady} />;
-  return <JoinFlow sync={sync} onDone={() => setHasJoined(true)} onCancel={onCancel} />;
+  return <JoinFlow sync={sync} onDone={handleDone} onCancel={onCancel} />;
 }
 
 type FirstDownloadProps = { sync: SyncQueries; onReady: () => void };

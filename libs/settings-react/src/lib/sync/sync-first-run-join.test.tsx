@@ -46,7 +46,7 @@ function status(state: SyncStatus["state"], overrides: Partial<SyncStatus> = {})
 
 const PREVIEW: SpacePreview = { spaceName: "Study", counts: { decks: 1 }, bytes: 1000 };
 
-function renderFirstRun(onReady: () => void) {
+function renderFirstRun(onReady: () => void, onJoined: () => void = vi.fn()) {
   const joined: JoinedSpace = { mode: "blank", knownIds: 0, status: status({ type: "bootstrapping" }) };
   const sync = {
     getDeviceNameQuery: () => ({ queryKey: ["sync", "device_name"], queryFn: async () => "laptop" }),
@@ -65,7 +65,9 @@ function renderFirstRun(onReady: () => void) {
       </QueryClientProvider>
     );
   }
-  render(<SyncFirstRunJoin sync={sync} onReady={onReady} onCancel={vi.fn()} />, { wrapper: Wrapper });
+  render(<SyncFirstRunJoin sync={sync} onJoined={onJoined} onReady={onReady} onCancel={vi.fn()} />, {
+    wrapper: Wrapper,
+  });
   return queryClient;
 }
 
@@ -75,16 +77,31 @@ async function press(name: string) {
   });
 }
 
-async function join() {
+async function preview() {
   await screen.findByDisplayValue("laptop");
   fireEvent.change(screen.getByLabelText(/settings.sync.server-url.label/), { target: { value: "https://s.test" } });
   fireEvent.change(screen.getByLabelText(/settings.sync.invite.code/), { target: { value: "ABCDE12345" } });
   await press("settings.sync.join.continue");
   await screen.findByText("settings.sync.join.preview.space Study");
+}
+
+async function join() {
+  await preview();
   await press("settings.sync.join.submit");
 }
 
 describe("SyncFirstRunJoin", () => {
+  it("tells the setup screen once the join succeeds, not at the preview", async () => {
+    const onJoined = vi.fn();
+    renderFirstRun(vi.fn(), onJoined);
+    await preview();
+    expect(onJoined).not.toHaveBeenCalled();
+
+    await press("settings.sync.join.submit");
+
+    expect(onJoined).toHaveBeenCalledTimes(1);
+  });
+
   it("waits for the space's first download before opening the app", async () => {
     const onReady = vi.fn();
     const queryClient = renderFirstRun(onReady);
