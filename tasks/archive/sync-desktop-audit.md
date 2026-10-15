@@ -1,6 +1,6 @@
 # Desktop sync audit fixes
 
-Status: ready
+Status: done
 Guides: agents/IMPLEMENTATION-PLAN.md, agents/TASKS.md, docs/specs/SYNC.md, agents/CODE-STYLE.md, agents/CODE-DOCUMENTATION.md, agents/TESTING.md, agents/I18N.md, agents/CSS.md, agents/VERIFY.md, agents/FUNCTIONAL-SPECIFICATIONS.md, agents/MARKDOWN.md, agents/BACKWARDS-COMPATIBILITY.md, agents/REVIEW.md, apps/electron/README.md, apps/electron/IPC.md, crates/koloda-sync/README.md, crates/koloda-sync-proto/PROTOCOL.md
 Flow: local
 
@@ -470,4 +470,54 @@ Out:
 
 ## Outcome
 
-<what shipped>
+Every finding of the audit is settled: 1 to 9, 11, and 12 are fixed.
+10 is skipped here and moved to a task of its own (Open questions, 2); it is not scheduled yet.
+
+Shipped, one Plan item per commit:
+
+- 1: `attachmentsFetched` sets `fetchedAttachmentsAtom` in `core-react`.
+  `useAttachmentImages` keeps each `<img>` it showed as alt text and loads it again when a batch names it.
+- 9: the engine's `Stop::Unreachable` names a server out of reach (`SyncError::Transport`), with its wire and TS twins.
+  Any other stop shows a translated line, with the engine's text as details on Settings → Sync.
+- 12: Replace reads the device record before it deletes rows, so a device removed while the choice waited detaches
+  with its rows kept.
+- 11: Settings → Sync offers Leave beside Add and Replace, hidden while Replace asks again.
+- 7: the status query starts the engine until a start succeeds, once the app provides the starter; a failed start
+  shows on Settings → Sync, and its retry starts again.
+- 6: `sync_status` queues on the database worker, and `sync_nudge` is synchronous.
+- 2: the changes-waiting count adds the changes held while the space is full.
+- 4: the title bar tooltip names the Add or Replace choice, a held change, and a full space;
+  `settings.sync.indicator.attention` is gone.
+- 5: the first-run language and color scheme pickers hide once the join succeeds.
+- 3: the first-run "Join a space" line says it needs a pairing code, in `en` and `ru`.
+- 8: the sync name rule counts code points, as the server does.
+
+`SYNC.md` changed with the items that made it true: §When Sync Stops, §Add or Replace, §Joining a Space, and
+§First Run.
+`PROTOCOL.md` §Joining says Replace reads the device record first; `IPC.md` §Sync says which calls skip the sync
+worker and that a start after a failed one starts again.
+
+Deviations from the Plan text are recorded on items 3, 5, 7, and 9.
+Self-review, by a separate review agent over `origin/main..HEAD`, found three real gaps and added five commits:
+- the addon's module comment and main's typings say which sync calls skip the network worker;
+- `SYNC.md` §Add or Replace says both choices need the server;
+- item 7's test reads the count the message receives;
+- the `core-react` README lists `fetchedAttachmentsAtom`;
+- this file records the deviations.
+
+Checked: `bun run check:push` passed on every item's tip and on the final tip.
+`cargo test -p koloda-electron` passed after items 2 and 6, which the gate does not run.
+Each new test failed with its fix broken, checked by hand once.
+
+Not checked, for the human (desktop):
+
+- A second desktop joins a space with images and starts a lesson during the download: alt text turns into the image.
+- With the sync server stopped, Settings → Sync and the tooltip say the server can't be reached, also in Russian.
+- A used database joins: Add, Replace, and Leave are offered; Leave shows the device left and offers Join.
+- At that choice with the server stopped, Replace fails, says why, and the cards stay.
+- At that choice, after another device removes it, Replace keeps the cards and shows the device left.
+- First run: the "Join a space" line names a pairing code, and the pickers go once the join succeeds.
+- A full space: the tooltip names it, and the waiting count includes held changes.
+
+Follow-ups: the task for finding 10 (desktop e2e sync spec: a secret-store seam, a server launcher, two app
+instances).
