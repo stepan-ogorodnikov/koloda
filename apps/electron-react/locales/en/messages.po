@@ -32,7 +32,7 @@ msgstr "Join a space"
 
 #: src/components/setup.tsx:68
 msgid "app.setup.join-message"
-msgstr "Connect to existing database"
+msgstr "Use a pairing code from a device already in the space"
 
 #: src/components/setup.tsx:60
 msgid "app.setup.submit"

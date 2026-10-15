@@ -432,7 +432,7 @@ Out:
   Commit: Hide the first-run pickers once the join succeeds
   Depends on: none
 
-- [ ] 10. Say on first run that joining needs a pairing code
+- [x] 10. Say on first run that joining needs a pairing code
   Goal (finding 3):
   - `app.setup.join-message` in `apps/electron-react/locales/en/messages.po:34-35` and `ru/messages.po:34-35` says
     that joining needs a pairing code from a device already in the space.

@@ -32,7 +32,7 @@ msgstr "Подключиться к пространству"
 
 #: src/components/setup.tsx:68
 msgid "app.setup.join-message"
-msgstr "База данных на сервере"
+msgstr "Нужен код подключения с устройства, которое уже в пространстве"
 
 #: src/components/setup.tsx:60
 msgid "app.setup.submit"
