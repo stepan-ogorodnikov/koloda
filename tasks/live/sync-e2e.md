@@ -1,6 +1,6 @@
 # Desktop e2e sync spec
 
-Status: draft
+Status: ready
 Guides: agents/IMPLEMENTATION-PLAN.md, agents/TASKS.md, apps/electron-e2e/README.md, libs/e2e/README.md, agents/VERIFY.md, agents/TESTING.md, agents/CODE-STYLE.md, agents/CODE-DOCUMENTATION.md, agents/MARKDOWN.md, agents/REVIEW.md, apps/electron/README.md, agents/RUST.md, crates/koloda-server/README.md, docs/specs/SYNC.md
 Flow: local
 
@@ -97,7 +97,8 @@ Out:
 
 ## Open questions
 
-- [ ] 1. Keyring: how does the suite keep secrets out of the OS keyring? — open.
+- [x] 1. Keyring: how does the suite keep secrets out of the OS keyring? — a debug addon with a file store, as
+  recommended (human, 2026-10-16).
   Recommended: build the suite's addon in debug and reuse the `debug_assertions` seam.
   The addon then installs a file store when `KOLODA_E2E_SECRETS` names a file, and the fixtures put that file in each
   test's user-data directory.
@@ -109,7 +110,7 @@ Out:
     so it never reaches a package;
   - no seam: the spec writes tokens to the keyring as the AI provider specs write keys today.
     Item 1 then drops out, and the spec runs only where a secret service is up.
-- [ ] 2. Coverage: what does the spec check? — open.
+- [x] 2. Coverage: what does the spec check? — the one test below, as recommended (human, 2026-10-16).
   Recommended: one test.
   - Device A starts fresh, makes a deck with a card, creates a space from Settings → Sync, and opens "Invite a device".
   - Device B joins from the first-run screen with that code.
@@ -119,7 +120,8 @@ Out:
   The pairing code comes from A's dialog, not `koloda-server pair`, so the invite flow is covered too.
   The last step goes through the events socket and the renderer's refresh, the kind of path finding 1 broke.
   Left out: a join from Settings → Sync on a device that started fresh, and images.
-- [ ] 3. Who runs the spec before Self-review? — open.
+- [x] 3. Who runs the spec before Self-review? — as recommended (human, 2026-10-16):
+  the human asks for a filtered run in the session that implements item 2.
   `agents/VERIFY.md` lets an agent run a Playwright command only when the human asks for it in that session.
   Without a run, item 2 is written blind against selectors and timing, and only typechecked.
   Recommended: in the session that implements item 2, the human asks for a filtered run of this spec, so the agent
@@ -128,11 +130,11 @@ Out:
   `bunx playwright test --config apps/electron-e2e/playwright.config.ts sync.spec.ts`.
   An argument after `nx run electron-e2e:e2e --` would reach the build steps too, so the filter goes to Playwright.
   Otherwise the human runs it after item 2, and failures come back as new commits.
-- [ ] 4. Flow? — `local`, the default, unless the human picks `remote`.
+- [x] 4. Flow? — `local` (human, 2026-10-16).
 
 ## Plan
 
-Written for the recommended answers to Open questions 1 to 3.
+Written for the answers to Open questions 1 to 3.
 
 - [ ] 1. Keep desktop e2e secrets out of the OS keyring
   Goal: no desktop e2e run reads or writes the OS keyring.
