@@ -933,7 +933,17 @@
           "dflt_value": null
         }
       ],
-      "indexes": [],
+      "indexes": [
+        {
+          "name": "sync_held_kind_id_group_name_idx",
+          "unique": 0,
+          "columns": [
+            "kind",
+            "id",
+            "group_name"
+          ]
+        }
+      ],
       "foreign_keys": []
     },
     {

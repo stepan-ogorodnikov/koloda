@@ -171,7 +171,7 @@ Out:
   Commit: Overlay a joiner's edited starter rows with the space's values
   Depends on: none
 
-- [ ] 2. Index held writes for the re-bootstrap cleanup
+- [x] 2. Index held writes for the re-bootstrap cleanup
   Goal (finding 3):
   - Client migration `crates/koloda/src/migrations/V17__sync_held_entity.sql` adds
     `sync_held_kind_id_group_name_idx` on `sync_held (kind, id, group_name)`.
