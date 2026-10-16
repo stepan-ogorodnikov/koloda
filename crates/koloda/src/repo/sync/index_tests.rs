@@ -1,5 +1,5 @@
-//! The statements that renumber this device's pending rows, find a cohort's rows, or tell which creates a
-//! re-bootstrap keeps search an index.
+//! The statements that renumber this device's pending rows, find a cohort's rows, or check what a re-bootstrap keeps
+//! all search an index.
 //!
 //! WHY: a fork, a heal, or a held release renumbers pending rows one by one in one transaction, and a save that
 //! replaces a pending row looks up its cohort. A re-bootstrap's cleanup looks every create up in the outbox and the

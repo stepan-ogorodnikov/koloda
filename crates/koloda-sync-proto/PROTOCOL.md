@@ -228,8 +228,8 @@ An unmodified seed row on a joining device carries stamp zero and is never pushe
 The joiner therefore cannot overwrite the space's copy; the space's `create` **overlays** it on apply.
 The joiner may edit the row before that `create` arrives, as while its download waits.
 The row still has no create origin, so the `create` still overlays it, but one update group at a time.
-A group whose local write beats the `create` keeps that write; every other group takes the `create`'s value and
-floor, and its pending write is dropped.
+A group whose local write beats the `create` keeps that write.
+Every other group takes the `create`'s value and floor, and loses its pending write as under any winning write.
 Every other device applies the joiner's edit over the `create`'s floor by the same comparison, so they agree.
 
 Seed ids are the one exception to ids being minted once: every first run mints them again.
