@@ -1,6 +1,6 @@
 # Sync modules audit fixes
 
-Status: draft
+Status: ready
 Guides: agents/IMPLEMENTATION-PLAN.md, agents/TASKS.md, crates/koloda/src/repo/sync/README.md, crates/koloda-sync-proto/PROTOCOL.md, agents/RUST.md, agents/DB.md, docs/decisions/TS-RUST-DOMAIN-MIRRORING.md, agents/TESTING.md, agents/CODE-DOCUMENTATION.md, agents/BACKWARDS-COMPATIBILITY.md, agents/MARKDOWN.md, agents/VERIFY.md, agents/REVIEW.md
 Flow: local
 
@@ -130,8 +130,7 @@ Out:
 
 - [x] 1. Triage? — as recommended (human, 2026-10-16).
   Fix 2 and 3, and 1 as a docs fix; 4 to 7 stay Later and are not scheduled.
-- [ ] 2. Flow? — open.
-  Recommended: `local`, as for the last two audit tasks.
+- [x] 2. Flow? — `local` (human, 2026-10-16).
 
 ## Plan
 
