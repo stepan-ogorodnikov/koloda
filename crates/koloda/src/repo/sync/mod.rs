@@ -1,8 +1,9 @@
 //! Sync bookkeeping SQL: device enrollment here, joining an existing space in `join`, capture of product writes
 //! in `capture`, rows that predate enrollment in `backfill`, push batches and their outcomes in `outbox`,
-//! remote envelopes in `apply`, image transfers in `attachments`, new stamps for pending cohorts in `restamp`, the
-//! re-bootstrap barrier in `rebase`, moving a file to a new device id in `switch`, re-pushing what a restored server
-//! lacks in `heal`, and discarding local data for an authoritative restore in `authoritative`
+//! remote envelopes in `apply`, pointers whose referent died in `repair`, image transfers in `attachments`, new
+//! stamps for pending cohorts in `restamp`, the re-bootstrap barrier in `rebase`, moving a file to a new device id in
+//! `switch`, re-pushing what a restored server lacks in `heal`, and discarding local data for an authoritative restore
+//! in `authoritative`
 //! (`crates/koloda-sync-proto/PROTOCOL.md` §Field groups and merge, §Clocks and order, §Devices, §Client state,
 //! §Joining, §Attachments, §Recovery).
 //!
@@ -236,7 +237,7 @@ pub struct SyncState {
     pub device_id: Uuid,
     pub space_id: Uuid,
     pub server_url: Option<String>,
-    /// The space's epoch the file last saw; a re-attach refuses a space restored since.
+    /// The space's epoch the file last saw; its calls name it until a restore moves it.
     pub epoch: Option<Uuid>,
     pub cursor_hot: u64,
     pub cursor_cold: u64,

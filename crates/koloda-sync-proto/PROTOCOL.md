@@ -1801,7 +1801,7 @@ Only native hosts write them; they are device-local runtime state, never synced.
 
 | Table | Key | Holds |
 | --- | --- | --- |
-| `sync_state` | Singleton | `device_id`, `space_id`, `epoch`, join phase, cursors, last HLC, stable high-water, `next_sender_seq`, last observed server seq, skew, role (creator or joiner), backfill phase stamps and watermark, rebase generation and barrier flag, fork nonce, clock pause, heal scan step and watermark, an authoritative restore waiting for the host, the image check a restore asks for, when and why the file detached |
+| `sync_state` | Singleton | `device_id`, `space_id`, `epoch`, server URL, join phase, bootstrap flag, cursors, last HLC, stable high-water, `next_sender_seq`, last observed server seq, role (creator or joiner), backfill phase stamps and watermark, rebase generation and barrier flag, fork nonce, clock pause, heal scan step and watermark, an authoritative restore waiting for the host, the image check a restore asks for, when and why the file detached |
 | `sync_enrolling` | Singleton | A claim or space creation sent and not recorded: kind, nonce, and for a claim the code's hash, space id, and server URL; its token waits in the secret store |
 | `sync_stamps` | `(kind, id, group)` | LWW register (§Field groups and merge) |
 | `sync_origins` | `(kind, id, group)` | Stamp and sender of immutable rows; legacy timestamp floor for creates; the re-bootstrap generation that last delivered a create |

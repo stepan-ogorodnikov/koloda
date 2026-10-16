@@ -192,7 +192,7 @@ Out:
   Commit: Index held writes for the re-bootstrap cleanup
   Depends on: none
 
-- [ ] 3. Match the sync client-state docs to the code
+- [x] 3. Match the sync client-state docs to the code
   Goal (finding 1):
   - `PROTOCOL.md` §Client state, the `sync_state` row (line 1798): drop "skew", which the engine keeps in memory;
     the clock pause it records is already listed.
