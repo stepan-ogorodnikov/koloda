@@ -47,13 +47,6 @@ async function openSyncSettings(page: Page) {
   await expect(page.getByRole("heading", { name: "Sync", exact: true })).toBeVisible();
 }
 
-// WHY: the name field starts as the computer's name once it loads; typing before that could be overwritten.
-async function fillDeviceName(page: Page, name: string) {
-  const field = page.getByRole("textbox", { name: "This device's name" });
-  await expect(field).not.toHaveValue("");
-  await field.fill(name);
-}
-
 async function openDeckCards(page: Page, deckTitle: string) {
   await openSection(page, "Decks");
   await page.getByRole("link", { name: deckTitle, exact: true }).click();
@@ -74,7 +67,7 @@ test("a device joins a space with a pairing code and gets its cards", async ({ p
   await createDialog.getByRole("textbox", { name: "Server address" }).fill(syncServer.url);
   await createDialog.getByLabel("Setup token", { exact: true }).fill(syncServer.setupToken);
   await createDialog.getByRole("textbox", { name: "Space name" }).fill("E2E Space");
-  await fillDeviceName(page, "Device A");
+  await createDialog.getByRole("textbox", { name: "This device's name" }).fill("Device A");
   await createDialog.getByRole("button", { name: "Create", exact: true }).click();
   await expect(createDialog).not.toBeVisible();
   await expect(page.getByRole("heading", { name: "Up to date", exact: true })).toBeVisible();
@@ -92,7 +85,7 @@ test("a device joins a space with a pairing code and gets its cards", async ({ p
   await secondDevice.getByRole("button", { name: "Join a space", exact: true }).click();
   await secondDevice.getByRole("textbox", { name: "Server address" }).fill(syncServer.url);
   await secondDevice.getByRole("textbox", { name: "Pairing code" }).fill(code ?? "");
-  await fillDeviceName(secondDevice, "Device B");
+  await secondDevice.getByRole("textbox", { name: "This device's name" }).fill("Device B");
   await secondDevice.getByRole("button", { name: "Continue", exact: true }).click();
 
   // Device B: the preview shows what the code joins

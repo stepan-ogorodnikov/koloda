@@ -35,7 +35,8 @@ export async function startSyncServer(): Promise<SyncServer> {
   if (!setupToken) throw new Error(`koloda-server init printed no setup token:\n${stdout}`);
 
   const port = await getFreePort();
-  // WHY: the free-disk floors default to 1 GiB, so a nearly full disk would hold the space's writes.
+  // WHY: by default the server holds writes below 1 GiB free and refuses pushes below 64 MiB, so a nearly full disk
+  // would fail the spec for a reason that has nothing to do with sync.
   const server = spawn(
     serverBinary,
     [
