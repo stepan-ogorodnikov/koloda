@@ -1,6 +1,6 @@
 # Desktop e2e sync spec
 
-Status: ready
+Status: done
 Guides: agents/IMPLEMENTATION-PLAN.md, agents/TASKS.md, apps/electron-e2e/README.md, libs/e2e/README.md, agents/VERIFY.md, agents/TESTING.md, agents/CODE-STYLE.md, agents/CODE-DOCUMENTATION.md, agents/MARKDOWN.md, agents/REVIEW.md, apps/electron/README.md, agents/RUST.md, crates/koloda-server/README.md, docs/specs/SYNC.md
 Flow: local
 
@@ -208,4 +208,32 @@ Written for the answers to Open questions 1 to 3.
 
 ## Outcome
 
-<what shipped>
+The desktop e2e suite covers sync end to end, and no desktop e2e run touches the OS keyring.
+
+Shipped, one Plan item per commit:
+
+- 1: debug addons keep secrets in a JSON file when `KOLODA_E2E_SECRETS` names one
+  (`apps/electron/src-rust/src/e2e_secrets.rs`); release addons have no such store.
+  The `e2e` target builds a debug addon, and the fixtures put the file in each test's user-data directory.
+- 2: `sync.spec.ts` runs one real `koloda-server` on loopback (`sync-server.ts`) and two app instances
+  (`launchApp`).
+  Device A creates a space and invites; device B joins from the first-run screen, lists both devices, shows A's card,
+  and shows a card A adds after the join without a reload.
+
+The deviation from the Plan text is recorded on item 2.
+Self-review over `origin/main..HEAD` added one commit: it drops a wait for the device name to fill in, which the spec
+does not need, and names both of the server's free-disk floors in the launcher's comment.
+
+Checked:
+
+- `bun run check:push` passed on every item's tip and on the final tip.
+- `cargo test -p koloda-electron` passed with the store's three new tests, which fail with its file write broken.
+  `cargo clippy -p koloda-electron --all-targets` was clean.
+  The release addon has no `KOLODA_E2E_SECRETS` string; the debug addon has it.
+- The sync spec passed in filtered runs (Open questions, 3), about 17 s each.
+  With A's second card commented out, it failed at that card; that run's `secrets.json` held A's sync token.
+- Item 1's manual verify passed: `ai-providers-add.spec.ts` passed, and its `secrets.json` held the profile's fake key.
+  The `koloda` items in the OS keyring were the same before and after the run, read by attributes only.
+- No server, Electron, or dev-server process and no temp directory was left after any run.
+
+Not done here: the full desktop suite was not run; only `sync.spec.ts` and `ai-providers-add.spec.ts` were.
