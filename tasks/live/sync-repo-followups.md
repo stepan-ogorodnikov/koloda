@@ -1,6 +1,6 @@
 # Sync modules audit follow-ups
 
-Status: draft
+Status: ready
 Guides: agents/IMPLEMENTATION-PLAN.md, agents/TASKS.md, crates/koloda/src/repo/sync/README.md, crates/koloda-sync-proto/PROTOCOL.md, agents/RUST.md, crates/koloda-sync/README.md, agents/DB.md, docs/decisions/TS-RUST-DOMAIN-MIRRORING.md, agents/TESTING.md, agents/CODE-DOCUMENTATION.md, agents/BACKWARDS-COMPATIBILITY.md, agents/MARKDOWN.md, agents/VERIFY.md, agents/REVIEW.md
 Flow: local
 
@@ -94,27 +94,20 @@ Out:
 
 ## Open questions
 
-- [ ] 1. Flow? — open.
-  Recommended: `local`, as for the last three audit tasks.
-- [ ] 2. How are held writes bounded (finding 4)? — open.
-  - Recommended, A: the engine adds no heal or backfill batch while the space is over quota (item 2).
-    A hold then holds at most the one push batch the outbox had and the writes made meanwhile.
-    `release_held` and §Push outcomes stay as they are.
-    The scan resumes on the first round whose record shows room.
-  - B: release one push batch of held rows at a time.
-    It bounds memory and the outbox, but `sync_held` still fills with the whole database.
-    §Push outcomes moves pending rows behind the released ones; with a release spread over rounds, pending writes
-    wait behind all of it, or a write naming a held create comes back `held { dependency }` again.
-  - C: both.
-- [ ] 3. Where does a bulk card delete split into cohorts (finding 5)? — open.
-  - Recommended, A: one local transaction, a new cohort every 1,000 cards (item 1).
-    The delete stays atomic on the device.
-    Another device may show part of it until its next pull.
-    §Cohorts then says a commit may write several cohorts, as backfill already does across phases
-    (`backfill.rs:234`).
-  - B: one local transaction per 1,000 cards.
-    A cohort keeps meaning one commit, but a failure part way leaves part of the selection deleted.
-  - Both add `Capture`'s refusal of a cohort the server would refuse.
+- [x] 1. Flow? — `local` (human, 2026-10-16).
+- [x] 2. How are held writes bounded (finding 4)? — no top-ups while over quota (human, 2026-10-16).
+  The engine adds no heal or backfill batch while the space is over quota (item 2).
+  A hold then holds at most the one push batch the outbox had and the writes made meanwhile.
+  `release_held` and §Push outcomes stay as they are.
+  Not chosen: releasing one push batch at a time.
+  `sync_held` would still fill with the whole database.
+  And pending writes would wait behind a release spread over rounds.
+- [x] 3. Where does a bulk card delete split into cohorts (finding 5)? — one transaction, a new cohort every 1,000
+  cards (human, 2026-10-16).
+  The delete stays atomic on the device; another device may show part of it until its next pull.
+  §Cohorts then says a commit may write several cohorts, as backfill already does across phases (`backfill.rs:234`).
+  `Capture` refuses a cohort the server would refuse.
+  Not chosen: one transaction per 1,000 cards, where a failure part way leaves part of the selection deleted.
 
 ## Plan
 
