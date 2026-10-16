@@ -1,6 +1,6 @@
 # Sync modules audit fixes
 
-Status: ready
+Status: done
 Guides: agents/IMPLEMENTATION-PLAN.md, agents/TASKS.md, crates/koloda/src/repo/sync/README.md, crates/koloda-sync-proto/PROTOCOL.md, agents/RUST.md, agents/DB.md, docs/decisions/TS-RUST-DOMAIN-MIRRORING.md, agents/TESTING.md, agents/CODE-DOCUMENTATION.md, agents/BACKWARDS-COMPATIBILITY.md, agents/MARKDOWN.md, agents/VERIFY.md, agents/REVIEW.md
 Flow: local
 
@@ -208,4 +208,30 @@ Out:
 
 ## Outcome
 
-<what shipped>
+Findings 1 to 3 are fixed.
+4 to 7 are skipped as Later and not scheduled (Open questions, 1); their evidence and fix directions stay in Scope.
+
+Shipped, one Plan item per commit:
+
+- 2: apply overlays a seed row with no create origin, one update group at a time.
+  A group whose local write beats the space's create keeps it; every other group takes the create's value and floor
+  and loses its pending write.
+  `PROTOCOL.md` §Seed identity, §Classes, the apply rule's step 6, and a new conformance case say so.
+- 3: client migration `V17` indexes `sync_held (kind, id, group_name)`, and `index_tests.rs` checks the absence
+  cleanup's held and outbox lookups.
+- 1: §Client state lists the server URL and the bootstrap flag and no skew; the `SyncState.epoch` doc and the module
+  map in `mod.rs` match the code.
+
+Self-review added one commit: clearer wording in §Seed identity and in the `index_tests.rs` module doc.
+
+Checked:
+
+- `bun run check:push` passed on the final tip.
+- `cargo test -p koloda` (297 integration, 395 domain) and `cargo test -p koloda-sync` (168) passed after items 1
+  and 2; clippy was clean.
+- `bunx nx test @koloda/db-sqlite` (91) passed with `V17` and the regenerated schema inventory.
+- Both new overlay tests failed against the old `apply.rs`, and the index test failed with `V17` removed, each checked
+  once by hand.
+
+Manual verify: none — the overlay fix needs an edit while the join's download waits, which only the tests arrange,
+and the other items are an index and docs.
