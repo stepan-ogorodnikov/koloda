@@ -36,6 +36,7 @@ export const test = base.extend<ElectronFixtures>({
     }
     env.KOLODA_USER_DATA = userDataDir;
     env.KOLODA_E2E = "1";
+    env.KOLODA_E2E_SECRETS = resolve(userDataDir, "secrets.json");
 
     const app = await electron.launch({
       executablePath: electronExecutable,

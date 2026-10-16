@@ -14,14 +14,10 @@
     },
     "e2e": {
       "executor": "nx:run-commands",
-      "dependsOn": [
-        {
-          "target": "build-rust",
-          "projects": ["@koloda/electron"]
-        }
-      ],
       "options": {
         "commands": [
+          "cargo build -p koloda-electron",
+          "bunx tsx apps/electron/scripts/copy-native-addon.ts debug",
           "bunx swc apps/electron/src/preload.ts -o apps/electron/dist/preload.js -C module.type=commonjs",
           "bunx playwright test --config apps/electron-e2e/playwright.config.ts"
         ],

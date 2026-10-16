@@ -136,7 +136,7 @@ Out:
 
 Written for the answers to Open questions 1 to 3.
 
-- [ ] 1. Keep desktop e2e secrets out of the OS keyring
+- [x] 1. Keep desktop e2e secrets out of the OS keyring
   Goal: no desktop e2e run reads or writes the OS keyring.
   In debug builds only, `KolodaDb::new` (`apps/electron/src-rust/src/lib.rs`) reads `KOLODA_E2E_SECRETS`.
   When the variable is set, it installs a file-backed `SecretStore` for that path through

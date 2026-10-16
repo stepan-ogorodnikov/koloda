@@ -20,6 +20,8 @@ use sync::{
     CreateSpaceWire, EventCallback, ImportModeWire, JoinWire, PreviewRequestWire, StarterWire, StatusWire, SyncHost,
 };
 
+#[cfg(debug_assertions)]
+mod e2e_secrets;
 mod optimizer;
 mod sync;
 
@@ -181,6 +183,9 @@ impl KolodaDb {
     // WHY: open + migrate stays synchronous; it runs once at startup before any window exists.
     #[napi(constructor)]
     pub fn new(db_path: String) -> Result<Self> {
+        // INVARIANT: before any worker exists, so the AI repo and the sync engine both get the e2e store.
+        #[cfg(debug_assertions)]
+        e2e_secrets::install_from_env().map_err(to_napi_error)?;
         let db = Database::init(db_path).map_err(to_napi_error)?;
         let sync = Arc::new(SyncHost::new(db.clone()));
         let optimizer = Arc::new(OptimizerHost::new(db.clone()));

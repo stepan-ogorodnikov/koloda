@@ -12,6 +12,8 @@ const STORE_ID: &str = "koloda";
 // `tests/` are a separate crate and link a non-`test` build of this library, so
 // `cfg(test)` would strip the seam. Release Electron builds use `--release`,
 // which disables `debug_assertions` and removes the override entirely.
+// The desktop e2e suite runs a debug addon, which installs a file store here
+// (`apps/electron/src-rust/src/e2e_secrets.rs`).
 #[cfg(debug_assertions)]
 static TEST_SECRET_STORE: LazyLock<RwLock<Option<Arc<dyn SecretStore>>>> = LazyLock::new(|| RwLock::new(None));
 

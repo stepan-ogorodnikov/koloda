@@ -9,6 +9,7 @@ One spec file per user flow; no app code is mocked except the AI provider.
 Tests `apps/electron` (main process) and `apps/electron-react` (renderer) together.
 The `e2e` target builds the Rust addon and compiles the preload first, then serves the renderer dev server on port 3000
 and launches Electron from `apps/electron` — the full stack, no bundling shortcuts.
+The addon is a debug build, so it can keep secrets in a file instead of the OS keyring (Fixtures below).
 The web counterpart is `apps/web-e2e`; the spec sets mirror each other flow for flow.
 
 ## How to run
@@ -23,6 +24,7 @@ The web counterpart is `apps/web-e2e`; the spec sets mirror each other flow for 
 - Fixtures: `src/fixtures.ts` — `_electron.launch` per test with a throwaway
   `KOLODA_USER_DATA` temp dir (isolated SQLite),
   `KOLODA_E2E=1`, and the first window as `page`.
+  `KOLODA_E2E_SECRETS` names `secrets.json` in that dir, where AI keys and sync tokens go instead of the OS keyring.
 - Helpers: `src/helpers.ts` — re-exports the shared UI flows from `libs/e2e` (`@koloda/e2e`) and wraps this
   suite's platform points: defaults written into the already-loaded window followed by a reload, and the
   desktop bootstrap copy ("How do you want to start?") and its "Start fresh" button.

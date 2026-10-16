@@ -8,12 +8,14 @@ const prefix = platform === "win32" ? "" : "lib";
 
 const workspaceRoot = join(__dirname, "..", "..", "..");
 const cargoTargetDir = process.env.CARGO_TARGET_DIR || join(workspaceRoot, "target");
-const srcPath = join(cargoTargetDir, "release", `${prefix}koloda_electron${ext}`);
+const profile = process.argv[2] ?? "release";
+const srcPath = join(cargoTargetDir, profile, `${prefix}koloda_electron${ext}`);
 const distDir = join(__dirname, "..", "dist");
 const dstPath = join(distDir, "koloda_electron.node");
 
 if (!existsSync(srcPath)) {
-  console.error(`Native addon not found at ${srcPath}. Run \`cargo build -p koloda-electron --release\` first.`);
+  const flag = profile === "release" ? " --release" : "";
+  console.error(`Native addon not found at ${srcPath}. Run \`cargo build -p koloda-electron${flag}\` first.`);
   process.exit(1);
 }
 
