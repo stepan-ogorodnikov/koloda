@@ -226,6 +226,11 @@ Repair never depends on them: a dead pointer moves to its kind's repair target (
 Two devices that set up independently hold the same starter rows under the same ids.
 An unmodified seed row on a joining device carries stamp zero and is never pushed.
 The joiner therefore cannot overwrite the space's copy; the space's `create` **overlays** it on apply.
+The joiner may edit the row before that `create` arrives, as while its download waits.
+The row still has no create origin, so the `create` still overlays it, but one update group at a time.
+A group whose local write beats the `create` keeps that write; every other group takes the `create`'s value and
+floor, and its pending write is dropped.
+Every other device applies the joiner's edit over the `create`'s floor by the same comparison, so they agree.
 
 Seed ids are the one exception to ids being minted once: every first run mints them again.
 A space may have deleted, and so fenced, a seed id that a joiner still holds.
@@ -288,7 +293,7 @@ Who writes what:
 ### Classes
 
 - **create**: insert if absent, else drop.
-  The exception is a local stamp-zero seed row, which is overlaid (replaced as if inserting).
+  The exception is a local seed row with no create origin, which the create overlays (§Seed identity).
   Never superseded, never compacted away.
 - **update**: never inserts.
   Dropped if the row is absent.
@@ -398,8 +403,9 @@ For every incoming envelope, in order:
    If it does not strictly beat it, drop.
    Otherwise insert if absent and the parent is live, and write `sync_origins`.
    Done.
-6. Create: insert if absent, else drop, except a stamp-zero seed row, which is overlaid.
-   On insert or overlay, stamp every update group (synthetic) and write `sync_origins`.
+6. Create: insert if absent, else drop, except a local seed row with no create origin, which is overlaid.
+   On insert or overlay, stamp every update group that holds no newer local write (synthetic) and write
+   `sync_origins`.
    Done.
 7. Update for an absent row: drop.
 8. Compare with the register.
@@ -1918,6 +1924,8 @@ Every implementation of the engine and the server must pass these.
 - A bootstrap restarted on a new lease drops an entity only the earlier lease delivered, for a join and for a
   re-bootstrap.
 - Start-fresh-then-Join overlays seeds; Add keeps an unmodified seed algorithm and remints a used seed template.
+- A joiner edits its kept seed algorithm before the space's create applies (the edited group keeps the joiner's
+  write while it is newer; every other group takes the space's).
 - Start-fresh-then-Join into a space that deleted the seed template (the local seed row is deleted, never pushed).
 - Add with decks on an unmodified seed algorithm the space deleted (reminted, decks follow); an unused one is
   deleted.

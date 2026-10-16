@@ -376,16 +376,24 @@ fn has_referents(conn: &Connection, header: &Header) -> Result<bool, AppError> {
 fn apply_create(conn: &Connection, entry: &Entry, starter: &Starter, changed: &mut Changed) -> Result<(), AppError> {
     let kind = entry.header.kind;
     let id = entry.header.id.as_str();
-    if is_present(conn, kind, id)? && !is_stamp_zero_seed(conn, kind, id)? {
-        return mark_seen(conn, kind, id);
-    }
-
-    match &entry.payload {
-        Payload::CardCreate(create) => insert_card(conn, id, create)?,
-        Payload::DeckCreate(create) => insert_deck(conn, id, create, starter, changed)?,
-        Payload::TemplateCreate(create) => upsert_document(conn, Kind::Templates, id, create)?,
-        Payload::AlgorithmCreate(create) => upsert_document(conn, Kind::Algorithms, id, create)?,
-        _ => return Err(protocol_error("a create group carries a create payload")),
+    if is_present(conn, kind, id)? {
+        if !is_local_seed(conn, kind, id)? {
+            return mark_seen(conn, kind, id);
+        }
+        match &entry.payload {
+            Payload::TemplateCreate(create) | Payload::AlgorithmCreate(create) => {
+                overlay_seed(conn, kind, id, create, entry.header.stamp)?
+            }
+            _ => return Err(protocol_error("a seed create carries a document payload")),
+        }
+    } else {
+        match &entry.payload {
+            Payload::CardCreate(create) => insert_card(conn, id, create)?,
+            Payload::DeckCreate(create) => insert_deck(conn, id, create, starter, changed)?,
+            Payload::TemplateCreate(create) => insert_document(conn, Kind::Templates, id, create)?,
+            Payload::AlgorithmCreate(create) => insert_document(conn, Kind::Algorithms, id, create)?,
+            _ => return Err(protocol_error("a create group carries a create payload")),
+        }
     }
     entry.values.write_create(conn, kind, id, &entry.payload)?;
     mark_seen(conn, kind, id)?;
@@ -413,9 +421,9 @@ fn mark_seen(conn: &Connection, kind: Kind, id: &str) -> Result<(), AppError> {
     Ok(())
 }
 
-// WHY: every first run mints the seed ids again. An untouched local seed row (no register, no origin) is the
-// same starter row the space holds, so the space's create replaces it instead of being dropped as a duplicate.
-fn is_stamp_zero_seed(conn: &Connection, kind: Kind, id: &str) -> Result<bool, AppError> {
+// WHY: every first run mints the seed ids again. A local seed row with no create origin is the same starter row the
+// space holds, so the space's create overlays it instead of being dropped as a duplicate.
+fn is_local_seed(conn: &Connection, kind: Kind, id: &str) -> Result<bool, AppError> {
     let is_seed = matches!(
         (kind, id),
         (Kind::Algorithms, SEED_ALGORITHM_SIMPLE_ID) | (Kind::Templates, SEED_TEMPLATE_TYPE_ID)
@@ -424,15 +432,54 @@ fn is_stamp_zero_seed(conn: &Connection, kind: Kind, id: &str) -> Result<bool, A
         return Ok(false);
     }
 
-    let is_stamped: bool = conn.query_row(
-        r#"
-        SELECT EXISTS (SELECT 1 FROM sync_stamps WHERE kind = ?1 AND id = ?2)
-            OR EXISTS (SELECT 1 FROM sync_origins WHERE kind = ?1 AND id = ?2)
-        "#,
+    let has_origin: bool = conn.query_row(
+        "SELECT EXISTS (SELECT 1 FROM sync_origins WHERE kind = ?1 AND id = ?2 AND group_name = 'create')",
         params![kind.as_wire(), id],
         |row| row.get(0),
     )?;
-    Ok(!is_stamped)
+    Ok(!has_origin)
+}
+
+// INVARIANT: a joiner may edit its starter row before the space's create applies. Each update group goes by stamp: a
+// local register that beats the create keeps its column, and any other group takes the create's value and floor and
+// drops its pending write, as a winning write does (apply rule step 9). The server installs the joiner's edit as the
+// group's first head whatever its stamp, but every other device applies it only over the create's floor, so this
+// leaves the joiner where they are (PROTOCOL.md, Seed identity).
+fn overlay_seed(
+    conn: &Connection,
+    kind: Kind,
+    id: &str,
+    create: &DocumentCreate,
+    stamp: Stamp,
+) -> Result<(), AppError> {
+    let (table, _) = table(kind);
+    conn.execute(
+        &format!("UPDATE {table} SET created_at = ?1 WHERE id = ?2"),
+        params![create.created_at, id],
+    )?;
+    for spec in kind.spec().groups.iter().filter(|spec| spec.class == Class::Update) {
+        let group = spec.group.as_wire();
+        if read_register(conn, kind, id, group)?.is_some_and(|held| held.stamp > stamp) {
+            continue;
+        }
+        let (column, value): (&str, Option<&str>) = match spec.group {
+            Group::Title => ("title", Some(&create.title)),
+            Group::Notes => ("notes", create.notes.as_deref()),
+            Group::Content | Group::Structure => ("content", Some(&create.content)),
+            _ => return Err(protocol_error("a document group names a document column")),
+        };
+        conn.execute(
+            &format!("UPDATE {table} SET {column} = ?1 WHERE id = ?2"),
+            params![value, id],
+        )?;
+        // WHY: the losing register goes, so `write_create` lays the create's synthetic floor in its place.
+        conn.execute(
+            "DELETE FROM sync_stamps WHERE kind = ?1 AND id = ?2 AND group_name = ?3",
+            params![kind.as_wire(), id, group],
+        )?;
+        discard_pending(conn, kind, id, group)?;
+    }
+    Ok(())
 }
 
 fn insert_card(conn: &Connection, id: &str, create: &CardCreate) -> Result<(), AppError> {
@@ -492,19 +539,13 @@ fn insert_deck(
     Ok(())
 }
 
-// WHY: the conflict branch is the stamp-zero seed overlay; any other existing id never reaches here (`apply_create`).
-fn upsert_document(conn: &Connection, kind: Kind, id: &str, create: &DocumentCreate) -> Result<(), AppError> {
+fn insert_document(conn: &Connection, kind: Kind, id: &str, create: &DocumentCreate) -> Result<(), AppError> {
     let (table, _) = table(kind);
     conn.execute(
         &format!(
             r#"
             INSERT INTO {table} (id, title, notes, content, created_at, updated_at)
             VALUES (?1, ?2, ?3, ?4, ?5, NULL)
-            ON CONFLICT(id) DO UPDATE SET
-                title = excluded.title,
-                notes = excluded.notes,
-                content = excluded.content,
-                created_at = excluded.created_at
             "#
         ),
         params![id, create.title, create.notes, create.content, create.created_at],

@@ -8,12 +8,13 @@ use koloda::repo::decks::get_deck;
 use koloda::repo::sync::apply::Page;
 use koloda::repo::templates::get_template;
 use koloda_sync_proto::payload::{CardCreate, CardScheduling, DeckCreate, DocumentCreate, InitialProductTs, Payload};
-use koloda_sync_proto::registry::{Kind, Lane};
+use koloda_sync_proto::registry::{Group, Kind, Lane};
 use uuid::Uuid;
 
 use crate::common::fixtures::{add_algorithm, add_card, add_deck, add_template};
 use crate::common::sync::{
-    apply, count, cursor, device, enroll, hot_page, last_hlc, origin, register, replica, sealed, stamp, FakeSpace,
+    apply, count, cursor, device, enroll, hot_page, last_hlc, origin, outbox, register, replica, sealed, stamp,
+    FakeSpace,
 };
 use crate::common::{fsrs_algorithm_content, seed_data, test_db};
 
@@ -144,56 +145,103 @@ fn a_create_for_an_id_already_held_is_dropped() {
     assert_eq!(get_algorithm(&b, &id).unwrap().unwrap().title, "Local");
 }
 
+fn seed_create_page(remote: Uuid, wall_ms: u64, title: &str) -> Page {
+    hot_page(
+        remote,
+        vec![sealed(
+            SEED_ALGORITHM_SIMPLE_ID,
+            None,
+            stamp(remote, wall_ms),
+            &algorithm_create(title, InitialProductTs::new(), None),
+        )],
+        1,
+    )
+}
+
+fn rename_seed_algorithm(db: &Database, title: &str) {
+    let seed = get_algorithm(db, SEED_ALGORITHM_SIMPLE_ID)
+        .expect("algorithm reads")
+        .expect("the seed algorithm exists");
+    update_algorithm(
+        db,
+        UpdateAlgorithmData {
+            id: seed.id,
+            values: UpdateAlgorithmValues {
+                title: title.to_string(),
+                content: seed.content,
+                notes: seed.notes,
+            },
+        },
+    )
+    .expect("the seed algorithm renames");
+}
+
 #[test]
-fn only_an_untouched_seed_row_is_overlaid_by_a_remote_seed_create() {
-    for is_touched in [false, true] {
+fn a_remote_seed_create_overlays_the_local_seed_row_except_its_newer_edits() {
+    // Covers PROTOCOL.md conformance: A joiner edits its kept seed algorithm before the space's create applies.
+    for is_edited in [false, true] {
         let b = test_db();
         seed_db(&b, seed_data("Simple", "Basic")).unwrap();
         enroll(&b);
-        if is_touched {
-            update_algorithm(
-                &b,
-                UpdateAlgorithmData {
-                    id: SEED_ALGORITHM_SIMPLE_ID.to_string(),
-                    values: UpdateAlgorithmValues {
-                        title: "Edited here".to_string(),
-                        content: fsrs_algorithm_content(),
-                        notes: None,
-                    },
-                },
-            )
-            .unwrap();
+        if is_edited {
+            // The joiner renames its starter algorithm before the space's create arrives
+            rename_seed_algorithm(&b, "Edited here");
         }
-        let local_title = get_algorithm(&b, SEED_ALGORITHM_SIMPLE_ID).unwrap().unwrap().title;
 
         let remote = Uuid::now_v7();
-        let page = hot_page(
-            remote,
-            vec![sealed(
-                SEED_ALGORITHM_SIMPLE_ID,
-                None,
-                stamp(remote, WALL_MS),
-                &algorithm_create("Space simple", InitialProductTs::new(), None),
-            )],
-            1,
-        );
-        apply(&b, &page).unwrap();
+        apply(&b, &seed_create_page(remote, WALL_MS, "Space simple")).unwrap();
 
         let seed = get_algorithm(&b, SEED_ALGORITHM_SIMPLE_ID).unwrap().unwrap();
-        if is_touched {
-            assert_eq!(
-                seed.title, local_title,
-                "a seed row with registers is no longer stamp zero"
-            );
-            assert!(origin(&b, "algorithms", SEED_ALGORITHM_SIMPLE_ID, "create").is_none());
-        } else {
-            assert_eq!(seed.title, "Space simple");
-            assert_eq!(seed.notes.as_deref(), Some("from the space"));
-            let created =
-                origin(&b, "algorithms", SEED_ALGORITHM_SIMPLE_ID, "create").expect("overlay records an origin");
-            assert_eq!(created.sender, remote);
-        }
+        let expected_title = if is_edited { "Edited here" } else { "Space simple" };
+        assert_eq!(
+            seed.title, expected_title,
+            "an edit newer than the create keeps its group"
+        );
+        assert_eq!(
+            seed.notes.as_deref(),
+            Some("from the space"),
+            "a group the joiner did not edit takes the space's value"
+        );
+        let title = register(&b, "algorithms", SEED_ALGORITHM_SIMPLE_ID, "title").expect("the title has a register");
+        assert_eq!(title.is_synthetic, !is_edited);
+        let created = origin(&b, "algorithms", SEED_ALGORITHM_SIMPLE_ID, "create").expect("overlay records an origin");
+        assert_eq!(created.sender, remote);
+
+        // A seed row the space's create overlaid is no longer local: another create is a duplicate
+        apply(&b, &seed_create_page(remote, WALL_MS + 1, "Created again")).unwrap();
+        assert_eq!(
+            get_algorithm(&b, SEED_ALGORITHM_SIMPLE_ID).unwrap().unwrap().title,
+            expected_title
+        );
     }
+}
+
+#[test]
+fn a_remote_seed_create_newer_than_a_local_edit_takes_that_group_and_drops_its_pending_write() {
+    let b = test_db();
+    seed_db(&b, seed_data("Simple", "Basic")).unwrap();
+    enroll(&b);
+    rename_seed_algorithm(&b, "Edited here");
+    let edit = register(&b, "algorithms", SEED_ALGORITHM_SIMPLE_ID, "title").expect("the edit writes a register");
+
+    let remote = Uuid::now_v7();
+    let create_wall_ms = edit.hlc.wall_ms() + 1;
+    apply(&b, &seed_create_page(remote, create_wall_ms, "Space simple")).unwrap();
+
+    assert_eq!(
+        get_algorithm(&b, SEED_ALGORITHM_SIMPLE_ID).unwrap().unwrap().title,
+        "Space simple",
+        "a create newer than the edit wins its group, as it does on every other device"
+    );
+    let title = register(&b, "algorithms", SEED_ALGORITHM_SIMPLE_ID, "title").expect("the title has a register");
+    assert!(title.is_synthetic, "the create's floor replaces the losing register");
+    assert_eq!(title.hlc, stamp(remote, create_wall_ms).hlc);
+    assert!(
+        outbox(&b)
+            .iter()
+            .all(|entry| entry.envelope.header.group != Some(Group::Title)),
+        "the losing edit is not pushed"
+    );
 }
 
 #[test]

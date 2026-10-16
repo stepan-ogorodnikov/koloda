@@ -134,7 +134,7 @@ Out:
 
 ## Plan
 
-- [ ] 1. Overlay a joiner's edited starter rows with the space's values
+- [x] 1. Overlay a joiner's edited starter rows with the space's values
   Goal (finding 2):
   - Apply overlays a starter row, the seed algorithm (`SEED_ALGORITHM_SIMPLE_ID`) or the seed template
     (`SEED_TEMPLATE_TYPE_ID`), while it has no create origin in `sync_origins`.
