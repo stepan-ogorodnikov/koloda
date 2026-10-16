@@ -164,7 +164,7 @@ Written for the answers to Open questions 1 to 3.
   Commit: Keep desktop e2e secrets out of the OS keyring
   Depends on: none
 
-- [ ] 2. Cover joining a space in a desktop e2e spec
+- [x] 2. Cover joining a space in a desktop e2e spec
   Goal: `apps/electron-e2e/src/sync.spec.ts` runs a space across two desktop instances and one real server.
   Launch: `fixtures.ts` exports `launchApp(userDataDir)`, which the `electronApp` fixture now calls.
   A spec can then start a second device on a temp directory of its own and close it at the end.
@@ -202,6 +202,8 @@ Written for the answers to Open questions 1 to 3.
   It fails if B never shows the second card, checked once by commenting out A's second card.
   Manual verify: none — the change is the test itself, and its run is the check.
   Commit: Cover joining a space in a desktop e2e spec
+  Deviation: the server builds with `cargo build -p koloda-server --target-dir dist/target/koloda`, the same
+  directory; an environment prefix on the command does not run on Windows.
   Depends on: 1
 
 ## Outcome

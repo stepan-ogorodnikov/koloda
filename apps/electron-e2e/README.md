@@ -7,14 +7,16 @@ One spec file per user flow; no app code is mocked except the AI provider.
 ## Where it sits
 
 Tests `apps/electron` (main process) and `apps/electron-react` (renderer) together.
-The `e2e` target builds the Rust addon and compiles the preload first, then serves the renderer dev server on port 3000
-and launches Electron from `apps/electron` — the full stack, no bundling shortcuts.
+The `e2e` target builds the Rust addon and `koloda-server` and compiles the preload first, then serves the renderer
+dev server on port 3000 and launches Electron from `apps/electron` — the full stack, no bundling shortcuts.
 The addon is a debug build, so it can keep secrets in a file instead of the OS keyring (Fixtures below).
 The web counterpart is `apps/web-e2e`; the spec sets mirror each other flow for flow.
+Sync is the exception: the web demo does not sync, so its spec is desktop only.
 
 ## How to run
 
-- `nx run electron-e2e:e2e` — full suite (builds the Rust addon and preload, serves the renderer, launches Electron)
+- `nx run electron-e2e:e2e` — full suite (builds the Rust addon, the sync server, and the preload, serves the renderer,
+  launches Electron)
 - `nx run electron-e2e:typecheck` — typecheck only
 - Also part of `nx run @koloda/electron:test`
 
@@ -25,6 +27,7 @@ The web counterpart is `apps/web-e2e`; the spec sets mirror each other flow for 
   `KOLODA_USER_DATA` temp dir (isolated SQLite),
   `KOLODA_E2E=1`, and the first window as `page`.
   `KOLODA_E2E_SECRETS` names `secrets.json` in that dir, where AI keys and sync tokens go instead of the OS keyring.
+  `launchApp(userDataDir)` starts another instance the same way, for a spec that needs a second device.
 - Helpers: `src/helpers.ts` — re-exports the shared UI flows from `libs/e2e` (`@koloda/e2e`) and wraps this
   suite's platform points: defaults written into the already-loaded window followed by a reload, and the
   desktop bootstrap copy ("How do you want to start?") and its "Start fresh" button.
@@ -33,8 +36,10 @@ The web counterpart is `apps/web-e2e`; the spec sets mirror each other flow for 
   AI HTTP runs in the Electron main process, invisible to renderer route interception;
   the handle returns the `baseUrl` to enter as the LM Studio profile.
   Serves SSE streams, tool calls, held responses, and failures from a FIFO queue per test.
+- Sync server: `src/sync-server.ts` — `startSyncServer()` runs the built `koloda-server` on a free loopback port
+  over plain HTTP, with a throwaway data directory; the handle returns its `url` and `setupToken`.
 - Specs: `src/*.spec.ts` — smoke, settings, decks, cards, templates, presets, lessons, hotkeys,
-  AI profiles, and assistant chat.
+  AI profiles, assistant chat, and sync.
 
 ### Does NOT own (prevent scope creep)
 

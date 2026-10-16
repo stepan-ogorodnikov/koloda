@@ -18,6 +18,7 @@
         "commands": [
           "cargo build -p koloda-electron",
           "bunx tsx apps/electron/scripts/copy-native-addon.ts debug",
+          "cargo build -p koloda-server --target-dir dist/target/koloda",
           "bunx swc apps/electron/src/preload.ts -o apps/electron/dist/preload.js -C module.type=commonjs",
           "bunx playwright test --config apps/electron-e2e/playwright.config.ts"
         ],

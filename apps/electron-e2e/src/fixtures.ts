@@ -18,6 +18,24 @@ type ElectronFixtures = {
   userDataDir: string;
 };
 
+export async function launchApp(userDataDir: string): Promise<ElectronApplication> {
+  const env: Record<string, string> = {};
+  for (const [key, value] of Object.entries(process.env)) {
+    if (key === "ELECTRON_RUN_AS_NODE" || value === undefined) continue;
+    env[key] = value;
+  }
+  env.KOLODA_USER_DATA = userDataDir;
+  env.KOLODA_E2E = "1";
+  env.KOLODA_E2E_SECRETS = resolve(userDataDir, "secrets.json");
+
+  return electron.launch({
+    executablePath: electronExecutable,
+    args: ["-r", "tsx/esm", "."],
+    cwd: electronAppDir,
+    env,
+  });
+}
+
 export const test = base.extend<ElectronFixtures>({
   // WHY: Playwright's fixture signature is `(parentFixtures, provide) => …`, so root fixtures must destructure an empty object.
   // Parameter is `provide` (not Playwright's usual `use`) so react/rules-of-hooks does not treat it as React `use`.
@@ -29,22 +47,7 @@ export const test = base.extend<ElectronFixtures>({
   },
 
   electronApp: async ({ userDataDir }, provide) => {
-    const env: Record<string, string> = {};
-    for (const [key, value] of Object.entries(process.env)) {
-      if (key === "ELECTRON_RUN_AS_NODE" || value === undefined) continue;
-      env[key] = value;
-    }
-    env.KOLODA_USER_DATA = userDataDir;
-    env.KOLODA_E2E = "1";
-    env.KOLODA_E2E_SECRETS = resolve(userDataDir, "secrets.json");
-
-    const app = await electron.launch({
-      executablePath: electronExecutable,
-      args: ["-r", "tsx/esm", "."],
-      cwd: electronAppDir,
-      env,
-    });
-
+    const app = await launchApp(userDataDir);
     await provide(app);
     await app.close();
   },
