@@ -166,7 +166,7 @@ Out:
   Commit: Stop topping up the outbox while the space is over quota
   Depends on: none
 
-- [ ] 3. Hold a learning value this app refuses as corrupt
+- [x] 3. Hold a learning value this app refuses as corrupt
   Goal (finding 6):
   - `breaks_domain_rule` (`apply.rs:217-225`) checks each learning group as a read checks it.
     - `dailyLimits` parses as `DailyLimits` and passes its `validate`.

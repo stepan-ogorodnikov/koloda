@@ -105,8 +105,12 @@ pub fn set_settings(db: &Database, name: SettingsName, content: Value) -> Result
                 )
                 .optional()?;
             upsert_settings(tx, name, &content, now)?;
-            // WHY: an unreadable previous document counts as absent, so every key is captured.
-            let previous = previous.and_then(|text| serde_json::from_str::<Value>(&text).ok());
+            // WHY: the previous document is compared as a read sees it, normalized, so a key it lacks a defaulted
+            // field of is not captured again on every save. One that does not normalize counts as absent, so every key
+            // is captured.
+            let previous = previous
+                .and_then(|text| serde_json::from_str::<Value>(&text).ok())
+                .and_then(|value| name.normalize(value).ok());
             let mut capture = Capture::begin(tx)?;
             for payload in learning_payloads(previous.as_ref(), &content) {
                 capture.write(LEARNING_SYNC_ID, None, &payload)?;

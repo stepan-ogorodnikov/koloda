@@ -23,6 +23,10 @@ use crate::app::error::{error_codes, throw_known_error, AppError};
 use crate::domain::cards::CardState;
 use crate::domain::reviews::InsertReviewData;
 use crate::domain::seed_ids::{SEED_ALGORITHM_SIMPLE_ID, SEED_TEMPLATE_TYPE_ID};
+use crate::domain::settings_learning::{
+    validate_daily_limits, validate_day_starts_at, validate_default_algorithm, validate_default_template,
+    validate_learn_ahead_limit,
+};
 use crate::repo::reviews::insert_review;
 
 /// One pull page: one lane's entries in `seq` order, and the highest seq the server examined for that lane.
@@ -213,15 +217,22 @@ fn unreadable(error: &EnvelopeError) -> HoldReason {
 
 // INVARIANT: a payload that decodes but breaks a rule applying it checks is corrupt, as bytes that do not decode are.
 // The lane holds at it until an operator drops it, instead of failing the page on every pull (PROTOCOL.md, Corrupt
-// envelopes). Every fallible conversion of a payload field that apply makes is checked here.
+// envelopes). Every fallible conversion of a payload field that apply makes is checked here. A learning key is
+// checked as a read of the whole document checks it, so one this app refuses never breaks every read.
 fn breaks_domain_rule(payload: &Payload) -> bool {
     match payload {
         Payload::Review(review) => review_data(review).and_then(|data| data.validate()).is_err(),
-        Payload::LearningDailyLimits(group)
-        | Payload::LearningDayStartsAt(group)
-        | Payload::LearningLearnAheadLimit(group) => serde_json::from_str::<Value>(&group.value).is_err(),
+        Payload::LearningDefaultAlgorithm(group) => validate_default_algorithm(&group.algorithm_id).is_err(),
+        Payload::LearningDefaultTemplate(group) => validate_default_template(&group.template_id).is_err(),
+        Payload::LearningDailyLimits(group) => is_refused(&group.value, validate_daily_limits),
+        Payload::LearningDayStartsAt(group) => is_refused(&group.value, validate_day_starts_at),
+        Payload::LearningLearnAheadLimit(group) => is_refused(&group.value, validate_learn_ahead_limit),
         _ => false,
     }
+}
+
+fn is_refused(json: &str, validate: fn(&Value) -> Result<(), AppError>) -> bool {
+    !serde_json::from_str::<Value>(json).is_ok_and(|value| validate(&value).is_ok())
 }
 
 // INVARIANT: a delete and a reset apply from the header when their payload does not decode; no other value is ever

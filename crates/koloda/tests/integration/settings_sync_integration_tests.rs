@@ -69,3 +69,25 @@ fn saves_that_change_no_learning_key_record_nothing() {
 
     assert!(outbox(&db).is_empty());
 }
+
+#[test]
+fn a_stored_document_missing_a_defaulted_field_records_only_the_key_a_save_changes() {
+    let db = learning_db();
+    db.with_conn(|conn| {
+        conn.execute(
+            "UPDATE settings SET content = json_remove(content, '$.dailyLimits.learn') WHERE name = 'learning'",
+            [],
+        )?;
+        Ok(())
+    })
+    .unwrap();
+
+    settings::patch_settings(&db, SettingsName::Learning, json!({ "dayStartsAt": "06:00" })).unwrap();
+
+    let groups: Vec<_> = outbox(&db).iter().map(|entry| entry.envelope.header.group).collect();
+    assert_eq!(
+        groups,
+        [Some(Group::DayStartsAt)],
+        "the daily limits read the same once their default is filled"
+    );
+}

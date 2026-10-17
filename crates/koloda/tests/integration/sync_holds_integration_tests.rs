@@ -9,17 +9,20 @@ use koloda::domain::cards::UpdateCardProgress;
 use koloda::domain::decks::{UpdateDeckData, UpdateDeckValues};
 use koloda::domain::lessons::LessonResultData;
 use koloda::domain::reviews::InsertReviewData;
+use koloda::domain::settings::SettingsName;
 use koloda::repo::cards::get_card;
 use koloda::repo::decks::{get_deck, update_deck};
 use koloda::repo::lessons::submit_lesson_result;
+use koloda::repo::reviews::get_todays_review_totals;
+use koloda::repo::settings::get_settings;
 use koloda::repo::sync::apply::{apply_page, apply_snapshot_page, Applied, Hold, HoldReason, Page, PageEntry};
 use koloda_sync_proto::envelope::Envelope;
-use koloda_sync_proto::payload::{CardReset, Delete, Payload, Review, SettingValue, SCHEMA};
+use koloda_sync_proto::payload::{CardReset, DefaultAlgorithm, Delete, Payload, Review, SettingValue, SCHEMA};
 use koloda_sync_proto::registry::{Kind, Lane};
 use uuid::Uuid;
 
 use crate::common::fixtures::{add_algorithm, add_card, add_deck, add_template};
-use crate::common::sync::{count, cursor, device, outbox, register, replica, sealed, stamp, starter};
+use crate::common::sync::{count, cursor, device, outbox, register, replica, sealed, seeded_replica, stamp, starter};
 
 /// Which pending write a case damages: its kind, id, and group.
 type Target = fn(&Written) -> (Kind, String, &'static str);
@@ -543,6 +546,51 @@ fn an_unreadable_hot_entry_reports_why() {
 
         assert_eq!(applied.hold, hold(Lane::Hot, seq, reason), "{case}");
         assert_eq!(cursor(&reader, Lane::Hot), seq - 1, "{case}");
+    }
+}
+
+#[test]
+fn a_learning_value_this_app_refuses_holds_and_the_document_still_reads() {
+    let cases: [(&str, Payload); 2] = [
+        (
+            "daily limits that pass their total",
+            Payload::LearningDailyLimits(SettingValue {
+                value: r#"{"total":10,"untouched":{"value":20,"counts":true}}"#.to_string(),
+            }),
+        ),
+        (
+            "a default algorithm that is not a UUID",
+            Payload::LearningDefaultAlgorithm(DefaultAlgorithm {
+                algorithm_id: "fsrs".to_string(),
+            }),
+        ),
+    ];
+    for (case, payload) in cases {
+        let reader = seeded_replica();
+        let before = get_settings(&reader, SettingsName::Learning)
+            .expect("learning reads")
+            .expect("learning is seeded");
+        let remote = Uuid::now_v7();
+        let page = Page {
+            lane: Lane::Hot,
+            entries: vec![PageEntry {
+                seq: 1,
+                sender: remote,
+                sender_seq: 1,
+                envelope: sealed("learning", None, stamp(remote, now_ms()), &payload),
+            }],
+            scanned_through: 1,
+        };
+
+        let applied = apply_held(&reader, &page);
+
+        assert_eq!(applied.hold, hold(Lane::Hot, 1, HoldReason::CorruptEnvelope), "{case}");
+        assert_eq!(cursor(&reader, Lane::Hot), 0, "{case}");
+        let after = get_settings(&reader, SettingsName::Learning)
+            .unwrap_or_else(|error| panic!("{case}: learning reads: {error:?}"))
+            .expect("learning is seeded");
+        assert_eq!(after.content, before.content, "{case}");
+        get_todays_review_totals(&reader).unwrap_or_else(|error| panic!("{case}: totals read: {error:?}"));
     }
 }
 

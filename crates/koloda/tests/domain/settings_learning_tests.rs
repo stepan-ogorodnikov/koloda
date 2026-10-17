@@ -1,5 +1,10 @@
+use koloda::app::error::AppError;
 use koloda::domain::settings::SettingsName;
-use koloda::domain::settings_learning::{parse_day_starts_at, LearningSettings};
+use koloda::domain::settings_learning::{
+    parse_day_starts_at, validate_daily_limits, validate_day_starts_at, validate_default_algorithm,
+    validate_default_template, validate_learn_ahead_limit, LearningSettings,
+};
+use serde_json::{json, Value};
 
 fn standard_daily_limits() -> &'static str {
     r#"{
@@ -629,4 +634,59 @@ fn test_settings_name_learning_validation_valid() {
     });
     let result = SettingsName::Learning.validate(&content);
     result.unwrap();
+}
+
+type KeyCheck = fn(&Value) -> Result<(), AppError>;
+
+#[test]
+fn each_key_check_agrees_with_a_read_of_the_whole_document() {
+    let algorithm: KeyCheck = |value| validate_default_algorithm(value.as_str().unwrap_or_default());
+    let template: KeyCheck = |value| validate_default_template(value.as_str().unwrap_or_default());
+    let cases: [(&str, Value, KeyCheck, bool); 14] = [
+        (
+            "/defaults/algorithm",
+            json!("01900000-0000-7000-8000-000000000009"),
+            algorithm,
+            true,
+        ),
+        ("/defaults/algorithm", json!("fsrs"), algorithm, false),
+        ("/defaults/template", json!(""), template, false),
+        ("/dailyLimits", json!({}), validate_daily_limits, true),
+        (
+            "/dailyLimits",
+            json!({ "total": 10, "untouched": 20 }),
+            validate_daily_limits,
+            false,
+        ),
+        (
+            "/dailyLimits",
+            json!({ "total": 0, "untouched": 20 }),
+            validate_daily_limits,
+            true,
+        ),
+        ("/dailyLimits", Value::Null, validate_daily_limits, false),
+        ("/dayStartsAt", json!("23:59"), validate_day_starts_at, true),
+        ("/dayStartsAt", json!("24:00"), validate_day_starts_at, false),
+        ("/dayStartsAt", json!(4), validate_day_starts_at, false),
+        ("/learnAheadLimit", json!([48, 59]), validate_learn_ahead_limit, true),
+        ("/learnAheadLimit", json!([49, 0]), validate_learn_ahead_limit, false),
+        ("/learnAheadLimit", json!("4:00"), validate_learn_ahead_limit, false),
+        ("/learnAheadLimit", Value::Null, validate_learn_ahead_limit, false),
+    ];
+    for (pointer, value, check, is_valid) in cases {
+        let mut document: Value = serde_json::from_str(&build_learning_settings_json(
+            standard_daily_limits(),
+            r#""04:00""#,
+            "[4, 0]",
+        ))
+        .unwrap();
+        *document.pointer_mut(pointer).unwrap() = value.clone();
+
+        assert_eq!(check(&value).is_ok(), is_valid, "{pointer} = {value}");
+        assert_eq!(
+            SettingsName::Learning.validate(&document).is_ok(),
+            is_valid,
+            "a read of {pointer} = {value}"
+        );
+    }
 }

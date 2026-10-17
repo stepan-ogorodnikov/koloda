@@ -9,6 +9,7 @@
 //! zero. Input Total `0` still deserializes as `None` (legacy unlimited).
 
 use serde::{Deserialize, Deserializer, Serialize};
+use serde_json::Value;
 
 use crate::app::error::{error_codes, AppError};
 use crate::domain::common::validate_uuid;
@@ -47,16 +48,33 @@ impl LearningSettings {
 
 impl LearningDefaults {
     fn validate(&self) -> Result<(), AppError> {
-        validate_uuid(
-            &self.algorithm,
-            error_codes::VALIDATION_SETTINGS_LEARNING_DEFAULTS_ALGORITHM,
-        )?;
-        validate_uuid(
-            &self.template,
-            error_codes::VALIDATION_SETTINGS_LEARNING_DEFAULTS_TEMPLATE,
-        )?;
+        validate_default_algorithm(&self.algorithm)?;
+        validate_default_template(&self.template)?;
         Ok(())
     }
+}
+
+// INVARIANT: each key check reads one key's value as `LearningSettings` reads that key, and runs the check `validate`
+// runs on it. Remote apply holds a learning value that fails its check, so the stored document always reads
+// (crates/koloda-sync-proto/PROTOCOL.md, Corrupt envelopes).
+pub fn validate_default_algorithm(id: &str) -> Result<(), AppError> {
+    validate_uuid(id, error_codes::VALIDATION_SETTINGS_LEARNING_DEFAULTS_ALGORITHM)
+}
+
+pub fn validate_default_template(id: &str) -> Result<(), AppError> {
+    validate_uuid(id, error_codes::VALIDATION_SETTINGS_LEARNING_DEFAULTS_TEMPLATE)
+}
+
+pub fn validate_daily_limits(value: &Value) -> Result<(), AppError> {
+    DailyLimits::deserialize(value)?.validate()
+}
+
+pub fn validate_day_starts_at(value: &Value) -> Result<(), AppError> {
+    parse_day_starts_at(&String::deserialize(value)?).map(|_| ())
+}
+
+pub fn validate_learn_ahead_limit(value: &Value) -> Result<(), AppError> {
+    LearnAheadLimit::deserialize(value)?.validate()
 }
 
 // INVARIANT: on `Ok`, returns `(hours, minutes)` with `0 <= hours <= 23` and `0 <= minutes <= 59`.

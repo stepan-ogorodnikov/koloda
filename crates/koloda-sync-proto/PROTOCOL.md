@@ -1126,7 +1126,9 @@ So does a frame, header, or `refs` key this app lacks, since only a newer app wr
 A payload key it lacks is corrupt: a new payload key comes with a schema raise.
 Any other envelope that does not decode, a lane mismatch, or a payload that does not decode is corrupt.
 So is a payload that decodes but breaks a domain rule applying it would check.
-That is a review the app would refuse to record, such as a rating out of range, or a learning value that is not JSON.
+That is a review the app would refuse to record, such as a rating out of range.
+It is also a learning value or default id that this app's validation of the learning document refuses, such as a
+value that is not JSON or daily limits past their total; applied, it would break every read of the document.
 The page applies every entry before the held one in one transaction and sets the lane cursor to the held seq minus
 one.
 Nothing at or after it applies, so every later pull meets it again until an upgrade reads it or a drop removes it.
@@ -1772,6 +1774,8 @@ The server's attachment store is re-uploaded under the new names.
 
 `schema` is a per-kind integer.
 Any change to a payload shape bumps it, including adding or removing a group.
+A learning value's JSON shape is part of its payload shape, though the payload carries it as text: changing it bumps
+`settings.learning`'s schema.
 The golden envelopes in this crate's `fixtures/` pin the bytes of every group at its current schema.
 A change that alters them changes the wire, so it needs a schema bump once any device has written that schema.
 A client reads every version of a kind up to its own, filling newer fields with defaults.
