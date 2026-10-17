@@ -1128,9 +1128,9 @@ The client cannot tell which, so it never guesses a value:
 Both header rules need a header that decodes.
 A header that names a kind, group, or op this app lacks, or a group outside its kind, needs an app update instead,
 and so does a schema above the app's own; that is `update_required { lane, seq }`.
+So does a frame, header, or `refs` key this app lacks, since only a newer app writes one.
 A newer schema may change a group's refs or a kind's parent, so a header above the app's schema that breaks this
 app's header rules, such as by carrying a ref its group lacks, is `update_required` too.
-So does a frame, header, or `refs` key this app lacks, since only a newer app writes one.
 A payload key it lacks is corrupt: a new payload key comes with a schema raise.
 Any other envelope that does not decode, a lane mismatch, or a payload that does not decode is corrupt.
 So is a payload that decodes but breaks a domain rule applying it would check.
