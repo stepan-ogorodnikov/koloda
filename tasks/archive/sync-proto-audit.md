@@ -1,6 +1,6 @@
 # Sync protocol audit fixes
 
-Status: ready
+Status: done
 Guides: agents/IMPLEMENTATION-PLAN.md, agents/TASKS.md, crates/koloda-sync-proto/PROTOCOL.md, crates/koloda-sync-proto/README.md, crates/koloda/src/repo/sync/README.md, agents/RUST.md, crates/koloda-sync/README.md, agents/TESTING.md, agents/CODE-DOCUMENTATION.md, agents/BACKWARDS-COMPATIBILITY.md, agents/MARKDOWN.md, agents/VERIFY.md, agents/REVIEW.md
 Flow: local
 
@@ -340,4 +340,43 @@ Out:
 
 ## Outcome
 
-<what shipped>
+Findings 1, 2, 3, 6, 7, 8, and 9 are fixed.
+4, 5, and 10 to 15 are skipped as Later and not scheduled (Open questions 1).
+16 needs a decision and is not scheduled (Open questions 3).
+Their evidence and fix directions stay in Scope.
+
+Shipped, one Plan item per commit:
+
+- 1: a header above the app's schema that this app's registry refuses decodes as `NewerSchema`, which the device
+  holds as `update_required`, not `corrupt_envelope`.
+  A newer-schema header that validates still decodes, so the server's schema handling is unchanged.
+  §Corrupt envelopes says so.
+- 2: `Header::decode` and `Envelope::decode` encode the decoded value again and refuse input whose bytes differ as
+  `NonCanonical`.
+  That covers reordered keys, trailing bytes, longer integer forms, explicit `null`s, and an empty `attachment_ids`.
+  The server refuses such a push as `bad_request`.
+  A duplicate `attachment_ids` case is tested; §Envelope encoding says so.
+- 3: `is_skew_paused` takes the engine's skew estimate, and the engine's `check_skew` calls it, so the at-limit table
+  pins the pause the product runs.
+- 4: the skew tolerance and the 16 KiB and 512 KiB limits are pinned against literals in the tests, and the
+  `TooFarAhead` message is formatted from the constant.
+  A `code_hash` table covers case, spaces, hyphens, and `O`, `I`, and `L`.
+- 5: §Bodies marks `last_sender_digest`, `revoked_at`, and the claim's `hint` as optional.
+
+Self-review added one commit: in §Corrupt envelopes the newer-schema sentence moved after the key sentence, which
+read "So does" against it.
+
+Checked:
+
+- `bun run check:push` passed after each item and on the final tip.
+- `cargo test -p koloda-sync-proto`: 32 passed, 1 ignored by design (`write_envelope_fixtures`).
+- Each new case was checked once by hand against the bug it guards, and each failed:
+  - the newer-schema relabel off;
+  - the encoding check off;
+  - `a <= b` for attachment ids;
+  - `>=` in the skew pause;
+  - each of the three limit constants changed;
+  - the `I`/`L` arm or the whitespace filter in `code_hash` removed.
+- The fixtures are unchanged.
+
+Manual verify: none — no app writes a newer schema or a second encoding yet; the tests arrange both.
