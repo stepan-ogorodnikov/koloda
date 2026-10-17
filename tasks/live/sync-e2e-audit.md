@@ -272,7 +272,7 @@ Written for the answers to Open questions 2 to 7.
   Depends on: none
   Deviation: it landed before item 2, which waits on Open questions 9; item 2 builds on its fixture.
 
-- [ ] 5. Run the desktop addon's tests in the push gate
+- [x] 5. Run the desktop addon's tests in the push gate
   Goal (finding 3):
   - `check:rust-push` (`package.json:25`) runs the addon's tests after the four crates' tests, in the same
     `dist/target/koloda` target directory.

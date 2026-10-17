@@ -26,6 +26,28 @@
         "cwd": "apps/electron"
       }
     },
+    "test-rust": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "inputs": [
+        "{workspaceRoot}/Cargo.toml",
+        "{workspaceRoot}/Cargo.lock",
+        "{workspaceRoot}/rust-toolchain.toml",
+        "{workspaceRoot}/clippy.toml",
+        "{projectRoot}/src-rust/**/*",
+        "{workspaceRoot}/crates/koloda/**/*",
+        "{workspaceRoot}/crates/koloda-sync/**/*",
+        "{workspaceRoot}/crates/koloda-sync-proto/**/*",
+        "!{workspaceRoot}/crates/**/*.md"
+      ],
+      "options": {
+        "command": "cargo test -p koloda-electron",
+        "forwardAllArgs": false,
+        "env": {
+          "CARGO_TARGET_DIR": "dist/target/koloda"
+        }
+      }
+    },
     "serve": {
       "executor": "nx:run-commands",
       "dependsOn": [
