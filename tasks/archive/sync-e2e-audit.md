@@ -1,6 +1,6 @@
 # Desktop e2e sync spec audit fixes
 
-Status: ready
+Status: done
 Guides: agents/IMPLEMENTATION-PLAN.md, agents/TASKS.md, apps/electron-e2e/README.md, libs/e2e/README.md, apps/web-e2e/README.md, agents/VERIFY.md, agents/TESTING.md, agents/CODE-STYLE.md, agents/CODE-DOCUMENTATION.md, agents/MARKDOWN.md, agents/REVIEW.md, docs/specs/SYNC.md, docs/specs/MEDIA.md, docs/specs/ALGORITHMS.md, crates/koloda-server/README.md, apps/electron/README.md
 Flow: local
 
@@ -314,4 +314,38 @@ Written for the answers to Open questions 2 to 9.
 
 ## Outcome
 
-<what shipped>
+Findings 1, 2, 3, 5, 6, and 8 are fixed, and 7 is decided: the suite stays on the debug addon, and the README says the
+release build's keyring is checked by hand (Open questions, 2).
+Finding 4 is skipped: its test waits for an engine change, a task of its own that is not scheduled yet (Open
+questions, 9).
+Its evidence, the engine findings, and item 2's design stay in Scope, Open questions 9, and the Plan.
+
+Shipped, one Plan item per commit:
+
+- 1: the desktop suite's after-load defaults wait for `load`, and evaluate once more when a navigation destroys the
+  context.
+- 3: the desktop preset-delete specs use the desktop's one starter preset, "Default".
+- 4: stopping the e2e sync server sends SIGKILL after 5 s; a start that fails removes its data directory and process;
+  the sync spec attaches the server's log to a test that fails.
+- 5: `check:rust-push` runs the desktop addon's 9 tests through a new `@koloda/electron:test-rust` target.
+- 6: the e2e README says how to run one desktop spec with fresh builds, and that no run uses the release addon.
+
+One more commit records why item 2 is skipped (Open questions, 9).
+Item 4 landed before item 2's slot, as recorded on item 4.
+
+Checked:
+
+- `bun run check:push` passed after each item and on the final tip.
+- The six spec files that failed in the audit's setup race passed 90 of 90 runs (`--repeat-each=3`); at the audit's
+  rate about 6 would have failed.
+- The full desktop suite (`nx run @koloda/electron:test:e2e`) passed 86 of 86 in 14.3 min, against 78 of 86 at the
+  audit.
+- Checked once by hand:
+  - a missing server binary left no `/tmp/koloda-e2e-*` directory;
+  - a forced failure attached `koloda-server.log`;
+  - breaking the file store's write failed `@koloda/electron:test-rust`.
+- No server, Electron, or dev-server process and no temp directory was left after any run.
+
+Not checked: whether the addon's test binary links on macOS and Windows (Open questions, 5); CI runs only Linux.
+
+Manual verify: none — test support, gate config, and docs.
