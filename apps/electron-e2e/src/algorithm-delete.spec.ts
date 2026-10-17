@@ -52,8 +52,9 @@ test("deletes an algorithm with successor selection when in use by a deck", asyn
 test("prevents deleting the learning-default algorithm", async ({ page }) => {
   await setupApp(page);
 
+  // WHY: the desktop's "Start fresh" seeds one preset, "Default", where the web demo seeds "Simple" and "Complex".
   await openSection(page, "Presets");
-  await page.getByRole("link", { name: "Simple", exact: true }).click();
+  await page.getByRole("link", { name: "Default", exact: true }).click();
   await expect(page).toHaveURL(
     /\/algorithms\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/,
   );
@@ -63,13 +64,10 @@ test("prevents deleting the learning-default algorithm", async ({ page }) => {
 });
 
 test("prevents deleting the last remaining algorithm", async ({ page }) => {
-  await setupApp(page);
+  const spareTitle = "E2E Spare Preset";
 
-  await openSection(page, "Presets");
-  await page.getByRole("link", { name: "Complex", exact: true }).click();
-  await expect(page).toHaveURL(
-    /\/algorithms\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/,
-  );
+  await setupApp(page);
+  await createAlgorithm(page, spareTitle);
 
   const deleteTrigger = page.getByRole("button", { name: "Delete preset", exact: true });
   await deleteTrigger.click();
@@ -77,9 +75,9 @@ test("prevents deleting the last remaining algorithm", async ({ page }) => {
   const deleteDialog = page.getByRole("dialog");
   await deleteDialog.getByRole("button", { name: "Delete preset", exact: true }).click();
   await expect(page).toHaveURL(/\/algorithms$/);
-  await expect(page.getByRole("link", { name: "Complex", exact: true })).not.toBeVisible();
+  await expect(page.getByRole("link", { name: spareTitle, exact: true })).not.toBeVisible();
 
-  await page.getByRole("link", { name: "Simple", exact: true }).click();
+  await page.getByRole("link", { name: "Default", exact: true }).click();
   await expect(page).toHaveURL(
     /\/algorithms\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/,
   );

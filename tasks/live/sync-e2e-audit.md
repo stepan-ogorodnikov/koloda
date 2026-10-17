@@ -221,7 +221,7 @@ Written for the answers to Open questions 2 to 7.
   Commit: Cover an image that arrives while its card is on screen in the sync spec
   Depends on: none
 
-- [ ] 3. Point the desktop preset-delete specs at the desktop starter preset
+- [x] 3. Point the desktop preset-delete specs at the desktop starter preset
   Goal (finding 8):
   - `apps/electron-e2e/src/algorithm-delete.spec.ts:52`: open "Default", the desktop's one starter preset, and find
     "Delete preset" unavailable.
