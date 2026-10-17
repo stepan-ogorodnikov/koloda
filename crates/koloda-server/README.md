@@ -45,6 +45,8 @@ A proxy must pass WebSocket upgrades on `/v1/spaces/{space}/events`, which tells
 It must also accept request bodies of 16 MiB, the protocol's cap; nginx's `client_max_body_size` defaults to 1 MiB.
 A device resends a push the proxy refused, since it cannot tell whether the server took it.
 A lower limit then stalls sync until the proxy accepts the body.
+Wrong pairing codes are limited per connection address (`PROTOCOL.md` §Pairing).
+Behind a proxy every client has the proxy's address, so all clients share one limit of 10 wrong codes a minute.
 Below `--min-free-disk` free bytes (1 GiB by default) it holds growing writes as if every space were over its quota,
 and below `--reserve-disk` (64 MiB) it refuses every push; on a platform without `statvfs` both are off.
 A request that runs out of disk anyway is refused with `507` and consumes nothing.

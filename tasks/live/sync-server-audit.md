@@ -237,7 +237,7 @@ Out:
   Commit: Stop the sync server on SIGTERM as on Ctrl+C
   Depends on: none
 
-- [ ] 3. Describe the server's deletes, tables, and limits as they are
+- [x] 3. Describe the server's deletes, tables, and limits as they are
   Goal (findings 2, 3, and 14):
   - §Topology and server state (`PROTOCOL.md:72-90`): list the space database's tables under their names:
     `space` (the epoch and the byte counters), `write_schema`, `lanes`, `versions`, `heads` (a tombstone is the

@@ -71,23 +71,24 @@ It is not authoritative for **meaning**.
 
 What the server stores per space, in one database per space:
 
-- `entry_versions`: immutable accepted envelope bytes, digest, and assigned lane `seq`.
+- `space`: the space's epoch, and how many bytes its versions and attachments hold.
+- `lanes`: each lane's head `seq` and its GC horizon (§Pull cursor).
+- `versions`: immutable accepted envelope bytes, digest, and assigned lane `seq`.
   A version remains while a head or a snapshot lease references it.
-- `entry_heads`: one live version per `(kind, id, group)`, compacted by moving the head reference.
+- `heads`: one live version per `(kind, id, group)`, compacted by moving the head reference.
   The head is the highest `(hlc, stamp_device)`.
   A pushed envelope that does not beat the head is `stale`.
   Immutable groups are never superseded; a duplicate is `stale` too.
-- `tombstones`: one row per deleted entity, kept until every active device has passed it.
+  A tombstone is the entity's head under the empty group, kept until every active device has passed it.
 - `deleted_ids`: permanent fence of tombstoned entity ids, kept after tombstone GC.
-- `deletion_scopes`: logical dead closures committed with a tombstone before physical chunk cleanup.
-  Pulls, snapshots, and head installation treat a covered entity as absent immediately.
-- `snapshots` plus `snapshot_items`: short-lived bootstrap leases (§Transport).
-- `sender_progress` and `sender_receipts`: per-sender high-water and the immutable outcome of every consumed
-  `(sender, sender_seq)`.
+- `leases` plus `lease_items`: short-lived bootstrap leases and the versions each pins (§Transport).
+- `senders` and `receipts`: per-sender high-water and the immutable outcome of every consumed `(sender, sender_seq)`.
   v1 keeps receipts for the life of the space; no pass collects them.
   Below a collected floor, the server could no longer tell a same-digest retry from a reused seq.
+- `sender_holds`: the creates each sender had held, which hold its later writes that name them (§Push outcomes).
 - `write_schema` per kind, and the accumulated restore points.
-- `attachment_refs`: which attachment ids each live card links (§Attachments).
+- `attachments` and `attachment_refs`: the stored attachments, and which ids each live card links (§Attachments).
+- `live_entities`: live entities per kind, for the pairing preview (§Pairing).
 
 For a newly consumed `(sender, sender_seq)`, one transaction in the space database commits its digest and outcome,
 the sender high-water, and any version, head, tombstone, fence, or lane `seq` it produced.
@@ -507,14 +508,15 @@ The server checks hard refs and parents on push:
   No head is installed.
 
 Deleting a deck publishes **one** tombstone.
-The server fences the deck and commits a logical deletion scope over descendant card and review ids.
-It then chunk-removes their heads and records their fences.
+The server fences the deck and removes the heads of its cards and their reviews, in the push that applies the tombstone.
+It fences those cards in the same transaction.
 Deleting a card does the same for its reviews.
 Deleting a template also drops and fences cards whose `refs.template_id` names it.
 Reviews never get tombstones of their own.
 Card ids are fenced; reviews need no fence, because their card's fence already refuses them.
 A tombstone for an id already fenced, by its own tombstone or a cascade, is `stale`.
-A 50k-card deck delete is a single envelope: the server removes it in chunks, and a device in one transaction.
+A 50k-card deck delete is a single envelope, and the server and a device each remove it in one transaction.
+v1 accepts that cost under the space's writer lock; chunked deletes may come later on both sides (§Tombstones).
 
 A card's `deck_id` and `template_id` are fixed at creation and never appear in an update group.
 That is what makes the cascade by ancestry a single envelope (`docs/decisions/FIXED-CARD-PARENTS.md`).
@@ -873,7 +875,7 @@ Unknown `kind`, `group`, or `op`, and lane mismatches, are rejected at a header 
 | `POST /v1/pairings/claim` | Body has `code`, name, platform, nonce, and the token the client minted; returns device id and epoch; the same nonce and token return the same device, and another token is `pairing_failed` |
 | `POST /v1/spaces/{space}/push` | Batch of envelopes; atomic, with per-seq outcomes |
 | `GET /v1/spaces/{space}/receipts` | Stored outcomes for any sender's seqs; usable while `rebase_required` |
-| `GET /v1/spaces/{space}/pull?lane&after&max_seq&limit` | Envelopes with `after < seq <= max_seq`, own sender excluded, minus anything under a committed deletion scope; each entry carries `(seq, sender, sender_seq)`; returns `scanned_through`, `has_more`, heads, epoch |
+| `GET /v1/spaces/{space}/pull?lane&after&max_seq&limit` | Envelopes with `after < seq <= max_seq`, own sender excluded; each entry carries `(seq, sender, sender_seq)`; returns `scanned_through`, `has_more`, heads, epoch |
 | `POST /v1/spaces/{space}/bootstrap` | Opens a snapshot lease at live heads; returns `snapshot_id`, counts, byte estimate, TTL, absolute expiry; pages start at position 0 |
 | `GET /v1/spaces/{space}/bootstrap/{snapshot}` | Streams the pinned snapshot with the same per-entry metadata as pull; hot by kind, referents first, then `seq`; cold newest-first by `(hlc, stamp_device, seq)`; own sender included |
 | `POST /v1/spaces/{space}/bootstrap/{snapshot}/heartbeat` | Extends TTL up to the absolute expiry |
@@ -1273,14 +1275,13 @@ Rough sizes for a heavy user (500k cards, 20M reviews):
 
 Personal scale is tens of MB for both lanes, plus attachments if downloaded.
 
-Bootstrap opens a **snapshot lease**: materialized `snapshot_items` for the live heads and creates after every
-committed deletion scope.
+Bootstrap opens a **snapshot lease**: materialized `lease_items` for the versions of the live heads.
 Tombstones are not in the snapshot; the catch-up pull delivers them.
-The lease pins those versions until release or expiry; compaction and chunk cleanup cannot remove them.
+The lease pins those versions until release or expiry; compaction and deletes cannot remove them.
 A lease taken before a later tombstone keeps its selected versions, and catch-up delivers the tombstone.
 
 Admission: one lease per device, a heartbeat TTL, and an absolute lifetime.
-Space-wide caps limit concurrent leases and pinned bytes.
+Pinned versions have no cap of their own; they count toward the space's quota as the pages they use (§Quotas).
 Opening a second lease for a device releases its first.
 The TTL is 5 minutes, and a heartbeat extends it, never past the absolute lifetime of 24 hours.
 A space serves at most 4 open leases; a fifth gets `429 rate_limited`.
@@ -1664,6 +1665,8 @@ Nothing keeps syncing afterwards.
   Wrong codes are limited per client address and server-wide, because a wrong code names no space.
   After 10 failures from one address, or 100 in all, previews and claims get `429 rate_limited` until the minute's
   window ends.
+  The address is the connection's, so behind a reverse proxy every client shares the proxy's.
+  The per-address limit then acts as one server-wide limit of 10 a minute; v1 accepts that.
 - **Break-glass**: the setup token can issue a pairing code for an existing space.
   An operator with the data directory can too, beside a running server (`koloda-server pair`).
 
