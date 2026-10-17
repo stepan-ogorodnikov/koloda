@@ -328,7 +328,7 @@ Out:
   Commit: Pin the protocol's numbers and pairing-code normalization in tests
   Depends on: 3
 
-- [ ] 5. Mark the optional reply fields in §Bodies
+- [x] 5. Mark the optional reply fields in §Bodies
   Goal (finding 3):
   - `PROTOCOL.md:928`: the device record carries `last_sender_digest` and `revoked_at` only when set.
   - `PROTOCOL.md:934`: the claim returns `hint` only when the code carries one.

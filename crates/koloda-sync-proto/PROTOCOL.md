@@ -928,13 +928,13 @@ Names are 1 to 100 characters after trimming.
 | --- | --- | --- |
 | `POST /v1/spaces` | `name`, `device_name`, `platform`, `nonce`, `token` | `space_id`, `device_id`, `epoch` |
 | `GET /v1/spaces` | none | `spaces`, each with `id`, `name`, `created_at`, `device_count` |
-| `GET /v1/spaces/{space}/devices/{id}` | none | `id`, `name`, `platform`, `created_at`, `last_seen`, `last_sender_seq`, `last_sender_digest`, `cursor_hot`, `cursor_cold`, `revoked_at`, `rebase_required` |
+| `GET /v1/spaces/{space}/devices/{id}` | none | `id`, `name`, `platform`, `created_at`, `last_seen`, `last_sender_seq`, optional `last_sender_digest`, `cursor_hot`, `cursor_cold`, optional `revoked_at`, `rebase_required` |
 | `GET /v1/spaces/{space}/devices` | none | `devices`, each a device record as above |
 | `DELETE /v1/spaces/{space}/devices/{id}` | none | empty |
 | `POST /v1/spaces/{space}/devices/fork` | `nonce`, `token` | the new device's enrollment, as space creation returns it; the same nonce and token return the same device, and another token is `bad_request` |
 | `POST /v1/spaces/{space}/pairings` | `hint`, optional bytes of at most 4 KiB | `code`, `expires_at` |
 | `POST /v1/pairings/preview` | `code` | `space_id`, `name`, `epoch`, `counts` per kind, `bytes` |
-| `POST /v1/pairings/claim` | `code`, `name`, `platform`, `nonce`, `token` | `enrollment` as space creation returns it, `hint` |
+| `POST /v1/pairings/claim` | `code`, `name`, `platform`, `nonce`, `token` | `enrollment` as space creation returns it, optional `hint` |
 | `POST /v1/spaces/{space}/push` | `items`, each `sender_seq` and `envelope` bytes; at most 5000 | `outcomes`, each `sender_seq`, `outcome`, `replayed`, and `missing_attachments` when not empty |
 | `POST /v1/spaces/{space}/ids/known` | `ids`, each `kind` and `id`; at most 1000 | `ids` the space holds, in the order asked, each `kind`, `id`, `state` (`live` or `fenced`) |
 | `GET /v1/spaces/{space}/pull?lane&after&max_seq&limit` | `lane` and `after`; `max_seq` defaults to the lane head | `entries`, each `seq`, `sender`, `sender_seq`, `envelope`; `scanned_through`, `has_more` |
