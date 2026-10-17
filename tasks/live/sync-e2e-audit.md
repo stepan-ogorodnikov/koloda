@@ -175,7 +175,7 @@ Out:
 
 Written for the answers to Open questions 2 to 7.
 
-- [ ] 1. Retry the desktop e2e defaults when a navigation interrupts them
+- [x] 1. Retry the desktop e2e defaults when a navigation interrupts them
   Goal (finding 1):
   - In `applyPageDefaults` (`libs/e2e/src/ui-flows.ts:17-32`), the `after-load` branch waits for the page's `load`
     state before it evaluates the seed.

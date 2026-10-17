@@ -26,7 +26,17 @@ export async function applyPageDefaults(page: Page, when: "before-load" | "after
   if (when === "before-load") {
     await page.addInitScript(seed);
   } else {
-    await page.evaluate(seed);
+    // WHY: the desktop's first window can navigate once more after `domcontentloaded`, for a reason not found yet,
+    // and that destroys the evaluate's context (about 1 setup in 14 in the e2e sync audit's runs). The reload below
+    // replaces the page anyway, so seeding a second time is harmless.
+    await page.waitForLoadState("load");
+    try {
+      await page.evaluate(seed);
+    } catch (error) {
+      if (!(error instanceof Error && error.message.includes("Execution context was destroyed"))) throw error;
+      await page.waitForLoadState("load");
+      await page.evaluate(seed);
+    }
     await page.reload({ waitUntil: "domcontentloaded" });
   }
 }
