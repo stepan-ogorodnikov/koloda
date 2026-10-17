@@ -471,6 +471,11 @@ impl Shared {
         Ok(())
     }
 
+    /// Whether the latest device meta, of the round's record or a push reply, showed the space over quota.
+    pub(crate) fn is_over_quota(&self) -> Result<bool, SyncError> {
+        Ok(self.lock(&self.run_state)?.is_over_quota)
+    }
+
     /// Holds pushing until server time reaches `until`, in unix milliseconds.
     ///
     /// INVARIANT: it fires no trigger. The runner sleeps until the wait ends, and a trigger from the cycle that set

@@ -28,7 +28,8 @@ pub struct Status {
     pub skew_ms: i64,
     /// The envelope a lane stopped at in the last pull; pushing and the other lane may still run.
     pub hold: Option<Hold>,
-    /// The space was over its quota, or the server low on disk, at the last device record: growing writes wait.
+    /// The space was over its quota, or the server low on disk, at the last device record or push reply: growing
+    /// writes wait.
     pub is_over_quota: bool,
     /// Bulk transfers wait on a metered network; incremental sync goes on.
     pub metered: Option<MeteredPause>,

@@ -25,11 +25,15 @@ const BACKFILL_BYTES: usize = 1024 * 1024;
 
 impl Shared {
     // INVARIANT: heal and backfill add a batch only while the outbox holds less than one push batch, so the outbox
-    // never holds the whole database (PROTOCOL.md, Backfill, Server restore). On a metered network they are bulk:
-    // each batch counts against the allowance, and none is added once it is spent (PROTOCOL.md, Metered networks).
-    // A scan left with rows then shows the pause, whichever work spent the allowance: a batch here, or an earlier
-    // cold page or image.
+    // never holds the whole database (PROTOCOL.md, Backfill, Server restore). They add none while the space is over
+    // quota: every write but a delete would come back held, so a batch would only move the database into the held
+    // writes (PROTOCOL.md, Quotas). On a metered network they are bulk: each batch counts against the allowance, and
+    // none is added once it is spent (PROTOCOL.md, Metered networks). A scan left with rows then shows the pause,
+    // whichever work spent the allowance: a batch here, or an earlier cold page or image.
     async fn top_up(self: &Arc<Self>) -> Result<(), SyncError> {
+        if self.is_over_quota()? {
+            return Ok(());
+        }
         while self.blocking(|shared| pending_count(&shared.db)).await? < PUSH_ITEMS && self.has_bulk_room()? {
             let is_counting = self.is_counting_bulk()?;
             let before = if is_counting {
@@ -98,7 +102,14 @@ impl Shared {
                 )
                 .await;
             let reply = match reply {
-                Ok(answer) => answer.ok,
+                Ok(answer) => {
+                    // WHY: the reply tells whether the space is over quota now, so a push that starts holding stops
+                    // the top-ups in this round, not the next.
+                    if let Some(device) = &answer.meta.device {
+                        self.note_quota(device.is_over_quota)?;
+                    }
+                    answer.ok
+                }
                 Err(error) => {
                     let sent = Arc::clone(&batch);
                     // INVARIANT: only a missing reply can hide a consumed push. A refusal and a local failure to

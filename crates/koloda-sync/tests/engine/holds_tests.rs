@@ -1,6 +1,8 @@
 //! A lane held at an envelope this app cannot read (`crates/koloda-sync-proto/PROTOCOL.md` §Corrupt envelopes): the
 //! cycle goes on around it, and the next one passes it once the bytes read again.
 
+use std::sync::{Arc, Mutex};
+
 use koloda::domain::cards::ResetCardProgressData;
 use koloda::domain::decks::DeleteDeckData;
 use koloda::repo::sync::apply::{Hold, HoldReason};
@@ -399,4 +401,73 @@ fn writes_held_over_the_quota_go_out_at_their_stamps_once_the_space_has_room() {
         create_hlc(&a, "cards", &card),
         "the card keeps the stamp it was captured with"
     );
+}
+
+#[test]
+fn a_space_over_quota_takes_no_backfill_until_a_record_shows_room() {
+    let space = Space::with(|device| {
+        let library = device.library();
+        device.add_cards(&library.deck, &library.template, 1_500);
+    });
+    let a = &space.device;
+    let server = space.server.server();
+    let space_id = space.space_id();
+    let pending_at_pushes = Arc::new(Mutex::new(Vec::new()));
+    let observed = Arc::clone(&pending_at_pushes);
+    let filling = Arc::clone(&server);
+    let db = a.db.clone();
+    a.transport.observe(move |request| {
+        if request.url.ends_with("/push") {
+            let mut pending_at_pushes = observed.lock().expect("pushes lock");
+            // The space fills up as the first push arrives, so the server holds it.
+            if pending_at_pushes.is_empty() {
+                filling.set_quota(space_id, Some(1)).expect("the quota is set");
+            }
+            let pending: i64 = db
+                .with_conn(|conn| Ok(conn.query_row("SELECT COUNT(*) FROM sync_outbox", [], |row| row.get(0))?))
+                .expect("the outbox counts");
+            pending_at_pushes.push(pending);
+        }
+    });
+    let pending_at_pushes = move || pending_at_pushes.lock().expect("pushes lock").clone();
+
+    a.engine.sync_now().expect("A's first push is held");
+
+    let pushes = pending_at_pushes();
+    assert!(a.engine.status().expect("status reads").is_over_quota);
+    assert_eq!(
+        a.count("SELECT COUNT(*) FROM sync_held"),
+        pushes[0],
+        "the reply that held the first push stops the top-ups: {pushes:?}"
+    );
+    assert!(a.outbox().is_empty());
+
+    a.engine.sync_now().expect("A syncs over the quota");
+    assert_eq!(
+        pending_at_pushes().len(),
+        pushes.len(),
+        "a record over the quota adds no backfill batch"
+    );
+    assert_eq!(a.count("SELECT COUNT(*) FROM sync_held"), pushes[0]);
+    assert_eq!(
+        a.count("SELECT backfill_step IS NULL FROM sync_state"),
+        0,
+        "backfill waits"
+    );
+
+    server.set_quota(space_id, None).expect("the operator lifts the quota");
+    a.engine
+        .sync_now()
+        .expect("A pushes its held writes, then the rest of its backfill");
+
+    assert_eq!(a.count("SELECT COUNT(*) FROM sync_held"), 0);
+    assert!(a.outbox().is_empty());
+    assert_eq!(
+        a.count("SELECT backfill_step IS NULL FROM sync_state"),
+        1,
+        "backfill is done"
+    );
+    let b = space.server.join(a);
+    b.engine.sync_now().expect("B pulls the library");
+    assert_eq!(b.ids("cards"), a.ids("cards"));
 }

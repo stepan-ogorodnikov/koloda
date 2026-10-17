@@ -138,7 +138,7 @@ Out:
   Commit: Split a bulk card delete into cohorts the server accepts
   Depends on: none
 
-- [ ] 2. Stop topping up the outbox while the space is over quota
+- [x] 2. Stop topping up the outbox while the space is over quota
   Goal (finding 4; per question 2, answer A):
   - `top_up` (`crates/koloda-sync/src/push.rs:32-66`) adds no heal or backfill batch while the space is over quota.
     The quota state is the latest device meta: the round's record, or a push reply's `meta.device`.

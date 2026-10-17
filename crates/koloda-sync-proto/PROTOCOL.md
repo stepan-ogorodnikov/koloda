@@ -1087,7 +1087,9 @@ While a space is over:
 - every pushed write but a delete is `held { quota }`; tombstones only shrink the space, so they still apply;
 - opening a bootstrap lease is `507 insufficient_storage`, since a lease pins versions compaction would free;
 - an attachment upload is `507` too, unless the space already stores those bytes;
-- every device call's `meta.device.is_over_quota` is `true`.
+- every device call's `meta.device.is_over_quota` is `true`;
+- a device adds no backfill or heal batch to its outbox once a device record or push reply shows it over, so a hold
+  holds only what the outbox had then and the writes made meanwhile.
 
 Usage is read once per push, so a push may overshoot the quota by one batch.
 Below the reserve, every push that holds a new seq is refused with `507` before anything is consumed or fenced.
@@ -1239,6 +1241,7 @@ It tops the outbox up in bounded batches and advances its watermark in the same 
 A batch never splits one entity's envelopes.
 The engine adds a batch before each push while the outbox holds less than one push batch, so the outbox never holds
 the whole database.
+It adds none while the space is over quota, so the held writes never hold it either (§Quotas).
 A batch is at most 500 envelopes and ends with the entity that reaches 1 MiB, so its cohort always fits one push.
 It skips a row that already has an origin, and a group whose register holds a write, not a synthetic floor.
 Both were written since enrollment and hold a newer head.

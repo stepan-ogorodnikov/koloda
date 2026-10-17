@@ -3,9 +3,9 @@
 //!
 //! WHY: a fork, a heal, or a held release renumbers pending rows one by one in one transaction, and a save that
 //! replaces a pending row looks up its cohort. A re-bootstrap's cleanup looks every create up in the outbox and the
-//! held writes, which a quota hold can fill with the whole backfill. A scan per row costs minutes on a large file, and
-//! no test of a few hundred rows notices. Nothing runs `ANALYZE`, so the plan does not depend on the rows and an empty
-//! file shows it.
+//! held writes, which a quota hold fills with every write made while the space is over. A scan per row costs minutes
+//! on a large file, and no test of a few hundred rows notices. Nothing runs `ANALYZE`, so the plan does not depend on
+//! the rows and an empty file shows it.
 
 use rusqlite::Connection;
 
