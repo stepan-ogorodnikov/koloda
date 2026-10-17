@@ -333,7 +333,7 @@ pub fn delete_card(db: &Database, data: DeleteCardData) -> Result<(), AppError> 
 }
 
 // WHY: a push never splits a cohort, and the server takes at most `MAX_PUSH_ITEMS` envelopes in one push. A thousand
-// tombstones also fit the engine's 2,000-envelope batch, so a bulk delete never pushes alone.
+// tombstones also fit the engine's 2,000-envelope batch, so no cohort has to go out alone past the engine's cap.
 const DELETE_COHORT_CARDS: usize = 1_000;
 
 pub fn delete_cards(db: &Database, data: DeleteCardsData) -> Result<(), AppError> {
