@@ -1,6 +1,6 @@
 # Sync server audit fixes
 
-Status: ready
+Status: done
 Guides: agents/IMPLEMENTATION-PLAN.md, agents/TASKS.md, crates/koloda-server/README.md, crates/koloda-sync-proto/PROTOCOL.md, agents/TESTING.md, agents/CODE-DOCUMENTATION.md, agents/BACKWARDS-COMPATIBILITY.md, agents/MARKDOWN.md, agents/VERIFY.md, agents/REVIEW.md
 Flow: local
 
@@ -32,7 +32,7 @@ Line numbers are at `447056b5`.
 
 - 1. Spec violation, Should-fix: a creation retried after the replay window, when its first attempt landed, is
   refused for good and leaves an orphan space file each time.
-  Decision: fix by item 1.
+  Decision: fixed by item 1.
   - `spaces.rs:44` deletes expired `space_creations` rows first, so `spaces.rs:47` finds no record of a nonce older
     than 10 minutes.
   - `spaces.rs:56` then creates `spaces/<new id>.db` and adds it to the open-space map (`server.rs:100-118`).
@@ -46,7 +46,7 @@ Line numbers are at `447056b5`.
     space".
   - `tests/server/spaces_tests.rs` replays only within the window.
 - 2. Spec violation, Should-fix: `PROTOCOL.md` describes server deletion scopes and chunked cleanup that do not exist.
-  Decision: fix by item 3.
+  Decision: fixed by item 3.
   - `PROTOCOL.md:82-83` lists `deletion_scopes` that pulls, snapshots, and head installation treat as absent.
   - `:510-511` and `:517` (§Cascades by ancestry and header refs) say the server commits a scope, then
     chunk-removes heads.
@@ -59,7 +59,7 @@ Line numbers are at `447056b5`.
     That sentence (`PROTOCOL.md:464-466`) is about the device's `sync_delete_jobs`, not the server.
   - `§Quotas` (`:1097`) already assumes the one-transaction delete.
 - 3. Spec violation, Later: §Topology's list of server state and §Bootstrap's pinned-bytes cap disagree with the code.
-  Decision: fix by item 3, which edits the same sections.
+  Decision: fixed by item 3, which edits the same sections.
   - `PROTOCOL.md:74-90` names `entry_versions`, `entry_heads`, `tombstones`, `snapshots` / `snapshot_items`, and
     `sender_progress` / `sender_receipts`.
   - The space schema has `versions`, `heads`, `leases` / `lease_items`, and `senders` / `receipts`
@@ -76,7 +76,7 @@ Line numbers are at `447056b5`.
   - `attachments.rs:86` clamps `limit` into 1 to 1,000, while pull and bootstrap pages refuse it (`pull.rs:46-49`).
   - Fix direction: name the count caps under `too_large`, or answer `bad_request`; refuse an out-of-range `limit`.
 - 5. Risk, Should-fix: in the Docker image `serve` ignores SIGTERM, so every stop waits 10 seconds and ends in SIGKILL.
-  Decision: fix by item 2.
+  Decision: fixed by item 2.
   - `main.rs:414-418` waits only for `tokio::signal::ctrl_c()`, and the graceful shutdown at `main.rs:374` and
     `:379` waits on it.
   - The image runs the binary as PID 1 (`Dockerfile:21-23`), and the compose example sets no `init`
@@ -264,4 +264,33 @@ Out:
 
 ## Outcome
 
-<what shipped>
+Findings 1, 2, 3, and 5 are fixed.
+Finding 14 is accepted for v1 and documented (Open questions 3).
+4 and 6 to 13 are skipped as Later and not scheduled (Open questions 1); their evidence and fix directions stay in
+Scope.
+
+Shipped, one Plan item per commit:
+
+- 1: a space creation whose nonce the server no longer knows, sent with a token that already names a device, returns
+  that device's enrollment and writes nothing, so no orphan space file is made.
+  `PROTOCOL.md` §Bodies says so.
+- 2: `serve` stops on SIGTERM as on Ctrl+C, after the requests in flight.
+  The SIGTERM handler is set before `serve` says it is listening.
+  The README says so.
+- 3: `PROTOCOL.md` describes the one-transaction delete cascade, lists the space tables under their names, drops the
+  pinned-bytes cap, and says that behind a proxy every client shares one pairing limit; the README says the same.
+
+Self-review added one commit: the SIGTERM test keeps the server's stderr open until it exits, so a later line never
+meets a closed pipe.
+
+Checked:
+
+- `bun run check:push` passed after each item and on the final tip.
+- `cargo test -p koloda-server` (1 unit, 126 integration) passed.
+- The late-retry test failed against the old `spaces.rs` ("the token is already enrolled"), and the SIGTERM test
+  failed against the old `main.rs` (the process died of the signal), each checked once by hand.
+- The SIGTERM test passed 30 runs in a row.
+- An upgraded events socket does not hold the graceful shutdown: hyper's connection future ends at the upgrade.
+
+Manual verify: the Docker stop (item 2) was not run in this session; the SIGTERM test covers the same signal outside
+Docker.
