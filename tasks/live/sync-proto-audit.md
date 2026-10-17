@@ -232,7 +232,7 @@ Out:
 
 ## Plan
 
-- [ ] 1. Ask for an update when a newer-schema header breaks this app's registry
+- [x] 1. Ask for an update when a newer-schema header breaks this app's registry
   Goal (finding 1):
   - Add `EnvelopeError::NewerSchema { kind, schema }` (`envelope.rs`), shown as the kind's schema being newer than
     this app's `payload::SCHEMA`.

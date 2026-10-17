@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 use sha2::{Digest as _, Sha256};
 
 use crate::hlc::{DeviceId, Hlc, Stamp};
+use crate::payload::SCHEMA;
 use crate::registry::{allow, Group, Kind, Op, RefName, RegistryError};
 
 pub const MAX_HEADER_BYTES: usize = 16 * 1024;
@@ -60,6 +61,7 @@ pub enum EnvelopeError {
     UnexpectedParent { kind: Kind },
     MissingRef { kind: Kind, name: RefName },
     RefNotAllowed { kind: Kind, name: RefName },
+    NewerSchema { kind: Kind, schema: u32 },
     NonCanonical { reason: &'static str },
     BadLength { field: &'static str, len: usize },
 }
@@ -157,7 +159,18 @@ impl Header {
         check_len(Part::Header, bytes.len(), MAX_HEADER_BYTES)?;
         let wire: WireHeader = decode_map(bytes, Part::Header, HEADER_KEYS)?;
         let header = Header::from_wire(wire)?;
-        header.validate()?;
+        // WHY: a newer schema may change a group's refs or a kind's parent (PROTOCOL.md, Schema versions), so this
+        // app's registry cannot judge the header; the reader needs an update, not a corrupt hold.
+        header.validate().map_err(|error| {
+            if header.schema > SCHEMA {
+                EnvelopeError::NewerSchema {
+                    kind: header.kind,
+                    schema: header.schema,
+                }
+            } else {
+                error
+            }
+        })?;
         Ok(header)
     }
 
@@ -356,6 +369,13 @@ impl fmt::Display for EnvelopeError {
                     "`{}` envelope must not carry ref `{}`",
                     kind.as_wire(),
                     name.as_wire()
+                )
+            }
+            EnvelopeError::NewerSchema { kind, schema } => {
+                write!(
+                    f,
+                    "`{}` envelope is at schema {schema}, newer than this app's {SCHEMA}",
+                    kind.as_wire()
                 )
             }
             EnvelopeError::NonCanonical { reason } => write!(f, "non-canonical header: {reason}"),

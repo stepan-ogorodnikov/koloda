@@ -191,8 +191,8 @@ fn with_key(map: &[u8], key: &str) -> Vec<u8> {
     bytes
 }
 
-fn with_header_key(envelope: &Envelope) -> Vec<u8> {
-    let header = with_key(&envelope.header.encode().expect("header encodes"), "key_id");
+/// A frame around header bytes `Header` cannot build, with `envelope`'s payload.
+fn framed(header: Vec<u8>, envelope: &Envelope) -> Vec<u8> {
     let frame = Value::Map(vec![
         (Value::Text("header".to_string()), Value::Bytes(header)),
         (
@@ -203,6 +203,39 @@ fn with_header_key(envelope: &Envelope) -> Vec<u8> {
     let mut bytes = Vec::new();
     ciborium::into_writer(&frame, &mut bytes).expect("the frame encodes");
     bytes
+}
+
+fn with_header_key(envelope: &Envelope) -> Vec<u8> {
+    framed(
+        with_key(&envelope.header.encode().expect("header encodes"), "key_id"),
+        envelope,
+    )
+}
+
+/// The header at the next schema with an attachment ref its group lacks, as a schema that adds one would write it.
+fn newer_schema_with_ref(envelope: &Envelope) -> Vec<u8> {
+    let header = envelope.header.encode().expect("header encodes");
+    let mut entries = ciborium::from_reader::<Value, _>(header.as_slice())
+        .expect("the header is CBOR")
+        .into_map()
+        .expect("the CBOR is a map");
+    for (key, value) in &mut entries {
+        if key.as_text() == Some("schema") {
+            *value = Value::Integer((SCHEMA + 1).into());
+        }
+    }
+    let at = entries
+        .iter()
+        .position(|(key, _)| key.as_text() == Some("group"))
+        .expect("a write names its group");
+    let refs = Value::Map(vec![(
+        Value::Text("attachment_ids".to_string()),
+        Value::Array(vec![Value::Text("a".repeat(64))]),
+    )]);
+    entries.insert(at, (Value::Text("refs".to_string()), refs));
+    let mut bytes = Vec::new();
+    ciborium::into_writer(&Value::Map(entries), &mut bytes).expect("the header encodes");
+    framed(bytes, envelope)
 }
 
 fn with_payload_key(envelope: &Envelope) -> Vec<u8> {
@@ -454,7 +487,7 @@ fn a_corrupt_reset_applies_from_its_header() {
 
 #[test]
 fn an_unreadable_hot_entry_reports_why() {
-    let cases: [(&str, Target, Damage, HoldReason); 10] = [
+    let cases: [(&str, Target, Damage, HoldReason); 11] = [
         (
             "unknown kind",
             |written| (Kind::Decks, written.deck.clone(), "title"),
@@ -477,6 +510,12 @@ fn an_unreadable_hot_entry_reports_why() {
             "newer schema",
             |written| (Kind::Decks, written.deck.clone(), "title"),
             |envelope| at_schema(envelope, SCHEMA + 1),
+            HoldReason::UpdateRequired,
+        ),
+        (
+            "a newer schema whose header carries a ref this app's group lacks",
+            |written| (Kind::Decks, written.deck.clone(), "title"),
+            newer_schema_with_ref,
             HoldReason::UpdateRequired,
         ),
         (

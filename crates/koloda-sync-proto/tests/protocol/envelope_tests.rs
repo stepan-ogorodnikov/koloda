@@ -3,6 +3,7 @@ use koloda_sync_proto::envelope::{
     digest, Envelope, EnvelopeError, Header, Part, Refs, MAX_HEADER_BYTES, MAX_PAYLOAD_BYTES,
 };
 use koloda_sync_proto::hlc::{DeviceId, Hlc, Stamp};
+use koloda_sync_proto::payload::SCHEMA;
 use koloda_sync_proto::registry::{Group, Kind, Op, RefName, RegistryError};
 
 fn stamp() -> Stamp {
@@ -267,6 +268,13 @@ fn header_validation_follows_the_registry() {
 
 #[test]
 fn decode_rejects_headers_that_do_not_parse_or_validate() {
+    let template_ref = || {
+        Value::Map(vec![(
+            Value::Text("template_id".to_string()),
+            Value::Text("template-1".to_string()),
+        )])
+    };
+    let newer_schema = || Value::Integer((SCHEMA + 1).into());
     let cases = [
         (
             raw_card_content_header(|entries| set(entries, "kind", Value::Text("conversations".to_string()))),
@@ -290,6 +298,33 @@ fn decode_rejects_headers_that_do_not_parse_or_validate() {
             raw_card_content_header(|entries| set(entries, "refs", Value::Map(Vec::new()))),
             EnvelopeError::NonCanonical {
                 reason: "an empty refs map is encoded by omitting it",
+            },
+        ),
+        (
+            raw_card_content_header(|entries| set(entries, "refs", template_ref())),
+            EnvelopeError::RefNotAllowed {
+                kind: Kind::Cards,
+                name: RefName::TemplateId,
+            },
+        ),
+        (
+            raw_card_content_header(|entries| {
+                set(entries, "refs", template_ref());
+                set(entries, "schema", newer_schema());
+            }),
+            EnvelopeError::NewerSchema {
+                kind: Kind::Cards,
+                schema: SCHEMA + 1,
+            },
+        ),
+        (
+            raw_card_content_header(|entries| {
+                entries.retain(|(key, _)| key.as_text() != Some("parent"));
+                set(entries, "schema", newer_schema());
+            }),
+            EnvelopeError::NewerSchema {
+                kind: Kind::Cards,
+                schema: SCHEMA + 1,
             },
         ),
     ];
