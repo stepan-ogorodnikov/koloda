@@ -41,9 +41,13 @@ fn card_content() -> Header {
     )
 }
 
-/// Re-encodes `card_content()` after editing its CBOR header map, to reach states `Header` cannot build.
 fn raw_card_content_header(edit: impl FnOnce(&mut Vec<(Value, Value)>)) -> Vec<u8> {
-    let bytes = card_content().encode().expect("base header encodes");
+    raw_header(&card_content(), edit)
+}
+
+/// Re-encodes `base` after editing its CBOR header map, to reach states `Header` cannot build.
+fn raw_header(base: &Header, edit: impl FnOnce(&mut Vec<(Value, Value)>)) -> Vec<u8> {
+    let bytes = base.encode().expect("base header encodes");
     let value: Value = ciborium::from_reader(bytes.as_slice()).expect("base header is CBOR");
     let mut entries = value.into_map().expect("header must be a CBOR map");
     edit(&mut entries);
@@ -53,9 +57,23 @@ fn raw_card_content_header(edit: impl FnOnce(&mut Vec<(Value, Value)>)) -> Vec<u
     out
 }
 
+/// Replaces `key` where it stands, so the edit does not also reorder the map, or appends it when absent.
 fn set(entries: &mut Vec<(Value, Value)>, key: &str, value: Value) {
-    entries.retain(|(existing, _)| existing.as_text() != Some(key));
-    entries.push((Value::Text(key.to_string()), value));
+    match entries.iter_mut().find(|(existing, _)| existing.as_text() == Some(key)) {
+        Some((_, existing)) => *existing = value,
+        None => entries.push((Value::Text(key.to_string()), value)),
+    }
+}
+
+/// `bytes` with the one occurrence of `from` replaced by `to`.
+fn spliced(bytes: &[u8], from: &[u8], to: &[u8]) -> Vec<u8> {
+    let at = bytes
+        .windows(from.len())
+        .position(|window| window == from)
+        .expect("the bytes hold the pattern");
+    let before = bytes.get(..at).expect("the pattern starts inside the bytes");
+    let after = bytes.get(at + from.len()..).expect("the pattern ends inside the bytes");
+    [before, to, after].concat()
 }
 
 #[test]
@@ -256,6 +274,22 @@ fn header_validation_follows_the_registry() {
             },
         ),
         (
+            header(
+                Kind::Cards,
+                "card-1",
+                Some("deck-1"),
+                Some(Group::Content),
+                Op::Write,
+                Refs {
+                    attachment_ids: vec!["aa".to_string(), "aa".to_string()],
+                    ..Refs::default()
+                },
+            ),
+            EnvelopeError::NonCanonical {
+                reason: "attachment ids are not sorted and unique",
+            },
+        ),
+        (
             header(Kind::Reviews, "review-1", Some("card-1"), None, Op::Delete, no_refs()),
             EnvelopeError::Registry(RegistryError::DeleteNotAllowed { kind: Kind::Reviews }),
         ),
@@ -275,6 +309,21 @@ fn decode_rejects_headers_that_do_not_parse_or_validate() {
         )])
     };
     let newer_schema = || Value::Integer((SCHEMA + 1).into());
+    let deck_algorithm = header(
+        Kind::Decks,
+        "deck-1",
+        None,
+        Some(Group::Algorithm),
+        Op::Write,
+        Refs {
+            algorithm_id: Some("algorithm-1".to_string()),
+            ..Refs::default()
+        },
+    );
+    let not_canonical = EnvelopeError::NonCanonical {
+        reason: "the header is not in its one encoding",
+    };
+    let canonical = card_content().encode().expect("header encodes");
     let cases = [
         (
             raw_card_content_header(|entries| set(entries, "kind", Value::Text("conversations".to_string()))),
@@ -327,9 +376,70 @@ fn decode_rejects_headers_that_do_not_parse_or_validate() {
                 schema: SCHEMA + 1,
             },
         ),
+        (
+            raw_card_content_header(|entries| entries.reverse()),
+            not_canonical.clone(),
+        ),
+        ([canonical.clone(), vec![0, 0, 0]].concat(), not_canonical.clone()),
+        (
+            spliced(&canonical, b"\x66schema\x01", b"\x66schema\x1a\x00\x00\x00\x01"),
+            not_canonical.clone(),
+        ),
+        (
+            raw_card_content_header(|entries| {
+                let refs = Value::Map(vec![
+                    (Value::Text("algorithm_id".to_string()), Value::Null),
+                    (
+                        Value::Text("attachment_ids".to_string()),
+                        Value::Array(vec![Value::Text("aa".to_string()), Value::Text("bb".to_string())]),
+                    ),
+                ]);
+                set(entries, "refs", refs);
+            }),
+            not_canonical.clone(),
+        ),
+        (
+            raw_header(&deck_algorithm, |entries| {
+                let refs = Value::Map(vec![
+                    (
+                        Value::Text("algorithm_id".to_string()),
+                        Value::Text("algorithm-1".to_string()),
+                    ),
+                    (Value::Text("attachment_ids".to_string()), Value::Array(Vec::new())),
+                ]);
+                set(entries, "refs", refs);
+            }),
+            not_canonical,
+        ),
     ];
     for (bytes, expected) in cases {
         assert_eq!(Header::decode(&bytes), Err(expected.clone()), "{expected:?}");
+    }
+}
+
+#[test]
+fn decode_rejects_a_frame_in_a_second_encoding() {
+    let canonical = Envelope {
+        header: card_content(),
+        payload: vec![1, 2, 3],
+    }
+    .encode()
+    .expect("envelope encodes");
+    let mut entries = ciborium::from_reader::<Value, _>(canonical.as_slice())
+        .expect("the frame is CBOR")
+        .into_map()
+        .expect("the frame is a map");
+    entries.reverse();
+    let mut reversed = Vec::new();
+    ciborium::into_writer(&Value::Map(entries), &mut reversed).expect("frame encodes");
+
+    for bytes in [reversed, [canonical, vec![0]].concat()] {
+        assert_eq!(
+            Envelope::decode(&bytes),
+            Err(EnvelopeError::NonCanonical {
+                reason: "the frame is not in its one encoding",
+            })
+        );
     }
 }
 

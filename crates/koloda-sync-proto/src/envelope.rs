@@ -141,6 +141,7 @@ impl Envelope {
         )?;
         let frame: WireFrame = decode_map(bytes, Part::Envelope, FRAME_KEYS)?;
         check_len(Part::Payload, frame.payload.len(), MAX_PAYLOAD_BYTES)?;
+        check_canonical(&frame, bytes, Part::Envelope, "the frame is not in its one encoding")?;
         Ok(Envelope {
             header: Header::decode(&frame.header)?,
             payload: frame.payload,
@@ -171,6 +172,12 @@ impl Header {
                 error
             }
         })?;
+        check_canonical(
+            &header.to_wire(),
+            bytes,
+            Part::Header,
+            "the header is not in its one encoding",
+        )?;
         Ok(header)
     }
 
@@ -319,6 +326,22 @@ fn fixed_bytes(field: &'static str, bytes: &[u8]) -> Result<[u8; 16], EnvelopeEr
     }
 }
 
+// INVARIANT: one logical frame or header has one encoding (PROTOCOL.md, Envelope encoding). Serde accepts keys in any
+// order, longer integer forms, and explicit nulls, and ciborium ignores trailing bytes, so only encoding the decoded
+// value again shows that the input was its one encoding.
+fn check_canonical<T: Serialize>(
+    decoded: &T,
+    bytes: &[u8],
+    part: Part,
+    reason: &'static str,
+) -> Result<(), EnvelopeError> {
+    if encode_cbor(decoded, part)? == bytes {
+        Ok(())
+    } else {
+        Err(EnvelopeError::NonCanonical { reason })
+    }
+}
+
 fn check_len(part: Part, len: usize, max: usize) -> Result<(), EnvelopeError> {
     if len > max {
         Err(EnvelopeError::TooLarge { part, len, max })
@@ -378,7 +401,7 @@ impl fmt::Display for EnvelopeError {
                     kind.as_wire()
                 )
             }
-            EnvelopeError::NonCanonical { reason } => write!(f, "non-canonical header: {reason}"),
+            EnvelopeError::NonCanonical { reason } => write!(f, "non-canonical encoding: {reason}"),
             EnvelopeError::BadLength { field, len } => write!(f, "`{field}` is {len} bytes, expected 16"),
         }
     }

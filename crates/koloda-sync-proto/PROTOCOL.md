@@ -136,6 +136,9 @@ Unknown keys are rejected, in the frame, the header, and `refs`.
 The server refuses such a push as `bad_request`.
 A client that pulls one reads a newer writer and holds for an app update (§Corrupt envelopes).
 One logical header has one encoding: `attachment_ids` are sorted and unique, and an empty `refs` map is omitted.
+A header or frame in any other encoding does not decode.
+That covers reordered keys, an explicit `null`, a longer integer or length form, and trailing bytes.
+The server refuses such a push as `bad_request`, and a client that pulls one holds it as corrupt (§Corrupt envelopes).
 The digest is the SHA-256 of the encoded envelope bytes.
 
 Decoding validates the header against the registry:

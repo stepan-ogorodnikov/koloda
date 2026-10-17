@@ -262,7 +262,7 @@ Out:
   Commit: Ask for an update when a newer-schema header breaks this app's registry
   Depends on: none
 
-- [ ] 2. Refuse a second encoding of an envelope's header or frame
+- [x] 2. Refuse a second encoding of an envelope's header or frame
   Goal (findings 2 and 8):
   - `Header::decode` (`envelope.rs:156-162`), after `validate()`, re-encodes the decoded header and refuses input
     whose bytes differ as `NonCanonical`.
