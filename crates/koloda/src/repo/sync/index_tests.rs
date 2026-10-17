@@ -1,15 +1,16 @@
-//! The statements that renumber this device's pending rows, find a cohort's rows, or check what a re-bootstrap keeps
-//! all search an index.
+//! The statements that renumber this device's pending rows, find a cohort's rows, check what a re-bootstrap keeps, or
+//! page the due image transfers all search an index.
 //!
 //! WHY: a fork, a heal, or a held release renumbers pending rows one by one in one transaction, and a save that
 //! replaces a pending row looks up its cohort. A re-bootstrap's cleanup looks every create up in the outbox and the
-//! held writes, which a quota hold fills with every write made while the space is over. A scan per row costs minutes
-//! on a large file, and no test of a few hundred rows notices. Nothing runs `ANALYZE`, so the plan does not depend on
-//! the rows and an empty file shows it.
+//! held writes, which a quota hold fills with every write made while the space is over. The engine asks for 16 due
+//! transfers at a time, so draining the queue reads it once per 16. A scan per row or per call costs minutes on a large
+//! file, and no test of a few hundred rows notices. Nothing runs `ANALYZE`, so the plan does not depend on the rows and
+//! an empty file shows it.
 
 use rusqlite::Connection;
 
-use super::{heal, outbox, rebase, EMPTY_COHORT, RENUMBER};
+use super::{attachments, heal, outbox, rebase, EMPTY_COHORT, RENUMBER};
 use crate::app::db::Database;
 
 /// The steps of the statement's plan that read one of `tables`, under the name SQLite gives it there.
@@ -47,6 +48,7 @@ fn renumbering_and_cohort_reads_search_an_index() {
         (heal::COHORT_ROWS, &["sync_outbox"][..]),
         // WHY: `h` and `x` are the held writes and the outbox under the aliases the statement gives them.
         (rebase::ABSENT_BATCH, &["h", "x"][..]),
+        (attachments::DUE_PAGE, &["sync_attachment_queue"][..]),
     ]);
     db.with_conn(|conn| {
         for (statement, tables) in statements {

@@ -50,6 +50,7 @@ remote apply queues a fetch for each linked id the file lacks.
   `finish_attachment_check` ends the one check (`sync_state.is_checking_attachments`).
 - `due_transfers` drops a fetch whose image arrived, and a retry no card links any more; only retries pay for the
   card scan. The queue pins nothing, so the startup sweep is unchanged.
+  It reads the due rows a page at a time in index order, reading on past dropped fetches.
 - `store_fetched` checks the hash and validates like an add, then writes through `insert_attachment`, the one insert
   that `add_attachment` uses too; bytes still go through `attachment_bytes` only.
 - `release_deferred_uploads` makes every upload deferred by `defer_for_room` (a `507`) due at once; the engine calls

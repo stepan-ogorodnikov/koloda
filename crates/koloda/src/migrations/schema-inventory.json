@@ -748,6 +748,15 @@
             "id",
             "direction"
           ]
+        },
+        {
+          "name": "sync_attachment_queue_due_idx",
+          "unique": 0,
+          "columns": [
+            "next_attempt_at",
+            "direction",
+            "id"
+          ]
         }
       ],
       "foreign_keys": []

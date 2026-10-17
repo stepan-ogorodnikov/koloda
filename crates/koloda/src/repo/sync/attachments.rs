@@ -81,41 +81,56 @@ pub fn finish_attachment_check(db: &Database) -> Result<(), AppError> {
     })
 }
 
+// INVARIANT: one page of due transfers after a `(next_attempt_at, direction, id)` key, in the order of
+// `sync_attachment_queue_due_idx`, so each page searches the index instead of scanning and sorting the queue.
+pub(super) const DUE_PAGE: &str = r#"
+    SELECT id, direction, attempts, next_attempt_at FROM sync_attachment_queue
+    WHERE next_attempt_at <= ?1 AND (next_attempt_at, direction, id) > (?2, ?3, ?4)
+    ORDER BY next_attempt_at, direction, id
+    LIMIT ?5
+"#;
+
 /// Up to `limit` transfers due at `now`, oldest first. A fetch whose attachment arrived meanwhile is dropped instead of
 /// listed, and so is a retry that no local card links any more.
 pub fn due_transfers(db: &Database, now: i64, limit: usize) -> Result<Vec<Transfer>, AppError> {
     throw_known_error(error_codes::DB_GET, || {
         db.with_transaction(|tx| {
-            let mut statement = tx.prepare(
-                r#"
-                SELECT id, direction, attempts FROM sync_attachment_queue
-                WHERE next_attempt_at <= ?1 ORDER BY next_attempt_at, direction, id
-                "#,
-            )?;
-            let queued = statement
-                .query_map(params![now], |row| {
-                    Ok((
-                        row.get::<_, String>(0)?,
-                        row.get::<_, String>(1)?,
-                        row.get::<_, u32>(2)?,
-                    ))
-                })?
-                .collect::<Result<Vec<_>, _>>()?;
+            let page_size = i64::try_from(limit).map_err(protocol_error)?;
+            let mut statement = tx.prepare(DUE_PAGE)?;
             let mut due = Vec::new();
-            for (id, direction, attempts) in queued {
-                if due.len() == limit {
+            // WHY: below every key, so the first page starts at the oldest due row.
+            let mut after = (i64::MIN, String::new(), String::new());
+            while due.len() < limit {
+                let page = statement
+                    .query_map(params![now, after.0, after.1, after.2, page_size], |row| {
+                        Ok((
+                            row.get::<_, String>(0)?,
+                            row.get::<_, String>(1)?,
+                            row.get::<_, u32>(2)?,
+                            row.get::<_, i64>(3)?,
+                        ))
+                    })?
+                    .collect::<Result<Vec<_>, _>>()?;
+                let is_last_page = page.len() < limit;
+                for (id, direction_text, attempts, next_attempt_at) in page {
+                    if due.len() == limit {
+                        break;
+                    }
+                    let direction = match direction_text.as_str() {
+                        "upload" => Direction::Upload,
+                        "fetch" => Direction::Fetch,
+                        other => return Err(protocol_error(format!("unknown transfer direction {other}"))),
+                    };
+                    after = (next_attempt_at, direction_text, id.clone());
+                    if direction == Direction::Fetch && !is_wanted(tx, &id, attempts)? {
+                        finish(tx, &id, direction)?;
+                        continue;
+                    }
+                    due.push(Transfer { id, direction });
+                }
+                if is_last_page {
                     break;
                 }
-                let direction = match direction.as_str() {
-                    "upload" => Direction::Upload,
-                    "fetch" => Direction::Fetch,
-                    other => return Err(protocol_error(format!("unknown transfer direction {other}"))),
-                };
-                if direction == Direction::Fetch && !is_wanted(tx, &id, attempts)? {
-                    finish(tx, &id, direction)?;
-                    continue;
-                }
-                due.push(Transfer { id, direction });
             }
             Ok(due)
         })

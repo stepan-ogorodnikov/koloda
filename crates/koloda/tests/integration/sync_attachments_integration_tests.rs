@@ -276,3 +276,33 @@ fn a_fetch_no_card_needs_any_more_is_dropped() {
     );
     assert_eq!(count(&db, "SELECT COUNT(*) FROM sync_attachment_queue"), 1);
 }
+
+#[test]
+fn unwanted_fetches_past_one_page_do_not_hide_a_due_upload_behind_them() {
+    let db = test_db();
+    let upload_id = id_of(&png(1));
+    db.with_conn(|conn| {
+        // Retries no card links, due before the upload, which sorts after them at the same time.
+        for n in 0..40 {
+            conn.execute(
+                "INSERT INTO sync_attachment_queue (id, direction, attempts, next_attempt_at) VALUES (?1, 'fetch', 1, 0)",
+                [format!("{n:064x}")],
+            )?;
+        }
+        conn.execute(
+            "INSERT INTO sync_attachment_queue (id, direction, attempts, next_attempt_at) VALUES (?1, 'upload', 0, 0)",
+            [&upload_id],
+        )?;
+        Ok(())
+    })
+    .unwrap();
+
+    let due = due_transfers(&db, 0, 16).unwrap();
+
+    assert_eq!(due, vec![upload(&upload_id)]);
+    assert_eq!(
+        count(&db, "SELECT COUNT(*) FROM sync_attachment_queue"),
+        1,
+        "every fetch dropped"
+    );
+}

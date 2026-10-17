@@ -195,7 +195,7 @@ Out:
   Commit: Hold a learning value this app refuses as corrupt
   Depends on: none
 
-- [ ] 4. Page due image transfers through an index
+- [x] 4. Page due image transfers through an index
   Goal (finding 7):
   - Client migration `crates/koloda/src/migrations/V18__sync_attachment_queue_due.sql` adds
     `sync_attachment_queue_due_idx` on `sync_attachment_queue (next_attempt_at, direction, id)`.
