@@ -4,6 +4,7 @@
 //! space's size quota, `drop-envelope` removes one damaged envelope from a space's log, and `write-schema` raises a
 //! kind's write schema.
 
+use std::future::Future;
 use std::io::{self, Write};
 use std::net::SocketAddr;
 use std::path::{Path, PathBuf};
@@ -364,6 +365,7 @@ fn serve(
         let server = Arc::new(server);
         tokio::spawn(collect_garbage(Arc::clone(&server)));
         let routes = router(server).into_make_service_with_connect_info::<SocketAddr>();
+        let stop = shutdown();
         match certificates {
             Some(certificates) => {
                 eprintln!("koloda-server: listening on https://{listen}");
@@ -371,12 +373,12 @@ fn serve(
                 // WORKAROUND: axum gives a listener of its own `ConnectInfo` only through `tap_io`, so the TLS
                 // listener goes through a tap that does nothing; pairing limits wrong codes per client address.
                 axum::serve(TlsListener::new(listener, certificates).tap_io(|_| {}), routes)
-                    .with_graceful_shutdown(shutdown())
+                    .with_graceful_shutdown(stop)
                     .await
             }
             None => {
                 eprintln!("koloda-server: listening on http://{listen}");
-                axum::serve(listener, routes).with_graceful_shutdown(shutdown()).await
+                axum::serve(listener, routes).with_graceful_shutdown(stop).await
             }
         }
         .map_err(|error| error.to_string())
@@ -411,8 +413,31 @@ async fn collect_garbage(server: Arc<Server>) {
     }
 }
 
-async fn shutdown() {
-    if let Err(error) = tokio::signal::ctrl_c().await {
-        eprintln!("koloda-server: cannot listen for Ctrl+C, stopping: {error}");
+// WHY: Docker and systemd stop a service with SIGTERM, and the image runs this binary as PID 1, which ignores a signal
+// it set no handler for; a stop would wait out Docker's grace period and end in SIGKILL. The handler is set before
+// `serve` says it is listening, so a stop sent from then on is never missed.
+fn shutdown() -> impl Future<Output = ()> {
+    #[cfg(unix)]
+    let terminate = tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate());
+    async move {
+        #[cfg(unix)]
+        let terminated = async {
+            match terminate {
+                Ok(mut terminate) => {
+                    terminate.recv().await;
+                }
+                Err(error) => eprintln!("koloda-server: cannot listen for SIGTERM, stopping: {error}"),
+            }
+        };
+        #[cfg(not(unix))]
+        let terminated = std::future::pending::<()>();
+        tokio::select! {
+            interrupted = tokio::signal::ctrl_c() => {
+                if let Err(error) = interrupted {
+                    eprintln!("koloda-server: cannot listen for Ctrl+C, stopping: {error}");
+                }
+            }
+            () = terminated => {}
+        }
     }
 }

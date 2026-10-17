@@ -50,6 +50,7 @@ and below `--reserve-disk` (64 MiB) it refuses every push; on a platform without
 A request that runs out of disk anyway is refused with `507` and consumes nothing.
 It runs a garbage collection pass every hour, over tombstones every active device has passed and attachments no card
 has linked for 90 days; `Server::collect_garbage` runs one on demand.
+It stops on Ctrl+C or SIGTERM, after the requests in flight, so `docker compose stop` needs no grace period.
 `backup` copies the active generation while `serve` runs, into a directory that is missing or empty.
 Each database is copied in one read transaction, `server.db` last; the attachment bytes follow each space's copy.
 `manifest.json` is written last, with each file's SHA-256 and each space's epoch, lane heads, senders' last seqs,

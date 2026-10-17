@@ -214,7 +214,7 @@ Out:
   Commit: Answer a late space-creation retry with the space it created
   Depends on: none
 
-- [ ] 2. Stop the sync server on SIGTERM as on Ctrl+C
+- [x] 2. Stop the sync server on SIGTERM as on Ctrl+C
   Goal (finding 5):
   - `shutdown()` (`main.rs:414-418`) resolves on Ctrl+C or, on Unix, on SIGTERM
     (`tokio::signal::unix::signal(SignalKind::terminate())`), so `with_graceful_shutdown` drains in both cases.

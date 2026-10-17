@@ -1,9 +1,11 @@
+use std::io::BufRead;
 use std::net::SocketAddr;
 use std::path::{Path, PathBuf};
-use std::process::Command;
+use std::process::{Command, Stdio};
 use std::sync::Arc;
 use std::time::Duration;
 
+use koloda_server::data_dir;
 use koloda_server::tls::{Certificates, TlsListener};
 use rcgen::{BasicConstraints, CertificateParams, CertifiedIssuer, IsCa, KeyPair};
 use rustls::pki_types::ServerName;
@@ -194,4 +196,38 @@ fn serve_needs_exactly_one_of_tls_and_plain_http() {
             "{name}: a usage error, before anything is served"
         );
     }
+}
+
+#[cfg(unix)]
+#[test]
+fn serve_stops_on_sigterm_once_it_says_it_is_listening() {
+    let dir = TempDir::new().expect("data directory");
+    data_dir::init(dir.path(), 0).expect("init a fresh data directory");
+    let mut serve = Command::new(env!("CARGO_BIN_EXE_koloda-server"))
+        .arg("serve")
+        .arg("--data-dir")
+        .arg(dir.path())
+        .args(["--insecure-http", "--listen", "127.0.0.1:0"])
+        .stderr(Stdio::piped())
+        .spawn()
+        .expect("the binary runs");
+    let stderr = std::io::BufReader::new(serve.stderr.take().expect("stderr is piped"));
+    let listening = stderr
+        .lines()
+        .map(|line| line.expect("stderr reads"))
+        .find(|line| line.contains("listening on"));
+    assert!(listening.is_some(), "serve says it is listening");
+
+    // Docker and systemd stop a service with SIGTERM.
+    let sent = Command::new("kill")
+        .args(["-TERM", &serve.id().to_string()])
+        .status()
+        .expect("kill runs");
+    assert!(sent.success(), "the signal is sent");
+    let stopped = serve.wait().expect("serve exits");
+
+    assert!(
+        stopped.success(),
+        "serve drains and exits on SIGTERM, not by the signal: {stopped}"
+    );
 }
