@@ -211,9 +211,10 @@ fn serve_stops_on_sigterm_once_it_says_it_is_listening() {
         .stderr(Stdio::piped())
         .spawn()
         .expect("the binary runs");
-    let stderr = std::io::BufReader::new(serve.stderr.take().expect("stderr is piped"));
+    // WHY: held until `serve` exits, so a line it writes after the first never meets a closed pipe.
+    let mut stderr = std::io::BufReader::new(serve.stderr.take().expect("stderr is piped")).lines();
     let listening = stderr
-        .lines()
+        .by_ref()
         .map(|line| line.expect("stderr reads"))
         .find(|line| line.contains("listening on"));
     assert!(listening.is_some(), "serve says it is listening");
