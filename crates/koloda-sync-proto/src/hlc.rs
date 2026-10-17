@@ -105,7 +105,7 @@ impl fmt::Display for HlcError {
             HlcError::TooFarAhead { wall_ms, server_now_ms } => {
                 write!(
                     f,
-                    "stamp wall time {wall_ms} is more than 5 minutes ahead of server time {server_now_ms}"
+                    "stamp wall time {wall_ms} is more than {SKEW_TOLERANCE_MS} ms ahead of server time {server_now_ms}"
                 )
             }
         }

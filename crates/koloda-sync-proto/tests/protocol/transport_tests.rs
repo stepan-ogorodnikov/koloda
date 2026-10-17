@@ -4,10 +4,10 @@ use std::num::NonZeroU32;
 use ciborium::Value;
 use koloda_sync_proto::registry::Kind;
 use koloda_sync_proto::transport::{
-    check_token, decode_schemas, encode_schemas, AttachmentBody, ClaimPairing, CreateSpace, Cutoff, DependencyAction,
-    DeviceInfo, DeviceMeta, Empty, Enrollment, ErrorBody, ErrorCode, Heads, HeldReason, IssuePairing, KnownId,
-    KnownState, LogEntry, Meta, Outcome, Platform, PullPage, Push, PushItem, PushOutcome, Reply, Restore, RestoreMode,
-    Snapshot, SnapshotPage,
+    check_token, code_hash, decode_schemas, encode_schemas, AttachmentBody, ClaimPairing, CreateSpace, Cutoff,
+    DependencyAction, DeviceInfo, DeviceMeta, Empty, Enrollment, ErrorBody, ErrorCode, Heads, HeldReason, IssuePairing,
+    KnownId, KnownState, LogEntry, Meta, Outcome, Platform, PullPage, Push, PushItem, PushOutcome, Reply, Restore,
+    RestoreMode, Snapshot, SnapshotPage,
 };
 use serde::Serialize;
 
@@ -450,4 +450,28 @@ fn a_token_is_64_lowercase_hex_characters() {
     ] {
         assert!(check_token(&token).is_err(), "{token}");
     }
+}
+
+#[test]
+fn a_pairing_code_hashes_the_same_however_it_is_typed() {
+    let canonical = code_hash("7K3M0Q1RXZ");
+    for typed in [
+        "7k3m0q1rxz",
+        "7K3M-0Q1R-XZ",
+        "7K3M 0Q1R XZ",
+        " 7k3m-0q1r xz ",
+        "7K3MOQ1RXZ",
+        "7K3MoQ1RXZ",
+        "7K3M0QIRXZ",
+        "7K3M0QiRXZ",
+        "7K3M0QLRXZ",
+        "7K3M0QlRXZ",
+    ] {
+        assert_eq!(code_hash(typed), canonical, "{typed}");
+    }
+    assert_ne!(
+        code_hash("7K3M0Q1RXY"),
+        canonical,
+        "a code one character off is another code"
+    );
 }

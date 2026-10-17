@@ -1,7 +1,5 @@
 use ciborium::Value;
-use koloda_sync_proto::envelope::{
-    digest, Envelope, EnvelopeError, Header, Part, Refs, MAX_HEADER_BYTES, MAX_PAYLOAD_BYTES,
-};
+use koloda_sync_proto::envelope::{digest, Envelope, EnvelopeError, Header, Part, Refs};
 use koloda_sync_proto::hlc::{DeviceId, Hlc, Stamp};
 use koloda_sync_proto::payload::SCHEMA;
 use koloda_sync_proto::registry::{Group, Kind, Op, RefName, RegistryError};
@@ -134,35 +132,36 @@ fn digest_is_sha256_of_the_encoded_bytes() {
 
 #[test]
 fn decode_enforces_size_limits_at_the_limit_and_one_past() {
+    // Wire contract pin: a header is at most 16 KiB and a payload at most 512 KiB.
     let at_limit = Envelope {
         header: card_content(),
-        payload: vec![0; MAX_PAYLOAD_BYTES],
+        payload: vec![0; 524_288],
     };
     assert_eq!(Envelope::decode(&at_limit.encode().unwrap()), Ok(at_limit));
 
     let past_limit = Envelope {
         header: card_content(),
-        payload: vec![0; MAX_PAYLOAD_BYTES + 1],
+        payload: vec![0; 524_289],
     };
     assert_eq!(
         Envelope::decode(&past_limit.encode().unwrap()),
         Err(EnvelopeError::TooLarge {
             part: Part::Payload,
-            len: MAX_PAYLOAD_BYTES + 1,
-            max: MAX_PAYLOAD_BYTES,
+            len: 524_289,
+            max: 524_288,
         })
     );
 
     // Grow the id until the encoded header is exactly at the limit; the length prefix stays 3 bytes.
     let base_len = header_with_id_len(1_000).encode().unwrap().len();
-    let fitting = header_with_id_len(1_000 + MAX_HEADER_BYTES - base_len);
+    let fitting = header_with_id_len(1_000 + 16_384 - base_len);
     let fitting_bytes = fitting.encode().unwrap();
-    assert_eq!(fitting_bytes.len(), MAX_HEADER_BYTES);
+    assert_eq!(fitting_bytes.len(), 16_384);
     assert_eq!(Header::decode(&fitting_bytes), Ok(fitting.clone()));
 
     let both_at_limit = Envelope {
         header: fitting,
-        payload: vec![0; MAX_PAYLOAD_BYTES],
+        payload: vec![0; 524_288],
     };
     assert_eq!(
         Envelope::decode(&both_at_limit.encode().unwrap()),
@@ -170,15 +169,13 @@ fn decode_enforces_size_limits_at_the_limit_and_one_past() {
         "frame overhead must fit beside a full header and a full payload"
     );
 
-    let oversized = header_with_id_len(1_001 + MAX_HEADER_BYTES - base_len)
-        .encode()
-        .unwrap();
+    let oversized = header_with_id_len(1_001 + 16_384 - base_len).encode().unwrap();
     assert_eq!(
         Header::decode(&oversized),
         Err(EnvelopeError::TooLarge {
             part: Part::Header,
-            len: MAX_HEADER_BYTES + 1,
-            max: MAX_HEADER_BYTES,
+            len: 16_385,
+            max: 16_384,
         })
     );
 }

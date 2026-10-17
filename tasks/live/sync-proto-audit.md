@@ -307,7 +307,7 @@ Out:
   Commit: Pause the engine on skew through the protocol crate's rule
   Depends on: none
 
-- [ ] 4. Pin the protocol's numbers and pairing-code normalization in tests
+- [x] 4. Pin the protocol's numbers and pairing-code normalization in tests
   Goal (findings 7 and 9):
   - `server_rejects_a_wall_part_more_than_five_minutes_ahead` (`hlc_tests.rs:91-105`) writes its boundaries as
     `server_now + 300_000` and `+ 300_001`.

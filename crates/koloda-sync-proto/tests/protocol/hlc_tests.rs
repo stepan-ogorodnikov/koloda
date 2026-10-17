@@ -1,6 +1,4 @@
-use koloda_sync_proto::hlc::{
-    check_not_ahead_of_server, is_skew_paused, DeviceId, Hlc, HlcClock, HlcError, Stamp, SKEW_TOLERANCE_MS,
-};
+use koloda_sync_proto::hlc::{check_not_ahead_of_server, is_skew_paused, DeviceId, Hlc, HlcClock, HlcError, Stamp};
 
 fn hlc(wall_ms: u64, counter: u16) -> Hlc {
     Hlc::new(wall_ms, counter).expect("test stamp fits in 48 bits")
@@ -91,15 +89,16 @@ fn client_pauses_only_when_skew_exceeds_five_minutes() {
 
 #[test]
 fn server_rejects_a_wall_part_more_than_five_minutes_ahead() {
+    // Wire contract pin: ruling 23 sets the tolerance at 5 minutes.
     let server_now = 1_700_000_000_000;
     assert_eq!(
-        check_not_ahead_of_server(hlc(server_now + SKEW_TOLERANCE_MS, u16::MAX), server_now),
+        check_not_ahead_of_server(hlc(server_now + 300_000, u16::MAX), server_now),
         Ok(())
     );
     assert_eq!(
-        check_not_ahead_of_server(hlc(server_now + SKEW_TOLERANCE_MS + 1, 0), server_now),
+        check_not_ahead_of_server(hlc(server_now + 300_001, 0), server_now),
         Err(HlcError::TooFarAhead {
-            wall_ms: server_now + SKEW_TOLERANCE_MS + 1,
+            wall_ms: server_now + 300_001,
             server_now_ms: server_now,
         })
     );
