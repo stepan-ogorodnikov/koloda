@@ -5,6 +5,7 @@ use koloda_sync_proto::payload::{
     CardCreate, CardScheduling, DeckCreate, InitialProductTs, Notes, Payload, Review, Title,
 };
 use koloda_sync_proto::registry::Kind;
+use koloda_sync_proto::transport::MAX_PUSH_ITEMS;
 use uuid::Uuid;
 
 use crate::common::fixtures::{add_algorithm, add_card, add_deck, add_template, insert_review_row};
@@ -26,6 +27,36 @@ fn capture(db: &Database, writes: impl FnOnce(&mut Capture<'_>) -> Result<(), Ap
         writes(&mut capture)
     })
     .expect("capture commit succeeds");
+}
+
+fn deck_id(n: usize) -> String {
+    format!("01920000-0000-7000-8000-{n:012x}")
+}
+
+/// Runs `write(0)` up to `write(attempts - 1)` in one commit, which must fail; returns how many succeeded first.
+fn writes_before_refusal(
+    db: &Database,
+    attempts: usize,
+    mut write: impl FnMut(&mut Capture<'_>, usize) -> Result<(), AppError>,
+) -> usize {
+    let mut written = 0;
+    db.with_transaction(|tx| {
+        let mut capture = Capture::begin(tx)?;
+        for n in 0..attempts {
+            write(&mut capture, n)?;
+            written += 1;
+        }
+        Ok(())
+    })
+    .expect_err("capture refuses a cohort past one push");
+    written
+}
+
+fn assert_nothing_captured(db: &Database, next_sender_seq: i64) {
+    for table in ["sync_outbox", "sync_stamps", "sync_cohorts", "sync_tombstones"] {
+        assert_eq!(count(db, &format!("SELECT COUNT(*) FROM {table}")), 0, "{table}");
+    }
+    assert_eq!(count(db, "SELECT next_sender_seq FROM sync_state"), next_sender_seq);
 }
 
 fn card_create(deck_id: &str, template_id: &str) -> Payload {
@@ -267,4 +298,37 @@ fn a_delete_records_a_tombstone_and_forgets_its_descendants() {
             delete: koloda_sync_proto::payload::Delete { successor: None },
         }
     );
+}
+
+#[test]
+fn a_commit_past_the_push_item_cap_fails_and_leaves_nothing() {
+    let db = test_db();
+    enroll(&db);
+    let next_sender_seq = count(&db, "SELECT next_sender_seq FROM sync_state");
+
+    let written = writes_before_refusal(&db, MAX_PUSH_ITEMS + 1, |capture, n| {
+        capture.delete(Kind::Decks, &deck_id(n), None, None)
+    });
+
+    assert_eq!(
+        written, MAX_PUSH_ITEMS,
+        "a cohort holds exactly as many envelopes as one push"
+    );
+    assert_nothing_captured(&db, next_sender_seq);
+}
+
+#[test]
+fn a_commit_past_the_push_body_cap_fails_and_leaves_nothing() {
+    let db = test_db();
+    enroll(&db);
+    let next_sender_seq = count(&db, "SELECT next_sender_seq FROM sync_state");
+    // WHY: 32 envelopes of a 510 KiB title fit a 16 MiB body with room to spare, and a 33rd passes it.
+    let long_title = "x".repeat(510 * 1024);
+
+    let written = writes_before_refusal(&db, 33, |capture, n| {
+        capture.write(&deck_id(n), None, &title(&long_title, 1))
+    });
+
+    assert_eq!(written, 32);
+    assert_nothing_captured(&db, next_sender_seq);
 }

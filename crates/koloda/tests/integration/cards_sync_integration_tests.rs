@@ -8,7 +8,7 @@ use koloda_sync_proto::payload::{CardScheduling, Delete, Payload, Review};
 use koloda_sync_proto::registry::Kind;
 
 use crate::common::card_content;
-use crate::common::fixtures::insert_review_row;
+use crate::common::fixtures::{insert_card_row, insert_review_row};
 use crate::common::sync::{count, enrolled_deck, outbox};
 use crate::common::test_db;
 
@@ -170,6 +170,49 @@ fn deleting_cards_records_one_tombstone_per_card_under_its_deck() {
         "a batch delete is one commit"
     );
     assert_eq!(count(&db, "SELECT COUNT(*) FROM sync_stamps WHERE kind = 'cards'"), 0);
+}
+
+#[test]
+fn deleting_many_cards_writes_a_cohort_per_thousand_in_one_transaction() {
+    let db = test_db();
+    let fixture = enrolled_deck(&db);
+    let ids: Vec<String> = (0..2_500)
+        .map(|_| insert_card_row(&db, &fixture.deck, &fixture.template, 2, None, 1_727_000_000_000))
+        .collect();
+    for id in [&ids[0], &ids[1_500], &ids[2_499]] {
+        insert_review_row(&db, id, 2, 0, 1_727_000_000_000);
+    }
+
+    cards::delete_cards(&db, DeleteCardsData { ids: ids.clone() }).unwrap();
+
+    let entries = outbox(&db);
+    assert_eq!(
+        entries
+            .iter()
+            .map(|entry| entry.envelope.header.id.clone())
+            .collect::<Vec<_>>(),
+        ids,
+        "one tombstone per card, in selection order"
+    );
+    let mut cohorts: Vec<((_, _), usize)> = Vec::new();
+    for header in entries.iter().map(|entry| &entry.envelope.header) {
+        let cohort = (header.commit_id, header.stamp);
+        match cohorts.last_mut() {
+            Some((last, size)) if *last == cohort => *size += 1,
+            _ => cohorts.push((cohort, 1)),
+        }
+    }
+    assert_eq!(
+        cohorts.iter().map(|(_, size)| *size).collect::<Vec<_>>(),
+        [1_000, 1_000, 500]
+    );
+    assert!(
+        cohorts.windows(2).all(|pair| pair[0].0 .1 < pair[1].0 .1),
+        "each cohort has its own stamp"
+    );
+    assert_eq!(count(&db, "SELECT COUNT(*) FROM sync_cohorts"), 3);
+    assert_eq!(count(&db, "SELECT COUNT(*) FROM cards"), 0);
+    assert_eq!(count(&db, "SELECT COUNT(*) FROM reviews"), 0);
 }
 
 #[test]

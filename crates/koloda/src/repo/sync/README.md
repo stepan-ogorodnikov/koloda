@@ -9,6 +9,9 @@ Cite its sections from here.
 
 - Record only the field groups whose values changed; a save that changes nothing records nothing.
 - Call `Capture::delete` before deleting product rows; it reads descendants to forget their registers.
+- A capture refuses a write that takes its cohort past one push's caps (PROTOCOL.md §Cohorts).
+  A write path that may pass them opens a new `Capture` per chunk in its transaction; `delete_cards` opens one per
+  1,000 cards.
 - Capture is a no-op until the database is enrolled, so web parity and non-sync tests are unaffected.
 - While backfill runs, `Capture::write` first backfills any unstamped row its envelope names (`backfill::touch`).
   Backfill itself writes through `write_envelope`, which skips that check.

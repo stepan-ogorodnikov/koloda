@@ -111,7 +111,7 @@ Out:
 
 ## Plan
 
-- [ ] 1. Split a bulk card delete into cohorts the server accepts
+- [x] 1. Split a bulk card delete into cohorts the server accepts
   Goal (finding 5; per question 3, answer A):
   - `delete_cards` (`cards.rs:335-361`) keeps one transaction.
     It opens a new `Capture` every 1,000 cards, so each chunk is its own cohort with its own stamp and `commit_id`.

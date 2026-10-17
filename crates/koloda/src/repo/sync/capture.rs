@@ -2,6 +2,7 @@ use koloda_sync_proto::envelope::digest;
 use koloda_sync_proto::hlc::{DeviceId, Hlc, HlcClock, Stamp};
 use koloda_sync_proto::payload::{seal, Delete, Payload, Seal};
 use koloda_sync_proto::registry::{allow, Class, Kind};
+use koloda_sync_proto::transport::{MAX_BODY_BYTES, MAX_PUSH_ITEMS};
 use rusqlite::{params, Connection, OptionalExtension};
 use uuid::Uuid;
 
@@ -11,6 +12,11 @@ use super::{
 };
 use crate::app::error::AppError;
 use crate::app::utility::get_current_timestamp;
+
+// WHY: a push body wraps each envelope in CBOR: the item map, its two keys, the seq, and the byte string's length
+// take at most 35 bytes. The body's own map, its key, and the array's length take at most 10.
+const PUSH_ITEM_FRAMING_BYTES: usize = 35;
+const PUSH_BODY_FRAMING_BYTES: usize = 10;
 
 /// One commit's sync capture, opened inside the repo transaction that writes the product rows.
 /// It does nothing when the database is not enrolled, and nothing until its first write.
@@ -24,6 +30,8 @@ struct DeviceState {
     clock: HlcClock,
     next_sender_seq: i64,
     commit: Option<Commit>,
+    cohort_items: usize,
+    cohort_body_bytes: usize,
     reserved: Option<Hlc>,
     role: SpaceRole,
     is_backfilling: bool,
@@ -58,6 +66,8 @@ impl<'c> Capture<'c> {
                 },
                 next_sender_seq,
                 commit: None,
+                cohort_items: 0,
+                cohort_body_bytes: PUSH_BODY_FRAMING_BYTES,
                 reserved: None,
                 role: SpaceRole::from_sql(&role)?,
                 is_backfilling,
@@ -125,21 +135,25 @@ impl<'c> Capture<'c> {
 
         // INVARIANT: at most one not-in-flight outbox row per group. A newer write replaces it at the tail;
         // an in-flight row is never touched.
-        let replaced: Option<(i64, Vec<u8>)> = conn
+        let replaced: Option<(i64, Vec<u8>, usize)> = conn
             .query_row(
                 r#"
-                SELECT sender_seq, commit_id FROM sync_outbox
+                SELECT sender_seq, commit_id, length(envelope) FROM sync_outbox
                 WHERE kind = ?1 AND id = ?2 AND group_name = ?3 AND in_flight = 0
                 "#,
                 params![kind.as_wire(), id, group_name],
-                |row| Ok((row.get(0)?, row.get(1)?)),
+                |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
             )
             .optional()?;
-        if let Some((replaced_seq, replaced_commit)) = replaced {
+        if let Some((replaced_seq, replaced_commit, replaced_bytes)) = replaced {
             conn.execute("DELETE FROM sync_outbox WHERE sender_seq = ?1", params![replaced_seq])?;
             delete_empty_cohort(conn, &replaced_commit)?;
+            if replaced_commit == commit.commit_id {
+                state.release(replaced_bytes);
+            }
         }
 
+        state.admit(sealed.bytes.len())?;
         insert_outbox(conn, sender_seq, kind, id, Some(group_name), commit, &sealed)?;
         Ok(sealed.bytes.len())
     }
@@ -179,6 +193,7 @@ impl<'c> Capture<'c> {
 
         stamp_values.write_tombstone(conn, kind, id, parent, successor)?;
         forget_entity(conn, kind, id)?;
+        state.admit(sealed.bytes.len())?;
 
         // WHY: a delete never replaces pending rows of its entity. Earlier creates still push first, so a pending
         // child envelope never names a parent the server has not seen; the tombstone then removes both.
@@ -215,6 +230,27 @@ impl DeviceState {
 
         self.commit = Some(commit);
         Ok(commit)
+    }
+
+    // INVARIANT: a cohort fits one push the server accepts. A push never splits a cohort, and a refused cohort goes
+    // back to `local` and is picked first again, so one past either cap would block the outbox for good
+    // (PROTOCOL.md, Cohorts). A write past them fails, and its transaction with it.
+    fn admit(&mut self, envelope_bytes: usize) -> Result<(), AppError> {
+        let items = self.cohort_items + 1;
+        let body_bytes = self.cohort_body_bytes + envelope_bytes + PUSH_ITEM_FRAMING_BYTES;
+        if items > MAX_PUSH_ITEMS || body_bytes > MAX_BODY_BYTES {
+            return Err(protocol_error(format!(
+                "a commit's cohort holds at most {MAX_PUSH_ITEMS} envelopes in a {MAX_BODY_BYTES}-byte push"
+            )));
+        }
+        self.cohort_items = items;
+        self.cohort_body_bytes = body_bytes;
+        Ok(())
+    }
+
+    fn release(&mut self, envelope_bytes: usize) {
+        self.cohort_items -= 1;
+        self.cohort_body_bytes -= envelope_bytes + PUSH_ITEM_FRAMING_BYTES;
     }
 
     fn tick(&mut self, conn: &Connection) -> Result<Hlc, AppError> {

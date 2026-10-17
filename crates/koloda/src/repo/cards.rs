@@ -5,7 +5,7 @@
 use crate::domain::cards::{AddCardsItemError, AddCardsItemResult, AddCardsResponse};
 use koloda_sync_proto::payload::{self as wire, InitialProductTs, Payload};
 use koloda_sync_proto::registry::Kind;
-use rusqlite::{params, Connection, OptionalExtension};
+use rusqlite::{params, params_from_iter, Connection, OptionalExtension};
 
 use crate::app::db::{parse_json_column, Database};
 use crate::app::error::{error_codes, throw_known_error, AppError};
@@ -332,31 +332,30 @@ pub fn delete_card(db: &Database, data: DeleteCardData) -> Result<(), AppError> 
     })
 }
 
+// WHY: a push never splits a cohort, and the server takes at most `MAX_PUSH_ITEMS` envelopes in one push. A thousand
+// tombstones also fit the engine's 2,000-envelope batch, so a bulk delete never pushes alone.
+const DELETE_COHORT_CARDS: usize = 1_000;
+
 pub fn delete_cards(db: &Database, data: DeleteCardsData) -> Result<(), AppError> {
     throw_known_error(error_codes::DB_DELETE, || {
-        if data.ids.is_empty() {
-            return Ok(());
-        }
-
-        let placeholders: Vec<String> = data
-            .ids
-            .iter()
-            .enumerate()
-            .map(|(i, _)| format!("?{}", i + 1))
-            .collect();
-        let in_list = placeholders.join(", ");
-        let reviews_sql = format!("DELETE FROM reviews WHERE card_id IN ({in_list})");
-        let cards_sql = format!("DELETE FROM cards WHERE id IN ({in_list})");
-
-        let params: Vec<&dyn rusqlite::ToSql> = data.ids.iter().map(|id| id as &dyn rusqlite::ToSql).collect();
-
+        // INVARIANT: one transaction, so the delete stays whole on this device. Each chunk is its own cohort, so
+        // another device may show part of it until its next pull (PROTOCOL.md, Cohorts).
         db.with_transaction(|tx| {
-            let mut capture = Capture::begin(tx)?;
-            for id in &data.ids {
-                capture_card_delete(&mut capture, tx, id)?;
+            for chunk in data.ids.chunks(DELETE_COHORT_CARDS) {
+                let mut capture = Capture::begin(tx)?;
+                for id in chunk {
+                    capture_card_delete(&mut capture, tx, id)?;
+                }
+                let in_list = vec!["?"; chunk.len()].join(", ");
+                tx.execute(
+                    &format!("DELETE FROM reviews WHERE card_id IN ({in_list})"),
+                    params_from_iter(chunk),
+                )?;
+                tx.execute(
+                    &format!("DELETE FROM cards WHERE id IN ({in_list})"),
+                    params_from_iter(chunk),
+                )?;
             }
-            tx.execute(&reviews_sql, params.as_slice())?;
-            tx.execute(&cards_sql, params.as_slice())?;
 
             Ok(())
         })

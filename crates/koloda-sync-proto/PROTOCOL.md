@@ -243,7 +243,8 @@ A joiner therefore keeps a seed id only while the space holds it live (§Joining
 A field group is the unit of merge: one envelope, one stamp, one last-writer-wins register.
 Writes to different groups of the same entity never conflict.
 Every envelope carries a random `commit_id`.
-All envelopes captured by one local transaction share it and one stamp.
+All envelopes of one commit share it and one stamp.
+A commit is what one local transaction captures, unless that would pass one push's caps (§Cohorts).
 
 The header `op` is `write` or `delete`.
 A write names one group of its kind; the group's class decides whether it creates, updates, or inserts.
@@ -634,6 +635,13 @@ The clock therefore only goes back over stamps that `local` cohorts alone held.
 ### Cohorts
 
 A cohort is one commit's envelopes.
+No cohort holds more than one push carries: 5000 envelopes in a 16 MiB body (§Bodies).
+Capture refuses a write past either, and its local transaction fails.
+The next push would pick a refused cohort first again, so one past a cap would stop the push for good.
+A local transaction that may pass them records several commits instead.
+A bulk card delete records one per 1,000 cards: the delete is whole on the device, and another device may show part
+of it until its next pull.
+
 The client records each cohort's state: `local`, `uncertain`, or `fixed`.
 Before any member is transmitted, the cohort becomes `uncertain`.
 Push requests never split a cohort, and a push is atomic (§Push outcomes).
