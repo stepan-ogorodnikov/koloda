@@ -25,7 +25,7 @@ Done when:
 
 - the desktop suite's after-load defaults step no longer fails on a navigation;
 - `algorithm-delete.spec.ts` passes on desktop;
-- the sync spec shows an image that arrives while its card is on screen on the second device;
+- the late-image case of the sync spec is recorded with what it waits for (Open questions, 9);
 - a sync server that fails to start, hangs on stop, or crashes mid-test leaves nothing behind and reports its log;
 - `bun run check:push` runs the desktop addon's tests;
 - the e2e README says how to run one desktop spec with fresh builds, and what the suite does not run;
@@ -77,7 +77,7 @@ Line numbers are at `ab8cf1c9`.
     release build in `build-rust`.
     Clippy compiles the tests (`--workspace --all-targets`) but does not run them.
 - 4. Risk (tests), Later: the path that motivated the spec is still uncovered.
-  Decision: fixed by item 2.
+  Decision: skipped; it waits for an engine change, a task of its own (Open questions, 9).
   - The spec exists because of desktop sync audit finding 1: an image downloaded while its card was shown stayed as
     alt text, and only the whole path could catch it (`tasks/archive/sync-e2e.md`, Scope).
     The lesson loads images through `useAttachmentImages` (`libs/srs-react/src/lib/lessons/use-attachment-images.ts`).
@@ -125,8 +125,7 @@ Line numbers are at `ab8cf1c9`.
 In:
 
 - `libs/e2e`: the after-load branch of `applyPageDefaults`.
-- `apps/electron-e2e`: `algorithm-delete.spec.ts`, `sync.spec.ts`, `sync-server.ts`, a proxy that holds attachment
-  downloads, a suite-local image helper, and `README.md`.
+- `apps/electron-e2e`: `algorithm-delete.spec.ts`, `sync.spec.ts`, `sync-server.ts`, and `README.md`.
 - `package.json` `check:rust-push`: the addon's tests.
 
 Out:
@@ -135,7 +134,8 @@ Out:
   goes to the human.
 - The web suite's `algorithm-delete.spec.ts`: its last-preset test also passes on the default rule alone; that is the
   web suite's, and the guard's unit test is a separate gap (`delete-algorithm.test.tsx` tests only the successor).
-- A release-addon run, unless Open questions 2 picks one.
+- A release-addon run (Open questions, 2).
+- The late-image case of the sync spec and the engine behavior it waits for (Open questions, 9).
 
 ## Open questions
 
@@ -170,8 +170,9 @@ Out:
   `agents/VERIFY.md` lets an agent run Playwright only when the human asks in that session.
   Items 1 to 4 can only be proven by a run.
 - [x] 8. Flow? — `local` (human, 2026-10-17).
-- [ ] 9. Item 2: the design from question 3 cannot work; how should the image arrive late? — open (found while
-  implementing, 2026-10-17).
+- [x] 9. Item 2: the design from question 3 cannot work; how should the image arrive late? — skip item 2 here, and
+  take the engine behavior up as a task of its own (human, 2026-10-17).
+  Found while implementing; (a) was picked first, then the last two bullets below ruled it out too.
   - The engine tells the screens about new rows only after the tick's image transfers: `run_cycle` emits `Changed`
     after `recorded_cycle`, whose `sync` runs the cycle, the missing-image check, and the transfers
     (`crates/koloda-sync/src/engine.rs:331-337`, `:349-358`, `:386-425`).
@@ -186,11 +187,21 @@ Out:
       works; that is product behavior (`SYNC.md` §Status: "Screens that show synced data refresh as changes arrive")
       and a task of its own;
     - (c) drop item 2.
-  - Proposed: (a) here, and (b) to the human as a product question.
+  - Holding A's upload does put the card on B's screen with its alt text, but nothing then fetches the image soon.
+    After a cycle the runner sleeps until its next poll, 5 minutes while the events socket is up, or a trigger
+    (`crates/koloda-sync/src/runner.rs:174-181`); a deferred fetch does not wake it.
+    The events socket sends only lane heads (`crates/koloda-server/src/events.rs:176`), and an upload changes none.
+    So (a) needs a 60 s wall-clock wait and then a change on A to wake B.
+  - For users: an image that reaches the server after its card shows on another device for up to about 5 minutes
+    as alt text, and a backlog of image downloads holds back new rows on screen.
+    `SYNC.md` §Status says a change "usually shows on the others within seconds".
+  - The follow-up task: tell the screens after the cycle, before the transfers; wake the runner when a deferred fetch
+    falls due; nudge devices when an image is uploaded.
+    The first makes item 2's design work as written, without waiting.
 
 ## Plan
 
-Written for the answers to Open questions 2 to 7.
+Written for the answers to Open questions 2 to 9.
 
 - [x] 1. Retry the desktop e2e defaults when a navigation interrupts them
   Goal (finding 1):
@@ -212,6 +223,7 @@ Written for the answers to Open questions 2 to 7.
   Depends on: none
 
 - [ ] 2. Cover an image that arrives while its card is on screen in the sync spec
+  Skipped (Open questions, 9): no commit; the text stays for the task that takes up the engine change.
   Goal (finding 4):
   - `apps/electron-e2e/src/sync-proxy.ts` exports `startSyncProxy(targetUrl)`.
     It listens on a free loopback port and forwards every HTTP request and the events socket's upgrade to the server.
@@ -270,7 +282,7 @@ Written for the answers to Open questions 2 to 7.
   Manual verify: none — test support only.
   Commit: Clean up and report a failed sync server in desktop e2e
   Depends on: none
-  Deviation: it landed before item 2, which waits on Open questions 9; item 2 builds on its fixture.
+  Deviation: it landed before item 2, which is skipped (Open questions, 9).
 
 - [x] 5. Run the desktop addon's tests in the push gate
   Goal (finding 3):
