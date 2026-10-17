@@ -290,7 +290,7 @@ Out:
   Commit: Refuse a second encoding of an envelope's header or frame
   Depends on: none
 
-- [ ] 3. Pause the engine on skew through the protocol crate's rule
+- [x] 3. Pause the engine on skew through the protocol crate's rule
   Goal (finding 6, and finding 9 for the pause):
   - `is_skew_paused` (`hlc.rs:86-88`) takes the skew estimate, server time minus local time in milliseconds as an
     `i64` (§Skew guards), and is true when its magnitude exceeds `SKEW_TOLERANCE_MS`.

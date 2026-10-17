@@ -12,7 +12,7 @@ use koloda::repo::sync::outbox::{
 };
 use koloda::repo::sync::repair::repair_dangling_defaults;
 use koloda::repo::sync::restamp::restamp_local_cohorts;
-use koloda_sync_proto::hlc::{Hlc, SKEW_TOLERANCE_MS};
+use koloda_sync_proto::hlc::{is_skew_paused, Hlc, SKEW_TOLERANCE_MS};
 use koloda_sync_proto::registry::{Kind, Lane};
 use koloda_sync_proto::transport::{DeviceInfo, DeviceMeta, ErrorCode, PullPage, MAX_RECEIPT_RANGE};
 use uuid::Uuid;
@@ -372,7 +372,7 @@ impl Shared {
     // would win or lose every register (PROTOCOL.md, Skew guards).
     pub(crate) fn check_skew(&self) -> Result<(), SyncError> {
         let skew_ms = self.skew.get();
-        if skew_ms.unsigned_abs() > SKEW_TOLERANCE_MS {
+        if is_skew_paused(skew_ms) {
             return Err(SyncError::ClockSkew { skew_ms });
         }
         Ok(())

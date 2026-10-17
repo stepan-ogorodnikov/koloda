@@ -83,8 +83,8 @@ impl HlcClock {
     }
 }
 
-pub fn is_skew_paused(local_now_ms: u64, server_now_ms: u64) -> bool {
-    local_now_ms.abs_diff(server_now_ms) > SKEW_TOLERANCE_MS
+pub fn is_skew_paused(skew_ms: i64) -> bool {
+    skew_ms.unsigned_abs() > SKEW_TOLERANCE_MS
 }
 
 pub fn check_not_ahead_of_server(hlc: Hlc, server_now_ms: u64) -> Result<(), HlcError> {

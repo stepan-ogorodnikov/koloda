@@ -76,15 +76,16 @@ fn stamps_order_by_hlc_then_by_device() {
 
 #[test]
 fn client_pauses_only_when_skew_exceeds_five_minutes() {
-    let server_now = 1_700_000_000_000;
+    // Wire contract pin: ruling 23 sets the tolerance at 5 minutes either way.
     let cases = [
-        (server_now + SKEW_TOLERANCE_MS, false),
-        (server_now + SKEW_TOLERANCE_MS + 1, true),
-        (server_now - SKEW_TOLERANCE_MS, false),
-        (server_now - SKEW_TOLERANCE_MS - 1, true),
+        (0, false),
+        (300_000, false),
+        (300_001, true),
+        (-300_000, false),
+        (-300_001, true),
     ];
-    for (local_now, expected) in cases {
-        assert_eq!(is_skew_paused(local_now, server_now), expected, "local {local_now}");
+    for (skew_ms, expected) in cases {
+        assert_eq!(is_skew_paused(skew_ms), expected, "skew {skew_ms}");
     }
 }
 
