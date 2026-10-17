@@ -37,7 +37,8 @@ Sync is the exception: the web demo does not sync, so its spec is desktop only.
   the handle returns the `baseUrl` to enter as the LM Studio profile.
   Serves SSE streams, tool calls, held responses, and failures from a FIFO queue per test.
 - Sync server: `src/sync-server.ts` — `startSyncServer()` runs the built `koloda-server` on a free loopback port
-  over plain HTTP, with a throwaway data directory; the handle returns its `url` and `setupToken`.
+  over plain HTTP, with a throwaway data directory; the handle returns its `url`, `setupToken`, and `log`.
+  The sync spec attaches the log to a test that fails.
 - Specs: `src/*.spec.ts` — smoke, settings, decks, cards, templates, presets, lessons, hotkeys,
   AI profiles, assistant chat, and sync.
 

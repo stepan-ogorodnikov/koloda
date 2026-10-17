@@ -17,10 +17,13 @@ type SyncFixtures = {
 const test = base.extend<SyncFixtures>({
   // WHY: Playwright's fixture signature is `(parentFixtures, provide) => …`, so root fixtures must destructure an empty object.
   // oxlint-disable-next-line no-empty-pattern
-  syncServer: async ({}, provide) => {
+  syncServer: async ({}, provide, testInfo) => {
     const server = await startSyncServer();
     await provide(server);
     await server.stop();
+    if (testInfo.status !== testInfo.expectedStatus) {
+      await testInfo.attach("koloda-server.log", { body: server.log(), contentType: "text/plain" });
+    }
   },
 
   // oxlint-disable-next-line no-empty-pattern

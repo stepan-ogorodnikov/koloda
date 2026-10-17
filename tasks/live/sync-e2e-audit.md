@@ -170,6 +170,23 @@ Out:
   `agents/VERIFY.md` lets an agent run Playwright only when the human asks in that session.
   Items 1 to 4 can only be proven by a run.
 - [x] 8. Flow? — `local` (human, 2026-10-17).
+- [ ] 9. Item 2: the design from question 3 cannot work; how should the image arrive late? — open (found while
+  implementing, 2026-10-17).
+  - The engine tells the screens about new rows only after the tick's image transfers: `run_cycle` emits `Changed`
+    after `recorded_cycle`, whose `sync` runs the cycle, the missing-image check, and the transfers
+    (`crates/koloda-sync/src/engine.rs:331-337`, `:349-358`, `:386-425`).
+    So holding device B's download also keeps the card off B's screen until the hold ends.
+  - A fetch of an image no device has uploaded yet waits 60 s before it tries again
+    (`crates/koloda-sync/src/attachments.rs:170-178`, `crates/koloda/src/repo/sync/attachments.rs:17`), and nothing
+    makes it due sooner.
+  - So the card shows before its image only when the image reaches the server late; B then gets it on its retry.
+  - Options:
+    - (a) the proxy sits in front of device A instead and holds its upload; the spec grows by about 60 s;
+    - (b) the engine first tells the screens after the cycle, before the transfers, then the design from question 3
+      works; that is product behavior (`SYNC.md` §Status: "Screens that show synced data refresh as changes arrive")
+      and a task of its own;
+    - (c) drop item 2.
+  - Proposed: (a) here, and (b) to the human as a product question.
 
 ## Plan
 
@@ -236,7 +253,7 @@ Written for the answers to Open questions 2 to 7.
   Commit: Point the desktop preset-delete specs at the desktop starter preset
   Depends on: none
 
-- [ ] 4. Clean up and report a sync server that fails in desktop e2e
+- [x] 4. Clean up and report a sync server that fails in desktop e2e
   Goal (findings 2 and 5):
   - `stop` (`sync-server.ts:61-67`) waits up to 5 s for the server to exit after SIGTERM, then sends SIGKILL, waits,
     and removes the data directory either way.
@@ -252,7 +269,8 @@ Written for the answers to Open questions 2 to 7.
     `/tmp/koloda-e2e-server-*` directory.
   Manual verify: none — test support only.
   Commit: Clean up and report a failed sync server in desktop e2e
-  Depends on: 2
+  Depends on: none
+  Deviation: it landed before item 2, which waits on Open questions 9; item 2 builds on its fixture.
 
 - [ ] 5. Run the desktop addon's tests in the push gate
   Goal (finding 3):
