@@ -1,6 +1,6 @@
 # Sync modules audit follow-ups
 
-Status: ready
+Status: done
 Guides: agents/IMPLEMENTATION-PLAN.md, agents/TASKS.md, crates/koloda/src/repo/sync/README.md, crates/koloda-sync-proto/PROTOCOL.md, agents/RUST.md, crates/koloda-sync/README.md, agents/DB.md, docs/decisions/TS-RUST-DOMAIN-MIRRORING.md, agents/TESTING.md, agents/CODE-DOCUMENTATION.md, agents/BACKWARDS-COMPATIBILITY.md, agents/MARKDOWN.md, agents/VERIFY.md, agents/REVIEW.md
 Flow: local
 
@@ -223,4 +223,47 @@ Out:
 
 ## Outcome
 
-<what shipped>
+Findings 4 to 7 are fixed; none is skipped.
+
+Shipped, one Plan item per commit:
+
+- 1 (finding 5): `delete_cards` stays one transaction and opens a new `Capture` every 1,000 cards, so each chunk is
+  its own cohort with its own stamp.
+  It also deletes the product rows per chunk, so a selection past SQLite's bound-variable limit no longer fails.
+  `Capture` refuses a write that takes its cohort past 5,000 envelopes or a 16 MiB push body, with each item's CBOR
+  framing counted; the write and its transaction fail.
+  `PROTOCOL.md` §Groups and §Cohorts say a local transaction may record several commits, and the sync README's
+  capture section says when.
+  The plan cited backfill as an existing case of several cohorts per transaction; it is not one, since backfill opens
+  a new capture only before it has written, so the docs do not cite it.
+- 2 (finding 4): `top_up` adds no heal or backfill batch while the space is over quota.
+  The push loop notes each reply's `is_over_quota`, so a push that starts holding stops the top-ups in the same round.
+  `PROTOCOL.md` §Quotas and §Backfill, the `koloda-sync` README, the status field's doc, and `index_tests.rs`'s
+  module doc say so.
+- 3 (finding 6): apply holds a learning value or default id that the learning validation refuses as
+  `corrupt_envelope`, through per-key checks in `domain/settings_learning.rs` that `validate` shares.
+  `set_settings` compares the normalized stored document, so a save captures only the keys that changed.
+  `PROTOCOL.md` §Corrupt envelopes and §Schema versions say so.
+- 4 (finding 7): client migration `V18` adds `sync_attachment_queue_due_idx`, and `due_transfers` reads the due rows
+  a page at a time through it, reading on past dropped fetches.
+  `index_tests.rs` lists the page statement; the schema inventory is regenerated.
+
+Self-review added one commit: clearer wording on why a bulk delete splits at 1,000 cards.
+
+Checked:
+
+- `bun run check:push` passed on each item's tip and on the final tip.
+- `cargo test -p koloda` (303 integration, 396 domain) and `cargo test -p koloda-sync` (169) passed; clippy was clean.
+- `bunx nx test @koloda/db-sqlite` (91) passed with `V18`, run with the nx cache skipped; the package has no bundle.
+- Checked once by hand: both capture-cap tests failed with the cap off, the engine quota test failed against the old
+  `push.rs`, the apply and settings tests failed against the old `apply.rs` and `settings.rs`, and the index test
+  failed with `V18` removed.
+
+Not done, for a later task:
+
+- `PROTOCOL.md` §Conformance cases has no entries for the three new rules; the plan did not name that section.
+- Unverified: if a capture replaces its own cohort's only row, `delete_empty_cohort` may delete that capture's cohort
+  row and leave an outbox row with no cohort. No product path that does this was found.
+
+Manual verify: none — each change needs thousands of cards, a server over quota, or a peer sending refused values,
+which only the tests arrange.
