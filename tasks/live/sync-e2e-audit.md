@@ -287,7 +287,7 @@ Written for the answers to Open questions 2 to 7.
   Commit: Run the desktop addon's tests in the push gate
   Depends on: none
 
-- [ ] 6. Document single-spec desktop e2e runs and the untested release addon
+- [x] 6. Document single-spec desktop e2e runs and the untested release addon
   Goal (findings 6 and 7):
   - `apps/electron-e2e/README.md` How to run: one line for a single spec, with the `e2e` target's first four
     commands (`project.json:19-22`), then `bunx playwright test --config apps/electron-e2e/playwright.config.ts <spec>`.

@@ -10,6 +10,7 @@ Tests `apps/electron` (main process) and `apps/electron-react` (renderer) togeth
 The `e2e` target builds the Rust addon and `koloda-server` and compiles the preload first, then serves the renderer
 dev server on port 3000 and launches Electron from `apps/electron` — the full stack, no bundling shortcuts.
 The addon is a debug build, so it can keep secrets in a file instead of the OS keyring (Fixtures below).
+So no run of the suite uses the release addon or the OS keyring; a release build's keyring is checked by hand.
 The web counterpart is `apps/web-e2e`; the spec sets mirror each other flow for flow.
 Sync is the exception: the web demo does not sync, so its spec is desktop only.
 
@@ -17,6 +18,10 @@ Sync is the exception: the web demo does not sync, so its spec is desktop only.
 
 - `nx run electron-e2e:e2e` — full suite (builds the Rust addon, the sync server, and the preload, serves the renderer,
   launches Electron)
+- One spec: run the first four commands of the `e2e` target in `project.json` (the builds and the preload), then
+  `bunx playwright test --config apps/electron-e2e/playwright.config.ts sync.spec.ts`.
+  An argument after `nx run electron-e2e:e2e --` reaches every build command too, so the filter goes to Playwright.
+  Without the builds, the run uses whatever addon and server the last build left.
 - `nx run electron-e2e:typecheck` — typecheck only
 - Also part of `nx run @koloda/electron:test`
 
