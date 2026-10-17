@@ -47,6 +47,18 @@ fn create_space(server: &Server, request: CreateSpace) -> Result<Enrollment, Api
     if let Some(enrollment) = same_creation(&conn, &request.nonce, &hash)? {
         return Ok(enrollment);
     }
+    // INVARIANT: past the replay window the token is the proof. A device resends one nonce and token until it records
+    // the enrollment, so a token that already names a device gets that device back, and no space file is made.
+    let enrolled: Option<(Uuid, Uuid)> = conn
+        .query_row(
+            "SELECT space_id, id FROM devices WHERE token_hash = ?1",
+            params![hash],
+            |row| Ok((row.get(0)?, row.get(1)?)),
+        )
+        .optional()?;
+    if let Some((space, device)) = enrolled {
+        return Ok(enrollment(space, device, server.space_epoch(space)?));
+    }
 
     let space_id = Uuid::new_v4();
     let epoch = Uuid::new_v4();

@@ -946,8 +946,9 @@ Creating a space also enrolls its creator, so the first device needs no pairing 
 The same `nonce` and `token` return the same result for 10 minutes.
 A different token for that nonce is `bad_request` and writes nothing.
 A device keeps both until it records the enrollment, across relaunches, and its next creation sends them again.
-A refusal does not end them, since an earlier attempt may have landed; past 10 minutes the server no longer knows the
-nonce, and they create a new space.
+A refusal does not end them, since an earlier attempt may have landed.
+Past 10 minutes the server no longer knows the nonce, and it answers from the token instead.
+A token that already names a device returns that device's enrollment and writes nothing; any other creates the space.
 A malformed token, one that is not 64 lowercase hex characters, is `bad_request`.
 A space's `device_count` counts the devices that are not revoked.
 An `epoch_changed` error carries `restore`: `epoch` (the space's), `mode`, `head_hot`, `head_cold`, and `cutoffs`,

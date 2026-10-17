@@ -188,7 +188,7 @@ Out:
 
 ## Plan
 
-- [ ] 1. Answer a late space-creation retry with the space it created
+- [x] 1. Answer a late space-creation retry with the space it created
   Goal (finding 1):
   - In `create_space` (`spaces.rs`), when `same_creation` finds no record for the nonce, look up the device whose
     `token_hash` the request's token hashes to, before anything is written.

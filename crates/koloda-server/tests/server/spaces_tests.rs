@@ -3,6 +3,8 @@ use koloda_sync_proto::transport::{CreateSpace, DeviceInfo, Enrollment, ErrorCod
 
 use crate::common::{create_request, nonce, token, uuid, Harness};
 
+const REPLAY_WINDOW_MS: u64 = 10 * 60 * 1000;
+
 #[tokio::test]
 async fn space_creation_enrolls_the_creator_and_replays_by_nonce() {
     let harness = Harness::new();
@@ -53,6 +55,49 @@ async fn space_creation_enrolls_the_creator_and_replays_by_nonce() {
         .ok();
     let listed: Vec<_> = list.spaces.iter().map(|space| (space.id, space.device_count)).collect();
     assert_eq!(listed, vec![(created.space_id, 1), (other.space_id, 1)]);
+}
+
+#[tokio::test]
+async fn a_creation_retried_after_the_replay_window_returns_the_space_it_created() {
+    let harness = Harness::new();
+    let request = create_request("Home", nonce("home"));
+    let create = || {
+        harness
+            .post("/v1/spaces")
+            .token(&harness.setup_token)
+            .body(&request)
+            .send::<Enrollment>()
+    };
+    let created = create().await.ok();
+
+    // The reply was lost, and the device sends the same nonce and token once the server has forgotten the nonce.
+    harness.clock.advance(REPLAY_WINDOW_MS + 1);
+    let retried = create().await.ok();
+
+    assert_eq!(retried, created, "the device the token enrolled answers");
+    let list = harness
+        .get("/v1/spaces")
+        .token(&harness.setup_token)
+        .send::<SpaceList>()
+        .await
+        .ok();
+    assert_eq!(list.spaces.len(), 1, "the retry created no second space");
+    let files: Vec<String> = std::fs::read_dir(harness.generation_dir().join("spaces"))
+        .expect("the spaces directory reads")
+        .map(|entry| {
+            entry
+                .expect("a directory entry")
+                .file_name()
+                .to_string_lossy()
+                .into_owned()
+        })
+        .filter(|name| name.ends_with(".db"))
+        .collect();
+    assert_eq!(
+        files,
+        vec![format!("{}.db", uuid(created.space_id))],
+        "the retry left no space file behind"
+    );
 }
 
 #[tokio::test]
