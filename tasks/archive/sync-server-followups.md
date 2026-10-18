@@ -1,6 +1,6 @@
 # Sync server audit follow-ups
 
-Status: ready
+Status: done
 Guides: agents/IMPLEMENTATION-PLAN.md, agents/TASKS.md, crates/koloda-server/README.md, crates/koloda-sync-proto/PROTOCOL.md, agents/TESTING.md, agents/CODE-DOCUMENTATION.md, agents/BACKWARDS-COMPATIBILITY.md, agents/MARKDOWN.md, agents/VERIFY.md, agents/REVIEW.md
 Flow: local
 
@@ -339,4 +339,44 @@ Out:
 
 ## Outcome
 
-<what shipped>
+Findings 4 and 6 to 13 are fixed; none is skipped.
+Finding 14 stays accepted for v1, as `sync-server-audit` decided.
+
+Shipped, one Plan item per commit:
+
+- 1 (finding 6): every endpoint that takes a device or setup token checks it before it reads the body
+  (`respond_with_body`), and checks it again for the reply meta.
+  Preview and claim read at most 16 KiB, before and after zstd.
+  `PROTOCOL.md` §Bodies says so.
+- 2 (finding 9): a pull page stops after 50,000 examined rows, the caller's own included, with `scanned_through` at
+  the last one and `has_more`; §Pull cursor says so.
+- 3 (finding 8): the space writers and the `server.db` connection open `Immediate` transactions, so a CLI write beside
+  `serve` makes a push wait instead of failing with `500`.
+- 4 (finding 7): a failed upload removes its staged file, and `serve` removes leftovers before it listens.
+- 5 (finding 4): §Errors names the count caps under `too_large`, and the missing-ids list refuses a `limit` out of
+  range as `bad_request`.
+- 6 (finding 13): the missing-ids page searches its index from its last id.
+- 7 (finding 12): the delete cascade prepares its statements once; a deck delete of 100,000 reviews took 24.0 s
+  before and 13.3 s after, in a debug build.
+- 8 (findings 10 and 11): the staleness and collection windows are tested at the limit and 1 ms past it, and the
+  events socket's close after 60 silent seconds under paused time.
+
+Deviations from the Plan text are recorded on items 1 to 4, 6, 7, and 8.
+The largest: item 1's test watches whether the body is polled, since the old code already answered `401` after
+reading it; item 2's test writes its 50,000 rows straight into the space database; item 8 enables tokio's
+`test-util` for the server's tests.
+Self-review over `origin/main..HEAD` found nothing to change.
+
+Checked:
+
+- `bun run check:push` passed on every item's tip and on the final tip.
+- `cargo test -p koloda-server` runs 3 unit and 134 integration tests, up from 1 and 127; `cargo test -p koloda-sync`
+  passed after each item.
+- Each new test failed once by hand against the code it guards: the old handlers, `pull.rs`, `db.rs`, `store`, and
+  missing-ids statement, `serve` without the sweep, `>=` in staleness, `<=` in collection, and a raised or `>`
+  silence check.
+- The paused-time socket test passed 30 runs in a row.
+
+Not checked: a real CLI write racing a push; the lock test stands in for it.
+
+Manual verify: none — server internals, limits, and tests; nothing a user sees changes.
