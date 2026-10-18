@@ -301,6 +301,31 @@ fn a_delete_records_a_tombstone_and_forgets_its_descendants() {
 }
 
 #[test]
+fn a_commit_that_rewrites_its_only_group_keeps_its_cohort() {
+    let db = test_db();
+    enroll(&db);
+
+    capture(&db, |capture| {
+        capture.write(DECK, None, &title("Spanish", 10))?;
+        capture.write(DECK, None, &title("Spanish verbs", 11))
+    });
+
+    assert_eq!(
+        count(&db, "SELECT COUNT(*) FROM sync_outbox"),
+        1,
+        "the second write replaces the first"
+    );
+    assert_eq!(
+        count(
+            &db,
+            "SELECT COUNT(*) FROM sync_outbox o JOIN sync_cohorts c ON c.commit_id = o.commit_id WHERE c.state = 'local'"
+        ),
+        1,
+        "the row still names its cohort"
+    );
+}
+
+#[test]
 fn a_commit_past_the_push_item_cap_fails_and_leaves_nothing() {
     let db = test_db();
     enroll(&db);

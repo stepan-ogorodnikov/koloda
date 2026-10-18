@@ -147,9 +147,12 @@ impl<'c> Capture<'c> {
             .optional()?;
         if let Some((replaced_seq, replaced_commit, replaced_bytes)) = replaced {
             conn.execute("DELETE FROM sync_outbox WHERE sender_seq = ?1", params![replaced_seq])?;
-            delete_empty_cohort(conn, &replaced_commit)?;
+            // INVARIANT: every outbox row names a cohort row, which restamp and the push marks read. A row of this
+            // capture's own commit gives way to the row inserted below, so its cohort stays even while it is empty.
             if replaced_commit == commit.commit_id {
                 state.release(replaced_bytes);
+            } else {
+                delete_empty_cohort(conn, &replaced_commit)?;
             }
         }
 

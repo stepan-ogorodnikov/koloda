@@ -234,7 +234,7 @@ Out:
   Commit: Refuse unknown keys in push outcomes
   Depends on: none
 
-- [ ] 3. Keep a capture's own cohort when it rewrites a group
+- [x] 3. Keep a capture's own cohort when it rewrites a group
   Goal (R2):
   - `write_envelope` (`crates/koloda/src/repo/sync/capture.rs:138-158`) calls `delete_empty_cohort` only when the
     replaced row belongs to another commit.
@@ -251,6 +251,9 @@ Out:
   - The test fails against today's `capture.rs`, checked once by hand.
   - `cargo test -p koloda` and `cargo test -p koloda-sync` pass, and `bun run check:push` is green.
   Manual verify: none — no product path writes one group twice in one capture.
+  Notes: the test writes `decks.title` twice rather than `cards.content`; the replace step is the same for every group,
+  and a deck title needs no parent.
+  Against today's `capture.rs` it found no cohort for the row.
   Commit: Keep a capture's own cohort when it rewrites a group
   Depends on: none
 
