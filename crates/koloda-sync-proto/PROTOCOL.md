@@ -924,6 +924,8 @@ Bodies are CBOR maps that reject unknown keys; this crate's `transport.rs` defin
 Space, device, epoch, and nonce ids are 16 raw UUID bytes; paths carry them as hyphenated UUID text.
 A request body may be zstd (`Content-Encoding: zstd`); a reply is zstd when the request accepts it.
 A body is at most 16 MiB after decompression, and zstd may expand a request body at most 32 times its size.
+The server reads a request body only after the request's token checks.
+A pairing preview or claim takes no token, so its body is at most 16 KiB, before and after decompression.
 A reply is limited by size only, since a push reply's repeated outcomes compress far past that ratio.
 A device sends a request body uncompressed when zstd would expand it past the ratio, which the server refuses on every
 retry.

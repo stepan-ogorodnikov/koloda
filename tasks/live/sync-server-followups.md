@@ -149,7 +149,7 @@ Out:
 
 ## Plan
 
-- [ ] 1. Read a body only after its token checks
+- [x] 1. Read a body only after its token checks
   Goal (finding 6; per question 2):
   - Every endpoint that takes a device or setup token checks it before it reads the body:
     push, `ids/known`, attachment upload, fork, pairing issue, and space creation.
@@ -175,6 +175,12 @@ Out:
   - Every existing server test passes unchanged.
   - `cargo test -p koloda-server` and `cargo test -p koloda-sync` pass, and `bun run check:push` is green.
   Manual verify: none — what changes is when the server reads a body; the tests send the refused requests.
+  Notes: today's work already checked the token before it used the body, so a wrong token answered `401` either way,
+  but only after reading up to 16 MiB.
+  So the test sends a body stream that records whether it was polled: unread after a token naming no device or a
+  missing setup token, read once the token checks.
+  Both new tests failed against the old handlers.
+  The handlers go through `respond_with_body` (`http.rs`), and `read_body` takes its cap.
   Commit: Read a body only after its token checks
   Depends on: none
 

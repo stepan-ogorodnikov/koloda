@@ -26,7 +26,7 @@ use sha2::{Digest, Sha256};
 use uuid::Uuid;
 
 use crate::auth;
-use crate::http::{query, read_body, respond, ApiError};
+use crate::http::{query, respond, respond_with_body, ApiError};
 use crate::quota::Room;
 use crate::server::{lock, Server};
 
@@ -40,15 +40,21 @@ pub(crate) async fn put(
     headers: HeaderMap,
     body: Body,
 ) -> Response {
-    let request = read_body::<AttachmentBody>(&headers, body).await;
-    respond(server, headers, move |server, scope, headers| {
-        let caller = auth::require_device(server, scope, headers, &space)?;
-        check_id(&id)?;
-        let attachment = request?;
-        check(&id, &attachment)?;
-        store(server, caller.space, &id, &attachment)?;
-        Ok(Empty {})
-    })
+    let checked = space.clone();
+    respond_with_body(
+        server,
+        headers,
+        body,
+        move |server, scope, headers| auth::require_device(server, scope, headers, &checked).map(drop),
+        move |server, scope, headers, request: Result<AttachmentBody, ApiError>| {
+            let caller = auth::require_device(server, scope, headers, &space)?;
+            check_id(&id)?;
+            let attachment = request?;
+            check(&id, &attachment)?;
+            store(server, caller.space, &id, &attachment)?;
+            Ok(Empty {})
+        },
+    )
     .await
 }
 

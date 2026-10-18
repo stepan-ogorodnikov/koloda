@@ -23,7 +23,7 @@ use uuid::Uuid;
 use crate::attachments;
 use crate::auth::{self, DeviceAuth};
 use crate::bootstrap;
-use crate::http::{query, read_body, respond, ApiError};
+use crate::http::{query, respond, respond_with_body, ApiError};
 use crate::log::{self, Entry};
 use crate::quota::Room;
 use crate::server::{lock, Server};
@@ -48,18 +48,24 @@ pub(crate) async fn push(
     headers: HeaderMap,
     body: Body,
 ) -> Response {
-    let request = read_body::<Push>(&headers, body).await;
-    respond(server, headers, move |server, scope, headers| {
-        let caller = auth::require_device(server, scope, headers, &space)?;
-        // INVARIANT: a device the server left behind re-bootstraps before anything it pushes is consumed; the refusal
-        // consumes nothing, replays included (PROTOCOL.md, Devices).
-        if caller.is_rebase_required {
-            return Err(ApiError::cursor_too_old(
-                "this device must re-bootstrap before it pushes",
-            ));
-        }
-        push_batch(server, &caller, request?)
-    })
+    let checked = space.clone();
+    respond_with_body(
+        server,
+        headers,
+        body,
+        move |server, scope, headers| auth::require_device(server, scope, headers, &checked).map(drop),
+        move |server, scope, headers, request: Result<Push, ApiError>| {
+            let caller = auth::require_device(server, scope, headers, &space)?;
+            // INVARIANT: a device the server left behind re-bootstraps before anything it pushes is consumed; the
+            // refusal consumes nothing, replays included (PROTOCOL.md, Devices).
+            if caller.is_rebase_required {
+                return Err(ApiError::cursor_too_old(
+                    "this device must re-bootstrap before it pushes",
+                ));
+            }
+            push_batch(server, &caller, request?)
+        },
+    )
     .await
 }
 

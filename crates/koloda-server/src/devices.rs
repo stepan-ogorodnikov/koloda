@@ -15,7 +15,7 @@ use uuid::Uuid;
 use crate::auth::{self, DeviceAuth};
 use crate::bootstrap;
 use crate::db::is_constraint;
-use crate::http::{read_body, respond, ApiError};
+use crate::http::{respond, respond_with_body, ApiError};
 use crate::log;
 use crate::server::{lock, Server};
 
@@ -96,11 +96,17 @@ pub(crate) async fn fork(
     headers: HeaderMap,
     body: Body,
 ) -> Response {
-    let request = read_body::<ForkDevice>(&headers, body).await;
-    respond(server, headers, move |server, scope, headers| {
-        let caller = auth::require_device(server, scope, headers, &space)?;
-        fork_device(server, &caller, request?)
-    })
+    let checked = space.clone();
+    respond_with_body(
+        server,
+        headers,
+        body,
+        move |server, scope, headers| auth::require_device(server, scope, headers, &checked).map(drop),
+        move |server, scope, headers, request: Result<ForkDevice, ApiError>| {
+            let caller = auth::require_device(server, scope, headers, &space)?;
+            fork_device(server, &caller, request?)
+        },
+    )
     .await
 }
 

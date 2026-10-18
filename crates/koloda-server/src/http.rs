@@ -1,6 +1,7 @@
 //! CBOR bodies with optional zstd, the `{ meta, ok | error }` reply, and the bridge from async handlers to SQLite.
 //!
-//! Handlers read their body first, then hand their work to `respond`, which runs it on the blocking pool and builds
+//! A handler that takes a token reads its body only after the token checks (`respond_with_body`), and one that takes
+//! none reads a small one. Every handler hands its work to `respond`, which runs it on the blocking pool and builds
 //! `meta` from what the work put in its `Scope`, so failures carry the same metadata as successes.
 
 use std::collections::BTreeMap;
@@ -127,13 +128,14 @@ impl From<rusqlite::Error> for ApiError {
     }
 }
 
-pub(crate) async fn read_body<T: DeserializeOwned>(headers: &HeaderMap, body: Body) -> Result<T, ApiError> {
-    let bytes = to_bytes(body, MAX_BODY_BYTES)
+/// Reads a body of at most `max` bytes, before and after zstd.
+pub(crate) async fn read_body<T: DeserializeOwned>(headers: &HeaderMap, body: Body, max: usize) -> Result<T, ApiError> {
+    let bytes = to_bytes(body, max)
         .await
-        .map_err(|error| ApiError::too_large(format!("body is over {MAX_BODY_BYTES} bytes: {error}")))?;
+        .map_err(|error| ApiError::too_large(format!("body is over {max} bytes: {error}")))?;
     let decoded = match headers.get(CONTENT_ENCODING) {
         None => bytes.to_vec(),
-        Some(encoding) if encoding == ZSTD => decompress(&bytes)?,
+        Some(encoding) if encoding == ZSTD => decompress(&bytes, max)?,
         Some(encoding) => {
             return Err(ApiError::bad_request(format!(
                 "unsupported content encoding {encoding:?}"
@@ -143,8 +145,8 @@ pub(crate) async fn read_body<T: DeserializeOwned>(headers: &HeaderMap, body: Bo
     decode_cbor(&decoded)
 }
 
-fn decompress(encoded: &[u8]) -> Result<Vec<u8>, ApiError> {
-    let cap = MAX_BODY_BYTES.min(encoded.len().saturating_mul(MAX_EXPANSION_RATIO));
+fn decompress(encoded: &[u8], max: usize) -> Result<Vec<u8>, ApiError> {
+    let cap = max.min(encoded.len().saturating_mul(MAX_EXPANSION_RATIO));
     let decoder =
         zstd::stream::read::Decoder::new(encoded).map_err(|error| ApiError::bad_request(format!("zstd: {error}")))?;
     let mut decoded = Vec::new();
@@ -154,7 +156,7 @@ fn decompress(encoded: &[u8]) -> Result<Vec<u8>, ApiError> {
         .map_err(|error| ApiError::bad_request(format!("zstd: {error}")))?;
     if decoded.len() > cap {
         return Err(ApiError::too_large(format!(
-            "zstd body expands past {cap} bytes ({MAX_EXPANSION_RATIO} times its size, at most {MAX_BODY_BYTES})"
+            "zstd body expands past {cap} bytes ({MAX_EXPANSION_RATIO} times its size, at most {max})"
         )));
     }
     Ok(decoded)
@@ -195,6 +197,34 @@ where
         Ok(encoded) => encoded_response(encoded, compress),
         Err(error) => (StatusCode::INTERNAL_SERVER_ERROR, error.to_string()).into_response(),
     }
+}
+
+/// `respond` for an endpoint that takes a token and a body: `check` runs first, and the body is read only once it
+/// accepts the caller, so a request with a wrong token costs no read. `work` then gets the body as `respond` runs it.
+///
+/// INVARIANT: `work` checks the token again. `meta` takes the caller from the scope `work` fills, and the caller may
+/// have been revoked while the body arrived. `check` must therefore write nothing a second check would not.
+pub(crate) async fn respond_with_body<B, T, C, F>(
+    server: Arc<Server>,
+    headers: HeaderMap,
+    body: Body,
+    check: C,
+    work: F,
+) -> Response
+where
+    B: DeserializeOwned + Send + 'static,
+    T: Serialize + Send + 'static,
+    C: FnOnce(&Server, &mut Scope, &HeaderMap) -> Result<(), ApiError> + Send + 'static,
+    F: FnOnce(&Server, &mut Scope, &HeaderMap, Result<B, ApiError>) -> Result<T, ApiError> + Send + 'static,
+{
+    if let Err(refused) = authorize(Arc::clone(&server), headers.clone(), check).await {
+        return *refused;
+    }
+    let request = read_body::<B>(&headers, body, MAX_BODY_BYTES).await;
+    respond(server, headers, move |server, scope, headers| {
+        work(server, scope, headers, request)
+    })
+    .await
 }
 
 /// Runs `work` as `respond` does, but hands a success back to a handler that answers with something other than a

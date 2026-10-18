@@ -12,17 +12,22 @@ use uuid::Uuid;
 
 use crate::auth;
 use crate::db::is_constraint;
-use crate::http::{read_body, respond, ApiError};
+use crate::http::{respond, respond_with_body, ApiError};
 use crate::server::Server;
 
 pub(crate) const REPLAY_WINDOW_MS: u64 = 10 * 60 * 1000;
 
 pub(crate) async fn create(State(server): State<Arc<Server>>, headers: HeaderMap, body: Body) -> Response {
-    let request = read_body::<CreateSpace>(&headers, body).await;
-    respond(server, headers, move |server, _, headers| {
-        auth::require_setup(server, headers)?;
-        create_space(server, request?)
-    })
+    respond_with_body(
+        server,
+        headers,
+        body,
+        |server, _, headers| auth::require_setup(server, headers),
+        move |server, _, headers, request: Result<CreateSpace, ApiError>| {
+            auth::require_setup(server, headers)?;
+            create_space(server, request?)
+        },
+    )
     .await
 }
 

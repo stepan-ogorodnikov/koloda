@@ -20,7 +20,7 @@ use rusqlite::{params, Connection, OptionalExtension};
 use uuid::Uuid;
 
 use crate::auth::{self, SpaceAuth};
-use crate::http::{read_body, respond, ApiError};
+use crate::http::{read_body, respond, respond_with_body, ApiError};
 use crate::log;
 use crate::server::{lock, Server};
 use crate::spaces::checked_name;
@@ -29,6 +29,8 @@ pub(crate) const CODE_TTL_MS: u64 = 10 * 60 * 1000;
 pub(crate) const GUESS_WINDOW_MS: u64 = 60 * 1000;
 pub(crate) const GUESSES_PER_ADDRESS: u32 = 10;
 pub(crate) const GUESSES_SERVER_WIDE: u32 = 100;
+// WHY: preview and claim take no token, so anyone can send one; a real one is under 1 KiB.
+const MAX_PAIRING_BODY_BYTES: usize = 16 * 1024;
 const CODE_CHARS: usize = 10;
 const ALPHABET: &[u8; 32] = b"0123456789ABCDEFGHJKMNPQRSTVWXYZ";
 
@@ -60,16 +62,22 @@ pub(crate) async fn issue(
     headers: HeaderMap,
     body: Body,
 ) -> Response {
-    let request = read_body::<IssuePairing>(&headers, body).await;
-    respond(server, headers, move |server, scope, headers| {
-        let caller = auth::require_device_or_setup(server, scope, headers, &space)?;
-        issue_code(server, &caller, request?)
-    })
+    let checked = space.clone();
+    respond_with_body(
+        server,
+        headers,
+        body,
+        move |server, scope, headers| auth::require_device_or_setup(server, scope, headers, &checked).map(drop),
+        move |server, scope, headers, request: Result<IssuePairing, ApiError>| {
+            let caller = auth::require_device_or_setup(server, scope, headers, &space)?;
+            issue_code(server, &caller, request?)
+        },
+    )
     .await
 }
 
 pub(crate) async fn preview(State(server): State<Arc<Server>>, peer: Peer, headers: HeaderMap, body: Body) -> Response {
-    let request = read_body::<PreviewPairing>(&headers, body).await;
+    let request = read_body::<PreviewPairing>(&headers, body, MAX_PAIRING_BODY_BYTES).await;
     respond(server, headers, move |server, _, _| {
         guarded(server, address(peer), || preview_code(server, &request?))
     })
@@ -77,7 +85,7 @@ pub(crate) async fn preview(State(server): State<Arc<Server>>, peer: Peer, heade
 }
 
 pub(crate) async fn claim(State(server): State<Arc<Server>>, peer: Peer, headers: HeaderMap, body: Body) -> Response {
-    let request = read_body::<ClaimPairing>(&headers, body).await;
+    let request = read_body::<ClaimPairing>(&headers, body, MAX_PAIRING_BODY_BYTES).await;
     respond(server, headers, move |server, _, _| {
         guarded(server, address(peer), || claim_code(server, request?))
     })

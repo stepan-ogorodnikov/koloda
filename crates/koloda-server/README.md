@@ -144,7 +144,8 @@ Triggers keep its live entities per kind and the bytes of its versions, which th
   operator's write-schema raise.
 - `src/tls.rs` — certificates read from PEM files and read again when they change, and a listener that runs each
   TLS handshake off its accept loop.
-- `src/http.rs` — CBOR and zstd bodies, their limits, the reply envelope, and `meta`.
+- `src/http.rs` — CBOR and zstd bodies, their limits, a body read only once its token checks, the reply envelope, and
+  `meta`.
 - `src/auth.rs` — setup and device tokens, marking a device stale when it calls after a long absence, refusing a
   device call on another epoch with the restore it must apply, and storing the schemas a device advertises.
 - `src/spaces.rs` — space creation, which enrolls the creator with the token the client minted, and the list.

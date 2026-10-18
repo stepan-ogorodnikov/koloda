@@ -67,7 +67,7 @@ pub struct Call<'a> {
     method: Method,
     path: String,
     token: Option<String>,
-    body: Option<Vec<u8>>,
+    body: Option<Body>,
     content_encoding: Option<&'static str>,
     accept_zstd: bool,
     peer: Option<SocketAddr>,
@@ -261,13 +261,19 @@ impl Call<'_> {
     pub fn body<B: Serialize>(mut self, body: &B) -> Self {
         let mut bytes = Vec::new();
         ciborium::into_writer(body, &mut bytes).expect("encode a test body");
-        self.body = Some(bytes);
+        self.body = Some(Body::from(bytes));
         self
     }
 
     pub fn raw(mut self, bytes: Vec<u8>, content_encoding: Option<&'static str>) -> Self {
-        self.body = Some(bytes);
+        self.body = Some(Body::from(bytes));
         self.content_encoding = content_encoding;
+        self
+    }
+
+    /// Sends `body` as it is, such as a stream that records whether the server read it.
+    pub fn stream(mut self, body: Body) -> Self {
+        self.body = Some(body);
         self
     }
 
@@ -332,7 +338,7 @@ impl Call<'_> {
             request = request.header(ACCEPT_ENCODING, "zstd");
         }
         let mut request = request
-            .body(self.body.map_or_else(Body::empty, Body::from))
+            .body(self.body.unwrap_or_else(Body::empty))
             .expect("build a test request");
         if let Some(peer) = self.peer {
             request.extensions_mut().insert(ConnectInfo(peer));
