@@ -16,6 +16,8 @@ mod attachments;
 mod auth;
 mod bootstrap;
 mod db;
+#[cfg(test)]
+mod db_tests;
 mod devices;
 mod events;
 #[cfg(test)]

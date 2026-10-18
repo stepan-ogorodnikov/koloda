@@ -7,7 +7,7 @@ use std::path::Path;
 use std::time::Duration;
 
 use refinery::Runner;
-use rusqlite::{Connection, ErrorCode, OpenFlags};
+use rusqlite::{Connection, ErrorCode, OpenFlags, TransactionBehavior};
 
 mod server_migrations {
     use refinery::embed_migrations;
@@ -50,6 +50,10 @@ fn open(path: &Path, mut runner: Runner) -> Result<Connection, DbError> {
     conn.busy_timeout(BUSY_TIMEOUT)?;
     runner.set_migration_table_name(MIGRATIONS_TABLE);
     runner.run(&mut conn).map_err(DbError::Migration)?;
+    // WHY: `drop-envelope`, `write-schema`, `pair`, and `quota` write these files from another process while `serve`
+    // runs. A deferred transaction that read first fails its write with `SQLITE_BUSY_SNAPSHOT`, which the busy timeout
+    // does not retry; an immediate one waits for the write lock instead.
+    conn.set_transaction_behavior(TransactionBehavior::Immediate);
     Ok(conn)
 }
 

@@ -139,7 +139,8 @@ Triggers keep its live entities per kind and the bytes of its versions, which th
 - `src/backup.rs` — an online copy of the active generation and its manifest.
 - `src/restore.rs` — a backup staged as a new generation: epochs, restore points, carried-forward revocations, and
   the swap of `CURRENT`; and the restore points after a device's epoch, combined as one.
-- `src/db.rs` — connections and the two migration series under `src/migrations/`.
+- `src/db.rs` — connections, whose write transactions take the write lock as they begin, and the two migration series
+  under `src/migrations/`.
 - `src/server.rs` — shared state: `server.db`, open space databases and their lane heads, the clock, and the
   operator's write-schema raise.
 - `src/tls.rs` — certificates read from PEM files and read again when they change, and a listener that runs each
@@ -167,6 +168,8 @@ Triggers keep its live entities per kind and the bytes of its versions, which th
   cards link that no device uploaded, card refs,
   and collection of attachments unlinked for 90 days.
 
+- `src/db_tests.rs` — a writer's transaction holds the write lock from its start; a unit test, because the openers
+  are private to the crate.
 - `src/heads_index_tests.rs` — the query plans of the reads of `heads` the space indexes serve, which must search
   one; a unit test, because the statements are private to the crate.
 - `tests/server/` — one test binary; `common.rs` drives the router in-process on a manual clock, and sends each

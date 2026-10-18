@@ -211,7 +211,7 @@ Out:
   Commit: Stop a pull page after a fixed number of examined rows
   Depends on: none
 
-- [ ] 3. Open the server's write transactions at once
+- [x] 3. Open the server's write transactions at once
   Goal (finding 8):
   - The connections that write open `Immediate` transactions by default, through
     `Connection::set_transaction_behavior`.
@@ -231,6 +231,8 @@ Out:
     It fails against today's `db.rs`.
   - `cargo test -p koloda-server` and `cargo test -p koloda-sync` pass, and `bun run check:push` is green.
   Manual verify: none — the race needs a CLI write in the instant between a push's read and its write.
+  Notes: the test is `src/db_tests.rs`; `drop_envelope.rs` keeps its explicit `Immediate`, since a CLI process opens
+  its own connection.
   Commit: Open the server's write transactions at once
   Depends on: none
 
