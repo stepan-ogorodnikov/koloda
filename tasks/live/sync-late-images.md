@@ -119,7 +119,7 @@ Written for the answers to Open questions 1 to 3.
   Commit: Tell the screens about synced rows before images download
   Depends on: none
 
-- [ ] 2. Cover an image that arrives while its card is on screen in the sync spec
+- [x] 2. Cover an image that arrives while its card is on screen in the sync spec
   Goal: `tasks/archive/sync-e2e-audit.md` Plan item 2, as written there:
   - `apps/electron-e2e/src/sync-proxy.ts` exports `startSyncProxy(targetUrl)`: a loopback proxy that forwards every
     request and the events socket's upgrade, holds each `GET …/attachments/{id}` (not `…/attachments/missing`) until
@@ -141,6 +141,10 @@ Written for the answers to Open questions 1 to 3.
   Manual verify: none — the change is the test itself, and its run is the check.
   Commit: Cover an image that arrives while its card is on screen in the sync spec
   Depends on: 1
+  Deviation: B opens the dashboard before A adds the card, and the spec waits for the open dashboard to count it.
+  As planned, the spec also passed against item 1's parent: a screen opened after the card arrived reads it from the
+  database, with or without the change event.
+  Now it fails there at the dashboard count.
 
 - [ ] 3. Wake the runner when a waiting transfer falls due
   Goal:

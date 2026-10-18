@@ -3,14 +3,25 @@ import type { Page } from "@playwright/test";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { resolve } from "node:path";
-import { addCard, cardRows, createDeckWithCard, openSection } from "@koloda/e2e";
+import {
+  addCard,
+  cardRows,
+  createDeckWithCard,
+  createDeckWithTemplate,
+  createTemplate,
+  openSection,
+  startDeckLesson,
+} from "@koloda/e2e";
 import { launchApp, test as base } from "./fixtures";
 import { setupApp, setupPageDefaults } from "./helpers";
+import { startSyncProxy } from "./sync-proxy";
+import type { SyncProxy } from "./sync-proxy";
 import { startSyncServer } from "./sync-server";
 import type { SyncServer } from "./sync-server";
 
 type SyncFixtures = {
   syncServer: SyncServer;
+  secondDeviceProxy: SyncProxy;
   secondDevice: Page;
 };
 
@@ -26,6 +37,12 @@ const test = base.extend<SyncFixtures>({
     }
   },
 
+  secondDeviceProxy: async ({ syncServer }, provide) => {
+    const proxy = await startSyncProxy(syncServer.url);
+    await provide(proxy);
+    await proxy.stop();
+  },
+
   // oxlint-disable-next-line no-empty-pattern
   secondDevice: async ({}, provide) => {
     const userDataDir = await mkdtemp(resolve(tmpdir(), "koloda-e2e-"));
@@ -39,6 +56,10 @@ const test = base.extend<SyncFixtures>({
 });
 
 const PAIRING_CODE = /^[0-9A-Z]{5}(?:-[0-9A-Z]{1,5})+$/;
+const ONE_PIXEL_PNG = Buffer.from(
+  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==",
+  "base64",
+);
 
 test.beforeEach(async ({ page }) => {
   await setupPageDefaults(page);
@@ -56,8 +77,43 @@ async function openDeckCards(page: Page, deckTitle: string) {
   await page.getByRole("tab", { name: "Cards" }).click();
 }
 
-test("a device joins a space with a pairing code and gets its cards", async ({ page, syncServer, secondDevice }) => {
+// WHY: images go in markdown fields only, and a new template's fields are text (`docs/specs/MEDIA.md`).
+async function createMarkdownFrontTemplate(page: Page, title: string) {
+  await createTemplate(page, title);
+  await page.getByRole("button", { name: /Type$/ }).first().click();
+  await page.getByRole("option", { name: "Markdown", exact: true }).click();
+  const saveButton = page.locator("form").getByRole("button", { name: "Save", exact: true });
+  await saveButton.scrollIntoViewIfNeeded();
+  await saveButton.click();
+  await expect(saveButton).not.toBeVisible();
+}
+
+async function addImageCard(page: Page, imageName: string, back: string) {
+  await page.getByRole("button", { name: "Add cards" }).click();
+  const addCardDialog = page.getByRole("dialog");
+  await expect(addCardDialog).toBeVisible();
+
+  // WHY: the "Insert image" button opens a native file picker; its hidden file input takes the file instead.
+  await addCardDialog
+    .locator('input[type="file"]')
+    .setInputFiles({ name: `${imageName}.png`, mimeType: "image/png", buffer: ONE_PIXEL_PNG });
+  await expect(addCardDialog.getByRole("textbox", { name: "Front" })).toHaveValue(/attachment:[0-9a-f]{64}/);
+  await addCardDialog.getByRole("textbox", { name: "Back" }).fill(back);
+
+  await addCardDialog.getByRole("button", { name: "Create card" }).click();
+  await expect(addCardDialog.getByRole("textbox", { name: "Front" })).toHaveValue("");
+  await page.keyboard.press("Escape");
+  await expect(addCardDialog).not.toBeVisible();
+}
+
+test("a device joins a space with a pairing code and gets its cards and images", async ({
+  page,
+  syncServer,
+  secondDeviceProxy,
+  secondDevice,
+}) => {
   const deckTitle = "E2E Synced Deck";
+  const imageDeckTitle = "E2E Image Deck";
 
   // Device A: start fresh with a deck and a card
   await setupApp(page);
@@ -83,10 +139,10 @@ test("a device joins a space with a pairing code and gets its cards", async ({ p
   await page.keyboard.press("Escape");
   await expect(inviteDialog).not.toBeVisible();
 
-  // Device B: join from the first-run screen
+  // Device B: join from the first-run screen, through a proxy that holds its image downloads
   await setupPageDefaults(secondDevice);
   await secondDevice.getByRole("button", { name: "Join a space", exact: true }).click();
-  await secondDevice.getByRole("textbox", { name: "Server address" }).fill(syncServer.url);
+  await secondDevice.getByRole("textbox", { name: "Server address" }).fill(secondDeviceProxy.url);
   await secondDevice.getByRole("textbox", { name: "Pairing code" }).fill(code ?? "");
   await secondDevice.getByRole("textbox", { name: "This device's name" }).fill("Device B");
   await secondDevice.getByRole("button", { name: "Continue", exact: true }).click();
@@ -118,4 +174,30 @@ test("a device joins a space with a pairing code and gets its cards", async ({ p
   // Device B: the new card shows without a reload
   await expect(cardRows(secondDevice).filter({ hasText: "Second front" })).toBeVisible();
   await expect(cardRows(secondDevice)).toHaveCount(2);
+
+  // Device A: add a deck whose template has a markdown field
+  await createMarkdownFrontTemplate(page, "E2E Image Template");
+  await createDeckWithTemplate(page, imageDeckTitle, "E2E Image Template");
+
+  // Device B: the dashboard shows the new deck
+  await openSection(secondDevice, "Dashboard");
+  const imageDeckRow = secondDevice
+    .getByRole("row")
+    .filter({ has: secondDevice.getByText(imageDeckTitle, { exact: true }) });
+  await expect(imageDeckRow).toBeVisible();
+
+  // Device A: add a card with an image to that deck
+  await page.getByRole("tab", { name: "Cards" }).click();
+  await addImageCard(page, "late-image", "Image back");
+
+  // Device B: the open dashboard counts the card while its image download is held, and its lesson shows the alt text
+  // WHY: the dashboard is already open, so only the engine's change event can show the card; opening a screen after
+  // the card arrived would read it from the database whether or not the event came.
+  await expect(imageDeckRow.getByRole("button", { name: "1", exact: true }).first()).toBeEnabled();
+  const lessonDialog = await startDeckLesson(secondDevice, imageDeckTitle, 1);
+  await expect(lessonDialog.getByText("late-image", { exact: true })).toBeVisible();
+
+  // Device B: the image shows once its download goes through, without a reload
+  secondDeviceProxy.release();
+  await expect(lessonDialog.getByRole("img", { name: "late-image" })).toBeVisible();
 });

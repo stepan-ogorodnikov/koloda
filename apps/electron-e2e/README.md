@@ -44,8 +44,11 @@ Sync is the exception: the web demo does not sync, so its spec is desktop only.
 - Sync server: `src/sync-server.ts` — `startSyncServer()` runs the built `koloda-server` on a free loopback port
   over plain HTTP, with a throwaway data directory; the handle returns its `url`, `setupToken`, and `log`.
   The sync spec attaches the log to a test that fails.
+- Sync proxy: `src/sync-proxy.ts` — `startSyncProxy(targetUrl)` forwards every request and the events socket to the
+  server on another loopback port, and holds each image download until `release()`.
+  The sync spec's second device joins through it, so its card shows before its image arrives.
 - Specs: `src/*.spec.ts` — smoke, settings, decks, cards, templates, presets, lessons, hotkeys,
-  AI profiles, assistant chat, and sync.
+  AI profiles, assistant chat, and sync, with an image that arrives while its card is on screen.
 
 ### Does NOT own (prevent scope creep)
 
