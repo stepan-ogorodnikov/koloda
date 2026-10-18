@@ -1,6 +1,6 @@
 # Late images reach other devices promptly
 
-Status: ready
+Status: done
 Guides: agents/IMPLEMENTATION-PLAN.md, agents/TASKS.md, crates/koloda-sync/README.md, crates/koloda/src/repo/sync/README.md, agents/RUST.md, crates/koloda-server/README.md, crates/koloda-sync-proto/PROTOCOL.md, crates/koloda-sync-proto/README.md, docs/specs/SYNC.md, docs/specs/MEDIA.md, apps/electron-e2e/README.md, libs/e2e/README.md, agents/VERIFY.md, agents/TESTING.md, agents/CODE-STYLE.md, agents/CODE-DOCUMENTATION.md, agents/BACKWARDS-COMPATIBILITY.md, agents/MARKDOWN.md, agents/REVIEW.md
 Flow: local
 
@@ -200,4 +200,30 @@ Written for the answers to Open questions 1 to 3.
 
 ## Outcome
 
-<what shipped>
+All four Plan items shipped, one per commit:
+
+- 1: the engine emits `Changed` for the kinds a cycle changed before its image transfers, and each kind once per
+  cycle; `sync_now` and `tick` return the same kinds as before.
+- 2: `apps/electron-e2e/src/sync-proxy.ts` holds device B's image downloads; the sync spec shows a card with its
+  image's alt text, then the image once the proxy releases it, as recorded on the item.
+- 3: after a cycle the runner wakes when the earliest transfer that waits on time falls due (`next_transfer_due`),
+  except while a spent metered allowance or a paused bootstrap holds transfers back, as recorded on the item.
+- 4: the events frame is `Nudge { head_hot, head_cold, uploads }`; a stored upload bumps the count, and a device
+  that sees it change releases its waiting fetches (`release_waiting_fetches`) once any running cycle ends.
+
+Checked:
+
+- `bun run check:push` passed after each item and on the final tip.
+- A filtered run of `sync.spec.ts` passed three times in a row after item 2, and once more after item 4.
+- Checked once by hand, each failing as intended:
+  - item 1's engine test against the engine before it, and against a cycle that re-sends every kind;
+  - the sync spec without the proxy's release (at the image), and against item 1's parent (at the dashboard count);
+  - item 3's engine test against the runner before it, and each guard's test without its guard;
+  - item 4's server test without the upload publish, and its engine test without the device's release.
+
+Not checked:
+
+- A full desktop suite run (Intent, Done when); only `sync.spec.ts` ran.
+- The order in which an upload nudge lands between a fetch's `404` and its deferral (item 4, Notes).
+
+Manual verify: none — engine timing and events that the tests arrange, and the e2e spec is the end-to-end check.
