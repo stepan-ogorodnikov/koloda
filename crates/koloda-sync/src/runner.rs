@@ -166,6 +166,7 @@ impl Shared {
             }
             seen = self.triggers.generation.load(Ordering::SeqCst);
             let (_, result) = self.run_cycle(None).await;
+            let is_cycle_ok = result.is_ok();
             wait = match result {
                 // WHY: a bootstrap paused on a metered network waits for the host, not for a retry.
                 Ok(_) | Err(SyncError::BudgetSpent | SyncError::Metered { .. }) => {
@@ -175,9 +176,23 @@ impl Shared {
                     } else {
                         POLL
                     };
-                    // WHY: a push waiting on server time goes once the wait ends, not at the next poll; a trigger
-                    // still ends the sleep sooner. A wait that cannot be read leaves the poll.
-                    Some(self.push_wait_left().ok().flatten().map_or(poll, |left| left.min(poll)))
+                    // WHY: a push waiting on server time goes once the wait ends, not at the next poll, and so does a
+                    // transfer that waits, such as a fetch of an image no device has uploaded yet; a trigger still
+                    // ends the sleep sooner. A wait that cannot be read leaves the poll.
+                    let push_wait = self.push_wait_left().ok().flatten();
+                    // WHY: a paused bootstrap ran no transfers, so their due times would wake the runner at once,
+                    // again and again.
+                    let transfer_wait = if is_cycle_ok {
+                        self.transfer_wait_left().await.ok().flatten()
+                    } else {
+                        None
+                    };
+                    Some(
+                        [push_wait, transfer_wait]
+                            .into_iter()
+                            .flatten()
+                            .fold(poll, Duration::min),
+                    )
                 }
                 // WHY: a waiting file fails the same way until the user or the host acts, and each such act fires a
                 // trigger; a poll or a backoff would only call the server, or fail, again (PROTOCOL.md, Cycle).

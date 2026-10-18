@@ -50,6 +50,7 @@ A delete that fails then emits `Event::Error` and the call succeeds; a re-attach
   A file in no space, holding an authoritative restore, or unknown to the server waits for a trigger: no poll, no
   backoff, and no `Error` event.
   A push waiting on server time cuts the idle sleep short: the runner wakes when the wait ends, not at the next poll.
+  So does a transfer that waits, unless a metered pause or a paused bootstrap holds transfers back.
 - `src/events.rs` — the events socket while the runner runs: the session it listens with, reconnects, and nudges
   that start a cycle, held back while one runs.
 - `src/status.rs` — the state the host shows, why the last cycle stopped (an authoritative restore waiting for the

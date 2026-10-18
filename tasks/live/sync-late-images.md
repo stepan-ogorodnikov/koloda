@@ -146,7 +146,7 @@ Written for the answers to Open questions 1 to 3.
   database, with or without the change event.
   Now it fails there at the dashboard count.
 
-- [ ] 3. Wake the runner when a waiting transfer falls due
+- [x] 3. Wake the runner when a waiting transfer falls due
   Goal:
   - `koloda` `repo/sync/attachments.rs` gains the earliest `next_attempt_at` among queued transfers that are not
     waiting for room, through `sync_attachment_queue_due_idx`.
@@ -163,6 +163,9 @@ Written for the answers to Open questions 1 to 3.
   Manual verify: none — timing only the tests arrange.
   Commit: Wake the runner when a waiting image transfer falls due
   Depends on: none
+  Added: no wake while a spent metered allowance or a paused bootstrap holds transfers back; a due transfer would
+  otherwise start cycles that move nothing, back to back.
+  An engine test pins each, and fails without its guard, checked once by hand.
 
 - [ ] 4. Nudge the space's devices when an image is uploaded
   Goal (Open questions, 1):

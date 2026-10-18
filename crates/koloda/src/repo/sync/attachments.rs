@@ -3,7 +3,7 @@
 //!
 //! The queue pins nothing: the startup sweep still removes an attachment no card links, and its upload then drops.
 
-use rusqlite::{params, Connection};
+use rusqlite::{params, Connection, OptionalExtension};
 use sha2::{Digest, Sha256};
 
 use crate::app::db::Database;
@@ -133,6 +133,28 @@ pub fn due_transfers(db: &Database, now: i64, limit: usize) -> Result<Vec<Transf
                 }
             }
             Ok(due)
+        })
+    })
+}
+
+/// When the earliest queued transfer that waits on time is due, which may be past; `None` when none is queued. An
+/// upload that waits for room is left out: it goes once a device record shows room (`release_deferred_uploads`).
+pub fn next_transfer_due(db: &Database) -> Result<Option<i64>, AppError> {
+    throw_known_error(error_codes::DB_GET, || {
+        db.with_conn(|conn| {
+            // INVARIANT: in the order of `sync_attachment_queue_due_idx`, so the read walks the index and stops at the
+            // first row that does not wait for room.
+            Ok(conn
+                .query_row(
+                    r#"
+                    SELECT next_attempt_at FROM sync_attachment_queue WHERE is_waiting_for_room = 0
+                    ORDER BY next_attempt_at, direction, id
+                    LIMIT 1
+                    "#,
+                    [],
+                    |row| row.get(0),
+                )
+                .optional()?)
         })
     })
 }

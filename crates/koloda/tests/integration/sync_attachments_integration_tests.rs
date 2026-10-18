@@ -4,8 +4,8 @@ use koloda::domain::cards::DeleteCardData;
 use koloda::repo::attachments::{add_attachment, get_attachment, get_attachment_bytes};
 use koloda::repo::cards::delete_card;
 use koloda::repo::sync::attachments::{
-    defer_for_room, defer_transfer, due_transfers, finish_transfer, queue_missing_uploads, release_deferred_uploads,
-    store_fetched, upload_source, Direction, Transfer,
+    defer_for_room, defer_transfer, due_transfers, finish_transfer, next_transfer_due, queue_missing_uploads,
+    release_deferred_uploads, store_fetched, upload_source, Direction, Transfer,
 };
 use koloda::repo::sync::outbox::{push_batch, settle_push};
 use koloda_sync_proto::payload::{CardContent, CardCreate, CardScheduling, InitialProductTs, Payload};
@@ -254,6 +254,33 @@ fn an_upload_waiting_for_room_goes_at_once_with_a_fresh_backoff_once_released() 
             .unwrap()
             .contains(&upload(&waiting)),
         "its next wait starts again from one minute"
+    );
+}
+
+#[test]
+fn the_next_transfer_due_is_the_earliest_wait_that_is_not_for_room() {
+    let db = test_db();
+    let fixture = enrolled_deck(&db);
+    let none_queued = next_transfer_due(&db).unwrap();
+    let waiting = add_attachment(&db, png(17)).unwrap().id;
+    let faulted = add_attachment(&db, png(18)).unwrap().id;
+    let missing = id_of(&png(19));
+    queue_missing_uploads(&db, &[waiting.clone(), faulted.clone()]).unwrap();
+    pull_card(&db, &fixture, CARD, &[&missing]);
+    let at = 1_000_000;
+    defer_for_room(&db, &upload(&waiting), at - HOUR_MS).unwrap();
+    for _ in 0..2 {
+        defer_transfer(&db, &upload(&faulted), at).unwrap();
+    }
+    defer_transfer(&db, &fetch(&missing), at).unwrap();
+
+    let due = next_transfer_due(&db).unwrap();
+
+    assert_eq!(none_queued, None);
+    assert_eq!(
+        due,
+        Some(at + MINUTE_MS),
+        "the fetch's one-minute wait ends first; the upload waiting for room, due earlier, is left out"
     );
 }
 

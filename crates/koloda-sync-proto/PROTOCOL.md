@@ -1220,6 +1220,8 @@ Attachment transfers run after the rounds, one at a time, uploads and fetches al
 They carry no stamps, so they also run when the rounds stop for clock skew or a file that is behind.
 They stop early when a trigger arrives, so the rows a local change wrote go out first, and after 64 MiB of bodies.
 When transfers are still due, the next cycle starts at once instead of waiting for the poll.
+A transfer that waits, as a fetch answered `404` does, starts a cycle when its wait ends, not at the next poll.
+It does not while bulk transfers or a bootstrap wait on a metered network (§Metered networks).
 The host hears of the rows the rounds changed before the transfers start, so a slow download holds back no card.
 A bounded tick spends its byte budget on transfer bodies as on pull pages.
 It is not done while its budget, its rounds, or the transfer limits left work for the next tick.

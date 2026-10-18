@@ -1,11 +1,13 @@
 use std::sync::mpsc::channel;
 use std::sync::Arc;
+use std::time::Duration;
 
 use koloda::app::init::seed_db;
 use koloda::domain::attachments::SweepAttachmentsData;
 use koloda::domain::cards::{CardContentField, UpdateCardData, UpdateCardValues};
 use koloda::repo::attachments::{get_attachment_bytes, sweep_attachments};
 use koloda::repo::cards::update_card;
+use koloda_sync::metered::Network;
 use koloda_sync::pairing::ImportMode;
 use koloda_sync::runner::{Budget, Event};
 use koloda_sync::transport::Method;
@@ -14,10 +16,15 @@ use koloda_sync_proto::transport::ErrorCode;
 
 use crate::common::{error_reply, proxy_page, Device, Fault, Space, TestServer, SERVER_URL};
 use crate::fixtures::{links, seed_data, seed_settings, Library, BACK, FRONT};
-use crate::runner_support::{channel_sink, wait_for, ManualTimer, POLL};
+use crate::runner_support::{channel_sink, wait_for, ManualTimer, POLL, SILENT_FOR};
 
 const ATTACHMENTS: &str = "/attachments/";
 const DAY_MS: u64 = 24 * 60 * 60 * 1000;
+// WHY: below an image of a few kilobytes, and below a library's snapshot.
+const METERED: Network = Network {
+    is_metered: true,
+    bulk_limit_bytes: 2_000,
+};
 
 impl Device {
     fn image(&self, id: &str) -> Option<Vec<u8>> {
@@ -231,6 +238,108 @@ fn a_device_that_pulls_before_the_upload_fetches_after_its_backoff() {
     assert_eq!(before_backoff, None);
     assert_eq!(b.image(&images[0]), a.image(&images[0]));
     assert_eq!(b.transfers(Method::Get), 2);
+}
+
+#[test]
+fn a_fetch_waiting_for_an_upload_wakes_the_runner_when_its_wait_ends() {
+    let space = Space::new();
+    let a = &space.device;
+    let images = card_with_images(a, 1, 2_000).images;
+    a.transport.fault_when(
+        Method::Put,
+        ATTACHMENTS,
+        Fault::Reply(error_reply(500, ErrorCode::Internal)),
+    );
+    a.engine.sync_now().expect("A's upload waits out its backoff");
+    let b = space.server.join(a);
+    b.transport.serve_events();
+    let timer = ManualTimer::default();
+    let (sink, events) = channel_sink();
+    b.engine
+        .start_runner(sink, Arc::new(timer.clone()))
+        .expect("the runner starts");
+    timer.wait_for_sleep(SILENT_FOR);
+    let (cycle, cycle_starts) = channel();
+    b.transport.observe(move |request| {
+        if request.url.contains("/devices/") {
+            let _sent = cycle.send(()).is_ok();
+        }
+    });
+
+    // WHY: the runner's first cycle, whose fetch was answered `404`, may end before the socket opens; a nudge runs one
+    // that ends with it open, so the runner would otherwise wait for the five-minute poll.
+    b.engine.nudge();
+    cycle_starts
+        .recv_timeout(Duration::from_secs(20))
+        .expect("the nudge starts a cycle");
+    // WHY: below the one-minute poll the runner takes without the socket, by the time the cycles have run.
+    let slept = timer.wait_for_sleep_within(Duration::from_secs(30)..=Duration::from_millis(59_999));
+    a.execute("UPDATE sync_attachment_queue SET next_attempt_at = 0");
+    a.engine.sync_now().expect("A uploads the image");
+    // WHY: the queue keeps wall-clock times, which the manual timer does not move.
+    b.execute("UPDATE sync_attachment_queue SET next_attempt_at = 0");
+    timer.advance(slept);
+    let fetched = wait_for(&events, |event| matches!(event, Event::AttachmentsFetched { .. }));
+
+    assert_eq!(fetched, Event::AttachmentsFetched { ids: images.clone() });
+    assert_eq!(b.image(&images[0]), a.image(&images[0]));
+}
+
+/// A device that joined and bootstrapped, whose fetches of the card's images got no reply, so they are still due.
+fn due_fetches(space: &Space, count: u64) -> Device {
+    card_with_images(&space.device, count, 8_000);
+    space.device.engine.sync_now().expect("A syncs");
+    let b = space.server.join(&space.device);
+    // WHY: a fetch with no reply after its retries ends the cycle's transfers and stays due.
+    for _ in 0..4 {
+        b.transport.fault_when(Method::Get, ATTACHMENTS, Fault::LoseReply);
+    }
+    b.engine.sync_now().expect_err("B's first fetch gets no reply");
+    b
+}
+
+#[test]
+fn a_fetch_a_spent_metered_allowance_holds_waits_for_the_host_not_for_its_due_time() {
+    let space = Space::new();
+    let b = due_fetches(&space, 2);
+    b.engine.set_network(METERED).expect("the network is set");
+    let timer = ManualTimer::default();
+    let (sink, _events) = channel_sink();
+
+    b.engine
+        .start_runner(sink, Arc::new(timer.clone()))
+        .expect("the runner starts");
+    timer.wait_for_sleep(POLL);
+
+    let status = b.engine.status().expect("the status reads");
+    assert!(status.metered.is_some(), "the allowance is spent");
+    assert_eq!(
+        status.fetches, 1,
+        "the held fetch is still due, and the runner idles at the poll"
+    );
+}
+
+#[test]
+fn a_due_fetch_does_not_wake_the_runner_while_a_bootstrap_waits_on_a_metered_network() {
+    let space = Space::new();
+    let b = due_fetches(&space, 1);
+    let b_id = b.state().expect("B is enrolled").device_id;
+    space.server.backdate(b_id, 91 * DAY_MS);
+    b.engine.set_network(METERED).expect("the network is set");
+    let timer = ManualTimer::default();
+    let (sink, _events) = channel_sink();
+
+    b.engine
+        .start_runner(sink, Arc::new(timer.clone()))
+        .expect("the runner starts");
+    timer.wait_for_sleep(POLL);
+
+    let status = b.engine.status().expect("the status reads");
+    assert!(status.metered.is_some(), "the re-bootstrap waits");
+    assert_eq!(
+        status.fetches, 1,
+        "the due fetch did not run, and the runner idles at the poll"
+    );
 }
 
 #[test]

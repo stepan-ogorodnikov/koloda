@@ -3,12 +3,13 @@
 
 use std::num::NonZeroU32;
 use std::sync::Arc;
+use std::time::Duration;
 
 use koloda::app::utility::get_current_timestamp;
 use koloda::domain::attachments::AddAttachmentData;
 use koloda::repo::sync::attachments::{
-    defer_for_room, defer_transfer, due_transfers, finish_attachment_check, finish_transfer, queue_missing_uploads,
-    store_fetched, upload_source, Direction, Transfer,
+    defer_for_room, defer_transfer, due_transfers, finish_attachment_check, finish_transfer, next_transfer_due,
+    queue_missing_uploads, store_fetched, upload_source, Direction, Transfer,
 };
 use koloda::repo::sync::sync_state;
 use koloda_sync_proto::transport::{AttachmentBody, Empty, ErrorCode, MissingAttachments, MAX_MISSING_IDS};
@@ -111,6 +112,20 @@ impl Shared {
                 moved += bytes;
             }
         }
+    }
+
+    /// How long until the earliest transfer that waits on time is due: zero once it is, `None` when none waits.
+    pub(crate) async fn transfer_wait_left(self: &Arc<Self>) -> Result<Option<Duration>, SyncError> {
+        // INVARIANT: once a metered network's allowance is spent, transfers wait for the host; waking for a due one
+        // would run cycles that move nothing, one after another (PROTOCOL.md, Metered networks).
+        if !self.has_bulk_room()? {
+            return Ok(None);
+        }
+        let Some(due_at) = self.blocking(|shared| next_transfer_due(&shared.db)).await? else {
+            return Ok(None);
+        };
+        let now = get_current_timestamp()?;
+        Ok(Some(Duration::from_millis(u64::try_from(due_at - now).unwrap_or(0))))
     }
 
     /// Sends one queued image and returns the bytes it moved.
