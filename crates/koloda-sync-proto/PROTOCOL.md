@@ -1998,12 +1998,18 @@ Every implementation of the engine and the server must pass these.
 - Two live copies of one file (the second forks, both keep syncing).
 - A v2 write before the `write_schema` raise (rejected); a v1 write after it (`held { schema }`).
 - A held seq followed by a writable kind; `held { quota }` then a freeing tombstone.
+- A space over quota during a backfill (no backfill batch until a record shows room; then the held writes go out and
+  the backfill resumes).
 - Corrupt create, update, and review (hold; pushing continues; an operator drop releases; a dropped create
   converges as a tombstone).
 - Corrupt delete and corrupt reset (still apply from the header).
 - A corrupt review holds `cold` only; a corrupt card create holds both lanes.
 - A review with an out-of-range rating holds `cold` as corrupt; an operator drop releases it.
+- A learning value or default id this app's validation refuses holds `hot` as corrupt (the learning settings and
+  today's totals still read).
 - An encoder that loses a field fails the local write and enqueues nothing.
+- A bulk delete of more than 1,000 cards (one cohort per 1,000 cards, each accepted); a commit past one push's item
+  or body cap (fails and writes nothing).
 - Partial push and lost acknowledgement for every consuming outcome.
 - Card create before referent backfill; concurrent delete of two algorithms while others remain.
 - Concurrent delete of the last two algorithms, and of the last two templates (each device creates a default;

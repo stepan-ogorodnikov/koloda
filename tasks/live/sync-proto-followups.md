@@ -315,7 +315,7 @@ Out:
   Commit: Trim the protocol crate's unused public surface
   Depends on: 4, 5
 
-- [ ] 7. List the bulk-delete, quota, and learning rules in the conformance cases
+- [x] 7. List the bulk-delete, quota, and learning rules in the conformance cases
   Goal (R1):
   - `PROTOCOL.md` §Conformance cases (`:1946`) gains one entry per rule `sync-repo-followups` added:
     - a bulk delete of more than 1,000 cards pushes as several accepted cohorts, and a capture past one push's caps
@@ -335,6 +335,7 @@ Out:
     - `a_learning_value_this_app_refuses_holds_and_the_document_still_reads` (`sync_holds_integration_tests.rs`).
   - `bun run check:push` is green.
   Manual verify: none — docs only.
+  Notes: the quota entry names the backfill only, since its engine test arranges no heal; the top-up rule covers both.
   Commit: List the bulk-delete, quota, and learning rules in the conformance cases
   Depends on: none
 
