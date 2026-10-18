@@ -1,6 +1,6 @@
 # Ask for an app update when a sync reply can't be read
 
-Status: draft
+Status: ready
 Guides: agents/IMPLEMENTATION-PLAN.md, agents/TASKS.md, crates/koloda-sync/README.md, crates/koloda-sync-proto/PROTOCOL.md, crates/koloda-sync-proto/README.md, apps/electron/README.md, apps/electron/IPC.md, docs/specs/SYNC.md, agents/FUNCTIONAL-SPECIFICATIONS.md, agents/I18N.md, agents/CODE-STYLE.md, agents/CODE-DOCUMENTATION.md, agents/TESTING.md, agents/BACKWARDS-COMPATIBILITY.md, agents/MARKDOWN.md, agents/VERIFY.md, agents/REVIEW.md
 Flow: local
 
@@ -77,9 +77,9 @@ Out:
 
 ## Open questions
 
-- [ ] 1. Flow? — proposed `local`, the default.
-- [ ] 2. How does the app tell a reply it cannot read (decided on 2026-10-18: it reads as update required)? —
-  proposed: any sync reply whose body does not decode.
+- [x] 1. Flow? — `local` (human, 2026-10-18).
+- [x] 2. How does the app tell a reply it cannot read (decided on 2026-10-18: it reads as update required)? —
+  any sync reply whose body does not decode; as proposed (human, 2026-10-18).
   When a reply fails to decode as `Reply<T>` but is a CBOR map with a `meta` key, it is a sync reply from a newer
   server.
   The engine fails the call with `SyncError::UpdateRequired`, not retried, which stops sync as `Stop::UpdateRequired`.
@@ -90,10 +90,10 @@ Out:
   Not proposed: an `Unknown` variant on each of the four enums.
   It covers only those four, puts an arm the server never sends into `koloda`'s settle code, and leaves every other
   new key or value reading as a server out of reach.
-- [ ] 3. Events frames: out, or the same rule? — proposed: out.
+- [x] 3. Events frames: out, or the same rule? — out; as proposed (human, 2026-10-18).
   An unreadable frame ends the socket (`crates/koloda-sync/src/transport.rs:116-121`), and it reconnects with a
   growing wait; polling still syncs, and the next reply that changed stops sync as update required.
-- [ ] 4. Copy? — proposed, in `en`:
+- [x] 4. Copy? — as proposed (human, 2026-10-18), in `en`:
   - the stop: "The sync server is newer than this version of the app. Update the app, and sync resumes."
   - a failed call: "The sync server is newer than this version of the app. Update the app, then try again."
   `ru` says the same; the implementer writes it and the human checks it.
