@@ -6,8 +6,8 @@ use koloda_sync_proto::registry::Kind;
 use koloda_sync_proto::transport::{
     check_token, code_hash, decode_schemas, encode_schemas, AttachmentBody, ClaimPairing, CreateSpace, Cutoff,
     DependencyAction, DeviceInfo, DeviceMeta, Empty, Enrollment, ErrorBody, ErrorCode, HeldReason, IssuePairing,
-    KnownId, KnownState, LogEntry, Meta, Nudge, Outcome, Platform, PullPage, Push, PushItem, PushOutcome, Reply,
-    Restore, RestoreMode, Snapshot, SnapshotPage,
+    KnownId, KnownState, LogEntry, Meta, Nudge, Outcome, Platform, PullPage, Push, PushItem, PushOutcome, Receipt,
+    Reply, Restore, RestoreMode, Snapshot, SnapshotPage,
 };
 use serde::Serialize;
 
@@ -224,6 +224,57 @@ fn outcomes_are_maps_tagged_by_status() {
         let decoded: Outcome = ciborium::from_reader(bytes.as_slice()).expect("decode");
         assert_eq!(decoded, outcome);
     }
+}
+
+fn text_map(entries: &[(&str, Value)]) -> Value {
+    Value::Map(
+        entries
+            .iter()
+            .map(|(key, value)| (Value::Text(key.to_string()), value.clone()))
+            .collect(),
+    )
+}
+
+fn decodes_as<T: serde::de::DeserializeOwned>(value: &Value) -> bool {
+    let mut bytes = Vec::new();
+    ciborium::into_writer(value, &mut bytes).expect("encode");
+    ciborium::from_reader::<T, _>(bytes.as_slice()).is_ok()
+}
+
+#[test]
+fn an_outcome_with_a_key_its_status_lacks_does_not_decode() {
+    let text = |value: &str| Value::Text(value.to_string());
+    let extra = || Value::Integer(1.into());
+    let refused = [
+        text_map(&[("status", text("applied")), ("extra", extra())]),
+        text_map(&[("status", text("held")), ("reason", text("quota")), ("extra", extra())]),
+        text_map(&[("status", text("applied")), ("reason", text("quota"))]),
+        text_map(&[("status", text("held"))]),
+    ];
+    for outcome in &refused {
+        assert!(!decodes_as::<Outcome>(outcome), "{outcome:?}");
+    }
+
+    let applied_with_extra = &refused[0];
+    let push_outcome = |outcome: Value| {
+        text_map(&[
+            ("sender_seq", Value::Integer(1.into())),
+            ("outcome", outcome),
+            ("replayed", Value::Bool(false)),
+        ])
+    };
+    let receipt = |outcome: Value| {
+        text_map(&[
+            ("sender_seq", Value::Integer(1.into())),
+            ("digest", Value::Bytes(vec![7; 32])),
+            ("outcome", outcome),
+        ])
+    };
+    let applied = text_map(&[("status", text("applied"))]);
+    assert!(decodes_as::<PushOutcome>(&push_outcome(applied.clone())));
+    assert!(!decodes_as::<PushOutcome>(&push_outcome(applied_with_extra.clone())));
+    assert!(decodes_as::<Receipt>(&receipt(applied)));
+    assert!(!decodes_as::<Receipt>(&receipt(applied_with_extra.clone())));
 }
 
 #[test]

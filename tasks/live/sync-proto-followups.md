@@ -209,7 +209,7 @@ Out:
   Commit: Refuse a payload in any encoding but the one sealing writes
   Depends on: none
 
-- [ ] 2. Refuse unknown keys in push outcomes
+- [x] 2. Refuse unknown keys in push outcomes
   Goal (finding 4):
   - `Outcome` (`transport.rs:331-342`) decodes through a private wire struct with `deny_unknown_fields`: `status`,
     optional `action`, and optional `reason`.
@@ -228,6 +228,9 @@ Out:
   - `cargo test -p koloda-sync-proto`, `cargo test -p koloda-server`, and `cargo test -p koloda-sync` pass, and
     `bun run check:push` is green.
   Manual verify: none — the server never sends such an outcome; the tests arrange it.
+  Notes: the refused shapes are their own test, `an_outcome_with_a_key_its_status_lacks_does_not_decode`, rather than
+  rows of `outcomes_are_maps_tagged_by_status`, which encodes and decodes valid outcomes.
+  It also refuses `held` without its reason.
   Commit: Refuse unknown keys in push outcomes
   Depends on: none
 

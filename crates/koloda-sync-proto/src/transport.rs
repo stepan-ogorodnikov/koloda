@@ -330,7 +330,7 @@ pub const SERVER_SENDER: [u8; 16] = [0; 16];
 
 /// Every outcome except `seq_reused` consumes its sequence (`PROTOCOL.md` §Push outcomes).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(tag = "status", rename_all = "snake_case")]
+#[serde(tag = "status", rename_all = "snake_case", try_from = "WireOutcome")]
 pub enum Outcome {
     Applied,
     Stale,
@@ -339,6 +339,47 @@ pub enum Outcome {
     DependencyFenced { action: DependencyAction },
     Held { reason: HeldReason },
     SeqReused,
+}
+
+// WHY: serde's internally tagged enums ignore unknown keys, and `deny_unknown_fields` on the enum misses a unit
+// variant with an extra key, so an outcome decodes through this map and refuses any key its status lacks.
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct WireOutcome {
+    status: OutcomeStatus,
+    action: Option<DependencyAction>,
+    reason: Option<HeldReason>,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize)]
+#[serde(rename_all = "snake_case")]
+enum OutcomeStatus {
+    Applied,
+    Stale,
+    Fenced,
+    Existence,
+    DependencyFenced,
+    Held,
+    SeqReused,
+}
+
+impl TryFrom<WireOutcome> for Outcome {
+    type Error = String;
+
+    fn try_from(wire: WireOutcome) -> Result<Outcome, String> {
+        match (wire.status, wire.action, wire.reason) {
+            (OutcomeStatus::Applied, None, None) => Ok(Outcome::Applied),
+            (OutcomeStatus::Stale, None, None) => Ok(Outcome::Stale),
+            (OutcomeStatus::Fenced, None, None) => Ok(Outcome::Fenced),
+            (OutcomeStatus::Existence, None, None) => Ok(Outcome::Existence),
+            (OutcomeStatus::DependencyFenced, Some(action), None) => Ok(Outcome::DependencyFenced { action }),
+            (OutcomeStatus::Held, None, Some(reason)) => Ok(Outcome::Held { reason }),
+            (OutcomeStatus::SeqReused, None, None) => Ok(Outcome::SeqReused),
+            (status, action, reason) => Err(format!(
+                "outcome {status:?} with action {action:?} and reason {reason:?} is not one the protocol has"
+            )),
+        }
+    }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
