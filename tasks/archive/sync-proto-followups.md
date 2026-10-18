@@ -1,6 +1,6 @@
 # Sync protocol audit follow-ups
 
-Status: ready
+Status: done
 Guides: agents/IMPLEMENTATION-PLAN.md, agents/TASKS.md, crates/koloda-sync-proto/PROTOCOL.md, crates/koloda-sync-proto/README.md, crates/koloda/src/repo/sync/README.md, agents/RUST.md, agents/TESTING.md, agents/CODE-DOCUMENTATION.md, agents/BACKWARDS-COMPATIBILITY.md, agents/MARKDOWN.md, agents/VERIFY.md, agents/REVIEW.md
 Flow: local
 
@@ -341,4 +341,38 @@ Out:
 
 ## Outcome
 
-<what shipped>
+Findings 4, 5, and 10 to 15 and the loose ends R1 and R2 are fixed; none is skipped.
+Finding 16 is decided and is the task `sync-unknown-codes` (Open questions 2).
+
+Shipped, one Plan item per commit:
+
+- 1 (finding 5): `Payload::decode` encodes what it decoded again and refuses input whose bytes differ, and refuses a
+  successor on a delete that is not an algorithm's, through the check `seal` shares.
+  `PROTOCOL.md` §Payloads says a payload has one encoding.
+- 2 (finding 4): `Outcome` decodes through a wire map with `deny_unknown_fields`, so a key its status lacks fails.
+- 3 (R2): a capture that replaces a row of its own commit keeps that cohort, so the new outbox row never names a
+  cohort that is gone.
+  The test found no cohort for the row against the old `capture.rs`, so the gap was real.
+- 4 (findings 10 and 11): tests pin each group's class and `updated_at` contribution against literals, and that every
+  group and tombstoned kind has a sample, and so a fixture.
+- 5 (findings 12 to 14): tests pin all 16 error codes' wire strings, the envelope cap at and one past it, and the
+  frame's key list; the reply test's name says what it asserts.
+- 6 (finding 15): `RestoreMode::from_wire` is gone, and `TOKEN_HEX_LEN`, `Platform::ALL`, `Group::ALL`, and
+  `Hlc::counter` are private.
+- 7 (R1): §Conformance cases lists the bulk-delete cohorts, the over-quota backfill stop, and the refused learning
+  value.
+
+Deviations from the Plan text are recorded on items 2, 3, and 7.
+Self-review over `origin/main..HEAD` found nothing to change.
+
+Checked:
+
+- `bun run check:push` passed on every item's tip and on the final tip.
+- `cargo test -p koloda-sync-proto` runs 37 tests (1 ignored by design), up from 33; `cargo test -p koloda` and
+  `cargo test -p koloda-sync` passed.
+- Each new test failed once by hand against the bug it guards: each check removed, a renamed error code, the
+  envelope cap raised by one, `"payload"` dropped from the frame keys, `reviews.row` made an update, a contribution
+  flipped, and a sample removed.
+- The fixtures are unchanged.
+
+Manual verify: none — no app writes the refused shapes; the tests arrange them.
