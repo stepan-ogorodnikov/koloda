@@ -923,6 +923,11 @@ It carries both lane heads, both GC horizons, `write_schema` per kind, the calle
 ### Bodies
 
 Bodies are CBOR maps that reject unknown keys; this crate's `transport.rs` defines them.
+A reply that is a CBOR map with `meta` but does not decode comes from a newer server: it carries a code, outcome,
+held reason, key, or value this app lacks.
+The client settles nothing from it, counts a push it answered as lost, and stops until the app is updated.
+It does not retry the call, since the server would send the same reply.
+Any other reply that does not decode, such as a proxy's error page, is a failed call and is retried.
 Space, device, epoch, and nonce ids are 16 raw UUID bytes; paths carry them as hyphenated UUID text.
 A request body may be zstd (`Content-Encoding: zstd`); a reply is zstd when the request accepts it.
 A body is at most 16 MiB after decompression, and zstd may expand a request body at most 32 times its size.
@@ -991,7 +996,8 @@ A device sends nothing but control frames; a socket that sends data is closed.
 
 A device keeps one socket open while its runner runs and the file may send.
 It opens none while the file is detached, waits for Add or Replace, or holds an authoritative restore.
-Nor does it once a cycle stopped on `401 unknown_device` for the epoch it sent, until a later cycle ends otherwise.
+Nor does it once a cycle stopped on `401 unknown_device` for the epoch it sent, or on a reply it cannot read (§Bodies),
+until a later cycle ends otherwise.
 A bounded tick opens none either, so a device that only ticks syncs by polling.
 Heads past the last ones a reply reported start a cycle (§Cycle).
 A nudge during a cycle waits for it to end: the cycle's own push moves the heads too.
@@ -1028,6 +1034,9 @@ A socket that delivers nothing for 75 seconds counts as closed, and losing the s
 | `rate_limited` | 429 | Too many wrong pairing codes (§Pairing), or too many open bootstrap leases (§Bootstrap) |
 | `internal` | 500 | A server fault |
 
+A code this table lacks reaches an older app as a reply it cannot read, so that app stops until it is updated
+(§Bodies).
+
 
 ### Push outcomes
 
@@ -1042,6 +1051,8 @@ A socket that delivers nothing for 75 seconds counts as closed, and losing the s
 | `seq_reused` | Stop | The file is behind and forks (§Devices) |
 
 Every status except `seq_reused` consumes the sequence.
+A status, action, or held reason an older app lacks makes it stop as for any reply it cannot read (§Bodies).
+Its push counts as lost, and once the app is updated the same items return their stored outcomes.
 A push is atomic: one transaction consumes every new item or none.
 Items arrive in strictly ascending `sender_seq`; an undecodable envelope or a misordered seq fails the push.
 `seq_reused` can only follow replays, because a new seq lifts the high-water above every later item's.
@@ -1950,6 +1961,9 @@ Propose one again only with a new decision (§Rulings).
   No tombstones or fences for attachments; they are collected by reference, per ruling 17 (§Attachments).
 - No server-side provisional enrollment, import reservation, or join plan.
   A used file waits locally for the user's choice (§Joining).
+- No catch-all variant for an error code, outcome, or held reason.
+  An older app treats every sync reply it cannot decode as a newer server's (§Bodies), which also covers a new key or
+  a new value of any other field.
 - No correction endpoint and no poison report.
   A corrupt envelope holds the pull, except that a corrupt delete or reset applies from its header (ruling 9).
 

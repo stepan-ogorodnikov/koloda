@@ -53,6 +53,8 @@ export function useSyncStopMessage() {
         }
         case "unreachable":
           return _(msg`settings.sync.stop.unreachable`);
+        case "updateRequired":
+          return _(msg`settings.sync.stop.update-required`);
         // WHY: the engine's text is a developer's English diagnostic; Settings → Sync shows it as details.
         case "error":
           return _(msg`settings.sync.stop.error`);

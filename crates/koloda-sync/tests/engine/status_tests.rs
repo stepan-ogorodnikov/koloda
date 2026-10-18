@@ -4,7 +4,7 @@ use koloda_sync::status::{State, Stop};
 use koloda_sync_proto::registry::Kind;
 use koloda_sync_proto::transport::ErrorCode;
 
-use crate::common::{error_reply, Device, Fault, Space, SERVER_URL};
+use crate::common::{error_reply, newer_server_reply, Device, Fault, Space, SERVER_URL};
 use crate::fixtures::{seed_data, seed_settings};
 
 fn state(device: &Device) -> State {
@@ -79,7 +79,7 @@ type Expect = fn(&State) -> bool;
 
 #[test]
 fn status_names_why_the_last_cycle_stopped() {
-    let cases: [(&str, Arrange, Expect); 6] = [
+    let cases: [(&str, Arrange, Expect); 7] = [
         (
             "clock skew",
             |space| {
@@ -133,6 +133,21 @@ fn status_names_why_the_last_cycle_stopped() {
                 copy
             },
             |state| *state == State::Stopped(Stop::Unreachable),
+        ),
+        (
+            "update required",
+            |space| {
+                let copy = space.server.copy(&space.device);
+                let text = |value: &str| ciborium::Value::Text(value.to_string());
+                let error = ciborium::Value::Map(vec![
+                    (text("code"), text("brand_new")),
+                    (text("message"), text("a code a newer server added")),
+                ]);
+                copy.transport
+                    .fault(Fault::Reply(newer_server_reply(409, "error", error)));
+                copy
+            },
+            |state| *state == State::Stopped(Stop::UpdateRequired),
         ),
         (
             "error",

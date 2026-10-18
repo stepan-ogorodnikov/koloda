@@ -100,7 +100,7 @@ Out:
 
 ## Plan
 
-- [ ] 1. Ask for an app update when a sync reply can't be read
+- [x] 1. Ask for an app update when a sync reply can't be read
   Goal (per questions 2 and 4):
   - `decode` and `read` (`crates/koloda-sync/src/client.rs:121-216`): a reply that fails to decode as `Reply<T>`,
     but decodes as a CBOR map with a `meta` key, fails the call with `SyncError::UpdateRequired { status, message }`.
@@ -154,6 +154,16 @@ Out:
     - Switch the language to Russian → the same message reads in Russian.
     - Stop the server → the message says the server can't be reached, as before.
   - Skip if: no local server build is at hand; the engine tests inject the same replies.
+  Notes, where the change went past the Goal text:
+  - A push whose reply this app cannot read counts as lost (`push_lost`), not refused, since the server may have
+    consumed it; once the app is updated, the same items get their stored outcomes as replays.
+  - The events socket stays closed after an update-required stop, as after `unknown_device`, so another device's
+    pushes do not start cycles that stop the same way; the runner test's table asserts it.
+  - `SYNC.md` §Servers says every call to a newer server fails and says to update; §When Sync Stops lists the stop.
+  - `IPC.md` lists no stop reasons or codes one by one, so it does not change.
+  - Only the `libs/app` and `libs/settings-react` catalogs changed; the extract's line-reference churn in other
+    catalogs was left out.
+  - Each new engine case failed against today's `client.rs`.
   Commit: Ask for an app update when a sync reply can't be read
   Depends on: none
 

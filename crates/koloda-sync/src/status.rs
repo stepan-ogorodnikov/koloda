@@ -67,6 +67,8 @@ pub enum Stop {
     },
     /// No sync reply: the server is down or out of reach, or a proxy in front of it answered instead.
     Unreachable,
+    /// The server is newer than this app: it answered with a sync reply this app cannot read.
+    UpdateRequired,
     Error(String),
 }
 
@@ -84,6 +86,7 @@ impl Stop {
                 free: *free,
             },
             SyncError::Transport { .. } => Stop::Unreachable,
+            SyncError::UpdateRequired { .. } => Stop::UpdateRequired,
             other => Stop::Error(other.to_string()),
         }
     }

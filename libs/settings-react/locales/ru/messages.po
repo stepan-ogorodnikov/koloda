@@ -26,7 +26,7 @@ msgid "{fetches, plural, other {settings.sync.fetches}}"
 msgstr "{fetches, plural, one {# изображение ждёт загрузки} few {# изображения ждут загрузки} many {# изображений ждут загрузки} other {# изображения ждут загрузки}}"
 
 #: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:42
-#: ../../libs/settings-react/src/lib/sync/sync-first-run-join.tsx:41
+#: ../../libs/settings-react/src/lib/sync/sync-first-run-join.tsx:51
 msgid "{left, plural, other {settings.sync.download-left}}"
 msgstr "{left, plural, one {Осталось загрузить # изменение} few {Осталось загрузить # изменения} many {Осталось загрузить # изменений} other {Осталось загрузить # изменения}}"
 
@@ -380,11 +380,11 @@ msgstr "Удалить {name} из пространства? Устройств�
 msgid "settings.sync.devices.this-device"
 msgstr "Это устройство"
 
-#: ../../libs/settings-react/src/lib/sync/sync-first-run-join.tsx:39
+#: ../../libs/settings-react/src/lib/sync/sync-first-run-join.tsx:49
 msgid "settings.sync.first-run.downloading"
 msgstr "Загружаем пространство. Приложение откроется, когда загрузка закончится."
 
-#: ../../libs/settings-react/src/lib/sync/sync-first-run-join.tsx:40
+#: ../../libs/settings-react/src/lib/sync/sync-first-run-join.tsx:50
 msgid "settings.sync.first-run.safe-to-close"
 msgstr "Закрыть приложение можно безопасно. Загрузка продолжится при следующем запуске."
 
@@ -593,7 +593,7 @@ msgstr "Синхронизация"
 msgid "settings.sync.stop.authoritative-restore"
 msgstr "Сервер синхронизации восстановлен из резервной копии, которая заменяет данные этого устройства. Изменения, сделанные здесь после копии, будут потеряны."
 
-#: ../../libs/settings-react/src/lib/sync/sync-messages.ts:58
+#: ../../libs/settings-react/src/lib/sync/sync-messages.ts:60
 msgid "settings.sync.stop.error"
 msgstr "Синхронизация остановилась из-за ошибки и повторится сама."
 
@@ -616,6 +616,10 @@ msgstr "Сервер синхронизации больше не знает э�
 #: ../../libs/settings-react/src/lib/sync/sync-messages.ts:55
 msgid "settings.sync.stop.unreachable"
 msgstr "Сервер синхронизации недоступен. Синхронизация повторится сама."
+
+#: ../../libs/settings-react/src/lib/sync/sync-messages.ts:57
+msgid "settings.sync.stop.update-required"
+msgstr "Сервер синхронизации новее этой версии приложения. Обновите приложение, и синхронизация возобновится."
 
 #: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:36
 msgid "settings.sync.sync-now"

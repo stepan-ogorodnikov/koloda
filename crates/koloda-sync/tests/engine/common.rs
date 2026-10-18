@@ -997,6 +997,20 @@ pub fn error_reply(status: u16, code: ErrorCode) -> Response {
     }
 }
 
+/// A reply as a newer server sends one: a sync reply whose `ok` or `error` carries what this app lacks.
+pub fn newer_server_reply(status: u16, key: &str, body: ciborium::Value) -> Response {
+    let text = |value: &str| ciborium::Value::Text(value.to_string());
+    let meta = ciborium::Value::Map(vec![(
+        text("server_time_ms"),
+        ciborium::Value::Integer(system_ms().into()),
+    )]);
+    Response {
+        status,
+        body: cbor(&ciborium::Value::Map(vec![(text("meta"), meta), (text(key), body)])),
+        is_zstd: false,
+    }
+}
+
 fn cbor<B: Serialize>(body: &B) -> Vec<u8> {
     let mut bytes = Vec::new();
     ciborium::into_writer(body, &mut bytes).expect("encode a test body");

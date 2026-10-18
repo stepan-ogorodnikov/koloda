@@ -26,7 +26,7 @@ msgid "{fetches, plural, other {settings.sync.fetches}}"
 msgstr "{fetches, plural, one {# image waits to download} other {# images wait to download}}"
 
 #: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:42
-#: ../../libs/settings-react/src/lib/sync/sync-first-run-join.tsx:41
+#: ../../libs/settings-react/src/lib/sync/sync-first-run-join.tsx:51
 msgid "{left, plural, other {settings.sync.download-left}}"
 msgstr "{left, plural, one {# change left to download} other {# changes left to download}}"
 
@@ -380,11 +380,11 @@ msgstr "Remove {name} from the space? It stops syncing and keeps its data."
 msgid "settings.sync.devices.this-device"
 msgstr "This device"
 
-#: ../../libs/settings-react/src/lib/sync/sync-first-run-join.tsx:39
+#: ../../libs/settings-react/src/lib/sync/sync-first-run-join.tsx:49
 msgid "settings.sync.first-run.downloading"
 msgstr "Downloading the space. The app opens when it's done."
 
-#: ../../libs/settings-react/src/lib/sync/sync-first-run-join.tsx:40
+#: ../../libs/settings-react/src/lib/sync/sync-first-run-join.tsx:50
 msgid "settings.sync.first-run.safe-to-close"
 msgstr "Closing the app is safe. The download picks up next time."
 
@@ -593,7 +593,7 @@ msgstr "Syncing"
 msgid "settings.sync.stop.authoritative-restore"
 msgstr "The sync server was restored from a backup that replaces this device's data. Changes made here since the backup will be lost."
 
-#: ../../libs/settings-react/src/lib/sync/sync-messages.ts:58
+#: ../../libs/settings-react/src/lib/sync/sync-messages.ts:60
 msgid "settings.sync.stop.error"
 msgstr "Sync stopped because of an error and retries on its own."
 
@@ -616,6 +616,10 @@ msgstr "The sync server no longer knows this device. Leave the space here, then 
 #: ../../libs/settings-react/src/lib/sync/sync-messages.ts:55
 msgid "settings.sync.stop.unreachable"
 msgstr "The sync server can't be reached. Sync retries on its own."
+
+#: ../../libs/settings-react/src/lib/sync/sync-messages.ts:57
+msgid "settings.sync.stop.update-required"
+msgstr "The sync server is newer than this version of the app. Update the app, and sync resumes."
 
 #: ../../libs/settings-react/src/lib/sync/settings-sync-status.tsx:36
 msgid "settings.sync.sync-now"

@@ -7,7 +7,7 @@ use koloda_sync_proto::payload::{Delete, Payload, Title};
 use koloda_sync_proto::registry::{Group, Kind, Lane};
 use koloda_sync_proto::transport::ErrorCode;
 
-use crate::common::{error_reply, proxy_page, Fault, Space};
+use crate::common::{error_reply, newer_server_reply, proxy_page, Fault, Space};
 use crate::fixtures::Library;
 
 /// The first try and 3 retries.
@@ -450,4 +450,39 @@ fn pushed_ids(space: &Space) -> Vec<(Kind, String)> {
 
 fn hex(bytes: &[u8]) -> String {
     bytes.iter().map(|byte| format!("{byte:02x}")).collect()
+}
+
+#[test]
+fn a_push_reply_this_app_cannot_read_settles_nothing() {
+    let space = Space::new();
+    space.device.engine.sync_now().expect("the first cycle syncs");
+    space.device.add_algorithm("Pending");
+    let pending = space.device.outbox().len();
+    assert!(pending > 0, "the new algorithm waits to push");
+    let text = |value: &str| ciborium::Value::Text(value.to_string());
+    let outcome = ciborium::Value::Map(vec![
+        (text("sender_seq"), ciborium::Value::Integer(1.into())),
+        (
+            text("outcome"),
+            ciborium::Value::Map(vec![(text("status"), text("brand_new"))]),
+        ),
+        (text("replayed"), ciborium::Value::Bool(false)),
+    ]);
+    let ok = ciborium::Value::Map(vec![(text("outcomes"), ciborium::Value::Array(vec![outcome]))]);
+    space
+        .device
+        .transport
+        .fault_on("/push", Fault::Reply(newer_server_reply(200, "ok", ok)));
+
+    let result = space.device.engine.sync_now();
+
+    assert!(matches!(result, Err(SyncError::UpdateRequired { .. })), "{result:?}");
+    assert_eq!(space.device.outbox().len(), pending, "no outcome is settled");
+
+    space
+        .device
+        .engine
+        .sync_now()
+        .expect("the push goes through once the reply reads");
+    assert!(space.device.outbox().is_empty());
 }

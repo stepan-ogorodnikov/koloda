@@ -148,7 +148,8 @@ impl Shared {
 
     /// Points the socket at the file's session once a cycle ends: none while the file is not enrolled, detached,
     /// waiting for Add or Replace, or holding an authoritative restore, since such a file sends nothing. None either
-    /// after a cycle the server stopped as an unknown device, which makes no call of its own (PROTOCOL.md, Devices).
+    /// after a cycle the server stopped as an unknown device, which makes no call of its own (PROTOCOL.md, Devices),
+    /// or one that met a newer server, whose nudges would only start cycles that stop the same way.
     pub(crate) async fn retarget(self: &Arc<Self>) {
         if self.listen_target.receiver_count() == 0 {
             return;
@@ -160,7 +161,9 @@ impl Shared {
             .map_or(true, |state| {
                 state.is_none_or(|state| state.is_import_pending || state.is_restore_held)
             });
-        let is_stopped = self.run_state().is_ok_and(|run| run.stop == Some(Stop::UnknownDevice));
+        let is_stopped = self
+            .run_state()
+            .is_ok_and(|run| matches!(run.stop, Some(Stop::UnknownDevice | Stop::UpdateRequired)));
         let target = if is_quiet || is_stopped {
             None
         } else {

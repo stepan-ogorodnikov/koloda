@@ -119,7 +119,16 @@ impl Client<'_> {
     }
 
     fn read<T: DeserializeOwned>(&self, response: &Response) -> Result<Result<Answer<T>, SyncError>, TransportError> {
-        let reply: Reply<T> = decode(response)?;
+        let reply: Reply<T> = match decode(response)? {
+            Decoded::Reply(reply) => reply,
+            // WHY: not retried, since the server sends the same reply again until this app is updated.
+            Decoded::Unreadable(message) => {
+                return Ok(Err(SyncError::UpdateRequired {
+                    status: response.status,
+                    message,
+                }))
+            }
+        };
         self.skew
             .record(reply.meta.server_time_ms)
             .map_err(|error| TransportError(error.to_string()))?;
@@ -196,15 +205,32 @@ fn encode<B: Serialize>(body: &B) -> Result<(Vec<u8>, bool), SyncError> {
     Ok((compressed, true))
 }
 
-fn decode<T: DeserializeOwned>(response: &Response) -> Result<Reply<T>, TransportError> {
+enum Decoded<T> {
+    Reply(Reply<T>),
+    /// A sync reply whose body this app cannot read, and why.
+    Unreadable(String),
+}
+
+fn decode<T: DeserializeOwned>(response: &Response) -> Result<Decoded<T>, TransportError> {
     let bytes = if response.is_zstd {
         Cow::Owned(decompress(&response.body)?)
     } else {
         Cow::Borrowed(response.body.as_slice())
     };
     let mut rest = bytes.as_ref();
-    let reply = ciborium::from_reader(&mut rest)
-        .map_err(|error| TransportError(format!("a {} reply is not a sync reply: {error}", response.status)))?;
+    let reply = match ciborium::from_reader(&mut rest) {
+        Ok(reply) => reply,
+        // INVARIANT: every body refuses keys and values this app lacks (PROTOCOL.md, Bodies), so a CBOR map with a
+        // `meta` key that does not decode comes from a newer server. Anything else, such as a proxy's error page, is
+        // not a sync reply.
+        Err(error) if is_sync_reply(&bytes) => return Ok(Decoded::Unreadable(error.to_string())),
+        Err(error) => {
+            return Err(TransportError(format!(
+                "a {} reply is not a sync reply: {error}",
+                response.status
+            )))
+        }
+    };
     if !rest.is_empty() {
         return Err(TransportError(format!(
             "a {} reply has {} bytes after its body",
@@ -212,7 +238,14 @@ fn decode<T: DeserializeOwned>(response: &Response) -> Result<Reply<T>, Transpor
             rest.len()
         )));
     }
-    Ok(reply)
+    Ok(Decoded::Reply(reply))
+}
+
+fn is_sync_reply(bytes: &[u8]) -> bool {
+    ciborium::from_reader::<ciborium::Value, _>(bytes)
+        .ok()
+        .and_then(|value| value.into_map().ok())
+        .is_some_and(|entries| entries.iter().any(|(key, _)| key.as_text() == Some("meta")))
 }
 
 // WHY: only the size cap applies to a reply. The expansion ratio guards the server against request bombs, and a push

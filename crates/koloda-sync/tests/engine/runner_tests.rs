@@ -9,7 +9,7 @@ use koloda_sync_proto::registry::Kind;
 use koloda_sync_proto::transport::RestoreMode;
 use uuid::Uuid;
 
-use crate::common::{system_ms, Device, Fault, Space};
+use crate::common::{newer_server_reply, system_ms, Device, Fault, Space};
 use crate::fixtures::{review, FRONT};
 use crate::runner_support::{
     channel_sink, wait_for, ManualTimer, COALESCE, FIRST_BACKOFF, POLL, POLL_LISTENING, SILENT_FOR,
@@ -109,7 +109,7 @@ fn quiet_cycle(events: &Receiver<Event>, name: &str) {
 
 #[test]
 fn a_file_that_cannot_sync_waits_for_a_trigger_without_errors_or_a_socket() {
-    let cases: [(&str, Arrange, usize); 4] = [
+    let cases: [(&str, Arrange, usize); 5] = [
         (
             "revoked",
             |space| {
@@ -147,6 +147,23 @@ fn a_file_that_cannot_sync_waits_for_a_trigger_without_errors_or_a_socket() {
                 copy.secrets
                     .set(&format!("sync.token.{id}"), "a token no device holds")
                     .expect("the token is replaced");
+                copy
+            },
+            1,
+        ),
+        (
+            "talking to a newer server",
+            |space| {
+                let copy = space.server.copy(&space.device);
+                let record = ciborium::Value::Map(vec![(
+                    ciborium::Value::Text("a_key_this_app_lacks".to_string()),
+                    ciborium::Value::Bool(true),
+                )]);
+                // One unreadable device record for each of the two cycles.
+                for _ in 0..2 {
+                    copy.transport
+                        .fault_on("/devices/", Fault::Reply(newer_server_reply(200, "ok", record.clone())));
+                }
                 copy
             },
             1,

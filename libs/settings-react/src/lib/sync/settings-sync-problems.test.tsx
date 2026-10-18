@@ -69,6 +69,7 @@ describe("SettingsSyncProblems", () => {
     [{ reason: "lowDisk", needed: 2_500_000_000, free: 300_000_000 }, "settings.sync.stop.low-disk 2.5 GB 300 MB"],
     [{ reason: "pushRefused", code: "stamp_ahead" }, "settings.sync.stop.push-refused stamp_ahead"],
     [{ reason: "unreachable" }, "settings.sync.stop.unreachable"],
+    [{ reason: "updateRequired" }, "settings.sync.stop.update-required"],
     [{ reason: "error", message: "the sync server answered 500" }, "settings.sync.stop.error"],
   ])("says why sync stopped for %o", (stop, message) => {
     renderProblems(status({ state: { type: "stopped", stop }, skewMs: 7 * 60_000 }));

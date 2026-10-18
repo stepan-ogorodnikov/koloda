@@ -33,6 +33,7 @@ use uuid::Uuid;
 /// Codes a host call fails with; `libs/app` `ERROR_MESSAGES` has a message for each (`error-parity.test.ts`).
 pub mod sync_error_codes {
     pub const UNREACHABLE: &str = "sync.unreachable";
+    pub const UPDATE_REQUIRED: &str = "sync.update-required";
     pub const UNAUTHORIZED: &str = "sync.unauthorized";
     pub const PAIRING_FAILED: &str = "sync.pairing-failed";
     pub const RATE_LIMITED: &str = "sync.rate-limited";
@@ -347,6 +348,7 @@ fn error_code(error: &SyncError) -> &'static str {
     match error {
         SyncError::Local(_) => error_codes::UNKNOWN,
         SyncError::Transport { .. } => codes::UNREACHABLE,
+        SyncError::UpdateRequired { .. } => codes::UPDATE_REQUIRED,
         SyncError::Server {
             code: ErrorCode::Unauthorized,
             ..
@@ -450,6 +452,7 @@ enum StopWire {
     PushRefused { code: ErrorCode },
     LowDisk { needed: u64, free: u64 },
     Unreachable,
+    UpdateRequired,
     Error { message: String },
 }
 
@@ -464,6 +467,7 @@ impl From<Stop> for StopWire {
             Stop::PushRefused(code) => StopWire::PushRefused { code },
             Stop::LowDisk { needed, free } => StopWire::LowDisk { needed, free },
             Stop::Unreachable => StopWire::Unreachable,
+            Stop::UpdateRequired => StopWire::UpdateRequired,
             Stop::Error(message) => StopWire::Error { message },
         }
     }
@@ -588,6 +592,7 @@ mod tests {
                 json!({ "reason": "lowDisk", "needed": 900, "free": 100 }),
             ),
             (Stop::Unreachable, json!({ "reason": "unreachable" })),
+            (Stop::UpdateRequired, json!({ "reason": "updateRequired" })),
             (
                 Stop::Error("the sync server answered 500".to_string()),
                 json!({ "reason": "error", "message": "the sync server answered 500" }),
@@ -646,6 +651,13 @@ mod tests {
                     message: "refused".to_string(),
                 },
                 "sync.unreachable",
+            ),
+            (
+                SyncError::UpdateRequired {
+                    status: 409,
+                    message: "unknown variant `brand_new`".to_string(),
+                },
+                "sync.update-required",
             ),
             (server(ErrorCode::Unauthorized), "sync.unauthorized"),
             (server(ErrorCode::PairingFailed), "sync.pairing-failed"),

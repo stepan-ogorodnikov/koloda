@@ -47,8 +47,8 @@ A delete that fails then emits `Event::Error` and the call succeeds; a re-attach
   nonce and token; only `pairing_failed` drops it.
 - `src/runner.rs` — the background runner: triggers, coalescing, the poll and how long it waits while the events
   socket is open, backoff, events, and tick budgets.
-  A file in no space, holding an authoritative restore, or unknown to the server waits for a trigger: no poll, no
-  backoff, and no `Error` event.
+  A file in no space, holding an authoritative restore, unknown to the server, or meeting a newer server waits for a
+  trigger: no poll, no backoff, and no `Error` event.
   A push waiting on server time cuts the idle sleep short: the runner wakes when the wait ends, not at the next poll.
   So does a transfer that waits, unless a metered pause or a paused bootstrap holds transfers back.
 - `src/events.rs` — the events socket while the runner runs: the session it listens with, reconnects, and nudges
@@ -72,8 +72,8 @@ A delete that fails then emits `Event::Error` and the call succeeds; a re-attach
   images the server lacks, retries and waits, early stops, and the event
   that tells the host which images arrived.
   A transfer the server fails on, or an upload a proxy refuses, waits out its backoff while the others go on.
-- `src/client.rs` — CBOR and zstd bodies, the reply envelope, the skew estimate, retries, the server URL rule, and the
-  epoch and the schemas this app writes, both of which every device call names.
+- `src/client.rs` — CBOR and zstd bodies, the reply envelope and a sync reply this app cannot read, the skew estimate,
+  retries, the server URL rule, and the epoch and the schemas this app writes, both of which every device call names.
 - `src/transport.rs` — `Transport`, one request and its raw reply, and the events socket; `HttpTransport` sends both
   with reqwest.
 - `src/error.rs` — `SyncError`.

@@ -13,6 +13,12 @@ pub enum SyncError {
         status: Option<u16>,
         message: String,
     },
+    /// The server answered with a sync reply this app cannot read, which only a newer server sends: a code, outcome, or
+    /// key this app lacks (`PROTOCOL.md` §Bodies). The same call gets the same reply until the app is updated.
+    UpdateRequired {
+        status: u16,
+        message: String,
+    },
     /// The server answered with an error reply.
     Server {
         status: u16,
@@ -77,8 +83,9 @@ pub enum SyncError {
 }
 
 impl SyncError {
-    /// The file cannot sync until the user or the host acts: it is in no space, holds an authoritative restore, or
-    /// the server no longer knows its device. Its status says so, and every such act fires a trigger.
+    /// The file cannot sync until the user or the host acts: it is in no space, holds an authoritative restore, the
+    /// server no longer knows its device, or the server is newer than this app. Its status says so, and every such act
+    /// fires a trigger.
     pub(crate) fn is_waiting(&self) -> bool {
         matches!(
             self,
@@ -88,6 +95,7 @@ impl SyncError {
                 | SyncError::PairAgain
                 | SyncError::RestoreHeld
                 | SyncError::UnknownDevice
+                | SyncError::UpdateRequired { .. }
         )
     }
 }
@@ -102,6 +110,12 @@ impl fmt::Display for SyncError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             SyncError::Transport { message, .. } => write!(f, "no reply from the sync server: {message}"),
+            SyncError::UpdateRequired { status, message } => {
+                write!(
+                    f,
+                    "the sync server answered {status} with a reply this app cannot read: {message}"
+                )
+            }
             SyncError::Server { status, code, message } => {
                 write!(f, "the sync server answered {status} {code:?}: {message}")
             }

@@ -130,6 +130,7 @@ export const ERROR_MESSAGES = {
   "secret-store": msg`secret-store`,
   "windows-credentials": msg`windows-credentials`,
   "sync.unreachable": msg`sync.unreachable`,
+  "sync.update-required": msg`sync.update-required`,
   "sync.unauthorized": msg`sync.unauthorized`,
   "sync.pairing-failed": msg`sync.pairing-failed`,
   "sync.rate-limited": msg`sync.rate-limited`,

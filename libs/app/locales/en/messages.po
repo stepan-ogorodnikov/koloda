@@ -377,69 +377,73 @@ msgstr "Toggle language"
 msgid "settings.hotkeys.ui.toggle-sidebar-controls"
 msgstr "Toggle sidebar"
 
-#: ../../libs/app/src/lib/error.ts:137
+#: ../../libs/app/src/lib/error.ts:138
 msgid "sync.already-enrolled"
 msgstr "This device already syncs with a space"
 
-#: ../../libs/app/src/lib/error.ts:143
+#: ../../libs/app/src/lib/error.ts:144
 msgid "sync.attached-elsewhere"
 msgstr "This device is in another space. Leave it before joining this one"
 
-#: ../../libs/app/src/lib/error.ts:144
+#: ../../libs/app/src/lib/error.ts:145
 msgid "sync.cannot-join"
 msgstr "This device can't join that space"
 
-#: ../../libs/app/src/lib/error.ts:142
+#: ../../libs/app/src/lib/error.ts:143
 msgid "sync.clock-skew"
 msgstr "This device's clock is more than 5 minutes off the sync server's"
 
-#: ../../libs/app/src/lib/error.ts:139
+#: ../../libs/app/src/lib/error.ts:140
 msgid "sync.detached"
 msgstr "This device is no longer in the space"
 
-#: ../../libs/app/src/lib/error.ts:147
+#: ../../libs/app/src/lib/error.ts:148
 msgid "sync.failed"
 msgstr "Sync failed"
 
-#: ../../libs/app/src/lib/error.ts:145
+#: ../../libs/app/src/lib/error.ts:146
 msgid "sync.insecure-server-url"
 msgstr "Use an https address, or http only for a server on this computer"
 
-#: ../../libs/app/src/lib/error.ts:146
+#: ../../libs/app/src/lib/error.ts:147
 msgid "sync.low-disk"
 msgstr "Not enough free disk space to download the space"
 
-#: ../../libs/app/src/lib/error.ts:138
+#: ../../libs/app/src/lib/error.ts:139
 msgid "sync.not-enrolled"
 msgstr "This device doesn't sync with a space"
 
-#: ../../libs/app/src/lib/error.ts:140
+#: ../../libs/app/src/lib/error.ts:141
 msgid "sync.pair-again"
 msgstr "The sync server no longer knows this device. Join the space again with a new pairing code"
 
-#: ../../libs/app/src/lib/error.ts:134
+#: ../../libs/app/src/lib/error.ts:135
 msgid "sync.pairing-failed"
 msgstr "The pairing code is wrong, expired, or already used"
 
-#: ../../libs/app/src/lib/error.ts:135
+#: ../../libs/app/src/lib/error.ts:136
 msgid "sync.rate-limited"
 msgstr "Too many attempts. Wait a minute and try again"
 
-#: ../../libs/app/src/lib/error.ts:141
+#: ../../libs/app/src/lib/error.ts:142
 msgid "sync.restore-held"
 msgstr "The sync server was restored from a backup. Confirm the restore to keep syncing"
 
-#: ../../libs/app/src/lib/error.ts:136
+#: ../../libs/app/src/lib/error.ts:137
 msgid "sync.server"
 msgstr "The sync server reported an error"
 
-#: ../../libs/app/src/lib/error.ts:133
+#: ../../libs/app/src/lib/error.ts:134
 msgid "sync.unauthorized"
 msgstr "The sync server didn't accept the token"
 
 #: ../../libs/app/src/lib/error.ts:132
 msgid "sync.unreachable"
 msgstr "Couldn't reach the sync server"
+
+#: ../../libs/app/src/lib/error.ts:133
+msgid "sync.update-required"
+msgstr "The sync server is newer than this version of the app. Update the app, then try again"
 
 #: ../../libs/app/src/lib/error.ts:10
 msgid "unknown"

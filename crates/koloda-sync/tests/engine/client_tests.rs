@@ -4,7 +4,7 @@ use std::collections::BTreeMap;
 
 use koloda_sync_proto::transport::{Meta, PairingPreview, Reply};
 
-use crate::common::{system_ms, Fault, TestServer, SERVER_URL};
+use crate::common::{newer_server_reply, system_ms, Fault, TestServer, SERVER_URL};
 
 /// The first try and 3 retries.
 const ATTEMPTS: usize = 4;
@@ -63,6 +63,34 @@ fn a_reply_that_is_not_a_sync_reply_is_a_transport_failure() {
         "it is retried like a lost reply, then given up"
     );
     assert!(device.state().is_none(), "the file is not enrolled");
+}
+
+#[test]
+fn a_sync_reply_this_app_cannot_read_needs_an_app_update() {
+    let server = TestServer::new();
+    let device = server.device();
+    let text = |value: &str| ciborium::Value::Text(value.to_string());
+    let error = ciborium::Value::Map(vec![
+        (text("code"), text("brand_new")),
+        (text("message"), text("a code a newer server added")),
+    ]);
+    device
+        .transport
+        .fault(Fault::Reply(newer_server_reply(409, "error", error)));
+
+    let result = device
+        .engine
+        .create_space(SERVER_URL, &server.setup_token, "Study", "Laptop");
+
+    assert!(
+        matches!(result, Err(SyncError::UpdateRequired { status: 409, .. })),
+        "{result:?}"
+    );
+    assert_eq!(
+        device.transport.sent().len(),
+        1,
+        "the same reply would come back, so it is not retried"
+    );
 }
 
 #[test]

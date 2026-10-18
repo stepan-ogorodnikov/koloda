@@ -48,6 +48,9 @@ A device reaches its sync server over https.
 Plain http is accepted only for a server on the same computer, such as a local proxy in front of the real server.
 Any other address is refused before anything is sent.
 
+A server newer than this version of the app may answer in a way the app cannot read.
+Then every call to it fails and says to update the app, and sync stops until the app is updated (§When Sync Stops).
+
 ## Creating a Space
 
 The user creates a space from Settings → Sync, on a device that has never been in a space.
@@ -227,6 +230,8 @@ Unless a reason below needs the user, sync retries on its own.
   free.
 - The server refused this device's changes: the message shows the server's reason code.
 - The server cannot be reached, or does not answer: the message says so.
+- The server is newer than this version of the app: nothing syncs until the app is updated, and the message says so.
+  Changes made meanwhile wait, and upload once the app is updated.
 - Anything else: the message says an error stopped sync.
   On Settings → Sync, its details say what failed.
 
