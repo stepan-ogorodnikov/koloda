@@ -1,6 +1,6 @@
 # Sync protocol audit follow-ups
 
-Status: draft
+Status: ready
 Guides: agents/IMPLEMENTATION-PLAN.md, agents/TASKS.md, crates/koloda-sync-proto/PROTOCOL.md, crates/koloda-sync-proto/README.md, crates/koloda/src/repo/sync/README.md, agents/RUST.md, agents/TESTING.md, agents/CODE-DOCUMENTATION.md, agents/BACKWARDS-COMPATIBILITY.md, agents/MARKDOWN.md, agents/VERIFY.md, agents/REVIEW.md
 Flow: local
 
@@ -158,14 +158,15 @@ Out:
 
 ## Open questions
 
-- [ ] 1. Flow? — proposed `local`, the default.
+- [x] 1. Flow? — `local` (human, 2026-10-18).
 - [x] 2. Finding 16: should an unknown error code or outcome read as "update required", or may a server add one only
   once every device's app knows it? — read as update required (human, 2026-10-18).
   The engine stops with an update-required state the screens show.
   It crosses the engine, the desktop addon, the TS screens, i18n, and `SYNC.md`, so it is the task
   `sync-unknown-codes`.
   How the app tells such a reply is that task's Open questions 2.
-- [ ] 3. How strict is payload decode (finding 5)? — proposed: one encoding, as the header and frame have.
+- [x] 3. How strict is payload decode (finding 5)? — one encoding, as the header and frame have; as proposed (human,
+  2026-10-18).
   `Payload::decode` re-encodes what it decoded and refuses bytes that differ, as `check_canonical` does for the header
   and frame.
   That one check covers a missing optional key, an explicit `null` successor, reordered keys, a longer integer form,
