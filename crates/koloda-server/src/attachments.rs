@@ -92,7 +92,10 @@ pub(crate) async fn list_missing(
     respond(server, headers, move |server, scope, headers| {
         let caller = auth::require_device(server, scope, headers, &space)?;
         let params = query(params)?;
-        let limit = params.limit.unwrap_or(MAX_MISSING_IDS).clamp(1, MAX_MISSING_IDS);
+        let limit = params.limit.unwrap_or(MAX_MISSING_IDS);
+        if limit == 0 || limit > MAX_MISSING_IDS {
+            return Err(ApiError::bad_request(format!("limit must be 1 to {MAX_MISSING_IDS}")));
+        }
         let space = server.space(caller.space)?.ok_or_else(ApiError::unknown_space)?;
         let ids = lock(&space.reader)?
             .prepare(

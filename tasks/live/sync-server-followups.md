@@ -260,7 +260,7 @@ Out:
   Commit: Remove staged uploads that never landed
   Depends on: none
 
-- [ ] 5. Name the count caps under too_large and refuse a missing-ids limit out of range
+- [x] 5. Name the count caps under too_large and refuse a missing-ids limit out of range
   Goal (finding 4; per question 3):
   - `PROTOCOL.md` §Errors: `too_large` is a body past its size or expansion cap, or a list past its count cap.
     The count caps are a push's 5,000 items and a probe's 1,000 ids.

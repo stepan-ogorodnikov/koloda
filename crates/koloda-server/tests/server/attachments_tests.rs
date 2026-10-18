@@ -508,6 +508,32 @@ async fn the_missing_list_names_linked_ids_without_bytes_in_id_order() {
 }
 
 #[tokio::test]
+async fn the_missing_list_takes_a_limit_of_1_to_1000() {
+    let harness = Harness::new();
+    let home = harness.create_space("Home").await;
+    let call = |limit: u32| {
+        harness
+            .get(format!(
+                "/v1/spaces/{}/attachments/missing?limit={limit}",
+                uuid(home.space_id)
+            ))
+            .token(&home.token)
+            .send::<MissingAttachments>()
+    };
+
+    for limit in [1, 1_000] {
+        assert_eq!(call(limit).await.ok().ids, Vec::<String>::new(), "{limit}");
+    }
+    for limit in [0, 1_001] {
+        assert_eq!(
+            call(limit).await.error(),
+            (StatusCode::BAD_REQUEST, ErrorCode::BadRequest),
+            "{limit}"
+        );
+    }
+}
+
+#[tokio::test]
 async fn an_upload_that_fails_to_land_leaves_no_staged_file() {
     let harness = Harness::new();
     let home = harness.create_space("Home").await;

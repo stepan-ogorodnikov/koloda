@@ -955,7 +955,7 @@ Names are 1 to 100 characters after trimming.
 | `GET /v1/spaces/{space}/receipts?sender&after&through` | `through - after` at most 5000 | `receipts`, each `sender_seq`, `digest`, `outcome` |
 | `PUT /v1/spaces/{space}/attachments/{id}` | `mime`, optional `width` and `height`, `bytes` | empty |
 | `GET /v1/spaces/{space}/attachments/{id}` | none | `mime`, optional `width` and `height`, `bytes` |
-| `GET /v1/spaces/{space}/attachments/missing?after&limit` | `after` an id, optional; `limit` at most 1000, the default | `ids`, in id order |
+| `GET /v1/spaces/{space}/attachments/missing?after&limit` | `after` an id, optional; `limit` 1 to 1000, 1000 by default | `ids`, in id order |
 
 Creating a space also enrolls its creator, so the first device needs no pairing code.
 The same `nonce` and `token` return the same result for 10 minutes.
@@ -1023,7 +1023,7 @@ A socket that delivers nothing for 75 seconds counts as closed, and losing the s
 | `cursor_too_old` | 409 | A push from a device that must re-bootstrap first, or a pull from below a GC horizon (§Devices, §Pull cursor) |
 | `epoch_changed` | 409 | A device call that names an epoch other than the space's (§Server restore) |
 | `lease_expired` | 410 | A bootstrap lease that expired, was released, or belongs to another device (§Bootstrap) |
-| `too_large` | 413 | A body past its size or expansion cap |
+| `too_large` | 413 | A body past its size or expansion cap, or a push of more than 5000 items or a probe of more than 1000 ids |
 | `insufficient_storage` | 507 | A push below the disk reserve, or a bootstrap or upload while the space is over its quota (§Quotas) |
 | `rate_limited` | 429 | Too many wrong pairing codes (§Pairing), or too many open bootstrap leases (§Bootstrap) |
 | `internal` | 500 | A server fault |
