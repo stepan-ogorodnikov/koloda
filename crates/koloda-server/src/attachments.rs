@@ -74,6 +74,13 @@ pub(crate) async fn get(
     .await
 }
 
+// INVARIANT: a page searches `attachment_refs_attachment` from the id after which it starts, so later pages do not read
+// every ref before them. The first page binds `''`, which sorts below every id.
+pub(crate) const MISSING_PAGE: &str = "SELECT DISTINCT r.attachment FROM attachment_refs r
+     WHERE r.attachment > ?1 AND NOT EXISTS (SELECT 1 FROM attachments a WHERE a.id = r.attachment)
+     ORDER BY r.attachment
+     LIMIT ?2";
+
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(crate) struct MissingQuery {
@@ -97,17 +104,10 @@ pub(crate) async fn list_missing(
             return Err(ApiError::bad_request(format!("limit must be 1 to {MAX_MISSING_IDS}")));
         }
         let space = server.space(caller.space)?.ok_or_else(ApiError::unknown_space)?;
+        let after = params.after.as_deref().unwrap_or("");
         let ids = lock(&space.reader)?
-            .prepare(
-                r#"
-                SELECT DISTINCT r.attachment FROM attachment_refs r
-                WHERE (?1 IS NULL OR r.attachment > ?1)
-                  AND NOT EXISTS (SELECT 1 FROM attachments a WHERE a.id = r.attachment)
-                ORDER BY r.attachment
-                LIMIT ?2
-                "#,
-            )?
-            .query_map(params![params.after, i64::try_from(limit).unwrap_or(i64::MAX)], |row| {
+            .prepare(MISSING_PAGE)?
+            .query_map(params![after, i64::try_from(limit).unwrap_or(i64::MAX)], |row| {
                 row.get(0)
             })?
             .collect::<Result<Vec<String>, _>>()?;

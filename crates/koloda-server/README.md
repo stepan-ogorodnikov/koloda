@@ -173,8 +173,8 @@ Triggers keep its live entities per kind and the bytes of its versions, which th
 
 - `src/db_tests.rs` — a writer's transaction holds the write lock from its start; a unit test, because the openers
   are private to the crate.
-- `src/heads_index_tests.rs` — the query plans of the reads of `heads` the space indexes serve, which must search
-  one; a unit test, because the statements are private to the crate.
+- `src/heads_index_tests.rs` — the query plans of the reads of `heads` the space indexes serve, and of the missing-ids
+  page, which must search one; a unit test, because the statements are private to the crate.
 - `tests/server/` — one test binary; `common.rs` drives the router in-process on a manual clock, and sends each
   device call with its space's current epoch and this crate's schemas unless a test names others.
 - `Dockerfile` — the server image; `deploy/compose.example.yaml` — the image behind Caddy.

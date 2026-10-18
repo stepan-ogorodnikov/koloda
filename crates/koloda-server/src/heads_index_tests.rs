@@ -1,4 +1,5 @@
-//! Every join of `versions` to `heads`, and every read of one lane's heads, searches an index of a migrated space.
+//! Every join of `versions` to `heads`, every read of one lane's heads, and the missing-ids page search an index of a
+//! migrated space.
 //!
 //! WHY: these run on every pull page or under the space writer lock, where a scan of `heads` costs seconds on a large
 //! space and no test of a few hundred rows notices. The server never runs `ANALYZE`, so the plan does not depend on
@@ -6,7 +7,7 @@
 
 use rusqlite::Connection;
 
-use crate::{bootstrap, db, drop_envelope, log, pull};
+use crate::{attachments, bootstrap, db, drop_envelope, log, pull};
 
 /// The steps of the statement's plan that read `heads`, as SQLite describes them.
 fn heads_steps(conn: &Connection, statement: &str) -> Vec<String> {
@@ -52,4 +53,22 @@ fn heads_reads_search_an_index() {
             .collect();
         assert!(scans.is_empty(), "{name} scans heads: {scans:?}");
     }
+}
+
+#[test]
+fn the_missing_list_searches_from_its_last_id() {
+    let dir = tempfile::tempdir().unwrap();
+    let conn = db::open_space(&dir.path().join("space.db")).unwrap();
+    let mut plan = conn
+        .prepare(&format!("EXPLAIN QUERY PLAN {}", attachments::MISSING_PAGE))
+        .unwrap();
+    let mut rows = plan.raw_query();
+    let mut steps = Vec::new();
+    while let Some(row) = rows.next().unwrap() {
+        steps.push(row.get::<_, String>(3).unwrap());
+    }
+    assert!(
+        steps.contains(&"SEARCH r USING COVERING INDEX attachment_refs_attachment (attachment>?)".to_string()),
+        "{steps:?}"
+    );
 }

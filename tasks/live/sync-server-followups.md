@@ -275,7 +275,7 @@ Out:
   Commit: Name the count caps under too_large and refuse a missing-ids limit out of range
   Depends on: none
 
-- [ ] 6. Seek the missing-ids list from its last id
+- [x] 6. Seek the missing-ids list from its last id
   Goal (finding 13):
   - The list's statement (`attachments.rs:89-97`) becomes a `pub(crate) const`.
     It filters `r.attachment > ?1` and binds `''` when `after` is absent, so each page searches the index from its
@@ -289,6 +289,8 @@ Out:
   - The existing missing-ids tests pass unchanged.
   - `cargo test -p koloda-server` passes, and `bun run check:push` is green.
   Manual verify: none — a query plan; nothing a device sees changes.
+  Notes: the plan test sits in `heads_index_tests.rs`, whose module doc now names the missing-ids page.
+  Against the old filter the plan read `SCAN r USING COVERING INDEX attachment_refs_attachment`.
   Commit: Seek the missing-ids list from its last id
   Depends on: 5
 
