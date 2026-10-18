@@ -308,3 +308,25 @@ async fn a_socket_that_sends_data_is_closed() {
 
     assert_eq!(next_nudge(&mut socket).await, None);
 }
+
+#[tokio::test(start_paused = true)]
+async fn a_socket_that_answers_no_ping_closes_after_60_silent_seconds() {
+    let harness = Harness::new();
+    let home = harness.create_space("Home").await;
+    let address = listen(&harness).await;
+    let mut socket = connect(address, &home).await;
+    assert!(next_nudge(&mut socket).await.is_some(), "the heads come first");
+
+    // WHY: the client queues its pong when it reads a ping and sends it only on its next read, so reading the ping at
+    // 59 s and nothing after leaves the server unanswered since the socket opened.
+    tokio::time::sleep(Duration::from_secs(59)).await;
+    assert!(
+        matches!(socket.next().await, Some(Ok(Message::Ping(_)))),
+        "the server pinged at 30 s instead of closing"
+    );
+    tokio::time::sleep(Duration::from_secs(2)).await;
+    assert!(
+        matches!(socket.next().await, Some(Ok(Message::Close(_)) | Err(_)) | None),
+        "the server closed at 60 s"
+    );
+}

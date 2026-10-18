@@ -314,7 +314,7 @@ Out:
   Commit: Reuse the delete cascade's prepared statements
   Depends on: none
 
-- [ ] 8. Test the staleness and collection windows at their limits, and the silent socket's close
+- [x] 8. Test the staleness and collection windows at their limits, and the silent socket's close
   Goal (findings 10 and 11):
   - `stale_tests.rs`: a device idle exactly 90 days is not stale, and one 1 ms past is.
     A forked-from record idle exactly 24 hours is not stale, and 1 ms past is.
@@ -331,6 +331,9 @@ Out:
     and `SILENT_FOR` raised.
   - `cargo test -p koloda-server` passes, and `bun run check:push` is green.
   Manual verify: none — tests only.
+  Notes: paused time needs tokio's `test-util`, which the server's dev-dependencies now enable.
+  The client reads the 30 s ping at 59 s and nothing after, since its pong goes out only on its next read.
+  The socket test passed 30 runs in a row; each case failed with its rule changed, and with `>` in the silence check.
   Commit: Test the staleness and collection windows at their limits, and the silent socket's close
   Depends on: none
 

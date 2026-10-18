@@ -67,18 +67,18 @@ async fn a_device_unseen_for_90_days_must_re_bootstrap_before_it_pushes() {
     let harness = Harness::new();
     let (home, phone) = space_with_deck(&harness).await;
 
-    harness.clock.advance(89 * DAY_MS);
+    harness.clock.advance(90 * DAY_MS);
     assert_eq!(
         push_title(&harness, &phone, 1, 1).await,
         None,
-        "89 days idle is not stale"
+        "exactly 90 days idle is not stale"
     );
 
-    harness.clock.advance(91 * DAY_MS);
+    harness.clock.advance(90 * DAY_MS + 1);
     assert_eq!(
         push_title(&harness, &phone, 2, 2).await,
         Some(ErrorCode::CursorTooOld),
-        "91 days idle is stale"
+        "90 days and 1 ms idle is stale"
     );
     let flagged = record(&harness, &home, &phone).await;
     assert!(
@@ -164,18 +164,18 @@ async fn a_record_another_was_forked_from_goes_stale_after_a_day() {
         .await
         .ok();
 
-    harness.clock.advance(23 * HOUR_MS);
+    harness.clock.advance(24 * HOUR_MS);
     assert_eq!(
         push_title(&harness, &phone, 1, 1).await,
         None,
-        "23 hours idle is not stale yet"
+        "exactly 24 hours idle is not stale yet"
     );
 
-    harness.clock.advance(25 * HOUR_MS);
+    harness.clock.advance(24 * HOUR_MS + 1);
     assert_eq!(
         push_title(&harness, &phone, 2, 2).await,
         Some(ErrorCode::CursorTooOld),
-        "a forked-from record is stale after 25 hours idle"
+        "a forked-from record is stale 24 hours and 1 ms idle"
     );
     assert_eq!(
         push_title(&harness, &tablet, 1, 3).await,

@@ -389,21 +389,21 @@ async fn an_attachment_unlinked_for_more_than_90_days_is_collected() {
     let (kept, kept_body) = image(20, 10);
     let (collected, collected_body) = image(21, 10);
     put(&harness, &home, &collected, &collected_body).await.ok();
-    harness.clock.advance(2 * DAY_MS);
+    harness.clock.advance(1);
     put(&harness, &home, &kept, &kept_body).await.ok();
 
-    harness.clock.advance(89 * DAY_MS);
+    harness.clock.advance(90 * DAY_MS);
     collect(&harness);
 
     assert_eq!(
         get(&harness, &home, &kept).await.ok(),
         kept_body,
-        "unlinked for 89 days"
+        "unlinked for exactly 90 days"
     );
     assert_eq!(
         get(&harness, &home, &collected).await.error(),
         (StatusCode::NOT_FOUND, ErrorCode::NotFound),
-        "unlinked for 91 days"
+        "unlinked for 90 days and 1 ms"
     );
     assert_eq!(files(&harness, &home), vec![kept]);
 }

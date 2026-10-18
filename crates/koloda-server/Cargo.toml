@@ -42,5 +42,7 @@ rustix = { version = "1", features = ["fs"] }
 futures-util = "0.3"
 rcgen = "0.14"
 tempfile = "3"
+# The events tests pause tokio time to reach the socket's 60 s silence without waiting for it.
+tokio = { version = "1", features = ["test-util"] }
 tokio-tungstenite = "0.29"
 tower = { version = "0.5", features = ["util"] }
