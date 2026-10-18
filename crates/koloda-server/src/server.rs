@@ -6,7 +6,7 @@ use std::sync::{Arc, Mutex, MutexGuard};
 
 use koloda_sync_proto::payload::SCHEMA;
 use koloda_sync_proto::registry::Kind;
-use koloda_sync_proto::transport::{decode_schemas, Heads};
+use koloda_sync_proto::transport::{decode_schemas, Nudge};
 use rusqlite::{params, Connection};
 use tokio::sync::watch;
 use uuid::Uuid;
@@ -38,8 +38,9 @@ pub struct Server {
 pub(crate) struct SpaceDb {
     pub(crate) writer: Mutex<Connection>,
     pub(crate) reader: Mutex<Connection>,
-    /// The lane heads as of the last push this process committed; the events socket sends each change.
-    pub(crate) heads: watch::Sender<Heads>,
+    /// The lane heads as of the last push this process committed, and the images it stored; the events socket sends
+    /// each change.
+    pub(crate) nudge: watch::Sender<Nudge>,
 }
 
 impl Server {
@@ -222,20 +223,30 @@ impl SpaceDb {
         Ok(SpaceDb {
             writer: Mutex::new(writer),
             reader: Mutex::new(db::open_reader(path)?),
-            heads: watch::Sender::new(Heads { head_hot, head_cold }),
+            nudge: watch::Sender::new(Nudge {
+                head_hot,
+                head_cold,
+                uploads: 0,
+            }),
         })
     }
 
     /// Publishes the lane heads after a commit, on the connection that made it; an unchanged pair wakes no socket.
     pub(crate) fn publish_heads(&self, conn: &Connection) -> Result<(), ApiError> {
         let (head_hot, head_cold) = log::lane_heads(conn)?;
-        let heads = Heads { head_hot, head_cold };
-        self.heads.send_if_modified(|current| {
-            let is_moved = *current != heads;
-            *current = heads;
+        self.nudge.send_if_modified(|nudge| {
+            let is_moved = (nudge.head_hot, nudge.head_cold) != (head_hot, head_cold);
+            nudge.head_hot = head_hot;
+            nudge.head_cold = head_cold;
             is_moved
         });
         Ok(())
+    }
+
+    /// Counts an image stored after its commit, so the fetches that wait for it on every device run at once.
+    pub(crate) fn publish_upload(&self) {
+        self.nudge
+            .send_modify(|nudge| nudge.uploads = nudge.uploads.wrapping_add(1));
     }
 }
 

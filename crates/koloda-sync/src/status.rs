@@ -98,6 +98,8 @@ pub(crate) struct RunState {
     pub(crate) heads: Option<(u64, u64)>,
     /// The highest heads nudged during the running cycle, checked once it ends.
     pub(crate) nudged: Option<(u64, u64)>,
+    /// An upload nudged during the running cycle, so the fetches that wait are released once it ends.
+    pub(crate) is_upload_nudged: bool,
     pub(crate) hold: Option<Hold>,
     pub(crate) is_over_quota: bool,
     /// Server time, in unix milliseconds, that the outbox's highest stamp waits for (`Shared::wait_for_server_time`).

@@ -969,8 +969,11 @@ An endpoint that returns nothing answers `ok` with an empty map.
 `GET /v1/spaces/{space}/events` upgrades to a WebSocket that carries only nudges.
 The upgrade is a device call: its token, `koloda-epoch`, and `koloda-schemas` are checked as for any other.
 A refusal is an ordinary reply, and a request that is not an upgrade is `bad_request`.
-Once upgraded, the server sends the lane heads as a binary frame holding the CBOR map `{ head_hot, head_cold }`.
-It sends them again whenever a push moves either head, to every socket of the space, the pusher's included.
+Once upgraded, the server sends a binary frame holding the CBOR map `{ head_hot, head_cold, uploads }`.
+`uploads` counts the images the server process stored for the space since it started; it is not persisted.
+The server sends the frame again to every socket of the space, the sender's included, whenever a push moves either
+head or an upload stores a new image.
+A repeated upload of a stored id sends nothing.
 `drop-envelope` runs beside the server and moves heads without a nudge.
 Each device has at most one socket: a new one closes the device's older one, and revoking a device closes its socket.
 The server pings every 30 seconds and closes a socket that has answered nothing for 60 seconds.
@@ -983,6 +986,10 @@ A bounded tick opens none either, so a device that only ticks syncs by polling.
 Heads past the last ones a reply reported start a cycle (§Cycle).
 A nudge during a cycle waits for it to end: the cycle's own push moves the heads too.
 The heads its last reply reports tell whether another device moved them as well.
+An `uploads` that differs from the previous frame's on the same socket releases the fetches that wait (§Download).
+The socket's first frame only sets the base, since the count starts over when the server restarts.
+The release waits for a running cycle to end too, so it also reaches a fetch that cycle answered `404` just before
+the upload landed.
 A refused upgrade starts one cycle, which applies a restore or detaches as for any other call.
 The device reconnects after a close or an error, waiting 1 second and doubling up to 60.
 The wait goes back to 1 second only after a socket that delivered a frame past its first, a ping or a nudge.
@@ -1737,6 +1744,8 @@ The client verifies the hash and validates the bytes as a local add would, befor
 Bytes that fail either check are not stored, and the fetch drops.
 `404 not_found` means no device has uploaded the bytes yet: the fetch waits 1 minute, doubling up to 6 hours, and
 tries again.
+A stored upload releases every fetch that waits, on every device in the space (§Events).
+Each runs at once with its backoff reset, as a first attempt, and one whose image is still missing waits again.
 Resumable transfers (`Range`, `Content-Range`) may come back if larger media arrive.
 
 After a server restore, the backup may hold a card whose image was uploaded after the backup was taken.

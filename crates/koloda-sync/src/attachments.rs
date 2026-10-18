@@ -9,7 +9,7 @@ use koloda::app::utility::get_current_timestamp;
 use koloda::domain::attachments::AddAttachmentData;
 use koloda::repo::sync::attachments::{
     defer_for_room, defer_transfer, due_transfers, finish_attachment_check, finish_transfer, next_transfer_due,
-    queue_missing_uploads, store_fetched, upload_source, Direction, Transfer,
+    queue_missing_uploads, release_waiting_fetches, store_fetched, upload_source, Direction, Transfer,
 };
 use koloda::repo::sync::sync_state;
 use koloda_sync_proto::transport::{AttachmentBody, Empty, ErrorCode, MissingAttachments, MAX_MISSING_IDS};
@@ -126,6 +126,17 @@ impl Shared {
         };
         let now = get_current_timestamp()?;
         Ok(Some(Duration::from_millis(u64::try_from(due_at - now).unwrap_or(0))))
+    }
+
+    /// Makes every fetch that waits due at once, after a device stored an image, and starts a cycle for them
+    /// (`PROTOCOL.md` §Download).
+    pub(crate) async fn release_fetches(self: &Arc<Self>) {
+        // WHY: with none released, as on the device that uploaded, a cycle would have nothing to fetch. A queue that
+        // cannot be written leaves the fetches to their waits, which still wake the runner.
+        let released = self.blocking(|shared| release_waiting_fetches(&shared.db)).await;
+        if released.is_ok_and(|released| released > 0) {
+            self.triggers.fire(false);
+        }
     }
 
     /// Sends one queued image and returns the bytes it moved.

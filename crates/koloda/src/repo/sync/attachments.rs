@@ -257,6 +257,25 @@ pub fn release_deferred_uploads(db: &Database) -> Result<(), AppError> {
     })
 }
 
+/// Makes every fetch that waits due at once, with its backoff reset, after a device stored an image; returns how many.
+///
+/// WHY: the nudge does not say which image went up, so every waiting fetch tries once more. Each runs as a first
+/// attempt, so it skips the check that a card still links it, and one whose card went meanwhile costs one download that
+/// the startup sweep removes, as a first attempt's does.
+pub fn release_waiting_fetches(db: &Database) -> Result<usize, AppError> {
+    throw_known_error(error_codes::DB_UPDATE, || {
+        db.with_conn(|conn| {
+            Ok(conn.execute(
+                r#"
+                UPDATE sync_attachment_queue SET attempts = 0, next_attempt_at = 0
+                WHERE direction = 'fetch' AND attempts > 0
+                "#,
+                [],
+            )?)
+        })
+    })
+}
+
 /// Queued uploads and fetches, for the host's status.
 pub fn transfer_counts(db: &Database) -> Result<(usize, usize), AppError> {
     throw_known_error(error_codes::DB_GET, || {

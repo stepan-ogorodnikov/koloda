@@ -5,9 +5,9 @@ use ciborium::Value;
 use koloda_sync_proto::registry::Kind;
 use koloda_sync_proto::transport::{
     check_token, code_hash, decode_schemas, encode_schemas, AttachmentBody, ClaimPairing, CreateSpace, Cutoff,
-    DependencyAction, DeviceInfo, DeviceMeta, Empty, Enrollment, ErrorBody, ErrorCode, Heads, HeldReason, IssuePairing,
-    KnownId, KnownState, LogEntry, Meta, Outcome, Platform, PullPage, Push, PushItem, PushOutcome, Reply, Restore,
-    RestoreMode, Snapshot, SnapshotPage,
+    DependencyAction, DeviceInfo, DeviceMeta, Empty, Enrollment, ErrorBody, ErrorCode, HeldReason, IssuePairing,
+    KnownId, KnownState, LogEntry, Meta, Nudge, Outcome, Platform, PullPage, Push, PushItem, PushOutcome, Reply,
+    Restore, RestoreMode, Snapshot, SnapshotPage,
 };
 use serde::Serialize;
 
@@ -316,12 +316,13 @@ fn bodies_keep_their_wire_keys() {
             vec!["entries", "scanned_through", "has_more"],
         ),
         (
-            "heads",
-            cbor(&Heads {
+            "nudge",
+            cbor(&Nudge {
                 head_hot: 1,
                 head_cold: 2,
+                uploads: 3,
             }),
-            vec!["head_hot", "head_cold"],
+            vec!["head_hot", "head_cold", "uploads"],
         ),
         (
             "snapshot",

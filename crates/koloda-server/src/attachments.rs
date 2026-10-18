@@ -181,6 +181,7 @@ fn store(server: &Server, space_id: Uuid, id: &str, attachment: &AttachmentBody)
         ],
     )?;
     tx.commit()?;
+    space.publish_upload();
     Ok(())
 }
 

@@ -1,12 +1,12 @@
 //! The events socket: while the runner runs, one socket per enrolled file, whose nudges start a cycle when another
-//! device moved the lane heads (`crates/koloda-sync-proto/PROTOCOL.md` §Events, §Cycle).
+//! device moved the lane heads, and release the fetches that wait when a device stored an image
+//! (`crates/koloda-sync-proto/PROTOCOL.md` §Events, §Cycle, §Download).
 
 use std::sync::atomic::Ordering;
 use std::sync::Arc;
 use std::time::Duration;
 
 use koloda::repo::sync::sync_state;
-use koloda_sync_proto::transport::Heads;
 use tokio::sync::watch;
 
 use crate::engine::{Session, Shared};
@@ -107,6 +107,9 @@ impl Shared {
         // WHY: the server sends the heads as every socket's first frame, so only a later one, a ping every 30 seconds
         // or a nudge, shows that the socket lasted.
         let mut frames = 0;
+        // WHY: the server counts the images it stored since it started, so only a change on this socket says one went
+        // up; the socket's first frame sets the base.
+        let mut uploads = None;
         let listened = loop {
             let silence = timer.sleep(SILENT_FOR);
             tokio::select! {
@@ -115,9 +118,14 @@ impl Shared {
                         frames += 1;
                     }
                     match delivery {
-                        Some(Delivery::Heads(heads)) => {
+                        Some(Delivery::Nudge(nudge)) => {
+                            let is_uploaded = uploads.is_some_and(|seen| seen != nudge.uploads);
+                            uploads = Some(nudge.uploads);
                             // WHY: a run state that cannot be read costs at most one more cycle.
-                            if self.note_nudge(heads).unwrap_or(true) {
+                            if is_uploaded && self.note_upload().unwrap_or(true) {
+                                self.release_fetches().await;
+                            }
+                            if self.note_nudge(nudge).unwrap_or(true) {
                                 self.triggers.fire(false);
                             }
                         }
@@ -172,6 +180,6 @@ impl Shared {
 }
 
 /// Whether `heads` are past the last heads a reply reported, or no reply reported any yet.
-pub(crate) fn is_past(heads: Heads, seen: Option<(u64, u64)>) -> bool {
-    seen.is_none_or(|(hot, cold)| heads.head_hot > hot || heads.head_cold > cold)
+pub(crate) fn is_past((head_hot, head_cold): (u64, u64), seen: Option<(u64, u64)>) -> bool {
+    seen.is_none_or(|(hot, cold)| head_hot > hot || head_cold > cold)
 }

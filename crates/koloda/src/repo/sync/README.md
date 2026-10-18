@@ -58,6 +58,8 @@ remote apply queues a fetch for each linked id the file lacks.
   An upload `defer_transfer` deferred after a server fault keeps its backoff (`is_waiting_for_room`).
 - `next_transfer_due` gives the engine's runner the time to wake for the earliest wait, leaving out uploads that
   wait for room.
+- `release_waiting_fetches` makes every fetch that waits due at once, with its backoff reset, when the events
+  socket reports an upload; uploads keep their own waits.
 
 **Re-stamp** — `restamp_local_cohorts` walks the `local` cohorts in one transaction, one new stamp per cohort.
 

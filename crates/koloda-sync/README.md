@@ -53,6 +53,7 @@ A delete that fails then emits `Event::Error` and the call succeeds; a re-attach
   So does a transfer that waits, unless a metered pause or a paused bootstrap holds transfers back.
 - `src/events.rs` — the events socket while the runner runs: the session it listens with, reconnects, and nudges
   that start a cycle, held back while one runs.
+  A change in a nudge's upload count releases the fetches that wait, also held back while a cycle runs.
 - `src/status.rs` — the state the host shows, why the last cycle stopped (an authoritative restore waiting for the
   host among the reasons), the lane held at an envelope this app cannot read, whether the space is over its quota,
   whether bulk transfers wait on a metered network, when a push waiting for server time resumes, and how far behind

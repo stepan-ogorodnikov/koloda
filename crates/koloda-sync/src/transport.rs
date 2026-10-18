@@ -6,7 +6,7 @@ use std::pin::Pin;
 use std::time::Duration;
 
 use futures_util::StreamExt;
-use koloda_sync_proto::transport::{Heads, EPOCH_HEADER, MAX_BODY_BYTES, SCHEMAS_HEADER};
+use koloda_sync_proto::transport::{Nudge, EPOCH_HEADER, MAX_BODY_BYTES, SCHEMAS_HEADER};
 use reqwest::header::{
     ACCEPT_ENCODING, CONNECTION, CONTENT_ENCODING, CONTENT_TYPE, SEC_WEBSOCKET_ACCEPT, SEC_WEBSOCKET_KEY,
     SEC_WEBSOCKET_VERSION, UPGRADE,
@@ -86,14 +86,14 @@ pub enum Opened {
 /// What the events socket delivered.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Delivery {
-    Heads(Heads),
-    /// A frame with no heads, such as the server's ping: the connection is alive.
+    Nudge(Nudge),
+    /// A control frame, such as the server's ping: the connection is alive.
     Alive,
 }
 
 pub type Delivering<'a> = Pin<Box<dyn Future<Output = Option<Delivery>> + Send + 'a>>;
 
-/// An open events socket; `next` is `None` once it closed or sent anything but heads and control frames.
+/// An open events socket; `next` is `None` once it closed or sent anything but nudges and control frames.
 pub trait Events: Send {
     fn next(&mut self) -> Delivering<'_>;
 }
@@ -115,7 +115,7 @@ impl<S: AsyncRead + AsyncWrite + Unpin + Send> Events for WebSocketEvents<S> {
     fn next(&mut self) -> Delivering<'_> {
         Box::pin(async move {
             match self.0.next().await? {
-                Ok(Message::Binary(bytes)) => ciborium::from_reader(bytes.as_ref()).ok().map(Delivery::Heads),
+                Ok(Message::Binary(bytes)) => ciborium::from_reader(bytes.as_ref()).ok().map(Delivery::Nudge),
                 Ok(Message::Ping(_) | Message::Pong(_)) => Some(Delivery::Alive),
                 Ok(_) | Err(_) => None,
             }

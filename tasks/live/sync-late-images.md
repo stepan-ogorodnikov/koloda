@@ -167,7 +167,7 @@ Written for the answers to Open questions 1 to 3.
   otherwise start cycles that move nothing, back to back.
   An engine test pins each, and fails without its guard, checked once by hand.
 
-- [ ] 4. Nudge the space's devices when an image is uploaded
+- [x] 4. Nudge the space's devices when an image is uploaded
   Goal (Open questions, 1):
   - `koloda-sync-proto`: the events frame is `{ head_hot, head_cold, uploads }`; `PROTOCOL.md` §Events says when the
     server sends it and what `uploads` counts.
@@ -189,6 +189,14 @@ Written for the answers to Open questions 1 to 3.
   Manual verify: none — the e2e case covers the path; this one needs a late upload.
   Commit: Nudge the space's devices when an image is uploaded
   Depends on: 3
+  Notes:
+  - The proto type `Heads` is renamed `Nudge`, since the frame now carries more than heads.
+  - A device fires the trigger only when the release freed a fetch; the uploader, which waits for none, runs no
+    extra cycle for its own upload.
+  - The release waits for a running cycle to end, as heads do, so it reaches a fetch that cycle answered `404` just
+    before the upload landed; deferring it then would leave the fetch to its one-minute wait.
+    No test forces that order: the harness has no hook between a fetch's `404` and its deferral.
+  - `koloda` gains `release_waiting_fetches`, pinned by an integration test beside `release_deferred_uploads`'s.
 
 ## Outcome
 

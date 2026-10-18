@@ -285,6 +285,40 @@ fn a_fetch_waiting_for_an_upload_wakes_the_runner_when_its_wait_ends() {
     assert_eq!(b.image(&images[0]), a.image(&images[0]));
 }
 
+#[test]
+fn a_fetch_waiting_for_an_upload_runs_once_another_device_uploads_it() {
+    let space = Space::new();
+    let a = &space.device;
+    let images = card_with_images(a, 1, 2_000).images;
+    a.transport.fault_when(
+        Method::Put,
+        ATTACHMENTS,
+        Fault::Reply(error_reply(500, ErrorCode::Internal)),
+    );
+    a.engine.sync_now().expect("A's upload waits out its backoff");
+    let b = space.server.join(a);
+    b.transport.serve_events();
+    let timer = ManualTimer::default();
+    let (sink, events) = channel_sink();
+    b.engine
+        .start_runner(sink, Arc::new(timer.clone()))
+        .expect("the runner starts");
+    timer.wait_for_sleep(SILENT_FOR);
+    let waiting = b.queued();
+
+    a.execute("UPDATE sync_attachment_queue SET next_attempt_at = 0");
+    a.engine.sync_now().expect("A uploads the image");
+    let fetched = wait_for(&events, |event| matches!(event, Event::AttachmentsFetched { .. }));
+
+    assert_eq!(waiting, (0, 1), "B's first fetch was answered `404` and waits");
+    assert_eq!(
+        fetched,
+        Event::AttachmentsFetched { ids: images.clone() },
+        "the upload's nudge released the fetch, with no time passing"
+    );
+    assert_eq!(b.image(&images[0]), a.image(&images[0]));
+}
+
 /// A device that joined and bootstrapped, whose fetches of the card's images got no reply, so they are still due.
 fn due_fetches(space: &Space, count: u64) -> Device {
     card_with_images(&space.device, count, 8_000);

@@ -18,7 +18,7 @@ use koloda::repo::sync::{
     enroll_device, enrolled_device, store_enrolling, stored_enrolling, sync_state, DetachReason, Enrolling, SpaceRole,
 };
 use koloda_sync_proto::registry::{Kind, Lane};
-use koloda_sync_proto::transport::{CreateSpace, Enrollment, ErrorCode, Heads, Platform};
+use koloda_sync_proto::transport::{CreateSpace, Enrollment, ErrorCode, Nudge, Platform};
 use tokio::runtime::Runtime;
 use tokio::sync::watch;
 use uuid::Uuid;
@@ -359,26 +359,28 @@ impl Shared {
         let result = self.settle_device(synced).await;
 
         *self.lock(&self.spending)? = None;
-        let mut run = self.lock(&self.run_state)?;
-        run.is_syncing = false;
-        if run
-            .nudged
-            .take()
-            .is_some_and(|(head_hot, head_cold)| is_past(Heads { head_hot, head_cold }, run.heads))
-        {
-            self.triggers.fire(false);
-        }
-        match &result {
-            Ok(_) => {
-                run.stop = None;
-                run.last_success_ms = get_current_timestamp().ok();
+        let is_upload_nudged = {
+            let mut run = self.lock(&self.run_state)?;
+            run.is_syncing = false;
+            if run.nudged.take().is_some_and(|nudged| is_past(nudged, run.heads)) {
+                self.triggers.fire(false);
             }
-            // WHY: a spent budget is the host's limit, not a fault; the next tick picks up from the cursors.
-            Err(SyncError::BudgetSpent) => {}
-            // WHY: a held bootstrap is waiting, not stopped; the status shows the hold beside the bootstrap state.
-            // A bootstrap paused on a metered network shows its pause the same way.
-            Err(SyncError::Held(_) | SyncError::Metered { .. }) => run.stop = None,
-            Err(error) => run.stop = Some(Stop::of(error)),
+            match &result {
+                Ok(_) => {
+                    run.stop = None;
+                    run.last_success_ms = get_current_timestamp().ok();
+                }
+                // WHY: a spent budget is the host's limit, not a fault; the next tick picks up from the cursors.
+                Err(SyncError::BudgetSpent) => {}
+                // WHY: a held bootstrap is waiting, not stopped; the status shows the hold beside the bootstrap state.
+                // A bootstrap paused on a metered network shows its pause the same way.
+                Err(SyncError::Held(_) | SyncError::Metered { .. }) => run.stop = None,
+                Err(error) => run.stop = Some(Stop::of(error)),
+            }
+            std::mem::take(&mut run.is_upload_nudged)
+        };
+        if is_upload_nudged {
+            self.release_fetches().await;
         }
         result
     }
@@ -468,14 +470,25 @@ impl Shared {
     ///
     /// INVARIANT: a nudge during a cycle waits for it to end. The cycle's own push moves the heads too, and only the
     /// heads its last reply reports tell whether another device moved them as well.
-    pub(crate) fn note_nudge(&self, heads: Heads) -> Result<bool, SyncError> {
+    pub(crate) fn note_nudge(&self, nudge: Nudge) -> Result<bool, SyncError> {
         let mut run = self.lock(&self.run_state)?;
         if !run.is_syncing {
-            return Ok(is_past(heads, run.heads));
+            return Ok(is_past((nudge.head_hot, nudge.head_cold), run.heads));
         }
         let (hot, cold) = run.nudged.unwrap_or_default();
-        run.nudged = Some((hot.max(heads.head_hot), cold.max(heads.head_cold)));
+        run.nudged = Some((hot.max(nudge.head_hot), cold.max(nudge.head_cold)));
         Ok(false)
+    }
+
+    /// Whether an upload nudge releases the fetches that wait now.
+    ///
+    /// INVARIANT: an upload nudge during a cycle waits for it to end, as heads do. A fetch the cycle saw answered `404`
+    /// just before the upload landed is deferred after the nudge arrives, and only a release once the cycle ends
+    /// reaches it.
+    pub(crate) fn note_upload(&self) -> Result<bool, SyncError> {
+        let mut run = self.lock(&self.run_state)?;
+        run.is_upload_nudged |= run.is_syncing;
+        Ok(!run.is_syncing)
     }
 
     pub(crate) fn note_quota(&self, is_over_quota: bool) -> Result<(), SyncError> {

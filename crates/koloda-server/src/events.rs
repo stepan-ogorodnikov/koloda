@@ -1,5 +1,6 @@
-//! The events socket: a WebSocket that sends a space's lane heads when a device connects and whenever a push moves
-//! them, so devices sync without waiting for a poll (`PROTOCOL.md` §Events). One socket per device.
+//! The events socket: a WebSocket that sends a space's lane heads and upload count when a device connects, and again
+//! whenever a push moves the heads or an image is stored, so devices sync without waiting for a poll
+//! (`PROTOCOL.md` §Events). One socket per device.
 
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -11,7 +12,7 @@ use axum::extract::ws::{close_code, CloseFrame, Message, WebSocket, WebSocketUpg
 use axum::extract::{Path, State};
 use axum::http::HeaderMap;
 use axum::response::{IntoResponse, Response};
-use koloda_sync_proto::transport::Heads;
+use koloda_sync_proto::transport::Nudge;
 use tokio::sync::{oneshot, watch};
 use tokio::time::Instant;
 use uuid::Uuid;
@@ -69,8 +70,8 @@ impl Drop for Registration {
 }
 
 struct Listening {
-    first: Heads,
-    heads: watch::Receiver<Heads>,
+    first: Nudge,
+    nudges: watch::Receiver<Nudge>,
     closed: oneshot::Receiver<()>,
     registration: Registration,
 }
@@ -113,12 +114,17 @@ fn listen(server: &Arc<Server>, space: Uuid, device: Uuid) -> Result<Listening, 
     let db = server.space(space)?.ok_or_else(ApiError::unknown_space)?;
     // INVARIANT: the device subscribes before the heads are read, so a push that commits between the two is sent
     // rather than lost.
-    let heads = db.heads.subscribe();
+    let nudges = db.nudge.subscribe();
     let (head_hot, head_cold) = log::lane_heads(&*lock(&db.reader)?)?;
+    let uploads = nudges.borrow().uploads;
     let (generation, closed) = server.sockets()?.open(device);
     Ok(Listening {
-        first: Heads { head_hot, head_cold },
-        heads,
+        first: Nudge {
+            head_hot,
+            head_cold,
+            uploads,
+        },
+        nudges,
         closed,
         registration: Registration {
             server: Arc::clone(server),
@@ -131,7 +137,7 @@ fn listen(server: &Arc<Server>, space: Uuid, device: Uuid) -> Result<Listening, 
 async fn serve(mut socket: WebSocket, listening: Listening) {
     let Listening {
         first,
-        mut heads,
+        mut nudges,
         mut closed,
         registration: _registration,
     } = listening;
@@ -143,11 +149,11 @@ async fn serve(mut socket: WebSocket, listening: Listening) {
     loop {
         tokio::select! {
             _ = &mut closed => break,
-            changed = heads.changed() => {
+            changed = nudges.changed() => {
                 if changed.is_err() {
                     break;
                 }
-                let latest = *heads.borrow_and_update();
+                let latest = *nudges.borrow_and_update();
                 if send(&mut socket, latest).await.is_err() {
                     return;
                 }
@@ -173,9 +179,9 @@ async fn serve(mut socket: WebSocket, listening: Listening) {
     close(socket, close_code::NORMAL, "").await;
 }
 
-async fn send(socket: &mut WebSocket, heads: Heads) -> Result<(), axum::Error> {
+async fn send(socket: &mut WebSocket, nudge: Nudge) -> Result<(), axum::Error> {
     let mut bytes = Vec::new();
-    ciborium::into_writer(&heads, &mut bytes).map_err(axum::Error::new)?;
+    ciborium::into_writer(&nudge, &mut bytes).map_err(axum::Error::new)?;
     socket.send(Message::Binary(bytes.into())).await
 }
 

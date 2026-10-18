@@ -5,7 +5,7 @@ use koloda::repo::attachments::{add_attachment, get_attachment, get_attachment_b
 use koloda::repo::cards::delete_card;
 use koloda::repo::sync::attachments::{
     defer_for_room, defer_transfer, due_transfers, finish_transfer, next_transfer_due, queue_missing_uploads,
-    release_deferred_uploads, store_fetched, upload_source, Direction, Transfer,
+    release_deferred_uploads, release_waiting_fetches, store_fetched, upload_source, Direction, Transfer,
 };
 use koloda::repo::sync::outbox::{push_batch, settle_push};
 use koloda_sync_proto::payload::{CardContent, CardCreate, CardScheduling, InitialProductTs, Payload};
@@ -253,6 +253,40 @@ fn an_upload_waiting_for_room_goes_at_once_with_a_fresh_backoff_once_released() 
         due_transfers(&db, at + MINUTE_MS, 10)
             .unwrap()
             .contains(&upload(&waiting)),
+        "its next wait starts again from one minute"
+    );
+}
+
+#[test]
+fn released_fetches_go_at_once_with_a_fresh_backoff_and_uploads_keep_theirs() {
+    let db = test_db();
+    let fixture = enrolled_deck(&db);
+    let faulted = add_attachment(&db, png(20)).unwrap().id;
+    let (waiting, first_try) = (id_of(&png(21)), id_of(&png(22)));
+    queue_missing_uploads(&db, std::slice::from_ref(&faulted)).unwrap();
+    pull_card(&db, &fixture, CARD, &[&waiting, &first_try]);
+    let at = 1_000_000;
+    for _ in 0..3 {
+        defer_transfer(&db, &fetch(&waiting), at).unwrap();
+    }
+    defer_transfer(&db, &upload(&faulted), at).unwrap();
+
+    let released = release_waiting_fetches(&db).unwrap();
+
+    assert_eq!(
+        released, 1,
+        "only the fetch that waits; the one not tried yet is due already"
+    );
+    let mut due = due_transfers(&db, at, 10).unwrap();
+    due.sort_by(|left, right| left.id.cmp(&right.id));
+    let mut expected = vec![fetch(&waiting), fetch(&first_try)];
+    expected.sort_by(|left, right| left.id.cmp(&right.id));
+    assert_eq!(due, expected, "the upload the server failed on keeps its backoff");
+    defer_transfer(&db, &fetch(&waiting), at).unwrap();
+    assert!(
+        due_transfers(&db, at + MINUTE_MS, 10)
+            .unwrap()
+            .contains(&fetch(&waiting)),
         "its next wait starts again from one minute"
     );
 }
