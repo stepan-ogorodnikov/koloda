@@ -125,6 +125,9 @@ No image is published to a registry.
 | `generations/<id>/attachments/<space>/<attachment>` | One attachment's bytes, named by their SHA-256 |
 | `lock` | Held by `serve` for its whole run |
 
+An upload stages its bytes as `.<attachment>.<uuid>.tmp` beside the stored files and renames them into place.
+A failed upload removes its staged file, and `serve` removes any left by a stop when it starts.
+
 A space database indexes `heads` by `(lane, seq)`, for every read that joins a version to its head.
 It indexes them by `(lane, grp, seq)` too, for a lease's live heads of one lane and a collection pass's tombstones.
 Triggers keep its live entities per kind and the bytes of its versions, which the pairing preview reads.

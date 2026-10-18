@@ -357,6 +357,9 @@ fn serve(
 ) -> Result<(), String> {
     let _lock = DataDirLock::acquire(&data_dir).map_err(|error| error.to_string())?;
     let server = Server::open_with(&data_dir, Arc::new(SystemClock), storage).map_err(|error| error.to_string())?;
+    if let Err(error) = server.remove_staged_uploads() {
+        eprintln!("koloda-server: cannot remove the staged files of uploads that never landed: {error}");
+    }
     let runtime = tokio::runtime::Runtime::new().map_err(|error| error.to_string())?;
     runtime.block_on(async move {
         let listener = tokio::net::TcpListener::bind(listen)

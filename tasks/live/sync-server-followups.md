@@ -236,7 +236,7 @@ Out:
   Commit: Open the server's write transactions at once
   Depends on: none
 
-- [ ] 4. Remove staged uploads that never landed
+- [x] 4. Remove staged uploads that never landed
   Goal (finding 7):
   - `store` (`attachments.rs:153-170`) removes its staged file when the write, the rename, or anything between them
     fails, as it already does when the room check refuses.
@@ -253,6 +253,10 @@ Out:
   - If no test can make the staged write fail, the item notes say so and why.
   - `cargo test -p koloda-server` passes, and `bun run check:push` is green.
   Manual verify: none — a failed disk write or a kill mid-upload; the test arranges the leftover.
+  Notes: a test can make the landing fail after all: a directory where the bytes belong fails their rename, and
+  `an_upload_that_fails_to_land_leaves_no_staged_file` finds only that directory left.
+  `store` stages the bytes, `land` renames and records them, and `store` removes the staged file whatever `land` did.
+  Both new tests failed against the old code.
   Commit: Remove staged uploads that never landed
   Depends on: none
 

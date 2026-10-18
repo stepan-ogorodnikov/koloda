@@ -1,6 +1,7 @@
 //! Shared state behind every handler: the active generation's `server.db`, open space databases, and the clock.
 
 use std::collections::HashMap;
+use std::io;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex, MutexGuard};
 
@@ -164,6 +165,14 @@ impl Server {
             )));
         }
         self.set_write_schema(space, kind, schema)
+    }
+
+    /// Removes the staged files of uploads that a failure or a stop left before they landed.
+    ///
+    /// INVARIANT: only `serve` calls it, before it listens. A CLI command runs beside a serving process, whose upload
+    /// may be staging.
+    pub fn remove_staged_uploads(&self) -> io::Result<()> {
+        attachments::remove_staged(&self.generation.join(ATTACHMENTS))
     }
 
     /// Runs one collection pass over every space: tombstones every active device has passed, then attachments no

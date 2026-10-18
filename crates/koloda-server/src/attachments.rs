@@ -28,9 +28,12 @@ use uuid::Uuid;
 use crate::auth;
 use crate::http::{query, respond, respond_with_body, ApiError};
 use crate::quota::Room;
-use crate::server::{lock, Server};
+use crate::server::{lock, Server, SpaceDb};
 
 const ID_LEN: usize = 64;
+// INVARIANT: a staged upload is `.<id>.<uuid>.tmp` beside the stored files, which are named by their hex id alone.
+const STAGED_PREFIX: char = '.';
+const STAGED_SUFFIX: &str = ".tmp";
 // WHY: the stale-device window. An offline device's pending edit that links an image again still finds it.
 const COLLECT_AFTER_MS: u64 = 90 * 24 * 60 * 60 * 1000;
 
@@ -144,35 +147,55 @@ fn store(server: &Server, space_id: Uuid, id: &str, attachment: &AttachmentBody)
         return Ok(());
     }
     let quota = server.quota(space_id)?;
-    let no_room = || {
-        ApiError::new(
-            StatusCode::INSUFFICIENT_STORAGE,
-            ErrorCode::InsufficientStorage,
-            "this space is over its quota or the server is low on disk",
-        )
-    };
     // WHY: checked before staging too, so a space already over costs no write.
     if server.room(&*lock(&space.reader)?, quota)? != Room::Free {
         return Err(no_room());
     }
     let dir = server.attachments_dir(space_id);
     fs::create_dir_all(&dir).map_err(io_error)?;
-    let staged = dir.join(format!(".{id}.{}.tmp", Uuid::new_v4()));
-    write_synced(&staged, &attachment.bytes).map_err(io_error)?;
+    let staged = dir.join(format!("{STAGED_PREFIX}{id}.{}{STAGED_SUFFIX}", Uuid::new_v4()));
+    let landed = write_synced(&staged, &attachment.bytes)
+        .map_err(io_error)
+        .and_then(|()| land(server, &space, quota, &dir, &staged, id, attachment));
+    // INVARIANT: an upload that did not land leaves no staged file, and one that landed renamed it away, which reads
+    // as `NotFound`. A failed upload answers with its own error; a staged file that cannot be removed now goes when
+    // `serve` next starts (`remove_staged`).
+    match (landed, fs::remove_file(&staged)) {
+        (Ok(()), Err(error)) if error.kind() != io::ErrorKind::NotFound => Err(io_error(error)),
+        (landed, _) => landed,
+    }
+}
 
+fn no_room() -> ApiError {
+    ApiError::new(
+        StatusCode::INSUFFICIENT_STORAGE,
+        ErrorCode::InsufficientStorage,
+        "this space is over its quota or the server is low on disk",
+    )
+}
+
+/// Renames the staged bytes into place and records them, unless another upload of the same id landed first.
+fn land(
+    server: &Server,
+    space: &SpaceDb,
+    quota: Option<u64>,
+    dir: &Path,
+    staged: &Path,
+    id: &str,
+    attachment: &AttachmentBody,
+) -> Result<(), ApiError> {
     let mut conn = lock(&space.writer)?;
     let tx = conn.transaction()?;
     if is_stored(&tx, id)? {
-        return fs::remove_file(&staged).map_err(io_error);
+        return Ok(());
     }
     // INVARIANT: the room is checked again under the writer lock, so a push that filled the space while the bytes
     // were staged cannot be overrun.
     if server.room(&tx, quota)? != Room::Free {
-        fs::remove_file(&staged).map_err(io_error)?;
         return Err(no_room());
     }
-    fs::rename(&staged, dir.join(id)).map_err(io_error)?;
-    File::open(&dir).and_then(|dir| dir.sync_all()).map_err(io_error)?;
+    fs::rename(staged, dir.join(id)).map_err(io_error)?;
+    File::open(dir).and_then(|dir| dir.sync_all()).map_err(io_error)?;
     tx.execute(
         "INSERT INTO attachments (id, mime, size, width, height, stored_at, unlinked_since)
          VALUES (?1, ?2, ?3, ?4, ?5, ?6, CASE WHEN EXISTS (SELECT 1 FROM attachment_refs WHERE attachment = ?1)
@@ -284,6 +307,32 @@ pub(crate) fn collect(server: &Server, space_id: Uuid) -> Result<(), ApiError> {
             Ok(()) => {}
             Err(error) if error.kind() == io::ErrorKind::NotFound => {}
             Err(error) => return Err(io_error(error)),
+        }
+    }
+    Ok(())
+}
+
+/// Removes the staged files of uploads that never landed, in every space's directory under `root`.
+pub(crate) fn remove_staged(root: &Path) -> io::Result<()> {
+    let spaces = match fs::read_dir(root) {
+        Ok(spaces) => spaces,
+        Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(()),
+        Err(error) => return Err(error),
+    };
+    for space in spaces {
+        let space = space?;
+        if !space.file_type()?.is_dir() {
+            continue;
+        }
+        for entry in fs::read_dir(space.path())? {
+            let entry = entry?;
+            let is_staged = entry
+                .file_name()
+                .to_str()
+                .is_some_and(|name| name.starts_with(STAGED_PREFIX) && name.ends_with(STAGED_SUFFIX));
+            if is_staged {
+                fs::remove_file(entry.path())?;
+            }
         }
     }
     Ok(())

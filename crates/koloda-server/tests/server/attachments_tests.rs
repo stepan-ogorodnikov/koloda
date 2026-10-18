@@ -506,3 +506,64 @@ async fn the_missing_list_names_linked_ids_without_bytes_in_id_order() {
         vec![absent[1].clone()]
     );
 }
+
+#[tokio::test]
+async fn an_upload_that_fails_to_land_leaves_no_staged_file() {
+    let harness = Harness::new();
+    let home = harness.create_space("Home").await;
+    let (id, body) = image(31, 10);
+    // A directory where the bytes belong makes their rename into place fail.
+    let dir = harness.generation_dir().join("attachments").join(uuid(home.space_id));
+    std::fs::create_dir_all(dir.join(&id).join("blocker")).expect("create a blocking directory");
+
+    let answer = put(&harness, &home, &id, &body).await;
+
+    assert_eq!(answer.error(), (StatusCode::INTERNAL_SERVER_ERROR, ErrorCode::Internal));
+    assert_eq!(files(&harness, &home), vec![id], "only the blocking directory is left");
+}
+
+#[cfg(unix)]
+#[tokio::test]
+async fn serve_removes_staged_uploads_before_it_listens() {
+    use std::io::BufRead;
+    use std::process::{Command, Stdio};
+
+    let harness = Harness::new();
+    let home = harness.create_space("Home").await;
+    let (stored, stored_body) = image(30, 10);
+    put(&harness, &home, &stored, &stored_body).await.ok();
+    // A kill mid-upload leaves the staged bytes beside the stored ones.
+    let dir = harness.generation_dir().join("attachments").join(uuid(home.space_id));
+    let staged = format!(".{stored}.{}.tmp", uuid([4; 16]));
+    std::fs::write(dir.join(&staged), b"half an image").expect("write a staged upload");
+    assert_eq!(files(&harness, &home).len(), 2);
+
+    let mut serve = Command::new(env!("CARGO_BIN_EXE_koloda-server"))
+        .arg("serve")
+        .arg("--data-dir")
+        .arg(harness.data_dir())
+        .args(["--insecure-http", "--listen", "127.0.0.1:0"])
+        // WHY: a `serve` left running must not hold the test binary's stdout, which `cargo test` reads to its end.
+        .stdout(Stdio::null())
+        .stderr(Stdio::piped())
+        .spawn()
+        .expect("the binary runs");
+    // WHY: held until `serve` exits, so a line it writes after the first never meets a closed pipe.
+    let mut stderr = std::io::BufReader::new(serve.stderr.take().expect("stderr is piped")).lines();
+    let listening = stderr
+        .by_ref()
+        .map(|line| line.expect("stderr reads"))
+        .find(|line| line.contains("listening on"));
+    assert!(listening.is_some(), "serve says it is listening");
+
+    // Stop `serve` before asserting, so a failure leaves no process behind.
+    let left = files(&harness, &home);
+    let sent = Command::new("kill")
+        .args(["-TERM", &serve.id().to_string()])
+        .status()
+        .expect("kill runs");
+    assert!(sent.success(), "the signal is sent");
+    assert!(serve.wait().expect("serve exits").success());
+
+    assert_eq!(left, vec![stored], "the staged file is gone and the stored one stays");
+}
