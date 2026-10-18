@@ -1,6 +1,6 @@
 # Sync server audit follow-ups
 
-Status: draft
+Status: ready
 Guides: agents/IMPLEMENTATION-PLAN.md, agents/TASKS.md, crates/koloda-server/README.md, crates/koloda-sync-proto/PROTOCOL.md, agents/TESTING.md, agents/CODE-DOCUMENTATION.md, agents/BACKWARDS-COMPATIBILITY.md, agents/MARKDOWN.md, agents/VERIFY.md, agents/REVIEW.md
 Flow: local
 
@@ -125,21 +125,24 @@ Out:
 
 ## Open questions
 
-- [ ] 1. Flow? — proposed `local`, the default.
-- [ ] 2. How does a token endpoint skip the body (finding 6)? — proposed: authenticate first, then read.
+- [x] 1. Flow? — `local` (human, 2026-10-18).
+- [x] 2. How does a token endpoint skip the body (finding 6)? — authenticate first, then read; as proposed (human,
+  2026-10-18).
   The handler runs the token check through `authorize` (`http.rs:202`) before it reads the body.
   The work under `respond` checks it again, since the reply meta needs that scope; the second check is one indexed
   read.
   Preview and claim read at most 16 KiB of body, before or after zstd, and answer `too_large` past it.
   Not proposed: a check of the header's shape alone, which any made-up token passes.
-- [ ] 3. Count caps (finding 4): `too_large` or `bad_request`? — proposed: keep `too_large`, and say so in §Errors.
+- [x] 3. Count caps (finding 4): `too_large` or `bad_request`? — keep `too_large`, and say so in §Errors; as proposed
+  (human, 2026-10-18).
   `413` is the specific code, and devices already receive it.
   The missing-ids list refuses a `limit` out of range as `bad_request`, as pull and bootstrap pages do.
   Not proposed: `bad_request` for the counts, which changes a code without a gain.
-- [ ] 4. Where does a pull page stop scanning (finding 9)? — proposed: after 50,000 examined rows.
+- [x] 4. Where does a pull page stop scanning (finding 9)? — after 50,000 examined rows; as proposed (human,
+  2026-10-18).
   At the audit's 0.8 µs a row that holds the reader about 40 ms, and 2M own entries take 40 pages.
   Own entries and others' count alike, so a page of 5,000 entries never meets it.
-- [ ] 5. Prepared statements or a set-based delete (finding 12)? — proposed: `prepare_cached`.
+- [x] 5. Prepared statements or a set-based delete (finding 12)? — `prepare_cached`; as proposed (human, 2026-10-18).
   It needs no SQL change.
   A set-based delete per card must collect the review ids first, since deleting `versions` changes what `LIVE_REVIEWS`
   then reads.
