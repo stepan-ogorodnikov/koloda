@@ -330,11 +330,10 @@ impl Shared {
     pub(crate) async fn run_cycle(self: &Arc<Self>, budget: Option<Budget>) -> (Vec<Kind>, Result<bool, SyncError>) {
         let _cycle = self.cycle.lock().await;
         let mut changed = Vec::new();
-        let result = self.recorded_cycle(budget, &mut changed).await;
+        let mut told = Vec::new();
+        let result = self.recorded_cycle(budget, &mut changed, &mut told).await;
         self.retarget().await;
-        if !changed.is_empty() {
-            self.emit(Event::Changed { kinds: changed.clone() });
-        }
+        self.tell_changed(&changed, &mut told);
         if let Err(error) = &result {
             // WHY: a spent budget and a metered pause are limits, not faults, and a waiting file's status already
             // says why it stopped; an error per trigger would repeat it.
@@ -350,12 +349,13 @@ impl Shared {
         self: &Arc<Self>,
         budget: Option<Budget>,
         changed: &mut Vec<Kind>,
+        told: &mut Vec<Kind>,
     ) -> Result<bool, SyncError> {
         *self.lock(&self.spending)? = budget.map(Spending::new);
         self.lock(&self.run_state)?.is_syncing = true;
         self.emit_status().await;
 
-        let synced = self.sync(changed).await;
+        let synced = self.sync(changed, told).await;
         let result = self.settle_device(synced).await;
 
         *self.lock(&self.spending)? = None;
@@ -383,8 +383,9 @@ impl Shared {
         result
     }
 
-    /// Runs the cycle, then the transfers; `Ok(false)` when the rounds ran out or transfers are still due.
-    async fn sync(self: &Arc<Self>, changed: &mut Vec<Kind>) -> Result<bool, SyncError> {
+    /// Runs the cycle, tells the host of the rows it changed, then runs the transfers; `Ok(false)` when the rounds ran
+    /// out or transfers are still due.
+    async fn sync(self: &Arc<Self>, changed: &mut Vec<Kind>, told: &mut Vec<Kind>) -> Result<bool, SyncError> {
         let mut session = self.session().await?;
         let mut result = self.cycle(&mut session, changed).await;
         // INVARIANT: a restore is applied before the file sends anything else on the new epoch; the cycle then starts
@@ -405,6 +406,9 @@ impl Shared {
         if matches!(result, Err(SyncError::ClockSkew { .. })) {
             self.blocking(|shared| pause_clock(&shared.db)).await?;
         }
+        // INVARIANT: rows reach the screens before images move, so a slow download holds back no card (SYNC.md,
+        // Status).
+        self.tell_changed(changed, told);
         // WHY: transfers carry no stamps, so they run while push and apply pause for the clock (PROTOCOL.md, Cycle).
         let result = match result {
             Ok(is_caught_up) => self.check_missing_attachments(&session).await.map(|()| is_caught_up),
@@ -422,6 +426,14 @@ impl Shared {
                 }
                 Ok(is_caught_up && !is_pending)
             }
+        }
+    }
+
+    fn tell_changed(&self, changed: &[Kind], told: &mut Vec<Kind>) {
+        let kinds: Vec<Kind> = changed.iter().filter(|kind| !told.contains(kind)).copied().collect();
+        if !kinds.is_empty() {
+            told.extend_from_slice(&kinds);
+            self.emit(Event::Changed { kinds });
         }
     }
 

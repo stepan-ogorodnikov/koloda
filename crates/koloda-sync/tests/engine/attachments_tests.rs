@@ -9,11 +9,12 @@ use koloda::repo::cards::update_card;
 use koloda_sync::pairing::ImportMode;
 use koloda_sync::runner::{Budget, Event};
 use koloda_sync::transport::Method;
+use koloda_sync_proto::registry::Kind;
 use koloda_sync_proto::transport::ErrorCode;
 
 use crate::common::{error_reply, proxy_page, Device, Fault, Space, TestServer, SERVER_URL};
 use crate::fixtures::{links, seed_data, seed_settings, Library, BACK, FRONT};
-use crate::runner_support::{channel_sink, wait_for, ManualTimer};
+use crate::runner_support::{channel_sink, wait_for, ManualTimer, POLL};
 
 const ATTACHMENTS: &str = "/attachments/";
 const DAY_MS: u64 = 24 * 60 * 60 * 1000;
@@ -71,6 +72,53 @@ fn an_image_inserted_on_one_device_arrives_on_another() {
     assert_eq!(b.image(&images[0]), a.image(&images[0]));
     assert_eq!(a.transfers(Method::Put), 1, "A uploads the image once");
     assert_eq!(a.queued(), (0, 0));
+}
+
+#[test]
+fn the_host_hears_of_a_synced_card_while_its_image_downloads() {
+    let space = Space::new();
+    let a = &space.device;
+    let images = card_with_images(a, 1, 2_000).images;
+    a.engine.sync_now().expect("A syncs");
+    let b = space.server.join(a);
+    let (reached, on_reached) = channel();
+    let (resume, on_resume) = channel::<()>();
+    let mut is_first = true;
+    b.transport.observe(move |request| {
+        if is_first && request.method == Method::Get && request.url.contains(ATTACHMENTS) {
+            is_first = false;
+            reached.send(()).expect("the test listens");
+            on_resume.recv().expect("the test resumes the fetch");
+        }
+    });
+    let (sink, events) = channel_sink();
+    let timer = ManualTimer::default();
+
+    b.engine
+        .start_runner(sink, Arc::new(timer.clone()))
+        .expect("the runner starts");
+    on_reached.recv().expect("B fetches the image");
+    let while_fetching: Vec<Event> = events.try_iter().collect();
+    resume.send(()).expect("the fetch resumes");
+    timer.wait_for_sleep(POLL);
+    let after_fetch: Vec<Event> = events.try_iter().collect();
+
+    let told_cards = |events: &[Event]| {
+        events
+            .iter()
+            .filter(|event| matches!(event, Event::Changed { kinds } if kinds.contains(&Kind::Cards)))
+            .count()
+    };
+    assert_eq!(
+        told_cards(&while_fetching),
+        1,
+        "the card reached the host before its image did"
+    );
+    assert!(
+        !after_fetch.iter().any(|event| matches!(event, Event::Changed { .. })),
+        "the cycle tells the host of each kind once: {after_fetch:?}"
+    );
+    assert_eq!(b.image(&images[0]), a.image(&images[0]));
 }
 
 #[test]

@@ -98,7 +98,7 @@ Out:
 
 Written for the answers to Open questions 1 to 3.
 
-- [ ] 1. Tell the screens about synced rows before images download
+- [x] 1. Tell the screens about synced rows before images download
   Goal:
   - `sync` (`crates/koloda-sync/src/engine.rs:386-425`) emits `Event::Changed` for the kinds the cycle changed once the
     rounds and any restore are done, before the missing-image check and the transfers.

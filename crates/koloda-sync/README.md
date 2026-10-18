@@ -27,6 +27,7 @@ A delete that fails then emits `Event::Error` and the call succeeds; a re-attach
 - `src/lib.rs` — crate root.
 - `src/engine.rs` — `Engine`: the runtime, host calls, space creation, the claim or creation kept pending until the
   file records it, the session a cycle uses, and running the cycle again on a restored epoch.
+  The host hears of the rows a cycle changed before its image transfers start, so a slow download holds back no card.
 - `src/cycle.rs` — the cycle: the Add an untouched seed's join left unfinished, the device record and the behind
   check, re-bootstrap when the server left the file behind, held writes and waiting uploads released once the space
   has room, push, `hot` to head, `cold` to the recorded head, a lane held at an envelope this app cannot read, the
