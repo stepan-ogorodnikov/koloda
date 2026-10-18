@@ -64,7 +64,7 @@ fn platforms_travel_as_their_wire_strings() {
 }
 
 #[test]
-fn replies_carry_meta_and_exactly_one_of_ok_and_error() {
+fn replies_encode_meta_with_ok_or_error() {
     let enrollment = Enrollment {
         space_id: [1; 16],
         device_id: [2; 16],
@@ -132,6 +132,36 @@ fn replies_carry_meta_and_exactly_one_of_ok_and_error() {
         field(field(&error, "error"), "code"),
         &Value::Text("unknown_space".to_string())
     );
+}
+
+#[test]
+fn error_codes_travel_as_their_wire_strings() {
+    // Wire contract pin: the codes of PROTOCOL.md §Errors, which the server and older apps must agree on.
+    let cases = [
+        (ErrorCode::BadRequest, "bad_request"),
+        (ErrorCode::TooLarge, "too_large"),
+        (ErrorCode::Unauthorized, "unauthorized"),
+        (ErrorCode::UnknownDevice, "unknown_device"),
+        (ErrorCode::Revoked, "revoked"),
+        (ErrorCode::UnknownSpace, "unknown_space"),
+        (ErrorCode::NotFound, "not_found"),
+        (ErrorCode::PairingFailed, "pairing_failed"),
+        (ErrorCode::RateLimited, "rate_limited"),
+        (ErrorCode::StampAhead, "stamp_ahead"),
+        (ErrorCode::SchemaReadOnly, "schema_read_only"),
+        (ErrorCode::CursorTooOld, "cursor_too_old"),
+        (ErrorCode::EpochChanged, "epoch_changed"),
+        (ErrorCode::LeaseExpired, "lease_expired"),
+        (ErrorCode::InsufficientStorage, "insufficient_storage"),
+        (ErrorCode::Internal, "internal"),
+    ];
+    for (code, wire) in cases {
+        assert_eq!(cbor(&code), Value::Text(wire.to_string()), "{code:?}");
+        let mut bytes = Vec::new();
+        ciborium::into_writer(&Value::Text(wire.to_string()), &mut bytes).expect("encode");
+        let decoded: ErrorCode = ciborium::from_reader(bytes.as_slice()).expect("decode");
+        assert_eq!(decoded, code, "{wire}");
+    }
 }
 
 #[test]

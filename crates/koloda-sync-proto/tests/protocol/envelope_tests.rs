@@ -178,6 +178,28 @@ fn decode_enforces_size_limits_at_the_limit_and_one_past() {
             max: 16_384,
         })
     );
+
+    // Wire contract pin: a whole envelope is at most a full header, a full payload, and 64 bytes of frame.
+    let past_envelope = vec![0; 16_384 + 524_288 + 65];
+    assert_eq!(
+        Envelope::decode(&past_envelope),
+        Err(EnvelopeError::TooLarge {
+            part: Part::Envelope,
+            len: 16_384 + 524_288 + 65,
+            max: 16_384 + 524_288 + 64,
+        })
+    );
+    let at_envelope = vec![0; 16_384 + 524_288 + 64];
+    assert!(
+        matches!(
+            Envelope::decode(&at_envelope),
+            Err(EnvelopeError::Malformed {
+                part: Part::Envelope,
+                ..
+            })
+        ),
+        "input at the envelope cap gets past the size check"
+    );
 }
 
 fn header_with_id_len(len: usize) -> Header {
@@ -491,8 +513,27 @@ fn a_key_this_app_does_not_know_is_named_as_a_newer_writers() {
 
 #[test]
 fn a_known_key_with_a_wrong_type_stays_malformed() {
-    // WHY: every header and `refs` key is present, so a name missing from the codec's lists would be reported as
-    // unknown here.
+    // WHY: every frame, header, and `refs` key is present, so a name missing from the codec's lists would be reported
+    // as unknown here.
+    let header = card_content().encode().expect("header encodes");
+    let frame = Value::Map(vec![
+        (Value::Text("header".to_string()), Value::Bytes(header)),
+        (Value::Text("payload".to_string()), Value::Text("not bytes".to_string())),
+    ]);
+    let mut frame_bytes = Vec::new();
+    ciborium::into_writer(&frame, &mut frame_bytes).expect("frame encodes");
+    assert!(
+        matches!(
+            Envelope::decode(&frame_bytes),
+            Err(EnvelopeError::Malformed {
+                part: Part::Envelope,
+                ..
+            })
+        ),
+        "{:?}",
+        Envelope::decode(&frame_bytes)
+    );
+
     let every_ref = Value::Map(vec![
         (
             Value::Text("algorithm_id".to_string()),

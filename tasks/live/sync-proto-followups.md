@@ -277,7 +277,7 @@ Out:
   Commit: Pin registry classes and sample coverage in the protocol tests
   Depends on: none
 
-- [ ] 5. Pin error codes, the envelope cap, and the frame keys in the protocol tests
+- [x] 5. Pin error codes, the envelope cap, and the frame keys in the protocol tests
   Goal (findings 12, 13, and 14):
   - A table test in `transport_tests.rs` pins all 16 `ErrorCode` variants against their wire strings, written as
     literals from §Errors, encoding and decoding each.
