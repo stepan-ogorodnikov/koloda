@@ -257,7 +257,7 @@ Out:
   Commit: Keep a capture's own cohort when it rewrites a group
   Depends on: none
 
-- [ ] 4. Pin registry classes and sample coverage in the protocol tests
+- [x] 4. Pin registry classes and sample coverage in the protocol tests
   Goal (findings 10 and 11):
   - A table test in `registry_tests.rs` pins each (kind, group)'s `class` and `contributes_updated_at`.
     The literals are copied from §Groups (Class column) and §`updated_at` (contributing groups), not read from

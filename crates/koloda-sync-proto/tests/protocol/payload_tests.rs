@@ -30,6 +30,25 @@ fn every_sample_round_trips_through_a_sealed_envelope() {
 }
 
 #[test]
+fn every_group_and_delete_has_a_sample() {
+    // WHY: each sample is a golden fixture (`fixtures_tests.rs`), so a group added without one has no pinned bytes.
+    let mut expected: Vec<String> = Kind::ALL
+        .into_iter()
+        .flat_map(|kind| {
+            let spec = kind.spec();
+            spec.groups
+                .iter()
+                .map(move |group| format!("{}.{}", kind.as_wire(), group.group.as_wire()))
+                .chain(spec.has_tombstones.then(|| format!("{}.delete", kind.as_wire())))
+        })
+        .collect();
+    let mut names: Vec<String> = samples().iter().map(|sample| sample.name.to_string()).collect();
+    expected.sort();
+    names.sort();
+    assert_eq!(names, expected);
+}
+
+#[test]
 fn a_payload_that_does_not_survive_the_round_trip_fails_the_seal() {
     let lossy = Payload::CardScheduling(CardScheduling {
         stability: f64::NAN,

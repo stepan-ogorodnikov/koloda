@@ -1,4 +1,4 @@
-use koloda_sync_proto::registry::{allow, check_lane, Group, Kind, Lane, Op, RegistryError};
+use koloda_sync_proto::registry::{allow, check_lane, Class, Group, Kind, Lane, Op, RegistryError};
 
 type HeaderCase = (
     &'static str,
@@ -124,4 +124,50 @@ fn only_reviews_travel_in_the_cold_lane() {
             "{kind:?} in {other:?}"
         );
     }
+}
+
+#[test]
+fn each_group_keeps_its_class_and_updated_at_contribution() {
+    // Wire contract pin: §Groups (Class column) and §`updated_at` (contributing groups), in registry order.
+    let expected = [
+        ("cards", "create", Class::Create, false),
+        ("cards", "content", Class::Update, true),
+        ("cards", "scheduling", Class::Update, false),
+        ("cards", "reset", Class::Update, false),
+        ("reviews", "row", Class::Immutable, false),
+        ("decks", "create", Class::Create, false),
+        ("decks", "title", Class::Update, true),
+        ("decks", "notes", Class::Update, true),
+        ("decks", "algorithm", Class::Update, true),
+        ("decks", "template", Class::Update, true),
+        ("templates", "create", Class::Create, false),
+        ("templates", "title", Class::Update, true),
+        ("templates", "notes", Class::Update, true),
+        ("templates", "structure", Class::Update, true),
+        ("algorithms", "create", Class::Create, false),
+        ("algorithms", "title", Class::Update, true),
+        ("algorithms", "notes", Class::Update, true),
+        ("algorithms", "content", Class::Update, true),
+        ("algorithm_revisions", "row", Class::Immutable, false),
+        ("settings.learning", "defaults.algorithm", Class::Update, false),
+        ("settings.learning", "defaults.template", Class::Update, false),
+        ("settings.learning", "dailyLimits", Class::Update, false),
+        ("settings.learning", "dayStartsAt", Class::Update, false),
+        ("settings.learning", "learnAheadLimit", Class::Update, false),
+    ];
+
+    let registry: Vec<_> = Kind::ALL
+        .into_iter()
+        .flat_map(|kind| {
+            kind.spec().groups.iter().map(move |spec| {
+                (
+                    kind.as_wire(),
+                    spec.group.as_wire(),
+                    spec.class,
+                    spec.contributes_updated_at,
+                )
+            })
+        })
+        .collect();
+    assert_eq!(registry, expected);
 }
