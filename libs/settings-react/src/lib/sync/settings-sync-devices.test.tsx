@@ -115,6 +115,9 @@ describe("SettingsSyncDevices", () => {
     };
     const detach = vi.fn(async () => left);
     const { queryClient } = renderDevices({ detachMutation: () => ({ mutationFn: detach }) });
+    // WHY: React Query tells the list of its load on a timer. Told after the leave, the list re-renders, which brings
+    // back the query the leave removed and loads the devices again.
+    await screen.findByText("laptop");
 
     await press("settings.sync.leave");
     expect(detach).not.toHaveBeenCalled();
