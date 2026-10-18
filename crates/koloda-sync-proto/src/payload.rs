@@ -410,17 +410,31 @@ impl Payload {
                 )))
             }
         };
+        check_successor(&payload)?;
+        // INVARIANT: one logical payload has one encoding, the one sealing writes (PROTOCOL.md, Payloads). Serde reads
+        // a missing optional key as null and keys in any order, and ciborium ignores trailing bytes, so only encoding
+        // the decoded payload again shows that the input was that encoding.
+        if payload.encode()? != bytes {
+            return Err(PayloadError::Envelope(EnvelopeError::NonCanonical {
+                reason: "the payload is not in its one encoding",
+            }));
+        }
         Ok(payload)
+    }
+}
+
+fn check_successor(payload: &Payload) -> Result<(), PayloadError> {
+    match payload {
+        Payload::Delete { kind, delete } if delete.successor.is_some() && *kind != Kind::Algorithms => {
+            Err(PayloadError::SuccessorNotAllowed { kind: *kind })
+        }
+        _ => Ok(()),
     }
 }
 
 pub fn seal(seal: Seal, payload: &Payload) -> Result<Sealed, PayloadError> {
     let (kind, group, op) = payload.target();
-    if let Payload::Delete { delete, .. } = payload {
-        if delete.successor.is_some() && kind != Kind::Algorithms {
-            return Err(PayloadError::SuccessorNotAllowed { kind });
-        }
-    }
+    check_successor(payload)?;
     let parent = match (payload.parent(), seal.parent) {
         (Some(own), Some(given)) if own != given => {
             return Err(PayloadError::ParentMismatch {

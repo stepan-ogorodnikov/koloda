@@ -157,6 +157,12 @@ A payload is a CBOR map whose shape the header's kind, group, and `schema` decid
 Every kind is at schema 1.
 Optional values are encoded as null, except a delete's `successor`, which is omitted when absent.
 Unknown keys are rejected.
+One logical payload has one encoding, the one sealing writes.
+A payload in any other encoding does not decode, and neither does a `successor` on a delete that is not an
+algorithm's.
+That covers a missing key, an explicit `null` successor, reordered keys, a longer integer or length form, and
+trailing bytes.
+A device treats it as any payload that does not decode (§Corrupt envelopes); the server never decodes a payload.
 JSON columns travel as the JSON text the row stores: card content, template structure, algorithm parameters,
 a revision's actor, and each learning-settings value.
 

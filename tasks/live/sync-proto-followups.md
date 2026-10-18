@@ -177,7 +177,7 @@ Out:
 
 ## Plan
 
-- [ ] 1. Refuse a payload in any encoding but the one sealing writes
+- [x] 1. Refuse a payload in any encoding but the one sealing writes
   Goal (finding 5; per question 3):
   - `Payload::decode` (`payload.rs:359-410`) encodes the payload it decoded again and refuses input whose bytes
     differ, as `Header::decode` and `Envelope::decode` do (`check_canonical`, `envelope.rs:329-343`).

@@ -1,4 +1,5 @@
-use koloda_sync_proto::envelope::{Envelope, EnvelopeError, Refs};
+use ciborium::Value;
+use koloda_sync_proto::envelope::{Envelope, EnvelopeError, Header, Refs};
 use koloda_sync_proto::payload::{
     attachment_ids_in, seal, CardContent, CardScheduling, Delete, Payload, PayloadError, SCHEMA,
 };
@@ -105,6 +106,75 @@ fn seal_rejects_a_parent_or_successor_the_payload_contradicts() {
     assert_eq!(
         seal(seal_for(DECK_ID, None), &deck_delete_with_successor),
         Err(PayloadError::SuccessorNotAllowed { kind: Kind::Decks })
+    );
+}
+
+fn sealed_header(name: &str) -> Header {
+    let sample = samples()
+        .into_iter()
+        .find(|sample| sample.name == name)
+        .expect("a sample of that name");
+    seal(sample.seal, &sample.payload)
+        .expect("the sample seals")
+        .envelope
+        .header
+}
+
+fn cbor(entries: Vec<(&str, Value)>) -> Vec<u8> {
+    let map = entries
+        .into_iter()
+        .map(|(key, value)| (Value::Text(key.to_string()), value))
+        .collect();
+    let mut bytes = Vec::new();
+    ciborium::into_writer(&Value::Map(map), &mut bytes).expect("payload encodes");
+    bytes
+}
+
+#[test]
+fn a_payload_sealing_never_writes_does_not_decode() {
+    let non_canonical = Err(PayloadError::Envelope(EnvelopeError::NonCanonical {
+        reason: "the payload is not in its one encoding",
+    }));
+    let content = || Value::Text("{}".to_string());
+    let updated_at = || Value::Integer(1_727_000_000_000_i64.into());
+    let mut trailing = cbor(vec![("content", content()), ("updated_at", updated_at())]);
+    trailing.push(0);
+
+    let cases = [
+        (
+            "an optional key left out",
+            "cards.content",
+            cbor(vec![("content", content())]),
+            non_canonical.clone(),
+        ),
+        (
+            "keys out of order",
+            "cards.content",
+            cbor(vec![("updated_at", updated_at()), ("content", content())]),
+            non_canonical.clone(),
+        ),
+        ("a trailing byte", "cards.content", trailing, non_canonical.clone()),
+        (
+            "an explicit null successor",
+            "algorithms.delete",
+            cbor(vec![("successor", Value::Null)]),
+            non_canonical.clone(),
+        ),
+        (
+            "a successor on a card delete",
+            "cards.delete",
+            cbor(vec![("successor", Value::Text("x".to_string()))]),
+            Err(PayloadError::SuccessorNotAllowed { kind: Kind::Cards }),
+        ),
+    ];
+    for (case, name, bytes, expected) in cases {
+        assert_eq!(Payload::decode(&sealed_header(name), &bytes), expected, "{case}");
+    }
+
+    let canonical = cbor(vec![("content", content()), ("updated_at", updated_at())]);
+    assert!(
+        Payload::decode(&sealed_header("cards.content"), &canonical).is_ok(),
+        "the same payload in its one encoding decodes"
     );
 }
 
