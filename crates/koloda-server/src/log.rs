@@ -111,8 +111,10 @@ pub(crate) fn delete(tx: &Connection, entry: &Entry<'_>) -> Result<Outcome, ApiE
         return Ok(Outcome::Stale);
     }
     let cards = cascaded_cards(tx, header.kind, &header.id)?;
+    // WHY: a deck delete runs two statements per review in one push transaction, millions for a large deck, so every
+    // statement of the cascade is prepared once and reused.
     for card in &cards {
-        let mut statement = tx.prepare(LIVE_REVIEWS)?;
+        let mut statement = tx.prepare_cached(LIVE_REVIEWS)?;
         let reviews = statement
             .query_map(params![card], |row| row.get::<_, String>(0))?
             .collect::<Result<Vec<_>, _>>()?;
@@ -436,17 +438,13 @@ fn remove(tx: &Connection, kind: Kind, id: &str, now_ms: u64) -> Result<(), ApiE
     if kind == Kind::Cards {
         attachments::link(tx, id, &[], now_ms)?;
     }
-    tx.execute(
-        &format!(
-            "DELETE FROM versions WHERE (lane, seq) IN (SELECT lane, seq FROM heads WHERE kind = ?1 AND id = ?2)
-             AND {UNPINNED}"
-        ),
-        params![kind.as_wire(), id],
-    )?;
-    tx.execute(
-        "DELETE FROM heads WHERE kind = ?1 AND id = ?2",
-        params![kind.as_wire(), id],
-    )?;
+    tx.prepare_cached(&format!(
+        "DELETE FROM versions WHERE (lane, seq) IN (SELECT lane, seq FROM heads WHERE kind = ?1 AND id = ?2)
+         AND {UNPINNED}"
+    ))?
+    .execute(params![kind.as_wire(), id])?;
+    tx.prepare_cached("DELETE FROM heads WHERE kind = ?1 AND id = ?2")?
+        .execute(params![kind.as_wire(), id])?;
     Ok(())
 }
 

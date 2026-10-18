@@ -294,7 +294,7 @@ Out:
   Commit: Seek the missing-ids list from its last id
   Depends on: 5
 
-- [ ] 7. Reuse the delete cascade's prepared statements
+- [x] 7. Reuse the delete cascade's prepared statements
   Goal (finding 12; per question 5):
   - `delete` (`log.rs:108-131`) and `remove` (`log.rs:435-451`) prepare through `prepare_cached`: `LIVE_REVIEWS`, and
     both of `remove`'s statements.
@@ -307,6 +307,10 @@ Out:
   - A deck delete of about 100k reviews is timed once by hand before and after, and the item notes record both.
   - `cargo test -p koloda-server` and `cargo test -p koloda-sync` pass, and `bun run check:push` is green.
   Manual verify: none — the same deletes, prepared once.
+  Notes: timed once each, debug build, with 1,000 cards and 100,000 reviews written straight into a space database by
+  a throwaway test: the deck delete took 24.0 s before and 13.3 s after.
+  `remove`'s `DELETE FROM versions` keeps its `format!` with `UNPINNED`: the text is the same on every call, so it is
+  one cache entry, and a literal copy of the pin rule could drift from it.
   Commit: Reuse the delete cascade's prepared statements
   Depends on: none
 
