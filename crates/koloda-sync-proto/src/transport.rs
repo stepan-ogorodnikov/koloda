@@ -16,7 +16,7 @@ pub const MAX_BODY_BYTES: usize = 16 * 1024 * 1024;
 pub const MAX_EXPANSION_RATIO: usize = 32;
 pub const MAX_NAME_CHARS: usize = 100;
 /// A bearer token is 32 random bytes, written as lowercase hex (`PROTOCOL.md` §Devices).
-pub const TOKEN_HEX_LEN: usize = 64;
+const TOKEN_HEX_LEN: usize = 64;
 
 /// Refuses a token that is not 64 lowercase hex characters.
 pub fn check_token(token: &str) -> Result<(), &'static str> {
@@ -420,12 +420,6 @@ impl RestoreMode {
             RestoreMode::Authoritative => "authoritative",
         }
     }
-
-    pub fn from_wire(value: &str) -> Option<RestoreMode> {
-        [RestoreMode::Heal, RestoreMode::Authoritative]
-            .into_iter()
-            .find(|mode| mode.as_wire() == value)
-    }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -602,7 +596,7 @@ pub struct DeviceList {
 }
 
 impl Platform {
-    pub const ALL: [Platform; 5] = [
+    const ALL: [Platform; 5] = [
         Platform::DesktopWin,
         Platform::DesktopMac,
         Platform::DesktopLinux,

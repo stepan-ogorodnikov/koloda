@@ -237,7 +237,7 @@ impl Kind {
 }
 
 impl Group {
-    pub const ALL: [Group; 15] = [
+    const ALL: [Group; 15] = [
         Group::Create,
         Group::Content,
         Group::Scheduling,

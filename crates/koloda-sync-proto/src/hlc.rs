@@ -55,7 +55,7 @@ impl Hlc {
         self.0 >> COUNTER_BITS
     }
 
-    pub fn counter(self) -> u16 {
+    fn counter(self) -> u16 {
         // WHY: the mask keeps exactly the low 16 bits, so the narrowing cannot lose information.
         (self.0 & u64::from(u16::MAX)) as u16
     }

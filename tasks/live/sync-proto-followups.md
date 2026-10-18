@@ -299,7 +299,7 @@ Out:
   Commit: Pin error codes, the envelope cap, and the frame keys in the protocol tests
   Depends on: none
 
-- [ ] 6. Trim the protocol crate's unused public surface
+- [x] 6. Trim the protocol crate's unused public surface
   Goal (finding 15):
   - Delete `RestoreMode::from_wire` (`transport.rs:383-387`), which has no caller.
   - Make `TOKEN_HEX_LEN` (`transport.rs:19`), `Platform::ALL` (`:564`), `Group::ALL` (`registry.rs:240`), and
