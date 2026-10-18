@@ -19,6 +19,10 @@ use crate::http::{query, respond, ApiError};
 use crate::log;
 use crate::server::{lock, Server};
 
+// WHY: a page skips the caller's own entries, and the space's one reader, which every device call's reply meta also
+// takes, would otherwise stay held across all of them: 2M of them took 1.6 s on a warm cache.
+const MAX_PAGE_EXAMINED: usize = 50_000;
+
 pub(crate) const PAGE: &str = "SELECT v.seq, v.sender, v.sender_seq, v.bytes FROM versions v
      JOIN heads h ON h.lane = v.lane AND h.seq = v.seq
      WHERE v.lane = ?1 AND v.seq > ?2 AND v.seq <= ?3 ORDER BY v.seq";
@@ -90,8 +94,14 @@ fn read_page(
     let mut entries = Vec::new();
     let mut bytes = 0;
     let mut scanned = after;
+    let mut examined = 0;
     let mut is_cut = false;
     while let Some(row) = rows.next()? {
+        if examined == MAX_PAGE_EXAMINED {
+            is_cut = true;
+            break;
+        }
+        examined += 1;
         let seq: u64 = row.get(0)?;
         let sender: Uuid = row.get(1)?;
         if sender == caller {

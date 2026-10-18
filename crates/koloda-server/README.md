@@ -156,7 +156,7 @@ Triggers keep its live entities per kind and the bytes of its versions, which th
   and cascade, tombstone collection and the GC horizon, and receipts.
 - `src/events.rs` — the events socket: the lane heads and the upload count to each device's one socket, which a
   newer socket of the device or its revocation closes.
-- `src/pull.rs` — pull pages per lane, cut by entry count and bytes, and the cursors they record.
+- `src/pull.rs` — pull pages per lane, cut by entry count, bytes, and rows examined, and the cursors they record.
 - `src/bootstrap.rs` — snapshot leases: open, stream pages, heartbeat, release, and expiry.
 - `src/known.rs` — the join probe: which ids the space holds live or fenced.
 - `src/drop_envelope.rs` — dropping one damaged version from a space's log, and the tombstone the server authors in

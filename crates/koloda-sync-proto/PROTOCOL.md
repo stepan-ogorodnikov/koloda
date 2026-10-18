@@ -709,7 +709,9 @@ No envelope is ever buffered waiting for another.
 Pull responses return `scanned_through`: the highest seq examined, including own-sender gaps and compacted holes.
 The client advances to `scanned_through`, so empty pages are safe.
 A page holds at most `limit` entries (1 to 5000, 5000 by default) and about 8 MiB of envelopes.
-It always holds the first entry due, so it makes progress.
+It holds the first entry due even past the byte cap, so it makes progress.
+It also stops after 50,000 examined rows, the caller's own included.
+Such a page may be empty and still have more; its `scanned_through` is the last row it examined.
 Pull reads live heads only, so a superseded version or a removed descendant never reaches a device.
 Each pull records the cursor it starts from, per lane, on the caller's device record, for GC.
 

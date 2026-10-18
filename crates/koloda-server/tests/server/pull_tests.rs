@@ -3,10 +3,75 @@ use koloda_sync_proto::envelope::{Envelope, Header};
 use koloda_sync_proto::registry::{Group, Kind, Op};
 use koloda_sync_proto::transport::{DeviceInfo, ErrorCode, PullPage, Push, PushItem};
 
-use crate::common::{card_create, child, encode, seqs, stamp, tombstone, uuid, write, Harness};
+use crate::common::{card_create, child, encode, seqs, stamp, tombstone, uuid, write, Enrolled, Harness};
 
 fn deck_title(offset_ms: u64) -> Header {
     write(Kind::Decks, "deck", Group::Title, stamp(offset_ms, 0, 1))
+}
+
+/// Writes `count` live deck creates of `device` straight into its space's `hot` lane, at seqs 1 to `count`.
+///
+/// WHY: pushing 50,000 envelopes takes about 20 s in a debug build; a page reads only these columns and the lane head.
+fn insert_own_heads(harness: &Harness, device: &Enrolled, count: u64) {
+    let file = harness
+        .generation_dir()
+        .join("spaces")
+        .join(format!("{}.db", uuid(device.space_id)));
+    let conn = rusqlite::Connection::open(file).expect("open the space database");
+    conn.execute_batch(&format!(
+        "WITH RECURSIVE n(i) AS (SELECT 1 UNION ALL SELECT i + 1 FROM n WHERE i < {count})
+         INSERT INTO versions (lane, seq, kind, id, grp, hlc, stamp_device, sender, sender_seq, digest, bytes)
+         SELECT 'hot', i, 'decks', 'deck-' || i, 'create', i, x'00', x'{sender}', i, randomblob(32), x'00' FROM n;
+         INSERT INTO heads (kind, id, grp, lane, seq) SELECT kind, id, grp, lane, seq FROM versions;
+         UPDATE lanes SET head = {count} WHERE lane = 'hot';",
+        sender = device
+            .device_id
+            .iter()
+            .map(|byte| format!("{byte:02x}"))
+            .collect::<String>(),
+    ))
+    .expect("insert the heads");
+}
+
+#[tokio::test]
+async fn a_page_stops_after_50_000_examined_rows() {
+    let harness = Harness::new();
+    let home = harness.create_space("Home").await;
+    let phone = harness.pair(&home, "Phone").await;
+
+    insert_own_heads(&harness, &home, 50_000);
+    let at_cap = harness.pull(&home, "lane=hot&after=0").await.ok();
+    assert!(at_cap.entries.is_empty());
+    assert_eq!(
+        (at_cap.scanned_through, at_cap.has_more),
+        (50_000, false),
+        "a page that examines exactly 50,000 rows reaches its bound"
+    );
+
+    harness
+        .push(
+            &home,
+            vec![(1, write(Kind::Decks, "home-deck", Group::Create, stamp(1, 0, 1)))],
+        )
+        .await
+        .ok();
+    harness
+        .push(
+            &phone,
+            vec![(1, write(Kind::Decks, "phone-deck", Group::Create, stamp(0, 0, 2)))],
+        )
+        .await
+        .ok();
+    let cut = harness.pull(&home, "lane=hot&after=0").await.ok();
+    assert!(cut.entries.is_empty());
+    assert_eq!(
+        (cut.scanned_through, cut.has_more),
+        (50_000, true),
+        "the 50,001st row waits for the next page"
+    );
+    let next = harness.pull(&home, "lane=hot&after=50000").await.ok();
+    assert_eq!(seqs(&next), vec![(50_002, 1)]);
+    assert_eq!((next.scanned_through, next.has_more), (50_002, false));
 }
 
 #[tokio::test]

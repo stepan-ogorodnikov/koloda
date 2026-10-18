@@ -184,7 +184,7 @@ Out:
   Commit: Read a body only after its token checks
   Depends on: none
 
-- [ ] 2. Stop a pull page after a fixed number of examined rows
+- [x] 2. Stop a pull page after a fixed number of examined rows
   Goal (finding 9; per question 4):
   - `read_page` (`pull.rs:66-125`) stops after 50,000 examined rows, the caller's own included.
     The page answers `scanned_through` at the last examined row and `has_more`, as a page cut by its entry or byte cap
@@ -205,6 +205,9 @@ Out:
     At exactly the cap the page reaches its bound.
   - `cargo test -p koloda-server` and `cargo test -p koloda-sync` pass, and `bun run check:push` is green.
   Manual verify: none — it needs a space with tens of thousands of one device's entries; the test counts the rows.
+  Notes: the test writes the 50,000 own heads straight into the space database, since pushing them took 22 s in a debug
+  build; the cap stays a private constant.
+  Against the old `pull.rs` the cut page held the phone's entry.
   Commit: Stop a pull page after a fixed number of examined rows
   Depends on: none
 
