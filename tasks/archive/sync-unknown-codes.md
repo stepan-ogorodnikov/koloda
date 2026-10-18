@@ -1,6 +1,6 @@
 # Ask for an app update when a sync reply can't be read
 
-Status: ready
+Status: done
 Guides: agents/IMPLEMENTATION-PLAN.md, agents/TASKS.md, crates/koloda-sync/README.md, crates/koloda-sync-proto/PROTOCOL.md, crates/koloda-sync-proto/README.md, apps/electron/README.md, apps/electron/IPC.md, docs/specs/SYNC.md, agents/FUNCTIONAL-SPECIFICATIONS.md, agents/I18N.md, agents/CODE-STYLE.md, agents/CODE-DOCUMENTATION.md, agents/TESTING.md, agents/BACKWARDS-COMPATIBILITY.md, agents/MARKDOWN.md, agents/VERIFY.md, agents/REVIEW.md
 Flow: local
 
@@ -169,4 +169,36 @@ Out:
 
 ## Outcome
 
-<what shipped>
+Finding 16 is fixed as decided: an app that meets a sync reply it cannot read asks for an update.
+
+Shipped in one commit (item 1):
+
+- The engine tells a sync reply it cannot decode (a CBOR map with `meta`) from one that is not a sync reply.
+  The first fails the call with `SyncError::UpdateRequired`, unretried, and stops sync as `Stop::UpdateRequired`; the
+  second stays a transport failure, retried as before.
+- The runner waits for a trigger after it, with no poll, no backoff, no `Error` event, and no events socket.
+- A push whose reply this app cannot read counts as lost, since the server may have consumed it.
+- The addon sends the stop as `updateRequired` and a failed host call as `sync.update-required`; Settings → Sync,
+  its tooltip, and failed calls say the server is newer than the app, in `en` and `ru`.
+- `PROTOCOL.md` §Bodies, §Events, §Errors, §Push outcomes, and §Rejected designs say what an older app does;
+  `SYNC.md` §Servers and §When Sync Stops say what the user sees.
+
+Deviations from the Plan text are recorded on item 1.
+Self-review over `origin/main..HEAD` found nothing to change.
+
+Checked:
+
+- `bun run check:push` passed on the final tip, on its second run, and again after the rebase onto the other two
+  follow-up tasks.
+  The first run failed on two timeouts in `ai-react` and `ui` tests this change does not touch, each a file's first
+  test taking 16 s while the Rust track compiled.
+- `cargo test -p koloda-sync` (176), `cargo test -p koloda-electron` (9), and the `app` and `settings-react` lib
+  tests passed.
+- Each new engine case failed against the old `client.rs`, checked once by hand.
+
+Not checked, for the human (desktop):
+
+- Point a synced desktop at a server built with one renamed error code or outcome status, then Sync now: Settings →
+  Sync and the title bar tooltip say the server is newer than the app.
+- Switch the language to Russian: the same message reads in Russian.
+- Stop the server: the message says the server can't be reached, as before.
