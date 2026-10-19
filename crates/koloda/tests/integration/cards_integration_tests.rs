@@ -1,6 +1,6 @@
 use koloda::app::error::error_codes;
 use koloda::domain::cards::{
-    DeleteCardData, DeleteCardsData, InsertCardData, ResetCardProgressData, UpdateCardProgress,
+    Card, DeleteCardData, DeleteCardsData, InsertCardData, ResetCardProgressData, UpdateCardProgress,
 };
 use koloda::domain::lessons::LessonResultData;
 use koloda::domain::reviews::{GetReviewsData, InsertReviewData};
@@ -32,6 +32,60 @@ fn get_card_counts_groups_by_deck() {
     assert!(counts
         .iter()
         .all(|c| c.deck_id != "01900000-0000-7000-8000-0000000f423f"));
+}
+
+#[test]
+fn add_card_round_trips_every_field() {
+    let db = test_db();
+    let algorithm_id = add_algorithm(&db, "FSRS");
+    let template_id = add_template(&db, "Basic");
+    let deck_id = add_deck(&db, &algorithm_id, &template_id, "Deck");
+    let content = card_content("question", "answer");
+
+    // WHY: no two columns share a value, so a swap in the INSERT or the row mapper fails the comparison.
+    let added = cards::add_card(
+        &db,
+        InsertCardData {
+            deck_id: deck_id.clone(),
+            template_id: template_id.clone(),
+            content: content.clone(),
+            state: Some(2),
+            due_at: Some(1_900_000_000_000),
+            stability: Some(3.25),
+            difficulty: Some(6.5),
+            scheduled_days: Some(7),
+            learning_steps: Some(4),
+            reps: Some(11),
+            lapses: Some(5),
+            last_reviewed_at: Some(1_800_000_000_000),
+        },
+    )
+    .expect("card should be created");
+    let stored = cards::get_card(&db, &added.id)
+        .expect("card query should succeed")
+        .expect("card should exist");
+
+    assert!(stored.created_at > 0, "created_at is stamped at insert");
+    assert_eq!(
+        stored,
+        Card {
+            id: added.id.clone(),
+            deck_id,
+            template_id,
+            content,
+            state: 2,
+            due_at: Some(1_900_000_000_000),
+            stability: 3.25,
+            difficulty: 6.5,
+            scheduled_days: 7,
+            learning_steps: 4,
+            reps: 11,
+            lapses: 5,
+            last_reviewed_at: Some(1_800_000_000_000),
+            created_at: stored.created_at,
+            updated_at: None,
+        }
+    );
 }
 
 #[test]

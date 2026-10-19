@@ -1,12 +1,54 @@
 use koloda::app::error::error_codes;
 use koloda::domain::settings::SettingsName;
 use koloda::domain::templates::{
-    DeleteTemplateData, TemplateContent, TemplateField, TemplateLayoutItem, UpdateTemplateData, UpdateTemplateValues,
+    DeleteTemplateData, Template, TemplateContent, TemplateField, TemplateLayoutItem, UpdateTemplateData,
+    UpdateTemplateValues,
 };
 use koloda::repo::templates;
 
 use crate::common::fixtures::{add_algorithm, add_card, add_deck, add_template};
-use crate::common::{learning_settings, test_db};
+use crate::common::{learning_settings, simple_template_content, test_db};
+
+#[test]
+fn update_template_round_trips_every_field() {
+    let db = test_db();
+    let template_id = add_template(&db, "Basic");
+    let original = templates::get_template(&db, &template_id)
+        .expect("template query should succeed")
+        .expect("template should exist");
+    let mut content = simple_template_content();
+    content.fields[0].title = "Prompt".to_string();
+
+    templates::update_template(
+        &db,
+        UpdateTemplateData {
+            id: template_id.clone(),
+            values: UpdateTemplateValues {
+                title: "Renamed".to_string(),
+                content: content.clone(),
+                notes: Some("Template notes".to_string()),
+            },
+        },
+    )
+    .expect("template should be updated");
+    let stored = templates::get_template(&db, &template_id)
+        .expect("template query should succeed")
+        .expect("template should exist");
+
+    assert!(stored.updated_at.is_some(), "updated_at is stamped at update");
+    assert_eq!(
+        stored,
+        Template {
+            id: template_id,
+            title: "Renamed".to_string(),
+            content,
+            is_locked: false,
+            notes: Some("Template notes".to_string()),
+            created_at: original.created_at,
+            updated_at: stored.updated_at,
+        }
+    );
+}
 
 #[test]
 fn update_template_fails_with_not_found_when_template_is_missing() {

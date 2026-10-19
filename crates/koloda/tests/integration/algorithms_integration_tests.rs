@@ -1,7 +1,7 @@
 use koloda::app::db::Database;
 use koloda::app::error::error_codes;
 use koloda::domain::algorithms::{
-    CloneAlgorithmData, DeleteAlgorithmData, InsertAlgorithmData, UpdateAlgorithmData, UpdateAlgorithmValues,
+    Algorithm, CloneAlgorithmData, DeleteAlgorithmData, InsertAlgorithmData, UpdateAlgorithmData, UpdateAlgorithmValues,
 };
 use koloda::domain::algorithms_fsrs::AlgorithmFSRS;
 use koloda::domain::optimizer::ApplyAlgorithmOptimizationData;
@@ -10,6 +10,50 @@ use koloda::repo::algorithms;
 
 use crate::common::fixtures::{add_algorithm, add_deck, add_template};
 use crate::common::{fsrs_algorithm_content, learning_settings, test_db};
+
+#[test]
+fn update_algorithm_round_trips_every_field() {
+    let db = test_db();
+    let algorithm_id = add_algorithm(&db, "FSRS");
+    let original = algorithms::get_algorithm(&db, &algorithm_id)
+        .expect("algorithm query should succeed")
+        .expect("algorithm should exist");
+    let content = AlgorithmFSRS {
+        retention: 85.0,
+        is_fuzz_enabled: false,
+        maximum_interval: 1000,
+        ..fsrs_algorithm_content()
+    };
+
+    algorithms::update_algorithm(
+        &db,
+        UpdateAlgorithmData {
+            id: algorithm_id.clone(),
+            values: UpdateAlgorithmValues {
+                title: "Renamed".to_string(),
+                content: content.clone(),
+                notes: Some("Algorithm notes".to_string()),
+            },
+        },
+    )
+    .expect("algorithm should be updated");
+    let stored = algorithms::get_algorithm(&db, &algorithm_id)
+        .expect("algorithm query should succeed")
+        .expect("algorithm should exist");
+
+    assert!(stored.updated_at.is_some(), "updated_at is stamped at update");
+    assert_eq!(
+        stored,
+        Algorithm {
+            id: algorithm_id,
+            title: "Renamed".to_string(),
+            content,
+            notes: Some("Algorithm notes".to_string()),
+            created_at: original.created_at,
+            updated_at: stored.updated_at,
+        }
+    );
+}
 
 #[test]
 fn update_algorithm_fails_with_not_found_when_algorithm_is_missing() {

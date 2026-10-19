@@ -322,7 +322,7 @@ Out:
   Commit: Read the card inside update_card's transaction
   Depends on: none
 
-- [ ] 5. Add full-field roundtrip tests for five entities
+- [x] 5. Add full-field roundtrip tests for five entities
   Goal (finding 4):
   - Add one integration roundtrip each for cards, reviews, decks, templates, and algorithms.
     Each writes a distinct value to every column, reads the row back through the repo, and compares every field.

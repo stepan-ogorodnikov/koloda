@@ -1,7 +1,9 @@
 use koloda::app::error::error_codes;
-use koloda::domain::reviews::GetReviewTotalsParams;
+use koloda::domain::cards::UpdateCardProgress;
+use koloda::domain::lessons::LessonResultData;
+use koloda::domain::reviews::{GetReviewTotalsParams, GetReviewsData, InsertReviewData, Review};
 use koloda::domain::settings::SettingsName;
-use koloda::repo::reviews;
+use koloda::repo::{lessons, reviews};
 use serde_json::json;
 
 use crate::common::fixtures::{add_algorithm, add_card, add_deck, add_template, insert_review_row};
@@ -10,6 +12,74 @@ use crate::common::{counted_daily_limit, learning_settings_with_day_start, valid
 
 fn get_todays_timestamp() -> i64 {
     koloda::app::utility::get_current_timestamp().expect("timestamp should be available")
+}
+
+#[test]
+fn submit_lesson_result_round_trips_every_review_field() {
+    let db = test_db();
+    let algorithm_id = add_algorithm(&db, "FSRS");
+    let template_id = add_template(&db, "Basic");
+    let deck_id = add_deck(&db, &algorithm_id, &template_id, "Deck");
+    let card_id = add_card(&db, &deck_id, &template_id, "question");
+
+    // WHY: no two columns share a value, so a swap in `insert_review` or the row mapper fails the comparison.
+    lessons::submit_lesson_result(
+        &db,
+        LessonResultData {
+            card: UpdateCardProgress {
+                id: card_id.clone(),
+                state: 2,
+                due_at: 1_910_000_000_000,
+                stability: 4.75,
+                difficulty: 6.25,
+                scheduled_days: 9,
+                learning_steps: 6,
+                reps: 1,
+                lapses: 0,
+                last_reviewed_at: Some(1_800_000_000_000),
+            },
+            review: InsertReviewData {
+                card_id: card_id.clone(),
+                rating: 3,
+                state: 2,
+                due_at: 1_910_000_000_000,
+                stability: 4.75,
+                difficulty: 6.25,
+                scheduled_days: 9,
+                learning_steps: 6,
+                time: 17,
+                is_ignored: true,
+            },
+        },
+    )
+    .expect("lesson result should be persisted");
+    let stored = reviews::get_reviews(
+        &db,
+        GetReviewsData {
+            card_id: card_id.clone(),
+        },
+    )
+    .expect("reviews query should succeed");
+
+    assert_eq!(stored.len(), 1);
+    assert!(stored[0].created_at > 0, "created_at is stamped at insert");
+    assert_eq!(
+        stored[0],
+        Review {
+            id: stored[0].id.clone(),
+            card_id,
+            rating: 3,
+            state: 2,
+            due_at: 1_910_000_000_000,
+            stability: 4.75,
+            difficulty: 6.25,
+            scheduled_days: 9,
+            learning_steps: 6,
+            time: 17,
+            is_ignored: true,
+            created_at: stored[0].created_at,
+        }
+    );
 }
 
 #[test]

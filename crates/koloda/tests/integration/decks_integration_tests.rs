@@ -1,10 +1,59 @@
 use koloda::app::error::error_codes;
-use koloda::domain::decks::{DeleteDeckData, InsertDeckData, UpdateDeckData, UpdateDeckValues};
+use koloda::domain::decks::{Deck, DeleteDeckData, InsertDeckData, UpdateDeckData, UpdateDeckValues};
 use koloda::domain::reviews::GetReviewsData;
 use koloda::repo::{cards, decks, reviews};
 
 use crate::common::fixtures::{add_algorithm, add_card, add_deck, add_template, insert_review_row};
 use crate::common::test_db;
+
+#[test]
+fn update_deck_round_trips_every_field() {
+    let db = test_db();
+    let algorithm_id = add_algorithm(&db, "FSRS");
+    let template_id = add_template(&db, "Basic");
+    let other_algorithm_id = add_algorithm(&db, "Other FSRS");
+    let other_template_id = add_template(&db, "Other");
+    let deck = decks::add_deck(
+        &db,
+        InsertDeckData {
+            title: "Deck".to_string(),
+            algorithm_id,
+            template_id,
+        },
+    )
+    .expect("deck should be created");
+
+    decks::update_deck(
+        &db,
+        UpdateDeckData {
+            id: deck.id.clone(),
+            values: UpdateDeckValues {
+                title: "Renamed".to_string(),
+                algorithm_id: other_algorithm_id.clone(),
+                template_id: other_template_id.clone(),
+                notes: Some("Deck notes".to_string()),
+            },
+        },
+    )
+    .expect("deck should be updated");
+    let stored = decks::get_deck(&db, &deck.id)
+        .expect("deck query should succeed")
+        .expect("deck should exist");
+
+    assert!(stored.updated_at.is_some(), "updated_at is stamped at update");
+    assert_eq!(
+        stored,
+        Deck {
+            id: deck.id.clone(),
+            title: "Renamed".to_string(),
+            algorithm_id: other_algorithm_id,
+            template_id: other_template_id,
+            notes: Some("Deck notes".to_string()),
+            created_at: deck.created_at,
+            updated_at: stored.updated_at,
+        }
+    );
+}
 
 #[test]
 fn add_deck_rejects_missing_algorithm() {
