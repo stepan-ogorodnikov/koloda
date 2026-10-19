@@ -261,21 +261,21 @@ fn test_defaults_hyphenless_uuid_fails() {
 }
 
 #[test]
-fn test_daily_limits_zero_total_coerces_to_unlimited() {
+fn test_daily_limits_zero_total_is_a_hard_cap() {
     let json = build_learning_settings_json(
         r#"{
             "total": 0,
-            "untouched": {"value": 999, "counts": true},
-            "learn": {"value": 999, "counts": true},
-            "review": {"value": 999, "counts": true}
+            "untouched": {"value": 0, "counts": true},
+            "learn": {"value": 0, "counts": true},
+            "review": {"value": 0, "counts": true}
         }"#,
         r#""04:00""#,
         "[4, 0]",
     );
 
     let settings: LearningSettings = serde_json::from_str(&json).expect("Should deserialize");
-    assert_eq!(settings.daily_limits.total, None);
-    assert!(settings.validate().is_ok(), "Legacy total 0 is unlimited");
+    assert_eq!(settings.daily_limits.total, Some(0));
+    assert!(settings.validate().is_ok(), "Total 0 with counted zeros is valid");
 }
 
 #[test]
@@ -298,32 +298,18 @@ fn test_daily_limits_null_total_allows_any_values() {
 
 #[test]
 fn test_daily_limits_hard_zero_total_rejects_counted_values() {
-    use koloda::domain::settings_learning::{CountedDailyLimit, DailyLimits, LearnAheadLimit, LearningDefaults};
+    let json = build_learning_settings_json(
+        r#"{
+            "total": 0,
+            "untouched": {"value": 1, "counts": true},
+            "learn": {"value": 0, "counts": false},
+            "review": {"value": 0, "counts": true}
+        }"#,
+        r#""04:00""#,
+        "[4, 0]",
+    );
 
-    let settings = LearningSettings {
-        defaults: LearningDefaults {
-            algorithm: "01900000-0000-7000-8000-000000000001".to_string(),
-            template: "01900000-0000-7000-8000-000000000002".to_string(),
-        },
-        daily_limits: DailyLimits {
-            total: Some(0),
-            untouched: CountedDailyLimit {
-                value: Some(1),
-                counts: true,
-            },
-            learn: CountedDailyLimit {
-                value: Some(0),
-                counts: false,
-            },
-            review: CountedDailyLimit {
-                value: Some(0),
-                counts: true,
-            },
-        },
-        day_starts_at: "04:00".to_string(),
-        learn_ahead_limit: LearnAheadLimit(4, 0),
-    };
-
+    let settings: LearningSettings = serde_json::from_str(&json).expect("Should deserialize");
     let err = settings.validate().unwrap_err();
     assert_eq!(
         err.code,
@@ -662,7 +648,7 @@ fn each_key_check_agrees_with_a_read_of_the_whole_document() {
             "/dailyLimits",
             json!({ "total": 0, "untouched": 20 }),
             validate_daily_limits,
-            true,
+            false,
         ),
         ("/dailyLimits", Value::Null, validate_daily_limits, false),
         ("/dayStartsAt", json!("23:59"), validate_day_starts_at, true),

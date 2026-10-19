@@ -221,7 +221,7 @@ Out:
 
 ## Plan
 
-- [ ] 1. Keep a saved daily Total of 0 as a hard cap on both hosts
+- [x] 1. Keep a saved daily Total of 0 as a hard cap on both hosts
   Goal (finding 1; question 1):
   - Rust: delete `deserialize_total` (`crates/koloda/src/domain/settings_learning.rs:199-210`) and its
     `deserialize_with` on `DailyLimits.total` (`:120`).

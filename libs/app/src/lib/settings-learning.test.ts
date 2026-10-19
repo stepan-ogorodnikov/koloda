@@ -164,21 +164,23 @@ describe("daily limits refine rules", () => {
     expect(result.success).toBe(true);
   });
 
-  it("coerces a stored total of 0 to null on the defaulting schema", () => {
+  // Twin of koloda `test_daily_limits_zero_total_is_a_hard_cap`.
+  it("keeps a stored total of 0 as a hard cap on the defaulting schema", () => {
     const result = learningSettingsValidation.parse({
       defaults,
       dailyLimits: {
         total: 0,
-        untouched: { value: 999, counts: true },
-        learn: { value: 999, counts: true },
-        review: { value: 999, counts: true },
+        untouched: { value: 0, counts: true },
+        learn: { value: 0, counts: true },
+        review: { value: 0, counts: true },
       },
     });
-    expect(result.dailyLimits.total).toBeNull();
+    expect(result.dailyLimits.total).toBe(0);
   });
 
-  it("rejects counted values above a hard-zero total on the resolved schema", () => {
-    const result = resolvedLearningSettingsValidation.safeParse({
+  // Twin of koloda `test_daily_limits_hard_zero_total_rejects_counted_values`.
+  it("rejects counted values above a hard-zero total on the defaulting schema", () => {
+    const result = learningSettingsValidation.safeParse({
       defaults,
       dailyLimits: {
         total: 0,
@@ -189,7 +191,9 @@ describe("daily limits refine rules", () => {
       dayStartsAt: "05:00",
       learnAheadLimit: [0, 30],
     });
-    expect(result.success).toBe(false);
+    expect(result.error?.issues.map((issue) => issue.message)).toEqual([
+      "validation.settings-learning.daily-limits.untouched-exceeds-total",
+    ]);
   });
 
   it("allows unlimited per-type values when total is finite", () => {

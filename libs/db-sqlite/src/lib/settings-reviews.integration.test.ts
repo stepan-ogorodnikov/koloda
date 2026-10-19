@@ -143,6 +143,32 @@ describe("settings and review totals integration", () => {
     expect(result.content.profiles[0]).not.toHaveProperty("whitelistModelIds");
   });
 
+  // Twin of koloda `set_settings_keeps_a_zero_total_as_a_hard_cap`.
+  it("keeps a saved Total of 0 as a hard cap", async () => {
+    const { db } = testDb;
+    const { algorithm, template } = await seedDeckContext(db);
+
+    await setSettings(db, {
+      name: "learning",
+      content: {
+        defaults: { algorithm: algorithm.id, template: template.id },
+        dailyLimits: {
+          total: 0,
+          untouched: { value: 0, counts: true },
+          learn: { value: 0, counts: true },
+          review: { value: 0, counts: true },
+        },
+        dayStartsAt: "05:00",
+        learnAheadLimit: [0, 30],
+      },
+    });
+
+    const stored = await getSettings(db, "learning");
+    expect(stored?.content.dailyLimits.total).toBe(0);
+    const totals = await getTodaysReviewTotals(db);
+    expect(totals.dailyLimits.total).toBe(0);
+  });
+
   it("returns normalized settings content with schema defaults applied", async () => {
     const { db } = testDb;
 

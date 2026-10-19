@@ -6,7 +6,7 @@
 //! `dayStartsAt` "05:00", `learnAheadLimit` [0, 30]. The `dailyLimits` key
 //! itself stays required, same as the TS twin (only its contents default).
 //! Daily-limit caps are `Option<u32>`: `None` is unlimited, `Some(0)` is a hard
-//! zero. Input Total `0` still deserializes as `None` (legacy unlimited).
+//! zero.
 
 use serde::{Deserialize, Deserializer, Serialize};
 use serde_json::Value;
@@ -117,7 +117,7 @@ fn day_starts_at_error(value: &str) -> AppError {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DailyLimits {
-    #[serde(default = "default_daily_limits_total", deserialize_with = "deserialize_total")]
+    #[serde(default = "default_daily_limits_total")]
     pub total: Option<u32>,
     #[serde(
         default = "default_untouched_limit",
@@ -194,19 +194,6 @@ pub fn is_bucket_over_daily_limit(
 // `z.preprocess` (`value ?? {}` + per-field defaults) does.
 fn default_daily_limits_total() -> Option<u32> {
     Some(200)
-}
-
-// WHY: stored Total 0 meant unlimited. Map it to None on input. Missing keys use
-// serde default Some(200), not this function. Form-resolved Some(0) is a hard cap
-// and is constructed in tests without going through this deserializer.
-fn deserialize_total<'de, D>(deserializer: D) -> Result<Option<u32>, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    match Option::<u32>::deserialize(deserializer)? {
-        None | Some(0) => Ok(None),
-        Some(n) => Ok(Some(n)),
-    }
 }
 
 fn default_untouched_limit() -> CountedDailyLimit {

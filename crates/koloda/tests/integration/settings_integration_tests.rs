@@ -1,6 +1,6 @@
 use koloda::app::error::error_codes;
 use koloda::domain::settings::SettingsName;
-use koloda::repo::settings;
+use koloda::repo::{reviews, settings};
 use serde_json::json;
 
 use crate::common::{counted_daily_limit, interface_settings, learning_settings, test_db, valid_learning_defaults};
@@ -190,6 +190,21 @@ fn set_settings_preserves_false_counts_flag() {
         saved.content["dailyLimits"]["untouched"],
         counted_daily_limit(20, false)
     );
+}
+
+#[test]
+fn set_settings_keeps_a_zero_total_as_a_hard_cap() {
+    let db = test_db();
+
+    settings::set_settings(&db, SettingsName::Learning, learning_settings(0, 0, 0, 0))
+        .expect("learning settings with Total 0 should save");
+
+    let stored = settings::get_settings(&db, SettingsName::Learning)
+        .expect("learning settings should read")
+        .expect("learning settings row should exist");
+    assert_eq!(stored.content["dailyLimits"]["total"], 0);
+    let totals = reviews::get_todays_review_totals(&db).expect("today totals should succeed");
+    assert_eq!(totals.daily_limits.total, Some(0));
 }
 
 #[test]

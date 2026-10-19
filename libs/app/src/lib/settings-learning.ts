@@ -121,10 +121,7 @@ export const resolvedDailyLimitsValidation = withCountedLimitRefines(
 
 const dailyLimitsValidation = withCountedLimitRefines(
   z.object({
-    // WHY: stored Total 0 meant unlimited. The defaulting/input schema maps it to
-    // null so get_settings still reads those rows as unlimited. Do not copy this
-    // onto the resolved schema — form save of 0 is a hard cap.
-    total: z.preprocess((value) => (value === 0 ? null : value), dailyLimitCapValidation.default(200)),
+    total: dailyLimitCapValidation.default(200),
     untouched: createLearningDailyLimitValidation(50, true),
     learn: createLearningDailyLimitValidation(0, false),
     review: createLearningDailyLimitValidation(200, true),
