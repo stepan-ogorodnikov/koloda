@@ -72,14 +72,30 @@ jobs:
           workspaces: ". -> dist/target/koloda"
           save-if: ${{ github.ref == 'refs/heads/main' }}
 
-      - name: Cache Nx
+      # WHY: Nx 23 keeps its cache, and the database that indexes it, under
+      # ~/.nx/<workspace id>/, not .nx/cache.
+      - name: Restore Nx cache
+        id: nx-cache
         if: steps.scope.outputs.docs_only != 'true'
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         with:
-          path: .nx/cache
+          path: ~/.nx
           key: nx-${{ runner.os }}-${{ github.run_id }}
           restore-keys: |
             nx-${{ runner.os }}-
+
+      # WORKAROUND: Nx names its database after /etc/machine-id and ignores cached
+      # outputs that have no row in it. A database from another runner misses
+      # every task until it carries this runner's id.
+      - name: Adopt Nx cache
+        if: steps.nx-cache.outputs.cache-matched-key != ''
+        run: |
+          id=$(cat /etc/machine-id)
+          for file in "$HOME"/.nx/*/databases/*-*; do
+            [[ -e "$file" ]] || continue
+            target="$(dirname "$file")/${id:?}-$(basename "$file" | cut -d- -f2-)"
+            [[ "$file" == "$target" ]] || mv "$file" "$target"
+          done
 
       # dprint downloads the plugins listed in dprint.json on first run.
       - name: Restore dprint cache
@@ -102,6 +118,13 @@ jobs:
           else
             bun run check:push
           fi
+
+      - name: Save Nx cache
+        if: github.ref == 'refs/heads/main' && steps.scope.outputs.docs_only != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: ~/.nx
+          key: ${{ steps.nx-cache.outputs.cache-primary-key }}
 
       - name: Save dprint cache
         if: github.ref == 'refs/heads/main' && steps.dprint-cache.outputs.cache-hit != 'true'

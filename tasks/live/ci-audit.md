@@ -191,7 +191,7 @@ Out:
   Commit: Fill the Cargo and dprint CI caches from main only
   Depends on: none
 
-- [ ] 2. Restore the Nx cache in CI from main's runs
+- [x] 2. Restore the Nx cache in CI from main's runs
   Goal (finding 7; question 1):
   - Replace `Cache Nx` (`ci.yml:78-84`) with `actions/cache/restore@v4` on `~/.nx`.
     Key `nx-${{ runner.os }}-${{ github.run_id }}`, restore key `nx-${{ runner.os }}-`, same `docs_only`
