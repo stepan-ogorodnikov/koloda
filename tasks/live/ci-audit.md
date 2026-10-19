@@ -1,6 +1,6 @@
 # CI audit fixes
 
-Status: draft
+Status: ready
 Guides: agents/IMPLEMENTATION-PLAN.md, agents/TASKS.md, agents/MARKDOWN.md, agents/VERIFY.md, agents/REVIEW.md
 Flow: remote
 
