@@ -210,8 +210,8 @@ fn test_invalid_time_format_fails() {
 fn test_settings_name_interface_validation_with_non_object_content() {
     let content = serde_json::json!("not an object");
 
-    let result = SettingsName::Interface.validate(&content);
-    assert!(result.is_err());
+    let result = SettingsName::Interface.normalize(content);
+    result.unwrap_err();
 }
 
 #[test]
@@ -230,7 +230,7 @@ fn test_settings_name_interface_all_valid_combinations() {
                 });
 
                 assert!(
-                    SettingsName::Interface.validate(&content).is_ok(),
+                    SettingsName::Interface.normalize(content).is_ok(),
                     "Should be valid: lang={}, scheme={}, motion={}",
                     lang,
                     scheme,

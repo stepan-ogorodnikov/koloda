@@ -591,15 +591,15 @@ fn test_learn_ahead_limit_as_string_fails() {
 #[test]
 fn test_settings_name_learning_validation_with_non_object_content() {
     let content = serde_json::json!("not an object");
-    let result = SettingsName::Learning.validate(&content);
-    assert!(result.is_err());
+    let result = SettingsName::Learning.normalize(content);
+    result.unwrap_err();
 }
 
 #[test]
 fn test_settings_name_learning_validation_with_array_content() {
     let content = serde_json::json!([1, 2, 3]);
-    let result = SettingsName::Learning.validate(&content);
-    assert!(result.is_err());
+    let result = SettingsName::Learning.normalize(content);
+    result.unwrap_err();
 }
 
 #[test]
@@ -618,7 +618,7 @@ fn test_settings_name_learning_validation_valid() {
         "dayStartsAt": "04:00",
         "learnAheadLimit": [4, 0]
     });
-    let result = SettingsName::Learning.validate(&content);
+    let result = SettingsName::Learning.normalize(content);
     result.unwrap();
 }
 
@@ -691,7 +691,7 @@ fn each_key_check_agrees_with_a_read_of_the_whole_document() {
 
         assert_eq!(check(&value).is_ok(), is_valid, "{pointer} = {value}");
         assert_eq!(
-            SettingsName::Learning.validate(&document).is_ok(),
+            SettingsName::Learning.normalize(document).is_ok(),
             is_valid,
             "a read of {pointer} = {value}"
         );

@@ -64,14 +64,6 @@ impl AISettings {
         self.validate_for_storage()
     }
 
-    pub fn validate_for_input(&self) -> Result<(), AppError> {
-        for profile in &self.profiles {
-            profile.validate_for_input()?;
-        }
-
-        self.validate_invariants()
-    }
-
     pub fn validate_for_storage(&self) -> Result<(), AppError> {
         for profile in &self.profiles {
             profile.validate_for_storage()?;

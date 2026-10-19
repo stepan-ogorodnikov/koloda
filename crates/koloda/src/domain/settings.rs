@@ -45,27 +45,6 @@ pub struct Settings {
 }
 
 impl SettingsName {
-    pub fn validate(&self, content: &Value) -> Result<(), AppError> {
-        match self {
-            SettingsName::Interface => {
-                let settings: InterfaceSettings = serde_json::from_value(content.clone())?;
-                settings.validate()
-            }
-            SettingsName::Learning => {
-                let settings: LearningSettings = serde_json::from_value(content.clone())?;
-                settings.validate()
-            }
-            SettingsName::Hotkeys => {
-                let settings: HotkeysSettings = serde_json::from_value(content.clone())?;
-                settings.validate()
-            }
-            SettingsName::Ai => {
-                let settings: AISettings = serde_json::from_value(content.clone())?;
-                settings.validate()
-            }
-        }
-    }
-
     pub fn normalize(&self, content: Value) -> Result<Value, AppError> {
         match self {
             SettingsName::Interface => {

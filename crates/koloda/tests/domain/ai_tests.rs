@@ -37,7 +37,7 @@ fn test_ollama_validate_empty_base_url_fails() {
         api_key: None,
     };
 
-    let result = secrets.validate();
+    let result = secrets.validate_for_input();
     assert_eq!(result.unwrap_err().code, "validation.settings-ai.providers.base-url");
 }
 
@@ -48,7 +48,7 @@ fn test_lmstudio_validate_ok_with_optional_api_key() {
         api_key: None,
     };
 
-    secrets.validate().unwrap();
+    secrets.validate_for_input().unwrap();
 }
 
 #[test]
@@ -58,7 +58,7 @@ fn test_lmstudio_validate_empty_base_url_fails() {
         api_key: Some("key".to_string()),
     };
 
-    let result = secrets.validate();
+    let result = secrets.validate_for_input();
     assert_eq!(result.unwrap_err().code, "validation.settings-ai.providers.base-url");
 }
 
@@ -79,16 +79,9 @@ const LOCAL_PROVIDER_ROWS: &[LocalProviderRow] = &[
 #[test]
 fn test_local_providers_input_rejects_non_url_base_url() {
     for &(provider, build) in LOCAL_PROVIDER_ROWS {
-        let secrets = build("not-a-url".to_string());
-        let via_validate = secrets.validate();
+        let result = build("not-a-url".to_string()).validate_for_input();
         assert_eq!(
-            via_validate.unwrap_err().code,
-            "validation.settings-ai.providers.base-url",
-            "{provider} validate must reject a non-URL baseUrl"
-        );
-        let via_input = secrets.validate_for_input();
-        assert_eq!(
-            via_input.unwrap_err().code,
+            result.unwrap_err().code,
             "validation.settings-ai.providers.base-url",
             "{provider} validate_for_input must reject a non-URL baseUrl"
         );
@@ -155,12 +148,12 @@ const KEYED_PROVIDER_ROWS: &[KeyedProviderRow] = &[
 fn test_keyed_providers_require_non_blank_api_key() {
     for &(provider, secret, build) in KEYED_PROVIDER_ROWS {
         let secrets = build(Some(secret.to_string()));
-        secrets.validate().unwrap();
+        secrets.validate_for_input().unwrap();
         assert_eq!(secrets.provider(), provider, "{provider} reports its provider id");
         assert_eq!(secrets.api_key(), Some(secret), "{provider} exposes its stored key");
 
         for api_key in [None, Some("  ".to_string())] {
-            let result = build(api_key).validate();
+            let result = build(api_key).validate_for_input();
             // WHY: absent and whitespace-only keys funnel through the same trimmed check,
             // so both rejections surface `validation.settings-ai.providers.api-key`.
             assert_eq!(
@@ -195,19 +188,12 @@ fn test_ai_secrets_invalid_provider_fails() {
 }
 
 #[test]
-fn test_ai_profile_validate_for_input_ok_with_secrets() {
-    let profile = AIProfile {
-        id: "01900000-0000-7000-8000-000000000001".to_string(),
-        title: Some("Main profile".to_string()),
-        secrets: Some(AISecrets::OpenRouter {
-            api_key: Some("key-123".to_string()),
-        }),
-        has_secrets: true,
-        whitelist_model_ids: None,
-        created_at: TEST_CREATED_AT,
+fn test_openrouter_input_accepts_api_key() {
+    let secrets = AISecrets::OpenRouter {
+        api_key: Some("key-123".to_string()),
     };
 
-    profile.validate_for_input().unwrap();
+    secrets.validate_for_input().unwrap();
 }
 
 #[test]
@@ -238,7 +224,7 @@ fn test_ai_profile_validate_ok_without_secrets() {
         created_at: TEST_CREATED_AT,
     };
 
-    profile.validate().unwrap();
+    profile.validate_for_storage().unwrap();
 }
 
 #[test]
@@ -252,27 +238,12 @@ fn test_ai_profile_validate_empty_id_fails() {
         created_at: TEST_CREATED_AT,
     };
 
-    let result = profile.validate();
+    let result = profile.validate_for_storage();
     assert_eq!(result.unwrap_err().code, "validation.settings-ai.providers.id");
 }
 
 #[test]
-fn test_ai_profile_validate_non_uuid_id_fails_for_input() {
-    let profile = AIProfile {
-        id: "not-a-uuid".to_string(),
-        title: Some("Profile".to_string()),
-        secrets: None,
-        has_secrets: false,
-        whitelist_model_ids: None,
-        created_at: TEST_CREATED_AT,
-    };
-
-    let result = profile.validate_for_input();
-    assert_eq!(result.unwrap_err().code, "validation.settings-ai.providers.id");
-}
-
-#[test]
-fn test_ai_profile_validate_hyphenless_uuid_id_fails_for_input() {
+fn test_ai_profile_validate_hyphenless_uuid_id_fails() {
     // WHY: `uuid::Uuid::parse_str` accepts this hyphenless form; the hand-rolled twin of
     // TS `z.uuid()` (strict 8-4-4-4-12) must reject it, so this pin fails on any
     // regression back to the crate parser or to an empty-only id check.
@@ -285,7 +256,7 @@ fn test_ai_profile_validate_hyphenless_uuid_id_fails_for_input() {
         created_at: TEST_CREATED_AT,
     };
 
-    let result = profile.validate_for_input();
+    let result = profile.validate_for_storage();
     assert_eq!(result.unwrap_err().code, "validation.settings-ai.providers.id");
 }
 
@@ -305,7 +276,7 @@ fn test_ai_profile_validate_non_uuid_id_fails_for_storage() {
 }
 
 #[test]
-fn test_ai_profile_validate_uuidv7_id_ok_for_input_and_storage() {
+fn test_ai_profile_validate_uuidv7_id_ok() {
     let profile = AIProfile {
         id: "01900000-0000-7000-8000-000000000001".to_string(),
         title: Some("Profile".to_string()),
@@ -315,7 +286,6 @@ fn test_ai_profile_validate_uuidv7_id_ok_for_input_and_storage() {
         created_at: TEST_CREATED_AT,
     };
 
-    profile.validate_for_input().unwrap();
     profile.validate_for_storage().unwrap();
 }
 
@@ -330,7 +300,7 @@ fn test_ai_profile_validate_title_too_long_fails() {
         created_at: TEST_CREATED_AT,
     };
 
-    let result = profile.validate();
+    let result = profile.validate_for_storage();
     assert_eq!(result.unwrap_err().code, "validation.common.title.too-long");
 }
 
@@ -347,7 +317,7 @@ fn test_ai_profile_validate_title_max_length_in_cyrillic_ok() {
         created_at: TEST_CREATED_AT,
     };
 
-    profile.validate().unwrap();
+    profile.validate_for_storage().unwrap();
 }
 
 #[test]
@@ -361,7 +331,7 @@ fn test_ai_profile_validate_title_one_past_max_length_in_cyrillic_fails() {
         created_at: TEST_CREATED_AT,
     };
 
-    let result = profile.validate();
+    let result = profile.validate_for_storage();
     assert_eq!(result.unwrap_err().code, "validation.common.title.too-long");
 }
 
@@ -376,7 +346,7 @@ fn test_ai_profile_validate_whitespace_only_title_ok() {
         created_at: TEST_CREATED_AT,
     };
 
-    profile.validate().unwrap();
+    profile.validate_for_storage().unwrap();
 }
 
 #[test]
@@ -392,23 +362,8 @@ fn test_ai_profile_validate_title_max_length_in_emoji_fails() {
         created_at: TEST_CREATED_AT,
     };
 
-    let result = profile.validate();
+    let result = profile.validate_for_storage();
     assert_eq!(result.unwrap_err().code, "validation.common.title.too-long");
-}
-
-#[test]
-fn test_ai_profile_validate_invalid_nested_secrets_fails() {
-    let profile = AIProfile {
-        id: "01900000-0000-7000-8000-000000000004".to_string(),
-        title: Some("Profile".to_string()),
-        secrets: Some(AISecrets::OpenRouter { api_key: None }),
-        has_secrets: false,
-        whitelist_model_ids: None,
-        created_at: TEST_CREATED_AT,
-    };
-
-    let result = profile.validate_for_input();
-    assert_eq!(result.unwrap_err().code, "validation.settings-ai.providers.api-key");
 }
 
 #[test]
@@ -508,7 +463,7 @@ fn test_ai_profile_validate_ok_with_whitelist() {
         created_at: TEST_CREATED_AT,
     };
 
-    profile.validate().unwrap();
+    profile.validate_for_storage().unwrap();
 }
 
 #[test]
@@ -522,7 +477,7 @@ fn test_ai_profile_validate_empty_whitelist_model_id_fails() {
         created_at: TEST_CREATED_AT,
     };
 
-    let result = profile.validate();
+    let result = profile.validate_for_storage();
     assert_eq!(
         result.unwrap_err().code,
         "validation.settings-ai.profiles.whitelist-model-ids"

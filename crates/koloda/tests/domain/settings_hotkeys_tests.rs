@@ -170,8 +170,8 @@ fn test_duplicate_keys_between_ui_and_navigation_fails() {
 fn test_settings_name_hotkeys_validation_with_non_object_content() {
     let content = serde_json::json!("not an object");
 
-    let result = SettingsName::Hotkeys.validate(&content);
-    assert!(result.is_err());
+    let result = SettingsName::Hotkeys.normalize(content);
+    result.unwrap_err();
 }
 
 #[test]
@@ -186,7 +186,7 @@ fn test_settings_name_hotkeys_validation_via_json() {
     }"#;
 
     let content: serde_json::Value = serde_json::from_str(json).expect("Should parse JSON");
-    let result = SettingsName::Hotkeys.validate(&content);
+    let result = SettingsName::Hotkeys.normalize(content);
     result.unwrap();
 }
 
@@ -201,7 +201,7 @@ fn test_settings_name_hotkeys_validation_with_duplicates() {
     }"#;
 
     let content: serde_json::Value = serde_json::from_str(json).expect("Should parse JSON");
-    let result = SettingsName::Hotkeys.validate(&content);
+    let result = SettingsName::Hotkeys.normalize(content);
     assert_eq!(result.unwrap_err().code, "validation.settings-hotkeys.duplicate-keys");
 }
 

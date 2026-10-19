@@ -277,16 +277,16 @@ fn test_profiles_as_object_fails() {
 fn test_settings_name_ai_validation_with_non_object_content() {
     let content = serde_json::json!("not an object");
 
-    let result = SettingsName::Ai.validate(&content);
-    assert!(result.is_err());
+    let result = SettingsName::Ai.normalize(content);
+    result.unwrap_err();
 }
 
 #[test]
 fn test_settings_name_ai_validation_with_array_content() {
     let content = serde_json::json!([1, 2, 3]);
 
-    let result = SettingsName::Ai.validate(&content);
-    assert!(result.is_err());
+    let result = SettingsName::Ai.normalize(content);
+    result.unwrap_err();
 }
 
 #[test]
@@ -305,7 +305,7 @@ fn test_settings_name_ai_validation_valid() {
         ]
     });
 
-    let result = SettingsName::Ai.validate(&content);
+    let result = SettingsName::Ai.normalize(content);
     result.unwrap();
 }
 
@@ -336,20 +336,6 @@ fn test_duplicate_profile_ids_fail() {
         "Wrong error code for duplicate profile id: {}",
         err.code
     );
-}
-
-#[test]
-fn test_duplicate_profile_ids_fail_for_input_too() {
-    let json = r#"{
-        "profiles": [
-            { "id": "01900000-0000-7000-8000-0000000000d0", "title": null, "createdAt": "2026-01-01T00:00:00Z" },
-            { "id": "01900000-0000-7000-8000-0000000000d0", "title": null, "createdAt": "2026-01-01T00:00:00Z" }
-        ]
-    }"#;
-
-    let settings: AISettings = serde_json::from_str(json).expect("Should deserialize");
-    let result = settings.validate_for_input();
-    assert!(result.is_err(), "Duplicate profile ids should fail validate_for_input");
 }
 
 #[test]

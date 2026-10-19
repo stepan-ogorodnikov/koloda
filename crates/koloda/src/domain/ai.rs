@@ -195,11 +195,6 @@ impl AISecrets {
         }
     }
 
-    // WHY: `validate` on secrets is input-strict (full values). Do not retarget to storage rules.
-    pub fn validate(&self) -> Result<(), AppError> {
-        self.validate_for_input()
-    }
-
     pub fn validate_for_input(&self) -> Result<(), AppError> {
         match self {
             AISecrets::OpenAi { api_key } => Self::require_api_key_for_input(api_key, "openai"),
@@ -237,23 +232,6 @@ impl AISecrets {
 }
 
 impl AIProfile {
-    // WHY: `validate` on profiles is storage-lenient (redacted OK). Do not retarget to input rules.
-    pub fn validate(&self) -> Result<(), AppError> {
-        self.validate_for_storage()
-    }
-
-    pub fn validate_for_input(&self) -> Result<(), AppError> {
-        self.validate_id_and_title()?;
-
-        if let Some(secrets) = &self.secrets {
-            secrets.validate_for_input()?;
-        }
-
-        Self::validate_whitelist_model_ids(self.whitelist_model_ids.as_deref())?;
-
-        Ok(())
-    }
-
     pub fn validate_for_storage(&self) -> Result<(), AppError> {
         self.validate_id_and_title()?;
 

@@ -339,7 +339,7 @@ Out:
   Commit: Add full-field roundtrip tests for cards, reviews, decks, templates, and algorithms
   Depends on: none
 
-- [ ] 6. Delete validation methods only tests call
+- [x] 6. Delete validation methods only tests call
   Goal (finding 6):
   - Delete `SettingsName::validate` (`crates/koloda/src/domain/settings.rs:48-67`), `AISecrets::validate`
     (`domain/ai.rs:198-201`), `AIProfile::validate` (`:240-243`), `AIProfile::validate_for_input` (`:245-255`), and
