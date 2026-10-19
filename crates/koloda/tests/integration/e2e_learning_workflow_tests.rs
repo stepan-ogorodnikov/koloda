@@ -5,7 +5,7 @@ use koloda::domain::lessons::{GetLessonDataParams, GetLessonsParams, LessonAmoun
 use koloda::domain::reviews::GetReviewTotalsParams;
 use koloda::repo::{algorithms, cards, decks, lessons, reviews, templates};
 
-use crate::common::{card_content, fsrs_content, simple_template, test_db};
+use crate::common::{card_content, fsrs_algorithm_content, simple_template, test_db};
 
 #[test]
 fn e2e_full_learning_workflow() {
@@ -15,7 +15,7 @@ fn e2e_full_learning_workflow() {
         &db,
         InsertAlgorithmData {
             title: "FSRS".to_string(),
-            content: fsrs_content(),
+            content: fsrs_algorithm_content(),
         },
     )
     .expect("algorithm should be created");

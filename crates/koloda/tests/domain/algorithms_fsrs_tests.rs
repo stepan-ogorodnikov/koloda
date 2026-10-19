@@ -368,40 +368,6 @@ fn test_weights_empty_string_fails() {
 }
 
 #[test]
-fn test_is_fuzz_enabled_true() {
-    let json = r#"{
-        "type": "fsrs",
-        "retention": 90.0,
-        "weights": "0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5",
-        "isFuzzEnabled": true,
-        "learningSteps": [],
-        "relearningSteps": [],
-        "maximumInterval": 36500
-    }"#;
-
-    let algorithm: AlgorithmFSRS = serde_json::from_str(json).expect("Should deserialize");
-    algorithm.validate().unwrap();
-    assert!(algorithm.is_fuzz_enabled);
-}
-
-#[test]
-fn test_is_fuzz_enabled_false() {
-    let json = r#"{
-        "type": "fsrs",
-        "retention": 90.0,
-        "weights": "0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5",
-        "isFuzzEnabled": false,
-        "learningSteps": [],
-        "relearningSteps": [],
-        "maximumInterval": 36500
-    }"#;
-
-    let algorithm: AlgorithmFSRS = serde_json::from_str(json).expect("Should deserialize");
-    algorithm.validate().unwrap();
-    assert!(!algorithm.is_fuzz_enabled);
-}
-
-#[test]
 fn test_learning_steps_empty_array() {
     let json = r#"{
         "type": "fsrs",

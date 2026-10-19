@@ -23,10 +23,6 @@ pub fn fsrs_algorithm_content() -> koloda::domain::algorithms_fsrs::AlgorithmFSR
     .expect("valid FSRS fixture")
 }
 
-pub fn fsrs_content() -> koloda::domain::algorithms_fsrs::AlgorithmFSRS {
-    fsrs_algorithm_content()
-}
-
 pub fn card_content(
     front: &str,
     back: &str,

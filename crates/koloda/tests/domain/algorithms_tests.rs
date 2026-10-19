@@ -1,6 +1,4 @@
-use koloda::domain::algorithms::{
-    CloneAlgorithmData, DeleteAlgorithmData, InsertAlgorithmData, UpdateAlgorithmData, UpdateAlgorithmValues,
-};
+use koloda::domain::algorithms::{CloneAlgorithmData, InsertAlgorithmData, UpdateAlgorithmData, UpdateAlgorithmValues};
 
 const VALID_FSRS_CONTENT: &str = r#"{
     "type": "fsrs",
@@ -164,18 +162,6 @@ fn test_incomplete_non_fsrs_content_fails_to_deserialize() {
 }
 
 #[test]
-fn test_clone_algorithm_valid() {
-    let json = r#"{
-        "title": "Cloned Algorithm",
-        "sourceId": "01900000-0000-7000-8000-00000000002a"
-    }"#;
-
-    let data: CloneAlgorithmData = serde_json::from_str(json).expect("Should deserialize");
-    assert_eq!(data.title, "Cloned Algorithm");
-    assert_eq!(data.source_id, "01900000-0000-7000-8000-00000000002a");
-}
-
-#[test]
 fn test_clone_algorithm_missing_title_fails() {
     let json = r#"{
         "sourceId": "01900000-0000-7000-8000-00000000002a"
@@ -193,30 +179,4 @@ fn test_clone_algorithm_missing_source_id_fails() {
 
     let result: Result<CloneAlgorithmData, _> = serde_json::from_str(json);
     result.unwrap_err();
-}
-
-#[test]
-fn test_delete_algorithm_with_successor() {
-    let json = r#"{
-        "id": "01900000-0000-7000-8000-000000000001",
-        "successorId": "01900000-0000-7000-8000-000000000002"
-    }"#;
-
-    let data: DeleteAlgorithmData = serde_json::from_str(json).expect("Should deserialize");
-    assert_eq!(data.id, "01900000-0000-7000-8000-000000000001");
-    assert_eq!(
-        data.successor_id,
-        Some("01900000-0000-7000-8000-000000000002".to_string())
-    );
-}
-
-#[test]
-fn test_delete_algorithm_without_successor() {
-    let json = r#"{
-        "id": "01900000-0000-7000-8000-000000000001"
-    }"#;
-
-    let data: DeleteAlgorithmData = serde_json::from_str(json).expect("Should deserialize");
-    assert_eq!(data.id, "01900000-0000-7000-8000-000000000001");
-    assert_eq!(data.successor_id, None);
 }

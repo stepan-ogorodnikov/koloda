@@ -374,7 +374,7 @@ Out:
   Commit: Delete stale AI aliases, timestamp fallback, and NULL stability read
   Depends on: 6
 
-- [ ] 8. Delete duplicate and passthrough koloda tests
+- [x] 8. Delete duplicate and passthrough koloda tests
   Goal (finding 8):
   - Move two cases from `tests/domain/conversations_tests.rs` into `conversations_serde_tests.rs`.
     They are `f64` `updatedAt` on `SetConversationInput` (`:168`) and an invalid `updatedAt` string (`:182`).
@@ -382,6 +382,8 @@ Out:
   - Delete `tests/domain/lessons_validation_tests.rs` and its `main.rs` line.
     `lessons_result_tests.rs:55` keeps the case.
   - Delete the passthrough tests: `algorithms_fsrs_tests.rs:370-403`, and `algorithms_tests.rs:166-222`.
+    That range holds five tests; three assert fields equal their JSON and go.
+    The two that a missing `title` or `sourceId` fails stay; they pin that both fields are required.
   - Inline `fsrs_content` (`tests/common/mod.rs:26-28`) at its one caller
     (`tests/integration/e2e_learning_workflow_tests.rs:18`), and delete it.
   Constraints: tests only.
