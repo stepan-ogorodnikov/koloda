@@ -69,10 +69,10 @@ AISecrets::MyProvider { .. } => "myProvider",
 
 // api_key() — extend the existing or-pattern (api-key-only) or the `{ api_key, .. }` arm (baseUrl).
 
-// validate_for_input() — require_api_key_for_input and/or require_base_url_for_input
+// validate_for_input() — require_api_key_for_input and/or require_base_url
 AISecrets::MyProvider { api_key } => Self::require_api_key_for_input(api_key, "myProvider"),
 
-// validate_for_storage() — reject_stored_api_key and, if baseUrl, require_stored_base_url
+// validate_for_storage() — reject_stored_api_key and, if baseUrl, require_base_url
 AISecrets::MyProvider { api_key } => Self::reject_stored_api_key(api_key, "myProvider"),
 ```
 
