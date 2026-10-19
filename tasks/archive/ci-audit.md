@@ -1,6 +1,6 @@
 # CI audit fixes
 
-Status: ready
+Status: done
 Guides: agents/IMPLEMENTATION-PLAN.md, agents/TASKS.md, agents/MARKDOWN.md, agents/VERIFY.md, agents/REVIEW.md
 Flow: remote
 
@@ -258,3 +258,37 @@ Out:
   Depends on: none
 
 ## Outcome
+
+Shipped, one commit per Plan item:
+
+- CI runs on pushes to `main` as well; only `main` saves the Cargo, Nx, and dprint caches, and branches restore them.
+  `bun run land` still waits only for the branch's `checks`.
+- Cargo caches dependencies only, through `Swatinem/rust-cache@v2` on `dist/target/koloda`.
+  A local `touch` of `crates/koloda-sync-proto/src/lib.rs` rechecked that crate and its dependents (cargo 1.98.1).
+  This confirms that workspace crates rebuild on mtime alone.
+- The Nx cache is `~/.nx`; an Adopt step renames the restored database to the runner's `/etc/machine-id`.
+  Before item 2 was committed, a local run of that step's exact script turned a database from another machine id
+  into a 1/1 hit; a second run left the files unchanged.
+- The Bun install cache and the Docker layer cache are gone.
+- `koloda:lint` is the one clippy target; its inputs cover every workspace member.
+  A comment edit in `crates/koloda-server/src` now reruns it.
+
+Checks on the branch:
+
+- Run 39221970268 (item 1) was green: rust-cache found no cache and saved nothing, and the dprint save was skipped.
+- Items 2–5 were pushed together, because a push cancels the branch's running CI.
+  Run 39222811173 on `fdb61c4d` was green, in 3m47s against about 6m before.
+  The Nx restore missed, Adopt and both saves were skipped, and the branch gained no cache entry.
+  The ts track was faster too (`tsc -b` 27s against 52s), so part of that gain is runner variance.
+- Docker run 39222811085 was green, smoke test included, with no layer cache saved.
+- `bun run check:push` passed locally after item 4.
+
+Left open:
+
+- Finding 2b (one `cargo test --workspace`): skipped, as Scope says.
+- Finding 4's `CARGO_PROFILE_DEV_DEBUG=line-tables-only`: skipped as unmeasured.
+- Finding 3 (split `checks` into parallel jobs): needs-decision, question 5.
+  Decide it from the first task branch run after this lands, once `main` has saved caches.
+  That run should show `v0-rust-`, `nx-Linux-`, and `dprint-` restores from `refs/heads/main`.
+  It should also show Nx hits for unchanged projects and cargo compiling only workspace crates.
+  If Nx still misses every task there, the Adopt step's premise about the database name no longer holds.
