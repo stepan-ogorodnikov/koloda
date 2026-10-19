@@ -1,6 +1,6 @@
 # Koloda crate audit fixes
 
-Status: ready
+Status: done
 Guides: agents/IMPLEMENTATION-PLAN.md, agents/TASKS.md, agents/RUST.md, docs/decisions/TS-RUST-DOMAIN-MIRRORING.md, docs/specs/LEARNING-SETTINGS.md, docs/decisions/MEDIA-STORAGE.md, agents/CODE-STYLE.md, agents/CODE-DOCUMENTATION.md, agents/TESTING.md, agents/BACKWARDS-COMPATIBILITY.md, agents/MARKDOWN.md, agents/VERIFY.md, agents/REVIEW.md
 Flow: local
 
@@ -437,4 +437,56 @@ Out:
 
 ## Outcome
 
-<what shipped>
+All ten findings are fixed, one Plan item per commit (items 1 to 10); none is skipped.
+Finding 1 shipped with no migration (Open questions 1).
+
+Shipped:
+
+- 1: a saved daily Total of 0 stays 0 on both hosts and reads back as a hard cap.
+  `deserialize_total` and the TS preprocess are gone.
+  A counted per-type value above a Total of 0 is now refused on save.
+- 2: the learning caps and learn-ahead values are `z.int()` in TS, so a fraction is refused on both hosts.
+  The learning form's number fields allow no fraction digits.
+- 3: the attachment sweep reads candidate ids, then every card's content once, then deletes the unreferenced ones,
+  in one transaction on each host.
+- 4: `update_card` re-reads the card inside its transaction, stops when it is gone, and compares against that row.
+- 5: cards, reviews, decks, templates, and algorithms each have a full-field roundtrip integration test.
+- 6: the five validation methods only tests called are deleted; their tests use `normalize`,
+  `validate_for_storage`, or `AISecrets::validate_for_input`.
+- 7: the snake_case AI aliases, the dead timestamp fallback, and the NULL stability read are deleted with their tests.
+- 8: `conversations_tests.rs` and `lessons_validation_tests.rs` are deleted after moving two cases, along with the two
+  fuzz-flag tests, three DTO passthrough tests, and the `fsrs_content` alias.
+- 9: `SetConversationInput` lives in `domain/conversations.rs`, and `AIProfile` and `AISecrets` are imported from
+  `domain::ai`.
+- 10: `update_template` uses `original.is_locked`; `is_template_locked` is gone.
+
+Self-review added item 11: `agents/RUST.md` and `agents/ADD-AI-PROVIDER.md` no longer name the deleted method or
+aliases.
+
+Departures from the plan:
+
+- Item 1 tests a counted value of 1 above a Total of 0, one past the limit, in place of 50.
+- Item 2 adds no form test.
+  Without the fix, a jsdom test of the field fails only because the number display crashes, so it proves nothing.
+  The schema tests on both hosts guard the rule.
+- Item 7 also deleted an alias pin the audit missed (`ai_serde_tests.rs`).
+- Item 8 kept the two `CloneAlgorithmData` missing-field tests in the audit's range; they pin that both fields are
+  required.
+
+Checked:
+
+- `bun run check:push` passed on the final tip.
+- `cargo test -p koloda -p koloda-sync`, `nx run @koloda/electron:test-rust`, and the touched TS libs passed after
+  each item.
+- The new Total 0 tests fail with the old mapping (it reads 0 as unlimited).
+  The card roundtrip failed once by hand with stability and difficulty swapped in `get_card_row`.
+- A one-off probe at the audit's scale timed the new desktop sweep: 20,000 cards and 2,000 referenced images took
+  about 28 ms in a debug build, against 11.8 s for the old statement in the SQLite CLI.
+
+Manual verify: not run in this session.
+On web and desktop: Settings → Learning → set Total, New, and Review to 0 → Save → Total shows 0 after a reload.
+Then New 50 → Save → "New can't be more than total".
+Then type 1.5 in Total and in Hours → neither field takes the fraction.
+
+Out of scope, seen during the work: `agents/ADD-AI-PROVIDER.md` names `require_base_url_for_input` and
+`require_stored_base_url`, which do not exist; the code has `require_base_url`.
