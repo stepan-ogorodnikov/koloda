@@ -293,6 +293,11 @@ pub fn update_card(db: &Database, data: UpdateCardData) -> Result<Card, AppError
         let content = serde_json::to_string(&data.values.content)?;
 
         db.with_transaction(|tx| {
+            // WHY: the sync engine applies remote envelopes over this connection between two lock
+            // acquisitions, so `original` may be stale. Decide what to capture from this read.
+            let Some(current) = select_card(tx, &data.id)? else {
+                return Ok(());
+            };
             tx.execute(
                 r#"
                 UPDATE cards
@@ -302,10 +307,10 @@ pub fn update_card(db: &Database, data: UpdateCardData) -> Result<Card, AppError
                 params![content, now, data.id],
             )?;
 
-            if original.content != data.values.content {
+            if current.content != data.values.content {
                 Capture::begin(tx)?.write(
                     &data.id,
-                    Some(&original.deck_id),
+                    Some(&current.deck_id),
                     &Payload::CardContent(wire::CardContent {
                         content,
                         updated_at: Some(now),

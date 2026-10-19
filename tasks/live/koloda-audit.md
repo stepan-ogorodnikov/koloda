@@ -302,7 +302,7 @@ Out:
   Commit: Sweep unreferenced attachments in one pass over cards
   Depends on: none
 
-- [ ] 4. Read the card inside update_card's transaction
+- [x] 4. Read the card inside update_card's transaction
   Goal (finding 5):
   - `update_card` (`crates/koloda/src/repo/cards.rs:274-321`) keeps its first `get_card`.
     That read still answers `NOT_FOUND_CARDS_UPDATE_CARD` and finds the template to validate against; a card's
