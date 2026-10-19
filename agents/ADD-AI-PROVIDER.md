@@ -58,9 +58,9 @@ not a runtime surprise.
 #[serde(rename = "myProvider")]
 MyProvider {
     // INVARIANT: `None` = redacted/absent in settings JSON (`"apiKey": null`).
-    #[serde(rename = "apiKey", alias = "api_key", deserialize_with = "deserialize_api_key")]
+    #[serde(rename = "apiKey", deserialize_with = "deserialize_api_key")]
     api_key: Option<String>,
-    // Optional: #[serde(rename = "baseUrl", alias = "base_url")]
+    // Optional: #[serde(rename = "baseUrl")]
     // base_url: String,
 },
 

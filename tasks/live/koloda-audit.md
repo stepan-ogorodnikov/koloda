@@ -424,6 +424,17 @@ Out:
   Commit: Use the read template's lock flag in update_template
   Depends on: none
 
+- [x] 11. Bring the guides in line with the deleted validate door and AI aliases
+  Goal (self-review of items 6 and 7):
+  - `agents/RUST.md` (§Per-task notes, Settings slices) still said `settings.rs` holds arms in both `validate()` and
+    `normalize()`; only `normalize()` is left.
+  - The `AISecrets` example in `agents/ADD-AI-PROVIDER.md` still carried `alias = "api_key"` and `alias = "base_url"`,
+    so the next provider would copy them back.
+  Constraints: docs only.
+  Done when: neither guide names a deleted method or alias.
+  Commit: Bring the guides in line with the deleted validate door and AI aliases
+  Depends on: 6, 7
+
 ## Outcome
 
 <what shipped>

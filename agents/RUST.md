@@ -59,7 +59,7 @@ Sync modules (`src/repo/sync/`) keep their internals in `src/repo/sync/README.md
 
 **Settings slices** — a slice module owns its struct plus `validate()` (and `fill_defaults()` where defaults exist).
 
-- `src/domain/settings.rs` holds the `SettingsName` variant and the arms in both `validate()` and `normalize()`.
+- `src/domain/settings.rs` holds the `SettingsName` variant and its arm in `normalize()`.
 - Storage is generic in `src/repo/settings.rs`; slices never touch SQL.
 - Mirror the registry in `libs/settings/src/index.ts` (`allowedSettings`).
 - The hotkeys slice has a dedicated walkthrough: `agents/ADD-HOTKEY.md`.
