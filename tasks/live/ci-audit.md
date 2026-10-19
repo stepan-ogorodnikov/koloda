@@ -228,7 +228,7 @@ Out:
   Commit: Drop the Bun install cache from CI
   Depends on: none
 
-- [ ] 4. Lint the Rust workspace with one clippy target
+- [x] 4. Lint the Rust workspace with one clippy target
   Goal (finding 2a):
   - Widen `koloda:lint`'s inputs (`crates/koloda/project.json:11-16`) to every workspace member:
     `rust`, `{workspaceRoot}/crates/**/*`, `{workspaceRoot}/apps/electron/src-rust/**/*`, and

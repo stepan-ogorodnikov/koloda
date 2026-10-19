@@ -5,22 +5,6 @@
   "projectType": "application",
   "tags": ["lang:rust"],
   "targets": {
-    "lint": {
-      "executor": "nx:run-commands",
-      "cache": true,
-      "inputs": [
-        "rust",
-        "{workspaceRoot}/crates/koloda-sync-proto/**/*",
-        "!{workspaceRoot}/crates/koloda-sync-proto/**/*.md"
-      ],
-      "options": {
-        "command": "cargo clippy -p koloda-server --all-targets -- -D warnings",
-        "forwardAllArgs": false,
-        "env": {
-          "CARGO_TARGET_DIR": "dist/target/koloda"
-        }
-      }
-    },
     "test": {
       "executor": "nx:run-commands",
       "cache": true,
