@@ -217,7 +217,7 @@ Out:
   Commit: Restore the Nx cache in CI from main's runs
   Depends on: 1
 
-- [ ] 3. Drop the Bun install cache from CI
+- [x] 3. Drop the Bun install cache from CI
   Goal (finding 5): delete `Cache Bun` (`ci.yml:56-62`).
   Constraints: `ci.yml` only.
   Leave setup-bun's own cache on.
