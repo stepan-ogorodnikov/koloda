@@ -276,7 +276,7 @@ Out:
   Commit: Accept only whole numbers for learning limits
   Depends on: 1
 
-- [ ] 3. Sweep unreferenced attachments in one pass over cards
+- [x] 3. Sweep unreferenced attachments in one pass over cards
   Goal (finding 2):
   - Desktop `sweep_attachments` (`crates/koloda/src/repo/attachments.rs:83-99`) and web `sweepAttachments`
     (`libs/db-sqlite/src/lib/attachments.ts:45-56`) drop the correlated `NOT EXISTS (… instr …)`.

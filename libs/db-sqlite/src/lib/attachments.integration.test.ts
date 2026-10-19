@@ -92,33 +92,36 @@ describe("attachments repository integration", () => {
     const { db } = testDb;
     const cutoff = new Date(1_000_000);
     const referenced = await addAttachment(db, { bytes: pngOfLength(16) });
+    const alsoReferenced = await addAttachment(db, { bytes: pngOfLength(19) });
     const old = await addAttachment(db, { bytes: pngOfLength(17) });
     const atCutoff = await addAttachment(db, { bytes: pngOfLength(18) });
-    await db.run(`UPDATE attachments SET created_at = ? WHERE id IN (?, ?)`, [
+    await db.run(`UPDATE attachments SET created_at = ? WHERE id IN (?, ?, ?)`, [
       cutoff.getTime() - 1,
       referenced.id,
+      alsoReferenced.id,
       old.id,
     ]);
     await db.run(`UPDATE attachments SET created_at = ? WHERE id = ?`, [cutoff.getTime(), atCutoff.id]);
 
     const { deck, template } = await seedDeckContext(db);
     const [first, second] = template.content.fields;
-    // The ref sits mid-text in the second field, so nothing matches it by position.
+    // The refs sit mid-text in the second field, so nothing matches them by position.
     await addCard(db, {
       deckId: deck.id,
       templateId: template.id,
       content: createCardContent(template, {
         [String(first?.id)]: "question",
-        [String(second?.id)]: `see ![x](attachment:${referenced.id})`,
+        [String(second?.id)]: `see ![x](attachment:${referenced.id}) and ![y](attachment:${alsoReferenced.id})`,
       }),
     });
 
     await sweepAttachments(db, { createdBefore: cutoff });
 
     expect(await getAttachment(db, referenced.id)).not.toBeNull();
+    expect(await getAttachment(db, alsoReferenced.id)).not.toBeNull();
     expect(await getAttachment(db, old.id)).toBeNull();
     expect(await getAttachmentBytes(db, old.id)).toBeNull();
     expect(await getAttachment(db, atCutoff.id)).not.toBeNull();
-    expect(await countRows(db, "attachment_bytes")).toBe(2);
+    expect(await countRows(db, "attachment_bytes")).toBe(3);
   });
 });

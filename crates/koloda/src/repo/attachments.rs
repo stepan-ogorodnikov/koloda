@@ -2,6 +2,8 @@
 //!
 //! Validation lives in `domain/attachments`. Bytes go through `repo::attachment_bytes` only.
 
+use std::collections::HashSet;
+
 use rusqlite::{params, Connection, OptionalExtension, Row};
 use sha2::{Digest, Sha256};
 
@@ -10,6 +12,9 @@ use crate::app::error::{error_codes, throw_known_error, AppError};
 use crate::app::utility::get_current_timestamp;
 use crate::domain::attachments::{AddAttachmentData, Attachment, SweepAttachmentsData};
 use crate::repo::attachment_bytes;
+
+const ATTACHMENT_REF_PREFIX: &str = "attachment:";
+const ATTACHMENT_ID_LEN: usize = 64;
 
 fn get_attachment_row(row: &Row) -> Result<Attachment, rusqlite::Error> {
     Ok(Attachment {
@@ -82,17 +87,38 @@ pub fn get_attachment(db: &Database, id: &str) -> Result<Option<Attachment>, App
 
 pub fn sweep_attachments(db: &Database, data: SweepAttachmentsData) -> Result<(), AppError> {
     throw_known_error(error_codes::DB_DELETE, || {
-        db.with_conn(|conn| {
-            // WHY: a hex id cannot be hidden by JSON escaping, so a substring match on the stored
-            // content finds every ref without parsing it. Bytes go through the foreign-key cascade.
-            conn.execute(
-                r#"
-                DELETE FROM attachments
-                WHERE created_at < ?1
-                  AND NOT EXISTS (SELECT 1 FROM cards WHERE instr(cards.content, 'attachment:' || attachments.id) > 0)
-                "#,
-                params![data.created_before],
-            )?;
+        db.with_transaction(|tx| {
+            let mut stmt = tx.prepare("SELECT id FROM attachments WHERE created_at < ?1")?;
+            let mut unreferenced = stmt
+                .query_map(params![data.created_before], |row| row.get::<_, String>(0))?
+                .collect::<Result<HashSet<_>, _>>()?;
+            if unreferenced.is_empty() {
+                return Ok(());
+            }
+
+            // WHY: one pass over the cards, not a scan per attachment, which grew as cards × attachments
+            // on the launch path. A hex id cannot be hidden by JSON escaping, so the text after each
+            // `attachment:` in the stored content is every ref, without parsing it.
+            let mut stmt = tx.prepare("SELECT content FROM cards")?;
+            let mut rows = stmt.query([])?;
+            while let Some(row) = rows.next()? {
+                let content: String = row.get(0)?;
+                for (start, _) in content.match_indices(ATTACHMENT_REF_PREFIX) {
+                    let id_start = start + ATTACHMENT_REF_PREFIX.len();
+                    if let Some(id) = content.get(id_start..id_start + ATTACHMENT_ID_LEN) {
+                        unreferenced.remove(id);
+                    }
+                }
+                if unreferenced.is_empty() {
+                    return Ok(());
+                }
+            }
+
+            // WHY: bytes go through the foreign-key cascade.
+            let mut stmt = tx.prepare("DELETE FROM attachments WHERE id = ?1")?;
+            for id in &unreferenced {
+                stmt.execute(params![id])?;
+            }
             Ok(())
         })
     })

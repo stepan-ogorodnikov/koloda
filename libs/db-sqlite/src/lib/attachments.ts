@@ -7,6 +7,8 @@ import type { DB } from "./db";
 import { parseRow, parseRowOrNull } from "./parse-rows";
 import { nowMs } from "./sql";
 
+const ATTACHMENT_REF_IN_TEXT = /attachment:([0-9a-f]{64})/g;
+
 async function sha256Hex(bytes: Uint8Array<ArrayBuffer>) {
   const digest = new Uint8Array(await crypto.subtle.digest("SHA-256", bytes));
   return Array.from(digest, (byte) => byte.toString(16).padStart(2, "0")).join("");
@@ -44,14 +46,22 @@ export async function getAttachment(db: DB, id: Attachment["id"]): Promise<Attac
 
 export async function sweepAttachments(db: DB, { createdBefore }: SweepAttachmentsData) {
   return throwKnownError("db.delete", async () => {
-    // WHY: a hex id cannot be hidden by JSON escaping, so a substring match on the stored
-    // content finds every ref without parsing it. Bytes go through the foreign-key cascade.
-    await db.run(
-      `DELETE FROM attachments
-       WHERE created_at < ?
-         AND NOT EXISTS (SELECT 1 FROM cards WHERE instr(cards.content, 'attachment:' || attachments.id) > 0)`,
-      [createdBefore],
-    );
+    await db.transaction(async (tx) => {
+      const candidates = await tx.all(`SELECT id FROM attachments WHERE created_at < ?`, [createdBefore]);
+      const unreferenced = new Set(candidates.map(({ id }) => String(id)));
+      if (unreferenced.size === 0) return;
+
+      // WHY: one pass over the cards, not a scan per attachment, which grew as cards × attachments
+      // on the launch path. A hex id cannot be hidden by JSON escaping, so a match on the stored
+      // content finds every ref without parsing it.
+      for (const { content } of await tx.all(`SELECT content FROM cards`)) {
+        for (const [, id] of String(content).matchAll(ATTACHMENT_REF_IN_TEXT)) unreferenced.delete(id);
+        if (unreferenced.size === 0) return;
+      }
+
+      // WHY: bytes go through the foreign-key cascade.
+      for (const id of unreferenced) await tx.run(`DELETE FROM attachments WHERE id = ?`, [id]);
+    });
   });
 }
 

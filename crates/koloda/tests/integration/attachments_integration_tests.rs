@@ -95,17 +95,25 @@ fn sweep_removes_only_old_unreferenced_attachments() {
     let db = test_db();
     let cutoff = 1_000_000;
     let referenced = repo::add_attachment(&db, add_data(png_of_len(16), None, None)).expect("add");
+    let also_referenced = repo::add_attachment(&db, add_data(png_of_len(19), None, None)).expect("add");
     let old = repo::add_attachment(&db, add_data(png_of_len(17), None, None)).expect("add");
     let at_cutoff = repo::add_attachment(&db, add_data(png_of_len(18), None, None)).expect("add");
     set_created_at(&db, &referenced.id, cutoff - 1);
+    set_created_at(&db, &also_referenced.id, cutoff - 1);
     set_created_at(&db, &old.id, cutoff - 1);
     set_created_at(&db, &at_cutoff.id, cutoff);
 
     let algorithm_id = add_algorithm(&db, "Algorithm");
     let template_id = add_template(&db, "Template");
     let deck_id = add_deck(&db, &algorithm_id, &template_id, "Deck");
-    // The ref sits mid-text in the back field, so nothing matches it by position.
-    let content = card_content("question", &format!("see ![x](attachment:{})", referenced.id));
+    // The refs sit mid-text in the back field, so nothing matches them by position.
+    let content = card_content(
+        "question",
+        &format!(
+            "see ![x](attachment:{}) and ![y](attachment:{})",
+            referenced.id, also_referenced.id
+        ),
+    );
     cards::add_card(
         &db,
         InsertCardData {
@@ -130,6 +138,10 @@ fn sweep_removes_only_old_unreferenced_attachments() {
     let has = |id: &str| repo::get_attachment(&db, id).expect("query should succeed").is_some();
     assert!(has(&referenced.id), "a referenced attachment survives, however old");
     assert!(
+        has(&also_referenced.id),
+        "every ref in a card keeps its attachment, not only the first"
+    );
+    assert!(
         !has(&old.id),
         "an unreferenced attachment older than the cutoff is removed"
     );
@@ -142,5 +154,5 @@ fn sweep_removes_only_old_unreferenced_attachments() {
         None,
         "the removed attachment's bytes go with it"
     );
-    assert_eq!(count_rows(&db, "attachment_bytes"), 2);
+    assert_eq!(count_rows(&db, "attachment_bytes"), 3);
 }
