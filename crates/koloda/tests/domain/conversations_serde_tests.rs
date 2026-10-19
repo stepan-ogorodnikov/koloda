@@ -1,5 +1,4 @@
-use koloda::domain::conversations::Conversation;
-use koloda::repo::conversations::SetConversationInput;
+use koloda::domain::conversations::{Conversation, SetConversationInput};
 use serde_json::json;
 
 fn conversation_fixture() -> Conversation {

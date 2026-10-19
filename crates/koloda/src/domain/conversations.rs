@@ -32,3 +32,14 @@ pub struct Conversation {
     )]
     pub updated_at: Option<i64>,
 }
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SetConversationInput {
+    pub id: String,
+    pub state: Value,
+    #[serde(default)]
+    pub title: Option<String>,
+    #[serde(default, deserialize_with = "deserialize_optional_timestamp")]
+    pub updated_at: Option<i64>,
+}

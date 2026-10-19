@@ -1,4 +1,4 @@
-use koloda::domain::conversations::Conversation;
+use koloda::domain::conversations::{Conversation, SetConversationInput};
 use koloda::repo::conversations as repo;
 use serde_json::json;
 
@@ -12,7 +12,7 @@ fn set(
 ) -> Result<Conversation, koloda::app::error::AppError> {
     repo::set_conversation(
         db,
-        repo::SetConversationInput {
+        SetConversationInput {
             id: id.to_string(),
             state,
             title: None,
@@ -65,7 +65,7 @@ fn set_conversation_upserts_existing_row_and_advances_updated_at() {
 
     let initial = repo::set_conversation(
         &db,
-        repo::SetConversationInput {
+        SetConversationInput {
             id: id.to_string(),
             state: json!({"version": 1}),
             title: None,
@@ -82,7 +82,7 @@ fn set_conversation_upserts_existing_row_and_advances_updated_at() {
 
     let updated = repo::set_conversation(
         &db,
-        repo::SetConversationInput {
+        SetConversationInput {
             id: id.to_string(),
             state: json!({"version": 2}),
             title: None,
@@ -133,7 +133,7 @@ fn set_conversation_with_explicit_updated_at_preserves_timestamp() {
 
     let stored = repo::set_conversation(
         &db,
-        repo::SetConversationInput {
+        SetConversationInput {
             id: id.to_string(),
             state: json!({"v": 1}),
             title: None,
@@ -169,7 +169,7 @@ fn set_conversation_insert_with_explicit_updated_at_sorts_to_top() {
     // Older conversations stamped earlier.
     let _ = repo::set_conversation(
         &db,
-        repo::SetConversationInput {
+        SetConversationInput {
             id: "older".to_string(),
             state: json!({}),
             title: None,
@@ -183,7 +183,7 @@ fn set_conversation_insert_with_explicit_updated_at_sorts_to_top() {
     let newer_stamp = 1_700_000_100_000_i64;
     let _ = repo::set_conversation(
         &db,
-        repo::SetConversationInput {
+        SetConversationInput {
             id: "brand-new".to_string(),
             state: json!({"messages": ["hi"]}),
             title: Some("hi".to_string()),
@@ -336,7 +336,7 @@ fn set_conversation_persists_explicit_title() {
     let db = test_db();
     let stored = repo::set_conversation(
         &db,
-        repo::SetConversationInput {
+        SetConversationInput {
             id: "conv-titled".to_string(),
             state: json!({"messages": []}),
             title: Some("My conversation".to_string()),
@@ -367,7 +367,7 @@ fn set_conversation_upsert_replaces_title() {
 
     repo::set_conversation(
         &db,
-        repo::SetConversationInput {
+        SetConversationInput {
             id: id.to_string(),
             state: json!({"v": 1}),
             title: Some("Old title".to_string()),
@@ -378,7 +378,7 @@ fn set_conversation_upsert_replaces_title() {
 
     let updated = repo::set_conversation(
         &db,
-        repo::SetConversationInput {
+        SetConversationInput {
             id: id.to_string(),
             state: json!({"v": 2}),
             title: Some("New title".to_string()),
@@ -397,7 +397,7 @@ fn set_conversation_upsert_can_clear_title_with_null() {
 
     repo::set_conversation(
         &db,
-        repo::SetConversationInput {
+        SetConversationInput {
             id: id.to_string(),
             state: json!({}),
             title: Some("Has title".to_string()),
@@ -408,7 +408,7 @@ fn set_conversation_upsert_can_clear_title_with_null() {
 
     let updated = repo::set_conversation(
         &db,
-        repo::SetConversationInput {
+        SetConversationInput {
             id: id.to_string(),
             state: json!({}),
             title: None,
@@ -429,7 +429,7 @@ fn get_conversations_returns_title_on_each_row() {
 
     repo::set_conversation(
         &db,
-        repo::SetConversationInput {
+        SetConversationInput {
             id: "with-title".to_string(),
             state: json!({}),
             title: Some("Titled".to_string()),

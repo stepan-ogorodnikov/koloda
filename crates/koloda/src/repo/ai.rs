@@ -8,9 +8,10 @@ use crate::app::db::Database;
 use crate::app::error::{error_codes, throw_known_error, AppError};
 use crate::app::secrets::get_secret_store;
 use crate::app::utility::{generate_uuid, get_current_timestamp};
+use crate::domain::ai::{AIProfile, AISecrets};
 use crate::domain::common::normalize_optional_title;
 use crate::domain::settings::SettingsName;
-use crate::domain::settings_ai::{AIProfile, AISecrets, AISettings};
+use crate::domain::settings_ai::AISettings;
 
 fn get_ai_profile_store_key(profile_id: &str) -> String {
     format!("ai-profile-{}", profile_id)

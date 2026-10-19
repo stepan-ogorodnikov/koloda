@@ -3,6 +3,7 @@ use koloda::app::db::Database;
 use koloda::app::error::{error_codes, AppError};
 use koloda::app::init::{self as init_mod, SeedData};
 use koloda::domain::attachments::{AddAttachmentData, Attachment, SweepAttachmentsData};
+use koloda::domain::conversations::SetConversationInput;
 use koloda::domain::lessons::GetLessonsParams;
 use koloda::domain::settings::SettingsName;
 use koloda::repo;
@@ -571,7 +572,7 @@ impl KolodaDb {
     #[napi]
     pub fn set_conversation(&self, env: Env, params: serde_json::Value) -> Result<JsObject> {
         self.run(env, move |db| {
-            let input: repo::conversations::SetConversationInput = from_wire(params)?;
+            let input: SetConversationInput = from_wire(params)?;
             let conversation = repo::conversations::set_conversation(db, input).map_err(to_napi_error)?;
             to_value(&conversation)
         })

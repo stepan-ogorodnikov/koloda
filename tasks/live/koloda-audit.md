@@ -393,7 +393,7 @@ Out:
   Commit: Delete duplicate and passthrough koloda tests
   Depends on: none
 
-- [ ] 9. Move the AI types and SetConversationInput to their domain homes
+- [x] 9. Move the AI types and SetConversationInput to their domain homes
   Goal (finding 9):
   - Delete the re-export of `AIProfile` and `AISecrets` in `crates/koloda/src/domain/settings_ai.rs:10`.
     Import them from `domain::ai` in `repo/ai.rs:13`, `tests/domain/ai_serde_tests.rs:1`, and any other importer.

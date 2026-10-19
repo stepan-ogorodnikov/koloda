@@ -1,4 +1,4 @@
-use koloda::domain::settings_ai::{AIProfile, AISecrets};
+use koloda::domain::ai::{AIProfile, AISecrets};
 use serde_json::json;
 
 /// Pins the public-profile wire shape: `secrets` is omitted entirely (not

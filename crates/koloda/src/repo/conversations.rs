@@ -1,14 +1,11 @@
 //! Conversation rows — opaque `state` json passes through unchanged (see `domain::conversations`).
 
 use rusqlite::{params, OptionalExtension};
-use serde::Deserialize;
-use serde_json::Value;
 
 use crate::app::db::{parse_json_column, Database};
 use crate::app::error::{error_codes, throw_known_error, AppError};
 use crate::app::utility::get_current_timestamp;
-use crate::domain::conversations::Conversation;
-use crate::domain::time::deserialize_optional_timestamp;
+use crate::domain::conversations::{Conversation, SetConversationInput};
 
 fn get_conversation_row(row: &rusqlite::Row<'_>) -> Result<Conversation, rusqlite::Error> {
     let state_str: String = row.get(2)?;
@@ -61,17 +58,6 @@ pub fn get_conversations(db: &Database) -> Result<Vec<Conversation>, AppError> {
             Ok(conversations)
         })
     })
-}
-
-#[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct SetConversationInput {
-    pub id: String,
-    pub state: Value,
-    #[serde(default)]
-    pub title: Option<String>,
-    #[serde(default, deserialize_with = "deserialize_optional_timestamp")]
-    pub updated_at: Option<i64>,
 }
 
 pub fn set_conversation(db: &Database, input: SetConversationInput) -> Result<Conversation, AppError> {

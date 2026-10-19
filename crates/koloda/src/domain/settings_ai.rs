@@ -7,7 +7,7 @@ use std::collections::HashSet;
 
 use crate::app::error::{error_codes, AppError};
 
-pub use crate::domain::ai::{AIProfile, AISecrets};
+use crate::domain::ai::AIProfile;
 
 /// Accepted `assistant.temperature` range. Covers the common bounds of the
 /// supported providers (openrouter, deepseek, ollama, lmstudio, opencodeGo/Zen, ollamaCloud); adjust
