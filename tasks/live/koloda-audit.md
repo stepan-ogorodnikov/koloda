@@ -410,7 +410,7 @@ Out:
   Commit: Move the AI types and SetConversationInput to their domain homes
   Depends on: 8
 
-- [ ] 10. Use the read template's lock flag in update_template
+- [x] 10. Use the read template's lock flag in update_template
   Goal (finding 10):
   - In `update_template` (`crates/koloda/src/repo/templates.rs:248`), use `original.is_locked`, which
     `get_template` computes (`:82-86`).

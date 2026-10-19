@@ -223,20 +223,6 @@ fn select_stored_template(conn: &Connection, id: &str) -> Result<Option<StoredTe
     .map_err(AppError::from)
 }
 
-pub fn is_template_locked(db: &Database, id: &str) -> Result<bool, AppError> {
-    throw_known_error(error_codes::DB_GET, || {
-        db.with_conn(|conn| {
-            let count: i64 = conn.query_row(
-                "SELECT COUNT(*) FROM cards WHERE template_id = ?1",
-                params![id],
-                |row| row.get(0),
-            )?;
-
-            Ok(count > 0)
-        })
-    })
-}
-
 pub fn update_template(db: &Database, data: UpdateTemplateData) -> Result<Template, AppError> {
     throw_known_error(error_codes::DB_UPDATE, || {
         let original = get_template(db, &data.id)?.ok_or_else(|| {
@@ -245,8 +231,7 @@ pub fn update_template(db: &Database, data: UpdateTemplateData) -> Result<Templa
                 Some(format!("Template id: {}", data.id)),
             )
         })?;
-        let is_locked = is_template_locked(db, &data.id)?;
-        if is_locked {
+        if original.is_locked {
             data.values.validate(Some(&original.content))?;
         } else {
             data.values.validate(None)?;
