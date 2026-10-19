@@ -247,7 +247,7 @@ Out:
   Commit: Lint the Rust workspace with one clippy target
   Depends on: none
 
-- [ ] 5. Drop the gha layer cache from the Docker workflow
+- [x] 5. Drop the gha layer cache from the Docker workflow
   Goal (finding 6; question 3): delete `cache-from` and `cache-to` (`docker.yml:41-42`).
   Constraints: `docker.yml` only; leave the Dockerfile alone.
   Done when:

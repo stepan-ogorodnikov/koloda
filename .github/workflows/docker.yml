@@ -31,6 +31,9 @@ jobs:
       - name: Set up Buildx
         uses: docker/setup-buildx-action@v3
 
+      # WHY: no layer cache. The Dockerfile copies the context before building, so
+      # a source change rebuilds from scratch anyway, and the ~560 MB it saved per
+      # branch crowded CI's caches out. Nothing waits on this job.
       - name: Build
         uses: docker/build-push-action@v6
         with:
@@ -38,8 +41,6 @@ jobs:
           file: crates/koloda-server/Dockerfile
           tags: koloda-server:ci
           load: true
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
 
       # Init and serve on a named volume, as the compose example does, so a volume the
       # non-root user cannot write fails here.
