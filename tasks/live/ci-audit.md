@@ -162,7 +162,7 @@ Out:
 
 ## Plan
 
-- [ ] 1. Fill the Cargo and dprint caches from main only
+- [x] 1. Fill the Cargo and dprint caches from main only
   Goal (findings 1 and 4; question 2):
   - In `.github/workflows/ci.yml`, run on pushes to every branch, `main` included:
     replace `branches-ignore: [main]` (`:9`) with `branches: ["**"]`.

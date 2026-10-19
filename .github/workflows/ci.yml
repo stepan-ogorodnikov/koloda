@@ -3,10 +3,12 @@ name: CI
 # The main ruleset requires the job `checks` to pass on a commit before main
 # can move to it. Renaming the job blocks every push to main.
 # Branch pushes are how a commit gets checked; see `bun run land`.
-# Main itself is not re-checked: it only fast-forwards to checked commits.
+# Main's own run fills the caches. A branch can read only its own caches and
+# main's, so branches restore and only main saves. `bun run land` does not wait
+# for main's run: main only fast-forwards to checked commits.
 on:
   push:
-    branches-ignore: [main]
+    branches: ["**"]
   pull_request:
     branches: [main]
   workflow_dispatch:
@@ -61,19 +63,14 @@ jobs:
           restore-keys: |
             bun-${{ runner.os }}-
 
-      # actions/cache saves only on a key miss. A run-specific key saves this
-      # run's results, and restore takes the newest entry with the prefix.
+      # WHY: rust-cache keeps dependencies only. Checkout gives every source a new
+      # mtime, so cargo rebuilds each workspace crate whatever the cache holds.
       - name: Cache Cargo
         if: steps.scope.outputs.docs_only != 'true'
-        uses: actions/cache@v4
+        uses: Swatinem/rust-cache@v2
         with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            dist/target
-          key: cargo-${{ runner.os }}-${{ hashFiles('rust-toolchain.toml') }}-${{ hashFiles('Cargo.lock') }}-${{ github.run_id }}
-          restore-keys: |
-            cargo-${{ runner.os }}-${{ hashFiles('rust-toolchain.toml') }}-
+          workspaces: ". -> dist/target/koloda"
+          save-if: ${{ github.ref == 'refs/heads/main' }}
 
       - name: Cache Nx
         if: steps.scope.outputs.docs_only != 'true'
@@ -85,8 +82,9 @@ jobs:
             nx-${{ runner.os }}-
 
       # dprint downloads the plugins listed in dprint.json on first run.
-      - name: Cache dprint
-        uses: actions/cache@v4
+      - name: Restore dprint cache
+        id: dprint-cache
+        uses: actions/cache/restore@v4
         with:
           path: ~/.cache/dprint
           key: dprint-${{ runner.os }}-${{ hashFiles('dprint.json') }}
@@ -104,3 +102,10 @@ jobs:
           else
             bun run check:push
           fi
+
+      - name: Save dprint cache
+        if: github.ref == 'refs/heads/main' && steps.dprint-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: ~/.cache/dprint
+          key: ${{ steps.dprint-cache.outputs.cache-primary-key }}
