@@ -369,56 +369,6 @@ fn add_card_omitted_stability_and_difficulty_persists_zero() {
 }
 
 #[test]
-fn get_card_reads_null_stability_and_difficulty_as_zero() {
-    let db = test_db();
-    let algorithm_id = add_algorithm(&db, "FSRS");
-    let template_id = add_template(&db, "Basic");
-    let deck_id = add_deck(&db, &algorithm_id, &template_id, "Deck");
-    let content = serde_json::to_string(&card_content("q", "a")).expect("content should serialize");
-
-    let card_id = koloda::app::utility::generate_uuidv7();
-    db.with_conn(|conn| {
-        conn.execute(
-            r#"
-                INSERT INTO cards (id, deck_id, template_id, content, state, due_at, stability, difficulty,
-                                  scheduled_days, learning_steps, reps, lapses, last_reviewed_at, created_at, updated_at)
-                VALUES (?1, ?2, ?3, ?4, 0, NULL, NULL, NULL, 0, 0, 0, 0, NULL, 1700000000000, NULL)
-                "#,
-            rusqlite::params![card_id, deck_id, template_id, content],
-        )?;
-        Ok(())
-    })
-    .expect("legacy NULL row should insert");
-
-    let fetched = cards::get_card(&db, &card_id)
-        .expect("card lookup should succeed")
-        .expect("card should exist");
-    assert!(
-        fetched.stability.abs() < f64::EPSILON,
-        "legacy NULL stability should read as 0, got {}",
-        fetched.stability
-    );
-    assert!(
-        fetched.difficulty.abs() < f64::EPSILON,
-        "legacy NULL difficulty should read as 0, got {}",
-        fetched.difficulty
-    );
-
-    let listed = cards::get_cards(&db, &deck_id).expect("cards query should succeed");
-    assert_eq!(listed.len(), 1);
-    assert!(
-        listed[0].stability.abs() < f64::EPSILON,
-        "listed legacy NULL stability should read as 0, got {}",
-        listed[0].stability
-    );
-    assert!(
-        listed[0].difficulty.abs() < f64::EPSILON,
-        "listed legacy NULL difficulty should read as 0, got {}",
-        listed[0].difficulty
-    );
-}
-
-#[test]
 fn reset_card_progress_fails_with_not_found_when_card_is_missing() {
     let db = test_db();
 

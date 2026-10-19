@@ -43,56 +43,46 @@ where
 pub enum AISecrets {
     #[serde(rename = "openai")]
     OpenAi {
-        #[serde(rename = "apiKey", alias = "api_key", deserialize_with = "deserialize_api_key")]
+        #[serde(rename = "apiKey", deserialize_with = "deserialize_api_key")]
         api_key: Option<String>,
     },
     #[serde(rename = "deepseek")]
     DeepSeek {
-        #[serde(rename = "apiKey", alias = "api_key", deserialize_with = "deserialize_api_key")]
+        #[serde(rename = "apiKey", deserialize_with = "deserialize_api_key")]
         api_key: Option<String>,
     },
     #[serde(rename = "openrouter")]
     OpenRouter {
-        #[serde(rename = "apiKey", alias = "api_key", deserialize_with = "deserialize_api_key")]
+        #[serde(rename = "apiKey", deserialize_with = "deserialize_api_key")]
         api_key: Option<String>,
     },
     #[serde(rename = "ollama")]
     Ollama {
-        #[serde(rename = "baseUrl", alias = "base_url")]
+        #[serde(rename = "baseUrl")]
         base_url: String,
-        #[serde(
-            rename = "apiKey",
-            alias = "api_key",
-            default,
-            deserialize_with = "deserialize_api_key"
-        )]
+        #[serde(rename = "apiKey", default, deserialize_with = "deserialize_api_key")]
         api_key: Option<String>,
     },
     #[serde(rename = "lmstudio")]
     LmStudio {
-        #[serde(rename = "baseUrl", alias = "base_url")]
+        #[serde(rename = "baseUrl")]
         base_url: String,
-        #[serde(
-            rename = "apiKey",
-            alias = "api_key",
-            default,
-            deserialize_with = "deserialize_api_key"
-        )]
+        #[serde(rename = "apiKey", default, deserialize_with = "deserialize_api_key")]
         api_key: Option<String>,
     },
     #[serde(rename = "opencodeGo")]
     OpencodeGo {
-        #[serde(rename = "apiKey", alias = "api_key", deserialize_with = "deserialize_api_key")]
+        #[serde(rename = "apiKey", deserialize_with = "deserialize_api_key")]
         api_key: Option<String>,
     },
     #[serde(rename = "opencodeZen")]
     OpencodeZen {
-        #[serde(rename = "apiKey", alias = "api_key", deserialize_with = "deserialize_api_key")]
+        #[serde(rename = "apiKey", deserialize_with = "deserialize_api_key")]
         api_key: Option<String>,
     },
     #[serde(rename = "ollamaCloud")]
     OllamaCloud {
-        #[serde(rename = "apiKey", alias = "api_key", deserialize_with = "deserialize_api_key")]
+        #[serde(rename = "apiKey", deserialize_with = "deserialize_api_key")]
         api_key: Option<String>,
     },
 }

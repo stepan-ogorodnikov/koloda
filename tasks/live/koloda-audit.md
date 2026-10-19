@@ -357,11 +357,12 @@ Out:
   Commit: Delete validation methods only tests call
   Depends on: none
 
-- [ ] 7. Delete the stale AI aliases, timestamp fallback, and NULL stability read
+- [x] 7. Delete the stale AI aliases, timestamp fallback, and NULL stability read
   Goal (finding 7):
   - Delete `alias = "api_key"` and `alias = "base_url"` from every `AISecrets` variant
     (`crates/koloda/src/domain/ai.rs:46-95`), and the tests that pin them (`tests/domain/ai_tests.rs:115`, `:127`,
     `:176`).
+    A fourth pin the audit missed sits in `tests/domain/ai_serde_tests.rs:80-83`; it goes too.
   - Delete the `parse_from_str` fallback in `parse_iso_timestamp` (`domain/time.rs:48-50`).
     It never succeeds: a literal `Z` with no `%z` has no offset.
   - In `get_card_row` (`repo/cards.rs:36-39`), read stability and difficulty as `f64` and drop the INVARIANT.

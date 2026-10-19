@@ -45,9 +45,6 @@ pub fn parse_iso_timestamp(value: &str) -> Result<i64, String> {
     if let Ok(dt) = chrono::DateTime::parse_from_rfc3339(value) {
         return Ok(dt.timestamp_millis());
     }
-    if let Ok(dt) = chrono::DateTime::parse_from_str(value, "%Y-%m-%dT%H:%M:%S%.fZ") {
-        return Ok(dt.timestamp_millis());
-    }
     Err(format!("Invalid date string: {}", value))
 }
 

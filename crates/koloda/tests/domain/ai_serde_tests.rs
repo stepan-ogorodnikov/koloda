@@ -76,9 +76,4 @@ fn test_secret_key_deserialization_contract() {
     let whitespace: AISecrets = serde_json::from_value(json!({ "provider": "openrouter", "apiKey": "   " })).unwrap();
     assert_eq!(whitespace.provider(), "openrouter");
     assert_eq!(whitespace.api_key(), None);
-
-    // Snake-case alias accepted for hand-edited/older settings payloads.
-    let alias: AISecrets = serde_json::from_value(json!({ "provider": "openrouter", "api_key": "sk-1" })).unwrap();
-    assert_eq!(alias.provider(), "openrouter");
-    assert_eq!(alias.api_key(), Some("sk-1"));
 }

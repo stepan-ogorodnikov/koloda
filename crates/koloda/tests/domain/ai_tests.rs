@@ -104,32 +104,8 @@ fn test_local_providers_storage_rejects_non_url_base_url() {
     }
 }
 
-#[test]
-fn test_ai_secrets_openrouter_deserialize_api_key_alias() {
-    let json = r#"{
-        "provider": "openrouter",
-        "api_key": "alias-key"
-    }"#;
-
-    let secrets: AISecrets = serde_json::from_str(json).expect("Should deserialize with api_key alias");
-    assert_eq!(secrets.provider(), "openrouter");
-    assert_eq!(secrets.api_key(), Some("alias-key"));
-}
-
-#[test]
-fn test_ai_secrets_ollama_deserialize_base_url_alias() {
-    let json = r#"{
-        "provider": "ollama",
-        "base_url": "http://localhost:11434"
-    }"#;
-
-    let secrets: AISecrets = serde_json::from_str(json).expect("Should deserialize with base_url alias");
-    assert_eq!(secrets.provider(), "ollama");
-    assert_eq!(secrets.api_key(), None);
-}
-
 // WHY: These variants share an identical single-field `{ api_key }` payload, so their
-// accept/reject/alias contracts collapse into one table; `openrouter` mirrors the input rules
+// accept/reject contracts collapse into one table; `openrouter` mirrors the input rules
 // but anchors the storage-redaction cases, so its tests stay explicit above.
 type KeyedProviderRow = (&'static str, &'static str, fn(Option<String>) -> AISecrets);
 const KEYED_PROVIDER_ROWS: &[KeyedProviderRow] = &[
@@ -162,17 +138,6 @@ fn test_keyed_providers_require_non_blank_api_key() {
                 "{provider} must reject a missing or blank apiKey"
             );
         }
-    }
-}
-
-#[test]
-fn test_keyed_providers_deserialize_api_key_alias() {
-    for &(provider, ..) in KEYED_PROVIDER_ROWS {
-        let json = format!(r#"{{ "provider": "{provider}", "api_key": "alias-key" }}"#);
-
-        let secrets: AISecrets = serde_json::from_str(&json).expect("Should deserialize with api_key alias");
-        assert_eq!(secrets.provider(), provider);
-        assert_eq!(secrets.api_key(), Some("alias-key"));
     }
 }
 

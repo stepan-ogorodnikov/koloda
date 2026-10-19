@@ -33,10 +33,8 @@ pub fn get_card_row(row: &rusqlite::Row<'_>) -> Result<Card, rusqlite::Error> {
         content,
         state: row.get(4)?,
         due_at: row.get(5)?,
-        // INVARIANT: column is nullable in V1; existing rows may be NULL from the old insert.
-        // Load NULL as 0.0. Do not change Card.stability/difficulty back to Option to "match SQL".
-        stability: row.get::<_, Option<f64>>(6)?.unwrap_or(0.0),
-        difficulty: row.get::<_, Option<f64>>(7)?.unwrap_or(0.0),
+        stability: row.get(6)?,
+        difficulty: row.get(7)?,
         scheduled_days: row.get(8)?,
         learning_steps: row.get(9)?,
         reps: row.get(10)?,
