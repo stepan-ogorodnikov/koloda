@@ -445,3 +445,29 @@ describe("negative daily limit values", () => {
     expect(result.success).toBe(false);
   });
 });
+
+// Twin of koloda `fractional_limits_are_refused`.
+describe("fractional limit values", () => {
+  const dailyLimits = {
+    total: 100,
+    untouched: { value: 20, counts: true },
+    learn: { value: 30, counts: true },
+    review: { value: 50, counts: true },
+  };
+  const cases = [
+    { field: "total", input: { dailyLimits: { ...dailyLimits, total: 1.5 } } },
+    { field: "untouched value", input: { dailyLimits: { ...dailyLimits, untouched: { value: 1.5, counts: true } } } },
+    { field: "learn-ahead hours", input: { learnAheadLimit: [1.5, 30] } },
+    { field: "learn-ahead minutes", input: { learnAheadLimit: [4, 1.5] } },
+  ];
+
+  it.each(
+    cases.flatMap((item) => [
+      { ...item, schemaName: "defaulting", schema: learningSettingsValidation },
+      { ...item, schemaName: "resolved", schema: resolvedLearningSettingsValidation },
+    ]),
+  )("rejects $field = 1.5 on the $schemaName schema", ({ input, schema }) => {
+    const result = schema.safeParse({ defaults, dailyLimits, dayStartsAt: "05:00", learnAheadLimit: [4, 0], ...input });
+    expect(result.success).toBe(false);
+  });
+});

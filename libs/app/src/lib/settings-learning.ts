@@ -38,7 +38,7 @@ export const LEARNING_DAILY_LIMIT_TYPES = ["untouched", "learn", "review"] as co
 
 export type LearningDailyLimitType = (typeof LEARNING_DAILY_LIMIT_TYPES)[number];
 
-export const dailyLimitCapValidation = z.number().min(0).nullable();
+export const dailyLimitCapValidation = z.int().min(0).nullable();
 
 export const learningDailyLimitValidation = z.object({
   value: dailyLimitCapValidation,
@@ -135,7 +135,7 @@ export const learningSettingsValidation = z.object({
   }),
   dailyLimits: dailyLimitsValidation,
   dayStartsAt: dayStartsAtValidation.default("05:00"),
-  learnAheadLimit: z.tuple([z.number().min(0).max(48), z.number().min(0).max(59)]).default([0, 30]),
+  learnAheadLimit: z.tuple([z.int().min(0).max(48), z.int().min(0).max(59)]).default([0, 30]),
 });
 
 export const resolvedLearningSettingsValidation = z.object({
@@ -145,7 +145,7 @@ export const resolvedLearningSettingsValidation = z.object({
   }),
   dailyLimits: resolvedDailyLimitsValidation,
   dayStartsAt: dayStartsAtValidation,
-  learnAheadLimit: z.tuple([z.number().min(0).max(48), z.number().min(0).max(59)]),
+  learnAheadLimit: z.tuple([z.int().min(0).max(48), z.int().min(0).max(59)]),
 });
 
 export type LearningSettingsInput = z.input<typeof learningSettingsValidation>;

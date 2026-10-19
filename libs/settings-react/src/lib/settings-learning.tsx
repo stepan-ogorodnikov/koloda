@@ -13,6 +13,10 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
 import { useRef } from "react";
 
+// WHY: `NumberField` takes these in place of its own `formatOptions`, so `useGrouping: false` is repeated.
+// No fraction digits keeps a typed 1.5 from reaching the save; every learning limit is a whole number.
+const wholeNumberFormatOptions: Intl.NumberFormatOptions = { useGrouping: false, maximumFractionDigits: 0 };
+
 export type SettingsLearningProps = { data: ResolvedLearningSettings };
 
 export type DailyLimitCapFieldProps = {
@@ -31,6 +35,7 @@ export function DailyLimitCapField({ label, unlimitedLabel, value, onChange }: D
     <div className="flex flex-row flex-wrap items-end gap-4">
       <NumberField
         minValue={0}
+        formatOptions={wholeNumberFormatOptions}
         isDisabled={isUnlimited}
         value={isUnlimited ? lastNumber.current : value}
         onChange={(next) => {
@@ -190,6 +195,7 @@ export function SettingsLearning({ data }: SettingsLearningProps) {
                 aria-label={_(msg`settings.learning.learn-ahead-limit.hours.label`)}
                 minValue={0}
                 maxValue={48}
+                formatOptions={wholeNumberFormatOptions}
                 value={field.state.value}
                 onChange={field.handleChange}
               >
@@ -205,6 +211,7 @@ export function SettingsLearning({ data }: SettingsLearningProps) {
                 aria-label={_(msg`settings.learning.learn-ahead-limit.minutes.label`)}
                 minValue={0}
                 maxValue={59}
+                formatOptions={wholeNumberFormatOptions}
                 value={field.state.value}
                 onChange={field.handleChange}
               >

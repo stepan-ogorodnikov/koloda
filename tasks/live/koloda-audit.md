@@ -254,7 +254,7 @@ Out:
   Commit: Keep a saved daily Total of 0 as a hard cap
   Depends on: none
 
-- [ ] 2. Accept only whole numbers for learning limits
+- [x] 2. Accept only whole numbers for learning limits
   Goal (finding 3):
   - `dailyLimitCapValidation` (`libs/app/src/lib/settings-learning.ts:41`) becomes `z.int().min(0).nullable()`.
   - Both learn-ahead tuples (`:141`, `:151`) use `z.int()` in place of `z.number()`, keeping their bounds.

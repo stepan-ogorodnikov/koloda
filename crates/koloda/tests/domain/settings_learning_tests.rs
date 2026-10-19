@@ -622,6 +622,27 @@ fn test_settings_name_learning_validation_valid() {
     result.unwrap();
 }
 
+// Twin of the `@koloda/app` "rejects fractional values" table.
+#[test]
+fn fractional_limits_are_refused() {
+    for pointer in [
+        "/dailyLimits/total",
+        "/dailyLimits/untouched/value",
+        "/learnAheadLimit/0",
+        "/learnAheadLimit/1",
+    ] {
+        let mut document: Value = serde_json::from_str(&build_learning_settings_json(
+            standard_daily_limits(),
+            r#""04:00""#,
+            "[4, 0]",
+        ))
+        .unwrap();
+        *document.pointer_mut(pointer).unwrap() = json!(1.5);
+
+        assert!(SettingsName::Learning.normalize(document).is_err(), "{pointer} = 1.5");
+    }
+}
+
 type KeyCheck = fn(&Value) -> Result<(), AppError>;
 
 #[test]
