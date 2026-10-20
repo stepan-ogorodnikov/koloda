@@ -64,6 +64,7 @@ export function useAssistantProfileSelection(): UseAssistantProfileSelectionRetu
   const setAIModelParameter = useSetAtom(setAssistantAIModelParameterAtom);
 
   const setGlobalAIProfileState = useSetGlobalAIProfileState();
+  const replaceGlobalAIProfileState = useSetAtom(aiProfileStateAtom);
 
   const {
     profiles,
@@ -121,14 +122,14 @@ export function useAssistantProfileSelection(): UseAssistantProfileSelectionRetu
       if (nextProfileId !== storedProfileId) {
         const sync = profileChangeSync(nextProfileId, nextModelId);
         setAIProfile(sync.conversation);
-        setGlobalAIProfileState(sync.global);
+        replaceGlobalAIProfileState(sync.global);
         return;
       }
       const sync = modelChangeSync(storedProfileId, nextModelId);
       setAIModel(sync.conversation);
-      setGlobalAIProfileState(sync.global);
+      replaceGlobalAIProfileState(sync.global);
     },
-    [setAIProfile, setAIModel, setGlobalAIProfileState, storedProfileId],
+    [setAIProfile, setAIModel, replaceGlobalAIProfileState, storedProfileId],
   );
 
   const handleModelParameterChange = useCallback(

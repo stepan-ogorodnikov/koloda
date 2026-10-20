@@ -1,5 +1,4 @@
 import type { AIModel, AIProfile, AIRuntime, ChatStreamRequest, StreamUsage } from "@koloda/ai";
-import type * as KolodaAiReactModule from "@koloda/ai-react";
 import { aiRuntimeAtom, queriesAtom, queryKeys } from "@koloda/core-react";
 import type { Queries } from "@koloda/core-react";
 import type { Template } from "@koloda/srs";
@@ -64,30 +63,6 @@ const wire = vi.hoisted(() => {
       title: string | null;
       state: { runs: Record<string, { status: string }> } | null;
     }>,
-  };
-});
-
-vi.mock("@koloda/ai-react", async () => {
-  const actual = await vi.importActual<typeof KolodaAiReactModule>("@koloda/ai-react");
-  return {
-    ...actual,
-    useAIProfiles: (profileId?: string | null) => {
-      const profile = wire.profiles[0] ?? null;
-      const selectedProfile = profileId ? profile : null;
-      return {
-        profiles: wire.profiles,
-        isLoading: false,
-        isError: false,
-        defaultProfileId: profile?.id ?? null,
-        selectedProfile,
-        missingSecretFieldLabels: [],
-      };
-    },
-    useAIModels: (_credentialId: string | null) => ({
-      models: wire.models,
-      isLoading: false,
-      isError: false,
-    }),
   };
 });
 
@@ -260,6 +235,19 @@ function createMockAIRuntime(): AIRuntime {
   };
 }
 
+// WHY: Seed the AI profile and model queries so the real `useAIProfiles` and
+// `useAIModels` resolve on first render. A file-level `vi.mock` of
+// `@koloda/ai-react` would leak to sibling files under `isolate: false`.
+function createTestQueryClient(): QueryClient {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+  });
+  queryClient.setQueryData(queryKeys.templates.detail(wire.template.id), wire.template);
+  queryClient.setQueryData(queryKeys.ai.profiles(), wire.profiles);
+  for (const profile of wire.profiles) queryClient.setQueryData(queryKeys.ai.models(profile.id), wire.models);
+  return queryClient;
+}
+
 function setupTestHarness(overrides: { profileId?: string; modelId?: string } = {}) {
   const profile = createAIProfile(overrides.profileId ? { id: overrides.profileId } : {});
   const model = createAIModel(overrides.modelId ? { id: overrides.modelId } : {});
@@ -302,10 +290,7 @@ describe("assistant chat integration (per-conversation state)", () => {
     store.set(upsertConversationAtom, makeConversation("B"));
     store.set(setCurrentConversationIdAtom, "A");
 
-    const queryClient = new QueryClient({
-      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
-    });
-    queryClient.setQueryData(queryKeys.templates.detail(wire.template.id), wire.template);
+    const queryClient = createTestQueryClient();
 
     wire.chatStream.keepInFlight = true;
 
@@ -375,10 +360,7 @@ describe("assistant chat integration (per-conversation state)", () => {
     store.set(upsertConversationAtom, makeConversation("B"));
     store.set(setCurrentConversationIdAtom, "A");
 
-    const queryClient = new QueryClient({
-      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
-    });
-    queryClient.setQueryData(queryKeys.templates.detail(wire.template.id), wire.template);
+    const queryClient = createTestQueryClient();
 
     function TestWrapper({ children }: PropsWithChildren) {
       return (
@@ -447,10 +429,7 @@ describe("assistant chat integration (per-conversation state)", () => {
     store.set(upsertConversationAtom, makeConversation("A"));
     store.set(setCurrentConversationIdAtom, "A");
 
-    const queryClient = new QueryClient({
-      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
-    });
-    queryClient.setQueryData(queryKeys.templates.detail(wire.template.id), wire.template);
+    const queryClient = createTestQueryClient();
 
     function TestWrapper({ children }: PropsWithChildren) {
       return (
@@ -535,10 +514,7 @@ describe("assistant chat integration (per-conversation state)", () => {
     );
     store.set(setCurrentConversationIdAtom, "B");
 
-    const queryClient = new QueryClient({
-      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
-    });
-    queryClient.setQueryData(queryKeys.templates.detail(wire.template.id), wire.template);
+    const queryClient = createTestQueryClient();
     queryClient.setQueryData(queryKeys.conversations.detail("A"), {
       id: "A",
       title: null,
@@ -619,10 +595,7 @@ describe("assistant chat integration (per-conversation state)", () => {
     );
     store.set(setCurrentConversationIdAtom, "A");
 
-    const queryClient = new QueryClient({
-      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
-    });
-    queryClient.setQueryData(queryKeys.templates.detail(wire.template.id), wire.template);
+    const queryClient = createTestQueryClient();
     // Pre-populate the conversation query cache so the restore effect
     // doesn't wait on a loading query.
     queryClient.setQueryData(queryKeys.conversations.detail("A"), {
@@ -701,10 +674,7 @@ describe("assistant chat integration (per-conversation state)", () => {
     store.set(upsertConversationAtom, makeConversation("A"));
     store.set(setCurrentConversationIdAtom, "A");
 
-    const queryClient = new QueryClient({
-      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
-    });
-    queryClient.setQueryData(queryKeys.templates.detail(wire.template.id), wire.template);
+    const queryClient = createTestQueryClient();
     queryClient.setQueryData(queryKeys.conversations.detail("A"), {
       id: "A",
       title: null,
@@ -771,10 +741,7 @@ describe("assistant chat integration (per-conversation state)", () => {
     store.set(upsertConversationAtom, makeConversation("A"));
     store.set(setCurrentConversationIdAtom, "A");
 
-    const queryClient = new QueryClient({
-      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
-    });
-    queryClient.setQueryData(queryKeys.templates.detail(wire.template.id), wire.template);
+    const queryClient = createTestQueryClient();
     queryClient.setQueryData(queryKeys.conversations.detail("A"), {
       id: "A",
       title: null,
@@ -840,10 +807,7 @@ describe("assistant chat integration (per-conversation state)", () => {
     store.set(upsertConversationAtom, makeConversation("A"));
     store.set(setCurrentConversationIdAtom, "A");
 
-    const queryClient = new QueryClient({
-      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
-    });
-    queryClient.setQueryData(queryKeys.templates.detail(wire.template.id), wire.template);
+    const queryClient = createTestQueryClient();
     queryClient.setQueryData(queryKeys.conversations.detail("A"), {
       id: "A",
       title: null,
@@ -925,10 +889,7 @@ describe("assistant chat integration (per-conversation state)", () => {
     store.set(upsertConversationAtom, makeConversation("A"));
     store.set(setCurrentConversationIdAtom, "A");
 
-    const queryClient = new QueryClient({
-      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
-    });
-    queryClient.setQueryData(queryKeys.templates.detail(wire.template.id), wire.template);
+    const queryClient = createTestQueryClient();
     queryClient.setQueryData(queryKeys.conversations.detail("A"), {
       id: "A",
       title: null,
@@ -994,10 +955,7 @@ describe("assistant chat integration (per-conversation state)", () => {
     store.set(upsertConversationAtom, makeConversation("A"));
     store.set(setCurrentConversationIdAtom, "A");
 
-    const queryClient = new QueryClient({
-      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
-    });
-    queryClient.setQueryData(queryKeys.templates.detail(wire.template.id), wire.template);
+    const queryClient = createTestQueryClient();
     queryClient.setQueryData(queryKeys.conversations.detail("A"), {
       id: "A",
       title: null,
@@ -1049,10 +1007,7 @@ describe("assistant chat integration (per-conversation state)", () => {
     store.set(upsertConversationAtom, makeConversation("A"));
     store.set(setCurrentConversationIdAtom, "A");
 
-    const queryClient = new QueryClient({
-      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
-    });
-    queryClient.setQueryData(queryKeys.templates.detail(wire.template.id), wire.template);
+    const queryClient = createTestQueryClient();
     queryClient.setQueryData(queryKeys.conversations.detail("A"), {
       id: "A",
       title: null,
@@ -1125,10 +1080,7 @@ describe("assistant chat integration (per-conversation state)", () => {
     store.set(upsertConversationAtom, makeConversation("A"));
     store.set(setCurrentConversationIdAtom, "A");
 
-    const queryClient = new QueryClient({
-      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
-    });
-    queryClient.setQueryData(queryKeys.templates.detail(wire.template.id), wire.template);
+    const queryClient = createTestQueryClient();
     queryClient.setQueryData(queryKeys.conversations.detail("A"), {
       id: "A",
       title: null,
@@ -1216,10 +1168,7 @@ describe("assistant chat integration (per-conversation state)", () => {
     store.set(upsertConversationAtom, makeConversation("A"));
     store.set(setCurrentConversationIdAtom, "A");
 
-    const queryClient = new QueryClient({
-      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
-    });
-    queryClient.setQueryData(queryKeys.templates.detail(wire.template.id), wire.template);
+    const queryClient = createTestQueryClient();
     queryClient.setQueryData(queryKeys.conversations.detail("A"), {
       id: "A",
       title: null,
@@ -1299,10 +1248,7 @@ describe("assistant chat restore policy (blocked rows)", () => {
     }
     store.set(queriesAtom as unknown as Parameters<typeof store.set>[0], queries);
     store.set(aiRuntimeAtom, createMockAIRuntime());
-    const queryClient = new QueryClient({
-      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
-    });
-    queryClient.setQueryData(queryKeys.templates.detail(wire.template.id), wire.template);
+    const queryClient = createTestQueryClient();
 
     function TestWrapper({ children }: PropsWithChildren) {
       return (
@@ -1329,10 +1275,7 @@ describe("assistant chat restore policy (blocked rows)", () => {
     store.set(queriesAtom as unknown as Parameters<typeof store.set>[0], buildQueries());
     store.set(aiRuntimeAtom, createMockAIRuntime());
 
-    const queryClient = new QueryClient({
-      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
-    });
-    queryClient.setQueryData(queryKeys.templates.detail(wire.template.id), wire.template);
+    const queryClient = createTestQueryClient();
     queryClient.setQueryData(queryKeys.conversations.detail("ok"), {
       id: "ok",
       title: null,
@@ -1410,10 +1353,7 @@ describe("assistant chat restore policy (blocked rows)", () => {
     store.set(queriesAtom as unknown as Parameters<typeof store.set>[0], buildQueries());
     store.set(aiRuntimeAtom, createMockAIRuntime());
 
-    const queryClient = new QueryClient({
-      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
-    });
-    queryClient.setQueryData(queryKeys.templates.detail(wire.template.id), wire.template);
+    const queryClient = createTestQueryClient();
     // malformed-version row: the version cannot be determined, so it is corrupt.
     queryClient.setQueryData(queryKeys.conversations.detail("corrupt"), {
       id: "corrupt",
@@ -1623,10 +1563,7 @@ describe("assistant chat restore policy (blocked rows)", () => {
     store.set(queriesAtom as unknown as Parameters<typeof store.set>[0], buildQueries());
     store.set(aiRuntimeAtom, createMockAIRuntime());
 
-    const queryClient = new QueryClient({
-      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
-    });
-    queryClient.setQueryData(queryKeys.templates.detail(wire.template.id), wire.template);
+    const queryClient = createTestQueryClient();
     queryClient.setQueryData(queryKeys.conversations.detail("ok"), {
       id: "ok",
       title: null,
@@ -1692,10 +1629,7 @@ describe("assistant chat restore policy (blocked rows)", () => {
     store.set(queriesAtom as unknown as Parameters<typeof store.set>[0], queries);
     store.set(aiRuntimeAtom, createMockAIRuntime());
 
-    const queryClient = new QueryClient({
-      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
-    });
-    queryClient.setQueryData(queryKeys.templates.detail(wire.template.id), wire.template);
+    const queryClient = createTestQueryClient();
 
     function TestWrapper({ children }: PropsWithChildren) {
       return (

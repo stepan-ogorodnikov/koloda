@@ -1,5 +1,5 @@
 import type { ModelParameter } from "@koloda/ai";
-import type { AIProfileStateUpdater } from "./ai-profile-state";
+import type { AIProfileState, AIProfileStateUpdater } from "./ai-profile-state";
 
 /**
  * Dual-write / last-used shapes for AI profile state.
@@ -16,17 +16,20 @@ export function lastUsedOnRunStart(profileId: string, modelId: string): AIProfil
   return { profileId, modelId };
 }
 
+// INVARIANT: Profile and model changes return the whole global record so the
+// caller replaces it. Merged into the stored record, the empty map would keep
+// the old model's parameters (ASSISTANT-CONVERSATIONS.md §AI Profile State).
 export function profileChangeSync(profileId: string, modelId: string) {
   return {
     conversation: { profileId, modelId, modelParameters: {} as const },
-    global: { profileId, modelId, modelParameters: {} } satisfies AIProfileStateUpdater,
+    global: { profileId, modelId, modelParameters: {} } satisfies AIProfileState,
   };
 }
 
 export function modelChangeSync(profileId: string | null, modelId: string) {
   return {
     conversation: { modelId, modelParameters: {} as const },
-    global: { profileId, modelId, modelParameters: {} } satisfies AIProfileStateUpdater,
+    global: { profileId, modelId, modelParameters: {} } satisfies AIProfileState,
   };
 }
 

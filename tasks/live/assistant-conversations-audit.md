@@ -339,7 +339,7 @@ Line numbers are at `7b8e8c1c`; when an earlier item moved them, find the code b
   Commit: Gate Enter in the assistant composer on the submit button's checks
   Depends on: none
 
-- [ ] 4. Reset global model parameters on a profile or model change
+- [x] 4. Reset global model parameters on a profile or model change
   Goal (finding 4):
   - With no conversation id, the composer reads parameters from the global AI profile record
     (`use-assistant-profile-selection.ts:56-60`).
