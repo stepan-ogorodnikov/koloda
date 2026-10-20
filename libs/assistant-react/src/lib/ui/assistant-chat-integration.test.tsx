@@ -1456,6 +1456,46 @@ describe("assistant chat restore policy (blocked rows)", () => {
     view.unmount();
   });
 
+  it("recovery reset: the fresh empty conversation is saved without new content", async () => {
+    setupTestHarness();
+    const deleteCalls: string[] = [];
+    const { queryClient, TestWrapper } = makeRecoveryWrapper({ deleteCalls });
+    queryClient.setQueryData(queryKeys.conversations.detail("corrupt"), {
+      id: "corrupt",
+      title: null,
+      state: makeBlockedRowState("corrupt", "2"),
+      createdAt: new Date(1).toISOString(),
+      updatedAt: null,
+    });
+
+    const view = render(
+      <TestWrapper>
+        <RecoveryHarness conversationId="corrupt" />
+      </TestWrapper>,
+    );
+
+    await act(async () => {
+      await Promise.resolve();
+    });
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "ai.conversation.recovery.reset.trigger" }));
+    });
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "ai.conversation.recovery.reset.confirm" }));
+    });
+    await act(async () => {
+      vi.advanceTimersByTime(500);
+    });
+
+    // WHY: A conversation with an identity is saved even with no messages
+    // (ASSISTANT-CONVERSATIONS.md §Relationships), so it stays in the list.
+    const savesForCorrupt = wire.setConversationCalls.filter((c) => c.id === "corrupt");
+    expect(savesForCorrupt).toHaveLength(1);
+    expect(savesForCorrupt[0]?.title).toBeNull();
+
+    view.unmount();
+  });
+
   it("recovery reset: the fresh conversation saves normally once content is added", async () => {
     setupTestHarness();
     const deleteCalls: string[] = [];

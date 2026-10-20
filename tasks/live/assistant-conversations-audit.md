@@ -409,7 +409,7 @@ Line numbers are at `7b8e8c1c`; when an earlier item moved them, find the code b
   Commit: Reconcile the global AI profile record when its profile is gone
   Depends on: 4
 
-- [ ] 6. Save the conversation that recovery reset creates
+- [x] 6. Save the conversation that recovery reset creates
   Goal (finding 6):
   - Reset on the recovery screen (`ui/assistant-conversation-recovery.tsx:81-90`) deletes the blocked row and runs
     `newConversation` under the same id, but nothing marks it dirty.

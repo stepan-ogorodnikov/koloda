@@ -10,7 +10,11 @@ import { AnimatePresence } from "motion/react";
 import { useCallback, useState } from "react";
 import { aiProfileStateAtom } from "../state/ai-profile-state";
 import { newConversationAtom } from "../state/conversation-actions";
-import { blockedConversationRestoreAtom, clearBlockedConversationRestore } from "../state/conversation-store";
+import {
+  blockedConversationRestoreAtom,
+  clearBlockedConversationRestore,
+  touchConversationAtom,
+} from "../state/conversation-store";
 import type { BlockedConversationRestore } from "../state/conversation-store";
 import { deleteAssistantConversation } from "../persistence/conversation-write-adapter";
 
@@ -40,6 +44,7 @@ export function AssistantConversationRecovery({
   const queryClient = useQueryClient();
   const { deleteConversationMutation } = useAtomValue(queriesAtom);
   const newConversation = useSetAtom(newConversationAtom);
+  const touchConversation = useSetAtom(touchConversationAtom);
   const setBlockedConversationRestore = useSetAtom(blockedConversationRestoreAtom);
   const readLastUsed = useAtomCallback((get) => get(aiProfileStateAtom));
   const [isResetOpen, setIsResetOpen] = useState(false);
@@ -70,8 +75,9 @@ export function AssistantConversationRecovery({
   // so the fresh same-id conversation would be unsaveable until restart. A
   // blocked row has no queued/in-flight writes (it was never inserted into the
   // store), so a plain DB delete cannot race an upsert. After the row is gone,
-  // create a fresh current-version conversation under the same id; it stays
-  // empty (and unwritten) until the user adds content.
+  // create a fresh current-version conversation under the same id and mark it
+  // dirty: like any conversation with an identity, it is saved while still
+  // empty, so it stays in the list.
   const {
     mutate: reset,
     isPending: isResetting,
@@ -87,6 +93,7 @@ export function AssistantConversationRecovery({
       setBlockedConversationRestore((prev) => clearBlockedConversationRestore(prev, conversationId));
       const stored = readLastUsed();
       newConversation({ id: conversationId, ...stored });
+      touchConversation(conversationId);
     },
     onSuccess: () => setIsResetOpen(false),
   });
