@@ -117,7 +117,7 @@ export function useRunOrchestration(options: UseRunOrchestrationOptions): UseRun
     async (value?: string) => {
       ensureConversationId();
       const cfg = configRef.current;
-      let currentState = readState();
+      const currentState = readState();
 
       // WHY: After ensureConversationId(), the conversation is in the store.
       // Use the state's id rather than the prop (which may be undefined on cold start).
@@ -129,30 +129,34 @@ export function useRunOrchestration(options: UseRunOrchestrationOptions): UseRun
       if (isSubmitInFlightByConversationRef.current.has(activeConversationId)) return;
 
       const promptText = (value ?? "").trim();
-      // INVARIANT: Validate the prompt BEFORE committing revert — an empty
-      // submit in a reverted state would otherwise permanently delete the
-      // hidden messages with no replacement run.
+      // INVARIANT: Every early return comes BEFORE commitRevert — a submit
+      // in a reverted state that starts no run would otherwise permanently
+      // delete the hidden messages. That covers an empty prompt and a
+      // missing profile or model.
       if (!promptText) return;
+
+      // WHY: Submit is always chat+tools. Cards injection is not resolved
+      // here — propose_cards runs against current data when the model calls it.
+      // The visible messages are the post-commit history: commitRevert drops
+      // exactly the hidden messages and their runs.
+      const prepared = prepareRunRequest(
+        cfg,
+        promptText,
+        getVisibleMessages(currentState.messages, currentState.revertState),
+        currentState.runs,
+      );
+      if (!prepared) return;
 
       // WHY: Revert is visual until the user submits a new prompt. Commit
       // it now so the hidden messages and their runs are actually
       // removed; the prompt then becomes the latest user message and
-      // starts a fresh run. Re-read the state afterwards so the rest of
-      // this handler sees the post-commit shape.
-      if (currentState.revertState) {
-        dispatch(["commitRevert"]);
-        currentState = readState();
-      }
+      // starts a fresh run.
+      if (currentState.revertState) dispatch(["commitRevert"]);
 
       isSubmitInFlightByConversationRef.current.add(activeConversationId);
       let submittedRunId: string | null = null;
       let submittedText: string | null = null;
       try {
-        // WHY: Submit is always chat+tools. Cards injection is not resolved
-        // here — propose_cards runs against current data when the model calls it.
-        const prepared = prepareRunRequest(cfg, promptText, currentState.messages, currentState.runs);
-        if (!prepared) return;
-
         const runId = generateUUID();
 
         rememberLastUsedAIProfile(cfg.profileId, cfg.modelId);

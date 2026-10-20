@@ -277,7 +277,7 @@ Line numbers are at `7b8e8c1c`; when an earlier item moved them, find the code b
   Commit: Keep a dismissed stream error from surfacing an older one
   Depends on: none
 
-- [ ] 2. Check the profile and model before committing a revert
+- [x] 2. Check the profile and model before committing a revert
   Goal (findings 2 and 8d):
   - In `handleGenerate` (`runs/use-run-orchestration.ts:116-187`), `commitRevert` runs at :142-145, before
     `prepareRunRequest` at :153.
