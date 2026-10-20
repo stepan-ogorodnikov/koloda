@@ -787,7 +787,7 @@ Line numbers are at `7b8e8c1c`; when an earlier item moved them, find the code b
   Commit: Correct stale assistant docs, spec pointers, and history comments
   Depends on: 7, 11
 
-- [ ] 17. Spec save-error retry and retry's global profile update
+- [x] 17. Spec save-error retry and retry's global profile update
   Goal (findings 7 and 16), in `docs/specs/ASSISTANT-CONVERSATIONS.md`:
   - §Save Errors (:238-242) describes only a dismissible panel.
     The panel also offers Retry, which saves the conversation again.

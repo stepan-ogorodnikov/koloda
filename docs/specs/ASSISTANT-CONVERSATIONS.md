@@ -29,7 +29,7 @@ The model may propose cards during that run.
 - **AI profile state** — the profile, model, and model parameters; stored per conversation and once globally
 - **Write target** — the deck and template an accepted proposal targeted; kept per run
 - **Prompt input** — the unsent composer text for this conversation
-- **Revert state** — not saved, cleared when the app reloads; hides messages from a past user message onward
+- **Revert state** — hides messages from a past user message onward; see §Revert State
 
 ### Relationships
 
@@ -172,18 +172,18 @@ The model picker in the footer still opens and shows the same add-profile action
 The button opens the same add-profile dialog as AI settings.
 Once a profile exists, these empty states are no longer shown.
 
-**When it is updated** — the global record is updated in two cases:
+**When it is updated** — the global record is updated in three cases:
 
 1. When the user starts a run by submitting a prompt in any conversation.
 2. When the user changes any of the three AI profile state values
    (profile, model, or model parameters) in any conversation.
+3. When the user retries a run in any conversation.
 
 ## Persistence
 
 Conversations are saved automatically.
 Messages, runs, and AI profile state are saved together.
 What happens when saved data cannot be read is in §Restore.
-The revert state is not saved.
 
 ### When Saves Happen
 
@@ -215,7 +215,7 @@ When a conversation is loaded:
 - Pending card statuses are reset; see ASSISTANT-CARD-GENERATION.md (§Card Status).
 - Accepted cards on a turn still show as a review table.
 - No run is active after restore.
-- Revert state is cleared.
+- Revert state follows §Revert State.
 - A dismissed stream error stays dismissed; see §Dismissing Errors.
 
 If the saved conversation is corrupt or was written by a newer version of the app, restore is blocked.
@@ -239,6 +239,7 @@ The partial content generated before the failure remains visible.
 ### Save Errors
 
 If saving fails, a dismissible save error panel appears.
+The panel also offers Retry, which saves the conversation again right away.
 If the user switches to a different conversation before the save error is displayed, the error is silently discarded.
 It belongs to the old conversation.
 
