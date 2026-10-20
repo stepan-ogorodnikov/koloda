@@ -7,7 +7,6 @@ import type { AssistantEvent, AssistantRunError } from "./assistant-protocol";
 import { boundRunErrorDetails } from "./assistant-protocol";
 import type { RunAbortReason, RunControllerRegistry } from "./run-controller-registry";
 import { RunControllerRegistryClosedError } from "./run-controller-registry";
-import { runStream } from "./run-stream";
 import { createSerialQueue, QueueClosedError } from "./serial-queue";
 import type { QueueCancelReason } from "./serial-queue";
 import type { StreamResult } from "./stream-result";
@@ -229,140 +228,122 @@ export function createConversationRuntime(
       return;
     }
 
-    return runStream(
-      {
-        transport: async (req, onValue) => {
-          // WHY: Last-chance gate for cancel that landed after dequeue.
-          const gateReason = takeCancelBeforeStart(runId);
-          if (gateReason !== undefined) {
-            {
-              const gateEntry = runs.get(runId);
-              if (gateEntry) gateEntry.abortReason = gateReason;
-            }
-            return { streamResult: "aborted" as const, usage: null as StreamUsage | null };
-          }
-          // INVARIANT: Leaving the awaiting-start gap before beginRun so a
-          // post-abort cancel cannot re-stamp a requestedReason.
-          const gateEntry = runs.get(runId);
-          if (gateEntry && gateEntry.phase === "awaitingStart") gateEntry.phase = "inFlight";
-          const controller = beginRunForTransport(runId);
-          if (!controller) {
-            return { streamResult: "aborted" as const, usage: null as StreamUsage | null };
-          }
-          try {
-            const onChunk = (chunk: ChatStreamChunk) => {
-              if (!controller.signal.aborted) onValue(chunk);
-            };
-            // WHY: same abort gate as text — a cancel mid-tool must not record
-            // partial tool traffic on the run.
-            const onToolEvent = (event: AssistantToolEvent) => {
-              if (!controller.signal.aborted) onValue(event);
-            };
-            const usage = await transports.executionPort.executeChat(
-              {
-                kind: "chat",
-                conversationId,
-                runId,
-                identity: execution,
-                request: req,
-              },
-              onChunk,
-              onToolEvent,
-              controller.signal,
-            );
-            return { streamResult: "success" as const, usage: usage ?? null };
-          } catch (e) {
-            // WHY: AbortError alone is not user cancel — classify from
-            // requested termination cause. A real Error must surface even if
-            // the signal was also aborted.
-            if (isAbortError(e)) {
-              return {
-                streamResult: classifyAbortError(runId),
-                usage: null as StreamUsage | null,
-              };
-            }
-            const error = e instanceof Error ? e : new Error(String(e));
-            emit({
-              type: "runTerminated",
-              conversationId,
-              runId,
-              outcome: { status: "failed", error: toRunError(error) },
-            });
-            callbacks.markReadIfCurrent(conversationId, runId);
-            return { streamResult: "error" as const, usage: null as StreamUsage | null };
-          } finally {
-            controllerRegistry.endRun(runId, controller);
-          }
-        },
-        initial: "",
-        onValue: (text: string, chunk: ChatStreamChunk | AssistantToolEvent) => {
-          // WHY: reasoning records on the run activity list (alongside tools)
-          // and never enters the accumulated text that becomes follow-up
-          // request history (card-outputs precedent).
-          if (chunk.kind === "reasoning") {
-            emit({
-              type: "runChunk",
-              conversationId,
-              runId,
-              chunk: { kind: "reasoning", text: chunk.text },
-            });
-            // WHY: reasoning arrivals dirty the conversation like text so
-            // streaming checkpoints persist the partial thinking row.
-            callbacks.touch(conversationId);
-            return text;
-          }
-          if (chunk.kind !== "text") {
-            emit({
-              type: "runChunk",
-              conversationId,
-              runId,
-              chunk,
-            });
-            // WHY: tool arrivals must dirty the originating conversation, like
-            // card arrivals, so streaming checkpoints save A while viewing B.
-            callbacks.touch(conversationId);
-            return text;
-          }
-          const currentText = text + chunk.text;
-          emit({
-            type: "runChunk",
+    let text = "";
+    const onValue = (chunk: ChatStreamChunk | AssistantToolEvent) => {
+      // WHY: reasoning records on the run activity list (alongside tools)
+      // and never enters the accumulated text that becomes follow-up
+      // request history (card-outputs precedent).
+      if (chunk.kind === "reasoning") {
+        emit({
+          type: "runChunk",
+          conversationId,
+          runId,
+          chunk: { kind: "reasoning", text: chunk.text },
+        });
+        // WHY: reasoning arrivals dirty the conversation like text so
+        // streaming checkpoints persist the partial thinking row.
+        callbacks.touch(conversationId);
+        return;
+      }
+      if (chunk.kind !== "text") {
+        emit({
+          type: "runChunk",
+          conversationId,
+          runId,
+          chunk,
+        });
+        // WHY: tool arrivals must dirty the originating conversation, like
+        // card arrivals, so streaming checkpoints save A while viewing B.
+        callbacks.touch(conversationId);
+        return;
+      }
+      text += chunk.text;
+      emit({
+        type: "runChunk",
+        conversationId,
+        runId,
+        chunk: { kind: "assistantText", text },
+      });
+      // WHY: Stream chunks must dirty the originating conversation so
+      // throttled streaming checkpoints save A while the user views B.
+      callbacks.touch(conversationId);
+    };
+
+    const stream = async (): Promise<{ streamResult: StreamResult; usage: StreamUsage | null }> => {
+      // WHY: Last-chance gate for cancel that landed after dequeue.
+      const gateReason = takeCancelBeforeStart(runId);
+      const gateEntry = runs.get(runId);
+      if (gateReason !== undefined) {
+        if (gateEntry) gateEntry.abortReason = gateReason;
+        return { streamResult: "aborted", usage: null };
+      }
+      // INVARIANT: Leaving the awaiting-start gap before beginRun so a
+      // post-abort cancel cannot re-stamp a requestedReason.
+      if (gateEntry && gateEntry.phase === "awaitingStart") gateEntry.phase = "inFlight";
+      const controller = beginRunForTransport(runId);
+      if (!controller) return { streamResult: "aborted", usage: null };
+      try {
+        const onChunk = (chunk: ChatStreamChunk) => {
+          if (!controller.signal.aborted) onValue(chunk);
+        };
+        // WHY: same abort gate as text — a cancel mid-tool must not record
+        // partial tool traffic on the run.
+        const onToolEvent = (event: AssistantToolEvent) => {
+          if (!controller.signal.aborted) onValue(event);
+        };
+        const usage = await transports.executionPort.executeChat(
+          {
+            kind: "chat",
             conversationId,
             runId,
-            chunk: { kind: "assistantText", text: currentText },
-          });
-          // WHY: Stream chunks must dirty the originating conversation so
-          // throttled streaming checkpoints save A while the user views B.
-          callbacks.touch(conversationId);
-          return currentText;
-        },
-        finalize: ({ streamResult, usage }, currentText) => {
-          // WHY: On abort the stream stops calling onChunk mid-text;
-          // re-emit the final accumulated value so the persisted
-          // assistant message reflects everything received.
-          if (streamResult === "aborted") {
-            emit({
-              type: "runChunk",
-              conversationId,
-              runId,
-              chunk: { kind: "assistantText", text: currentText },
-            });
-          }
-          if (usage) {
-            emit({
-              type: "runChunk",
-              conversationId,
-              runId,
-              chunk: { kind: "usage", usage },
-            });
-          }
-          return streamResult;
-        },
-      },
-      conversationId,
-      runId,
-      request,
-      handleStreamResult,
-    );
+            identity: execution,
+            request,
+          },
+          onChunk,
+          onToolEvent,
+          controller.signal,
+        );
+        return { streamResult: "success", usage: usage ?? null };
+      } catch (e) {
+        // WHY: AbortError alone is not user cancel — classify from
+        // requested termination cause. A real Error must surface even if
+        // the signal was also aborted.
+        if (isAbortError(e)) return { streamResult: classifyAbortError(runId), usage: null };
+        const error = e instanceof Error ? e : new Error(String(e));
+        emit({
+          type: "runTerminated",
+          conversationId,
+          runId,
+          outcome: { status: "failed", error: toRunError(error) },
+        });
+        callbacks.markReadIfCurrent(conversationId, runId);
+        return { streamResult: "error", usage: null };
+      } finally {
+        controllerRegistry.endRun(runId, controller);
+      }
+    };
+
+    const { streamResult, usage } = await stream();
+    // WHY: On abort the stream stops calling onChunk mid-text;
+    // re-emit the final accumulated value so the persisted
+    // assistant message reflects everything received.
+    if (streamResult === "aborted") {
+      emit({
+        type: "runChunk",
+        conversationId,
+        runId,
+        chunk: { kind: "assistantText", text },
+      });
+    }
+    if (usage) {
+      emit({
+        type: "runChunk",
+        conversationId,
+        runId,
+        chunk: { kind: "usage", usage },
+      });
+    }
+    handleStreamResult(conversationId, streamResult, runId);
   };
 
   const mapQueueClosed = (error: QueueClosedError): AssistantEngineClosedError =>

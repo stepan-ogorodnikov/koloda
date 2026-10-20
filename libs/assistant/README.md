@@ -1,7 +1,7 @@
 # @koloda/assistant
 
 Framework-free assistant application layer: per-conversation runtimes, serial command queues,
-run-scoped AbortControllers, persistence scheduling, graceful shutdown, and the shared stream funnel.
+run-scoped AbortControllers, persistence scheduling, and graceful shutdown.
 No React, no Jotai, no TanStack Query, no UI, no repository I/O.
 
 ## Where it sits
@@ -57,7 +57,6 @@ Do not log token chunks, card payloads, or secrets.
 - Controllers: `run-controller-registry.ts` — engine-owned `AbortController` map keyed by `runId`
   (cancel isolation; shutdown/dispose aborts all).
   Closed-registry `beginRun` becomes a typed interrupt, not a bare throw that leaves the run `streaming`.
-- Stream funnel: `run-stream.ts` — shared `runStream` success / fail / abort handling used by chat.
 - Serial queue: `serial-queue.ts` — per-conversation command serialization
   (one hop per public execute entry; retry must not re-enqueue through those entry points).
 - Types / helpers: `stream-result.ts`, `assistant-protocol.ts` (`boundRunErrorDetails`).

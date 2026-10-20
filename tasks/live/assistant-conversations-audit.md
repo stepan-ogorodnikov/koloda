@@ -629,7 +629,7 @@ Line numbers are at `7b8e8c1c`; when an earlier item moved them, find the code b
   Commit: Restore conversation fields in the shape the current build writes
   Depends on: 8, 9
 
-- [ ] 11. Inline runStream into the chat run
+- [x] 11. Inline runStream into the chat run
   Goal (finding 15, and the `run-stream.ts` parts of findings 9 and 14; question 2):
   - `runStream` (`libs/assistant/src/lib/run-stream.ts:8-31`) has four type parameters and one caller, `runChatRun` in
     `conversation-runtime.ts` (call at :232).
