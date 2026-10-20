@@ -672,7 +672,7 @@ Line numbers are at `7b8e8c1c`; when an earlier item moved them, find the code b
   Commit: Split the engine host test file by subject
   Depends on: none
 
-- [ ] 13. Test the save-error discard and clear rules
+- [x] 13. Test the save-error discard and clear rules
   Goal (finding 8c):
   - Spec: ASSISTANT-CONVERSATIONS.md (§Save Errors) says an error that arrives after the user switched conversations is
     discarded.

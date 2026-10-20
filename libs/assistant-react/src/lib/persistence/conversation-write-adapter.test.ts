@@ -14,6 +14,7 @@ import {
   conversationsAtom,
   currentConversationIdAtom,
   pendingSaveByConversationAtom,
+  saveStatusAtom,
   touchConversationAtom,
   upsertConversationAtom,
 } from "../state/conversation-store";
@@ -182,6 +183,62 @@ describe("buildWriteConversation", () => {
       error: failure,
       isDismissed: false,
     });
+  });
+
+  it("discards a save error that arrives after the user switched conversations", async () => {
+    const store = createStore();
+    store.set(upsertConversationAtom, makeConversation("A"));
+    store.set(upsertConversationAtom, makeConversation("B"));
+    store.set(currentConversationIdAtom, "A");
+    let rejectWrite!: (error: Error) => void;
+    const write = buildWriteConversation({
+      store,
+      setConversationFn: () =>
+        new Promise<Conversation>((_resolve, reject) => {
+          rejectWrite = reject;
+        }),
+      setSaveStatus: (status) => store.set(saveStatusAtom, status),
+      setQueryConversation: vi.fn(),
+      updateConversationsList: vi.fn(),
+      isTombstoned: () => false,
+    });
+
+    const pending = write("A");
+    store.set(currentConversationIdAtom, "B");
+    const failure = new AppError("db.update", "SQLITE_BUSY");
+    rejectWrite(failure);
+
+    // WHY: The error belongs to A (ASSISTANT-CONVERSATIONS.md §Save Errors);
+    // B's panel must not show it.
+    await expect(pending).rejects.toBe(failure);
+    expect(store.get(saveStatusAtom)).toEqual({ conversationId: null, error: null, isDismissed: false });
+  });
+
+  it("a successful save clears an earlier save error", async () => {
+    const store = createStore();
+    store.set(upsertConversationAtom, makeConversation("A"));
+    store.set(currentConversationIdAtom, "A");
+    const failure = new AppError("db.update", "SQLITE_BUSY");
+    let shouldFail = true;
+    const write = buildWriteConversation({
+      store,
+      setConversationFn: async (data) => {
+        if (shouldFail) throw failure;
+        return makeRow(data);
+      },
+      setSaveStatus: (status) => store.set(saveStatusAtom, status),
+      setQueryConversation: vi.fn(),
+      updateConversationsList: vi.fn(),
+      isTombstoned: () => false,
+    });
+
+    await expect(write("A")).rejects.toBe(failure);
+    expect(store.get(saveStatusAtom).error).toBe(failure);
+
+    shouldFail = false;
+    await write("A");
+
+    expect(store.get(saveStatusAtom)).toEqual({ conversationId: "A", error: null, isDismissed: false });
   });
 });
 
