@@ -37,14 +37,19 @@ type HarnessOptions = {
   profiles: AIProfile[];
   models: AIModel[];
   stored: AIProfileState | null;
+  /** Overrides the profile list fetch, e.g. to hold it on a gated promise. */
+  loadProfiles?: () => Promise<AIProfile[]>;
 };
 
-function renderSelection({ profiles, models, stored }: HarnessOptions) {
+function renderSelection({ profiles, models, stored, loadProfiles }: HarnessOptions) {
   const store = createStore();
   store.set(
     queriesAtom as WritableAtom<Queries, [Queries], unknown>,
     {
-      getAIProfilesQuery: () => ({ queryKey: queryKeys.ai.profiles(), queryFn: async () => profiles }),
+      getAIProfilesQuery: () => ({
+        queryKey: queryKeys.ai.profiles(),
+        queryFn: loadProfiles ?? (async () => profiles),
+      }),
     } as unknown as Queries,
   );
   store.set(
@@ -120,5 +125,67 @@ describe("useAssistantProfileSelection without a conversation", () => {
       modelId: "model-1",
       modelParameters: { reasoning_effort: "low" },
     });
+  });
+});
+
+describe("useAssistantProfileSelection reconciles the global record on load", () => {
+  const storedGone: AIProfileState = {
+    profileId: "profile-deleted",
+    modelId: "model-1",
+    modelParameters: { reasoning_effort: "high" },
+  };
+  const reconciledToNewest: AIProfileState = { profileId: "profile-b", modelId: null, modelParameters: {} };
+
+  it("falls back to the newest profile when the stored profile is gone", async () => {
+    const { result, store } = renderSelection({
+      profiles: [profileA, profileB],
+      models: [modelOne],
+      stored: storedGone,
+    });
+
+    await waitFor(() => expect(store.get(aiProfileStateAtom)).toEqual(reconciledToNewest));
+    expect(result.current.profileId).toBe("profile-b");
+  });
+
+  it("keeps a stored profile that is still available", async () => {
+    const stored: AIProfileState = {
+      profileId: "profile-a",
+      modelId: "model-1",
+      modelParameters: { reasoning_effort: "high" },
+    };
+    const { result, store } = renderSelection({ profiles: [profileA, profileB], models: [modelOne], stored });
+
+    await waitFor(() => expect(result.current.modelId).toBe("model-1"));
+    expect(store.get(aiProfileStateAtom)).toEqual(stored);
+  });
+
+  it("leaves the stored record alone until the profile list has loaded", async () => {
+    let releaseProfiles!: (profiles: AIProfile[]) => void;
+    const pendingProfiles = new Promise<AIProfile[]>((resolve) => {
+      releaseProfiles = resolve;
+    });
+    const { store } = renderSelection({
+      profiles: [],
+      models: [modelOne],
+      stored: storedGone,
+      loadProfiles: () => pendingProfiles,
+    });
+
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(store.get(aiProfileStateAtom)).toEqual(storedGone);
+
+    await act(async () => {
+      releaseProfiles([profileA, profileB]);
+      await pendingProfiles;
+    });
+    await waitFor(() => expect(store.get(aiProfileStateAtom)).toEqual(reconciledToNewest));
+  });
+
+  it("writes the newest profile when nothing is stored", async () => {
+    const { store } = renderSelection({ profiles: [profileA, profileB], models: [modelOne], stored: null });
+
+    await waitFor(() => expect(store.get(aiProfileStateAtom)).toEqual(reconciledToNewest));
   });
 });

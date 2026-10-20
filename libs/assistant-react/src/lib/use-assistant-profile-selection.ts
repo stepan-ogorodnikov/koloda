@@ -4,7 +4,7 @@ import { useAIModels, useAIProfiles } from "@koloda/ai-react";
 import { useAtomValue, useSetAtom } from "jotai";
 import { useCallback, useEffect, useMemo } from "react";
 import { modelChangeSync, parameterChangeSync, profileChangeSync } from "./state/ai-profile-sync";
-import { aiProfileStateAtom } from "./state/ai-profile-state";
+import { aiProfileStateAtom, reconcileAIProfileState } from "./state/ai-profile-state";
 import {
   setAssistantAIModelAtom,
   setAssistantAIModelParameterAtom,
@@ -69,6 +69,7 @@ export function useAssistantProfileSelection(): UseAssistantProfileSelectionRetu
   const {
     profiles,
     isLoading: areProfilesLoading,
+    isSuccess: areProfilesLoaded,
     selectedProfile,
     defaultProfileId,
     missingSecretFieldLabels,
@@ -78,21 +79,33 @@ export function useAssistantProfileSelection(): UseAssistantProfileSelectionRetu
   const hasProfiles = profiles.length > 0;
 
   useEffect(() => {
-    if (defaultProfileId && !storedProfileId) {
-      const payload = {
-        profileId: defaultProfileId,
-        modelId: null,
-        modelParameters: {},
-      };
-      if (hasConversation) {
-        setAIProfile(payload);
-      } else {
-        // WHY: Param-less has no conversation row. The same default write must
-        // still land on the global record so the picker is not a no-op.
-        setGlobalAIProfileState(payload);
+    if (hasConversation) {
+      if (defaultProfileId && !storedProfileId) {
+        setAIProfile({ profileId: defaultProfileId, modelId: null, modelParameters: {} });
       }
+      return;
     }
-  }, [defaultProfileId, storedProfileId, setAIProfile, setGlobalAIProfileState, hasConversation]);
+    // WHY: The profile list is empty while it loads or after it failed;
+    // reconciling against it would wipe a valid stored profile.
+    if (!areProfilesLoaded) return;
+    // INVARIANT: A missing or unavailable stored profile falls back to the
+    // newest profile, no model, and empty parameters (ASSISTANT-CONVERSATIONS.md
+    // §Global AI Profile State). Write only when the profile changes, so an
+    // empty profile list does not rewrite the record again.
+    const reconciled = reconcileAIProfileState(globalAIProfileState, profiles);
+    if (!globalAIProfileState || globalAIProfileState.profileId !== reconciled.profileId) {
+      replaceGlobalAIProfileState(reconciled);
+    }
+  }, [
+    hasConversation,
+    defaultProfileId,
+    storedProfileId,
+    setAIProfile,
+    areProfilesLoaded,
+    globalAIProfileState,
+    profiles,
+    replaceGlobalAIProfileState,
+  ]);
 
   const resolvedModelId = useMemo(() => {
     if (!storedProfileId) return "";

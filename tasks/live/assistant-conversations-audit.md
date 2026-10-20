@@ -378,7 +378,7 @@ Line numbers are at `7b8e8c1c`; when an earlier item moved them, find the code b
   Commit: Reset global model parameters on a profile or model change
   Depends on: none
 
-- [ ] 5. Reconcile the global AI profile record when its profile is gone
+- [x] 5. Reconcile the global AI profile record when its profile is gone
   Goal (finding 5):
   - Spec: ASSISTANT-CONVERSATIONS.md (§Global AI Profile State), "Loading".
     A stored value whose profile is no longer available is reconciled to defaults: the newest profile, no model, and
