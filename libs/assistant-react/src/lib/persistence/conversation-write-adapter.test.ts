@@ -1,4 +1,3 @@
-import { IDLE_SAVE_DEBOUNCE_MS } from "@koloda/assistant";
 import { AppError } from "@koloda/app";
 import type { Conversation, SetConversationData } from "@koloda/app";
 import { createStore } from "jotai";
@@ -19,6 +18,9 @@ import {
   upsertConversationAtom,
 } from "../state/conversation-store";
 import { buildWriteConversation, deleteAssistantConversation } from "./conversation-write-adapter";
+
+// WHY: The idle save delay inside @koloda/assistant, which keeps it off its entry.
+const IDLE_SAVE_DEBOUNCE_MS = 250;
 
 function makeRow(data: SetConversationData): Conversation {
   return {
@@ -54,7 +56,7 @@ describe("buildWriteConversation", () => {
       isTombstoned: () => false,
     });
 
-    expect(await write("draft-1")).toBe(true);
+    await write("draft-1");
     expect(setConversationFn).toHaveBeenCalledTimes(1);
     const payload = setConversationFn.mock.calls[0]![0];
     expect(payload.id).toBe("draft-1");
@@ -83,7 +85,7 @@ describe("buildWriteConversation", () => {
       isTombstoned: () => false,
     });
 
-    expect(await write("draft-1")).toBe(true);
+    await write("draft-1");
     expect(setConversationFn.mock.calls[0]![0].title).toBeNull();
   });
 
@@ -113,7 +115,7 @@ describe("buildWriteConversation", () => {
       isTombstoned: () => false,
     });
 
-    expect(await write("A")).toBe(true);
+    await write("A");
     expect(setConversationFn.mock.calls[0]![0].title).toBe("first turn");
   });
 
@@ -156,7 +158,7 @@ describe("buildWriteConversation", () => {
       isTombstoned: () => true,
     });
 
-    expect(await write("draft-1")).toBe(false);
+    await write("draft-1");
     expect(setConversationFn).not.toHaveBeenCalled();
   });
 
@@ -264,10 +266,9 @@ describe("deleteAssistantConversation", () => {
     // (removeConversationAtom clears the row after a successful delete).
     registerAssistantPersistenceWriteAdapter({
       writeConversation: async (id) => {
-        if (host.isTombstoned(id)) return false;
-        if (!store.get(conversationsAtom)[id]) return false;
+        if (host.isTombstoned(id)) return;
+        if (!store.get(conversationsAtom)[id]) return;
         writes.push(id);
-        return true;
       },
     });
 

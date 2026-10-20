@@ -646,7 +646,7 @@ describe("useConversationRuns", () => {
     });
 
     await act(async () => {
-      await shutdownAssistantGracefully(harness.store, 0);
+      await shutdownAssistantGracefully(harness.store);
       await runPromise;
     });
 

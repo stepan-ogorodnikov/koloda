@@ -36,11 +36,11 @@ export function buildWriteConversation({
   setQueryConversation,
   updateConversationsList,
   isTombstoned,
-}: BuildWriteConversationOptions): (conversationId: string) => Promise<boolean> {
-  return async (id: string): Promise<boolean> => {
-    if (isTombstoned(id)) return false;
+}: BuildWriteConversationOptions): (conversationId: string) => Promise<void> {
+  return async (id: string): Promise<void> => {
+    if (isTombstoned(id)) return;
     const state = store.get(conversationsAtom)[id];
-    if (!state) return false;
+    if (!state) return;
     // INVARIANT: Every conversation with an id is persistable, including
     // drafts with no messages and no active run. Clearing the composer must
     // not skip the write — that would drop the row on the next save.
@@ -63,13 +63,13 @@ export function buildWriteConversation({
     };
 
     // WHY: re-check after cloning — a delete can land between snapshot and write.
-    if (isTombstoned(id) || !store.get(conversationsAtom)[id]) return false;
+    if (isTombstoned(id) || !store.get(conversationsAtom)[id]) return;
 
     try {
       const row = await setConversationFn(data);
       // WHY: coordinated delete may have finished while the upsert ran; do not
       // push a resurrected row into the query cache or store timestamps.
-      if (isTombstoned(id) || !store.get(conversationsAtom)[id]) return false;
+      if (isTombstoned(id) || !store.get(conversationsAtom)[id]) return;
       const currentId = store.get(currentConversationIdAtom);
       if (currentId === row.id)
         setSaveStatus({
@@ -87,7 +87,6 @@ export function buildWriteConversation({
           return { ...prev, updatedAt: savedAt };
         });
       }
-      return true;
     } catch (error) {
       console.error("Failed to save conversation", error);
       const currentId = store.get(currentConversationIdAtom);

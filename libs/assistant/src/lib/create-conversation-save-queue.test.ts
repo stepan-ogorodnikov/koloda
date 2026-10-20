@@ -28,9 +28,9 @@ describe("createConversationSaveQueue", () => {
   });
 
   it("flushOnce reports the queue's own outcome for the round", async () => {
-    const writes: Array<ReturnType<typeof deferred<boolean>>> = [];
+    const writes: Array<ReturnType<typeof deferred<void>>> = [];
     const write = vi.fn(() => {
-      const d = deferred<boolean>();
+      const d = deferred();
       writes.push(d);
       return d.promise;
     });
@@ -44,7 +44,7 @@ describe("createConversationSaveQueue", () => {
     // Dirty queue " flushOnce resolves "saved" when the write acks.
     queue.notifyDirty();
     const saving = queue.flushOnce();
-    writes[0]!.resolve(true);
+    writes[0]!.resolve();
     expect(await saving).toBe("saved");
 
     // Failing write " flushOnce resolves "failed".
@@ -55,9 +55,9 @@ describe("createConversationSaveQueue", () => {
   });
 
   it("serializes writes so a second flush waits for the in-flight write", async () => {
-    const writes: Array<ReturnType<typeof deferred<boolean>>> = [];
+    const writes: Array<ReturnType<typeof deferred<void>>> = [];
     const write = vi.fn(() => {
-      const d = deferred<boolean>();
+      const d = deferred();
       writes.push(d);
       return d.promise;
     });
@@ -74,21 +74,21 @@ describe("createConversationSaveQueue", () => {
     expect(write).toHaveBeenCalledTimes(1);
     expect(queue.isDirty()).toBe(true);
 
-    writes[0]!.resolve(true);
+    writes[0]!.resolve();
     await writes[0]!.promise;
     await Promise.resolve();
     await vi.advanceTimersByTimeAsync(IDLE_SAVE_DEBOUNCE_MS);
     expect(write).toHaveBeenCalledTimes(2);
 
-    writes[1]!.resolve(true);
+    writes[1]!.resolve();
     await writes[1]!.promise;
     await Promise.resolve();
     expect(queue.isDirty()).toBe(false);
   });
 
   it("ack of N does not clear dirty when N+1 was queued during the write", async () => {
-    const first = deferred<boolean>();
-    const second = deferred<boolean>();
+    const first = deferred();
+    const second = deferred();
     let call = 0;
     const write = vi.fn(() => {
       call += 1;
@@ -109,7 +109,7 @@ describe("createConversationSaveQueue", () => {
     queue.notifyDirty();
     expect(queue.isDirty()).toBe(true);
 
-    first.resolve(true);
+    first.resolve();
     await first.promise;
     await Promise.resolve();
     // Ack of N must leave dirty set — N+1 is still outstanding.
@@ -118,7 +118,7 @@ describe("createConversationSaveQueue", () => {
     await vi.advanceTimersByTimeAsync(IDLE_SAVE_DEBOUNCE_MS);
     expect(write).toHaveBeenCalledTimes(2);
 
-    second.resolve(true);
+    second.resolve();
     await second.promise;
     await Promise.resolve();
     expect(queue.isDirty()).toBe(false);
@@ -127,8 +127,8 @@ describe("createConversationSaveQueue", () => {
   it("persists the latest snapshot after overlapping in-flight and queued dirties", async () => {
     const snapshots: string[] = [];
     let latest = "N";
-    const first = deferred<boolean>();
-    const second = deferred<boolean>();
+    const first = deferred();
+    const second = deferred();
     let call = 0;
     const write = vi.fn(async () => {
       call += 1;
@@ -139,7 +139,6 @@ describe("createConversationSaveQueue", () => {
         await second.promise;
       }
       snapshots.push(snap);
-      return true;
     });
     const queue = createConversationSaveQueue({
       conversationId: "A",
@@ -154,13 +153,13 @@ describe("createConversationSaveQueue", () => {
     latest = "N+1";
     queue.notifyDirty();
 
-    first.resolve(true);
+    first.resolve();
     await first.promise;
     await Promise.resolve();
     await vi.advanceTimersByTimeAsync(IDLE_SAVE_DEBOUNCE_MS);
 
     expect(write).toHaveBeenCalledTimes(2);
-    second.resolve(true);
+    second.resolve();
     await second.promise;
     await Promise.resolve();
 
@@ -172,7 +171,7 @@ describe("createConversationSaveQueue", () => {
     const random = vi.fn(() => 0); // jitter factor 0.5 → delay = floor(base * 0.5)
     const logSaveFailure = vi.fn();
     const write = vi
-      .fn<() => Promise<boolean>>()
+      .fn<() => Promise<void>>()
       .mockRejectedValueOnce(new Error("db down"))
       .mockRejectedValueOnce(new Error("db down"))
       .mockResolvedValueOnce(true);
@@ -191,7 +190,6 @@ describe("createConversationSaveQueue", () => {
     await Promise.resolve();
     expect(write).toHaveBeenCalledTimes(1);
     expect(queue.isDirty()).toBe(true);
-    expect(queue.consecutiveFailures()).toBe(1);
     expect(logSaveFailure).toHaveBeenCalledWith(
       expect.objectContaining({
         conversationId: "conv-1",
@@ -211,7 +209,6 @@ describe("createConversationSaveQueue", () => {
     await Promise.resolve();
     await Promise.resolve();
     expect(write).toHaveBeenCalledTimes(2);
-    expect(queue.consecutiveFailures()).toBe(2);
     expect(logSaveFailure).toHaveBeenCalledTimes(2);
 
     // Manual retry cancels backoff and attempts immediately.
@@ -223,7 +220,6 @@ describe("createConversationSaveQueue", () => {
     await Promise.resolve();
     expect(write).toHaveBeenCalledTimes(3);
     expect(queue.isDirty()).toBe(false);
-    expect(queue.consecutiveFailures()).toBe(0);
 
     // Pending backoff must not fire after the successful manual retry.
     await vi.advanceTimersByTimeAsync(SAVE_RETRY_MAX_DELAY_MS);
@@ -231,7 +227,7 @@ describe("createConversationSaveQueue", () => {
   });
 
   it("cancels retry timers on dispose", async () => {
-    const write = vi.fn<() => Promise<boolean>>().mockRejectedValue(new Error("db down"));
+    const write = vi.fn<() => Promise<void>>().mockRejectedValue(new Error("db down"));
     const queue = createConversationSaveQueue({
       conversationId: "A",
       write,
@@ -251,7 +247,7 @@ describe("createConversationSaveQueue", () => {
   });
 
   it("beginDelete awaits in-flight, preserves dirty, and commit permanently drops it", async () => {
-    const first = deferred<boolean>();
+    const first = deferred();
     const write = vi.fn(() => first.promise);
     const queue = createConversationSaveQueue({
       conversationId: "A",
@@ -273,7 +269,6 @@ describe("createConversationSaveQueue", () => {
       return deletion;
     });
     await Promise.resolve();
-    expect(queue.isTombstoned()).toBe(true);
     expect(beginDone).toBe(false);
     // WHY: dirty stays set until commit — rollback must be able to resume N+1.
     expect(queue.isDirty()).toBe(true);
@@ -283,22 +278,21 @@ describe("createConversationSaveQueue", () => {
     await vi.advanceTimersByTimeAsync(IDLE_SAVE_DEBOUNCE_MS);
     expect(write).toHaveBeenCalledTimes(1);
 
-    first.resolve(true);
+    first.resolve();
     await first.promise;
     const deletion = await begin;
     expect(beginDone).toBe(true);
     expect(queue.isDirty()).toBe(true);
 
     deletion.commit();
-    expect(queue.isTombstoned()).toBe(true);
     expect(queue.isDirty()).toBe(false);
     expect(write).toHaveBeenCalledTimes(1);
   });
 
   it("beginDelete rollback restores dirty and resumes autosave", async () => {
-    const writes: Array<ReturnType<typeof deferred<boolean>>> = [];
+    const writes: Array<ReturnType<typeof deferred<void>>> = [];
     const write = vi.fn(() => {
-      const d = deferred<boolean>();
+      const d = deferred();
       writes.push(d);
       return d.promise;
     });
@@ -317,15 +311,13 @@ describe("createConversationSaveQueue", () => {
 
     const begin = queue.beginDelete();
     await Promise.resolve();
-    expect(queue.isTombstoned()).toBe(true);
 
-    writes[0]!.resolve(true);
+    writes[0]!.resolve();
     await writes[0]!.promise;
     const deletion = await begin;
     expect(queue.isDirty()).toBe(true);
 
     deletion.rollback();
-    expect(queue.isTombstoned()).toBe(false);
     expect(queue.isDirty()).toBe(true);
 
     // Rollback schedules coalesced resume — not an immediate same-turn write.
@@ -333,14 +325,14 @@ describe("createConversationSaveQueue", () => {
     await vi.advanceTimersByTimeAsync(IDLE_SAVE_DEBOUNCE_MS);
     expect(write).toHaveBeenCalledTimes(2);
 
-    writes[1]!.resolve(true);
+    writes[1]!.resolve();
     await writes[1]!.promise;
     await Promise.resolve();
     expect(queue.isDirty()).toBe(false);
   });
 
   it("dispose does not flush a pending coalesced save", async () => {
-    const write = vi.fn(async () => true);
+    const write = vi.fn(async () => {});
     const queue = createConversationSaveQueue({
       conversationId: "A",
       write,
@@ -359,7 +351,7 @@ describe("createConversationSaveQueue", () => {
   });
 
   it("throttles while streaming", async () => {
-    const write = vi.fn(async () => true);
+    const write = vi.fn(async () => {});
     const queue = createConversationSaveQueue({
       conversationId: "A",
       write,

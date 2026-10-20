@@ -17,7 +17,6 @@ describe("createConversationPersistenceHost", () => {
     const host = createConversationPersistenceHost({
       createWrite: (id) => async () => {
         writes.push(id);
-        return true;
       },
       isStreaming: () => false,
       getInitialPending: () => ({ A: 1 }),
@@ -40,7 +39,6 @@ describe("createConversationPersistenceHost", () => {
         await new Promise<void>((resolve) => {
           resolveWrite = resolve;
         });
-        return true;
       },
       isStreaming: () => false,
       getInitialPending: () => ({ A: 1 }),
@@ -58,12 +56,12 @@ describe("createConversationPersistenceHost", () => {
 
   it("flushAllBounded completes a queued N+1 write after the in-flight write finishes", async () => {
     const writes: Array<{
-      resolve: (value: boolean) => void;
-      promise: Promise<boolean>;
+      resolve: () => void;
+      promise: Promise<void>;
     }> = [];
     const write = vi.fn(() => {
-      let resolve!: (value: boolean) => void;
-      const promise = new Promise<boolean>((res) => {
+      let resolve!: () => void;
+      const promise = new Promise<void>((res) => {
         resolve = res;
       });
       writes.push({ resolve, promise });
@@ -91,14 +89,14 @@ describe("createConversationPersistenceHost", () => {
     listener!(pending);
     expect(write).toHaveBeenCalledTimes(1);
 
-    writes[0]!.resolve(true);
+    writes[0]!.resolve();
     await writes[0]!.promise;
     await Promise.resolve();
     await vi.advanceTimersByTimeAsync(0);
 
     expect(write).toHaveBeenCalledTimes(2);
 
-    writes[1]!.resolve(true);
+    writes[1]!.resolve();
     await bounded;
     host.dispose();
   });
@@ -109,7 +107,6 @@ describe("createConversationPersistenceHost", () => {
       createWrite: () => async () => {
         writeStarted();
         await new Promise<void>(() => {});
-        return true;
       },
       isStreaming: () => false,
       getInitialPending: () => ({ A: 1 }),
@@ -163,7 +160,7 @@ describe("createConversationPersistenceHost", () => {
       subscribePendingSaves: () => () => {},
     });
 
-    // Drive ordinary autosave failures until consecutiveFailures >= cap.
+    // Drive ordinary autosave failures until the failure count reaches the cap.
     for (let i = 0; i < SHUTDOWN_SAVE_MAX_ATTEMPTS; i += 1) {
       host.retrySave("A");
       await vi.advanceTimersByTimeAsync(0);
@@ -187,20 +184,20 @@ describe("createConversationPersistenceHost", () => {
   });
 
   it("flushAllBounded caps and yields after mid-flush success with N+1 still dirty", async () => {
-    // WHY: consecutiveFailures resets on ack — a local flush failure count must
+    // WHY: the failure count resets on ack — a local flush failure count must
     // still cap retries and keep failure yields after lifetime-at-cap → success
     // → subsequent rejects (otherwise the loop tight-spins until the deadline).
     const writes: Array<{
-      resolve: (value: boolean) => void;
-      promise: Promise<boolean>;
+      resolve: () => void;
+      promise: Promise<void>;
     }> = [];
     let mode: "fail-lifetime" | "succeed-once" | "fail-shutdown" = "fail-lifetime";
     const write = vi.fn(() => {
       if (mode === "fail-lifetime" || mode === "fail-shutdown") {
         return Promise.reject(new Error("db down"));
       }
-      let resolve!: (value: boolean) => void;
-      const promise = new Promise<boolean>((res) => {
+      let resolve!: () => void;
+      const promise = new Promise<void>((res) => {
         resolve = res;
       });
       writes.push({ resolve, promise });
@@ -238,7 +235,7 @@ describe("createConversationPersistenceHost", () => {
     listener!(pending);
 
     mode = "fail-shutdown";
-    writes[0]!.resolve(true);
+    writes[0]!.resolve();
     await writes[0]!.promise;
     await Promise.resolve();
 
@@ -259,7 +256,6 @@ describe("createConversationPersistenceHost", () => {
     let shouldFail = true;
     const write = vi.fn(async () => {
       if (shouldFail) throw new Error("db down");
-      return true;
     });
     const host = createConversationPersistenceHost({
       createWrite: () => write,
@@ -298,7 +294,6 @@ describe("createConversationPersistenceHost", () => {
         await writeGate;
         writeCount += 1;
         rows.set(id, "saved");
-        return true;
       },
       isStreaming: () => false,
       getInitialPending: () => ({ ...pending }),
@@ -363,7 +358,6 @@ describe("createConversationPersistenceHost", () => {
         await writeGate;
         writeCount += 1;
         rows.set(id, `v${writeCount}`);
-        return true;
       },
       isStreaming: () => false,
       getInitialPending: () => ({ ...pending }),
@@ -438,7 +432,6 @@ describe("createConversationPersistenceHost", () => {
     const host = createConversationPersistenceHost({
       createWrite: () => async () => {
         writeCount += 1;
-        return true;
       },
       isStreaming: () => false,
       getInitialPending: () => ({ ...pending }),
@@ -502,9 +495,8 @@ describe("createConversationPersistenceHost", () => {
         writeStarted = true;
         // Passed the in-memory existence check; block before upsert.
         await writeGate;
-        if (host.isTombstoned(id)) return false;
+        if (host.isTombstoned(id)) return;
         rows.set(id, "v2");
-        return true;
       },
       isStreaming: () => false,
       getInitialPending: () => ({ A: 1 }),

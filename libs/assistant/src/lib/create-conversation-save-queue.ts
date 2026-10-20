@@ -27,11 +27,11 @@ export type CreateConversationSaveQueueOptions = {
   conversationId: string;
   /**
    * Perform the durable write for the latest snapshot.
-   * Return `false` to skip (e.g. tombstoned) — that still counts as an ack
-   * when no newer dirty arrived during the write.
+   * Resolving counts as an ack when no newer dirty arrived during the write,
+   * including a write the caller skipped (e.g. tombstoned).
    * Throw to fail — dirty stays set and a bounded backoff retry is scheduled.
    */
-  write: () => Promise<boolean>;
+  write: () => Promise<void>;
   isStreaming: () => boolean;
   throttleMs?: number;
   debounceMs?: number;
@@ -54,8 +54,6 @@ export type ConversationSaveQueue = {
    */
   flushOnce: () => Promise<FlushOutcome>;
   isDirty: () => boolean;
-  /** Consecutive failed writes since the last successful ack. */
-  consecutiveFailures: () => number;
   cancelRetry: () => void;
   waitUntilIdle: () => Promise<void>;
   /**
@@ -63,7 +61,6 @@ export type ConversationSaveQueue = {
    * Preserves dirty generations until `commit` (drop) or `rollback` (restore).
    */
   beginDelete: () => Promise<ConversationDeletion>;
-  isTombstoned: () => boolean;
   dispose: () => void;
 };
 
@@ -139,8 +136,6 @@ export function createConversationSaveQueue({
   let retryTimer: ReturnType<typeof setTimeout> | null = null;
 
   const isDirty = () => dirtyGeneration > ackedGeneration;
-  const consecutiveFailures = () => failureAttempt;
-  const isTombstoned = () => hasTombstone;
 
   const clearRetryTimer = () => {
     if (!retryTimer) return;
@@ -308,11 +303,9 @@ export function createConversationSaveQueue({
     flushNow,
     flushOnce,
     isDirty,
-    consecutiveFailures,
     cancelRetry,
     waitUntilIdle,
     beginDelete,
-    isTombstoned,
     dispose,
   };
 }

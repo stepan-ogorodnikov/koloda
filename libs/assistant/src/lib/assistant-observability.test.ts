@@ -25,7 +25,7 @@ describe("assistant structured observability", () => {
   });
 
   it("logs saveStart and saveAck for a successful flush", async () => {
-    const write = vi.fn(async () => true);
+    const write = vi.fn(async () => {});
     const queue = createConversationSaveQueue({
       conversationId: "conv-1",
       write,
@@ -92,7 +92,6 @@ describe("assistant structured observability", () => {
     const host = createConversationPersistenceHost({
       createWrite: () => async () => {
         await writeGate;
-        return true;
       },
       isStreaming: () => false,
       getInitialPending: () => ({ A: 1 }),

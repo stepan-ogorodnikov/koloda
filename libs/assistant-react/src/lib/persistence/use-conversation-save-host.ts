@@ -10,11 +10,7 @@ import {
   registerAssistantPersistenceWriteAdapter,
 } from "../runs/assistant-persistence-host";
 import type { AssistantPersistenceWriteAdapter } from "../runs/assistant-persistence-host";
-import { dismissSaveStatusAtom, saveStatusAtom } from "../state/conversation-store";
-
-export type UseConversationSaveHostReturn = {
-  handleDismissSave: () => void;
-};
+import { saveStatusAtom } from "../state/conversation-store";
 
 /**
  * Application-shell persistence adapter. Scheduling and queue-map lifetime are
@@ -22,13 +18,12 @@ export type UseConversationSaveHostReturn = {
  * only registers the React-side durable-write adapter while the shell is mounted.
  * Mount on the app shell (with `useAssistantEngineHost`), not the AI route.
  */
-export function useConversationSaveHost(): UseConversationSaveHostReturn {
+export function useConversationSaveHost(): void {
   const queryClient = useQueryClient();
   const store = useStore();
   const { setConversationMutation } = useAtomValue(queriesAtom);
   const { mutationFn: setConversationFn } = setConversationMutation();
   const setSaveStatus = useSetAtom(saveStatusAtom);
-  const dismissSaveStatus = useSetAtom(dismissSaveStatusAtom);
 
   // WHY: Keep the latest React deps in a ref so the registered adapter stays
   // a stable plain object (safe for the module singleton) while still reading
@@ -42,7 +37,7 @@ export function useConversationSaveHost(): UseConversationSaveHostReturn {
   });
 
   const adapterRef = useRef<AssistantPersistenceWriteAdapter>({
-    writeConversation: async (id: string): Promise<boolean> => {
+    writeConversation: async (id: string): Promise<void> => {
       const {
         store: currentStore,
         setConversationFn: currentSetConversationFn,
@@ -98,6 +93,4 @@ export function useConversationSaveHost(): UseConversationSaveHostReturn {
     // a callback owned by an unmounted tree.
     return registerAssistantPersistenceWriteAdapter(adapterRef.current);
   }, [store]);
-
-  return { handleDismissSave: dismissSaveStatus };
 }

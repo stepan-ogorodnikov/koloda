@@ -1,5 +1,4 @@
 import type { AIRuntime } from "@koloda/ai";
-import { IDLE_SAVE_DEBOUNCE_MS } from "@koloda/assistant";
 import type { Conversation, ConversationListItem, SetConversationData } from "@koloda/app";
 import { aiRuntimeAtom, queriesAtom, queryKeys } from "@koloda/core-react";
 import type { Queries } from "@koloda/core-react";
@@ -19,6 +18,9 @@ import {
   resetAssistantEngineForTests,
 } from "../runs/assistant-persistence-host";
 import { useConversationSaveHost } from "./use-conversation-save-host";
+
+// WHY: The idle save delay inside @koloda/assistant, which keeps it off its entry.
+const IDLE_SAVE_DEBOUNCE_MS = 250;
 
 function makeConversation(id: string, overrides: Partial<ConversationReducerState> = {}): ConversationReducerState {
   return {

@@ -690,7 +690,7 @@ Line numbers are at `7b8e8c1c`; when an earlier item moved them, find the code b
   Commit: Test the save-error discard and clear rules
   Depends on: 12
 
-- [ ] 14. Delete dead assistant persistence and selector surface
+- [x] 14. Delete dead assistant persistence and selector surface
   Goal (finding 11).
   Each item was checked with `grep -rn '\b<name>\b' libs apps --include='*.ts' --include='*.tsx'`, ignoring `dist/` and
   tests.

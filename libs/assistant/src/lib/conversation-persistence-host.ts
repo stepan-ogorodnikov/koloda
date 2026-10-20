@@ -12,7 +12,7 @@ export const SHUTDOWN_FLUSH_TIMEOUT_MS = 2000;
 export const SHUTDOWN_SAVE_MAX_ATTEMPTS = 3;
 
 export type CreateConversationPersistenceHostOptions = {
-  createWrite: (conversationId: string) => () => Promise<boolean>;
+  createWrite: (conversationId: string) => () => Promise<void>;
   isStreaming: (conversationId: string) => boolean;
   getInitialPending: () => Record<string, number>;
   subscribePendingSaves: (listener: (pending: Record<string, number>) => void) => () => void;
@@ -61,10 +61,8 @@ export function createConversationPersistenceHost({
         // started before beginDelete still no-ops if delete won the race at
         // the host boundary (queue-level beginDelete also awaits in-flight).
         write: async () => {
-          if (tombstonedIds.has(id)) return false;
-          const wrote = await createWrite(id)();
-          if (tombstonedIds.has(id)) return false;
-          return wrote;
+          if (tombstonedIds.has(id)) return;
+          await createWrite(id)();
         },
         isStreaming: () => isStreaming(id),
       });
@@ -151,9 +149,9 @@ export function createConversationPersistenceHost({
   const flushAllBounded = async (timeoutMs = SHUTDOWN_FLUSH_TIMEOUT_MS): Promise<void> => {
     if (isDisposed) return;
     const deadline = Date.now() + timeoutMs;
-    // WHY: count failures for this flushAllBounded call only — lifetime
-    // consecutiveFailures must not starve exit flushes after earlier autosave
-    // failures.
+    // WHY: count failures for this flushAllBounded call only — a queue's
+    // lifetime failure count must not starve exit flushes after earlier
+    // autosave failures.
     const flushFailures = new Map<string, number>();
     const failuresDuringFlush = (id: string) => flushFailures.get(id) ?? 0;
 

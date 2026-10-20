@@ -22,15 +22,12 @@ function interruptAllStreamingRuns(store: AssistantJotaiStore): void {
   }
 }
 
-export function shutdownAssistantGracefully(
-  store: AssistantJotaiStore,
-  flushTimeoutMs = SHUTDOWN_FLUSH_TIMEOUT_MS,
-): Promise<void> {
+export function shutdownAssistantGracefully(store: AssistantJotaiStore): Promise<void> {
   return ensureAssistantEngine(store).dispatch({
     type: "shutdown",
     input: {
       interruptActiveRuns: () => interruptAllStreamingRuns(store),
-      flushTimeoutMs,
+      flushTimeoutMs: SHUTDOWN_FLUSH_TIMEOUT_MS,
     },
   }) as Promise<void>;
 }

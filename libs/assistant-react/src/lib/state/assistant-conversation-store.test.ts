@@ -10,7 +10,7 @@ import {
   setCurrentConversationIdAtom,
   upsertConversationAtom,
 } from "./conversation-store";
-import { assistantConversationHasContextAtom, assistantHasContextAtom } from "./conversation-selectors";
+import { assistantConversationHasContextAtom } from "./conversation-selectors";
 import {
   setAssistantAIProfileAtom,
   setAssistantCardStatusAtom,
@@ -619,7 +619,6 @@ describe("assistantConversationHasContextAtom", () => {
     const store = createStore();
     store.set(upsertConversationAtom, makeConversation("A", { promptInput: "draft" }));
     store.set(setCurrentConversationIdAtom, "A");
-    expect(store.get(assistantHasContextAtom)).toBe(false);
     expect(store.get(assistantConversationHasContextAtom("A"))).toBe(false);
   });
 });

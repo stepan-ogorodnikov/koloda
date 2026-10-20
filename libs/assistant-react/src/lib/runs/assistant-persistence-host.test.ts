@@ -1,4 +1,3 @@
-import { IDLE_SAVE_DEBOUNCE_MS } from "@koloda/assistant";
 import { createStore } from "jotai";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { makeConversation } from "../state/assistant-conversation.fixtures";
@@ -10,6 +9,9 @@ import {
   registerAssistantPersistenceWriteAdapter,
   resetAssistantEngineForTests,
 } from "./assistant-persistence-host";
+
+// WHY: The idle save delay inside @koloda/assistant, which keeps it off its entry.
+const IDLE_SAVE_DEBOUNCE_MS = 250;
 
 describe("registerAssistantPersistenceWriteAdapter", () => {
   beforeEach(() => {
@@ -23,8 +25,8 @@ describe("registerAssistantPersistenceWriteAdapter", () => {
   it("exposes readiness and unregisters only the current token", () => {
     expect(isAssistantPersistenceWriteAdapterReady()).toBe(false);
 
-    const adapterA = { writeConversation: async () => true };
-    const adapterB = { writeConversation: async () => true };
+    const adapterA = { writeConversation: async () => {} };
+    const adapterB = { writeConversation: async () => {} };
     const unregisterA = registerAssistantPersistenceWriteAdapter(adapterA);
     expect(isAssistantPersistenceWriteAdapterReady()).toBe(true);
 
@@ -37,8 +39,8 @@ describe("registerAssistantPersistenceWriteAdapter", () => {
   });
 
   it("abandoned render token cannot clear a later committed registration", () => {
-    const adapterA = { writeConversation: async () => false };
-    const adapterB = { writeConversation: async () => true };
+    const adapterA = { writeConversation: async () => {} };
+    const adapterB = { writeConversation: async () => {} };
 
     const unregisterAbandoned = registerAssistantPersistenceWriteAdapter(adapterA);
     const unregisterCommitted = registerAssistantPersistenceWriteAdapter(adapterB);
@@ -67,9 +69,8 @@ describe("registerAssistantPersistenceWriteAdapter", () => {
 
     registerAssistantPersistenceWriteAdapter({
       writeConversation: async (id) => {
-        if (!store.get(conversationsAtom)[id]) return false;
+        if (!store.get(conversationsAtom)[id]) return;
         writes.push(id);
-        return true;
       },
     });
 

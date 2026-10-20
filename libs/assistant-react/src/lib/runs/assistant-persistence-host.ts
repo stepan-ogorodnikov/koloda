@@ -6,7 +6,7 @@ import type { AssistantJotaiStore } from "./assistant-engine-instance";
 import { ensureAssistantEngine, resetEngineInstanceForTests } from "./assistant-engine-instance";
 
 export type AssistantPersistenceWriteAdapter = {
-  writeConversation: (conversationId: string) => Promise<boolean>;
+  writeConversation: (conversationId: string) => Promise<void>;
 };
 
 // WHY: Persistence queues outlive any single React tree. The host keeps a
