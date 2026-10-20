@@ -300,8 +300,12 @@ describe("createConversationRuntime retryRun status guard", () => {
     return { runtime, events, executionPort };
   }
 
-  it.each(["success", "streaming"] as const)("ignores a retry for a %s run", async (status) => {
-    const { runtime, events, executionPort } = makeRetryRuntime({ "run-1": { status } });
+  it.each<{ label: string; storedRuns: Record<string, unknown> }>([
+    { label: "a success", storedRuns: { "run-1": { status: "success" } } },
+    { label: "a streaming", storedRuns: { "run-1": { status: "streaming" } } },
+    { label: "a missing", storedRuns: {} },
+  ])("ignores a retry for $label run", async ({ storedRuns }) => {
+    const { runtime, events, executionPort } = makeRetryRuntime(storedRuns);
 
     await runtime.retryRun("run-1", {} as ChatStreamRequest, undefined, TEST_EXECUTION);
 
@@ -315,19 +319,6 @@ describe("createConversationRuntime retryRun status guard", () => {
 
   it.each(["failed", "canceled", "interrupted"] as const)("retries a %s run", async (status) => {
     const { runtime, events, executionPort } = makeRetryRuntime({ "run-1": { status } });
-
-    await runtime.retryRun("run-1", {} as ChatStreamRequest, undefined, TEST_EXECUTION);
-
-    expect(events[0]).toEqual({
-      type: "runStarted",
-      conversationId: "conv-a",
-      run: { runId: "run-1", modelName: undefined },
-    });
-    expect(executionPort.executeChat).toHaveBeenCalledTimes(1);
-  });
-
-  it("retries a missing run (restore-dropped error-marker recreate)", async () => {
-    const { runtime, events, executionPort } = makeRetryRuntime({});
 
     await runtime.retryRun("run-1", {} as ChatStreamRequest, undefined, TEST_EXECUTION);
 

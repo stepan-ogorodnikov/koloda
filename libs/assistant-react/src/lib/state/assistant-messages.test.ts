@@ -8,7 +8,6 @@ import {
   backfillUserMessageRunIds,
   buildConversationMessages,
   createTextMessage,
-  getErrorMetadata,
   getMessageRunId,
   getUserMessageCreatedAt,
   serializeGeneratedCards,
@@ -77,16 +76,6 @@ describe("aiChatUtility", () => {
     expect(healed.metadata).toEqual({ createdAt: realIso, runId: "r2" });
   });
 
-  it("reads error metadata from error assistant messages", () => {
-    const message = createTextMessage("assistant-1", "assistant", "", {
-      kind: "error",
-      runId: "run-1",
-    });
-
-    expect(getErrorMetadata(message)).toEqual({ kind: "error", runId: "run-1" });
-    expect(getErrorMetadata(createTextMessage("assistant-2", "assistant", "ready"))).toBeNull();
-  });
-
   it("serializes generated cards in template field order", () => {
     const template = createTemplate();
     const cards = [
@@ -125,15 +114,6 @@ function assistantChatTextMessage(id: string, runId: string, text: string): UIMe
     role: "assistant",
     parts: [{ type: "text", text }],
     metadata: { kind: "chat-text", runId },
-  } as UIMessage;
-}
-
-function assistantErrorMessage(id: string, runId: string): UIMessage {
-  return {
-    id,
-    role: "assistant",
-    parts: [{ type: "text", text: "" }],
-    metadata: { kind: "error", runId },
   } as UIMessage;
 }
 
@@ -316,12 +296,6 @@ describe("buildConversationMessages", () => {
     expect(result[0]).toEqual({ role: "user", content: "Generate some cards" });
     expect(result[1]).toEqual({ role: "assistant", content: "Sure!" });
     expect(result[2].content).toContain("## Card 1");
-  });
-
-  it("skips assistant error messages when building history", () => {
-    const messages = [userMessage("u1", "What is 2+2?"), assistantErrorMessage("a1", "r1")];
-    const result = buildConversationMessages(messages, {});
-    expect(result).toEqual([{ role: "user", content: "What is 2+2?" }]);
   });
 
   it("serializes chat-text cards with run.templateFields", () => {

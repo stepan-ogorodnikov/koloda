@@ -936,77 +936,6 @@ describe("conversationReducer", () => {
       expect(state.runs["r1"].reason).toBeUndefined();
     });
 
-    it("creates a fresh run and rewrites the assistant error marker back to its original kind when the run is missing", () => {
-      const state = conversationReducer(
-        {
-          ...initialConversationState,
-          messages: [
-            {
-              id: "user-r1",
-              role: "user",
-              parts: [{ type: "text", text: "Hi" }],
-              metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r1" },
-            },
-            {
-              id: "assistant-r1",
-              role: "assistant",
-              parts: [{ type: "text", text: "" }],
-              metadata: { kind: "error", runId: "r1" },
-            },
-          ],
-        },
-        ["restartRun", { runId: "r1" }],
-      );
-
-      expect(state.runs["r1"].status).toBe("streaming");
-      expect(state.runs["r1"]).not.toHaveProperty("mode");
-      expect(state.activeRunId).toBe("r1");
-      expect(state.messages[1]).toEqual({
-        id: "assistant-r1",
-        role: "assistant",
-        parts: [{ type: "text", text: "" }],
-        metadata: { kind: "chat-text", runId: "r1" },
-      });
-    });
-
-    it("rewrites an error marker to chat-text when retrying", () => {
-      const state = conversationReducer(
-        {
-          ...initialConversationState,
-          runs: {
-            r1: {
-              id: "r1",
-              status: "failed",
-              cards: [],
-              cardStatuses: {},
-              templateFields: null,
-              startedAt: new Date(0),
-              elapsedSeconds: 1,
-              error: { message: "boom" },
-            },
-          },
-          messages: [
-            {
-              id: "user-r1",
-              role: "user",
-              parts: [{ type: "text", text: "Make cards" }],
-              metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r1" },
-            },
-            {
-              id: "assistant-r1",
-              role: "assistant",
-              parts: [{ type: "text", text: "" }],
-              metadata: { kind: "error", runId: "r1" },
-            },
-          ],
-        },
-        ["restartRun", { runId: "r1" }],
-      );
-
-      expect(state.runs["r1"]).not.toHaveProperty("mode");
-      expect(state.messages[1]?.metadata).toEqual({ kind: "chat-text", runId: "r1" });
-    });
-
     it("overwrites modelName when a new value is provided", () => {
       let state = reduce([
         ["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "", modelName: "GPT-4" }],
@@ -1032,7 +961,7 @@ describe("conversationReducer", () => {
       expect(state.runs["r1"].modelName).toBe("GPT-4");
     });
 
-    it("uses the action's modelName when recreating a missing error-marker run", () => {
+    it("a restart of a missing run is a no-op, even with its message pair present", () => {
       const state = conversationReducer(
         {
           ...initialConversationState,
@@ -1047,19 +976,12 @@ describe("conversationReducer", () => {
               id: "assistant-r1",
               role: "assistant",
               parts: [{ type: "text", text: "" }],
-              metadata: { kind: "error", runId: "r1" },
+              metadata: { kind: "chat-text", runId: "r1" },
             },
           ],
         },
         ["restartRun", { runId: "r1", modelName: "Claude" }],
       );
-
-      expect(state.runs["r1"].status).toBe("streaming");
-      expect(state.runs["r1"].modelName).toBe("Claude");
-    });
-
-    it("does not conjure a run when the missing run has no marker", () => {
-      const state = conversationReducer(initialConversationState, ["restartRun", { runId: "r1", modelName: "Claude" }]);
 
       expect(state.runs["r1"]).toBeUndefined();
       expect(state.activeRunId).toBeNull();
@@ -1113,32 +1035,6 @@ describe("conversationReducer", () => {
       expect(state.dismissedRunErrorId).toBe("r1");
     });
 
-    it("clears dismissedRunErrorId when recreating a missing run", () => {
-      const state = conversationReducer(
-        {
-          ...initialConversationState,
-          dismissedRunErrorId: "r1",
-          messages: [
-            {
-              id: "user-r1",
-              role: "user",
-              parts: [{ type: "text", text: "Hi" }],
-              metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r1" },
-            },
-            {
-              id: "assistant-r1",
-              role: "assistant",
-              parts: [{ type: "text", text: "" }],
-              metadata: { kind: "error", runId: "r1" },
-            },
-          ],
-        },
-        ["restartRun", { runId: "r1" }],
-      );
-
-      expect(state.dismissedRunErrorId).toBeNull();
-    });
-
     it("keeps the stored data access snapshot on restart", () => {
       const dataAccess: DataAccessSnapshot = { context: "User decks:", manifest: { decks: [], writeTarget: null } };
       let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
@@ -1179,29 +1075,10 @@ describe("hasRetryableTurn", () => {
     expect(hasRetryableTurn(state, "r1")).toBe(false);
   });
 
-  it("rejects an unknown runId with no assistant message", () => {
-    expect(hasRetryableTurn(initialConversationState, "missing")).toBe(false);
-  });
-
-  it("allows a missing run whose assistant message is an error marker", () => {
-    const state: ConversationReducerState = {
-      ...initialConversationState,
-      messages: [
-        {
-          id: "assistant-r1",
-          role: "assistant",
-          parts: [{ type: "text", text: "" }],
-          metadata: { kind: "error", runId: "r1" },
-        },
-      ],
-    };
-
-    expect(hasRetryableTurn(state, "r1")).toBe(true);
-  });
-
-  it("allows a missing run whose assistant message is chat-text", () => {
-    const state: ConversationReducerState = {
-      ...initialConversationState,
+  it.each<{ label: string; messages: ConversationReducerState["messages"] }>([
+    { label: "no assistant message", messages: [] },
+    {
+      label: "its assistant message still present",
       messages: [
         {
           id: "assistant-r1",
@@ -1210,8 +1087,8 @@ describe("hasRetryableTurn", () => {
           metadata: { kind: "chat-text", runId: "r1" },
         },
       ],
-    };
-
-    expect(hasRetryableTurn(state, "r1")).toBe(true);
+    },
+  ])("rejects a missing run with $label", ({ messages }) => {
+    expect(hasRetryableTurn({ ...initialConversationState, messages }, "r1")).toBe(false);
   });
 });

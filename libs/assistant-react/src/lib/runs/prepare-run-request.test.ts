@@ -66,13 +66,6 @@ describe("prepareRunRequest — retry history", () => {
     });
   }
 
-  function errorAssistantMessage(runId: string): UIMessage {
-    return createTextMessage(assistantMessageId(runId), "assistant", "", {
-      kind: "error",
-      runId,
-    });
-  }
-
   it("retry excludes the retried pair so the prompt appears exactly once", () => {
     const messages = [chatUserMessage("run-1", "hello"), chatAssistantMessage("run-1", "")];
     const runs: Record<string, AssistantRun> = {
@@ -118,7 +111,7 @@ describe("prepareRunRequest — retry history", () => {
       chatUserMessage("run-0", "prior"),
       chatAssistantMessage("run-0", "ok"),
       chatUserMessage("run-1", "hello"),
-      errorAssistantMessage("run-1"),
+      chatAssistantMessage("run-1", ""),
     ];
     const runs: Record<string, AssistantRun> = {
       "run-0": {

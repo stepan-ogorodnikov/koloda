@@ -180,7 +180,7 @@ describe("createAssistantEngine", () => {
   });
 
   it("in-flight retry for A stays owned by A after UI-current switches to B", async () => {
-    conversationStates["A"] = { runs: { "run-a": {} } };
+    conversationStates["A"] = { runs: { "run-a": { status: "failed" } } };
     conversationStates["B"] = { runs: {} };
 
     let releaseRetry!: () => void;
@@ -398,7 +398,7 @@ describe("createAssistantEngine", () => {
   });
 
   it("repeated retry while active rejects without enqueueing another provider call", async () => {
-    conversationStates["A"] = { runs: { "run-1": {} } };
+    conversationStates["A"] = { runs: { "run-1": { status: "failed" } } };
 
     let releaseFirst!: () => void;
     const firstGate = new Promise<void>((resolve) => {
@@ -427,7 +427,7 @@ describe("createAssistantEngine", () => {
 
   it("cancel in-flight twice then retry same runId still runs", async () => {
     const streaming = new Set(["run-1"]);
-    conversationStates["A"] = { runs: { "run-1": {} } };
+    conversationStates["A"] = { runs: { "run-1": { status: "canceled" } } };
 
     engine = createAssistantEngine({
       executionPort: portFromGenerators(chatStreamGenerator),

@@ -452,16 +452,11 @@ export function createConversationRuntime(
         // retry command must not restart a success/streaming run or spend a
         // provider call on it — without this the runChunk below would still
         // overwrite a good answer even though the reducer ignores restart.
-        // Missing runs proceed (restore-dropped error-marker recreate).
+        // A missing run is not retryable either.
         const storedRun = callbacks.readConversationState(conversationId).runs[runId];
         const storedStatus =
           typeof storedRun === "object" && storedRun !== null ? (storedRun as { status?: unknown }).status : undefined;
-        if (
-          storedStatus !== undefined &&
-          storedStatus !== "failed" &&
-          storedStatus !== "canceled" &&
-          storedStatus !== "interrupted"
-        ) {
+        if (storedStatus !== "failed" && storedStatus !== "canceled" && storedStatus !== "interrupted") {
           return;
         }
 

@@ -7,8 +7,7 @@ import { useCallback } from "react";
 import { AssistantCardsMessage } from "./assistant-cards-message";
 import { renderAssistantReasoningMarkdown } from "./assistant-markdown";
 import {
-  getChatTextMetadata,
-  getErrorMetadata,
+  getAssistantMetadata,
   getMessageRunId,
   getUserMessageCreatedAt,
   makeHistoricalTemplate,
@@ -41,10 +40,7 @@ export function useAssistantMessageRenderer({ handleRetry, handleRevert }: UseAs
 
       const isTail = message.id === tailMessageId;
 
-      const errorMetadata = getErrorMetadata(message);
-      if (errorMetadata) return renderErrorMessage(errorMetadata.runId, isTail, handleRetry);
-
-      const chatMetadata = getChatTextMetadata(message);
+      const chatMetadata = getAssistantMetadata(message);
       if (chatMetadata) {
         const run = runs[chatMetadata.runId];
         if (run) {
@@ -127,14 +123,6 @@ function renderCardsMessage(options: RenderCardsMessageOptions) {
       startedAt={run.startedAt}
       modelName={run.modelName}
     />
-  );
-}
-
-function renderErrorMessage(runId: string, isTail: boolean, handleRetry: (runId: string) => Promise<void>) {
-  return (
-    <AIChatMessageLayout role="assistant">
-      <AIChatMessageStatus state="failed" canRetry={isTail} onRetry={() => handleRetry(runId)} />
-    </AIChatMessageLayout>
   );
 }
 

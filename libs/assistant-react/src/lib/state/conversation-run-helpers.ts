@@ -2,7 +2,7 @@ import type { TemplateFields } from "@koloda/srs";
 import type { UIMessage } from "ai";
 import type { AssistantRun, ConversationReducerState, RevertState, RunActivity } from "./conversation-types";
 import { isReasoningActivity } from "./conversation-types";
-import { assistantMessageId, getAssistantMetadata, getMessageRunId } from "./assistant-messages";
+import { getMessageRunId } from "./assistant-messages";
 
 // WHY: With revert active, the target user message and everything after
 // it must be hidden from the UI. The conversation state still holds the
@@ -89,22 +89,10 @@ export function dropRuns(
 
 export function hasRetryableTurn(state: ConversationReducerState, runId: string): boolean {
   const run = state.runs[runId];
-  if (run) {
-    // INVARIANT: Successful and streaming runs are not retryable
-    // (ASSISTANT-CONVERSATIONS.md §Retry). Renderers hide the button; this
-    // is the backstop for programmatic controller.retry.
-    return run.status === "failed" || run.status === "canceled" || run.status === "interrupted";
-  }
-
-  // WHY: Restore normalize keeps every run (see normalizeRestoredConversation)
-  // and live paths drop a run together with its message pair — a marker
-  // message without its run comes from legacy persisted rows. Fall back to
-  // the marker kind so those turns stay retryable instead of stranding a
-  // dead error marker.
-  const assistantMessage = state.messages.find((m) => m.id === assistantMessageId(runId));
-  if (!assistantMessage) return false;
-  const metadata = getAssistantMetadata(assistantMessage);
-  return metadata?.kind === "error" || metadata?.kind === "chat-text";
+  // INVARIANT: Successful and streaming runs are not retryable
+  // (ASSISTANT-CONVERSATIONS.md §Retry). Renderers hide the button; this
+  // is the backstop for programmatic controller.retry.
+  return !!run && (run.status === "failed" || run.status === "canceled" || run.status === "interrupted");
 }
 
 export function findLatestErroredRun(state: ConversationReducerState): AssistantRun | null {

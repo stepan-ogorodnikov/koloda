@@ -8,14 +8,7 @@ import type {
   RunLifecycleEvent,
   RunTerminationReason,
 } from "./conversation-types";
-import {
-  clearActiveIfRun,
-  finishRunningReasoning,
-  finishRunningTools,
-  makeRun,
-  stampElapsed,
-} from "./conversation-run-helpers";
-import { assistantMessageId, getAssistantMetadata } from "./assistant-messages";
+import { clearActiveIfRun, finishRunningReasoning, finishRunningTools, stampElapsed } from "./conversation-run-helpers";
 
 // INVARIANT: Legal run lifecycle transitions:
 // streaming → success | failed | canceled(reason:user) | interrupted(reason);
@@ -121,41 +114,11 @@ type RestartRunPayload = {
   modelName?: string;
 };
 
-function applyRetryAssistantKind(draft: ConversationReducerState, runId: string) {
-  const msg = draft.messages.find((m) => m.id === assistantMessageId(runId));
-  if (!msg) return;
-  const metadata = getAssistantMetadata(msg);
-  if (!metadata || metadata.kind === "chat-text") return;
-  if (metadata.kind === "error") {
-    msg.metadata = { kind: "chat-text", runId };
-  }
-}
-
+// INVARIANT: A restart of a missing or non-retryable run is a no-op
+// (hasRetryableTurn parity), so a stray restart can neither wipe a successful
+// run nor conjure one from nothing.
 export function restartRun(draft: ConversationReducerState, payload: RestartRunPayload) {
-  if (
-    transitionRun(draft, payload.runId, {
-      type: "restart",
-      modelName: payload.modelName,
-    })
-  ) {
-    applyRetryAssistantKind(draft, payload.runId);
-    return;
-  }
-
-  // WHY: A legacy persisted row can carry the assistant error marker without
-  // its run record (restore normalize never drops runs) — recreate the run
-  // and rewrite the error marker so the turn stays retryable. Anything else
-  // (a present but non-retryable run, or a missing run with no marker) is a
-  // no-op: hasRetryableTurn parity, so a stray restart can neither wipe a
-  // successful run nor conjure one from nothing.
-  if (draft.runs[payload.runId]) return;
-  const assistantMessage = draft.messages.find((m) => m.id === assistantMessageId(payload.runId));
-  const markerKind = assistantMessage ? getAssistantMetadata(assistantMessage)?.kind : undefined;
-  if (markerKind !== "error" && markerKind !== "chat-text") return;
-  draft.runs[payload.runId] = makeRun(payload.runId, null, payload.modelName);
-  applyRetryAssistantKind(draft, payload.runId);
-  draft.activeRunId = payload.runId;
-  if (draft.dismissedRunErrorId === payload.runId) draft.dismissedRunErrorId = null;
+  transitionRun(draft, payload.runId, { type: "restart", modelName: payload.modelName });
 }
 
 type SetUsagePayload = { runId: string; usage: StreamUsage };

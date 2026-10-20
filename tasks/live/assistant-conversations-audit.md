@@ -432,7 +432,7 @@ Line numbers are at `7b8e8c1c`; when an earlier item moved them, find the code b
   Commit: Save the conversation that recovery reset creates
   Depends on: none
 
-- [ ] 7. Drop the legacy error-marker message kind
+- [x] 7. Drop the legacy error-marker message kind
   Goal (finding 13, plus the messages audit's finding 3 code side; question 3):
   - No live code creates the assistant `error` message kind; a failed run keeps its `chat-text` message.
     Only rows from older builds carry it.

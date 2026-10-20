@@ -3,7 +3,7 @@ import type { GeneratedCard, Message } from "@koloda/ai";
 import type { Template, TemplateFields } from "@koloda/srs";
 import type { TextUIPart, UIMessage } from "ai";
 
-export type AssistantMessageMetadata = { kind: "chat-text"; runId: string } | { kind: "error"; runId: string };
+export type AssistantMessageMetadata = { kind: "chat-text"; runId: string };
 
 export type UserMessageMetadata = { createdAt: string; runId: string };
 
@@ -31,10 +31,7 @@ function isAssistantMetadata(value: unknown): value is AssistantMessageMetadata 
   const obj = value as Record<string, unknown>;
 
   if (typeof obj.runId !== "string") return false;
-  if (obj.kind === "chat-text") return true;
-  if (obj.kind === "error") return true;
-
-  return false;
+  return obj.kind === "chat-text";
 }
 
 function isUserMessageMetadata(value: unknown): value is UserMessageMetadata {
@@ -106,18 +103,6 @@ export function backfillUserMessageRunIds(
   return changed ? next : messages;
 }
 
-export function getChatTextMetadata(
-  message: UIMessage,
-): Extract<AssistantMessageMetadata, { kind: "chat-text" }> | null {
-  const metadata = getAssistantMetadata(message);
-  return metadata?.kind === "chat-text" ? metadata : null;
-}
-
-export function getErrorMetadata(message: UIMessage): Extract<AssistantMessageMetadata, { kind: "error" }> | null {
-  const metadata = getAssistantMetadata(message);
-  return metadata?.kind === "error" ? metadata : null;
-}
-
 export function userMessageId(runId: string) {
   return `user-${runId}`;
 }
@@ -186,27 +171,22 @@ export function buildConversationMessages(
     const textContent = getTextMessageContent(message);
     const run = runs[runId];
 
-    if (metadata.kind === "chat-text") {
-      const parts: string[] = [];
-      // WHY: history matches the screen — table first, leftover note second.
-      // Interrupted cards stay: the interruption is environmental (shutdown /
-      // crash), not a model failure or user rejection, and the proposal
-      // completed before the stream stopped. Failed/canceled stay excluded.
-      if (run && (run.status === "success" || run.status === "interrupted") && run.cards.length > 0) {
-        // WHY: Chat proposals serialize against the fields captured on that run.
-        const cardTemplate = run.templateFields ? makeHistoricalTemplate(run.templateFields) : null;
-        if (cardTemplate) {
-          const cardContent = serializeGeneratedCards(run.cards, cardTemplate);
-          if (cardContent) parts.push(cardContent);
-        }
+    const parts: string[] = [];
+    // WHY: history matches the screen — table first, leftover note second.
+    // Interrupted cards stay: the interruption is environmental (shutdown /
+    // crash), not a model failure or user rejection, and the proposal
+    // completed before the stream stopped. Failed/canceled stay excluded.
+    if (run && (run.status === "success" || run.status === "interrupted") && run.cards.length > 0) {
+      // WHY: Chat proposals serialize against the fields captured on that run.
+      const cardTemplate = run.templateFields ? makeHistoricalTemplate(run.templateFields) : null;
+      if (cardTemplate) {
+        const cardContent = serializeGeneratedCards(run.cards, cardTemplate);
+        if (cardContent) parts.push(cardContent);
       }
-      if (textContent) parts.push(textContent);
-      if (parts.length === 0) continue;
-      conversation.push({ role: "assistant", content: parts.join("\n\n") });
-      continue;
     }
-
-    if (metadata.kind === "error") continue;
+    if (textContent) parts.push(textContent);
+    if (parts.length === 0) continue;
+    conversation.push({ role: "assistant", content: parts.join("\n\n") });
   }
 
   return conversation;
