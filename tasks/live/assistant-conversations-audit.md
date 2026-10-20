@@ -472,7 +472,7 @@ Line numbers are at `7b8e8c1c`; when an earlier item moved them, find the code b
   Commit: Drop the legacy error-marker message kind
   Depends on: none
 
-- [ ] 8. Drop the v0 conversation schema migration
+- [x] 8. Drop the v0 conversation schema migration
   Goal (entry 17; question 4):
   - Rows without `schemaVersion` are read as v0 and healed by `migrateV0ToV1`
     (`persistence/conversation-schema-version.ts:43-98`).

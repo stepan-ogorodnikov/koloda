@@ -87,7 +87,12 @@ function buildQueries(): Queries {
       queryFn: async () => ({
         id,
         title: null,
-        state: { ...initialConversationState, id, createdAt: new Date(1).toISOString() },
+        state: {
+          ...initialConversationState,
+          schemaVersion: CONVERSATION_SCHEMA_VERSION,
+          id,
+          createdAt: new Date(1).toISOString(),
+        },
         createdAt: new Date(1).toISOString(),
         updatedAt: null,
       }),
@@ -518,14 +523,24 @@ describe("assistant chat integration (per-conversation state)", () => {
     queryClient.setQueryData(queryKeys.conversations.detail("A"), {
       id: "A",
       title: null,
-      state: { ...initialConversationState, id: "A", createdAt: new Date(1).toISOString() },
+      state: {
+        ...initialConversationState,
+        schemaVersion: CONVERSATION_SCHEMA_VERSION,
+        id: "A",
+        createdAt: new Date(1).toISOString(),
+      },
       createdAt: new Date(1).toISOString(),
       updatedAt: null,
     });
     queryClient.setQueryData(queryKeys.conversations.detail("B"), {
       id: "B",
       title: null,
-      state: { ...initialConversationState, id: "B", createdAt: new Date(1).toISOString() },
+      state: {
+        ...initialConversationState,
+        schemaVersion: CONVERSATION_SCHEMA_VERSION,
+        id: "B",
+        createdAt: new Date(1).toISOString(),
+      },
       createdAt: new Date(1).toISOString(),
       updatedAt: null,
     });
@@ -601,14 +616,24 @@ describe("assistant chat integration (per-conversation state)", () => {
     queryClient.setQueryData(queryKeys.conversations.detail("A"), {
       id: "A",
       title: null,
-      state: { ...initialConversationState, id: "A", createdAt: new Date(1).toISOString() },
+      state: {
+        ...initialConversationState,
+        schemaVersion: CONVERSATION_SCHEMA_VERSION,
+        id: "A",
+        createdAt: new Date(1).toISOString(),
+      },
       createdAt: new Date(1).toISOString(),
       updatedAt: null,
     });
     queryClient.setQueryData(queryKeys.conversations.detail("B"), {
       id: "B",
       title: null,
-      state: { ...initialConversationState, id: "B", createdAt: new Date(1).toISOString() },
+      state: {
+        ...initialConversationState,
+        schemaVersion: CONVERSATION_SCHEMA_VERSION,
+        id: "B",
+        createdAt: new Date(1).toISOString(),
+      },
       createdAt: new Date(1).toISOString(),
       updatedAt: null,
     });
@@ -678,7 +703,12 @@ describe("assistant chat integration (per-conversation state)", () => {
     queryClient.setQueryData(queryKeys.conversations.detail("A"), {
       id: "A",
       title: null,
-      state: { ...initialConversationState, id: "A", createdAt: new Date(1).toISOString() },
+      state: {
+        ...initialConversationState,
+        schemaVersion: CONVERSATION_SCHEMA_VERSION,
+        id: "A",
+        createdAt: new Date(1).toISOString(),
+      },
       createdAt: new Date(1).toISOString(),
       updatedAt: null,
     });
@@ -745,7 +775,12 @@ describe("assistant chat integration (per-conversation state)", () => {
     queryClient.setQueryData(queryKeys.conversations.detail("A"), {
       id: "A",
       title: null,
-      state: { ...initialConversationState, id: "A", createdAt: new Date(1).toISOString() },
+      state: {
+        ...initialConversationState,
+        schemaVersion: CONVERSATION_SCHEMA_VERSION,
+        id: "A",
+        createdAt: new Date(1).toISOString(),
+      },
       createdAt: new Date(1).toISOString(),
       updatedAt: null,
     });
@@ -811,7 +846,12 @@ describe("assistant chat integration (per-conversation state)", () => {
     queryClient.setQueryData(queryKeys.conversations.detail("A"), {
       id: "A",
       title: null,
-      state: { ...initialConversationState, id: "A", createdAt: new Date(1).toISOString() },
+      state: {
+        ...initialConversationState,
+        schemaVersion: CONVERSATION_SCHEMA_VERSION,
+        id: "A",
+        createdAt: new Date(1).toISOString(),
+      },
       createdAt: new Date(1).toISOString(),
       updatedAt: null,
     });
@@ -893,7 +933,12 @@ describe("assistant chat integration (per-conversation state)", () => {
     queryClient.setQueryData(queryKeys.conversations.detail("A"), {
       id: "A",
       title: null,
-      state: { ...initialConversationState, id: "A", createdAt: new Date(1).toISOString() },
+      state: {
+        ...initialConversationState,
+        schemaVersion: CONVERSATION_SCHEMA_VERSION,
+        id: "A",
+        createdAt: new Date(1).toISOString(),
+      },
       createdAt: new Date(1).toISOString(),
       updatedAt: null,
     });
@@ -959,7 +1004,12 @@ describe("assistant chat integration (per-conversation state)", () => {
     queryClient.setQueryData(queryKeys.conversations.detail("A"), {
       id: "A",
       title: null,
-      state: { ...initialConversationState, id: "A", createdAt: new Date(1).toISOString() },
+      state: {
+        ...initialConversationState,
+        schemaVersion: CONVERSATION_SCHEMA_VERSION,
+        id: "A",
+        createdAt: new Date(1).toISOString(),
+      },
       createdAt: new Date(1).toISOString(),
       updatedAt: null,
     });
@@ -1011,7 +1061,12 @@ describe("assistant chat integration (per-conversation state)", () => {
     queryClient.setQueryData(queryKeys.conversations.detail("A"), {
       id: "A",
       title: null,
-      state: { ...initialConversationState, id: "A", createdAt: new Date(1).toISOString() },
+      state: {
+        ...initialConversationState,
+        schemaVersion: CONVERSATION_SCHEMA_VERSION,
+        id: "A",
+        createdAt: new Date(1).toISOString(),
+      },
       createdAt: new Date(1).toISOString(),
       updatedAt: null,
     });
@@ -1084,7 +1139,12 @@ describe("assistant chat integration (per-conversation state)", () => {
     queryClient.setQueryData(queryKeys.conversations.detail("A"), {
       id: "A",
       title: null,
-      state: { ...initialConversationState, id: "A", createdAt: new Date(1).toISOString() },
+      state: {
+        ...initialConversationState,
+        schemaVersion: CONVERSATION_SCHEMA_VERSION,
+        id: "A",
+        createdAt: new Date(1).toISOString(),
+      },
       createdAt: new Date(1).toISOString(),
       updatedAt: null,
     });
@@ -1172,7 +1232,12 @@ describe("assistant chat integration (per-conversation state)", () => {
     queryClient.setQueryData(queryKeys.conversations.detail("A"), {
       id: "A",
       title: null,
-      state: { ...initialConversationState, id: "A", createdAt: new Date(1).toISOString() },
+      state: {
+        ...initialConversationState,
+        schemaVersion: CONVERSATION_SCHEMA_VERSION,
+        id: "A",
+        createdAt: new Date(1).toISOString(),
+      },
       createdAt: new Date(1).toISOString(),
       updatedAt: null,
     });
@@ -1397,9 +1462,7 @@ describe("assistant chat restore policy (blocked rows)", () => {
     expect(store.get(conversationsAtom)["corrupt"]).toBeUndefined();
     expect(store.get(blockedConversationRestoreAtom)["corrupt"]).toEqual({
       status: "corrupt",
-      issues: [
-        { path: "schemaVersion", kind: "invalid_type", message: "expected a non-negative integer schemaVersion" },
-      ],
+      issues: [expect.objectContaining({ path: "schemaVersion" })],
     });
     // INVARIANT: never leave the unresolved gap that would flash the editable chat shell.
     expect(phases.every((p) => p.isRestoring || p.blocked || p.hasLive)).toBe(true);

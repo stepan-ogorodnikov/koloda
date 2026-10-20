@@ -219,6 +219,7 @@ When a conversation is loaded:
 - A dismissed stream error stays dismissed; see §Dismissing Errors.
 
 If the saved conversation is corrupt or was written by a newer version of the app, restore is blocked.
+A conversation saved in a shape this version no longer reads is treated as corrupt.
 The saved conversation is left untouched and is not opened for editing, so autosave cannot overwrite it.
 The chat shows a recovery screen instead of an empty conversation.
 Reset and delete are explicit user actions on that screen.

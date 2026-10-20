@@ -12,7 +12,7 @@ Add a sibling only when the task crosses that spec.
 |--------|------|
 | `state/` | Reducer, store, selectors, actions, messages, profile/config types, AI profile dual-write payloads (`ai-profile-sync`) |
 | `runs/` | Session (`RunController`), orchestration, engine host, command prep (`prepare-run-request` / `build-stream-request`), restore-only `dataAccess` snapshot types (`data-access`), thin `engine.dispatch` adapter |
-| `persistence/` | Restore/saver hooks, coerce/normalize, `schemaVersion` migrations, save host adapter |
+| `persistence/` | Restore/saver hooks, coerce/normalize, `schemaVersion` check, save host adapter |
 | `ui/` | Chat shell, lists, settings, message/card renderers (incl. tool-activity wiring), chrome |
 | *(root)* | Profile cascade hooks (`use-assistant-profile-selection`, `use-global-ai-profile-state`), runtime config, client, prompt templates |
 

@@ -4,7 +4,7 @@ import type { TemplateFields } from "@koloda/srs";
 import type { UIMessage } from "ai";
 import type { PersistedConversation } from "./conversation-persistence";
 import { fromPersistedState } from "./conversation-persistence";
-import { CONVERSATION_SCHEMA_VERSION, migratePersistedConversation } from "./conversation-schema-version";
+import { CONVERSATION_SCHEMA_VERSION } from "./conversation-schema-version";
 import type {
   CardStatus,
   ConversationReducerState,
@@ -450,37 +450,22 @@ function toRestoreIssues(issues: z.core.$ZodIssue[]): RestoreIssue[] {
   }));
 }
 
-/**
- * Coerce a persisted row into a `ConversationRestoreResult`. Migrations run
- * at this boundary before validation; the versioned-schema policy lives in
- * `migratePersistedConversation` and is only re-read here for the
- * `unsupportedVersion` `supported` number.
- */
 export function coerceConversationState(value: unknown): ConversationRestoreResult {
   // WHY: an absent row reaches this boundary as `undefined` (the restore
   // query resolves `null` and the hook unwraps `conversationData?.state`).
   // Any other non-object is a row that exists but cannot be parsed.
   if (value === undefined) return { status: "missing" };
 
-  const migrated = migratePersistedConversation(value);
-  if (migrated.status === "unsupportedVersion") {
-    return {
-      status: "unsupportedVersion",
-      found: migrated.found,
-      supported: CONVERSATION_SCHEMA_VERSION,
-    };
-  }
-  if (migrated.status === "invalid") {
-    return {
-      status: "corrupt",
-      issues:
-        migrated.reason === "not-an-object"
-          ? [{ path: "(root)", kind: "invalid_type", message: "expected a conversation object" }]
-          : [{ path: "schemaVersion", kind: "invalid_type", message: "expected a non-negative integer schemaVersion" }],
-    };
+  // INVARIANT: A row from a newer build never loads into live state. Any
+  // other missing or mismatched version fails the schema's version literal
+  // as corrupt; older rows are not migrated.
+  const declared =
+    value !== null && typeof value === "object" ? (value as Record<string, unknown>).schemaVersion : undefined;
+  if (typeof declared === "number" && Number.isInteger(declared) && declared > CONVERSATION_SCHEMA_VERSION) {
+    return { status: "unsupportedVersion", found: declared, supported: CONVERSATION_SCHEMA_VERSION };
   }
 
-  const result = persistedConversationStateSchema.safeParse(migrated.value);
+  const result = persistedConversationStateSchema.safeParse(value);
   if (!result.success) {
     return { status: "corrupt", issues: toRestoreIssues(result.error.issues) };
   }

@@ -8,6 +8,11 @@ import type { DataAccessSnapshot } from "../runs/data-access";
 import { findLatestErroredRun, initialConversationState } from "../state/conversation-reducer";
 import type { ConversationReducerState } from "../state/conversation-reducer";
 
+// A stored row as the current build writes it: no revert state, stamped with
+// the schema version. Restore fixtures spread it and override what they test.
+const { revertState: _revertState, ...persistedInitialState } = initialConversationState;
+const storedRow = { ...persistedInitialState, schemaVersion: CONVERSATION_SCHEMA_VERSION };
+
 function testId(n: number): string {
   return `01900000-0000-7000-8000-${n.toString(16).padStart(12, "0")}`;
 }
@@ -143,7 +148,7 @@ describe("toPersistedState / fromPersistedState", () => {
 describe("coerceConversationState", () => {
   it("accepts a valid conversation shape with Date timestamps", () => {
     const state = {
-      ...initialConversationState,
+      ...storedRow,
       id: "conv-1",
       createdAt: new Date(1),
     };
@@ -152,7 +157,7 @@ describe("coerceConversationState", () => {
 
   it("rejects a message with null parts as corrupt instead of reaching the renderer", () => {
     const row = {
-      ...initialConversationState,
+      ...storedRow,
       id: "conv-1",
       createdAt: new Date(1),
       messages: [
@@ -169,7 +174,7 @@ describe("coerceConversationState", () => {
 
   it("rejects a message with a non-string id as corrupt", () => {
     const row = {
-      ...initialConversationState,
+      ...storedRow,
       id: "conv-1",
       createdAt: new Date(1),
       messages: [{ id: 7, role: "user", parts: [{ type: "text", text: "Hi" }] }],
@@ -188,7 +193,7 @@ describe("coerceConversationState", () => {
       elapsedSeconds: null,
     };
     const okRow = {
-      ...initialConversationState,
+      ...storedRow,
       id: "conv-1",
       createdAt: new Date(1),
       messages: [
@@ -235,20 +240,18 @@ describe("coerceConversationState", () => {
   });
 
   it("rejects objects with wrong field types as corrupt", () => {
-    expect(expectCorrupt({ ...initialConversationState, id: 123 }).length).toBeGreaterThan(0);
-    expect(expectCorrupt({ ...initialConversationState, mode: "voice" }).length).toBeGreaterThan(0);
-    expect(expectCorrupt({ ...initialConversationState, profileId: 5 }).length).toBeGreaterThan(0);
-    expect(expectCorrupt({ ...initialConversationState, modelId: 7 }).length).toBeGreaterThan(0);
-    expect(expectCorrupt({ ...initialConversationState, modelParameters: "x" }).length).toBeGreaterThan(0);
-    expect(
-      expectCorrupt({ ...initialConversationState, modelParameters: { reasoning_effort: 5 } }).length,
-    ).toBeGreaterThan(0);
+    expect(expectCorrupt({ ...storedRow, id: 123 }).length).toBeGreaterThan(0);
+    expect(expectCorrupt({ ...storedRow, mode: "voice" }).length).toBeGreaterThan(0);
+    expect(expectCorrupt({ ...storedRow, profileId: 5 }).length).toBeGreaterThan(0);
+    expect(expectCorrupt({ ...storedRow, modelId: 7 }).length).toBeGreaterThan(0);
+    expect(expectCorrupt({ ...storedRow, modelParameters: "x" }).length).toBeGreaterThan(0);
+    expect(expectCorrupt({ ...storedRow, modelParameters: { reasoning_effort: 5 } }).length).toBeGreaterThan(0);
   });
 
   it("coerces ISO string createdAt into a Date", () => {
     const iso = "2024-01-01T00:00:00.000Z";
     const coerced = expectOk({
-      ...initialConversationState,
+      ...storedRow,
       id: "conv-1",
       createdAt: iso,
     });
@@ -258,7 +261,7 @@ describe("coerceConversationState", () => {
 
   it("coerces number createdAt into a Date", () => {
     const coerced = expectOk({
-      ...initialConversationState,
+      ...storedRow,
       id: "conv-1",
       createdAt: 1700000000000,
     });
@@ -268,7 +271,7 @@ describe("coerceConversationState", () => {
 
   it("defaults missing AI configuration fields to null and an empty map", () => {
     const coerced = expectOk({
-      ...initialConversationState,
+      ...storedRow,
       id: "conv-1",
       createdAt: new Date(1),
     });
@@ -279,7 +282,7 @@ describe("coerceConversationState", () => {
 
   it("preserves stored AI profile, model, and model parameters", () => {
     const coerced = expectOk({
-      ...initialConversationState,
+      ...storedRow,
       id: "conv-1",
       createdAt: new Date(1),
       profileId: "prof-1",
@@ -294,7 +297,7 @@ describe("coerceConversationState", () => {
   describe("lastReadRunId coercion", () => {
     function rowWithLastRead(shouldOmit: boolean, lastReadRunId?: unknown) {
       const row: Record<string, unknown> = {
-        ...initialConversationState,
+        ...storedRow,
         id: "conv-1",
         createdAt: new Date(1),
       };
@@ -326,7 +329,7 @@ describe("coerceConversationState", () => {
   describe("promptInput coercion", () => {
     function rowWithPrompt(shouldOmit: boolean, promptInput?: unknown) {
       const row: Record<string, unknown> = {
-        ...initialConversationState,
+        ...storedRow,
         id: "conv-1",
         createdAt: new Date(1),
       };
@@ -354,7 +357,7 @@ describe("coerceConversationState", () => {
   describe("run modelName coercion", () => {
     function makeStateWithRun(run: Record<string, unknown>) {
       return {
-        ...initialConversationState,
+        ...storedRow,
         id: "conv-1",
         createdAt: new Date(1),
         messages: [],
@@ -408,7 +411,7 @@ describe("coerceConversationState", () => {
   describe("run templateFields coercion", () => {
     function makeStateWithRun(run: Record<string, unknown>) {
       return {
-        ...initialConversationState,
+        ...storedRow,
         id: "conv-1",
         createdAt: new Date(1),
         messages: [],
@@ -455,7 +458,7 @@ describe("coerceConversationState", () => {
   describe("run dataAccess coercion", () => {
     function makeStateWithRun(run: Record<string, unknown>) {
       return {
-        ...initialConversationState,
+        ...storedRow,
         id: "conv-1",
         createdAt: new Date(1),
         messages: [],
@@ -498,7 +501,7 @@ describe("coerceConversationState", () => {
 
     it("keeps dataAccess intact across a save→restore roundtrip (JSON wire shape)", () => {
       const state: ConversationReducerState = {
-        ...initialConversationState,
+        ...storedRow,
         id: "conv-1",
         runs: {
           r1: {
@@ -531,7 +534,7 @@ describe("coerceConversationState", () => {
     it("rejects a conversation whose mode is cards as corrupt", () => {
       expect(
         expectCorrupt({
-          ...initialConversationState,
+          ...storedRow,
           id: "conv-1",
           createdAt: new Date(1),
           mode: "cards",
@@ -546,7 +549,7 @@ describe("coerceConversationState", () => {
     it("rejects generated-cards message metadata as corrupt", () => {
       expect(
         expectCorrupt({
-          ...initialConversationState,
+          ...storedRow,
           id: "conv-1",
           createdAt: new Date(1),
           messages: [
@@ -563,7 +566,7 @@ describe("coerceConversationState", () => {
 
     it("strips historical chat mode from conversation and run on restore", () => {
       const coerced = expectOk({
-        ...initialConversationState,
+        ...storedRow,
         id: "conv-1",
         createdAt: new Date(1),
         mode: "chat",
@@ -575,7 +578,7 @@ describe("coerceConversationState", () => {
 
     it("strips leftover conversation deckId on restore", () => {
       const numeric = expectOk({
-        ...initialConversationState,
+        ...storedRow,
         id: "conv-1",
         createdAt: new Date(1),
         deckId: 5,
@@ -583,7 +586,7 @@ describe("coerceConversationState", () => {
       expect(numeric).not.toHaveProperty("deckId");
 
       const malformed = expectOk({
-        ...initialConversationState,
+        ...storedRow,
         id: "conv-1",
         createdAt: new Date(1),
         deckId: "5",
@@ -734,7 +737,7 @@ describe("coerceConversationState", () => {
   describe("run toolCalls coercion", () => {
     function makeStateWithRun(run: Record<string, unknown>) {
       return {
-        ...initialConversationState,
+        ...storedRow,
         id: "conv-1",
         createdAt: new Date(1),
         messages: [],
@@ -774,7 +777,7 @@ describe("coerceConversationState", () => {
 
     it("keeps toolCalls intact across a save→restore roundtrip (JSON wire shape)", () => {
       const state: ConversationReducerState = {
-        ...initialConversationState,
+        ...storedRow,
         id: "conv-1",
         runs: {
           r1: {
@@ -882,7 +885,7 @@ describe("coerceConversationState", () => {
         },
       ];
       const state: ConversationReducerState = {
-        ...initialConversationState,
+        ...storedRow,
         id: "conv-1",
         runs: {
           r1: {
@@ -990,7 +993,7 @@ describe("coerceConversationState", () => {
   describe("run write target id coercion", () => {
     function makeStateWithRun(run: Record<string, unknown>) {
       return {
-        ...initialConversationState,
+        ...storedRow,
         id: "conv-1",
         createdAt: new Date(1),
         messages: [],
@@ -1032,7 +1035,7 @@ describe("coerceConversationState", () => {
       "keeps $field intact across a save→restore roundtrip (JSON wire shape)",
       ({ roundtrip, expected }) => {
         const state: ConversationReducerState = {
-          ...initialConversationState,
+          ...storedRow,
           id: "conv-1",
           runs: {
             r1: {
@@ -1075,7 +1078,7 @@ describe("coerceConversationState", () => {
   describe("compatibility boundary", () => {
     it("ignores a persisted revertState and rebuilds it as null", () => {
       const coerced = expectOk({
-        ...initialConversationState,
+        ...storedRow,
         id: "conv-1",
         createdAt: new Date(1),
         revertState: { revertedToUserMessageId: "u-r1", preRevertInputText: "hi" },
@@ -1086,7 +1089,7 @@ describe("coerceConversationState", () => {
     it("fails the row as corrupt when updatedAt is present but unparseable (not coerced to null)", () => {
       expect(
         expectCorrupt({
-          ...initialConversationState,
+          ...storedRow,
           id: "conv-1",
           createdAt: new Date(1),
           updatedAt: "not-a-date",
@@ -1096,7 +1099,7 @@ describe("coerceConversationState", () => {
 
     it("tolerates an untyped dismissedRunErrorId (no validation gate, pre-refactor behavior)", () => {
       const coerced = expectOk({
-        ...initialConversationState,
+        ...storedRow,
         id: "conv-1",
         createdAt: new Date(1),
         dismissedRunErrorId: 7,
@@ -1109,7 +1112,7 @@ describe("coerceConversationState", () => {
   describe("schemaVersion and strict lifecycle validation", () => {
     function makeStateWithRun(run: Record<string, unknown>) {
       return {
-        ...initialConversationState,
+        ...storedRow,
         id: "conv-1",
         createdAt: new Date(1),
         messages: [],
@@ -1133,7 +1136,7 @@ describe("coerceConversationState", () => {
     it("classifies a future schemaVersion row as unsupportedVersion with found and supported", () => {
       expect(
         coerceConversationState({
-          ...initialConversationState,
+          ...storedRow,
           id: "conv-1",
           createdAt: new Date(1),
           schemaVersion: CONVERSATION_SCHEMA_VERSION + 1,
@@ -1145,10 +1148,12 @@ describe("coerceConversationState", () => {
       });
     });
 
-    it("classifies a row whose schemaVersion cannot be determined as corrupt", () => {
+    it("classifies a row with a missing or malformed schemaVersion as corrupt", () => {
+      const { schemaVersion: _omit, ...withoutVersion } = makeStateWithRun(baseRun());
+      expect(expectCorrupt({ ...withoutVersion, id: "conv-1" }).length).toBeGreaterThan(0);
       expect(
         expectCorrupt({
-          ...initialConversationState,
+          ...storedRow,
           id: "conv-1",
           createdAt: new Date(1),
           schemaVersion: "2",
@@ -1156,7 +1161,7 @@ describe("coerceConversationState", () => {
       ).toBeGreaterThan(0);
       expect(
         expectCorrupt({
-          ...initialConversationState,
+          ...storedRow,
           id: "conv-1",
           createdAt: new Date(1),
           schemaVersion: 1.5,
@@ -1164,7 +1169,7 @@ describe("coerceConversationState", () => {
       ).toBeGreaterThan(0);
       expect(
         expectCorrupt({
-          ...initialConversationState,
+          ...storedRow,
           id: "conv-1",
           createdAt: new Date(1),
           schemaVersion: -1,
@@ -1176,7 +1181,7 @@ describe("coerceConversationState", () => {
       expect(expectCorrupt(makeStateWithRun(baseRun({ status: "pending" }))).length).toBeGreaterThan(0);
     });
 
-    it("rejects canceled without reason user after migration heal is skipped by explicit bad reason", () => {
+    it("rejects canceled with a reason other than user as corrupt", () => {
       expect(
         expectCorrupt(makeStateWithRun(baseRun({ status: "canceled", reason: "app_shutdown" }))).length,
       ).toBeGreaterThan(0);
@@ -1191,20 +1196,15 @@ describe("coerceConversationState", () => {
       expect(coerced.runs["r1"]?.reason).toBe(reason);
     });
 
-    it("rejects success carrying a termination reason on a current-schema row as corrupt", () => {
-      expect(
-        expectCorrupt({
-          ...makeStateWithRun(baseRun({ status: "success", reason: "user" })),
-          schemaVersion: CONVERSATION_SCHEMA_VERSION,
-        }).length,
-      ).toBeGreaterThan(0);
+    it("rejects success carrying a termination reason as corrupt", () => {
+      expect(expectCorrupt(makeStateWithRun(baseRun({ status: "success", reason: "user" }))).length).toBeGreaterThan(0);
     });
   });
 
   describe("run cardStatuses coercion", () => {
     function makeStateWithRun(run: Record<string, unknown>) {
       return {
-        ...initialConversationState,
+        ...storedRow,
         id: "conv-1",
         createdAt: new Date(1),
         messages: [],
