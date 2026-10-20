@@ -517,7 +517,7 @@ Line numbers are at `7b8e8c1c`; when an earlier item moved them, find the code b
   Commit: Drop the v0 conversation schema migration
   Depends on: none
 
-- [ ] 9. Drop legacy message repairs from conversation restore
+- [x] 9. Drop legacy message repairs from conversation restore
   Goal (entry 18; question 4).
   Each repair below rewrites a shape no current writer produces:
   - `backfillUserMessageRunIds` (`state/assistant-messages.ts:72-106`), called from `normalizeRestoredConversation`

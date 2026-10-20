@@ -1,12 +1,4 @@
-import type { UIMessage } from "ai";
-import { backfillUserMessageRunIds, getMessageRunId } from "../state/assistant-messages";
-import type {
-  AssistantRun,
-  CardStatus,
-  ConversationReducerState,
-  RunActivity,
-  RunReasoningActivity,
-} from "../state/conversation-reducer";
+import type { AssistantRun, CardStatus, ConversationReducerState, RunActivity } from "../state/conversation-reducer";
 import { isReasoningActivity } from "../state/conversation-reducer";
 import { CONVERSATION_SCHEMA_VERSION } from "./conversation-schema-version";
 
@@ -123,23 +115,6 @@ export function normalizeRestoredConversation(state: ConversationReducerState): 
     }
   }
 
-  // WHY: Backfill so legacy user messages (runId only in `user-<id>`
-  // encoding) stay linked, and re-stringify Date/`epoch-ms` createdAt values
-  // that Electron wire revival may have injected, healing epoch timestamps
-  // from run.startedAt.
-  const startedAtByRunId: Record<string, Date> = {};
-  for (const [runId, run] of Object.entries(state.runs)) {
-    startedAtByRunId[runId] = run.startedAt;
-  }
-  const messagesWithRunIds = backfillUserMessageRunIds(state.messages, startedAtByRunId);
-  if (messagesWithRunIds !== state.messages) didNormalize = true;
-
-  const lifted = liftLegacyReasoningParts(messagesWithRunIds, runs);
-  if (lifted.hasChanges) {
-    didNormalize = true;
-    Object.assign(runs, lifted.runs);
-  }
-
   // WHY: dismissed stream errors persist so reload does not re-show a
   // banner the user already put away. Drop the id only when its run is gone.
   const dismissedRunErrorId =
@@ -164,7 +139,6 @@ export function normalizeRestoredConversation(state: ConversationReducerState): 
     // Failed runs are kept, so a pointer at a failed run survives restore.
     lastReadRunId: state.lastReadRunId !== null && runs[state.lastReadRunId] === undefined ? null : state.lastReadRunId,
     runs,
-    messages: lifted.hasChanges ? lifted.messages : messagesWithRunIds,
   };
 }
 
@@ -172,41 +146,4 @@ function closeRestoredActivity(entry: RunActivity): RunActivity {
   if (entry.status !== "running") return entry;
   if (isReasoningActivity(entry)) return { ...entry, status: "done" };
   return { ...entry, status: "error" };
-}
-
-function isReasoningPart(part: UIMessage["parts"][number]): part is { type: "reasoning"; text: string } {
-  return part.type === "reasoning" && "text" in part && typeof part.text === "string";
-}
-
-// WHY: pre-activity rows stored thinking as a message part after the answer.
-// Lift those parts onto the run timeline (ahead of any tools) and strip them
-// from the message so restore shows the same widget as a live run.
-function liftLegacyReasoningParts(
-  messages: UIMessage[],
-  runs: Record<string, AssistantRun>,
-): { messages: UIMessage[]; runs: Record<string, AssistantRun>; hasChanges: boolean } {
-  let hasChanges = false;
-  const nextRuns = { ...runs };
-  const nextMessages = messages.map((message) => {
-    if (!message.parts.some(isReasoningPart)) return message;
-    hasChanges = true;
-    const reasoningParts = message.parts.filter(isReasoningPart);
-    const runId = getMessageRunId(message);
-    if (runId) {
-      const run = nextRuns[runId];
-      if (run && !(run.toolCalls ?? []).some(isReasoningActivity)) {
-        const activities: RunReasoningActivity[] = reasoningParts.map((part, index) => ({
-          kind: "reasoning",
-          id: `${runId}-reasoning-${index}`,
-          text: part.text,
-          status: "done",
-        }));
-        nextRuns[runId] = { ...run, toolCalls: [...activities, ...(run.toolCalls ?? [])] };
-      }
-    }
-    return { ...message, parts: message.parts.filter((part) => part.type !== "reasoning") };
-  });
-  return hasChanges
-    ? { messages: nextMessages, runs: nextRuns, hasChanges: true }
-    : { messages, runs, hasChanges: false };
 }

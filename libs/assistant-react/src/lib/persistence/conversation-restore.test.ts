@@ -138,11 +138,6 @@ describe("toPersistedState / fromPersistedState", () => {
     expect(restored.promptInput).toBe("   \n");
     expect(computeConversationTitle(restored)).toBeNull();
   });
-
-  it("does not write leftover conversation deckId", () => {
-    const persisted = toPersistedState(initialConversationState);
-    expect(persisted).not.toHaveProperty("deckId");
-  });
 });
 
 describe("coerceConversationState", () => {
@@ -241,7 +236,6 @@ describe("coerceConversationState", () => {
 
   it("rejects objects with wrong field types as corrupt", () => {
     expect(expectCorrupt({ ...storedRow, id: 123 }).length).toBeGreaterThan(0);
-    expect(expectCorrupt({ ...storedRow, mode: "voice" }).length).toBeGreaterThan(0);
     expect(expectCorrupt({ ...storedRow, profileId: 5 }).length).toBeGreaterThan(0);
     expect(expectCorrupt({ ...storedRow, modelId: 7 }).length).toBeGreaterThan(0);
     expect(expectCorrupt({ ...storedRow, modelParameters: "x" }).length).toBeGreaterThan(0);
@@ -529,69 +523,6 @@ describe("coerceConversationState", () => {
     it("restores rows saved before data access unchanged (no dataAccess snapshot)", () => {
       const coerced = expectOk(makeStateWithRun(baseRun()));
       expect(coerced.runs["r1"].dataAccess).toBeUndefined();
-    });
-
-    it("rejects a conversation whose mode is cards as corrupt", () => {
-      expect(
-        expectCorrupt({
-          ...storedRow,
-          id: "conv-1",
-          createdAt: new Date(1),
-          mode: "cards",
-        }).length,
-      ).toBeGreaterThan(0);
-    });
-
-    it("rejects a run whose mode is cards as corrupt", () => {
-      expect(expectCorrupt(makeStateWithRun(baseRun({ mode: "cards" }))).length).toBeGreaterThan(0);
-    });
-
-    it("rejects generated-cards message metadata as corrupt", () => {
-      expect(
-        expectCorrupt({
-          ...storedRow,
-          id: "conv-1",
-          createdAt: new Date(1),
-          messages: [
-            {
-              id: "assistant-r1",
-              role: "assistant",
-              parts: [{ type: "text", text: "" }],
-              metadata: { kind: "generated-cards", runId: "r1" },
-            },
-          ],
-        }).length,
-      ).toBeGreaterThan(0);
-    });
-
-    it("strips historical chat mode from conversation and run on restore", () => {
-      const coerced = expectOk({
-        ...storedRow,
-        id: "conv-1",
-        createdAt: new Date(1),
-        mode: "chat",
-        runs: { r1: baseRun({ mode: "chat" }) },
-      });
-      expect(coerced).not.toHaveProperty("mode");
-      expect(coerced.runs["r1"]).not.toHaveProperty("mode");
-    });
-
-    it("strips leftover conversation deckId on restore", () => {
-      const numeric = expectOk({
-        ...storedRow,
-        id: "conv-1",
-        createdAt: new Date(1),
-        deckId: 5,
-      });
-      expect(numeric).not.toHaveProperty("deckId");
-
-      const malformed = expectOk({
-        ...storedRow,
-        id: "conv-1",
-        createdAt: new Date(1),
-        deckId: "5",
-      });
-      expect(malformed).not.toHaveProperty("deckId");
     });
 
     it("rejects a wrong-typed dataAccess value as corrupt", () => {
@@ -1455,49 +1386,6 @@ describe("normalizeRestoredConversation", () => {
     vi.useRealTimers();
   });
 
-  it("lifts legacy message reasoning parts onto the run activity list", () => {
-    const state: ConversationReducerState = {
-      ...initialConversationState,
-      id: "conv-1",
-      messages: [
-        {
-          id: "user-r1",
-          role: "user",
-          parts: [{ type: "text", text: "Hello" }],
-          metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r1" },
-        },
-        {
-          id: "assistant-r1",
-          role: "assistant",
-          parts: [
-            { type: "text", text: "Visible answer." },
-            { type: "reasoning", text: "Quiet plan." },
-          ],
-          metadata: { kind: "chat-text", runId: "r1" },
-        },
-      ],
-      runs: {
-        r1: {
-          id: "r1",
-          status: "success",
-          cards: [],
-          cardStatuses: {},
-          toolCalls: [{ id: "call-1", name: "list_decks", input: {}, status: "success", output: { decks: [] } }],
-          templateFields: null,
-          startedAt: new Date(1000),
-          elapsedSeconds: 1,
-        },
-      },
-    };
-
-    const next = normalizeRestoredConversation(state)!;
-    expect(next.messages[1]?.parts).toEqual([{ type: "text", text: "Visible answer." }]);
-    expect(next.runs["r1"]?.toolCalls).toEqual([
-      { kind: "reasoning", id: "r1-reasoning-0", text: "Quiet plan.", status: "done" },
-      { id: "call-1", name: "list_decks", input: {}, status: "success", output: { decks: [] } },
-    ]);
-  });
-
   it("preserves generate error details across a save→restore roundtrip", () => {
     const state: ConversationReducerState = {
       ...initialConversationState,
@@ -1654,103 +1542,6 @@ describe("normalizeRestoredConversation", () => {
     const next = normalizeRestoredConversation(state);
 
     expect(next).toBeNull();
-  });
-
-  it("backfills runId onto legacy user messages that only encoded it in the id", () => {
-    const state: ConversationReducerState = {
-      ...initialConversationState,
-      id: "conv-1",
-      activeRunId: null,
-      messages: [
-        {
-          id: "user-r1",
-          role: "user",
-          parts: [{ type: "text", text: "Hello" }],
-          metadata: { createdAt: "2026-07-01T11:00:00.000Z" },
-        },
-        {
-          id: "assistant-r1",
-          role: "assistant",
-          parts: [{ type: "text", text: "Hi" }],
-          metadata: { kind: "chat-text", runId: "r1" },
-        },
-      ],
-      runs: {
-        r1: {
-          id: "r1",
-          status: "success",
-          cards: [],
-          cardStatuses: {},
-          templateFields: null,
-          startedAt: new Date(1000),
-          elapsedSeconds: 1,
-        },
-      },
-    };
-
-    const next = normalizeRestoredConversation(state)!;
-
-    expect(next.messages[0].metadata).toEqual({
-      createdAt: "2026-07-01T11:00:00.000Z",
-      runId: "r1",
-    });
-    expect(next.runs["r1"].status).toBe("success");
-  });
-
-  it("normalizes Date createdAt and heals epoch timestamps from run.startedAt", () => {
-    const startedAt = new Date("2026-07-18T11:00:00.000Z");
-    const state: ConversationReducerState = {
-      ...initialConversationState,
-      id: "conv-1",
-      activeRunId: null,
-      messages: [
-        {
-          id: "user-r1",
-          role: "user",
-          parts: [{ type: "text", text: "Hello" }],
-          // WHY: Electron fromWire used to revive ISO strings into Dates here.
-          metadata: { createdAt: new Date("2026-07-18T11:00:00.000Z"), runId: "r1" },
-        },
-        {
-          id: "user-r2",
-          role: "user",
-          parts: [{ type: "text", text: "Again" }],
-          // WHY: Prior buggy restore wrote epoch; heal from the paired run.
-          metadata: { createdAt: "1970-01-01T00:00:00.000Z", runId: "r2" },
-        },
-      ],
-      runs: {
-        r1: {
-          id: "r1",
-          status: "success",
-          cards: [],
-          cardStatuses: {},
-          templateFields: null,
-          startedAt,
-          elapsedSeconds: 1,
-        },
-        r2: {
-          id: "r2",
-          status: "success",
-          cards: [],
-          cardStatuses: {},
-          templateFields: null,
-          startedAt,
-          elapsedSeconds: 1,
-        },
-      },
-    };
-
-    const next = normalizeRestoredConversation(state)!;
-
-    expect(next.messages[0].metadata).toEqual({
-      createdAt: "2026-07-18T11:00:00.000Z",
-      runId: "r1",
-    });
-    expect(next.messages[1].metadata).toEqual({
-      createdAt: "2026-07-18T11:00:00.000Z",
-      runId: "r2",
-    });
   });
 
   it("resets pending card statuses to idle while preserving success and error", () => {

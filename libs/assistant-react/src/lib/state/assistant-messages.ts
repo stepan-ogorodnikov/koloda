@@ -5,25 +5,12 @@ import type { TextUIPart, UIMessage } from "ai";
 
 export type AssistantMessageMetadata = { kind: "chat-text"; runId: string };
 
-export type UserMessageMetadata = { createdAt: string; runId: string };
-
-// INVARIANT: Fallback only when no real createdAt / run.startedAt is available.
-const EPOCH_ISO = new Date(0).toISOString();
-
-// WHY: Accept string / Date / epoch-ms so Electron `fromWire` revival and legacy rows round-trip.
-function coerceCreatedAtToIso(value: unknown): string | null {
-  if (typeof value === "string") {
-    const date = new Date(value);
-    return Number.isNaN(date.getTime()) ? null : date.toISOString();
-  }
-  if (value instanceof Date) {
-    return Number.isNaN(value.getTime()) ? null : value.toISOString();
-  }
-  if (typeof value === "number" && Number.isFinite(value)) {
-    const date = new Date(value);
-    return Number.isNaN(date.getTime()) ? null : date.toISOString();
-  }
-  return null;
+// INVARIANT: User message `createdAt` is an ISO string, as `submitTurn`
+// writes it; restore does not repair other shapes.
+function parseCreatedAt(value: unknown): Date | null {
+  if (typeof value !== "string") return null;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
 }
 
 function isAssistantMetadata(value: unknown): value is AssistantMessageMetadata {
@@ -34,20 +21,9 @@ function isAssistantMetadata(value: unknown): value is AssistantMessageMetadata 
   return obj.kind === "chat-text";
 }
 
-function isUserMessageMetadata(value: unknown): value is UserMessageMetadata {
-  if (!value || typeof value !== "object") return false;
-  const obj = value as Record<string, unknown>;
-
-  // INVARIANT: Canonical in-memory shape — createdAt must already be an ISO string.
-  return (
-    typeof obj.createdAt === "string" && typeof obj.runId === "string" && coerceCreatedAtToIso(obj.createdAt) !== null
-  );
-}
-
 export function getUserMessageCreatedAt(message: UIMessage): Date | null {
   if (!message.metadata || typeof message.metadata !== "object") return null;
-  const iso = coerceCreatedAtToIso((message.metadata as Record<string, unknown>).createdAt);
-  return iso ? new Date(iso) : null;
+  return parseCreatedAt((message.metadata as Record<string, unknown>).createdAt);
 }
 
 export function getAssistantMetadata(message: UIMessage) {
@@ -64,43 +40,6 @@ export function getMessageRunId(message: UIMessage): string | null {
     return getAssistantMetadata(message)?.runId ?? null;
   }
   return null;
-}
-
-// WHY: Stamp `runId` on legacy `user-<runId>` ids and normalize createdAt after Electron wire revival.
-// `startedAtByRunId` heals epoch / missing createdAt from the paired run. Returns the same array when unchanged.
-export function backfillUserMessageRunIds(
-  messages: UIMessage[],
-  startedAtByRunId?: Readonly<Record<string, Date>>,
-): UIMessage[] {
-  let changed = false;
-  const next = messages.map((m) => {
-    if (m.role !== "user") return m;
-
-    const meta = m.metadata && typeof m.metadata === "object" ? (m.metadata as Record<string, unknown>) : null;
-    const existingRunId = typeof meta?.runId === "string" ? meta.runId : null;
-    const runIdFromId = m.id.startsWith("user-") ? m.id.slice("user-".length) : "";
-    const runId = existingRunId ?? (runIdFromId || null);
-    if (!runId) return m;
-
-    const coerced = meta ? coerceCreatedAtToIso(meta.createdAt) : null;
-    const startedAt = startedAtByRunId?.[runId];
-    const createdAt =
-      coerced && coerced !== EPOCH_ISO
-        ? coerced
-        : startedAt && !Number.isNaN(startedAt.getTime())
-          ? startedAt.toISOString()
-          : (coerced ?? EPOCH_ISO);
-
-    const alreadyCanonical =
-      isUserMessageMetadata(m.metadata) &&
-      (m.metadata as UserMessageMetadata).createdAt === createdAt &&
-      (m.metadata as UserMessageMetadata).runId === runId;
-    if (alreadyCanonical) return m;
-
-    changed = true;
-    return { ...m, metadata: { createdAt, runId } satisfies UserMessageMetadata };
-  });
-  return changed ? next : messages;
 }
 
 export function userMessageId(runId: string) {

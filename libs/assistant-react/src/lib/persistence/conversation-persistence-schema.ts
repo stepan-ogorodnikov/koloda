@@ -56,9 +56,6 @@ const messageShape = z.object({
   id: z.string(),
   role: z.enum(["user", "assistant"]),
   parts: z.array(z.unknown()),
-  // WHY: kept unvalidated so the conversation-level superRefine below can
-  // still inspect metadata kinds on the parsed value (generated-cards and
-  // cards-mode markers must keep failing the row as corrupt).
   metadata: z.unknown().optional(),
 });
 
@@ -248,10 +245,6 @@ const activityField = z.union([reasoningActivityField, toolCallField]);
 const runSchema: z.ZodType<AssistantRun> = z
   .object({
     id: z.string(),
-    // WHY: Live runs have no mode. Historical `"chat"` is stripped;
-    // `"cards"` (and any other value) fails the row as corrupt — not rewritten
-    // into chat.
-    mode: z.enum(["chat"]).optional(),
     // INVARIANT: status must be one of the five known values — never an
     // arbitrary string cast to RunStatus.
     status: runStatusField,
@@ -360,36 +353,6 @@ const persistedConversationStateSchema: z.ZodType<PersistedConversation> = z
       .string()
       .nullish()
       .transform((v) => v ?? ""),
-    // WHY: Live conversations have no mode. Historical `"chat"` is stripped;
-    // `"cards"` (and any other value) fails the row as corrupt — not rewritten
-    // into chat.
-    mode: z.enum(["chat"]).optional(),
-  })
-  .superRefine((state, ctx) => {
-    for (let i = 0; i < state.messages.length; i++) {
-      const message = state.messages[i];
-      if (!message || typeof message !== "object" || Array.isArray(message)) continue;
-      const metadata = (message as Record<string, unknown>).metadata;
-      if (!metadata || typeof metadata !== "object" || Array.isArray(metadata)) continue;
-      const kind = (metadata as Record<string, unknown>).kind;
-      const mode = (metadata as Record<string, unknown>).mode;
-      // INVARIANT: Do not restore generated-cards or cards-mode error markers.
-      // Those documents are corrupt, not rewritten into chat-text.
-      if (kind === "generated-cards") {
-        ctx.addIssue({
-          code: "custom",
-          path: ["messages", i, "metadata", "kind"],
-          message: '"generated-cards" is not a valid message kind',
-        });
-      }
-      if (mode === "cards") {
-        ctx.addIssue({
-          code: "custom",
-          path: ["messages", i, "metadata", "mode"],
-          message: '"cards" is not a valid assistant mode',
-        });
-      }
-    }
   })
   .transform(
     (state): PersistedConversation => ({

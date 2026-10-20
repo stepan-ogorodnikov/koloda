@@ -5,7 +5,6 @@ import { describe, expect, it } from "vitest";
 import { createGeneratedCard, createTemplate, testId } from "../../test/test-helpers";
 import { SEED_TEMPLATE_TYPE_BACK_FIELD_ID, SEED_TEMPLATE_TYPE_FRONT_FIELD_ID } from "@koloda/app";
 import {
-  backfillUserMessageRunIds,
   buildConversationMessages,
   createTextMessage,
   getMessageRunId,
@@ -14,12 +13,9 @@ import {
 } from "./assistant-messages";
 
 describe("aiChatUtility", () => {
-  it.each([
-    { shape: "an ISO string", createdAt: "2026-07-18T11:00:00.000Z" as string | Date },
-    { shape: "a Date left by wire revival", createdAt: new Date("2026-07-18T11:00:00.000Z") },
-  ])("reads createdAt when metadata stores $shape", ({ createdAt }) => {
+  it("reads createdAt and runId from user message metadata", () => {
     const message = createTextMessage("user-1", "user", "Hello", {
-      createdAt,
+      createdAt: "2026-07-18T11:00:00.000Z",
       runId: "1",
     });
 
@@ -44,36 +40,6 @@ describe("aiChatUtility", () => {
     expect(getMessageRunId(user)).toBe("r1");
     expect(getMessageRunId(assistant)).toBe("r1");
     expect(getMessageRunId(createTextMessage("user-r1", "user", "Hi"))).toBeNull();
-  });
-
-  it("backfills runId onto legacy user messages from the message id", () => {
-    const legacy = createTextMessage("user-r1", "user", "Hi", {
-      createdAt: "2026-07-01T11:00:00.000Z",
-    });
-    const [backfilled] = backfillUserMessageRunIds([legacy]);
-    expect(backfilled.metadata).toEqual({
-      createdAt: "2026-07-01T11:00:00.000Z",
-      runId: "r1",
-    });
-    const already = [backfilled];
-    expect(backfillUserMessageRunIds(already)).toBe(already);
-  });
-
-  it("re-stringifies Date createdAt and heals epoch from run startedAt", () => {
-    const realIso = "2026-07-18T11:00:00.000Z";
-    const withDate = createTextMessage("user-r1", "user", "Hi", {
-      createdAt: new Date(realIso),
-      runId: "r1",
-    });
-    const [normalized] = backfillUserMessageRunIds([withDate]);
-    expect(normalized.metadata).toEqual({ createdAt: realIso, runId: "r1" });
-
-    const corrupted = createTextMessage("user-r2", "user", "Hi", {
-      createdAt: "1970-01-01T00:00:00.000Z",
-      runId: "r2",
-    });
-    const [healed] = backfillUserMessageRunIds([corrupted], { r2: new Date(realIso) });
-    expect(healed.metadata).toEqual({ createdAt: realIso, runId: "r2" });
   });
 
   it("serializes generated cards in template field order", () => {
