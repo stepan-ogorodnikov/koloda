@@ -12,12 +12,12 @@ function elapsedSecondsSince(startedAt: Date, now = Date.now()): number {
 function snapshotStreamingElapsed(run: AssistantRun, now: number): AssistantRun {
   if (run.status !== "streaming") return run;
   const elapsedSeconds = elapsedSecondsSince(run.startedAt, now);
-  if (!run.toolCalls?.length) return { ...run, elapsedSeconds };
+  if (!run.toolCalls.length) return { ...run, elapsedSeconds };
   return {
     ...run,
     elapsedSeconds,
     toolCalls: run.toolCalls.map((entry) => {
-      if (entry.status !== "running" || typeof entry.elapsedSeconds === "number" || !entry.startedAt) {
+      if (entry.status !== "running" || typeof entry.elapsedSeconds === "number") {
         return entry;
       }
       return { ...entry, elapsedSeconds: elapsedSecondsSince(entry.startedAt, now) };
@@ -99,7 +99,7 @@ export function normalizeRestoredConversation(state: ConversationReducerState): 
     // is still useful, so in-flight reasoning rows close as `done`. Keep any
     // persisted elapsed snapshot; do not measure from startedAt at restore.
     const toolCalls = nextRun.toolCalls;
-    if (toolCalls?.some((entry) => entry.status === "running")) {
+    if (toolCalls.some((entry) => entry.status === "running")) {
       nextRun = {
         ...nextRun,
         toolCalls: toolCalls.map((entry) => closeRestoredActivity(entry)),

@@ -283,8 +283,7 @@ describe("useConversationRuns", () => {
     // WHY: the chat finalize hook must re-dispatch `updateAssistantText`
     // with the full accumulated text on abort so the persisted assistant
     // message reflects everything received before the stream was torn
-    // down. This pins behavior that the shared executor inherits from the
-    // pre-refactor `executeChatRun`.
+    // down.
     const harness = createHarness();
     harness.store.set(upsertConversationAtom, makeConversation("A"));
     harness.store.set(setCurrentConversationIdAtom, "A");

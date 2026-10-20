@@ -562,7 +562,7 @@ Line numbers are at `7b8e8c1c`; when an earlier item moved them, find the code b
   Commit: Drop legacy message repairs from conversation restore
   Depends on: 7, 8
 
-- [ ] 10. Restore conversation fields in the shape the current build writes
+- [x] 10. Restore conversation fields in the shape the current build writes
   Goal (entry 19, and finding 14's schema part; question 4).
   Each tolerance below accepts or heals a shape no current writer produces.
   Make `persistence/conversation-persistence-schema.ts` accept the live shape only:

@@ -39,7 +39,7 @@ export function notifyAddDeckWritten(store: AssistantJotaiStore, event: Assistan
   const { chunk, conversationId, runId } = event;
   if (chunk.kind !== "toolResult" || chunk.error !== undefined) return;
   const run = store.get(conversationsAtom)[conversationId]?.runs[runId];
-  const call = run?.toolCalls?.find(
+  const call = run?.toolCalls.find(
     (entry): entry is RunToolCall => !isReasoningActivity(entry) && entry.id === chunk.callId,
   );
   if (call?.name !== ASSISTANT_TOOL_SPECS.add_deck.name || call.status !== "success") return;

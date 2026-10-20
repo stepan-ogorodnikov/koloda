@@ -17,9 +17,15 @@ function testId(n: number): string {
   return `01900000-0000-7000-8000-${n.toString(16).padStart(12, "0")}`;
 }
 
+// WHY: Both hosts hand restore the stored JSON, so Dates arrive as ISO
+// strings and undefined keys are absent. Fixtures keep Dates for readability.
+function asStored(value: unknown): unknown {
+  return JSON.parse(JSON.stringify(value));
+}
+
 /** Returns the state of an `ok` restore result, failing the test otherwise. */
 function expectOk(value: unknown): ConversationReducerState {
-  const result = coerceConversationState(value);
+  const result = coerceConversationState(asStored(value));
   if (result.status !== "ok") {
     throw new Error(`expected restore result "ok", got ${JSON.stringify(result)}`);
   }
@@ -28,7 +34,7 @@ function expectOk(value: unknown): ConversationReducerState {
 
 /** Returns the issues of a `corrupt` restore result, failing the test otherwise. */
 function expectCorrupt(value: unknown): RestoreIssue[] {
-  const result = coerceConversationState(value);
+  const result = coerceConversationState(asStored(value));
   if (result.status !== "corrupt") {
     throw new Error(`expected restore result "corrupt", got ${JSON.stringify(result)}`);
   }
@@ -141,15 +147,6 @@ describe("toPersistedState / fromPersistedState", () => {
 });
 
 describe("coerceConversationState", () => {
-  it("accepts a valid conversation shape with Date timestamps", () => {
-    const state = {
-      ...storedRow,
-      id: "conv-1",
-      createdAt: new Date(1),
-    };
-    expect(coerceConversationState(state).status).toBe("ok");
-  });
-
   it("rejects a message with null parts as corrupt instead of reaching the renderer", () => {
     const row = {
       ...storedRow,
@@ -186,6 +183,7 @@ describe("coerceConversationState", () => {
       templateFields: null,
       startedAt: new Date(1),
       elapsedSeconds: null,
+      toolCalls: [],
     };
     const okRow = {
       ...storedRow,
@@ -240,6 +238,22 @@ describe("coerceConversationState", () => {
     expect(expectCorrupt({ ...storedRow, modelId: 7 }).length).toBeGreaterThan(0);
     expect(expectCorrupt({ ...storedRow, modelParameters: "x" }).length).toBeGreaterThan(0);
     expect(expectCorrupt({ ...storedRow, modelParameters: { reasoning_effort: 5 } }).length).toBeGreaterThan(0);
+    expect(expectCorrupt({ ...storedRow, modelParameters: { reasoning_effort: null } }).length).toBeGreaterThan(0);
+    expect(expectCorrupt({ ...storedRow, createdAt: 1700000000000 }).length).toBeGreaterThan(0);
+    expect(expectCorrupt({ ...storedRow, dismissedRunErrorId: 7 }).length).toBeGreaterThan(0);
+  });
+
+  it.each([
+    "activeRunId",
+    "dismissedRunErrorId",
+    "profileId",
+    "modelId",
+    "modelParameters",
+    "lastReadRunId",
+    "promptInput",
+  ])("rejects a row without %s as corrupt (the current build always writes it)", (field) => {
+    const { [field as keyof typeof storedRow]: _omit, ...row } = storedRow;
+    expect(expectCorrupt(row).length).toBeGreaterThan(0);
   });
 
   it("coerces ISO string createdAt into a Date", () => {
@@ -251,27 +265,6 @@ describe("coerceConversationState", () => {
     });
     expect(coerced.createdAt).toBeInstanceOf(Date);
     expect(coerced.createdAt.toISOString()).toBe(iso);
-  });
-
-  it("coerces number createdAt into a Date", () => {
-    const coerced = expectOk({
-      ...storedRow,
-      id: "conv-1",
-      createdAt: 1700000000000,
-    });
-    expect(coerced.createdAt).toBeInstanceOf(Date);
-    expect(coerced.createdAt.getTime()).toBe(1700000000000);
-  });
-
-  it("defaults missing AI configuration fields to null and an empty map", () => {
-    const coerced = expectOk({
-      ...storedRow,
-      id: "conv-1",
-      createdAt: new Date(1),
-    });
-    expect(coerced.profileId).toBeNull();
-    expect(coerced.modelId).toBeNull();
-    expect(coerced.modelParameters).toEqual({});
   });
 
   it("preserves stored AI profile, model, and model parameters", () => {
@@ -304,7 +297,6 @@ describe("coerceConversationState", () => {
     }
 
     it.each<{ label: string; lastReadRunId?: unknown; shouldOmit: boolean; expected: string | null }>([
-      { label: "missing", shouldOmit: true, expected: null },
       { label: "null", lastReadRunId: null, shouldOmit: false, expected: null },
       { label: "a string", lastReadRunId: "r-42", shouldOmit: false, expected: "r-42" },
     ])("coerces lastReadRunId when the field is $label", ({ lastReadRunId, shouldOmit, expected }) => {
@@ -335,16 +327,12 @@ describe("coerceConversationState", () => {
       return row;
     }
 
-    it.each<{ label: string; promptInput?: unknown; shouldOmit: boolean; expected: string }>([
-      { label: "missing", shouldOmit: true, expected: "" },
-      { label: "a string", promptInput: "unsent", shouldOmit: false, expected: "unsent" },
-      { label: "null", promptInput: null, shouldOmit: false, expected: "" },
-    ])("coerces promptInput when the field is $label", ({ promptInput, shouldOmit, expected }) => {
-      expect(expectOk(rowWithPrompt(shouldOmit, promptInput)).promptInput).toBe(expected);
+    it("keeps a stored promptInput", () => {
+      expect(expectOk(rowWithPrompt(false, "unsent")).promptInput).toBe("unsent");
     });
 
-    it("rejects a non-string promptInput as corrupt", () => {
-      expect(expectCorrupt(rowWithPrompt(false, 42)).length).toBeGreaterThan(0);
+    it.each([null, 42])("rejects a promptInput of %s as corrupt", (promptInput) => {
+      expect(expectCorrupt(rowWithPrompt(false, promptInput)).length).toBeGreaterThan(0);
     });
   });
 
@@ -368,6 +356,7 @@ describe("coerceConversationState", () => {
         templateFields: null,
         startedAt: new Date(1),
         elapsedSeconds: 1,
+        toolCalls: [],
         ...overrides,
       };
     }
@@ -375,33 +364,24 @@ describe("coerceConversationState", () => {
     it.each<{ label: string; modelName?: unknown; shouldOmit: boolean; expected?: string }>([
       { label: "a string", modelName: "GPT-4", shouldOmit: false, expected: "GPT-4" },
       { label: "missing", shouldOmit: true },
-      { label: "null", modelName: null, shouldOmit: false },
     ])("coerces modelName when the field is $label", ({ modelName, shouldOmit, expected }) => {
       const run = baseRun(shouldOmit ? {} : { modelName });
       expect(expectOk(makeStateWithRun(run)).runs["r1"].modelName).toBe(expected);
     });
 
     it.each<{ label: string; modelName: unknown }>([
+      { label: "null", modelName: null },
       { label: "a number", modelName: 5 },
       { label: "a boolean", modelName: true },
       { label: "an object", modelName: {} },
     ])("rejects modelName when the field is $label", ({ modelName }) => {
       expect(expectCorrupt(makeStateWithRun(baseRun({ modelName }))).length).toBeGreaterThan(0);
     });
-
-    it("strips legacy request from restored runs", () => {
-      const coerced = expectOk(makeStateWithRun(baseRun({ request: { messages: [{ role: "user", content: "hi" }] } })));
-      expect(coerced.runs["r1"]).not.toHaveProperty("request");
-    });
   });
 
   // WHY: `TemplateFields` is an *array* of field objects
-  // (`Template["content"]["fields"]`), not a record. A prior Zod port used
-  // `z.record(...)` here, which rejects arrays — so any run that persisted
-  // its non-null `templateFields` failed the whole row on restore and the
-  // conversation fell back to a fresh empty state (empty feed after reload,
-  // while rows that store `null` survived). These pin the array-or-null
-  // acceptance that the pre-refactor hand-rolled gate provided.
+  // (`Template["content"]["fields"]`), not a record. Validating it as a record
+  // would fail every proposal run on restore. These pin array-or-null.
   describe("run templateFields coercion", () => {
     function makeStateWithRun(run: Record<string, unknown>) {
       return {
@@ -422,6 +402,7 @@ describe("coerceConversationState", () => {
         templateFields: null,
         startedAt: new Date(1),
         elapsedSeconds: 1,
+        toolCalls: [],
         ...overrides,
       };
     }
@@ -469,6 +450,7 @@ describe("coerceConversationState", () => {
         templateFields: null,
         startedAt: new Date(1),
         elapsedSeconds: 1,
+        toolCalls: [],
         ...overrides,
       };
     }
@@ -503,6 +485,7 @@ describe("coerceConversationState", () => {
             status: "success",
             cards: [],
             cardStatuses: {},
+            toolCalls: [],
             templateFields: null,
             startedAt: new Date(1000),
             elapsedSeconds: 1,
@@ -685,9 +668,12 @@ describe("coerceConversationState", () => {
         templateFields: null,
         startedAt: new Date(1),
         elapsedSeconds: 1,
+        toolCalls: [],
         ...overrides,
       };
     }
+
+    const timing = { startedAt: new Date("2026-07-01T12:00:00.000Z"), elapsedSeconds: 1 };
 
     const fullToolCalls = [
       {
@@ -696,6 +682,7 @@ describe("coerceConversationState", () => {
         input: {},
         status: "success" as const,
         output: { decks: [{ deckId: 3, title: "Spanish", cardCount: 12 }] },
+        ...timing,
       },
       {
         id: "call-2",
@@ -703,6 +690,7 @@ describe("coerceConversationState", () => {
         input: { deckId: 3 },
         status: "error" as const,
         error: "deck missing",
+        ...timing,
       },
     ];
 
@@ -729,30 +717,41 @@ describe("coerceConversationState", () => {
       expect(restored.runs["r1"]?.toolCalls).toEqual(fullToolCalls);
     });
 
-    it("restores rows saved before tool activity unchanged (no toolCalls field)", () => {
-      const coerced = expectOk(makeStateWithRun(baseRun()));
-      expect(coerced.runs["r1"].toolCalls).toBeUndefined();
-    });
-
     it("rejects a malformed toolCalls value as corrupt", () => {
+      const { toolCalls: _omit, ...withoutToolCalls } = baseRun();
+      expect(expectCorrupt(makeStateWithRun(withoutToolCalls)).length).toBeGreaterThan(0);
       expect(expectCorrupt(makeStateWithRun(baseRun({ toolCalls: "yes" }))).length).toBeGreaterThan(0);
       expect(expectCorrupt(makeStateWithRun(baseRun({ toolCalls: null }))).length).toBeGreaterThan(0);
       expect(
         expectCorrupt(
           makeStateWithRun(
             baseRun({
-              toolCalls: [{ id: "call-1", name: "list_decks", input: {}, status: "pending" }],
+              toolCalls: [{ id: "call-1", name: "list_decks", input: {}, status: "pending", ...timing }],
             }),
           ),
         ).length,
       ).toBeGreaterThan(0);
       expect(
-        expectCorrupt(makeStateWithRun(baseRun({ toolCalls: [{ name: "list_decks", input: {}, status: "success" }] })))
-          .length,
+        expectCorrupt(
+          makeStateWithRun(baseRun({ toolCalls: [{ name: "list_decks", input: {}, status: "success", ...timing }] })),
+        ).length,
       ).toBeGreaterThan(0);
       expect(
         expectCorrupt(
-          makeStateWithRun(baseRun({ toolCalls: [{ id: 1, name: "list_decks", input: {}, status: "success" }] })),
+          makeStateWithRun(
+            baseRun({ toolCalls: [{ id: 1, name: "list_decks", input: {}, status: "success", ...timing }] }),
+          ),
+        ).length,
+      ).toBeGreaterThan(0);
+      expect(
+        expectCorrupt(
+          makeStateWithRun(
+            baseRun({
+              toolCalls: [
+                { id: "call-1", name: "list_decks", input: {}, status: "error", error: { message: "boom" }, ...timing },
+              ],
+            }),
+          ),
         ).length,
       ).toBeGreaterThan(0);
     });
@@ -761,12 +760,12 @@ describe("coerceConversationState", () => {
       const coerced = expectOk(
         makeStateWithRun(
           baseRun({
-            toolCalls: [{ id: "call-1", name: "list_decks", input: {}, status: "running", extra: true }],
+            toolCalls: [{ id: "call-1", name: "list_decks", input: {}, status: "running", extra: true, ...timing }],
           }),
         ),
       );
       expect(coerced.runs["r1"]?.toolCalls).toEqual([
-        { id: "call-1", name: "list_decks", input: {}, status: "running" },
+        { id: "call-1", name: "list_decks", input: {}, status: "running", ...timing },
       ]);
     });
 
@@ -776,22 +775,10 @@ describe("coerceConversationState", () => {
         id: "r1-reasoning-0",
         text: "Quiet plan.",
         status: "done" as const,
+        ...timing,
       };
       const coerced = expectOk(makeStateWithRun(baseRun({ toolCalls: [reasoning, fullToolCalls[0]] })));
       expect(coerced.runs["r1"]?.toolCalls).toEqual([reasoning, fullToolCalls[0]]);
-    });
-
-    it("heals a legacy object tool error into a bounded string", () => {
-      const coerced = expectOk(
-        makeStateWithRun(
-          baseRun({
-            toolCalls: [{ id: "call-1", name: "list_decks", input: {}, status: "error", error: { message: "boom" } }],
-          }),
-        ),
-      );
-      expect(coerced.runs["r1"]?.toolCalls).toEqual([
-        { id: "call-1", name: "list_decks", input: {}, status: "error", error: "boom" },
-      ]);
     });
 
     it("keeps activity timers intact across a save→restore roundtrip (JSON wire shape)", () => {
@@ -836,20 +823,14 @@ describe("coerceConversationState", () => {
       expect(restored.runs["r1"]?.toolCalls).toEqual(timedToolCalls);
     });
 
-    it("restores rows saved before activity timers without startedAt or elapsedSeconds", () => {
-      const coerced = expectOk(
-        makeStateWithRun(
-          baseRun({
-            toolCalls: [{ id: "call-1", name: "list_decks", input: {}, status: "success", output: { decks: [] } }],
-          }),
-        ),
-      );
-      expect(coerced.runs["r1"]?.toolCalls).toEqual([
-        { id: "call-1", name: "list_decks", input: {}, status: "success", output: { decks: [] } },
-      ]);
-    });
-
-    it("rejects a malformed activity timer as corrupt", () => {
+    it("rejects a missing or malformed activity timer as corrupt", () => {
+      expect(
+        expectCorrupt(
+          makeStateWithRun(
+            baseRun({ toolCalls: [{ id: "call-1", name: "list_decks", input: {}, status: "success" }] }),
+          ),
+        ).length,
+      ).toBeGreaterThan(0);
       expect(
         expectCorrupt(
           makeStateWithRun(
@@ -885,40 +866,6 @@ describe("coerceConversationState", () => {
         ).length,
       ).toBeGreaterThan(0);
     });
-
-    it("caps an oversized tool error string on restore", () => {
-      const coerced = expectOk(
-        makeStateWithRun(
-          baseRun({
-            toolCalls: [{ id: "call-1", name: "list_decks", input: {}, status: "error", error: "x".repeat(2001) }],
-          }),
-        ),
-      );
-      expect(coerced.runs["r1"]?.toolCalls?.[0]?.error).toBe(`${"x".repeat(2000)}…`);
-    });
-
-    it("caps an oversized tool input on restore", () => {
-      let payload = "";
-      while (JSON.stringify({ cards: payload }).length <= 2000) payload += "x";
-      const input = { cards: payload };
-      expect(JSON.stringify(input).length).toBe(2001);
-
-      const coerced = expectOk(
-        makeStateWithRun(
-          baseRun({
-            toolCalls: [{ id: "call-1", name: "propose_cards", input, status: "running" }],
-          }),
-        ),
-      );
-      const stored = coerced.runs["r1"]?.toolCalls?.[0]?.input as {
-        isTruncated: boolean;
-        itemCount: number;
-        preview: string;
-      };
-      expect(stored.isTruncated).toBe(true);
-      expect(stored.itemCount).toBe(1);
-      expect(stored.preview).toHaveLength(400);
-    });
   });
 
   describe("run write target id coercion", () => {
@@ -941,6 +888,7 @@ describe("coerceConversationState", () => {
         templateFields: null,
         startedAt: new Date(1),
         elapsedSeconds: 1,
+        toolCalls: [],
         ...overrides,
       };
     }
@@ -974,6 +922,7 @@ describe("coerceConversationState", () => {
               status: "success",
               cards: [],
               cardStatuses: {},
+              toolCalls: [],
               templateFields: null,
               startedAt: new Date(1000),
               elapsedSeconds: 1,
@@ -988,11 +937,14 @@ describe("coerceConversationState", () => {
       },
     );
 
-    it.each(writeTargetFields)("restores rows saved before $field unchanged", ({ absentOverrides, absentExpected }) => {
-      const run = expectOk(makeStateWithRun(baseRun(absentOverrides))).runs["r1"];
-      expect(run.writeTargetDeckId).toBe(absentExpected.writeTargetDeckId);
-      expect(run.writeTargetTemplateId).toBe(absentExpected.writeTargetTemplateId);
-    });
+    it.each(writeTargetFields)(
+      "restores a run without $field (set only once propose_cards succeeds)",
+      ({ absentOverrides, absentExpected }) => {
+        const run = expectOk(makeStateWithRun(baseRun(absentOverrides))).runs["r1"];
+        expect(run.writeTargetDeckId).toBe(absentExpected.writeTargetDeckId);
+        expect(run.writeTargetTemplateId).toBe(absentExpected.writeTargetTemplateId);
+      },
+    );
 
     it.each(writeTargetFields)("rejects a malformed $field value as corrupt", ({ field }) => {
       for (const value of ["yes", null, 0, -1, 1.5, true]) {
@@ -1001,11 +953,8 @@ describe("coerceConversationState", () => {
     });
   });
 
-  // WHY: persisted rows are a compat boundary.
-  // These pin the three behaviors a naive Zod port loses: `revertState` is
-  // ignored even when present, an unparseable *present* `updatedAt` fails the
-  // row, and `dismissedRunErrorId` (which had no pre-refactor validation gate)
-  // is tolerated untyped rather than rejected.
+  // WHY: These pin that a stored `revertState` is ignored and that an
+  // unparseable `updatedAt` fails the row instead of becoming `null`.
   describe("compatibility boundary", () => {
     it("ignores a persisted revertState and rebuilds it as null", () => {
       const coerced = expectOk({
@@ -1026,17 +975,6 @@ describe("coerceConversationState", () => {
           updatedAt: "not-a-date",
         }).length,
       ).toBeGreaterThan(0);
-    });
-
-    it("tolerates an untyped dismissedRunErrorId (no validation gate, pre-refactor behavior)", () => {
-      const coerced = expectOk({
-        ...storedRow,
-        id: "conv-1",
-        createdAt: new Date(1),
-        dismissedRunErrorId: 7,
-      });
-      // `?? null` defaulting: a present non-null value is kept as-is.
-      expect(coerced.dismissedRunErrorId).toBe(7);
     });
   });
 
@@ -1060,6 +998,7 @@ describe("coerceConversationState", () => {
         templateFields: null,
         startedAt: new Date(1),
         elapsedSeconds: 1,
+        toolCalls: [],
         ...overrides,
       };
     }
@@ -1152,6 +1091,7 @@ describe("coerceConversationState", () => {
         templateFields: null,
         startedAt: new Date(1),
         elapsedSeconds: 1,
+        toolCalls: [],
         ...overrides,
       };
     }
@@ -1209,6 +1149,7 @@ describe("normalizeRestoredConversation", () => {
           status: "streaming",
           cards: [],
           cardStatuses: {},
+          toolCalls: [],
           templateFields: null,
           startedAt: new Date(5000),
           elapsedSeconds: null,
@@ -1397,6 +1338,7 @@ describe("normalizeRestoredConversation", () => {
           error: { message: "ai.http.401", details: "Unauthorized" },
           cards: [],
           cardStatuses: {},
+          toolCalls: [],
           templateFields: null,
           startedAt: new Date(1000),
           elapsedSeconds: 2,
@@ -1407,32 +1349,6 @@ describe("normalizeRestoredConversation", () => {
     const persisted = JSON.parse(JSON.stringify(toPersistedState(state))) as unknown;
     const restored = expectOk(persisted);
     expect(restored.runs["r1"]?.error).toEqual({ message: "ai.http.401", details: "Unauthorized" });
-  });
-
-  it("caps oversized generate error details on restore", () => {
-    const state: ConversationReducerState = {
-      ...initialConversationState,
-      id: "conv-1",
-      runs: {
-        r1: {
-          id: "r1",
-          status: "failed",
-          error: { message: "ai.http.500", details: "x".repeat(20_000) },
-          cards: [],
-          cardStatuses: {},
-          templateFields: null,
-          startedAt: new Date(1000),
-          elapsedSeconds: 2,
-        },
-      },
-    };
-
-    const persisted = JSON.parse(JSON.stringify(toPersistedState(state))) as unknown;
-    const restored = expectOk(persisted);
-    expect(restored.runs["r1"]?.error).toEqual({
-      message: "ai.http.500",
-      details: `${"x".repeat(16_000)}…`,
-    });
   });
 
   it("preserves failed chat runs with cards and chat-text metadata without rewriting", () => {
@@ -1463,6 +1379,7 @@ describe("normalizeRestoredConversation", () => {
           error: { message: "Provider error" },
           cards,
           cardStatuses: { 0: "idle" },
+          toolCalls: [],
           templateFields: null,
           startedAt: new Date(1000),
           elapsedSeconds: 1,
@@ -1495,6 +1412,7 @@ describe("normalizeRestoredConversation", () => {
           error: { message: "Network error" },
           cards: [],
           cardStatuses: {},
+          toolCalls: [],
           templateFields: null,
           startedAt: new Date(1000),
           elapsedSeconds: 2,
@@ -1532,6 +1450,7 @@ describe("normalizeRestoredConversation", () => {
           status: "success",
           cards: [],
           cardStatuses: {},
+          toolCalls: [],
           templateFields: null,
           startedAt: new Date(1000),
           elapsedSeconds: 5,
@@ -1560,6 +1479,7 @@ describe("normalizeRestoredConversation", () => {
             { content: { "1": { text: "D" } } },
           ],
           cardStatuses: { 0: "pending", 1: "success", 2: "error", 3: "idle" },
+          toolCalls: [],
           templateFields: null,
           startedAt: new Date(1000),
           elapsedSeconds: 5,
@@ -1616,6 +1536,7 @@ describe("normalizeRestoredConversation", () => {
           status: "success",
           cards: [],
           cardStatuses: {},
+          toolCalls: [],
           templateFields: null,
           startedAt: new Date(1000),
           elapsedSeconds: 3,
@@ -1626,6 +1547,7 @@ describe("normalizeRestoredConversation", () => {
           error: { message: "Network error" },
           cards: [],
           cardStatuses: {},
+          toolCalls: [],
           templateFields: null,
           startedAt: new Date(2000),
           elapsedSeconds: 1,
@@ -1651,6 +1573,7 @@ describe("normalizeRestoredConversation", () => {
           error: { message: "Timeout" },
           cards: [],
           cardStatuses: {},
+          toolCalls: [],
           templateFields: null,
           startedAt: new Date(1000),
           elapsedSeconds: 5,
@@ -1675,6 +1598,7 @@ describe("normalizeRestoredConversation", () => {
           error: { message: "Timeout" },
           cards: [{ content: { "1": { text: "A" } } }],
           cardStatuses: { 0: "pending" },
+          toolCalls: [],
           templateFields: null,
           startedAt: new Date(1000),
           elapsedSeconds: 5,
@@ -1702,6 +1626,7 @@ describe("normalizeRestoredConversation", () => {
           status: "success",
           cards: [],
           cardStatuses: {},
+          toolCalls: [],
           templateFields: null,
           startedAt: new Date(1000),
           elapsedSeconds: 1,
@@ -1726,6 +1651,7 @@ describe("normalizeRestoredConversation", () => {
           status: "streaming",
           cards: [],
           cardStatuses: {},
+          toolCalls: [],
           templateFields: null,
           startedAt: new Date(1000),
           elapsedSeconds: null,
@@ -1755,6 +1681,7 @@ describe("normalizeRestoredConversation", () => {
           status: "success",
           cards: [{ content: { "1": { text: "A" } } }, { content: { "1": { text: "B" } } }],
           cardStatuses: { 0: "pending", 1: "success" },
+          toolCalls: [],
           templateFields: null,
           startedAt: new Date(1000),
           elapsedSeconds: 1,

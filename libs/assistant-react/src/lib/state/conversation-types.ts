@@ -28,10 +28,8 @@ export type RunToolCall = {
   // WHY: always a bounded string (`boundToolError`) so a tool failure cannot
   // grow the persisted blob with an arbitrary error object.
   error?: string;
-  // WHY: optional so rows saved before activity timers restore without them;
-  // live calls always stamp both (`activityTiming` / `stampActivityElapsed`).
-  startedAt?: Date;
-  elapsedSeconds?: number | null;
+  startedAt: Date;
+  elapsedSeconds: number | null;
 };
 
 /**
@@ -43,10 +41,8 @@ export type RunReasoningActivity = {
   id: string;
   text: string;
   status: "running" | "done";
-  // WHY: optional so rows saved before activity timers restore without them;
-  // live thinking always stamps both (`activityTiming` / `stampActivityElapsed`).
-  startedAt?: Date;
-  elapsedSeconds?: number | null;
+  startedAt: Date;
+  elapsedSeconds: number | null;
 };
 
 export type RunActivity = RunToolCall | RunReasoningActivity;
@@ -62,16 +58,12 @@ export type AssistantRun = {
   reason?: RunTerminationReason;
   cards: GeneratedCard[];
   cardStatuses: Record<number, CardStatus>;
-  // WHY: optional so rows saved before tool activity restore unchanged; live
-  // runs always initialize the field (`makeRun`). When present, persistence
-  // validates the array — a malformed payload fails the row as corrupt.
-  // Reasoning rows (`kind: "reasoning"`) share this list so the activity
+  // WHY: Reasoning rows (`kind: "reasoning"`) share this list so the activity
   // widget can interleave thinking with real tool calls.
-  toolCalls?: RunActivity[];
+  toolCalls: RunActivity[];
   templateFields: TemplateFields | null;
-  // WHY: optional so rows saved before proposed-card write targets restore
-  // unchanged; live chat runs set it when `propose_cards` first succeeds.
-  // When present, persistence requires a UUID string — malformed fails the row.
+  // WHY: optional because live chat runs set it only when `propose_cards`
+  // first succeeds. When present, persistence requires a UUID string.
   writeTargetDeckId?: string;
   writeTargetTemplateId?: string;
   error?: AssistantRunError;

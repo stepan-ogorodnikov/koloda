@@ -127,7 +127,7 @@ function renderCardsMessage(options: RenderCardsMessageOptions) {
 }
 
 function hasLiveRunActivity(run: AssistantRun): boolean {
-  return !!run.toolCalls?.some((entry) => entry.status === "running");
+  return run.toolCalls.some((entry) => entry.status === "running");
 }
 
 // WHY: pending means "this turn still owes a reply". Hide it when a tool or
@@ -230,7 +230,7 @@ function renderChatMessage(options: RenderChatMessageOptions) {
   // widget must read `run.toolCalls` so arrival order is preserved.
   // Markdown is injected here so `@koloda/ai-react` stays free of `@koloda/srs`.
   const toolActivity =
-    run.toolCalls && run.toolCalls.length > 0 ? (
+    run.toolCalls.length > 0 ? (
       <AIToolActivity calls={run.toolCalls} renderText={renderAssistantReasoningMarkdown} />
     ) : null;
   const cardsBlock =

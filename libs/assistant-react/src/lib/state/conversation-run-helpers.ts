@@ -1,6 +1,6 @@
 import type { TemplateFields } from "@koloda/srs";
 import type { UIMessage } from "ai";
-import type { AssistantRun, ConversationReducerState, RevertState, RunActivity } from "./conversation-types";
+import type { AssistantRun, ConversationReducerState, RevertState } from "./conversation-types";
 import { isReasoningActivity } from "./conversation-types";
 import { getMessageRunId } from "./assistant-messages";
 
@@ -41,13 +41,12 @@ export function activityTiming(): { startedAt: Date; elapsedSeconds: null } {
   return { startedAt: new Date(), elapsedSeconds: null };
 }
 
-export function stampActivityElapsed(entry: { startedAt?: Date; elapsedSeconds?: number | null }) {
-  if (!entry.startedAt) return;
+export function stampActivityElapsed(entry: { startedAt: Date; elapsedSeconds: number | null }) {
   entry.elapsedSeconds = elapsedSecondsSince(entry.startedAt);
 }
 
 export function finishRunningReasoning(run: AssistantRun) {
-  const last = run.toolCalls?.at(-1);
+  const last = run.toolCalls.at(-1);
   if (last && isReasoningActivity(last) && last.status === "running") {
     last.status = "done";
     stampActivityElapsed(last);
@@ -57,17 +56,12 @@ export function finishRunningReasoning(run: AssistantRun) {
 export function finishRunningTools(run: AssistantRun) {
   // WHY: a run ending without a tool result must not leave its activity
   // spinning. Match restore's error status, but freeze elapsed time now.
-  for (const entry of run.toolCalls ?? []) {
+  for (const entry of run.toolCalls) {
     if (!isReasoningActivity(entry) && entry.status === "running") {
       entry.status = "error";
       stampActivityElapsed(entry);
     }
   }
-}
-
-export function ensureActivity(run: AssistantRun): RunActivity[] {
-  if (!run.toolCalls) run.toolCalls = [];
-  return run.toolCalls;
 }
 
 // WHY: `cloneConversationAtom` and restore-time normalization both need to drop run ids

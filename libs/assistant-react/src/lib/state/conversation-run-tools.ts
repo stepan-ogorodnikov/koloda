@@ -2,12 +2,7 @@ import { generatedCardsFromProposeOutput, isProposeCardsOutput } from "@koloda/a
 import type { GeneratedCard } from "@koloda/ai";
 import type { CardStatus, ConversationReducerState, RunToolCall } from "./conversation-types";
 import { isReasoningActivity } from "./conversation-types";
-import {
-  activityTiming,
-  ensureActivity,
-  finishRunningReasoning,
-  stampActivityElapsed,
-} from "./conversation-run-helpers";
+import { activityTiming, finishRunningReasoning, stampActivityElapsed } from "./conversation-run-helpers";
 
 type AddCardPayload = { runId: string; card: GeneratedCard };
 
@@ -32,7 +27,7 @@ type AddToolCallPayload = { runId: string; call: Pick<RunToolCall, "id" | "name"
 export function addToolCall(draft: ConversationReducerState, payload: AddToolCallPayload) {
   const run = draft.runs[payload.runId];
   if (!run) return;
-  const activity = ensureActivity(run);
+  const activity = run.toolCalls;
   if (activity.some((call) => call.id === payload.call.id)) return;
   // WHY: a tool call is the next timeline step — finish thinking so the
   // row label switches to Thought before the new tool row appears.
@@ -52,7 +47,7 @@ type SetToolCallResultPayload = { runId: string; callId: string; output?: unknow
 export function setToolCallResult(draft: ConversationReducerState, payload: SetToolCallResultPayload) {
   const run = draft.runs[payload.runId];
   if (!run) return;
-  const call = run.toolCalls?.find(
+  const call = run.toolCalls.find(
     (entry): entry is RunToolCall => !isReasoningActivity(entry) && entry.id === payload.callId,
   );
   if (!call) return;

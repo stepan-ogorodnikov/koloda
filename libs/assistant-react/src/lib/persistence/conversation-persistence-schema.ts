@@ -1,5 +1,4 @@
-import type { GeneratedCard, ModelParameter, StreamUsage } from "@koloda/ai";
-import { boundRunErrorDetails } from "@koloda/assistant";
+import type { GeneratedCard, StreamUsage } from "@koloda/ai";
 import type { TemplateFields } from "@koloda/srs";
 import type { UIMessage } from "ai";
 import type { PersistedConversation } from "./conversation-persistence";
@@ -13,45 +12,28 @@ import type {
   RunStatus,
   RunTerminationReason,
 } from "../state/conversation-reducer";
-import { boundToolError, boundToolOutput } from "../state/conversation-reducer";
 import { z } from "zod";
 
 /**
- * Persistence/coercion schemas for restored conversation rows.
+ * Restore schemas for stored conversation rows.
  *
- * WHY: persisted rows are a *compatibility boundary*.
- * The hand-rolled coercion in `conversation-persistence.ts`
- * deliberately does three things a naive Zod port would lose:
- *   1. `toDate` — coerce ISO-string / epoch-number / Date timestamps into
- *      `Date`, failing the *whole row* on an unparseable required date.
- *   2. Default missing legacy optional fields (`profileId`/`modelId`/…
- *      → `null`; `modelParameters` → `{}`) while still rejecting wrong-typed
- *      present values.
- *   3. Parse into `PersistedConversation` (no `revertState`; unknown keys
- *      including a stale `revertState` are stripped). Live state is rebuilt
- *      via `fromPersistedState`. Also tolerate untyped `messages`/`cards`/
- *      `usage`. Legacy `request` on runs is stripped (never read back; retry
- *      rebuilds live).
- *
- * The existing `conversation-restore.test.ts` fixtures are the contract; this
- * port keeps them green for all real persisted rows. The collapse on the first
- * bad field/run (`safeParse` → `null`) is preserved. The only intentional
- * tightening vs. the old truthy gate is `templateFields`: it now accepts only
- * `null` or a `TemplateFields` array and rejects records, whereas the old gate
- * alone would have accepted and miscast a record — records are never
- * persisted, so no real row changes behavior.
+ * INVARIANT: They accept the shape the current build writes
+ * (`toPersistedState`, then JSON) and nothing older: no defaults for missing
+ * fields and no repairs. One bad field fails the whole row as corrupt.
+ * Unknown keys, including a stale `revertState`, are stripped; live state is
+ * rebuilt via `fromPersistedState`.
  */
 
-// INVARIANT: structural card check. Restore previously cast `cards`
-// unvalidated, so a malformed card reached the renderer and crashed it
-// instead of failing the row as corrupt. Extra fields are tolerated.
+// INVARIANT: structural card check, so a malformed card fails the row as
+// corrupt instead of reaching the renderer and crashing it. Extra fields are
+// tolerated.
 const cardShape = z.object({
   content: z.record(z.string(), z.object({ text: z.string() })),
 });
 
-// INVARIANT: structural message check. Restore previously cast `messages`
-// unvalidated, so a row with `parts: null` reached the renderer and crashed
-// it instead of failing the row as corrupt. Extra fields are tolerated.
+// INVARIANT: structural message check, so a row with `parts: null` fails as
+// corrupt instead of reaching the renderer and crashing it. Extra fields are
+// tolerated.
 const messageShape = z.object({
   id: z.string(),
   role: z.enum(["user", "assistant"]),
@@ -59,40 +41,28 @@ const messageShape = z.object({
   metadata: z.unknown().optional(),
 });
 
+// WHY: Timestamps sit in the stored JSON as ISO strings on both hosts.
 function toDate(value: unknown): Date | null {
-  if (value instanceof Date) return value;
-  if (typeof value === "string") {
-    const parsed = new Date(value);
-    if (!Number.isNaN(parsed.getTime())) return parsed;
-  }
-  if (typeof value === "number" && Number.isFinite(value)) return new Date(value);
-  return null;
+  if (typeof value !== "string") return null;
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
 }
 
-/** Required date field: string/number/Date → Date; anything else fails. */
+/** Required date field: an ISO string → Date; anything else fails. */
 const dateField = z.preprocess(toDate, z.date());
 
-/** `null`-able date: `null` → `null`; otherwise a valid date. Mirrors the
- * pre-refactor `updatedAt` rule (missing/unparseable → fail, not coerce). */
+/** `null` → `null`; an ISO string → Date; anything else, including a missing value, fails. */
 const nullableDateField = z.unknown().transform((v, ctx): Date | null => {
   if (v === null) return null;
   const d = toDate(v);
   if (!d) {
-    ctx.addIssue({ code: "custom", message: "expected a Date, ISO string, epoch, or null" });
+    ctx.addIssue({ code: "custom", message: "expected an ISO date string or null" });
     return z.NEVER;
   }
   return d;
 });
 
-/** `string | null | undefined` → `string | null`; non-strings fail. */
-const optionalString = z
-  .string()
-  .nullish()
-  .transform((v) => v ?? null);
-
-/** `null`-able number: `null` → `null`; a finite number → number; else fail.
- * A *missing* value fails the row, unlike `optionalString` — mirrors the
- * pre-refactor `elapsedSeconds` gate, which rejected `undefined`. */
+/** `null` → `null`; a finite number → number; anything else, including a missing value, fails. */
 const nullableNumberField = z.unknown().transform((v, ctx): number | null => {
   if (v === null) return null;
   if (typeof v === "number" && Number.isFinite(v)) return v;
@@ -100,59 +70,20 @@ const nullableNumberField = z.unknown().transform((v, ctx): number | null => {
   return z.NEVER;
 });
 
-/**
- * `modelParameters`: `null`/`undefined`/`object` → a map of string→string with
- * null-valued entries dropped. A non-object (other than null/undefined) or a
- * non-string, non-null entry value fails the whole row.
- */
-const modelParametersField = z
-  .record(z.string(), z.string().nullable())
-  .nullish()
-  .transform((entries) => {
-    const out: Partial<Record<ModelParameter["type"], string>> = {};
-    for (const [key, val] of Object.entries(entries ?? {})) {
-      if (val === null) continue;
-      out[key as ModelParameter["type"]] = val;
-    }
-    return out;
-  });
-
-/** `modelName`: `null`/`undefined` → `undefined`; `string` → `string`; else fail. */
-const modelNameField = z
-  .string()
-  .nullish()
-  .transform((v) => v ?? undefined);
-
-/** `templateFields`: `null` → `null`; a `TemplateFields` array → passthrough; else fail.
+/** `templateFields`: `null` or a `TemplateFields` array; anything else fails.
  * WHY: `TemplateFields` is `Template["content"]["fields"]` — an *array* of field
- * objects, not a record. A previous port used `z.record(...)` here, which
- * rejects arrays, so any run that persisted its non-null `templateFields`
- * failed the whole row on restore and the conversation fell back to a fresh
- * empty state (empty feed after reload). Tighter than the old
- * truthy gate, which would have accepted and miscast a record; no real row is
- * a record, so behavior for persisted rows is unchanged (see file header). */
+ * objects, not a record. Validating it as a record would fail every proposal
+ * run on restore. */
 const templateFieldsField = z.union([z.null(), z.array(z.unknown())]);
 
 /** Tolerate an untyped passthrough value (e.g. `usage`). */
 const passthroughField = z.unknown();
 
-/** `error`: a falsy/absent value → `undefined`; a truthy object → `{ message, details? }`.
- * Details are re-capped on restore so rows saved before the storage backstop
- * heal instead of keeping an oversized payload alive across sessions. */
-const errorField = z.unknown().transform((error): { message: string; details?: string } | undefined => {
-  if (!error || typeof error !== "object") return undefined;
-  const record = error as Record<string, unknown>;
-  const message = String(record.message ?? "");
-  const details =
-    typeof record.details === "string" && record.details.trim() ? boundRunErrorDetails(record.details) : undefined;
-  return details ? { message, details } : { message };
-});
+/** Live run errors are bounded by the runtime when they are recorded. */
+const errorField = z.object({ message: z.string(), details: z.string().optional() }).optional();
 
-/** `reason`: absent/null/undefined → omit; known string → passthrough; else fail. */
-const terminationReasonField = z
-  .enum(["user", "app_shutdown", "crash_recovery"])
-  .nullish()
-  .transform((v) => v ?? undefined);
+/** `reason`: absent → omit; a known reason → passthrough; anything else fails. */
+const terminationReasonField = z.enum(["user", "app_shutdown", "crash_recovery"]).optional();
 
 const runStatusField = z.enum(["streaming", "success", "failed", "canceled", "interrupted"]);
 
@@ -203,31 +134,19 @@ const dataAccessSnapshotField = z.object({
 const toolCallStatusField = z.enum(["running", "success", "error"]);
 
 /**
- * Tool activity recorded on the run. Shape mirrors `RunToolCall` — unknown
- * extra keys are stripped; a present-but-invalid array fails the whole row
- * as corrupt (same optional-field policy as `dataAccess`).
+ * Tool activity recorded on the run. Shape mirrors `RunToolCall`; unknown
+ * extra keys are stripped. Live code bounds `input` and `error` when it
+ * records a call, so restore does not re-bound them.
  */
-// WHY: optional so rows saved before activity timers restore without them;
-// a present invalid value fails the row as corrupt.
-const optionalActivityStartedAtField = dateField.optional();
-const optionalActivityElapsedField = z.number().nullable().optional();
-
 const toolCallField = z.object({
   id: z.string(),
   name: z.string(),
-  // WHY: rows saved before input was bounded may hold a full propose_cards
-  // arguments blob — cap on restore so reload cannot keep rewriting it.
-  input: z.unknown().transform((input) => boundToolOutput(input)),
+  input: z.unknown(),
   status: toolCallStatusField,
   output: z.unknown().optional(),
-  // WHY: rows saved before `RunToolCall.error` became a bounded string may
-  // hold an arbitrary error object — coerce to the live shape on restore.
-  error: z
-    .unknown()
-    .optional()
-    .transform((error) => (error === undefined ? undefined : boundToolError(error))),
-  startedAt: optionalActivityStartedAtField,
-  elapsedSeconds: optionalActivityElapsedField,
+  error: z.string().optional(),
+  startedAt: dateField,
+  elapsedSeconds: z.number().nullable(),
 });
 
 const reasoningActivityField = z.object({
@@ -235,11 +154,11 @@ const reasoningActivityField = z.object({
   id: z.string(),
   text: z.string(),
   status: z.enum(["running", "done"]),
-  startedAt: optionalActivityStartedAtField,
-  elapsedSeconds: optionalActivityElapsedField,
+  startedAt: dateField,
+  elapsedSeconds: z.number().nullable(),
 });
 
-// WHY: pre-reasoning rows omit `kind` and must still restore as tool calls.
+// WHY: Live tool calls carry no `kind`; only reasoning rows do.
 const activityField = z.union([reasoningActivityField, toolCallField]);
 
 const runSchema: z.ZodType<AssistantRun> = z
@@ -256,19 +175,18 @@ const runSchema: z.ZodType<AssistantRun> = z
     templateFields: templateFieldsField,
     startedAt: dateField,
     elapsedSeconds: nullableNumberField,
-    modelName: modelNameField,
+    modelName: z.string().optional(),
     usage: passthroughField,
     error: errorField,
     // INVARIANT: optional so rows saved before data access restore unchanged;
     // when present it must validate — a malformed manifest fails the row as
     // corrupt rather than silently dropping the snapshot from the run.
     dataAccess: dataAccessSnapshotField.optional(),
-    // INVARIANT: optional so rows saved before tool activity restore unchanged;
-    // when present it must validate — a malformed array fails the row as
-    // corrupt rather than silently dropping tool history from the run.
-    toolCalls: z.array(activityField).optional(),
-    // INVARIANT: optional so rows saved before proposed-card write targets
-    // restore unchanged; when present it must be a UUID — a malformed
+    // INVARIANT: a malformed array fails the row as corrupt rather than
+    // silently dropping tool history from the run.
+    toolCalls: z.array(activityField),
+    // INVARIANT: optional because a live run sets them only once
+    // `propose_cards` succeeds; a present value must be a UUID — a malformed
     // value fails the row as corrupt rather than silently dropping the target.
     writeTargetDeckId: z.uuid().optional(),
     writeTargetTemplateId: z.uuid().optional(),
@@ -321,18 +239,13 @@ const runSchema: z.ZodType<AssistantRun> = z
       usage: run.usage as StreamUsage | undefined,
       error: run.error,
       dataAccess: run.dataAccess,
-      toolCalls: run.toolCalls as RunActivity[] | undefined,
+      toolCalls: run.toolCalls as RunActivity[],
       writeTargetDeckId: run.writeTargetDeckId,
       writeTargetTemplateId: run.writeTargetTemplateId,
     };
   });
 
-/**
- * The persisted conversation row schema. Shape is `PersistedConversation`
- * (`revertState` absent). `dismissedRunErrorId` is tolerated as any type
- * (matching the pre-refactor "no validation gate" behavior) and defaulted
- * to `null`.
- */
+/** The stored conversation row schema. Shape is `PersistedConversation` (`revertState` absent). */
 const persistedConversationStateSchema: z.ZodType<PersistedConversation> = z
   .object({
     schemaVersion: z.literal(CONVERSATION_SCHEMA_VERSION),
@@ -341,18 +254,13 @@ const persistedConversationStateSchema: z.ZodType<PersistedConversation> = z
     updatedAt: nullableDateField,
     messages: z.array(messageShape),
     runs: z.record(z.string(), runSchema),
-    activeRunId: optionalString,
-    dismissedRunErrorId: z.unknown().transform((v) => (v ?? null) as string | null),
-    profileId: optionalString,
-    modelId: optionalString,
-    modelParameters: modelParametersField,
-    lastReadRunId: optionalString,
-    // WHY: optional so rows saved before per-conversation composer text
-    // restore with an empty input; a present non-string fails the row.
-    promptInput: z
-      .string()
-      .nullish()
-      .transform((v) => v ?? ""),
+    activeRunId: z.string().nullable(),
+    dismissedRunErrorId: z.string().nullable(),
+    profileId: z.string().nullable(),
+    modelId: z.string().nullable(),
+    modelParameters: z.record(z.string(), z.string()),
+    lastReadRunId: z.string().nullable(),
+    promptInput: z.string(),
   })
   .transform(
     (state): PersistedConversation => ({

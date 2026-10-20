@@ -1689,6 +1689,7 @@ describe("assistant chat restore policy (blocked rows)", () => {
             templateFields: null,
             startedAt: new Date(1).toISOString(),
             elapsedSeconds: 1,
+            toolCalls: [],
           },
         },
       },

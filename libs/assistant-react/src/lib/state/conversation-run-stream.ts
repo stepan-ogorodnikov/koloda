@@ -6,7 +6,6 @@ import {
   activityTiming,
   clearActiveIfRun,
   dropRuns,
-  ensureActivity,
   finishRunningReasoning,
   makeRun,
 } from "./conversation-run-helpers";
@@ -63,7 +62,7 @@ type AppendAssistantReasoningPayload = { runId: string; text: string };
 export function appendAssistantReasoning(draft: ConversationReducerState, payload: AppendAssistantReasoningPayload) {
   const run = draft.runs[payload.runId];
   if (!run || payload.text === "") return;
-  const activity = ensureActivity(run);
+  const activity = run.toolCalls;
   const last = activity.at(-1);
   if (last && isReasoningActivity(last)) {
     last.text += payload.text;
