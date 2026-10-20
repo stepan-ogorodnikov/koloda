@@ -63,11 +63,10 @@ export function createConversationRuntime(
   const queue = createSerialQueue<void>();
 
   /**
-   * Single per-run lifecycle record. Replaces the four previously separate
-   * race-tracking slots (cancelBeforeStart, runAwaitingStart, abortedRunReasons,
-   * outstandingRunId) so every invariant is inspectable in one place.
+   * Single per-run lifecycle record, so every race invariant is inspectable
+   * in one place.
    *
-   * INVARIANT: At most one entry per conversation " occupancy is claimed
+   * INVARIANT: At most one entry per conversation — occupancy is claimed
    * synchronously on enqueue (duplicate submit/retry rejects before a second
    * serial-queue entry is created) and released when the task settles.
    */
@@ -111,8 +110,6 @@ export function createConversationRuntime(
     callbacks.touch(conversationId);
   };
 
-  const takeCancelBeforeStart = takeRequestedReason;
-
   const classifyAbortError = (runId: string): StreamResult => {
     const reason = controllerRegistry.takeAbortReason(runId);
     if (reason === undefined) {
@@ -127,7 +124,7 @@ export function createConversationRuntime(
       callbacks.markReadIfCurrent(conversationId, runId);
       return "error";
     }
-    // WHY: stash on the lifecycle record " the registry stamp is consumed
+    // WHY: stash on the lifecycle record — the registry stamp is consumed
     // here, but handleStreamResult reads it after endRun/finally.
     const entry = runs.get(runId);
     if (entry) entry.abortReason = reason;
@@ -167,9 +164,9 @@ export function createConversationRuntime(
         callbacks.touch(targetConversationId);
         break;
       case "error":
-        // WHY: `runFailed` was already emitted in the transport catch;
-        // still dirty the originating conversation so the failed terminal
-        // status is scheduled for save.
+        // WHY: the transport catch already emitted `runTerminated` with a
+        // failed outcome; still dirty the originating conversation so the
+        // failed terminal status is scheduled for save.
         callbacks.touch(targetConversationId);
         break;
       case "aborted": {
@@ -222,7 +219,7 @@ export function createConversationRuntime(
     request: ChatStreamRequest,
     execution: AssistantExecutionIdentity,
   ): Promise<void> => {
-    const earlyCancel = takeCancelBeforeStart(runId);
+    const earlyCancel = takeRequestedReason(runId);
     if (earlyCancel !== undefined) {
       applyQueuedCancel(runId, earlyCancel);
       return;
@@ -271,7 +268,7 @@ export function createConversationRuntime(
 
     const stream = async (): Promise<{ streamResult: StreamResult; usage: StreamUsage | null }> => {
       // WHY: Last-chance gate for cancel that landed after dequeue.
-      const gateReason = takeCancelBeforeStart(runId);
+      const gateReason = takeRequestedReason(runId);
       const gateEntry = runs.get(runId);
       if (gateReason !== undefined) {
         if (gateEntry) gateEntry.abortReason = gateReason;
@@ -420,7 +417,7 @@ export function createConversationRuntime(
   ): Promise<void> =>
     enqueueExclusive(runId, async () => {
       await withAwaitingStart(runId, async () => {
-        const earlyCancel = takeCancelBeforeStart(runId);
+        const earlyCancel = takeRequestedReason(runId);
         if (earlyCancel !== undefined) {
           // WHY: Do not restartRun after cancel/shutdown — that would revive a
           // terminal run and then call the provider.

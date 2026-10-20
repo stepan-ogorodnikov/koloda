@@ -12,11 +12,6 @@ export type SubmitInput = ImmutableExecutionValue<{
   request: ChatStreamRequest;
 }>;
 
-/**
- * Data access snapshot replayed by retry: the context text sent with the
- * request plus its manifest. Opaque to the engine — carried to the
- * `runStarted` event untouched; the store adapter owns the manifest type.
- */
 export type RetryInput = ImmutableExecutionValue<{
   runId: string;
   execution: AssistantExecutionIdentity;

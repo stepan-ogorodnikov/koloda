@@ -756,7 +756,7 @@ Line numbers are at `7b8e8c1c`; when an earlier item moved them, find the code b
   Commit: Import conversation reducer helpers from their defining files
   Depends on: 7, 10, 14
 
-- [ ] 16. Correct stale assistant docs, spec pointers, and history comments
+- [x] 16. Correct stale assistant docs, spec pointers, and history comments
   Goal (findings 9, 10, and the runtime part of 14):
   - Finding 9:
     - Delete the `RetryInput` doc (`libs/assistant/src/lib/assistant-protocol.ts:15-19`).

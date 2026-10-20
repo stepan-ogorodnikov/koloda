@@ -30,7 +30,7 @@ export function useAssistantChatHotkeys({
   useAppHotkey(ai.cancel, () => handleCancel(), "", { enabled: isProcessing, ignoreInputs: false });
   // WHY: Same gate as AssistantNewConversationButton. On the param-less
   // surface there is no conversation id; New would mint a second empty one
-  // (ASSISTANT-CONVERSATIONS.md §Conversation List).
+  // (ASSISTANT-CONVERSATION-LIST.md (§Conversation List)).
   useAppHotkey(ai.newConversation, handleNewConversation, "", {
     enabled: canStartNewConversation,
     ignoreInputs: false,

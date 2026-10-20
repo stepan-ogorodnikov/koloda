@@ -9,7 +9,8 @@ No React, no Jotai, no TanStack Query, no UI, no repository I/O.
 Consumed by `@koloda/assistant-react` via an application-shell engine host
 (`useAssistantEngineHost`) that injects store callbacks,
 a required `AssistantExecutionPort`, and a durable-write adapter for persistence.
-Depends on `@koloda/ai` (stream/request types, card-proposal template shaping) and `@koloda/app` (abort/error helpers).
+Depends on `@koloda/ai` (stream, request, and tool-event types, and AI error mapping)
+and `@koloda/app` (abort/error helpers).
 Conversation documents and reducer policy still live in `@koloda/assistant-react`;
 this package owns run **execution lifetime**,
 **per-conversation save queue scheduling**,
