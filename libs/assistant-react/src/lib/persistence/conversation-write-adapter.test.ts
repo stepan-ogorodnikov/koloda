@@ -1,10 +1,23 @@
+import { IDLE_SAVE_DEBOUNCE_MS } from "@koloda/assistant";
 import { AppError } from "@koloda/app";
 import type { Conversation, SetConversationData } from "@koloda/app";
 import { createStore } from "jotai";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { ensureAssistantEngine } from "../runs/assistant-engine-instance";
+import {
+  ensureAssistantPersistenceHost,
+  registerAssistantPersistenceWriteAdapter,
+  resetAssistantEngineForTests,
+} from "../runs/assistant-persistence-host";
 import { makeConversation } from "../state/assistant-conversation.fixtures";
-import { conversationsAtom, currentConversationIdAtom, upsertConversationAtom } from "../state/conversation-store";
-import { buildWriteConversation } from "./conversation-write-adapter";
+import {
+  conversationsAtom,
+  currentConversationIdAtom,
+  pendingSaveByConversationAtom,
+  touchConversationAtom,
+  upsertConversationAtom,
+} from "../state/conversation-store";
+import { buildWriteConversation, deleteAssistantConversation } from "./conversation-write-adapter";
 
 function makeRow(data: SetConversationData): Conversation {
   return {
@@ -169,5 +182,97 @@ describe("buildWriteConversation", () => {
       error: failure,
       isDismissed: false,
     });
+  });
+});
+
+describe("deleteAssistantConversation", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    resetAssistantEngineForTests();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    resetAssistantEngineForTests();
+  });
+
+  it("failed delete rolls back so edit → autosave → later delete succeed", async () => {
+    const store = createStore();
+    const writes: string[] = [];
+    store.set(upsertConversationAtom, makeConversation("A"));
+
+    ensureAssistantEngine(store);
+    const host = ensureAssistantPersistenceHost(store);
+    // WHY: mirror production write gating — no store row means no durable write
+    // (removeConversationAtom clears the row after a successful delete).
+    registerAssistantPersistenceWriteAdapter({
+      writeConversation: async (id) => {
+        if (host.isTombstoned(id)) return false;
+        if (!store.get(conversationsAtom)[id]) return false;
+        writes.push(id);
+        return true;
+      },
+    });
+
+    // Seed a queue and confirm autosave works before delete.
+    store.set(touchConversationAtom, "A");
+    await vi.advanceTimersByTimeAsync(IDLE_SAVE_DEBOUNCE_MS);
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(writes).toEqual(["A"]);
+    writes.length = 0;
+
+    const invalidateConversations = vi.fn();
+    const removeConversationQuery = vi.fn();
+
+    await expect(
+      deleteAssistantConversation({
+        store,
+        conversationId: "A",
+        deleteFromDb: async () => {
+          throw new Error("db delete failed");
+        },
+        invalidateConversations,
+        removeConversationQuery,
+      }),
+    ).rejects.toThrow("db delete failed");
+
+    // INVARIANT: failure must not dispose/remove or leave a permanent tombstone.
+    expect(host.isTombstoned("A")).toBe(false);
+    expect(store.get(conversationsAtom)["A"]).toBeDefined();
+    expect(invalidateConversations).not.toHaveBeenCalled();
+    expect(removeConversationQuery).not.toHaveBeenCalled();
+
+    // Edit → autosave resumes after rollback.
+    store.set(touchConversationAtom, "A");
+    await vi.advanceTimersByTimeAsync(IDLE_SAVE_DEBOUNCE_MS);
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(writes).toEqual(["A"]);
+    writes.length = 0;
+
+    await deleteAssistantConversation({
+      store,
+      conversationId: "A",
+      deleteFromDb: async () => undefined,
+      invalidateConversations,
+      removeConversationQuery,
+    });
+
+    expect(store.get(conversationsAtom)["A"]).toBeUndefined();
+    expect(invalidateConversations).toHaveBeenCalledTimes(1);
+    expect(removeConversationQuery).toHaveBeenCalledWith("A");
+
+    // INVARIANT: removeConversationAtom drops the pending counter and the
+    // store row; the committed host tombstone stays so a late pending bump
+    // cannot resurrect the conversation.
+    expect(host.isTombstoned("A")).toBe(true);
+    store.set(pendingSaveByConversationAtom, { A: 99 });
+    host.retrySave("A");
+    await vi.advanceTimersByTimeAsync(IDLE_SAVE_DEBOUNCE_MS);
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(writes).toEqual([]);
+    expect(host.isTombstoned("A")).toBe(true);
   });
 });

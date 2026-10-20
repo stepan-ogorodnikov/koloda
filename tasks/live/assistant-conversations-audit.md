@@ -651,7 +651,7 @@ Line numbers are at `7b8e8c1c`; when an earlier item moved them, find the code b
   Commit: Inline runStream into the chat run
   Depends on: 7
 
-- [ ] 12. Split the engine host test file by subject
+- [x] 12. Split the engine host test file by subject
   Goal (finding 8b):
   - `runs/use-assistant-engine-host.test.ts` does not test `useAssistantEngineHost`, against TESTING.md (§Repetition
     and tables).
