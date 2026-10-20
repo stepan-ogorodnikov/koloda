@@ -111,8 +111,11 @@ export function findLatestErroredRun(state: ConversationReducerState): Assistant
   const ids = Object.keys(state.runs);
   for (let i = ids.length - 1; i >= 0; i--) {
     const run = state.runs[ids[i]];
-    if (run && run.status === "failed" && run.error && run.id !== state.dismissedRunErrorId) {
-      return run;
+    if (run && run.status === "failed" && run.error) {
+      // INVARIANT: Dismissing hides the panel until a newer failure
+      // (ASSISTANT-CONVERSATIONS.md §Dismissing Errors). Never fall through
+      // to an older failed run.
+      return run.id === state.dismissedRunErrorId ? null : run;
     }
   }
   return null;

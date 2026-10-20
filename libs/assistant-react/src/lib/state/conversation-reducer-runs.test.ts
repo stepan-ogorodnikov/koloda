@@ -1078,6 +1078,27 @@ describe("conversationReducer", () => {
       expect(findLatestErroredRun(state)?.id).toBe("r1");
     });
 
+    it("dismissing the newest failure hides the panel instead of surfacing an older one", () => {
+      let state = reduce([["submitTurn", { runId: "r1", text: "one", kind: "chat-text", assistantText: "" }]]);
+      state = conversationReducer(state, ["runFailed", { runId: "r1", error: { message: "boom" } }]);
+      state = conversationReducer(state, [
+        "submitTurn",
+        { runId: "r2", text: "two", kind: "chat-text", assistantText: "" },
+      ]);
+      state = conversationReducer(state, ["runFailed", { runId: "r2", error: { message: "boom" } }]);
+      expect(findLatestErroredRun(state)?.id).toBe("r2");
+
+      state = conversationReducer(state, ["dismissRunError", { runId: "r2" }]);
+      expect(findLatestErroredRun(state)).toBeNull();
+
+      state = conversationReducer(state, [
+        "submitTurn",
+        { runId: "r3", text: "three", kind: "chat-text", assistantText: "" },
+      ]);
+      state = conversationReducer(state, ["runFailed", { runId: "r3", error: { message: "boom" } }]);
+      expect(findLatestErroredRun(state)?.id).toBe("r3");
+    });
+
     it("does not clear dismissedRunErrorId when restarting a different run", () => {
       let state = reduce([
         ["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }],

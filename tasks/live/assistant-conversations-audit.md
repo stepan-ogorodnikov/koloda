@@ -254,7 +254,7 @@ Out:
 Paths without a package prefix are under `libs/assistant-react/src/lib/`.
 Line numbers are at `7b8e8c1c`; when an earlier item moved them, find the code by its text.
 
-- [ ] 1. Keep a dismissed stream error from surfacing an older one
+- [x] 1. Keep a dismissed stream error from surfacing an older one
   Goal (finding 1):
   - `findLatestErroredRun` (`state/conversation-run-helpers.ts:110-119`) walks runs newest first and skips only the
     run whose id is `dismissedRunErrorId`, so it returns the next older failure.
