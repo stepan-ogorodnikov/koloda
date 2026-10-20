@@ -731,7 +731,7 @@ Line numbers are at `7b8e8c1c`; when an earlier item moved them, find the code b
   Commit: Delete dead assistant persistence and selector surface
   Depends on: 12
 
-- [ ] 15. Import conversation reducer helpers from their defining files
+- [x] 15. Import conversation reducer helpers from their defining files
   Goal (finding 12):
   - `state/conversation-reducer.ts:25-29` re-exports `conversation-types` (`export *`).
     It also re-exports `dropRuns`, `findLatestErroredRun`, `getVisibleMessages`, and `hasRetryableTurn` from

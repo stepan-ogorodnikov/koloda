@@ -13,7 +13,7 @@ import {
   makeHistoricalTemplate,
   serializeGeneratedCards,
 } from "../state/assistant-messages";
-import type { AssistantRun } from "../state/conversation-reducer";
+import type { AssistantRun } from "../state/conversation-types";
 import { assistantActiveRunIdAtom, assistantMessagesAtom, assistantRunsAtom } from "../state/conversation-selectors";
 import { CopyMessageButton } from "./copy-message-button";
 import { MessageTimestamp } from "./message-timestamp";

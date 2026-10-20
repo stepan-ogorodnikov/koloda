@@ -17,7 +17,8 @@ import {
   setAssistantPromptInputAtom,
 } from "./conversation-actions";
 import { dispatchTo, makeConversation, makeRun } from "./assistant-conversation.fixtures";
-import type { ConversationReducerAction, ConversationReducerState } from "./conversation-reducer";
+import type { ConversationReducerAction } from "./conversation-reducer";
+import type { ConversationReducerState } from "./conversation-types";
 
 describe("assistantConversationStateAtom (per-conversation store)", () => {
   it("switching conversations preserves both states", () => {

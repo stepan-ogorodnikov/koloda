@@ -6,7 +6,7 @@ import {
   getMessageRunId,
   userMessageId,
 } from "../state/assistant-messages";
-import type { ConversationReducerState, AssistantRun } from "../state/conversation-reducer";
+import type { ConversationReducerState, AssistantRun } from "../state/conversation-types";
 import type { StreamRequestResult } from "./build-stream-request";
 import { buildStreamRequest } from "./build-stream-request";
 

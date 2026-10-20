@@ -1,5 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
-import { conversationReducer, getVisibleMessages, initialConversationState } from "./conversation-reducer";
+import { conversationReducer } from "./conversation-reducer";
+import { initialConversationState } from "./conversation-types";
+import { getVisibleMessages } from "./conversation-run-helpers";
 import { reduce } from "./conversation-reducer.fixtures";
 
 describe("conversationReducer", () => {

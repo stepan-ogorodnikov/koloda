@@ -5,7 +5,7 @@ import type { Deck, Template } from "@koloda/srs";
 import { useQuery } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
 import { AssistantCardsTable } from "./assistant-cards-table";
-import type { CardStatus } from "../state/conversation-reducer";
+import type { CardStatus } from "../state/conversation-types";
 
 export type AssistantCardsMessageProps = {
   runId: string;

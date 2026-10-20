@@ -4,15 +4,14 @@ import type { GeneratedCard } from "@koloda/ai";
 import type { Template } from "@koloda/srs";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { useAtomValue } from "jotai";
-import { createStore, Provider as JotaiProvider } from "jotai";
+import { useAtomValue, createStore, Provider as JotaiProvider } from "jotai";
 import type { ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { AssistantCardsTable } from "./assistant-cards-table";
 import { useAssistantCardsTable } from "./use-assistant-cards-table";
 import { makeConversation, makeRun } from "../state/assistant-conversation.fixtures";
 import { conversationsAtom, currentConversationIdAtom } from "../state/conversation-store";
-import type { CardStatus } from "../state/conversation-reducer";
+import type { CardStatus } from "../state/conversation-types";
 import { testId } from "../../test/test-helpers";
 
 vi.mock("@lingui/react", () => ({

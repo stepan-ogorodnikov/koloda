@@ -7,8 +7,8 @@ import { aiProfileStateAtom } from "../state/ai-profile-state";
 import type { AIProfileState } from "../state/ai-profile-state";
 import { normalizeRestoredConversation } from "./conversation-persistence";
 import { coerceConversationState } from "./conversation-persistence-schema";
-import { initialConversationState } from "../state/conversation-reducer";
-import type { ConversationReducerState } from "../state/conversation-reducer";
+import { initialConversationState } from "../state/conversation-types";
+import type { ConversationReducerState } from "../state/conversation-types";
 import {
   touchAtom,
   conversationsAtom,

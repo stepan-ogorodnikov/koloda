@@ -7,7 +7,7 @@ import {
 } from "./conversation-store";
 import { assistantMessagesAtom } from "./conversation-selectors";
 import { dispatchTo, makeConversation } from "./assistant-conversation.fixtures";
-import type { AssistantRun } from "./conversation-reducer";
+import type { AssistantRun } from "./conversation-types";
 
 describe("revert state in-memory lifecycle", () => {
   function chatRun(runId: string): AssistantRun {

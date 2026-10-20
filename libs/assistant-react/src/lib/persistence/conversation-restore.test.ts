@@ -5,8 +5,9 @@ import { coerceConversationState } from "./conversation-persistence-schema";
 import type { RestoreIssue } from "./conversation-persistence-schema";
 import { CONVERSATION_SCHEMA_VERSION } from "./conversation-schema-version";
 import type { DataAccessSnapshot } from "../runs/data-access";
-import { findLatestErroredRun, initialConversationState } from "../state/conversation-reducer";
-import type { ConversationReducerState } from "../state/conversation-reducer";
+import { initialConversationState } from "../state/conversation-types";
+import { findLatestErroredRun } from "../state/conversation-run-helpers";
+import type { ConversationReducerState } from "../state/conversation-types";
 
 // A stored row as the current build writes it: no revert state, stamped with
 // the schema version. Restore fixtures spread it and override what they test.

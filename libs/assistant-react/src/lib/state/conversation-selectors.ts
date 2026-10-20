@@ -1,5 +1,5 @@
 import { atom } from "jotai";
-import { findLatestErroredRun, getVisibleMessages } from "./conversation-reducer";
+import { findLatestErroredRun, getVisibleMessages } from "./conversation-run-helpers";
 import { getMessageRunId } from "./assistant-messages";
 import {
   assistantConversationStateAtom,

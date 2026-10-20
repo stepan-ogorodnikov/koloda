@@ -11,7 +11,7 @@ import type {
   RunActivity,
   RunStatus,
   RunTerminationReason,
-} from "../state/conversation-reducer";
+} from "../state/conversation-types";
 import { z } from "zod";
 
 /**

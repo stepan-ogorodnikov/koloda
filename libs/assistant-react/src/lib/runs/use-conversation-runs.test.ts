@@ -3,8 +3,9 @@ import { aiRuntimeAtom } from "@koloda/core-react";
 import { act, renderHook } from "@testing-library/react";
 import { createStore } from "jotai";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { ConversationReducerAction, ConversationReducerState } from "../state/conversation-reducer";
-import { initialConversationState } from "../state/conversation-reducer";
+import type { ConversationReducerAction } from "../state/conversation-reducer";
+import type { ConversationReducerState } from "../state/conversation-types";
+import { initialConversationState } from "../state/conversation-types";
 import * as conversationStore from "../state/conversation-store";
 import {
   assistantConversationStateAtom,

@@ -2,8 +2,10 @@ import { atom } from "jotai";
 import type { Getter, Setter } from "jotai";
 import type { Store } from "jotai/vanilla/store";
 import type { RestoreIssue } from "../persistence/conversation-persistence-schema";
-import { conversationReducer, initialConversationState } from "./conversation-reducer";
-import type { ConversationReducerAction, ConversationReducerState } from "./conversation-reducer";
+import { conversationReducer } from "./conversation-reducer";
+import { initialConversationState } from "./conversation-types";
+import type { ConversationReducerAction } from "./conversation-reducer";
+import type { ConversationReducerState } from "./conversation-types";
 
 export type SaveStatus = {
   conversationId: string | null;

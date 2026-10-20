@@ -1,5 +1,5 @@
-import type { AssistantRun, CardStatus, ConversationReducerState, RunActivity } from "../state/conversation-reducer";
-import { isReasoningActivity } from "../state/conversation-reducer";
+import type { AssistantRun, CardStatus, ConversationReducerState, RunActivity } from "../state/conversation-types";
+import { isReasoningActivity } from "../state/conversation-types";
 import { CONVERSATION_SCHEMA_VERSION } from "./conversation-schema-version";
 
 function elapsedSecondsSince(startedAt: Date, now = Date.now()): number {

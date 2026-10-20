@@ -8,8 +8,8 @@ import { createStore, Provider as JotaiProvider } from "jotai";
 import * as React from "react";
 import type { PropsWithChildren } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { initialConversationState } from "../state/conversation-reducer";
-import type { ConversationReducerState } from "../state/conversation-reducer";
+import { initialConversationState } from "../state/conversation-types";
+import type { ConversationReducerState } from "../state/conversation-types";
 import { touchConversationAtom, upsertConversationAtom } from "../state/conversation-store";
 import { ensureAssistantEngine } from "../runs/assistant-engine-instance";
 import {

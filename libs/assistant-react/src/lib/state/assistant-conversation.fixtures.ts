@@ -1,7 +1,8 @@
 import type { createStore } from "jotai";
 import { dispatchToConversationOnStore, markReadIfCurrentOnStore } from "./conversation-store";
-import type { ConversationReducerAction, ConversationReducerState, AssistantRun } from "./conversation-reducer";
-import { initialConversationState } from "./conversation-reducer";
+import type { ConversationReducerAction } from "./conversation-reducer";
+import type { ConversationReducerState, AssistantRun } from "./conversation-types";
+import { initialConversationState } from "./conversation-types";
 
 export function makeRun(id: string, status: AssistantRun["status"]): AssistantRun {
   return {

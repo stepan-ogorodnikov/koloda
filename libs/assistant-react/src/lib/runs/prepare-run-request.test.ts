@@ -3,7 +3,7 @@ import type { UIMessage } from "ai";
 import { describe, expect, it } from "vitest";
 import type { AssistantConversationConfig } from "../state/assistant-conversation-config";
 import { createTextMessage, assistantMessageId, userMessageId } from "../state/assistant-messages";
-import type { AssistantRun } from "../state/conversation-reducer";
+import type { AssistantRun } from "../state/conversation-types";
 import { prepareRunRequest, toRetryCommand, toSubmitCommand } from "./prepare-run-request";
 
 const CHAT_TOOLS = Object.keys(ASSISTANT_TOOL_SPECS);

@@ -6,7 +6,7 @@ import {
   currentConversationIdAtom,
   upsertConversationAtom,
 } from "./conversation-store";
-import { initialConversationState } from "./conversation-reducer";
+import { initialConversationState } from "./conversation-types";
 import type { StreamUsage } from "@koloda/ai";
 
 const usageA: StreamUsage = { promptTokens: 100, completionTokens: 10, totalTokens: 110 };

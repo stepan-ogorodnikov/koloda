@@ -10,7 +10,7 @@ import {
 import { unreadConversationIdsAtom } from "./conversation-selectors";
 import { cloneConversationAtom } from "./conversation-actions";
 import { makeConversation, makeRun } from "./assistant-conversation.fixtures";
-import type { ConversationReducerState } from "./conversation-reducer";
+import type { ConversationReducerState } from "./conversation-types";
 
 describe("cloneConversationAtom", () => {
   it("creates a new conversation with a fresh id and switches the current id to it", () => {

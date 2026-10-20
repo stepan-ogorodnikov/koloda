@@ -1,12 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
 import type { DataAccessSnapshot } from "../runs/data-access";
-import {
-  conversationReducer,
-  findLatestErroredRun,
-  hasRetryableTurn,
-  initialConversationState,
-} from "./conversation-reducer";
-import type { ConversationReducerAction, ConversationReducerState } from "./conversation-reducer";
+import { conversationReducer } from "./conversation-reducer";
+import { initialConversationState } from "./conversation-types";
+import { findLatestErroredRun, hasRetryableTurn } from "./conversation-run-helpers";
+import type { ConversationReducerAction } from "./conversation-reducer";
+import type { ConversationReducerState } from "./conversation-types";
 import { reduce } from "./conversation-reducer.fixtures";
 
 function testId(n: number): string {

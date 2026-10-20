@@ -1,8 +1,8 @@
 import type { ModelParameter } from "@koloda/ai";
 import { generateUUID } from "@koloda/app";
 import { atom } from "jotai";
-import { dropRuns } from "./conversation-reducer";
-import type { CardStatus, ConversationReducerState } from "./conversation-reducer";
+import { dropRuns } from "./conversation-run-helpers";
+import type { CardStatus, ConversationReducerState } from "./conversation-types";
 import { aiProfileStateAtom } from "./ai-profile-state";
 import {
   assistantConversationStateAtom,

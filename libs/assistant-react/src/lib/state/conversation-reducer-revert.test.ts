@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { conversationReducer, initialConversationState } from "./conversation-reducer";
-import type { ConversationReducerState } from "./conversation-reducer";
+import { conversationReducer } from "./conversation-reducer";
+import { initialConversationState } from "./conversation-types";
+import type { ConversationReducerState } from "./conversation-types";
 
 // WHY: See ASSISTANT-MESSAGES.md §Reverting the Conversation.
 // Revert is now a visual overlay (setRevertState) backed by an explicit

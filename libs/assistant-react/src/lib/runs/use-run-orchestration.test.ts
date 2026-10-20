@@ -6,8 +6,9 @@ import { createStore } from "jotai";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { AssistantConversationConfig } from "../state/assistant-conversation-config";
 import { userMessageId } from "../state/assistant-messages";
-import type { ConversationReducerAction, ConversationReducerState } from "../state/conversation-reducer";
-import { initialConversationState } from "../state/conversation-reducer";
+import type { ConversationReducerAction } from "../state/conversation-reducer";
+import type { ConversationReducerState } from "../state/conversation-types";
+import { initialConversationState } from "../state/conversation-types";
 import {
   assistantConversationStateAtom,
   currentConversationIdAtom,

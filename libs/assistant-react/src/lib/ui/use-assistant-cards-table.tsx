@@ -9,7 +9,7 @@ import { useCallback, useEffect, useMemo, useRef } from "react";
 import { AssistantCardsTableSelectCell } from "./assistant-cards-table-select-cell";
 import { AssistantCardsTableSelectHeader } from "./assistant-cards-table-select-header";
 import { setAssistantCardStatusAtom } from "../state/conversation-actions";
-import type { CardStatus } from "../state/conversation-reducer";
+import type { CardStatus } from "../state/conversation-types";
 import { currentConversationIdAtom } from "../state/conversation-store";
 
 export type CardWithStatus = GeneratedCard & { status: CardStatus };

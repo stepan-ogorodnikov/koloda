@@ -6,8 +6,9 @@ import type { RefObject } from "react";
 import { useCallback, useRef } from "react";
 import type { AssistantConversationConfig } from "../state/assistant-conversation-config";
 import { assistantMessageId, userMessageId } from "../state/assistant-messages";
-import type { ConversationReducerAction, ConversationReducerState } from "../state/conversation-reducer";
-import { findLatestErroredRun, getVisibleMessages, hasRetryableTurn } from "../state/conversation-reducer";
+import type { ConversationReducerAction } from "../state/conversation-reducer";
+import type { ConversationReducerState } from "../state/conversation-types";
+import { findLatestErroredRun, getVisibleMessages, hasRetryableTurn } from "../state/conversation-run-helpers";
 import { prepareRunRequest, toRetryCommand, toSubmitCommand } from "./prepare-run-request";
 
 // WHY: dispatchCommand rejections are engine verdicts, not transport failures
