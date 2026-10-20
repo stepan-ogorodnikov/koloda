@@ -1,6 +1,6 @@
 # Assistant conversations audit fixes
 
-Status: ready
+Status: done
 Guides: agents/IMPLEMENTATION-PLAN.md, agents/TASKS.md, agents/ASSISTANT-MAP.md, docs/specs/ASSISTANT-CONVERSATIONS.md, agents/CODE-STYLE.md, agents/CODE-DOCUMENTATION.md, agents/TESTING.md, agents/VERIFY.md, agents/BACKWARDS-COMPATIBILITY.md, agents/FUNCTIONAL-SPECIFICATIONS.md, agents/MARKDOWN.md, agents/REVIEW.md, libs/assistant/README.md
 Flow: local
 
@@ -813,4 +813,66 @@ Line numbers are at `7b8e8c1c`; when an earlier item moved them, find the code b
 
 ## Outcome
 
-<what shipped>
+Shipped, one commit per Plan item:
+
+- The error panel picks the newest failed run and stays hidden once that run's error is dismissed.
+- Submit checks the profile and model before committing a revert, so hidden turns are deleted only when a run starts.
+- Enter, the submit hotkey, and the submit button share one gate (`useAIChatInput` takes `canSubmit`).
+- Profile and model changes replace the global AI profile record; parameter edits and run start still merge.
+- With no conversation open, a global record whose profile is missing is reconciled to the newest profile once the
+  profile list has loaded.
+- Recovery reset marks the fresh conversation dirty, so it is saved while empty.
+- Restore reads only the shape the current build writes:
+  - no `error` message kind, missing-run recreate, or marker fallback in retry;
+  - no v0 migration: a row without the current `schemaVersion` is corrupt, a newer one is `unsupportedVersion`;
+  - no user-message `runId`/`createdAt` backfill, reasoning-part lift, `generated-cards`/`cards`-mode rejection, or
+    `mode` stripping;
+  - no defaults or repairs for conversation, run, and activity fields; timestamps are ISO strings only;
+  - `AssistantRun.toolCalls` and activity `startedAt`/`elapsedSeconds` are required in the live types.
+- `runStream` is inlined into the chat run; `run-stream.ts` is gone.
+- The engine host test file is split into files named for their subjects; the save-error discard and clear rules have
+  tests.
+- Dead surface is deleted: `assistantHasContextAtom`, the queue's `consecutiveFailures` and `isTombstoned`, the save
+  host's return value, `IDLE_SAVE_DEBOUNCE_MS` and `boundRunErrorDetails` on the `@koloda/assistant` entry,
+  `shutdownAssistantGracefully`'s `flushTimeoutMs`, and the durable write's boolean result.
+- `conversation-reducer.ts` no longer re-exports; importers use the defining files.
+- Stale docs, spec pointers, and history comments are corrected.
+- ASSISTANT-CONVERSATIONS.md describes save-error Retry and retry's global update, says rows in an older shape are
+  corrupt, and keeps the unsaved-revert rule only in §Revert State.
+
+Beyond the item text:
+
+- Item 4 replaced the chat integration test's file-level `vi.mock("@koloda/ai-react")` with seeded query data.
+  Under `isolate: false` that mock collided with the new profile hook test: 14 integration failures in a full run.
+- Item 7 also deleted `getChatTextMetadata`, which became a passthrough.
+  Three engine test fixtures stored runs without a status and now carry one.
+- Item 8 folded the version check into `coerceConversationState` and deleted `conversation-schema-version.test.ts`;
+  the restore tests cover its cases.
+- Items 9 and 10 also deleted `isUserMessageMetadata`, `UserMessageMetadata`, `ensureActivity`, and the two
+  `deckId` tests; restore now rejects `reason: null`.
+  The restore test helpers JSON-round-trip each fixture, as both hosts deliver stored rows.
+- Item 14 also changed `AssistantPersistenceWriteAdapter.writeConversation` to `Promise<void>`.
+
+Checks on the branch:
+
+- Scoped Vitest per item; at the tip `@koloda/assistant-react` 475, `@koloda/assistant` 75, `@koloda/ai-react` 66.
+- `bun run test:app-unit` passed after item 14.
+- `bun run check:push` passed on the tip before Archive.
+- assistant-react passed with one worker, with a cold results cache, and in six shuffled orders of the files that
+  mock `@koloda/ai-react`.
+
+Left open:
+
+- Finding 8a: no change needed; the bfcache `pagehide` path is already covered.
+- The legacy `dataAccess` snapshot stays with the data-access audit (its finding 7; question 5), together with its
+  "rows saved before data access" schema comment.
+- `ASSISTANT-MESSAGES.md` still describes the error marker; that rewrite is the messages audit's finding 3.
+- Seen while working, not fixed:
+  - `assistant-conversations-list.test.tsx` fails in some shuffled file orders: `useLingui` runs without its file
+    mock. It reproduces on `7b8e8c1c`.
+  - `use-run-orchestration.test.ts` casts a submit payload to a type with a `mode` field that no longer exists;
+    `tsc -b` excludes test files, so stale test types go unnoticed.
+  - `use-assistant-message-renderer.test.tsx` and `assistant-cards-message.test.tsx` mock `@koloda/ai-react` at file
+    level; every probed order passed.
+- Manual verify (web) was handed to the human: dismissing with two failures, Enter while the model list fails,
+  effort reset on a model change, a deleted global profile, and reload of a conversation with tool activity.
