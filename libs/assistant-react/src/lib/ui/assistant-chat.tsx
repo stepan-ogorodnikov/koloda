@@ -123,12 +123,22 @@ export function AssistantChat({
     modelParameters,
   });
 
-  const { inputValue, setInputValue, prompt, submit, handleSubmit, handleNewConversation } = useAIChatInput({
+  const { canSubmit, canCancel, showMissingSecretsWarning } = useAIChatValidation({
+    profileId,
+    modelId,
+    prompt: promptInput.trim(),
+    isLoading: isProcessing,
+    hasRequiredSecrets,
+    isModelsLoading,
+    isModelsError,
+  });
+
+  const { inputValue, setInputValue, submit, handleSubmit, handleNewConversation } = useAIChatInput({
     value: promptInput,
     onChange: setPromptInput,
     onSubmit: controller.submit,
     onReset: controller.reset,
-    isLoading: isProcessing,
+    canSubmit,
     scroll,
   });
 
@@ -152,16 +162,6 @@ export function AssistantChat({
     const text = controller.restore();
     if (text != null) setInputValue(text);
   }, [controller, setInputValue]);
-
-  const { canSubmit, canCancel, showMissingSecretsWarning } = useAIChatValidation({
-    profileId,
-    modelId,
-    prompt,
-    isLoading: isProcessing,
-    hasRequiredSecrets,
-    isModelsLoading,
-    isModelsError,
-  });
 
   const renderMessage = useAssistantMessageRenderer({
     handleRetry: controller.retry,

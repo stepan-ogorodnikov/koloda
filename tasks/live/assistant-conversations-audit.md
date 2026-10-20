@@ -304,7 +304,7 @@ Line numbers are at `7b8e8c1c`; when an earlier item moved them, find the code b
   Commit: Check the profile and model before committing a revert
   Depends on: none
 
-- [ ] 3. Gate Enter in the assistant composer on the submit button's checks
+- [x] 3. Gate Enter in the assistant composer on the submit button's checks
   Goal (finding 3):
   - `useAIChatInput.submit` (`libs/ai-react/src/lib/use-ai-chat-input.ts:33-41`) checks only a non-empty prompt and
     `!isLoading`, then calls `onSubmit(prompt)` and always clears the composer.

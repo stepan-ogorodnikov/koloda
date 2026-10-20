@@ -6,15 +6,13 @@ export type UseAIChatInputOptions = {
   onChange: (value: string) => void;
   onSubmit: (value: string) => void | Promise<void>;
   onReset?: () => void;
-  isLoading?: boolean;
+  canSubmit: boolean;
   scroll: UseAutoScrollReturn;
 };
 
 export type UseAIChatInputReturn = {
   inputValue: string;
   setInputValue: (value: string) => void;
-  prompt: string;
-  canSubmit: boolean;
   submit: () => void;
   handleSubmit: (e: FormEvent) => void;
   handleNewConversation: () => void;
@@ -25,17 +23,15 @@ export function useAIChatInput({
   onChange,
   onSubmit,
   onReset,
-  isLoading = false,
+  canSubmit,
   scroll,
 }: UseAIChatInputOptions): UseAIChatInputReturn {
-  const prompt = value.trim();
-
-  const canSubmit = !!prompt && !isLoading;
-
   const submit = () => {
+    // INVARIANT: Enter, the submit hotkey, and the submit button share this
+    // one gate. A blocked submit must keep the composer text.
     if (!canSubmit) return;
     const shouldFollow = scroll.prepareSubmit();
-    onSubmit(prompt);
+    onSubmit(value.trim());
     onChange("");
     if (shouldFollow) scroll.startFollowingLatest("smooth");
   };
@@ -56,8 +52,6 @@ export function useAIChatInput({
   return {
     inputValue: value,
     setInputValue: onChange,
-    prompt,
-    canSubmit,
     submit,
     handleSubmit,
     handleNewConversation,
