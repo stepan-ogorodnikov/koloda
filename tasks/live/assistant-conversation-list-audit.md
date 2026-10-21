@@ -586,7 +586,7 @@ Line numbers are at `d32fb02e`; when an earlier item moved them, find the code b
   Commit: Share one minute clock across the conversation list
   Depends on: none
 
-- [ ] 16. Name the working and unread markers for screen readers
+- [x] 16. Name the working and unread markers for screen readers
   Goal (entry 16):
   - Give each marker `role="img"`, keeping its `aria-label` (`ui/assistant-conversations-list.tsx:134,136`).
   - In both e2e suites, find the markers by role and name: `row.getByRole("img", { name: "Running" })` and

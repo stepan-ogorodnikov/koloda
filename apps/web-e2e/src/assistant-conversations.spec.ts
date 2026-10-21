@@ -23,11 +23,11 @@ function sidebarRow(page: Page, title: string): Locator {
 }
 
 function workingMarker(row: Locator): Locator {
-  return row.locator(`div[aria-label="Running"]`);
+  return row.getByRole("img", { name: "Running" });
 }
 
 function unreadMarker(row: Locator): Locator {
-  return row.locator(`div[aria-label="Unread"]`);
+  return row.getByRole("img", { name: "Unread" });
 }
 
 function rowDeleteTrigger(row: Locator): Locator {

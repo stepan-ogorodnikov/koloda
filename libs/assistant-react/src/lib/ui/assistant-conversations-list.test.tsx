@@ -79,10 +79,21 @@ describe("AssistantConversationsList", () => {
     expect(sent.className).not.toContain("fg-level-4");
   });
 
+  it("names the working marker for assistive technology", async () => {
+    renderList([items()[1]!], (store) => {
+      store.set(
+        upsertConversationAtom,
+        makeConversation("sent", { runs: { r1: makeRun("r1", "streaming") }, activeRunId: "r1" }),
+      );
+    });
+
+    expect(await screen.findByRole("img", { name: "ai.conversation.running" })).toBeTruthy();
+  });
+
   it("shows a saved unread flag for a conversation that is not loaded", async () => {
     renderList([{ ...items()[1]!, isUnread: true }]);
 
-    expect(await screen.findByLabelText("ai.conversation.unread")).toBeTruthy();
+    expect(await screen.findByRole("img", { name: "ai.conversation.unread" })).toBeTruthy();
   });
 
   it("prefers live read state over a stale saved unread flag", async () => {
@@ -96,7 +107,7 @@ describe("AssistantConversationsList", () => {
     });
 
     await screen.findByText("hello");
-    expect(screen.queryByLabelText("ai.conversation.unread")).toBeNull();
+    expect(screen.queryByRole("img", { name: "ai.conversation.unread" })).toBeNull();
   });
 
   it("treats a row as submitted once its loaded conversation has a turn, before the list refreshes", async () => {
