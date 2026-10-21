@@ -482,7 +482,7 @@ Line numbers are at `d32fb02e`; when an earlier item moved them, find the code b
   Commit: Disable Clone while there is nothing finished to copy
   Depends on: none
 
-- [ ] 9. State each conversation list rule once in the spec
+- [x] 9. State each conversation list rule once in the spec
   Goal (entry 8):
   - Keep the Relationships bullets (FUNCTIONAL-SPECIFICATIONS.md §Core model makes them the home of this spec's
     invariants) and cut the section copies:

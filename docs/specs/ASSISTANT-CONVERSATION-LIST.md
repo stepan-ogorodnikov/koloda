@@ -44,9 +44,6 @@ The first change to the prompt that is not only whitespace assigns an identity a
 Whitespace-only edits do not assign an identity.
 The composer may hold whitespace until that first non-empty change.
 Creating a conversation sets its timestamp to that moment.
-Later prompt edits do not change the timestamp.
-The next timestamp bump is when a run is submitted.
-See ASSISTANT-CONVERSATIONS.md (§Starting a Run).
 
 The prompt input belongs to that conversation and is independent of every other conversation.
 Whether that surface is saved is covered by ASSISTANT-CONVERSATIONS.md (§What Doesn't Get Saved).
@@ -56,7 +53,7 @@ Whether that surface is saved is covered by ASSISTANT-CONVERSATIONS.md (§What D
 Conversations are listed in the sidebar, sorted by most recently updated.
 The timestamp is bumped only when a new run starts.
 That is when the user sends a message or retries the most recent run.
-See ASSISTANT-CONVERSATIONS.md (§Retry).
+See ASSISTANT-CONVERSATIONS.md (§Starting a Run) and ASSISTANT-CONVERSATIONS.md (§Retry).
 Picking a different AI profile, model, or model parameter does not change the conversation's order in the sidebar.
 Typing in the prompt input does not change the conversation's order in the sidebar.
 If the sidebar has no conversations, nothing is shown.
@@ -74,7 +71,6 @@ A working or unread indicator may appear next to the conversation's name.
 ### Working Status
 
 A conversation is **working** when it has an active run that is still streaming.
-The working status indicator takes priority over the unread status indicator.
 The working indicator is cleared when the run completes, fails, is canceled, or is interrupted.
 See ASSISTANT-CONVERSATIONS.md (§Runs).
 
@@ -84,9 +80,6 @@ A conversation is **unread** when its most recent run has finished.
 The user has not opened it since that run finished.
 A finished run is one whose status is success, failed, canceled, or interrupted — never streaming.
 The unread indicator is cleared when the user opens the conversation.
-
-A run that finishes in the currently-open conversation is automatically marked as read.
-The user has just watched it stream, so it cannot be unread.
 
 ## Conversation Name
 
@@ -112,7 +105,6 @@ The following are copied into the new conversation:
 
 ### What Does Not Get Cloned
 
-- The conversation ID — the clone gets a new ID
 - Unread status — the clone starts as read
 - Active streaming state — any in-progress run is not copied
 - Prompt input — the clone starts with an empty composer
@@ -136,7 +128,6 @@ Revert itself is covered by ASSISTANT-MESSAGES.md (§Reverting the Conversation)
 ## Delete
 
 The user can delete a conversation from the sidebar.
-Delete cannot be undone.
 A draft that has never had a submitted run is deleted immediately, without confirmation.
 Delete still asks for confirmation after a run has been submitted.
 The recovery screen for a conversation that failed to load also offers delete.
