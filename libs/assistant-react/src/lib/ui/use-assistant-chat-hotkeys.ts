@@ -2,9 +2,10 @@ import type { UseAutoScrollReturn } from "@koloda/ai-react";
 import { useAppHotkey, useHotkeysSettings } from "@koloda/core-react";
 import { useAtomValue } from "jotai";
 import type { RefObject } from "react";
-import { assistantCanStartNewConversationAtom, assistantIsProcessingAtom } from "../state/conversation-selectors";
+import { assistantIsProcessingAtom } from "../state/conversation-selectors";
 
 export type UseAssistantChatHotkeysOptions = {
+  conversationId: string | undefined;
   handleCancel: () => void;
   handleNewConversation: () => void;
   scroll: UseAutoScrollReturn;
@@ -15,6 +16,7 @@ export type UseAssistantChatHotkeysOptions = {
 };
 
 export function useAssistantChatHotkeys({
+  conversationId,
   handleCancel,
   handleNewConversation,
   scroll,
@@ -25,14 +27,13 @@ export function useAssistantChatHotkeys({
 }: UseAssistantChatHotkeysOptions) {
   const { ai } = useHotkeysSettings();
   const isProcessing = useAtomValue(assistantIsProcessingAtom);
-  const canStartNewConversation = useAtomValue(assistantCanStartNewConversationAtom);
 
   useAppHotkey(ai.cancel, () => handleCancel(), "", { enabled: isProcessing, ignoreInputs: false });
   // WHY: Same gate as AssistantNewConversationButton. On the param-less
   // surface there is no conversation id; New would mint a second empty one
   // (ASSISTANT-CONVERSATION-LIST.md (§Conversation List)).
   useAppHotkey(ai.newConversation, handleNewConversation, "", {
-    enabled: canStartNewConversation,
+    enabled: !!conversationId,
     ignoreInputs: false,
   });
   useAppHotkey(ai.openModelPicker, () => modelProfilePickerRef.current?.click(), "", {

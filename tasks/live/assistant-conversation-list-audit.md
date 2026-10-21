@@ -434,7 +434,7 @@ Line numbers are at `d32fb02e`; when an earlier item moved them, find the code b
   Commit: Leave a conversation that was deleted earlier in the session
   Depends on: none
 
-- [ ] 7. Enable New whenever the route names a conversation
+- [x] 7. Enable New whenever the route names a conversation
   Goal (entry 7):
   - New's button and hotkey gate on the store's current id (`state/conversation-selectors.ts:34`;
     `ui/assistant-new-conversation-button.tsx:15,21`; `ui/use-assistant-chat-hotkeys.ts:28,34-37`).

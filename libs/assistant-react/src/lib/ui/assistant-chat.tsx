@@ -173,6 +173,7 @@ export function AssistantChat({
   });
 
   useAssistantChatHotkeys({
+    conversationId,
     handleCancel: controller.cancel,
     handleNewConversation,
     scroll,

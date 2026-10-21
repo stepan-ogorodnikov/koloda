@@ -90,7 +90,10 @@ function AIRoute() {
   return (
     <>
       <Layout.Sidebar>
-        <AssistantNewConversationButton onStartNewConversation={handleStartNewConversation} />
+        <AssistantNewConversationButton
+          conversationId={conversationId}
+          onStartNewConversation={handleStartNewConversation}
+        />
         <AssistantConversationsList activeId={conversationId} onActiveDeleted={handleStartNewConversation} />
       </Layout.Sidebar>
       <Layout.Content isAlwaysVisible>

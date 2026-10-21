@@ -33,8 +33,6 @@ export const assistantIsProcessingAtom = atom((get) => {
   return state.activeRunId !== null;
 });
 
-export const assistantCanStartNewConversationAtom = atom((get) => get(currentConversationIdAtom) != null);
-
 export const assistantConversationHasContextAtom = (id: string) =>
   atom((get) => {
     const state = get(conversationsAtom)[id];

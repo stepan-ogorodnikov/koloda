@@ -4,7 +4,6 @@ import { renderHook } from "@testing-library/react";
 import { createStore, Provider } from "jotai";
 import type { PropsWithChildren } from "react";
 import { describe, expect, it, vi } from "vitest";
-import { currentConversationIdAtom } from "../state/conversation-store";
 import { useAssistantChatHotkeys } from "./use-assistant-chat-hotkeys";
 
 const registrations = vi.hoisted(() => ({
@@ -45,11 +44,16 @@ const scroll = {
   resetScroll: vi.fn(),
 } as unknown as UseAutoScrollReturn;
 
-function renderWithStore(store: ReturnType<typeof createStore>, onToggleSettings = vi.fn()) {
+function renderWithStore(
+  store: ReturnType<typeof createStore>,
+  conversationId: string | undefined,
+  onToggleSettings = vi.fn(),
+) {
   const wrapper = ({ children }: PropsWithChildren) => <Provider store={store}>{children}</Provider>;
   return renderHook(
     () =>
       useAssistantChatHotkeys({
+        conversationId,
         handleCancel: vi.fn(),
         handleNewConversation: vi.fn(),
         scroll,
@@ -61,20 +65,15 @@ function renderWithStore(store: ReturnType<typeof createStore>, onToggleSettings
 }
 
 describe("useAssistantChatHotkeys", () => {
-  it("enables New when a conversation id is current", () => {
-    const store = createStore();
-    store.set(currentConversationIdAtom, "draft");
-
-    renderWithStore(store);
+  it("enables New when the route names a conversation, even before one is current in the store", () => {
+    // WHY: A conversation that fails to load on a cold start never becomes current.
+    renderWithStore(createStore(), "draft");
 
     expect(registrations.newConversation.enabled).toBe(true);
   });
 
   it("disables New on the param-less surface", () => {
-    const store = createStore();
-    store.set(currentConversationIdAtom, null);
-
-    renderWithStore(store);
+    renderWithStore(createStore(), undefined);
 
     expect(registrations.newConversation.enabled).toBe(false);
   });
@@ -83,7 +82,7 @@ describe("useAssistantChatHotkeys", () => {
     const store = createStore();
     const onToggleSettings = vi.fn();
 
-    renderWithStore(store, onToggleSettings);
+    renderWithStore(store, "draft", onToggleSettings);
     registrations.toggleSettings.callback?.();
 
     expect(onToggleSettings).toHaveBeenCalledTimes(1);

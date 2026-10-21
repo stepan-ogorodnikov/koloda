@@ -1,18 +1,21 @@
 import { Button, NewConversationIcon } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
-import { useAtomValue } from "jotai";
-import { assistantCanStartNewConversationAtom } from "../state/conversation-selectors";
 
 export type AssistantNewConversationButtonProps = {
+  conversationId: string | undefined;
   onStartNewConversation: () => void;
 };
 
-export function AssistantNewConversationButton({ onStartNewConversation }: AssistantNewConversationButtonProps) {
+export function AssistantNewConversationButton({
+  conversationId,
+  onStartNewConversation,
+}: AssistantNewConversationButtonProps) {
   const { _ } = useLingui();
-  // WHY: Disabled only on the param-less surface. A draft with an id and no
-  // runs is still a conversation the user can leave via New.
-  const canStartNewConversation = useAtomValue(assistantCanStartNewConversationAtom);
+  // WHY: Disabled only on the param-less surface. Gate on the route's id, not
+  // the store's: a conversation that fails to load never becomes current. A
+  // draft with an id and no runs is still a conversation the user can leave via New.
+  const canStartNewConversation = !!conversationId;
 
   return (
     <Button

@@ -2,7 +2,7 @@ import { createStore } from "jotai";
 import { describe, expect, it } from "vitest";
 import { aiProfileStateAtom } from "./ai-profile-state";
 import { setAssistantPromptInputAtom, startParamlessConversationAtom } from "./conversation-actions";
-import { assistantCanStartNewConversationAtom, assistantPromptInputAtom } from "./conversation-selectors";
+import { assistantPromptInputAtom } from "./conversation-selectors";
 import {
   conversationsAtom,
   currentConversationIdAtom,
@@ -65,19 +65,5 @@ describe("mint conversation id on first non-whitespace prompt", () => {
     expect(store.get(assistantPromptInputAtom)).toBe("");
     expect(store.set(setAssistantPromptInputAtom, "\t")).toBeNull();
     expect(Object.keys(store.get(conversationsAtom))).toEqual(["A"]);
-  });
-
-  it("enables New only when a conversation id is current, including a draft with no runs", () => {
-    const store = createStore();
-    expect(store.get(assistantCanStartNewConversationAtom)).toBe(false);
-
-    store.set(upsertConversationAtom, makeConversation("draft"));
-    store.set(setCurrentConversationIdAtom, "draft");
-    expect(store.get(conversationsAtom)["draft"]!.messages).toHaveLength(0);
-    expect(store.get(conversationsAtom)["draft"]!.activeRunId).toBeNull();
-    expect(store.get(assistantCanStartNewConversationAtom)).toBe(true);
-
-    store.set(startParamlessConversationAtom);
-    expect(store.get(assistantCanStartNewConversationAtom)).toBe(false);
   });
 });
