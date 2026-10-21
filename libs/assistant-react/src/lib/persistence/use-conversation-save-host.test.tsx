@@ -113,7 +113,7 @@ describe("useConversationSaveHost", () => {
 
   it("title-stable autosave upserts the list cache without a refetch", async () => {
     const seededList: ConversationListItem[] = [
-      { id: "A", title: "hello", createdAt: "2026-07-01T11:00:00.000Z", updatedAt: null, hasTurns: true },
+      { id: "A", title: "hello", createdAt: new Date("2026-07-01T11:00:00.000Z"), updatedAt: null, hasTurns: true },
     ];
     const { store, queryClient, Wrapper } = createTestWrapper();
     queryClient.setQueryData(queryKeys.conversations.all(), seededList);
@@ -157,8 +157,8 @@ describe("useConversationSaveHost", () => {
       {
         id: "A",
         title: "hello",
-        createdAt: "2026-07-01T11:00:00.000Z",
-        updatedAt: "2026-07-01T11:00:00.000Z",
+        createdAt: new Date("2026-07-01T11:00:00.000Z"),
+        updatedAt: new Date("2026-07-01T11:00:00.000Z"),
         hasTurns: false,
       },
     ];
@@ -196,8 +196,8 @@ describe("useConversationSaveHost", () => {
       {
         id: "A",
         title: "hello",
-        createdAt: "2026-07-01T11:00:00.000Z",
-        updatedAt: "2026-07-01T11:00:00.000Z",
+        createdAt: new Date("2026-07-01T11:00:00.000Z"),
+        updatedAt: new Date("2026-07-01T11:00:00.000Z"),
         hasTurns: false,
       },
     ];
@@ -231,6 +231,30 @@ describe("useConversationSaveHost", () => {
     expect(list).not.toBe(seededList);
     expect(list![0]!.hasTurns).toBe(true);
     expect(list![0]!.title).toBe("hello");
+  });
+
+  it("moves a saved row to the top when its save stamps a newer timestamp", async () => {
+    const seededList: ConversationListItem[] = [
+      { id: "B", title: "beta", createdAt: new Date(1), updatedAt: new Date(2000), hasTurns: true },
+      { id: "A", title: "hello", createdAt: new Date(1), updatedAt: new Date(1000), hasTurns: true },
+    ];
+    const { store, queryClient, Wrapper } = createTestWrapper();
+    queryClient.setQueryData(queryKeys.conversations.all(), seededList);
+    store.set(upsertConversationAtom, makeConversation("A"));
+    function Probe() {
+      useConversationSaveHost();
+      return null;
+    }
+    render(<Probe />, { wrapper: Wrapper });
+
+    store.set(touchConversationAtom, "A");
+    await vi.advanceTimersByTimeAsync(IDLE_SAVE_DEBOUNCE_MS);
+    await Promise.resolve();
+    await Promise.resolve();
+
+    const list = queryClient.getQueryData<ConversationListItem[]>(queryKeys.conversations.all());
+    expect(list!.map((item) => item.id)).toEqual(["A", "B"]);
+    expect(queryClient.getQueryState(queryKeys.conversations.all())!.isInvalidated).toBe(false);
   });
 
   it("unregisters on unmount", () => {

@@ -317,7 +317,7 @@ Line numbers are at `d32fb02e`; when an earlier item moved them, find the code b
   Commit: Mark a run read only once it has finished
   Depends on: none
 
-- [ ] 3. Re-sort the sidebar when a save changes a row's timestamp
+- [x] 3. Re-sort the sidebar when a save changes a row's timestamp
   Goal (entries 3 and 18):
   - `updateConversationsList` (`persistence/use-conversation-save-host.ts:61-82`) replaces a cached row in place and
     keeps the array order.
@@ -331,6 +331,9 @@ Line numbers are at `d32fb02e`; when an earlier item moved them, find the code b
     seed [B at 2000, A at 1000], save A with a later `updatedAt`, and expect [A, B] with no refetch.
     Add one case where a title-only save keeps the order.
   Constraints: the save host and its test.
+  Done: the cached list is re-sorted on every in-place update, not only when `updatedAt` moved.
+  That is as correct and has no branch, so the planned title-only case would pass either way; it was not added.
+  The existing cases seeded list timestamps as strings, which the `Date` type forbids; they now seed `Date`s.
   Done when:
   - `AR use-conversation-save-host` passes, and the two-row case fails against the old code;
   - Manual verify (web): with three conversations, open the bottom one and send a message → it moves to the top at once;

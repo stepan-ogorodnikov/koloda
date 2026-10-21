@@ -55,27 +55,23 @@ export function useConversationSaveHost(): void {
           currentQueryClient.setQueryData(queryKeys.conversations.detail(rowId), row);
         },
         // WHY: autosave fires ~1/sec while streaming — a full list refetch per
-        // save is wasted work. Upsert the existing row in place (title included)
-        // and refetch only when the conversation is new, where list membership
-        // and server-side ordering matter.
+        // save is wasted work. Upsert the existing row in place and refetch only
+        // when the conversation is new, where list membership matters. A run
+        // start moves `updatedAt`, so re-sort the way the repos order the list
+        // (`updated_at DESC, created_at DESC`).
         updateConversationsList: (row) => {
           const list = currentQueryClient.getQueryData<ConversationListItem[]>(queryKeys.conversations.all());
-          const existing = list?.find((item) => item.id === row.id);
-          if (list && existing) {
+          if (list?.some((item) => item.id === row.id)) {
             const hasTurns = conversationHasTurns(row.state);
-            if (existing.title === row.title && existing.hasTurns === hasTurns) {
-              currentQueryClient.setQueryData(
-                queryKeys.conversations.all(),
-                list.map((item) => (item.id === row.id ? { ...item, updatedAt: row.updatedAt } : item)),
-              );
-              return;
-            }
-            currentQueryClient.setQueryData(
-              queryKeys.conversations.all(),
-              list.map((item) =>
-                item.id === row.id ? { ...item, title: row.title, updatedAt: row.updatedAt, hasTurns } : item,
-              ),
+            const next = list.map((item) =>
+              item.id === row.id ? { ...item, title: row.title, updatedAt: row.updatedAt, hasTurns } : item,
             );
+            next.sort(
+              (a, b) =>
+                (b.updatedAt ?? b.createdAt).getTime() - (a.updatedAt ?? a.createdAt).getTime() ||
+                b.createdAt.getTime() - a.createdAt.getTime(),
+            );
+            currentQueryClient.setQueryData(queryKeys.conversations.all(), next);
             return;
           }
           currentQueryClient.invalidateQueries({ queryKey: queryKeys.conversations.all() });
