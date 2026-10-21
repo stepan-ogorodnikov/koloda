@@ -11,6 +11,15 @@ vi.mock("@number-flow/react", async () => {
   };
 });
 
+// WHY: No test here renders a real catalog. A file-level mock does not apply once a
+// sibling has imported a module that binds the real useLingui, e.g. a pure-helper
+// test importing the component file that defines the helper.
+vi.mock("@lingui/react", () => ({
+  useLingui: () => ({
+    _: (message: { toString(): string }) => message.toString(),
+  }),
+}));
+
 // Mock ResizeObserver for @dnd-kit/dom (required by ToggleGroup)
 global.ResizeObserver ??= class ResizeObserver {
   observe() {}

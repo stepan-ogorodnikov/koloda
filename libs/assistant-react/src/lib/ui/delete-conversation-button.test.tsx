@@ -11,12 +11,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { resetAssistantEngineForTests } from "../runs/assistant-persistence-host";
 import { DeleteConversationButton } from "./delete-conversation-button";
 
-vi.mock("@lingui/react", () => ({
-  useLingui: () => ({
-    _: (message: { toString(): string }) => message.toString(),
-  }),
-}));
-
 const deleteFromDb = vi.hoisted(() => vi.fn(async (_data: DeleteConversationData) => undefined));
 
 function buildQueries(): Queries {

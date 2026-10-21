@@ -6,17 +6,11 @@ import { act, renderHook, waitFor } from "@testing-library/react";
 import { createStore, Provider as JotaiProvider } from "jotai";
 import type { WritableAtom } from "jotai";
 import type { PropsWithChildren } from "react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 import { createAIModel, createAIProfile } from "../test/test-helpers";
 import { aiProfileStateAtom } from "./state/ai-profile-state";
 import type { AIProfileState } from "./state/ai-profile-state";
 import { useAssistantProfileSelection } from "./use-assistant-profile-selection";
-
-vi.mock("@lingui/react", () => ({
-  useLingui: () => ({
-    _: (message: { toString(): string }) => message.toString(),
-  }),
-}));
 
 const REASONING_LEVELS = [
   { effort: "low", description: "Low" },

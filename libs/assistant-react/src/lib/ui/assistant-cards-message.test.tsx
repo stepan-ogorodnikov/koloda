@@ -10,12 +10,6 @@ import { describe, expect, it, vi } from "vitest";
 import { AssistantCardsMessage } from "./assistant-cards-message";
 import { testId } from "../../test/test-helpers";
 
-vi.mock("@lingui/react", () => ({
-  useLingui: () => ({
-    _: (message: { toString(): string }) => message.toString(),
-  }),
-}));
-
 vi.mock("@koloda/ai-react", () => ({
   AIChatMessageLayout: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
   AIChatMessageStatus: (props: {

@@ -10,12 +10,6 @@ import { resetAssistantEngineForTests } from "../runs/assistant-persistence-host
 import { conversationsAtom } from "../state/conversation-store";
 import { ConversationHeaderMenu } from "./conversation-header-menu";
 
-vi.mock("@lingui/react", () => ({
-  useLingui: () => ({
-    _: (message: { toString(): string }) => message.toString(),
-  }),
-}));
-
 const deleteFromDb = vi.hoisted(() => vi.fn(async (_data: DeleteConversationData) => undefined));
 
 function buildQueries(): Queries {

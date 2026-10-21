@@ -270,7 +270,7 @@ Paths without a package prefix are under `libs/assistant-react/src/lib/`.
 Line numbers are at `d32fb02e`; when an earlier item moved them, find the code by its text.
 `AR` below stands for `bunx vitest run --config libs/assistant-react/vitest.config.mjs --configLoader runner`.
 
-- [ ] 1. Make the conversation list test pass in any file order
+- [x] 1. Make the conversation list test pass in any file order
   Goal (entry 19):
   - `ui/assistant-conversations-list.test.tsx` fails in some shuffled file orders: `useLingui` runs without the
     file's `vi.mock("@lingui/react")` (:12-16).
@@ -282,6 +282,9 @@ Line numbers are at `d32fb02e`; when an earlier item moved them, find the code b
     If the claim cannot hold for this file, say so in the WHY and fix the cause locally; do not turn isolation on for
     the whole package.
   Constraints: the list test, the sibling that leaks, and the config's WHY only.
+  Done: `conversation-list-timestamp.test.ts` imports the real timestamp component, which binds the real `useLingui`.
+  The `@lingui/react` stub moved to `src/test-setup.ts` (TESTING.md §Runner constraints names that replacement), and
+  the ten identical file-level copies were deleted; the config's WHY holds again unchanged.
   Done when:
   - `AR` passes with `--sequence.shuffle.files` for seeds 1–8, including the seed that failed before;
   - the cause is named in the commit body.

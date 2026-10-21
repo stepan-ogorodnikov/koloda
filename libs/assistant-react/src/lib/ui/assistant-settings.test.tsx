@@ -10,12 +10,6 @@ import { describe, expect, it, vi } from "vitest";
 import { AssistantSettings } from "./assistant-settings";
 import type { AssistantSettingsProps } from "./assistant-settings";
 
-vi.mock("@lingui/react", () => ({
-  useLingui: () => ({
-    _: (message: { toString(): string }) => message.toString(),
-  }),
-}));
-
 vi.mock("@koloda/core-react", async (importOriginal) => {
   const actual = await importOriginal();
   return {

@@ -14,12 +14,6 @@ import { conversationsAtom, currentConversationIdAtom } from "../state/conversat
 import type { CardStatus } from "../state/conversation-types";
 import { testId } from "../../test/test-helpers";
 
-vi.mock("@lingui/react", () => ({
-  useLingui: () => ({
-    _: (message: { toString(): string }) => message.toString(),
-  }),
-}));
-
 const template = {
   id: testId(1),
   title: "T",

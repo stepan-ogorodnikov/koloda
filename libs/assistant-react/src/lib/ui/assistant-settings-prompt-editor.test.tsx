@@ -2,12 +2,6 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { AssistantSettingsPromptEditor } from "./assistant-settings-prompt-editor";
 
-vi.mock("@lingui/react", () => ({
-  useLingui: () => ({
-    _: (message: { toString(): string }) => message.toString(),
-  }),
-}));
-
 const defaultTemplate = "built-in prompt";
 const customDraft = "my custom prompt";
 

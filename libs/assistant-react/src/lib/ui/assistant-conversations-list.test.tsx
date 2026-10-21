@@ -9,12 +9,6 @@ import type { PropsWithChildren, ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { AssistantConversationsList } from "./assistant-conversations-list";
 
-vi.mock("@lingui/react", () => ({
-  useLingui: () => ({
-    _: (message: { toString(): string }) => message.toString(),
-  }),
-}));
-
 vi.mock("@koloda/ui", async () => {
   const actual = await vi.importActual<typeof KolodaUi>("@koloda/ui");
   return {

@@ -66,12 +66,6 @@ const wire = vi.hoisted(() => {
   };
 });
 
-vi.mock("@lingui/react", () => ({
-  useLingui: () => ({
-    _: (message: { toString(): string }) => message.toString(),
-  }),
-}));
-
 function buildQueries(): Queries {
   return {
     getSettingsQuery: (name) => ({
