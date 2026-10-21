@@ -524,7 +524,7 @@ Line numbers are at `d32fb02e`; when an earlier item moved them, find the code b
   Commit: Correct the clone comments and drop the null timestamp pin
   Depends on: none
 
-- [ ] 12. Delete unused ways to create a conversation
+- [x] 12. Delete unused ways to create a conversation
   Goal (entry 13):
   - Delete `ensureConversationId`'s third branch (`runs/use-assistant-session.ts:113-119`); it cannot run, because the
     first non-whitespace character mints the conversation before a submit is possible.
@@ -535,6 +535,10 @@ Line numbers are at `d32fb02e`; when an earlier item moved them, find the code b
   - `newConversationAtom` (`state/conversation-actions.ts:70-82`): make `id` required, drop the `{}` default and the
     `generateUUID` fallback, and stop exporting `NewConversationPayload`.
   Constraints: the session hook, the orchestration hook, `conversation-actions.ts`, and their tests.
+  Done: no test needed the URL catch-up, and the mint already navigates when it assigns the id, so
+  `ensureConversationId` and its orchestration option are gone.
+  That left `conversationId` and `onConversationIdChange` unread in `useAssistantSession`, so both options went too,
+  with their call sites in `AssistantChat`, the test harness, and the integration tests.
   Done when: `AR use-run-orchestration conversation-mint assistant-chat-integration` and `bun run typecheck` pass.
   Manual verify: none — dead paths only; the mint path is covered by `conversation-mint.test.ts`.
   Commit: Delete unused ways to create a conversation

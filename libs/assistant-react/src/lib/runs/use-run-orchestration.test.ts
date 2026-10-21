@@ -116,7 +116,6 @@ describe("useRunOrchestration — handleRetry ordering", () => {
         rememberLastUsedAIProfile,
         cancelActiveRun: vi.fn(),
         dispatchCommand,
-        ensureConversationId: () => "conv-1",
       }),
     );
   }
@@ -250,7 +249,6 @@ describe("useRunOrchestration — atomic submitTurn", () => {
         rememberLastUsedAIProfile: vi.fn(),
         cancelActiveRun: vi.fn(),
         dispatchCommand,
-        ensureConversationId: () => "conv-1",
       }),
     );
 
@@ -318,7 +316,6 @@ describe("useRunOrchestration — always-chat submit", () => {
         rememberLastUsedAIProfile: vi.fn(),
         cancelActiveRun: vi.fn(),
         dispatchCommand,
-        ensureConversationId: () => "conv-1",
       }),
     );
   }
@@ -418,7 +415,6 @@ describe("useRunOrchestration — retry always chat", () => {
         rememberLastUsedAIProfile: vi.fn(),
         cancelActiveRun: vi.fn(),
         dispatchCommand,
-        ensureConversationId: () => "conv-1",
       }),
     );
   }
@@ -546,7 +542,6 @@ describe("useRunOrchestration — handleRevert", () => {
         rememberLastUsedAIProfile: vi.fn(),
         cancelActiveRun: vi.fn(),
         dispatchCommand: vi.fn(),
-        ensureConversationId: () => "conv-1",
       }),
     );
 
@@ -605,7 +600,6 @@ describe("useRunOrchestration — submit in-flight guard", () => {
         rememberLastUsedAIProfile: vi.fn(),
         cancelActiveRun: vi.fn(),
         dispatchCommand,
-        ensureConversationId: () => "conv-1",
       }),
     );
 
@@ -648,7 +642,6 @@ describe("useRunOrchestration — submit in-flight guard", () => {
           rememberLastUsedAIProfile: vi.fn(),
           cancelActiveRun: vi.fn(),
           dispatchCommand,
-          ensureConversationId: () => "conv-1",
         }),
       );
 
@@ -692,7 +685,6 @@ describe("useRunOrchestration — submit in-flight guard", () => {
         rememberLastUsedAIProfile: vi.fn(),
         cancelActiveRun: vi.fn(),
         dispatchCommand,
-        ensureConversationId: () => "conv-1",
       }),
     );
 
@@ -760,7 +752,6 @@ describe("useRunOrchestration — submit in-flight guard", () => {
         rememberLastUsedAIProfile: vi.fn(),
         cancelActiveRun: vi.fn(),
         dispatchCommand,
-        ensureConversationId: () => "conv-1",
       }),
     );
 
@@ -806,7 +797,6 @@ describe("useRunOrchestration — submit in-flight guard", () => {
         rememberLastUsedAIProfile: vi.fn(),
         cancelActiveRun: vi.fn(),
         dispatchCommand,
-        ensureConversationId: () => store.get(currentConversationIdAtom) ?? undefined,
       }),
     );
 
@@ -851,7 +841,6 @@ describe("useRunOrchestration — submit in-flight guard", () => {
         rememberLastUsedAIProfile: vi.fn(),
         cancelActiveRun: vi.fn(),
         dispatchCommand,
-        ensureConversationId: () => "conv-1",
       }),
     );
 
@@ -886,7 +875,6 @@ describe("useRunOrchestration — submit in-flight guard", () => {
         rememberLastUsedAIProfile: vi.fn(),
         cancelActiveRun: vi.fn(),
         dispatchCommand,
-        ensureConversationId: () => "conv-1",
       }),
     );
 
@@ -915,7 +903,6 @@ describe("useRunOrchestration — submit in-flight guard", () => {
         rememberLastUsedAIProfile: vi.fn(),
         cancelActiveRun: vi.fn(),
         dispatchCommand,
-        ensureConversationId: () => "conv-1",
       }),
     );
 
@@ -944,7 +931,6 @@ describe("useRunOrchestration — submit in-flight guard", () => {
         rememberLastUsedAIProfile: vi.fn(),
         cancelActiveRun: vi.fn(),
         dispatchCommand,
-        ensureConversationId: () => "conv-1",
       }),
     );
 
@@ -974,7 +960,6 @@ describe("useRunOrchestration — submit in-flight guard", () => {
         rememberLastUsedAIProfile: vi.fn(),
         cancelActiveRun: vi.fn(),
         dispatchCommand,
-        ensureConversationId: () => "conv-1",
       }),
     );
 
@@ -999,7 +984,6 @@ describe("useRunOrchestration — submit in-flight guard", () => {
         rememberLastUsedAIProfile: vi.fn(),
         cancelActiveRun: vi.fn(),
         dispatchCommand,
-        ensureConversationId: () => "conv-1",
       }),
     );
 
@@ -1034,7 +1018,6 @@ describe("useRunOrchestration — submit in-flight guard", () => {
         rememberLastUsedAIProfile: vi.fn(),
         cancelActiveRun: vi.fn(),
         dispatchCommand,
-        ensureConversationId: () => "conv-1",
       }),
     );
 

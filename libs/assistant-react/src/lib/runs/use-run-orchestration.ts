@@ -35,7 +35,6 @@ type UseRunOrchestrationOptions = {
   cancelActiveRun: () => void;
   /** Sole engine ingress — submit/retry go through typed commands. */
   dispatchCommand: (command: AssistantCommand) => void | Promise<void>;
-  ensureConversationId: () => string | undefined;
 };
 
 type UseRunOrchestrationReturn = {
@@ -47,16 +46,8 @@ type UseRunOrchestrationReturn = {
 };
 
 export function useRunOrchestration(options: UseRunOrchestrationOptions): UseRunOrchestrationReturn {
-  const {
-    configRef,
-    readState,
-    dispatch,
-    dispatchLocal,
-    rememberLastUsedAIProfile,
-    cancelActiveRun,
-    dispatchCommand,
-    ensureConversationId,
-  } = options;
+  const { configRef, readState, dispatch, dispatchLocal, rememberLastUsedAIProfile, cancelActiveRun, dispatchCommand } =
+    options;
 
   // WHY: Engine rejects duplicate runs, but same-tick double submit can still
   // dispatch two submitTurn actions before React disables the button.
@@ -116,12 +107,11 @@ export function useRunOrchestration(options: UseRunOrchestrationOptions): UseRun
 
   const handleGenerate = useCallback(
     async (value?: string) => {
-      ensureConversationId();
       const cfg = configRef.current;
       const currentState = readState();
 
-      // WHY: After ensureConversationId(), the conversation is in the store.
-      // Use the state's id rather than the prop (which may be undefined on cold start).
+      // WHY: Use the state's id, not the route's: the URL can lag a
+      // conversation that the prompt just minted.
       const activeConversationId = currentState.id;
       // WHY: Guard before commitRevert. After revert cancels an active stream,
       // the aborted execute* may still hold this conversation in the in-flight
@@ -188,7 +178,7 @@ export function useRunOrchestration(options: UseRunOrchestrationOptions): UseRun
         isSubmitInFlightByConversationRef.current.delete(activeConversationId);
       }
     },
-    [configRef, ensureConversationId, dispatch, dispatchCommand, readState, rememberLastUsedAIProfile],
+    [configRef, dispatch, dispatchCommand, readState, rememberLastUsedAIProfile],
   );
 
   const handleRevert = useCallback(

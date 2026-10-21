@@ -8,7 +8,6 @@ import { useConversationSaveHost } from "../persistence/use-conversation-save-ho
 
 export type UseAssistantChatTestHarnessOptions = {
   conversationId: string | undefined;
-  onConversationIdChange: (id: string) => void;
   onStartNewConversation?: () => void;
 };
 
@@ -28,7 +27,6 @@ export function useAssistantAppShellHosts(): void {
  */
 export function useAssistantChatSessionHarness({
   conversationId,
-  onConversationIdChange,
   onStartNewConversation,
 }: UseAssistantChatTestHarnessOptions) {
   const { profileId, modelId, modelName, modelParameters } = useAssistantProfileSelection();
@@ -39,8 +37,6 @@ export function useAssistantChatSessionHarness({
   useConversationPersistence({ conversationId });
 
   const { controller } = useAssistantSession({
-    conversationId,
-    onConversationIdChange,
     onStartNewConversation: onStartNewConversation ?? startParamlessConversation,
     profileId,
     modelId,
@@ -57,10 +53,9 @@ export function useAssistantChatSessionHarness({
  */
 export function useAssistantChatTestHarness({
   conversationId,
-  onConversationIdChange,
   onStartNewConversation,
 }: UseAssistantChatTestHarnessOptions) {
   useAssistantAppShellHosts();
 
-  return useAssistantChatSessionHarness({ conversationId, onConversationIdChange, onStartNewConversation });
+  return useAssistantChatSessionHarness({ conversationId, onStartNewConversation });
 }

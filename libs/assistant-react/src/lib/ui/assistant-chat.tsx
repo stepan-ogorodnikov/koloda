@@ -118,8 +118,6 @@ export function AssistantChat({
   }, [isDeleted, onActiveDeleted]);
 
   const { controller } = useAssistantSession({
-    conversationId,
-    onConversationIdChange,
     onStartNewConversation,
     profileId,
     modelId,

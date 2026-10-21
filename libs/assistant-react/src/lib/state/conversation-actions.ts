@@ -67,18 +67,15 @@ export const setAssistantAIModelParameterAtom = atom(
   },
 );
 
-export type NewConversationPayload = {
-  id?: string;
+type NewConversationPayload = {
+  id: string;
   profileId?: string | null;
   modelId?: string | null;
   modelParameters?: Partial<Record<ModelParameter["type"], string>>;
 };
 
-export const newConversationAtom = atom(null, (_get, set, payload: NewConversationPayload = {}) => {
-  const id = payload.id ?? generateUUID();
-  set(assistantConversationStateAtom, ["newConversation", { ...payload, id, createdAt: new Date() }]);
-
-  return id;
+export const newConversationAtom = atom(null, (_get, set, payload: NewConversationPayload) => {
+  set(assistantConversationStateAtom, ["newConversation", { ...payload, createdAt: new Date() }]);
 });
 
 // WHY: New conversation, delete-of-open, and session reset share this path.

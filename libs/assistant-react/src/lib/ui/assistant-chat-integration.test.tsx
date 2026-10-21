@@ -301,10 +301,8 @@ describe("assistant chat integration (per-conversation state)", () => {
       );
     }
 
-    const onConversationIdChange = vi.fn();
     const { result, rerender } = renderHook(
-      ({ conversationId }: { conversationId: string | undefined }) =>
-        useAssistantChatTestHarness({ conversationId, onConversationIdChange }),
+      ({ conversationId }: { conversationId: string | undefined }) => useAssistantChatTestHarness({ conversationId }),
       {
         wrapper: TestWrapper,
         initialProps: { conversationId: "A" as string | undefined },
@@ -382,10 +380,8 @@ describe("assistant chat integration (per-conversation state)", () => {
       }, 100);
     };
 
-    const onConversationIdChange = vi.fn();
     const { result, rerender } = renderHook(
-      ({ conversationId }: { conversationId: string | undefined }) =>
-        useAssistantChatTestHarness({ conversationId, onConversationIdChange }),
+      ({ conversationId }: { conversationId: string | undefined }) => useAssistantChatTestHarness({ conversationId }),
       {
         wrapper: TestWrapper,
         initialProps: { conversationId: "A" as string | undefined },
@@ -444,10 +440,8 @@ describe("assistant chat integration (per-conversation state)", () => {
       onChunk({ kind: "text", text: "The answer" });
     };
 
-    const onConversationIdChange = vi.fn();
     const { result } = renderHook(
-      ({ conversationId }: { conversationId: string | undefined }) =>
-        useAssistantChatTestHarness({ conversationId, onConversationIdChange }),
+      ({ conversationId }: { conversationId: string | undefined }) => useAssistantChatTestHarness({ conversationId }),
       {
         wrapper: TestWrapper,
         initialProps: { conversationId: "A" as string | undefined },
@@ -547,8 +541,7 @@ describe("assistant chat integration (per-conversation state)", () => {
       );
     }
 
-    const onConversationIdChange = vi.fn();
-    renderHook(() => useAssistantChatTestHarness({ conversationId: "B", onConversationIdChange }), {
+    renderHook(() => useAssistantChatTestHarness({ conversationId: "B" }), {
       wrapper: TestWrapper,
     });
 
@@ -640,10 +633,8 @@ describe("assistant chat integration (per-conversation state)", () => {
       );
     }
 
-    const onConversationIdChange = vi.fn();
     const { rerender } = renderHook(
-      ({ conversationId }: { conversationId: string | undefined }) =>
-        useAssistantChatTestHarness({ conversationId, onConversationIdChange }),
+      ({ conversationId }: { conversationId: string | undefined }) => useAssistantChatTestHarness({ conversationId }),
       {
         wrapper: TestWrapper,
         initialProps: { conversationId: "A" as string | undefined },
@@ -719,8 +710,7 @@ describe("assistant chat integration (per-conversation state)", () => {
     // status while the throttled save fires.
     wire.chatStream.keepInFlight = true;
 
-    const onConversationIdChange = vi.fn();
-    const { result } = renderHook(() => useAssistantChatTestHarness({ conversationId: "A", onConversationIdChange }), {
+    const { result } = renderHook(() => useAssistantChatTestHarness({ conversationId: "A" }), {
       wrapper: TestWrapper,
     });
 
@@ -789,8 +779,7 @@ describe("assistant chat integration (per-conversation state)", () => {
 
     wire.chatStream.keepInFlight = true;
 
-    const onConversationIdChange = vi.fn();
-    const { result } = renderHook(() => useAssistantChatTestHarness({ conversationId: "A", onConversationIdChange }), {
+    const { result } = renderHook(() => useAssistantChatTestHarness({ conversationId: "A" }), {
       wrapper: TestWrapper,
     });
 
@@ -860,8 +849,7 @@ describe("assistant chat integration (per-conversation state)", () => {
 
     wire.chatStream.keepInFlight = true;
 
-    const onConversationIdChange = vi.fn();
-    const { result } = renderHook(() => useAssistantChatTestHarness({ conversationId: "A", onConversationIdChange }), {
+    const { result } = renderHook(() => useAssistantChatTestHarness({ conversationId: "A" }), {
       wrapper: TestWrapper,
     });
 
@@ -947,13 +935,9 @@ describe("assistant chat integration (per-conversation state)", () => {
 
     wire.chatStream.keepInFlight = true;
 
-    const onConversationIdChange = vi.fn();
-    const { result, unmount } = renderHook(
-      () => useAssistantChatTestHarness({ conversationId: "A", onConversationIdChange }),
-      {
-        wrapper: TestWrapper,
-      },
-    );
+    const { result, unmount } = renderHook(() => useAssistantChatTestHarness({ conversationId: "A" }), {
+      wrapper: TestWrapper,
+    });
 
     await act(async () => {
       void result.current.controller.submit("Hello from A");
@@ -1018,13 +1002,9 @@ describe("assistant chat integration (per-conversation state)", () => {
 
     wire.chatStream.keepInFlight = true;
 
-    const onConversationIdChange = vi.fn();
-    const { result, unmount } = renderHook(
-      () => useAssistantChatTestHarness({ conversationId: "A", onConversationIdChange }),
-      {
-        wrapper: TestWrapper,
-      },
-    );
+    const { result, unmount } = renderHook(() => useAssistantChatTestHarness({ conversationId: "A" }), {
+      wrapper: TestWrapper,
+    });
 
     await act(async () => {
       void result.current.controller.submit("Hello from A");
@@ -1074,7 +1054,6 @@ describe("assistant chat integration (per-conversation state)", () => {
     }
 
     wire.chatStream.keepInFlight = true;
-    const onConversationIdChange = vi.fn();
     const controllerRef: { current: RunController | null } = { current: null };
 
     function AppShell({ showAiRoute }: { showAiRoute: boolean }) {
@@ -1087,7 +1066,6 @@ describe("assistant chat integration (per-conversation state)", () => {
     function AiRouteChat() {
       const { controller } = useAssistantChatSessionHarness({
         conversationId: "A",
-        onConversationIdChange,
       });
       controllerRef.current = controller;
       return null;
@@ -1152,7 +1130,6 @@ describe("assistant chat integration (per-conversation state)", () => {
     }
 
     wire.chatStream.keepInFlight = true;
-    const onConversationIdChange = vi.fn();
     const controllerRef: { current: RunController | null } = { current: null };
 
     function AppShell({ showAiRoute }: { showAiRoute: boolean }) {
@@ -1164,7 +1141,6 @@ describe("assistant chat integration (per-conversation state)", () => {
     function AiRouteChat() {
       const { controller } = useAssistantChatSessionHarness({
         conversationId: "A",
-        onConversationIdChange,
       });
       controllerRef.current = controller;
       return null;
@@ -1246,8 +1222,7 @@ describe("assistant chat integration (per-conversation state)", () => {
 
     wire.chatStream.keepInFlight = true;
 
-    const onConversationIdChange = vi.fn();
-    const { result } = renderHook(() => useAssistantChatTestHarness({ conversationId: "A", onConversationIdChange }), {
+    const { result } = renderHook(() => useAssistantChatTestHarness({ conversationId: "A" }), {
       wrapper: TestWrapper,
     });
 
@@ -1322,7 +1297,7 @@ describe("assistant chat restore policy (blocked rows)", () => {
 
   function RecoveryHarness({ conversationId, onDeleted }: { conversationId: string; onDeleted?: () => void }) {
     useAssistantAppShellHosts();
-    useAssistantChatSessionHarness({ conversationId, onConversationIdChange: () => {} });
+    useAssistantChatSessionHarness({ conversationId });
     const blocked = useAtomValue(blockedConversationRestoreAtom)[conversationId] ?? null;
     if (!blocked) return null;
     return <AssistantConversationRecovery conversationId={conversationId} blocked={blocked} onDeleted={onDeleted} />;
@@ -1358,11 +1333,10 @@ describe("assistant chat restore policy (blocked rows)", () => {
       );
     }
 
-    const onConversationIdChange = vi.fn();
     const phases: Array<{ isRestoring: boolean; blocked: boolean; hasLive: boolean }> = [];
     const { rerender } = renderHook(
       ({ conversationId }: { conversationId: string | undefined }) => {
-        const result = useAssistantChatTestHarness({ conversationId, onConversationIdChange });
+        const result = useAssistantChatTestHarness({ conversationId });
         const persistence = useConversationPersistence({ conversationId });
         const hasLive = conversationId ? !!useAtomValue(conversationsAtom)[conversationId] : false;
         phases.push({
@@ -1430,11 +1404,10 @@ describe("assistant chat restore policy (blocked rows)", () => {
       );
     }
 
-    const onConversationIdChange = vi.fn();
     const phases: Array<{ isRestoring: boolean; blocked: boolean; hasLive: boolean }> = [];
     renderHook(
       () => {
-        const result = useAssistantChatTestHarness({ conversationId: "corrupt", onConversationIdChange });
+        const result = useAssistantChatTestHarness({ conversationId: "corrupt" });
         const persistence = useConversationPersistence({ conversationId: "corrupt" });
         const hasLive = !!useAtomValue(conversationsAtom)["corrupt"];
         phases.push({
@@ -1571,7 +1544,6 @@ describe("assistant chat restore policy (blocked rows)", () => {
       useAssistantAppShellHosts();
       const { controller } = useAssistantChatSessionHarness({
         conversationId: "corrupt",
-        onConversationIdChange: () => {},
       });
       controllerRef.current = controller;
       const blocked = useAtomValue(blockedConversationRestoreAtom)["corrupt"] ?? null;
@@ -1699,8 +1671,7 @@ describe("assistant chat restore policy (blocked rows)", () => {
       );
     }
 
-    const onConversationIdChange = vi.fn();
-    renderHook(() => useAssistantChatTestHarness({ conversationId: "ok", onConversationIdChange }), {
+    renderHook(() => useAssistantChatTestHarness({ conversationId: "ok" }), {
       wrapper: TestWrapper,
     });
 
@@ -1737,13 +1708,11 @@ describe("assistant chat restore policy (blocked rows)", () => {
       );
     }
 
-    const onConversationIdChange = vi.fn();
     const controllerRef: { current: RunController | null } = { current: null };
 
     function HarnessProbe() {
       const { controller } = useAssistantChatTestHarness({
         conversationId: "missing",
-        onConversationIdChange,
       });
       controllerRef.current = controller;
       return null;

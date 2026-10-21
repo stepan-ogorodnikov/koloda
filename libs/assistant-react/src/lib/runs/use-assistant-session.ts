@@ -1,11 +1,9 @@
 import type { ModelParameter } from "@koloda/ai";
-import { generateUUID } from "@koloda/app";
 import { useSetAtom } from "jotai";
 import { useAtomCallback } from "jotai/utils";
-import { useCallback, useEffect, useRef } from "react";
-import { aiProfileStateAtom } from "../state/ai-profile-state";
+import { useCallback } from "react";
 import type { ConversationReducerAction } from "../state/conversation-reducer";
-import { assistantConversationStateAtom, currentConversationIdAtom, touchAtom } from "../state/conversation-store";
+import { assistantConversationStateAtom, touchAtom } from "../state/conversation-store";
 import { useAssistantRuntimeConfig } from "../use-assistant-runtime-config";
 import { useRememberLastUsedAIProfile } from "../use-global-ai-profile-state";
 import type { RunController } from "./run-controller";
@@ -13,8 +11,6 @@ import { useConversationRuns } from "./use-conversation-runs";
 import { useRunOrchestration } from "./use-run-orchestration";
 
 export type UseAssistantSessionOptions = {
-  conversationId: string | undefined;
-  onConversationIdChange: (id: string) => void;
   onStartNewConversation: () => void;
   profileId: string;
   modelId: string;
@@ -27,8 +23,6 @@ export type UseAssistantSessionReturn = {
 };
 
 export function useAssistantSession({
-  conversationId,
-  onConversationIdChange,
   onStartNewConversation,
   profileId,
   modelId,
@@ -49,7 +43,6 @@ export function useAssistantSession({
   });
 
   const readState = useAtomCallback((get) => get(assistantConversationStateAtom));
-  const readLastUsed = useAtomCallback((get) => get(aiProfileStateAtom));
 
   // WHY: Keep three named helpers (dispatch / by-id / local) instead of
   // one options-bag. Collapsing them makes it easy to touch on stream
@@ -92,34 +85,6 @@ export function useAssistantSession({
     onStartNewConversation();
   }, [onStartNewConversation]);
 
-  // WHY: Prompt mint and ensureConversationId can assign an id before the URL
-  // updates. Keep a local copy so submit can target that id in the same tick.
-  const localConversationIdRef = useRef<string | null>(conversationId ?? null);
-
-  useEffect(() => {
-    localConversationIdRef.current = conversationId ?? null;
-  }, [conversationId]);
-
-  const readCurrentConversationId = useAtomCallback((get) => get(currentConversationIdAtom));
-
-  const ensureConversationId = useCallback(() => {
-    if (conversationId) return conversationId;
-    const currentId = readCurrentConversationId();
-    if (currentId) {
-      localConversationIdRef.current = currentId;
-      onConversationIdChange(currentId);
-      return currentId;
-    }
-    if (!localConversationIdRef.current) {
-      const id = generateUUID();
-      localConversationIdRef.current = id;
-      const stored = readLastUsed();
-      dispatch(["newConversation", { ...stored, id, createdAt: new Date() }]);
-      onConversationIdChange(id);
-    }
-    return localConversationIdRef.current;
-  }, [conversationId, onConversationIdChange, dispatch, readLastUsed, readCurrentConversationId]);
-
   const orchestrationOptions = {
     configRef,
     readState,
@@ -128,7 +93,6 @@ export function useAssistantSession({
     rememberLastUsedAIProfile,
     cancelActiveRun: handleCancel,
     dispatchCommand,
-    ensureConversationId,
   };
   const { handleGenerate, handleRetry, handleDismissGenerate, handleRevert, handleRestore } =
     useRunOrchestration(orchestrationOptions);

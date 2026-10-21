@@ -71,8 +71,8 @@ export const assistantConversationStateAtom = atom(
   (get, set, update: ConversationReducerAction | ((prev: ConversationReducerState) => ConversationReducerState)) => {
     // WHY: newConversation carries its own target id. We must insert the
     // fresh entry and switch the current id even when currentConversationIdAtom
-    // is null (mint-on-prompt / ensureConversationId). The reducer sets
-    // updatedAt equal to createdAt; we do not stamp a second time.
+    // is null (mint-on-prompt). The reducer sets updatedAt equal to createdAt;
+    // we do not stamp a second time.
     if (typeof update !== "function" && update[0] === "newConversation") {
       const store = get(conversationsAtom);
       const next = conversationReducer(store[update[1].id] ?? initialConversationState, update);

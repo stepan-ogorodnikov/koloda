@@ -247,7 +247,7 @@ describe("assistantConversationStateAtom (per-conversation store)", () => {
 
     // The writable form should now accept regular actions targeting the
     // current (newly-created) conversation. This is the path that
-    // ensureConversationId → handleGenerate relies on.
+    // mint-on-prompt → handleGenerate relies on.
     store.set(assistantConversationStateAtom, [
       "submitTurn",
       {
