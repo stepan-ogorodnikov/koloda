@@ -1,6 +1,6 @@
 # Assistant conversation list audit fixes
 
-Status: ready
+Status: done
 Guides: agents/IMPLEMENTATION-PLAN.md, agents/TASKS.md, agents/ASSISTANT-MAP.md, docs/specs/ASSISTANT-CONVERSATION-LIST.md, agents/CODE-STYLE.md, agents/CODE-DOCUMENTATION.md, agents/TESTING.md, agents/VERIFY.md, agents/CSS.md, agents/BACKWARDS-COMPATIBILITY.md, agents/FUNCTIONAL-SPECIFICATIONS.md, agents/MARKDOWN.md, agents/REVIEW.md, apps/web-e2e/README.md, apps/electron-e2e/README.md, libs/e2e/README.md
 Flow: local
 
@@ -627,4 +627,60 @@ Line numbers are at `d32fb02e`; when an earlier item moved them, find the code b
 
 ## Outcome
 
-<what shipped>
+Shipped, one commit per Plan item:
+
+- Unread follows a run's finish:
+  - a retry clears a read mark on its reused id;
+  - a streaming run is never marked read, on open or by `markRead`;
+  - the saved list item carries `isUnread` (`conversationIsUnread` in `@koloda/app`), so dots survive a reload;
+  - the sidebar prefers live store state for loaded conversations and the saved flag for the rest.
+- The cached list re-sorts by `updatedAt`, then `createdAt`, on every in-place save, so a sent message moves its row
+  to the top.
+- A sidebar row reads draft state from the live conversation, so a streaming first run asks before delete.
+- Going back to a conversation deleted this session leaves for the AI route with no conversation id.
+  The restore hook reports the tombstoned id instead of restoring a fresh, unsaveable conversation.
+- New and its hotkey gate on the route's conversation id; `assistantCanStartNewConversationAtom` is gone.
+- Clone is disabled until the conversation has a finished turn to copy (`assistantConversationCanCloneAtom`).
+- ASSISTANT-CONVERSATION-LIST.md states each rule once; it says Back into a deleted conversation goes to the AI route
+  with no conversation id, and describes the conversation menu's and Clone's availability.
+- Dead surface is deleted:
+  - the header menu's draft-delete branch and its impossible-state test;
+  - `ensureConversationId` and `useAssistantSession`'s `conversationId` and `onConversationIdChange` options;
+  - `newConversationAtom`'s optional id and its `NewConversationPayload` export;
+  - the `updatedAt === null` clone pin.
+- The recovery screen deletes through `useDeleteConversation` and `DeleteConversationConfirmContent`.
+- List invalidations pass `exact: true`.
+- One shared minute clock drives every row's age.
+- The working and unread markers have `role="img"`, and both e2e suites find them by role.
+- The untitled route header uses a `tv` recipe.
+- Web `getConversations` maps rows with `toConversationListItem` (entry 20).
+- Both e2e suites have a clone flow.
+
+Beyond the item text:
+
+- Item 1 moved the `@lingui/react` stub to `libs/assistant-react/src/test-setup.ts` and deleted ten identical
+  file-level copies.
+- Item 3 seeds the save-host test lists with `Date`s, which the type requires.
+- Item 4 shares one `membershipStableSetAtom` helper across the sidebar's stable sets.
+- Item 12 also updated the test harness and the integration tests that passed the removed options.
+- Item 15 renamed `conversation-list-timestamp.test.ts` to `.tsx` for its component case.
+
+Checks on the branch:
+
+- Scoped Vitest per item, and the failing case of each fix run against the old code.
+- `@koloda/assistant-react` passed in shuffled file orders, seeds 1–8 and one worker.
+- `bun run check:push` passed on the tip before Archive.
+- The e2e suites were not run; items 5, 16, and 18 change them, and the human runs them.
+
+Left open:
+
+- Entry 10's summary column is skipped (question 3): no cost has been measured, and a column should cover
+  `hasTurns` and `isUnread` at once, with a schema change on both hosts.
+- Seen while working, not fixed:
+  - `ui/use-assistant-chat-hotkeys.test.tsx` and `ui/assistant-settings.test.tsx` file-mock `@koloda/core-react`
+    under `isolate: false`, the shape of entry 19; every probed order passed.
+  - `tsc -b` skips test files, so stale test types go unnoticed; item 2 met a `restartRun` payload with a removed
+    `templateFields` field.
+- Manual verify was handed to the human: unread after a mid-stream open, a retry, and a reload; a sent message moving
+  its row up; confirm on delete during a first run; Back into a deleted conversation; Clone during and after a first
+  run.
