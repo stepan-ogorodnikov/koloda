@@ -61,11 +61,6 @@ export function ConversationHeaderMenu({ conversationId, onClone, onActiveDelete
             <Dialog.Content variants={{ class: "min-w-48 p-1" }}>
               <CloneConversationButton id={conversationId} onClone={onClone} onClose={() => setIsOpen(false)} />
               <DeleteConversationMenuAction
-                id={conversationId}
-                onDraftDelete={() => {
-                  setIsOpen(false);
-                  deleteConversation();
-                }}
                 onRequestConfirm={() => {
                   setShowDeleteConfirm(true);
                   reset();

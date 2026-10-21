@@ -497,7 +497,7 @@ Line numbers are at `d32fb02e`; when an earlier item moved them, find the code b
   Commit: State each conversation list rule once in the spec
   Depends on: 6, 8
 
-- [ ] 10. Drop the header menu's unreachable draft delete
+- [x] 10. Drop the header menu's unreachable draft delete
   Goal (entry 11):
   - The header menu is enabled only with messages or an active run (`ui/conversation-header-menu.tsx:52`), so
     `onDraftDelete` (:65-68; `ui/delete-conversation-menu-action.tsx:34-37`) never runs.

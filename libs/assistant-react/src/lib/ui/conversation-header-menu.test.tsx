@@ -63,45 +63,6 @@ describe("ConversationHeaderMenu", () => {
     deleteFromDb.mockClear();
   });
 
-  it("deletes without confirmation when the conversation has no submitted turn", async () => {
-    const store = createStore();
-    store.set(queriesAtom as unknown as Parameters<typeof store.set>[0], buildQueries());
-    store.set(conversationsAtom, {
-      c1: {
-        messages: [],
-        runs: {},
-        activeRunId: "r1",
-        promptInput: "",
-      },
-    } as never);
-    const queryClient = new QueryClient({
-      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
-    });
-
-    function Wrapper({ children }: PropsWithChildren) {
-      return (
-        <QueryClientProvider client={queryClient}>
-          <JotaiProvider store={store}>{children}</JotaiProvider>
-        </QueryClientProvider>
-      );
-    }
-
-    const onActiveDeleted = vi.fn();
-    render(<ConversationHeaderMenu conversationId="c1" onActiveDeleted={onActiveDeleted} />, { wrapper: Wrapper });
-
-    await act(async () => {
-      fireEvent.click(screen.getByRole("button", { name: "ai.conversation.menu.trigger" }));
-    });
-    await act(async () => {
-      fireEvent.click(screen.getByRole("button", { name: "ai.conversation.delete.action" }));
-    });
-
-    await waitFor(() => {
-      expect(deleteFromDb).toHaveBeenCalledWith({ id: "c1" });
-    });
-    expect(onActiveDeleted).toHaveBeenCalled();
-  });
-
   it("asks for confirmation before deleting a conversation with turns", async () => {
     renderMenu({}, true);
 
