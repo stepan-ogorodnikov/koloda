@@ -292,7 +292,7 @@ Line numbers are at `d32fb02e`; when an earlier item moved them, find the code b
   Commit: Make the conversation list test pass in any file order
   Depends on: none
 
-- [ ] 2. Mark a run read only once it has finished
+- [x] 2. Mark a run read only once it has finished
   Goal (entries 1 and 18):
   - In `transitionRun`'s restart branch (`state/conversation-run-lifecycle.ts:22-53`), clear `lastReadRunId` when it
     equals the restarted id, next to the `dismissedRunErrorId` clear at :43-44.

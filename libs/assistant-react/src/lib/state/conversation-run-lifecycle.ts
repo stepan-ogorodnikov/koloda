@@ -40,8 +40,10 @@ export function transitionRun(draft: ConversationReducerState, runId: string, ev
     run.usage = undefined;
     run.error = undefined;
     draft.activeRunId = runId;
-    // WHY: retry reuses the run id; a later fail must count as a new failure.
+    // WHY: retry reuses the run id; a later fail must count as a new failure,
+    // and a later finish away from the conversation as unread.
     if (draft.dismissedRunErrorId === runId) draft.dismissedRunErrorId = null;
+    if (draft.lastReadRunId === runId) draft.lastReadRunId = null;
     logAssistantStructured({
       conversationId: draft.id,
       runId,

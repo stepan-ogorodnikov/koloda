@@ -170,14 +170,16 @@ export const setCurrentConversationIdAtom = atom(null, (get, set, id: string | n
   // for the latest run, so the conversation clears its unread state and
   // the updated `lastReadRunId` is persisted. We do this here rather than
   // at the route layer so any future caller of this atom (deep links,
-  // keyboard shortcuts, etc.) gets the same behavior.
+  // keyboard shortcuts, etc.) gets the same behavior. A streaming run is left
+  // unread here; `markReadIfCurrent` marks it if it ends while still open.
   if (id) {
     const state = get(conversationsAtom)[id];
     if (state) {
       const runIds = Object.keys(state.runs);
-      const latestRunId = runIds[runIds.length - 1] ?? null;
-      if (latestRunId && latestRunId !== state.lastReadRunId) {
-        dispatchToConversation(id, ["markRead", { runId: latestRunId }])(get, set);
+      const latestRunId = runIds[runIds.length - 1];
+      const latestRun = latestRunId ? state.runs[latestRunId] : undefined;
+      if (latestRun && latestRun.status !== "streaming" && latestRun.id !== state.lastReadRunId) {
+        dispatchToConversation(id, ["markRead", { runId: latestRun.id }])(get, set);
         set(touchAtom);
       }
     }

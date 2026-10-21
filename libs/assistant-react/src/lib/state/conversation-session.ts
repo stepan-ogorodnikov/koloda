@@ -53,7 +53,11 @@ export function dismissRunError(draft: ConversationReducerState, payload: RunIdP
 }
 
 export function markRead(draft: ConversationReducerState, payload: RunIdPayload) {
-  if (!draft.runs[payload.runId]) return;
+  const run = draft.runs[payload.runId];
+  if (!run) return;
+  // INVARIANT: Only a finished run can be read. Marking a streaming run would
+  // hide its finish if the user leaves before it ends.
+  if (run.status === "streaming") return;
   if (draft.lastReadRunId === payload.runId) return;
   draft.lastReadRunId = payload.runId;
 }

@@ -173,10 +173,25 @@ describe("unreadConversationIdsAtom", () => {
     expect(store.get(unreadConversationIdsAtom).has("A")).toBe(false);
   });
 
-  it("does not bump lastReadRunId when restartRun flips a run back to streaming", () => {
-    // WHY: A retry flips the existing run's status to "streaming" and
-    // clears its content. Terminal hooks do not call markReadIfCurrent
-    // on restart, so lastReadRunId must stay put.
+  it("marks a retry unread when it finishes after the user left, though the failed run was read", () => {
+    // WHY: Retry reuses the run id, so the failed run's read mark would
+    // otherwise match the retried run when it finishes.
+    const store = createStore();
+    store.set(
+      upsertConversationAtom,
+      makeConversation("A", { runs: { r1: makeRun("r1", "failed") }, lastReadRunId: "r1" }),
+    );
+    store.set(upsertConversationAtom, makeConversation("B"));
+    store.set(setCurrentConversationIdAtom, "A");
+
+    store.set(assistantConversationStateAtom, ["restartRun", { runId: "r1" }]);
+    store.set(setCurrentConversationIdAtom, "B");
+    dispatchTerminal(store, "A", ["completeRun", { runId: "r1" }]);
+
+    expect(store.get(unreadConversationIdsAtom).has("A")).toBe(true);
+  });
+
+  it("keeps a retry read when it finishes in the open conversation", () => {
     const store = createStore();
     store.set(
       upsertConversationAtom,
@@ -184,16 +199,11 @@ describe("unreadConversationIdsAtom", () => {
     );
     store.set(setCurrentConversationIdAtom, "A");
 
-    store.set(assistantConversationStateAtom, [
-      "restartRun",
-      {
-        runId: "r1",
-        templateFields: null,
-      },
-    ]);
+    store.set(assistantConversationStateAtom, ["restartRun", { runId: "r1" }]);
+    dispatchTerminal(store, "A", ["completeRun", { runId: "r1" }]);
 
-    expect(store.get(conversationsAtom)["A"].runs["r1"].status).toBe("streaming");
     expect(store.get(conversationsAtom)["A"].lastReadRunId).toBe("r1");
+    expect(store.get(unreadConversationIdsAtom).has("A")).toBe(false);
   });
 });
 
@@ -273,6 +283,23 @@ describe("setCurrentConversationIdAtom mark-read side effect", () => {
 
     expect(store.get(unreadConversationIdsAtom).has("A")).toBe(true);
     expect(store.get(unreadConversationIdsAtom).has("B")).toBe(false);
+  });
+
+  it("marks a run unread when the user opened it mid-stream and left before it finished", () => {
+    const store = createStore();
+    store.set(
+      upsertConversationAtom,
+      makeConversation("A", { runs: { r1: makeRun("r1", "success") }, lastReadRunId: "r1" }),
+    );
+    store.set(upsertConversationAtom, makeConversation("B"));
+    store.set(setCurrentConversationIdAtom, "B");
+    dispatchTo(store, "A", ["submitTurn", { runId: "r2", text: "hello", kind: "chat-text", assistantText: "" }]);
+
+    store.set(setCurrentConversationIdAtom, "A");
+    store.set(setCurrentConversationIdAtom, "B");
+    dispatchTerminal(store, "A", ["completeRun", { runId: "r2" }]);
+
+    expect(store.get(unreadConversationIdsAtom).has("A")).toBe(true);
   });
 
   it("clears the unread on the conversation the user lands on, but not on others", () => {
