@@ -320,31 +320,6 @@ describe("cloneConversationAtom", () => {
     expect(store.get(unreadConversationIdsAtom).has(newId)).toBe(false);
   });
 
-  it("sets updatedAt to null so the clone sorts by createdAt until the user touches it", () => {
-    const store = createStore();
-    store.set(
-      upsertConversationAtom,
-      makeConversation("A", {
-        messages: [
-          {
-            id: "user-r1",
-            role: "user" as const,
-            parts: [{ type: "text" as const, text: "Q" }],
-            metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r1" },
-          },
-        ],
-        runs: { r1: makeRun("r1", "success") },
-        updatedAt: new Date(1000),
-      }),
-    );
-    store.set(setCurrentConversationIdAtom, "A");
-
-    const newId = store.set(cloneConversationAtom, { sourceId: "A" })!;
-    const clone = store.get(conversationsAtom)[newId];
-
-    expect(clone.updatedAt).toBeNull();
-  });
-
   it("bumps the new conversation's pending-save counter so the clone is persisted on restore", () => {
     const store = createStore();
     store.set(

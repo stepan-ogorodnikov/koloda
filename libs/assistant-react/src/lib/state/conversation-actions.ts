@@ -142,16 +142,13 @@ export type CloneConversationPayload = {
   sourceId: string;
 };
 
-// WHY: Clone is implemented as a store-level action so all the derived
-// atoms (sidebar list, unread indicators, active-run pulse)
-// observe the new conversation in a single synchronous write — the
-// sidebar shows the clone immediately and the route navigates to it
-// without a re-render race. The reducer in `conversation-reducer.ts`
-// would not help here: `submitTurn` / `addUserMessage` / `addAssistantMessage`
-// append forward, and we need to copy an arbitrary prefix of the source's
-// message history while dropping the message pair for any streaming run
-// (linked by `runId` metadata). So the clone is assembled here directly
-// and inserted into the store as a complete unit (see
+// WHY: Clone is a store-level action, not a reducer case: `submitTurn` /
+// `addUserMessage` / `addAssistantMessage` append forward, and the clone
+// copies an arbitrary prefix of the source's message history while dropping
+// the message pair for any streaming run (linked by `runId` metadata). So the
+// clone is assembled here and inserted into the store as a complete unit,
+// which the route then navigates to. The sidebar is the DB list query: it
+// shows the clone once the clone's first save invalidates that list (see
 // ASSISTANT-CONVERSATION-LIST.md (§Clone)).
 export const cloneConversationAtom = atom(null, (get, set, payload: CloneConversationPayload) => {
   const { sourceId } = payload;
@@ -183,11 +180,8 @@ export const cloneConversationAtom = atom(null, (get, set, payload: CloneConvers
     ...source,
     id: newId,
     createdAt: now,
-    // WHY: `null` (not `now`) so the clone sorts by `createdAt` rather
-    // than pinning itself to the top of the list. This differs from
-    // `newConversation`, which stamps `updatedAt = createdAt`; the first
-    // DB save stamps `now` either way, and the next content-changing
-    // dispatch stamps a real `updatedAt` via `applyConversationUpdate`.
+    // WHY: `null` makes the first save stamp the time, which puts the clone
+    // at the top of the list; the save's ack writes that time into the store.
     updatedAt: null,
     messages,
     runs,

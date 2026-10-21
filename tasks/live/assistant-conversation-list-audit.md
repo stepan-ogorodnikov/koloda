@@ -510,7 +510,7 @@ Line numbers are at `d32fb02e`; when an earlier item moved them, find the code b
   Commit: Drop the header menu's unreachable draft delete
   Depends on: none
 
-- [ ] 11. Correct the clone comments and drop the null timestamp pin
+- [x] 11. Correct the clone comments and drop the null timestamp pin
   Goal (entry 12):
   - Rewrite the WHY at `state/conversation-actions.ts:145-155`: the clone reaches the sidebar through its first save,
     which invalidates the list; the store write is what the route navigates to.
