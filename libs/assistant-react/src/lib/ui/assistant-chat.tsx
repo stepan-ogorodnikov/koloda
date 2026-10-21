@@ -22,7 +22,7 @@ import { useLingui } from "@lingui/react";
 import { useAtomValue, useSetAtom } from "jotai";
 import { AnimatePresence } from "motion/react";
 import type { ReactNode } from "react";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { AssistantConversationRecovery } from "./assistant-conversation-recovery";
 import { renderAssistantMarkdown } from "./assistant-markdown";
 import { AssistantNoProfiles } from "./assistant-no-profiles";
@@ -110,8 +110,12 @@ export function AssistantChat({
   const hasRequiredSecrets = missingSecretFieldLabels.length === 0;
   const contextLength = models.find((m) => m.id === modelId)?.context_length ?? 0;
 
-  const { isRestoring, loadError, handleDismissSave, retrySave, retryLoad, blockedRestore } =
+  const { isRestoring, isDeleted, loadError, handleDismissSave, retrySave, retryLoad, blockedRestore } =
     useConversationPersistence({ conversationId });
+
+  useEffect(() => {
+    if (isDeleted) onActiveDeleted?.();
+  }, [isDeleted, onActiveDeleted]);
 
   const { controller } = useAssistantSession({
     conversationId,

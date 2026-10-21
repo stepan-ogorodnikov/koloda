@@ -151,6 +151,7 @@ A late save cannot bring the conversation back.
 ### Deleting the Open Conversation
 
 If the deleted conversation is the one currently open, the app goes to the AI route with no conversation id.
+Returning to a deleted conversation later, such as with Back, goes there too.
 It does not assign a replacement identity.
 The composer is empty, and the global AI profile state applies, as for any new conversation.
 See ASSISTANT-CONVERSATIONS.md (§Global AI Profile State).

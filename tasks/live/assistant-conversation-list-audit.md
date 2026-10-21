@@ -406,7 +406,7 @@ Line numbers are at `d32fb02e`; when an earlier item moved them, find the code b
   Commit: Read a sidebar row's draft state from the live conversation
   Depends on: 4
 
-- [ ] 6. Leave a conversation that was deleted earlier in the session
+- [x] 6. Leave a conversation that was deleted earlier in the session
   Goal (entry 9):
   - Delete leaves a permanent tombstone for the session (`libs/assistant/src/lib/conversation-persistence-host.ts:130`).
     Navigating back to that id restores it as a fresh conversation (`persistence/use-conversation-restore.ts:87-89`),
@@ -423,6 +423,10 @@ Line numbers are at `d32fb02e`; when an earlier item moved them, find the code b
   - Tests: a `use-conversation-restore.test.tsx` case for a tombstoned id (nothing upserted, nothing dirtied, the hook
     reports it); a chat integration case that `onActiveDeleted` is called.
   Constraints: the restore hook, `useConversationPersistence`, `AssistantChat`, their tests, and the spec sentence.
+  Done: no chat integration case was added.
+  No test renders `AssistantChat`; the integration file drives hooks through a harness.
+  The chat side is a one-line effect (pure wiring per TESTING.md), and the hook test owns the behavior.
+  The hook leaves its restored-id ref unset for a deleted id, so the chat stays on the restoring branch until it leaves.
   Done when:
   - `AR use-conversation-restore assistant-chat-integration` passes;
   - Manual verify (web): open A, then B, delete A from the sidebar, press Back → the AI route with no conversation id

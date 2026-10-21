@@ -2,7 +2,8 @@ import { queriesAtom } from "@koloda/core-react";
 import { useQuery } from "@tanstack/react-query";
 import { useAtomValue, useSetAtom, useStore } from "jotai";
 import { useAtomCallback } from "jotai/utils";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { ensureAssistantPersistenceHost } from "../runs/assistant-persistence-host";
 import { aiProfileStateAtom } from "../state/ai-profile-state";
 import type { AIProfileState } from "../state/ai-profile-state";
 import { normalizeRestoredConversation } from "./conversation-persistence";
@@ -29,6 +30,7 @@ export type UseConversationRestoreOptions = {
 
 export type UseConversationRestoreReturn = {
   isRestoring: boolean;
+  isDeleted: boolean;
   loadError: Error | null;
   retryLoad: () => Promise<unknown>;
   blockedRestore: BlockedConversationRestore | null;
@@ -39,6 +41,7 @@ export function useConversationRestore({
 }: UseConversationRestoreOptions): UseConversationRestoreReturn {
   const store = useStore();
   const restoredIdRef = useRef<string | null>(null);
+  const [deletedId, setDeletedId] = useState<string | null>(null);
   const { getConversationQuery } = useAtomValue(queriesAtom);
   const blockedStore = useAtomValue(blockedConversationRestoreAtom);
   const conversations = useAtomValue(conversationsAtom);
@@ -61,6 +64,14 @@ export function useConversationRestore({
   useEffect(() => {
     if (!conversationId) return;
     if (restoredIdRef.current === conversationId) return;
+    // WHY: Delete tombstones its id for the session, so a fresh conversation
+    // restored under it could never be saved. History can still hold the id
+    // (Back after deleting from the sidebar). Report it instead, and leave the
+    // ref unset so the chat stays on its restoring branch until it navigates away.
+    if (ensureAssistantPersistenceHost(store).isTombstoned(conversationId)) {
+      setDeletedId(conversationId);
+      return;
+    }
     if (isLoading) return;
     if (isFetching && !conversationData) return;
     // WHY: Don't overwrite with a fresh empty state when the query failed.
@@ -143,6 +154,7 @@ export function useConversationRestore({
       !hasBlocked &&
       restoredIdRef.current !== conversationId &&
       !conversationError,
+    isDeleted: !!conversationId && deletedId === conversationId,
     loadError: conversationError ?? null,
     retryLoad: refetch,
     blockedRestore: conversationId ? (blockedStore[conversationId] ?? null) : null,

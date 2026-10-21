@@ -13,6 +13,7 @@ export type UseConversationPersistenceReturn = {
   handleDismissSave: () => void;
   retrySave: () => void;
   isRestoring: boolean;
+  isDeleted: boolean;
   loadError: Error | null;
   retryLoad: () => Promise<unknown>;
   blockedRestore: BlockedConversationRestore | null;
@@ -29,7 +30,7 @@ export function useConversationPersistence({
 }: UseConversationPersistenceOptions): UseConversationPersistenceReturn {
   const store = useStore();
   const dismissSaveStatus = useSetAtom(dismissSaveStatusAtom);
-  const { isRestoring, loadError, retryLoad, blockedRestore } = useConversationRestore({ conversationId });
+  const { isRestoring, isDeleted, loadError, retryLoad, blockedRestore } = useConversationRestore({ conversationId });
 
   const retrySave = useCallback(() => {
     if (!conversationId) return;
@@ -40,6 +41,7 @@ export function useConversationPersistence({
     handleDismissSave: dismissSaveStatus,
     retrySave,
     isRestoring,
+    isDeleted,
     loadError,
     retryLoad,
     blockedRestore,
