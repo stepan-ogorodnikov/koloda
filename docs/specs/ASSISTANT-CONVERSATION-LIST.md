@@ -104,7 +104,7 @@ The user can clone an existing conversation to create an independent copy.
 
 The following are copied into the new conversation:
 
-- All messages (user and assistant)
+- All messages (user and assistant), except the turn of a run that is still streaming
 - All completed runs (success, failed, canceled, or interrupted) — streaming runs are not cloned
 - AI profile state.
   See ASSISTANT-CONVERSATIONS.md (§AI Profile State).
@@ -122,6 +122,8 @@ The following are copied into the new conversation:
 ### Clone Trigger
 
 Cloning is triggered from the conversation menu.
+The conversation menu is unavailable for a conversation with no messages.
+Clone is disabled until the conversation has a finished turn to copy, so it is unavailable during the first run.
 The clone appears immediately in the sidebar, sorted by its new timestamp.
 The user is navigated to the cloned conversation.
 

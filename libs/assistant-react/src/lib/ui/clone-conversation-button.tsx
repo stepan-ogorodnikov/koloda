@@ -4,7 +4,7 @@ import { useLingui } from "@lingui/react";
 import { useAtomValue, useSetAtom } from "jotai";
 import { useCallback, useMemo } from "react";
 import { cloneConversationAtom } from "../state/conversation-actions";
-import { assistantConversationHasContextAtom } from "../state/conversation-selectors";
+import { assistantConversationCanCloneAtom } from "../state/conversation-selectors";
 
 export type CloneConversationButtonProps = {
   id: string;
@@ -15,9 +15,8 @@ export type CloneConversationButtonProps = {
 export function CloneConversationButton({ id, onClone, onClose }: CloneConversationButtonProps) {
   const { _ } = useLingui();
   const clone = useSetAtom(cloneConversationAtom);
-  // WHY: Don't clone empty conversation
-  const hasContextAtom = useMemo(() => assistantConversationHasContextAtom(id), [id]);
-  const hasContext = useAtomValue(hasContextAtom);
+  const canCloneAtom = useMemo(() => assistantConversationCanCloneAtom(id), [id]);
+  const canClone = useAtomValue(canCloneAtom);
 
   const handlePress = useCallback(() => {
     const newId = clone({ sourceId: id });
@@ -26,7 +25,7 @@ export function CloneConversationButton({ id, onClone, onClose }: CloneConversat
   }, [clone, id, onClone, onClose]);
 
   return (
-    <Button variants={{ style: "ghost", class: "justify-start px-2" }} onPress={handlePress} isDisabled={!hasContext}>
+    <Button variants={{ style: "ghost", class: "justify-start px-2" }} onPress={handlePress} isDisabled={!canClone}>
       <CloneIcon className="size-5 min-w-5" strokeWidth={1.75} aria-hidden="true" />
       {_(msg`ai.conversation.clone.action`)}
     </Button>

@@ -7,6 +7,8 @@ import { createStore, Provider as JotaiProvider } from "jotai";
 import type { PropsWithChildren } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { resetAssistantEngineForTests } from "../runs/assistant-persistence-host";
+import { makeConversation } from "../state/assistant-conversation.fixtures";
+import { conversationReducer } from "../state/conversation-reducer";
 import { conversationsAtom } from "../state/conversation-store";
 import { ConversationHeaderMenu } from "./conversation-header-menu";
 
@@ -33,6 +35,7 @@ function renderMenu(state: Record<string, unknown>, hasTurns: boolean) {
       runs: hasTurns ? { r1: { status: "success" } } : {},
       activeRunId: null,
       promptInput: "",
+      ...state,
     },
   } as never);
   const queryClient = new QueryClient({
@@ -119,5 +122,20 @@ describe("ConversationHeaderMenu", () => {
     await waitFor(() => {
       expect(deleteFromDb).toHaveBeenCalledWith({ id: "c1" });
     });
+  });
+
+  it("disables Clone while the only run is still streaming", async () => {
+    const streaming = conversationReducer(makeConversation("c1"), [
+      "submitTurn",
+      { runId: "r1", text: "hi", kind: "chat-text", assistantText: "" },
+    ]);
+    renderMenu({ messages: streaming.messages, runs: streaming.runs, activeRunId: streaming.activeRunId }, true);
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "ai.conversation.menu.trigger" }));
+    });
+
+    const clone = screen.getByRole("button", { name: "ai.conversation.clone.action" }) as HTMLButtonElement;
+    expect(clone.disabled).toBe(true);
   });
 });

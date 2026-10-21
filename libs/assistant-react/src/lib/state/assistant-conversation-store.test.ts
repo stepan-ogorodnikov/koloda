@@ -10,7 +10,7 @@ import {
   setCurrentConversationIdAtom,
   upsertConversationAtom,
 } from "./conversation-store";
-import { assistantConversationHasContextAtom } from "./conversation-selectors";
+import { assistantConversationCanCloneAtom, assistantConversationHasContextAtom } from "./conversation-selectors";
 import {
   setAssistantAIProfileAtom,
   setAssistantCardStatusAtom,
@@ -621,6 +621,26 @@ describe("assistantConversationHasContextAtom", () => {
     store.set(upsertConversationAtom, makeConversation("A", { promptInput: "draft" }));
     store.set(setCurrentConversationIdAtom, "A");
     expect(store.get(assistantConversationHasContextAtom("A"))).toBe(false);
+  });
+});
+
+describe("assistantConversationCanCloneAtom", () => {
+  const submit = (runId: string): ConversationReducerAction => [
+    "submitTurn",
+    { runId, text: "hi", kind: "chat-text", assistantText: "" },
+  ];
+
+  it.each<[string, ConversationReducerAction[], boolean]>([
+    ["no messages", [], false],
+    ["only a streaming first run", [submit("r1")], false],
+    ["a finished run", [submit("r1"), ["completeRun", { runId: "r1" }]], true],
+    ["a finished run and a streaming follow-up", [submit("r1"), ["completeRun", { runId: "r1" }], submit("r2")], true],
+  ])("%s → %s", (_name, actions, expected) => {
+    const store = createStore();
+    store.set(upsertConversationAtom, makeConversation("A", { promptInput: "draft" }));
+    for (const action of actions) dispatchTo(store, "A", action);
+
+    expect(store.get(assistantConversationCanCloneAtom("A"))).toBe(expected);
   });
 });
 

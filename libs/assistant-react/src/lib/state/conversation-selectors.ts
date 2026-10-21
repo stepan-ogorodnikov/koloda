@@ -39,6 +39,19 @@ export const assistantConversationHasContextAtom = (id: string) =>
     return state ? state.messages.length > 0 || state.activeRunId !== null : false;
   });
 
+// INVARIANT: Matches what `cloneConversationAtom` copies: every message except
+// the turn of a run that is still streaming. Clone is offered only when that
+// leaves something to copy.
+export const assistantConversationCanCloneAtom = (id: string) =>
+  atom((get) => {
+    const state = get(conversationsAtom)[id];
+    if (!state) return false;
+    return state.messages.some((message) => {
+      const runId = getMessageRunId(message);
+      return !runId || state.runs[runId]?.status !== "streaming";
+    });
+  });
+
 // WHY: The next request's context is the LATEST run's usage — every run's
 // prompt already includes the full history, so summing across runs
 // double-counts and grows quadratically against the context window. Walk the

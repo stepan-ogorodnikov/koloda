@@ -457,7 +457,7 @@ Line numbers are at `d32fb02e`; when an earlier item moved them, find the code b
   Commit: Enable New whenever the route names a conversation
   Depends on: none
 
-- [ ] 8. Disable Clone while there is nothing finished to copy
+- [x] 8. Disable Clone while there is nothing finished to copy
   Goal (entries 5 and 6):
   - Clone drops a streaming run's message pair (`state/conversation-actions.ts:165-171`).
     During the only run, the clone is an empty Untitled conversation, and the button allows it
@@ -473,6 +473,8 @@ Line numbers are at `d32fb02e`; when an earlier item moved them, find the code b
     :596-623) covers the new atom: only a streaming first run → false; a finished run and a streaming retry → true.
     A `ui/conversation-header-menu.test.tsx` case checks that Clone is disabled while the only run streams.
   Constraints: the clone button, the selectors, their tests, and the two spec sections.
+  Done: the name line in §What Gets Cloned stays as it was.
+  Clone now needs a finished turn, and only the latest run can stream, so the first user message is always copied.
   Done when:
   - `AR conversation-store clone conversation-header-menu` passes;
   - Manual verify (web): send the first message, open the menu while it streams → Clone is disabled; after the run
