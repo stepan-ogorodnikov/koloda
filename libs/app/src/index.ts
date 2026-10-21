@@ -1,6 +1,7 @@
 export {
   clearActiveConversationId,
   conversationHasTurns,
+  conversationIsUnread,
   conversationListItemSchema,
   conversationRowSchema,
   getActiveConversationId,

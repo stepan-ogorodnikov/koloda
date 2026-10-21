@@ -1,4 +1,9 @@
-import { conversationHasTurns, conversationListItemSchema, conversationRowSchema, throwKnownError } from "@koloda/app";
+import {
+  conversationListItemSchema,
+  conversationRowSchema,
+  throwKnownError,
+  toConversationListItem,
+} from "@koloda/app";
 import type { DeleteConversationData, SetConversationData } from "@koloda/app";
 import { CONVERSATION_SELECT } from "./columns";
 import type { DB } from "./db";
@@ -18,16 +23,7 @@ export async function getConversations(db: DB) {
       `SELECT ${CONVERSATION_SELECT} FROM conversations ORDER BY updated_at DESC, created_at DESC`,
     );
     const rows = parseRows(conversationRowSchema, result);
-    return parseRows(
-      conversationListItemSchema,
-      rows.map((row) => ({
-        id: row.id,
-        title: row.title,
-        createdAt: row.createdAt,
-        updatedAt: row.updatedAt,
-        hasTurns: conversationHasTurns(row.state),
-      })),
-    );
+    return parseRows(conversationListItemSchema, rows.map(toConversationListItem));
   });
 }
 

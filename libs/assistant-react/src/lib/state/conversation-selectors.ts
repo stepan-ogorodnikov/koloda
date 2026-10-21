@@ -7,6 +7,7 @@ import {
   currentConversationIdAtom,
   unassignedPromptInputAtom,
 } from "./conversation-store";
+import type { ConversationReducerState } from "./conversation-types";
 
 export const assistantErroredRunAtom = atom((get) => findLatestErroredRun(get(assistantConversationStateAtom)));
 
@@ -54,32 +55,34 @@ export const assistantContextUsageAtom = atom((get) => {
   return null;
 });
 
-let lastActiveRunSet: Set<string> | null = null;
-let lastUnreadSet: Set<string> | null = null;
+// WHY: `conversationsAtom` is rewritten on every streamed chunk; returning a
+// fresh Set each time would re-render the sidebar at chunk rate even when
+// membership is unchanged. Keep the previous reference while membership is
+// identical (membership is always compared against the freshly computed set,
+// so cross-store staleness is impossible).
+function membershipStableSetAtom(collect: (store: Record<string, ConversationReducerState>) => Set<string>) {
+  let previous: Set<string> | null = null;
+  return atom((get) => {
+    const next = collect(get(conversationsAtom));
+    const prev = previous;
+    if (prev !== null && prev.size === next.size && [...next].every((id) => prev.has(id))) return prev;
+    previous = next;
+    return next;
+  });
+}
 
 // WHY: The sidebar only needs running-pulse membership, not the whole store.
-// `conversationsAtom` is rewritten on every streamed chunk; subscribe the list
-// to this membership-stable set instead so it re-renders only when the set of
-// conversations with an active run actually changes (same pattern as
-// `unreadConversationIdsAtom`).
-export const activeRunConversationIdsAtom = atom((get) => {
-  const store = get(conversationsAtom);
+export const activeRunConversationIdsAtom = membershipStableSetAtom((store) => {
   const active = new Set<string>();
   for (const [id, state] of Object.entries(store)) {
     if (state.activeRunId != null) active.add(id);
   }
-  const previous = lastActiveRunSet;
-  if (previous !== null && previous.size === active.size && [...active].every((id) => previous.has(id))) {
-    return previous;
-  }
-  lastActiveRunSet = active;
   return active;
 });
 
 // WHY: Use one derived atom for the whole list instead of per-conversation
 // derived atoms, which would create N subscriptions.
-export const unreadConversationIdsAtom = atom((get) => {
-  const store = get(conversationsAtom);
+export const unreadConversationIdsAtom = membershipStableSetAtom((store) => {
   const unread = new Set<string>();
   for (const [id, state] of Object.entries(store)) {
     const runIds = Object.keys(state.runs);
@@ -91,15 +94,9 @@ export const unreadConversationIdsAtom = atom((get) => {
     if (latestRun.id === state.lastReadRunId) continue;
     unread.add(id);
   }
-  // WHY: `conversationsAtom` is rewritten on every streamed chunk; returning
-  // a fresh Set each time would re-render the sidebar at chunk rate even
-  // when unread membership is unchanged. Keep the previous reference while
-  // membership is identical (membership is always compared against the
-  // freshly computed set, so cross-store staleness is impossible).
-  const previous = lastUnreadSet;
-  if (previous !== null && previous.size === unread.size && [...unread].every((id) => previous.has(id))) {
-    return previous;
-  }
-  lastUnreadSet = unread;
   return unread;
 });
+
+// WHY: Conversations in the store have live state, which a sidebar row must
+// prefer over its saved list item; the others are known only by that item.
+export const loadedConversationIdsAtom = membershipStableSetAtom((store) => new Set(Object.keys(store)));

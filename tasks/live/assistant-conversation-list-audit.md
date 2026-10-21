@@ -341,7 +341,7 @@ Line numbers are at `d32fb02e`; when an earlier item moved them, find the code b
   Commit: Re-sort the sidebar when a save changes a row's timestamp
   Depends on: none
 
-- [ ] 4. Keep unread indicators across a reload
+- [x] 4. Keep unread indicators across a reload
   Goal (entries 2, 18, and 20):
   - Add `conversationIsUnread(state: unknown): boolean` next to `conversationHasTurns` in
     `libs/app/src/lib/conversations.ts`.
@@ -368,6 +368,9 @@ Line numbers are at `d32fb02e`; when an earlier item moved them, find the code b
     the selector stable-reference test covers the new set.
   Constraints: `libs/app` conversations, `libs/db-sqlite` conversations, the save host, the list, the selectors, and
   their tests.
+  Done: the three stable sets share `membershipStableSetAtom` in `state/conversation-selectors.ts`, so the existing
+  stable-reference test in `state/assistant-conversation-unread.test.ts` covers the new `loadedConversationIdsAtom`.
+  `libs/db-sqlite/README.md` now names `toConversationListItem` as the list mapping.
   No schema change; `state` stays unparsed in Rust (`libs/app/src/lib/conversations.ts:63-64`).
   Done when:
   - `bunx vitest run --config libs/app/vitest.config.mjs --configLoader runner conversations`,

@@ -282,7 +282,7 @@ describe("conversations repository integration", () => {
     expect("state" in item).toBe(false);
   });
 
-  it("getConversations sets hasTurns from stored messages", async () => {
+  it("getConversations derives hasTurns and isUnread from stored state", async () => {
     const { db } = testDb;
     const createdAt = new Date(1700000000000);
     await setConversation(db, {
@@ -313,12 +313,27 @@ describe("conversations repository integration", () => {
       title: null,
       state: { id: "no-messages-key", createdAt, runs: {} },
     });
+    await setConversation(db, {
+      id: "read",
+      title: "seen",
+      state: {
+        id: "read",
+        createdAt,
+        messages: [{ id: "msg-1", role: "user", parts: [{ type: "text", text: "seen" }] }],
+        runs: { r1: { id: "r1", status: "success" } },
+        activeRunId: null,
+        lastReadRunId: "r1",
+      },
+    });
 
     const list = await getConversations(db);
     const byId = Object.fromEntries(list.map((item) => [item.id, item]));
     expect(byId.draft.hasTurns).toBe(false);
     expect(byId["with-turn"].hasTurns).toBe(true);
     expect(byId["no-messages-key"].hasTurns).toBe(false);
+    expect(byId.draft.isUnread).toBe(false);
+    expect(byId["with-turn"].isUnread).toBe(true);
+    expect(byId.read.isUnread).toBe(false);
   });
 
   it("preserves null titles through a null-stored list query", async () => {

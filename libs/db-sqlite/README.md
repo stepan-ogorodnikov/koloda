@@ -18,7 +18,8 @@ Wired to `apps/web`. Desktop apps do not use this package; they call `koloda` vi
   `lessons.ts`, `settings.ts`, `conversations.ts`, `attachments.ts`.
 - Attachment bytes: `attachment-bytes.ts` — the only reader and writer of `attachment_bytes`
   (`docs/decisions/MEDIA-STORAGE.md`).
-- `getConversations` returns trimmed list items with `hasTurns` derived from `state` in TS;
+- `getConversations` returns trimmed list items from `toConversationListItem` (`@koloda/app`), which derives `hasTurns`
+  and `isUnread` from `state` in TS;
   desktop `get_conversations` returns full rows including `state` (deliberate — see `crates/koloda/README.md`).
 - Row mapping: `parse-rows.ts` — unix-ms ↔ `Date`, JSON text ↔ objects, `0/1` ↔ boolean.
 

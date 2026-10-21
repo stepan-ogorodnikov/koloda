@@ -12,6 +12,7 @@ export type ConversationListItem = Timestamps & {
   id: string;
   title: string | null;
   hasTurns: boolean;
+  isUnread: boolean;
 };
 
 export type Conversation = Timestamps & {
@@ -22,6 +23,7 @@ export type Conversation = Timestamps & {
 
 export const conversationListItemSchema = conversationIdentitySchema.extend({
   hasTurns: z.boolean(),
+  isUnread: z.boolean(),
 });
 
 export const conversationRowSchema = conversationIdentitySchema.extend({
@@ -73,6 +75,20 @@ export function conversationHasTurns(state: unknown): boolean {
   return false;
 }
 
+// INVARIANT: The saved-row twin of the assistant's live unread rule
+// (`unreadConversationIdsAtom`): the latest run is the last key of `runs`, and
+// it is unread until `lastReadRunId` names it. A saved streaming run counts as
+// finished, because restore turns it into an interrupted run.
+export function conversationIsUnread(state: unknown): boolean {
+  if (state == null || typeof state !== "object") return false;
+  const record = state as Record<string, unknown>;
+  const runs = record.runs;
+  if (runs == null || typeof runs !== "object" || Array.isArray(runs)) return false;
+  const runIds = Object.keys(runs);
+  const latestRunId = runIds[runIds.length - 1];
+  return latestRunId !== undefined && latestRunId !== record.lastReadRunId;
+}
+
 export function toConversationListItem(row: Conversation): ConversationListItem {
   return {
     id: row.id,
@@ -80,5 +96,6 @@ export function toConversationListItem(row: Conversation): ConversationListItem 
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
     hasTurns: conversationHasTurns(row.state),
+    isUnread: conversationIsUnread(row.state),
   };
 }

@@ -1,4 +1,4 @@
-import { conversationHasTurns } from "@koloda/app";
+import { conversationHasTurns, conversationIsUnread } from "@koloda/app";
 import type { ConversationListItem } from "@koloda/app";
 import { queriesAtom, queryKeys } from "@koloda/core-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -63,8 +63,9 @@ export function useConversationSaveHost(): void {
           const list = currentQueryClient.getQueryData<ConversationListItem[]>(queryKeys.conversations.all());
           if (list?.some((item) => item.id === row.id)) {
             const hasTurns = conversationHasTurns(row.state);
+            const isUnread = conversationIsUnread(row.state);
             const next = list.map((item) =>
-              item.id === row.id ? { ...item, title: row.title, updatedAt: row.updatedAt, hasTurns } : item,
+              item.id === row.id ? { ...item, title: row.title, updatedAt: row.updatedAt, hasTurns, isUnread } : item,
             );
             next.sort(
               (a, b) =>

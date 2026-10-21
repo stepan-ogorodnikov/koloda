@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { conversationHasTurns, toConversationListItem } from "./conversations";
+import { conversationHasTurns, conversationIsUnread, toConversationListItem } from "./conversations";
 
 describe("conversationHasTurns", () => {
   it("is false for missing, empty, or prompt-only state", () => {
@@ -21,13 +21,27 @@ describe("conversationHasTurns", () => {
   });
 });
 
+describe("conversationIsUnread", () => {
+  it.each([
+    ["missing state", undefined, false],
+    ["no runs", { messages: [], runs: {} }, false],
+    ["latest run read", { runs: { r1: {}, r2: {} }, lastReadRunId: "r2" }, false],
+    ["latest run not read", { runs: { r1: {}, r2: {} }, lastReadRunId: "r1" }, true],
+    ["never read", { runs: { r1: { status: "success" } }, lastReadRunId: null }, true],
+    // WHY: restore turns a saved streaming run into an interrupted one, which is finished.
+    ["saved streaming run", { runs: { r1: { status: "streaming" } }, lastReadRunId: null }, true],
+  ])("%s → %s", (_name, state, expected) => {
+    expect(conversationIsUnread(state)).toBe(expected);
+  });
+});
+
 describe("toConversationListItem", () => {
-  it("maps hasTurns from state and omits state", () => {
+  it("maps hasTurns and isUnread from state and omits state", () => {
     const createdAt = new Date(1);
     const withTurns = toConversationListItem({
       id: "c1",
       title: "hello",
-      state: { messages: [{ id: "m1" }] },
+      state: { messages: [{ id: "m1" }], runs: { r1: {} }, lastReadRunId: null },
       createdAt,
       updatedAt: null,
     });
@@ -37,6 +51,7 @@ describe("toConversationListItem", () => {
       createdAt,
       updatedAt: null,
       hasTurns: true,
+      isUnread: true,
     });
     expect("state" in withTurns).toBe(false);
 
