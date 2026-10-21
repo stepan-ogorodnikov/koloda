@@ -85,7 +85,7 @@ export function AssistantConversationRecovery({
       if (!mutationFn) throw new Error("deleteConversationMutation is missing mutationFn");
       await mutationFn({ id: conversationId }, { client: queryClient, meta: undefined });
       queryClient.removeQueries({ queryKey: queryKeys.conversations.detail(conversationId) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.conversations.all() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.conversations.all(), exact: true });
       setBlockedConversationRestore((prev) => clearBlockedConversationRestore(prev, conversationId));
       const stored = readLastUsed();
       newConversation({ id: conversationId, ...stored });

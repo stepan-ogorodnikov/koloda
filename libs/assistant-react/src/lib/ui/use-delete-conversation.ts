@@ -26,7 +26,7 @@ export function useDeleteConversation({ id, onSuccess, onError }: UseDeleteConve
         conversationId: data.id,
         deleteFromDb: (conversationId) => mutationFn({ id: conversationId }, { client: queryClient, meta: undefined }),
         invalidateConversations: () => {
-          queryClient.invalidateQueries({ queryKey: queryKeys.conversations.all() });
+          queryClient.invalidateQueries({ queryKey: queryKeys.conversations.all(), exact: true });
         },
         removeConversationQuery: (conversationId) => {
           queryClient.removeQueries({ queryKey: queryKeys.conversations.detail(conversationId) });

@@ -559,7 +559,7 @@ Line numbers are at `d32fb02e`; when an earlier item moved them, find the code b
   Commit: Reuse the delete hook and popover on the recovery screen
   Depends on: none
 
-- [ ] 14. Invalidate only the conversation list query
+- [x] 14. Invalidate only the conversation list query
   Goal (entry 10, first half):
   - The list invalidations use the `["conversations"]` prefix, so they also refetch the open conversation's detail
     query (`libs/core-react/src/lib/query-keys.ts:34-36`), which restore then ignores.
