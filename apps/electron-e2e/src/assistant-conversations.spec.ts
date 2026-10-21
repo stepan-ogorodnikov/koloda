@@ -616,6 +616,46 @@ test("still confirms when deleting a conversation that has a turn", async ({ pag
   }
 });
 
+test("clones a conversation from its menu into a new sidebar row and opens it", async ({ page }) => {
+  test.setTimeout(60_000);
+
+  const mock = await mockOpenAICompatibleProvider({
+    defaultCompletion: { text: "Reply for the clone source.", chunkBy: "all" },
+  });
+
+  try {
+    await setupApp(page);
+    await addLmStudioProfile(page, { baseUrl: mock.baseUrl });
+    await createDeckAndOpenAssistant(page);
+    await waitForAssistantReady(page);
+
+    await sendAssistantMessage(page, "Clone source prompt");
+    const log = conversationLog(page);
+    await expect(log.getByText("Reply for the clone source.")).toBeVisible({ timeout: 20_000 });
+    const rows = sidebarRow(page, "Clone source prompt");
+    await expect(rows).toHaveCount(1, { timeout: 15_000 });
+    const sourceId = await waitForConversationIdFromUrl(page);
+
+    await page.getByRole("button", { name: "Conversation actions" }).click();
+    await page.getByRole("button", { name: "Clone", exact: true }).click();
+
+    // The route moves to the clone, which is a new identity.
+    await expect(page).not.toHaveURL(new RegExp(`conversationId=${sourceId}($|&)`));
+    const cloneId = await waitForConversationIdFromUrl(page);
+    expect(cloneId).not.toBe(sourceId);
+
+    // The clone is saved, listed under the same name, and sorted first.
+    await expect(rows).toHaveCount(2, { timeout: 15_000 });
+    await expect(rows.first()).toHaveAttribute("href", new RegExp(`conversationId=${cloneId}($|&)`));
+
+    // It carries the copied turn.
+    await expect(log.getByText("Clone source prompt")).toBeVisible();
+    await expect(log.getByText("Reply for the clone source.")).toBeVisible();
+  } finally {
+    await mock.dispose();
+  }
+});
+
 test("reloads the param-less AI route onto the last active conversation", async ({ page }) => {
   test.setTimeout(60_000);
 

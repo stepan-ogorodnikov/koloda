@@ -612,7 +612,7 @@ Line numbers are at `d32fb02e`; when an earlier item moved them, find the code b
   Commit: Style the untitled route header with a tv recipe
   Depends on: 7
 
-- [ ] 18. Cover clone in both e2e suites
+- [x] 18. Cover clone in both e2e suites
   Goal (entry 18):
   - Add one clone flow to `apps/web-e2e/src/assistant-conversations.spec.ts` and its desktop twin: send a message and
     wait for the reply; open the conversation menu → Clone; expect a second sidebar row with the same name at the top,
