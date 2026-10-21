@@ -16,6 +16,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useAtomValue, useSetAtom } from "jotai";
 import { useCallback, useEffect, useMemo } from "react";
 import { SettingsAIAddProfile } from "@koloda/settings-react";
+import { tv } from "tailwind-variants";
 
 export const Route = createFileRoute("/_/ai")({
   component: AIRoute,
@@ -30,6 +31,14 @@ export const Route = createFileRoute("/_/ai")({
     ]);
     return { title: msg`title.ai` };
   },
+});
+
+const conversationTitle = tv({
+  base: "min-w-0",
+  variants: {
+    isUntitled: { true: "fg-disabled" },
+  },
+  defaultVariants: { isUntitled: false },
 });
 
 function AIRoute() {
@@ -99,7 +108,7 @@ function AIRoute() {
       <Layout.Content isAlwaysVisible>
         <Layout.Header>
           <div className="flex flex-row flex-nowrap items-center min-w-0 w-full max-w-3xl mx-auto">
-            <Layout.H1 variants={{ class: title ? "min-w-0" : "min-w-0 fg-disabled" }}>
+            <Layout.H1 variants={{ class: conversationTitle({ isUntitled: !title }) }}>
               {title || _(CONVERSATION_TITLE_FALLBACK)}
             </Layout.H1>
             {conversationId && (

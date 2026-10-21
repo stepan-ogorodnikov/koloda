@@ -602,7 +602,7 @@ Line numbers are at `d32fb02e`; when an earlier item moved them, find the code b
   Commit: Name the working and unread markers for screen readers
   Depends on: 5
 
-- [ ] 17. Style the untitled route header with a tv recipe
+- [x] 17. Style the untitled route header with a tv recipe
   Goal (entry 17):
   - Replace the ternary at `libs/app-react/src/lib/routes/_.ai.tsx:99` with a module-level `tv` recipe that has an
     `isUntitled` variant (CSS.md §Conditional styling with `tailwind-variants`).
