@@ -3,7 +3,7 @@ import { queriesAtom, queryKeys } from "@koloda/core-react";
 import type { Queries } from "@koloda/core-react";
 import type * as KolodaUi from "@koloda/ui";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { createStore, Provider as JotaiProvider } from "jotai";
 import type { PropsWithChildren, ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
@@ -97,5 +97,36 @@ describe("AssistantConversationsList", () => {
 
     await screen.findByText("hello");
     expect(screen.queryByLabelText("ai.conversation.unread")).toBeNull();
+  });
+
+  it("treats a row as submitted once its loaded conversation has a turn, before the list refreshes", async () => {
+    // WHY: The first save after a submit can wait for the stream throttle; until
+    // then the cached row still says draft.
+    renderList([items()[0]!], (store) => {
+      store.set(
+        upsertConversationAtom,
+        makeConversation("draft", {
+          messages: [
+            {
+              id: "user-r1",
+              role: "user",
+              parts: [{ type: "text", text: "soon" }],
+              metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r1" },
+            },
+          ],
+          runs: { r1: makeRun("r1", "streaming") },
+          activeRunId: "r1",
+        }),
+      );
+    });
+
+    const title = await screen.findByText("soon");
+    expect(title.getAttribute("data-has-turns")).toBe("true");
+    expect(title.className).not.toContain("fg-level-4");
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "ai.conversation.delete.trigger" }));
+    });
+    expect(await screen.findByText("ai.conversation.delete.message")).toBeTruthy();
   });
 });

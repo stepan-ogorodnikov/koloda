@@ -384,7 +384,7 @@ Line numbers are at `d32fb02e`; when an earlier item moved them, find the code b
   Commit: Keep unread indicators across a reload
   Depends on: 1, 2
 
-- [ ] 5. Read a sidebar row's draft state from the live conversation
+- [x] 5. Read a sidebar row's draft state from the live conversation
   Goal (entry 4):
   - The row's dimming and its no-confirm delete read `hasTurns` from the cached query row
     (`ui/assistant-conversations-list.tsx:139,154`; `ui/delete-conversation-button.tsx:33-42`).

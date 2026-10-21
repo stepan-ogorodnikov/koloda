@@ -10,6 +10,7 @@ import { useRef } from "react";
 import {
   activeRunConversationIdsAtom,
   loadedConversationIdsAtom,
+  turnConversationIdsAtom,
   unreadConversationIdsAtom,
 } from "../state/conversation-selectors";
 import { ConversationListTimestamp } from "./conversation-list-timestamp";
@@ -30,6 +31,7 @@ export function AssistantConversationsList({ activeId, onActiveDeleted }: Assist
   const activeRunIds = useAtomValue(activeRunConversationIdsAtom);
   const unreadIds = useAtomValue(unreadConversationIdsAtom);
   const loadedIds = useAtomValue(loadedConversationIdsAtom);
+  const turnIds = useAtomValue(turnConversationIdsAtom);
   const query = useQuery(getConversationsQuery());
 
   return (
@@ -44,6 +46,7 @@ export function AssistantConversationsList({ activeId, onActiveDeleted }: Assist
                 fallback={_(CONVERSATION_TITLE_FALLBACK)}
                 isActive={conversation.id === activeId}
                 hasActiveRun={activeRunIds.has(conversation.id)}
+                hasTurns={loadedIds.has(conversation.id) ? turnIds.has(conversation.id) : conversation.hasTurns}
                 hasUnread={loadedIds.has(conversation.id) ? unreadIds.has(conversation.id) : conversation.isUnread}
                 runningLabel={_(CONVERSATION_RUNNING_LABEL)}
                 unreadLabel={_(CONVERSATION_UNREAD_LABEL)}
@@ -91,6 +94,7 @@ type ConversationItemProps = {
   fallback: string;
   isActive: boolean;
   hasActiveRun: boolean;
+  hasTurns: boolean;
   hasUnread: boolean;
   runningLabel: string;
   unreadLabel: string;
@@ -102,6 +106,7 @@ function ConversationItem({
   fallback,
   isActive,
   hasActiveRun,
+  hasTurns,
   hasUnread,
   runningLabel,
   unreadLabel,
@@ -141,7 +146,7 @@ function ConversationItem({
           <div className="size-2 rounded-full bg-fg-link" aria-label={unreadLabel} />
         ) : null}
       </span>
-      <span className={conversationTitle({ isDraft: !conversation.hasTurns })} data-has-turns={conversation.hasTurns}>
+      <span className={conversationTitle({ isDraft: !hasTurns })} data-has-turns={hasTurns}>
         {name}
       </span>
       <div className="grid min-w-8 shrink-0 items-center justify-items-end">
@@ -156,7 +161,7 @@ function ConversationItem({
         >
           <DeleteConversationButton
             id={conversation.id}
-            hasTurns={conversation.hasTurns}
+            hasTurns={hasTurns}
             isActive={isActive}
             onActiveDeleted={onActiveDeleted}
           />

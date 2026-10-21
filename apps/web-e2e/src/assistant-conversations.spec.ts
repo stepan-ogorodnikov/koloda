@@ -285,9 +285,9 @@ test("shows a failed delete error in the popover and keeps the conversation", as
     await expect(conversationLog(page).getByText("Reply for the undeleted conversation.")).toBeVisible({
       timeout: 20_000,
     });
-    // WHY: the sidebar row's hasTurns only flips once the first save flushes,
-    // and a draft row (hasTurns=false) deletes without confirmation — arming
-    // the failure sim before that flip would skip the confirm dialog entirely.
+    // WHY: a draft row (hasTurns=false) deletes without confirmation. Confirm
+    // the row counts the submitted turn before arming the failure sim, or the
+    // confirm dialog this test needs never opens.
     await expect(row.locator('[data-has-turns="true"]')).toBeVisible({ timeout: 15_000 });
 
     await setIdbWriteFailureArmed(page, true);

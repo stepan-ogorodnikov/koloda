@@ -1,3 +1,4 @@
+import { conversationHasTurns } from "@koloda/app";
 import { atom } from "jotai";
 import { findLatestErroredRun, getVisibleMessages } from "./conversation-run-helpers";
 import { getMessageRunId } from "./assistant-messages";
@@ -100,3 +101,11 @@ export const unreadConversationIdsAtom = membershipStableSetAtom((store) => {
 // WHY: Conversations in the store have live state, which a sidebar row must
 // prefer over its saved list item; the others are known only by that item.
 export const loadedConversationIdsAtom = membershipStableSetAtom((store) => new Set(Object.keys(store)));
+
+export const turnConversationIdsAtom = membershipStableSetAtom((store) => {
+  const withTurns = new Set<string>();
+  for (const [id, state] of Object.entries(store)) {
+    if (conversationHasTurns(state)) withTurns.add(id);
+  }
+  return withTurns;
+});
