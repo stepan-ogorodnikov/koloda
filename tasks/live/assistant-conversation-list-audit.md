@@ -571,7 +571,7 @@ Line numbers are at `d32fb02e`; when an earlier item moved them, find the code b
   Commit: Invalidate only the conversation list query
   Depends on: 13
 
-- [ ] 15. Share one minute clock across the conversation list
+- [x] 15. Share one minute clock across the conversation list
   Goal (entry 15):
   - `ConversationListTimestamp` starts a `setInterval` per row and re-renders each row once on mount
     (`ui/conversation-list-timestamp.tsx:51-56`).
@@ -579,6 +579,8 @@ Line numbers are at `d32fb02e`; when an earlier item moved them, find the code b
     once when the first row subscribes.
   - Update the timestamp tests to drive the shared clock with fake timers.
   Constraints: `conversation-list-timestamp.tsx` and its test.
+  Done: the test file became `conversation-list-timestamp.test.tsx` to hold a component case: two rows advance
+  together on one fake-timer minute, from one `setInterval`.
   Done when: `AR conversation-list-timestamp conversations-list` passes.
   Manual verify (web): leave the AI route open for two minutes → every row's age advances together.
   Commit: Share one minute clock across the conversation list

@@ -1,6 +1,6 @@
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
-import { useEffect, useState } from "react";
+import { atom, useAtomValue } from "jotai";
 
 const MINUTE_MS = 60_000;
 const HOUR_MS = 3_600_000;
@@ -39,6 +39,15 @@ export function formatConversationListRelativeTime(
   return formatters.years(Math.max(1, Math.floor(diffMs / YEAR_MS)));
 }
 
+// WHY: One clock for every row, not one interval per conversation. The time is
+// refreshed when the first row subscribes, since the atom may have been idle.
+const minuteClockAtom = atom(new Date());
+minuteClockAtom.onMount = (setNow) => {
+  setNow(new Date());
+  const id = setInterval(() => setNow(new Date()), TICK_MS);
+  return () => clearInterval(id);
+};
+
 export type ConversationListTimestampProps = {
   timestamp: Date;
   className?: string;
@@ -46,14 +55,7 @@ export type ConversationListTimestampProps = {
 
 export function ConversationListTimestamp({ timestamp, className }: ConversationListTimestampProps) {
   const { _ } = useLingui();
-  const [now, setNow] = useState(() => new Date());
-
-  useEffect(() => {
-    const tick = () => setNow(new Date());
-    tick();
-    const id = setInterval(tick, TICK_MS);
-    return () => clearInterval(id);
-  }, []);
+  const now = useAtomValue(minuteClockAtom);
 
   const label = formatConversationListRelativeTime(timestamp, now, {
     minutes: (count) => _(msg`ai.conversation.list.time.minutes ${count}`),
