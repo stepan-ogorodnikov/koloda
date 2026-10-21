@@ -544,7 +544,7 @@ Line numbers are at `d32fb02e`; when an earlier item moved them, find the code b
   Commit: Delete unused ways to create a conversation
   Depends on: 7
 
-- [ ] 13. Reuse the delete hook and popover on the recovery screen
+- [x] 13. Reuse the delete hook and popover on the recovery screen
   Goal (entry 14):
   - Replace `removeBlockedRow` and the delete mutation (`ui/assistant-conversation-recovery.tsx:53-70,101-112`) with
     `useDeleteConversation` (`ui/use-delete-conversation.ts`), calling `onDeleted` on success.

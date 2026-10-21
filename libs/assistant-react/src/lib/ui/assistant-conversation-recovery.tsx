@@ -1,13 +1,12 @@
-import { ERROR_MESSAGES, formatAppError } from "@koloda/app";
 import { queriesAtom, queryKeys } from "@koloda/core-react";
 import { Button, Dialog, ErrorMessage, Fade } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useAtomValue, useSetAtom, useStore } from "jotai";
+import { useAtomValue, useSetAtom } from "jotai";
 import { useAtomCallback } from "jotai/utils";
 import { AnimatePresence } from "motion/react";
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import { aiProfileStateAtom } from "../state/ai-profile-state";
 import { newConversationAtom } from "../state/conversation-actions";
 import {
@@ -16,7 +15,8 @@ import {
   touchConversationAtom,
 } from "../state/conversation-store";
 import type { BlockedConversationRestore } from "../state/conversation-store";
-import { deleteAssistantConversation } from "../persistence/conversation-write-adapter";
+import { DeleteConversationConfirmContent } from "./delete-conversation-confirm-dialog";
+import { useDeleteConversation } from "./use-delete-conversation";
 
 export type AssistantConversationRecoveryProps = {
   conversationId: string;
@@ -30,7 +30,7 @@ export type AssistantConversationRecoveryProps = {
  * (unsupportedVersion / corrupt). The stored row is never touched here —
  * reset and delete are explicit user actions and the only ways the row can be
  * removed or replaced. Delete reuses the coordinated delete path
- * (`deleteAssistantConversation`); reset deletes the row directly (a blocked
+ * (`useDeleteConversation`); reset deletes the row directly (a blocked
  * row has no queued writes, so no tombstone is needed) and then creates a
  * fresh current-version conversation under the same id.
  */
@@ -40,7 +40,6 @@ export function AssistantConversationRecovery({
   onDeleted,
 }: AssistantConversationRecoveryProps) {
   const { _ } = useLingui();
-  const store = useStore();
   const queryClient = useQueryClient();
   const { deleteConversationMutation } = useAtomValue(queriesAtom);
   const newConversation = useSetAtom(newConversationAtom);
@@ -53,21 +52,18 @@ export function AssistantConversationRecovery({
   // WHY: The coordinated delete tombstones the id so a late upsert cannot
   // resurrect the row, then clears the blocked entry (and the DB row). It is
   // the single removal path for abandoned blocked rows.
-  const removeBlockedRow = useCallback(async () => {
-    const { mutationFn } = deleteConversationMutation();
-    if (!mutationFn) throw new Error("deleteConversationMutation is missing mutationFn");
-    await deleteAssistantConversation({
-      store,
-      conversationId,
-      deleteFromDb: (id) => mutationFn({ id }, { client: queryClient, meta: undefined }),
-      invalidateConversations: () => {
-        queryClient.invalidateQueries({ queryKey: queryKeys.conversations.all() });
-      },
-      removeConversationQuery: (conversationId) => {
-        queryClient.removeQueries({ queryKey: queryKeys.conversations.detail(conversationId) });
-      },
-    });
-  }, [conversationId, deleteConversationMutation, queryClient, store]);
+  const {
+    deleteConversation,
+    isPending: isDeleting,
+    error: deleteError,
+    reset: clearDeleteError,
+  } = useDeleteConversation({
+    id: conversationId,
+    onSuccess: () => {
+      setIsDeleteOpen(false);
+      onDeleted?.();
+    },
+  });
 
   // WHY: Reset keeps the conversation id, so it must NOT go through the
   // coordinated delete: `beginDelete`+`commit` leaves a permanent host
@@ -96,19 +92,6 @@ export function AssistantConversationRecovery({
       touchConversation(conversationId);
     },
     onSuccess: () => setIsResetOpen(false),
-  });
-
-  const {
-    mutate: remove,
-    isPending: isDeleting,
-    error: deleteError,
-    reset: clearDeleteError,
-  } = useMutation({
-    mutationFn: async () => {
-      await removeBlockedRow();
-      onDeleted?.();
-    },
-    onSuccess: () => setIsDeleteOpen(false),
   });
 
   const handleResetOpenChange = (value: boolean) => {
@@ -183,31 +166,7 @@ export function AssistantConversationRecovery({
       </Dialog.Root>
       <Dialog.Root isOpen={isDeleteOpen} onOpenChange={handleDeleteOpenChange}>
         <Dialog.Popover placement="bottom">
-          <Dialog.Body>
-            <Dialog.Content variants={{ class: "items-center gap-4 max-w-[90vw] pt-4 pb-2" }}>
-              <AnimatePresence mode="wait">
-                {deleteError ? (
-                  <Fade key="error">
-                    <ErrorMessage {...formatAppError(deleteError, _, ERROR_MESSAGES["db.delete"])} />
-                  </Fade>
-                ) : (
-                  <Fade key="message">{_(msg`ai.conversation.delete.message`)}</Fade>
-                )}
-              </AnimatePresence>
-              <div className="flex flex-row items-center gap-4">
-                <Button
-                  variants={{ style: "primary" }}
-                  onPress={() => remove()}
-                  isDisabled={!!deleteError || isDeleting}
-                >
-                  {_(msg`ai.conversation.delete.confirm`)}
-                </Button>
-                <Button variants={{ style: "ghost" }} slot="close" autoFocus>
-                  {_(msg`ai.conversation.delete.cancel`)}
-                </Button>
-              </div>
-            </Dialog.Content>
-          </Dialog.Body>
+          <DeleteConversationConfirmContent onConfirm={deleteConversation} isPending={isDeleting} error={deleteError} />
         </Dialog.Popover>
       </Dialog.Root>
     </div>
