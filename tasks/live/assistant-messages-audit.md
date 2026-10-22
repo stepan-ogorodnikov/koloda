@@ -450,7 +450,7 @@ Line numbers are at `5801f741`; when an earlier item moved them, find the code b
   Commit: Re-render only the assistant turns that changed
   Depends on: 6, 7, 8
 
-- [ ] 10. Drop the error marker from the messages spec
+- [x] 10. Drop the error marker from the messages spec
   Goal (entries 3 and 6):
   - In `docs/specs/ASSISTANT-MESSAGES.md`:
     - Core model: drop "Metadata kind" (:23).

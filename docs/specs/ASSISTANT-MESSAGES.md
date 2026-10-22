@@ -2,7 +2,7 @@
 
 ## Scope
 
-Covers message types, message metadata, how messages are displayed,
+Covers message types, how messages are displayed,
 message states and status indicators, and user interactions with messages.
 Does not cover the conversation list, runs, persistence, or the streaming transport layer.
 The list, naming, clone, and delete are covered by ASSISTANT-CONVERSATION-LIST.md.
@@ -20,7 +20,6 @@ Together they form a single turn in the conversation, tied to one AI run.
 - **User message** — the submitted prompt text
 - **Assistant message** — the AI's response; created empty at run start and filled by the stream
 - **Turn** — one user message and its assistant message, tied to a single run
-- **Metadata kind** — chat-text or error; decides how an assistant message renders
 - **Revert point** — the user message a revert targets; at most one per conversation, cleared when the app reloads
 
 ### Relationships
@@ -28,7 +27,6 @@ Together they form a single turn in the conversation, tied to one AI run.
 - An assistant message inherits its state from its run.
 - A message pair maps to exactly one run; retry overwrites that pair in place.
   See ASSISTANT-CONVERSATIONS.md (§Retry).
-- The metadata kind picks the display; an error marker has empty text and shows a retry button.
 - A turn that proposed cards renders as tool activity, the review table, then leftover text.
   See ASSISTANT-CARD-GENERATION.md (§Card Display).
 - Revert hides the target turn and everything after it; the data is removed only by the next submit.
@@ -44,40 +42,23 @@ Assistant messages contain the AI's response.
 An assistant message is created as an empty placeholder when a run starts.
 Its content fills in as the AI stream progresses.
 
-## Message Metadata
-
-Each assistant message carries metadata that classifies its kind.
-
-There are two kinds:
-
-- **chat-text** — a chat response from the AI.
-  The same turn may also show tool activity and a review table when that run proposed cards.
-- **error** — a synthesized error marker.
-  Created when a run fails or when a failed run is restored.
-  The message text is cleared to empty.
-
-The metadata kind determines how the message is rendered.
-
 ## Message Display
 
-Messages are rendered differently based on their type and metadata.
+Messages are rendered differently based on their type.
 
 User messages always render as text.
 
-Assistant messages:
-
-- **chat-text**: the streamed text is shown as rendered markdown.
-  Reasoning and tool calls appear as activity rows above that text, even when there are no cards.
-  See §Message Content.
-  A status indicator shows the run state.
-  When the same run proposed cards, that turn is mixed:
-  tool activity, then the review table, then leftover streamed text, then status.
-  Leftover text appears below the table, not above it.
-  Once cards are on screen, the pending status is not shown on the table.
-  It attaches below the table while the run is still streaming,
-  leftover text has not arrived, and no tool or thinking row is still running.
-  Tool activity, if any, appears above the table even when there is no leftover text.
-- **error**: a failed status indicator and a retry button are shown.
+An assistant message shows the streamed text as rendered markdown.
+Reasoning and tool calls appear as activity rows above that text, even when there are no cards.
+See §Message Content.
+A status indicator shows the run state.
+When the same run proposed cards, that turn is mixed:
+tool activity, then the review table, then leftover streamed text, then status.
+Leftover text appears below the table, not above it.
+Once cards are on screen, the pending status is not shown on the table.
+It attaches below the table while the run is still streaming,
+leftover text has not arrived, and no tool or thinking row is still running.
+Tool activity, if any, appears above the table even when there is no leftover text.
 
 Status indicators appear below assistant messages.
 They show one of:
@@ -103,13 +84,15 @@ The message state maps to the run state:
 - **success**: full content is displayed.
   An elapsed time indicator is shown.
 - **failed**: partial content is preserved.
-  A failed status indicator with a retry button is shown.
+  A failed status indicator is shown.
 - **canceled**: partial content is preserved.
   A canceled status indicator is shown.
 - **interrupted**: partial content is preserved.
-  An interrupted status indicator with a retry button is shown.
+  An interrupted status indicator is shown.
 Elapsed time is included when a duration was saved; crash restore does not count downtime.
 See ASSISTANT-CONVERSATIONS.md (§Restore).
+
+Which of these states offer retry is in ASSISTANT-CONVERSATIONS.md (§Retry).
 
 For a mixed chat turn, content is the tool rows, the proposed cards, and leftover text together.
 
@@ -120,7 +103,8 @@ For a mixed chat turn, content is the tool rows, the proposed cards, and leftove
 The user types a prompt and presses Enter or clicks Submit.
 This creates a user message and an assistant message placeholder.
 A run starts immediately in streaming status; see ASSISTANT-CONVERSATIONS.md (§Starting a Run).
-If that run fails, the user message and an error assistant message remain, so the conversation is not empty.
+If that run fails, the user message and the assistant message with any partial text remain,
+so the conversation is not empty.
 
 ### Canceling a Run
 
@@ -133,8 +117,6 @@ The text accumulated so far is kept.
 See ASSISTANT-CONVERSATIONS.md (§Retry) for when retry is available,
 which run it reuses, and which AI profile state it uses.
 
-Retrying an error marker replaces it with the new response, which can render as a mixed turn.
-
 ### Reverting the Conversation
 
 The user can revert the conversation to the state it was in before any past user message.
@@ -143,14 +125,14 @@ It hides the target user message and everything after it from the UI, while leav
 The hidden messages are only actually deleted when the user submits a new prompt.
 
 The revert affordance is available next to every user message.
-It is available regardless of the paired assistant's status: success, failed, canceled, or error marker.
+It is available regardless of the paired assistant's status: success, failed, canceled, or interrupted.
 
 #### What Is Hidden
 
 After revert, the following are hidden from the UI:
 
 - The target user message
-- Its paired assistant message, including any error marker
+- Its paired assistant message
 - All subsequent user and assistant messages
 - If a run is currently streaming, it is canceled first; its messages and partial content are hidden along with the rest
 
