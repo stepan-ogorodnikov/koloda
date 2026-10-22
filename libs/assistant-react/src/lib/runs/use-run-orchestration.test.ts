@@ -262,7 +262,6 @@ describe("useRunOrchestration — atomic submitTurn", () => {
 
     const payload = turnActions[0]![1] as {
       text: string;
-      mode: string;
       kind: string;
       assistantText: string;
     };
@@ -363,9 +362,6 @@ describe("useRunOrchestration — always-chat submit", () => {
     expect(command.input.kind).toBe("chat");
     expect(command.input.request).toMatchObject({ tools: CHAT_TOOLS });
     expect(command.input.request).not.toHaveProperty("dataContext");
-
-    const runId = readState().activeRunId;
-    expect(readState().runs[runId!]).not.toHaveProperty("mode");
   });
 });
 
@@ -523,7 +519,7 @@ describe("useRunOrchestration — handleRevert", () => {
     dispatchLocal = vi.fn((action) => store.set(assistantConversationStateAtom, action));
   });
 
-  it("reverts a completed run without dispatching a conversation-mode action", () => {
+  it("returns the reverted message's text as the pre-fill", () => {
     store.set(upsertConversationAtom, {
       ...initialConversationState,
       id: "conv-1",
@@ -551,7 +547,6 @@ describe("useRunOrchestration — handleRevert", () => {
     });
 
     expect(prompt).toBe("make cards");
-    expect(readState()).not.toHaveProperty("mode");
   });
 
   it("restores the draft typed before the first revert after reverting again", () => {

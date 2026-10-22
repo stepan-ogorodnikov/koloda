@@ -511,7 +511,7 @@ Line numbers are at `5801f741`; when an earlier item moved them, find the code b
   Commit: Describe message copy and send time in the messages spec
   Depends on: 11
 
-- [ ] 13. Drop dead assertions and duplicate cases from message tests
+- [x] 13. Drop dead assertions and duplicate cases from message tests
   Goal (entry 14):
   - Drop the `not.toHaveProperty("mode")` assertions (`runs/use-run-orchestration.test.ts:368`, :554).
     Delete a case if that assertion was all it checked.

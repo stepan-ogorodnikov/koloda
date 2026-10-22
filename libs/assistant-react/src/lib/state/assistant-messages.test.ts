@@ -12,7 +12,7 @@ import {
   serializeGeneratedCards,
 } from "./assistant-messages";
 
-describe("aiChatUtility", () => {
+describe("message metadata readers and card serialization", () => {
   it("reads createdAt and runId from user message metadata", () => {
     const message = createTextMessage("user-1", "user", "Hello", {
       createdAt: "2026-07-18T11:00:00.000Z",
