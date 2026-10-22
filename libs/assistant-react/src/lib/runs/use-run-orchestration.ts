@@ -198,7 +198,9 @@ export function useRunOrchestration(options: UseRunOrchestrationOptions): UseRun
         "setRevertState",
         {
           revertedToUserMessageId: userMessageId,
-          preRevertInputText: currentInputText,
+          // WHY: on a second revert the composer holds the first revert's
+          // pre-fill, not the user's draft. Keep the draft the first revert held.
+          preRevertInputText: state.revertState?.preRevertInputText ?? currentInputText,
         },
       ]);
       return promptText;

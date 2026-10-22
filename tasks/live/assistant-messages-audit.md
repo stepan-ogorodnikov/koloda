@@ -231,7 +231,7 @@ Line numbers are at `5801f741`; when an earlier item moved them, find the code b
 `AR` below stands for `bunx vitest run --config libs/assistant-react/vitest.config.mjs --configLoader runner`.
 `AIR` stands for the same command with `libs/ai-react/vitest.config.mjs`.
 
-- [ ] 1. Keep the first draft when reverting again
+- [x] 1. Keep the first draft when reverting again
   Goal (entry 1):
   - In `handleRevert` (`runs/use-run-orchestration.ts:184-207`), store
     `state.revertState?.preRevertInputText ?? currentInputText` as `preRevertInputText`.

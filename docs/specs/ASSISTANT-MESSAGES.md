@@ -163,6 +163,7 @@ While revert is active, hidden messages are also excluded from the conversation 
 Reverting to a different user message while in a reverted state updates the revert point.
 No messages are actually deleted by changing the revert point.
 The pre-fill in the prompt input is updated to the new target message's text.
+The text held from before the first revert is kept, so Restore still returns it.
 
 #### Restore
 

@@ -553,6 +553,42 @@ describe("useRunOrchestration — handleRevert", () => {
     expect(prompt).toBe("make cards");
     expect(readState()).not.toHaveProperty("mode");
   });
+
+  it("restores the draft typed before the first revert after reverting again", () => {
+    store.set(upsertConversationAtom, {
+      ...initialConversationState,
+      id: "conv-1",
+      createdAt: new Date(1),
+    });
+    store.set(currentConversationIdAtom, "conv-1");
+    dispatch(["submitTurn", { runId: "run-1", text: "First", kind: "chat-text", assistantText: "" }]);
+    dispatch(["completeRun", { runId: "run-1" }]);
+    dispatch(["submitTurn", { runId: "run-2", text: "Second", kind: "chat-text", assistantText: "" }]);
+    dispatch(["completeRun", { runId: "run-2" }]);
+
+    const { result } = renderHook(() =>
+      useRunOrchestration({
+        configRef: { current: makeConfig() },
+        readState,
+        dispatch,
+        dispatchLocal,
+        rememberLastUsedAIProfile: vi.fn(),
+        cancelActiveRun: vi.fn(),
+        dispatchCommand: vi.fn(),
+      }),
+    );
+
+    // The chat shell passes the composer text, which is the last pre-fill after the first revert.
+    let restored: string | null = null;
+    act(() => {
+      const firstPrefill = result.current.handleRevert(userMessageId("run-2"), "my draft");
+      result.current.handleRevert(userMessageId("run-1"), firstPrefill ?? "");
+      restored = result.current.handleRestore();
+    });
+
+    expect(restored).toBe("my draft");
+    expect(readState().revertState).toBeNull();
+  });
 });
 
 describe("useRunOrchestration — submit in-flight guard", () => {
