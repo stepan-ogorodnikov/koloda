@@ -492,7 +492,7 @@ Line numbers are at `5801f741`; when an earlier item moved them, find the code b
   Commit: State the mixed-turn order and pending rule once in the messages spec
   Depends on: 10
 
-- [ ] 12. Describe message copy and send time in the messages spec
+- [x] 12. Describe message copy and send time in the messages spec
   Goal (entry 7):
   - Add §Copying a Message under §Interactions:
     - a user message's copy action copies its text;

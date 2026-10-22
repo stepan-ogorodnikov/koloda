@@ -97,11 +97,10 @@ The unavailable notice replaces the add button.
 
 If no cards were accepted, the review table is not shown.
 
-The message copy action includes the cards.
+The message copy action includes the cards; when it shows is in ASSISTANT-MESSAGES.md (§Copying a Message).
 It serializes every card on the run in the conversation-history format below,
 then appends any leftover assistant text — the same order the turn renders.
 Copy is independent of the selection checkboxes and per-card statuses.
-The action appears whenever the turn has cards or text, including cards-only turns.
 If the template fields are unavailable, copy falls back to the text alone.
 
 ## Card Status

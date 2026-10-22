@@ -46,6 +46,9 @@ Its content fills in as the AI stream progresses.
 Messages are rendered differently based on their type.
 
 User messages always render as text.
+Each user message shows when it was sent.
+A message sent today shows "Today" and the time; an older one shows the date and the time.
+The date and time follow INTERFACE-SETTINGS.md (§Date and Time Format).
 
 An assistant message shows the streamed text as rendered markdown.
 Reasoning and tool calls appear as activity rows above that text, even when there are no cards.
@@ -112,6 +115,16 @@ The text accumulated so far is kept.
 
 See ASSISTANT-CONVERSATIONS.md (§Retry) for when retry is available,
 which run it reuses, and which AI profile state it uses.
+
+### Copying a Message
+
+Each user message has a copy action that copies its text.
+
+An assistant turn has a copy action once its run has ended, whatever the outcome.
+It copies the turn's text.
+What a turn with cards copies is in ASSISTANT-CARD-GENERATION.md (§Card Display).
+The action shows only when the turn has something to copy.
+While the run is streaming, the turn has no copy action.
 
 ### Reverting the Conversation
 
