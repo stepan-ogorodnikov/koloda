@@ -67,6 +67,16 @@ describe("toPersistedState / fromPersistedState", () => {
     expect(fromPersistedState(persisted).promptInput).toBe("unsent");
   });
 
+  it("saves the held draft instead of the revert pre-fill, so a reload acts like Restore", () => {
+    const state: ConversationReducerState = {
+      ...initialConversationState,
+      id: "conv-1",
+      promptInput: "First",
+      revertState: { revertedToUserMessageId: "user-r1", preRevertInputText: "my draft" },
+    };
+    expect(fromPersistedState(toPersistedState(state)).promptInput).toBe("my draft");
+  });
+
   it("snapshots streaming elapsed so crash restore does not count downtime", () => {
     vi.useFakeTimers();
     const startedAt = new Date("2026-07-01T12:00:00.000Z");

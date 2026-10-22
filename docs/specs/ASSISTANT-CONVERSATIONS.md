@@ -200,7 +200,7 @@ Everything is saved as-is, including failed runs, their error messages, and whet
 A conversation that has not yet been given an identity is not saved.
 Clearing the composer does not remove a conversation that already has an identity.
 Typing in the prompt schedules a save and does not bump the conversation timestamp.
-The current composer text is stored with the conversation.
+The current composer text is stored with the conversation; during a revert, see §Revert State.
 Which conversation reopens on reload is covered by ASSISTANT-CONVERSATION-LIST.md (§Conversation List).
 
 ## Restore
@@ -285,6 +285,7 @@ This section covers only conversation-level effects.
 
 Revert does not persist across sessions.
 Reloading the app clears the revert state.
+It also returns the prompt input to its pre-revert state, as Restore does; see ASSISTANT-MESSAGES.md (§Restore).
 
 ### Conversation-Level Implications
 

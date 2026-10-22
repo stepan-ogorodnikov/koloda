@@ -253,7 +253,7 @@ Line numbers are at `5801f741`; when an earlier item moved them, find the code b
   Commit: Keep the first draft when reverting again
   Depends on: none
 
-- [ ] 2. Give back the pre-revert draft after a reload
+- [x] 2. Give back the pre-revert draft after a reload
   Goal (entry 15; question 2):
   - In `toPersistedState` (`persistence/conversation-persistence.ts:40-48`), when `state.revertState` is set, write
     `promptInput: state.revertState.preRevertInputText`.
