@@ -137,6 +137,32 @@ describe("useAssistantMessageRenderer", () => {
     expect(handleRetry).toHaveBeenCalledWith(runId);
   });
 
+  it.each([
+    { label: "a chat turn", cards: [] },
+    { label: "a card turn", cards: [sampleCard] },
+  ])("keeps activity and copy on $label that succeeded without a saved duration", ({ cards }) => {
+    const run = {
+      ...makeRun("r1", "success"),
+      elapsedSeconds: null,
+      cards,
+      templateFields: sampleFields,
+      toolCalls: [
+        {
+          kind: "reasoning" as const,
+          id: "r1-reasoning-0",
+          text: "plan",
+          status: "done" as const,
+          startedAt: new Date(0),
+          elapsedSeconds: 2,
+        },
+      ],
+    };
+    mountRenderer({ r1: run });
+
+    expect(screen.getByTestId("tool-activity").textContent).toBe("thinking");
+    expect(screen.getByTestId("copy-button")).toBeTruthy();
+  });
+
   it("renders tool activity on a streaming chat message", () => {
     const run = {
       ...makeRun("r1", "streaming"),

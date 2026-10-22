@@ -152,14 +152,14 @@ type RenderRunStatusOptions = {
 function renderRunStatus(options: RenderRunStatusOptions): ReactNode {
   const { run, runId, isTail, copyAction, handleRetry } = options;
   if (run.status === "success") {
-    return run.elapsedSeconds !== null ? (
+    return (
       <AIChatMessageStatus
         state="success"
-        elapsedSeconds={run.elapsedSeconds}
+        elapsedSeconds={run.elapsedSeconds ?? undefined}
         modelName={run.modelName}
         actions={copyAction}
       />
-    ) : null;
+    );
   }
   if (run.status === "canceled" || run.status === "interrupted" || run.status === "failed") {
     return (
@@ -279,16 +279,11 @@ function renderChatMessage(options: RenderChatMessageOptions) {
     return <AIChatMessageLayout role="assistant">{pending}</AIChatMessageLayout>;
   }
 
-  const terminalStatus = renderRunStatus({ run, runId, isTail, copyAction, handleRetry });
-  if (terminalStatus) {
-    return (
-      <div className="group flex flex-col gap-2 self-start w-full">
-        {toolActivity}
-        {content}
-        {terminalStatus}
-      </div>
-    );
-  }
-
-  return content;
+  return (
+    <div className="group flex flex-col gap-2 self-start w-full">
+      {toolActivity}
+      {content}
+      {renderRunStatus({ run, runId, isTail, copyAction, handleRetry })}
+    </div>
+  );
 }

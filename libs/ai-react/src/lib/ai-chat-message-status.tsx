@@ -83,17 +83,16 @@ export function AIChatMessageStatus(props: AIChatMessageStatusProps) {
   }
 
   if (state === "success") {
+    const hasTime = typeof elapsedSeconds === "number";
     return (
       <div className="flex flex-row items-center gap-2 px-3">
-        <p className="fg-level-4 flex flex-row items-center gap-1">
-          {modelName && (
-            <>
-              {modelName}
-              <span aria-hidden="true">·</span>
-            </>
-          )}
-          <AIChatElapsedTimeDisplay seconds={elapsedSeconds ?? 0} />
-        </p>
+        {(modelName || hasTime) && (
+          <p className="fg-level-4 flex flex-row items-center gap-1">
+            {modelName}
+            {modelName && hasTime && <span aria-hidden="true">·</span>}
+            {hasTime && <AIChatElapsedTimeDisplay seconds={elapsedSeconds} />}
+          </p>
+        )}
         {actions}
       </div>
     );

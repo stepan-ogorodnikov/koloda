@@ -348,7 +348,7 @@ Line numbers are at `5801f741`; when an earlier item moved them, find the code b
   Commit: Tell Thinking from Thought in Russian
   Depends on: none
 
-- [ ] 6. Keep activity rows and copy on a success run without a duration
+- [x] 6. Keep activity rows and copy on a success run without a duration
   Goal (entry 11):
   - In `renderRunStatus` (`ui/use-assistant-message-renderer.tsx:152-176`), always return the success status.
     Pass `elapsedSeconds={run.elapsedSeconds ?? undefined}`.

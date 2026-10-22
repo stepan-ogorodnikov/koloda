@@ -44,6 +44,22 @@ describe("AIChatMessageStatus", () => {
       expect(status!.querySelector('[aria-hidden="true"]')).toBeNull();
       expect(status!.textContent).not.toContain("GPT-4");
     });
+
+    it("shows the modelName without a separator or time when no duration was saved", () => {
+      const { container } = render(<AIChatMessageStatus state="success" modelName="GPT-4" />);
+
+      expect(container.textContent).toBe("GPT-4");
+      expect(container.querySelector('[aria-hidden="true"]')).toBeNull();
+    });
+
+    it("shows only the actions when there is neither a modelName nor a duration", () => {
+      const { container } = render(
+        <AIChatMessageStatus state="success" actions={<button type="button">copy</button>} />,
+      );
+
+      expect(container.textContent).toBe("copy");
+      expect(container.querySelector("p")).toBeNull();
+    });
   });
 
   describe("retry on terminal states", () => {
