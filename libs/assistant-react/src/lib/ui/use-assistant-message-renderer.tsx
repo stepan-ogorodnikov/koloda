@@ -1,11 +1,11 @@
 import { getTextMessageContent } from "@koloda/ai";
-import { AIChatMessageLayout, AIChatMessageStatus, AIToolActivity } from "@koloda/ai-react";
+import { AIChatMessage, AIChatMessageLayout, AIChatMessageStatus, AIToolActivity } from "@koloda/ai-react";
 import type { UIMessage } from "ai";
 import { useAtomValue } from "jotai";
 import type { ReactNode } from "react";
-import { useCallback } from "react";
+import { memo, useCallback } from "react";
 import { AssistantCardsMessage } from "./assistant-cards-message";
-import { renderAssistantReasoningMarkdown } from "./assistant-markdown";
+import { renderAssistantMarkdown, renderAssistantReasoningMarkdown } from "./assistant-markdown";
 import {
   getAssistantMetadata,
   getMessageRunId,
@@ -44,15 +44,16 @@ export function useAssistantMessageRenderer({ handleRetry, handleRevert }: UseAs
       if (chatMetadata) {
         const run = runs[chatMetadata.runId];
         if (run) {
-          return renderChatMessage({
-            message,
-            content,
-            run,
-            runId: chatMetadata.runId,
-            isCurrentRun: chatMetadata.runId === activeRunId,
-            isTail,
-            handleRetry,
-          });
+          return (
+            <AssistantTurn
+              message={message}
+              run={run}
+              runId={chatMetadata.runId}
+              isCurrentRun={chatMetadata.runId === activeRunId}
+              isTail={isTail}
+              handleRetry={handleRetry}
+            />
+          );
         }
       }
 
@@ -193,9 +194,8 @@ function renderChatProposal(options: RenderChatProposalOptions) {
   );
 }
 
-type RenderChatMessageOptions = {
+type AssistantTurnProps = {
   message: UIMessage;
-  content: ReactNode;
   run: AssistantRun;
   runId: string;
   isCurrentRun: boolean;
@@ -203,8 +203,19 @@ type RenderChatMessageOptions = {
   handleRetry: (runId: string) => Promise<void>;
 };
 
-function renderChatMessage(options: RenderChatMessageOptions) {
-  const { message, content, run, runId, isCurrentRun, isTail, handleRetry } = options;
+// WHY: memoized so a keystroke or a chunk streamed into the tail skips finished
+// turns; immer keeps their message and run objects stable. The turn renders its
+// own text instead of taking `AIChatMessages`' `content`, which is a new element
+// on every render and would defeat the memo.
+const AssistantTurn = memo(function AssistantTurn({
+  message,
+  run,
+  runId,
+  isCurrentRun,
+  isTail,
+  handleRetry,
+}: AssistantTurnProps) {
+  const content = <AIChatMessage role="assistant" parts={message.parts} renderText={renderAssistantMarkdown} />;
   const text = getTextMessageContent(message);
   // WHY: copy mirrors the rendered turn — cards first, leftover text second —
   // reusing the history serialization so multi-line card markdown survives.
@@ -262,4 +273,4 @@ function renderChatMessage(options: RenderChatMessageOptions) {
       {renderRunStatus({ run, runId, isTail, copyAction, handleRetry })}
     </div>
   );
-}
+});

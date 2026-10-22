@@ -10,7 +10,8 @@ export type AIChatMessageProps = {
 };
 
 // WHY: memoized on props identity — immer keeps untouched messages' parts
-// references stable, so streamed chunks re-render only the tail message.
+// references stable, so streamed chunks skip this message's text. It covers the
+// text only; a caller that adds rows around it memoizes the whole turn.
 export const AIChatMessage = memo(function AIChatMessage({ role, parts, renderText }: AIChatMessageProps) {
   const filteredParts = getMessageParts(parts);
   const textRenderer = role === "user" ? undefined : renderText;

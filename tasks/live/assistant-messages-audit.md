@@ -416,7 +416,7 @@ Line numbers are at `5801f741`; when an earlier item moved them, find the code b
   Commit: Delete unused chat message props and part types
   Depends on: none
 
-- [ ] 9. Re-render only the assistant turns that changed
+- [x] 9. Re-render only the assistant turns that changed
   Goal (entry 9):
   - Add a memoized assistant turn component in `ui/`.
     Its props are the message, its run, `runId`, `isTail`, `isCurrentRun`, and `handleRetry`.

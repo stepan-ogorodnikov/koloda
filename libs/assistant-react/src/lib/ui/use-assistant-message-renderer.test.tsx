@@ -1,5 +1,6 @@
-import { render, renderHook, screen } from "@testing-library/react";
-import { createStore, Provider as JotaiProvider } from "jotai";
+import { getTextMessageContent } from "@koloda/ai";
+import { act, render, renderHook, screen } from "@testing-library/react";
+import { createStore, Provider as JotaiProvider, useAtomValue } from "jotai";
 import * as React from "react";
 import type { PropsWithChildren } from "react";
 import { describe, expect, it, vi } from "vitest";
@@ -7,11 +8,22 @@ import { makeRun } from "../state/assistant-conversation.fixtures";
 import { assistantMessageId, createTextMessage } from "../state/assistant-messages";
 import { initialConversationState } from "../state/conversation-types";
 import type { AssistantRun } from "../state/conversation-types";
-import { conversationsAtom, currentConversationIdAtom } from "../state/conversation-store";
+import { assistantMessagesAtom } from "../state/conversation-selectors";
+import {
+  assistantConversationStateAtom,
+  conversationsAtom,
+  currentConversationIdAtom,
+} from "../state/conversation-store";
 import { useAssistantMessageRenderer } from "./use-assistant-message-renderer";
 import { testId } from "../../test/test-helpers";
 
+// Records which run's activity row or card table rendered, for the render-count test.
+const stubRenders = vi.hoisted(() => vi.fn<(widget: "activity" | "cards", key: string | undefined) => void>());
+
 vi.mock("@koloda/ai-react", () => ({
+  AIChatMessage: ({ parts }: { parts: Array<{ type: string; text?: string }> }) => (
+    <p>{parts.map((part) => (part.type === "text" ? part.text : "")).join("")}</p>
+  ),
   AIChatMessageLayout: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
   AIChatMessageStatus: (props: {
     state: string;
@@ -33,13 +45,16 @@ vi.mock("@koloda/ai-react", () => ({
     calls,
     renderText,
   }: {
-    calls: Array<{ name?: string; kind?: string }>;
+    calls: Array<{ id: string; name?: string; kind?: string }>;
     renderText?: (text: string) => React.ReactNode;
-  }) => (
-    <div data-testid="tool-activity" data-has-render-text={renderText ? "true" : "false"}>
-      {calls.map((entry) => (entry.kind === "reasoning" ? "thinking" : entry.name)).join(",")}
-    </div>
-  ),
+  }) => {
+    stubRenders("activity", calls[0]?.id);
+    return (
+      <div data-testid="tool-activity" data-has-render-text={renderText ? "true" : "false"}>
+        {calls.map((entry) => (entry.kind === "reasoning" ? "thinking" : entry.name)).join(",")}
+      </div>
+    );
+  },
 }));
 
 vi.mock("./copy-message-button", () => ({
@@ -47,14 +62,22 @@ vi.mock("./copy-message-button", () => ({
 }));
 
 vi.mock("./assistant-cards-message", () => ({
-  AssistantCardsMessage: (props: { canAdd: boolean; deckId: string | null; templateId: string | undefined }) => (
-    <div
-      data-testid="cards-table"
-      data-can-add={String(props.canAdd)}
-      data-deck-id={String(props.deckId)}
-      data-template-id={String(props.templateId)}
-    />
-  ),
+  AssistantCardsMessage: (props: {
+    runId: string;
+    canAdd: boolean;
+    deckId: string | null;
+    templateId: string | undefined;
+  }) => {
+    stubRenders("cards", props.runId);
+    return (
+      <div
+        data-testid="cards-table"
+        data-can-add={String(props.canAdd)}
+        data-deck-id={String(props.deckId)}
+        data-template-id={String(props.templateId)}
+      />
+    );
+  },
 }));
 
 const sampleCard = { content: { [testId(1)]: { text: "Q" }, [testId(2)]: { text: "A" } } };
@@ -406,5 +429,78 @@ describe("useAssistantMessageRenderer", () => {
     const first = result.current;
     rerender();
     expect(result.current).toBe(first);
+  });
+
+  it("re-renders only the streaming tail on keystrokes and chunks, not finished turns", () => {
+    const conversationId = "c1";
+    const store = createStore();
+    store.set(currentConversationIdAtom, conversationId);
+    store.set(conversationsAtom, {
+      [conversationId]: {
+        ...initialConversationState,
+        id: conversationId,
+        activeRunId: "r2",
+        messages: [
+          createTextMessage("user-r1", "user", "Make cards", { createdAt: "2026-07-01T11:00:00.000Z", runId: "r1" }),
+          createTextMessage(assistantMessageId("r1"), "assistant", "Done", { kind: "chat-text", runId: "r1" }),
+          createTextMessage("user-r2", "user", "More", { createdAt: "2026-07-01T11:01:00.000Z", runId: "r2" }),
+          createTextMessage(assistantMessageId("r2"), "assistant", "", { kind: "chat-text", runId: "r2" }),
+        ],
+        runs: {
+          r1: {
+            ...makeRun("r1", "success"),
+            cards: [sampleCard],
+            templateFields: sampleFields,
+            toolCalls: [
+              {
+                id: "r1-call",
+                name: "propose_cards",
+                input: {},
+                status: "success" as const,
+                output: { cards: [sampleCard] },
+                startedAt: new Date(0),
+                elapsedSeconds: 1,
+              },
+            ],
+          },
+          r2: makeRun("r2", "streaming"),
+        },
+      },
+    });
+    const handleRetry = vi.fn();
+    const handleRevert = vi.fn();
+
+    // Stands in for AIChatMessages: the chat shell re-renders it on every keystroke.
+    // User rows are left out; their send time needs a locale this file does not set up.
+    function Transcript(_props: { promptInput: string }) {
+      const messages = useAtomValue(assistantMessagesAtom);
+      const renderMessage = useAssistantMessageRenderer({ handleRetry, handleRevert });
+      return (
+        <>
+          {messages
+            .filter((message) => message.role === "assistant")
+            .map((message) => (
+              <React.Fragment key={message.id}>
+                {renderMessage(message, <p>{getTextMessageContent(message)}</p>)}
+              </React.Fragment>
+            ))}
+        </>
+      );
+    }
+    const Wrapper = ({ children }: PropsWithChildren) => <JotaiProvider store={store}>{children}</JotaiProvider>;
+    const { rerender } = render(<Transcript promptInput="" />, { wrapper: Wrapper });
+
+    for (const promptInput of ["a", "ab", "abc", "abcd", "abcde"]) {
+      rerender(<Transcript promptInput={promptInput} />);
+    }
+    for (const text of ["You", "You have", "You have 2", "You have 2 decks", "You have 2 decks."]) {
+      act(() => {
+        store.set(assistantConversationStateAtom, ["updateAssistantText", { runId: "r2", text }]);
+      });
+    }
+
+    expect(screen.getByText("You have 2 decks.")).toBeTruthy();
+    expect(stubRenders.mock.calls.filter(([, key]) => key === "r1-call")).toHaveLength(1);
+    expect(stubRenders.mock.calls.filter(([, key]) => key === "r1")).toHaveLength(1);
   });
 });
