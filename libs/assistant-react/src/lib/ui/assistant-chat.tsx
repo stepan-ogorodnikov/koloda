@@ -220,7 +220,6 @@ export function AssistantChat({
               messages={messages}
               renderMessage={renderMessage}
               renderText={renderAssistantMarkdown}
-              modelName={modelName}
               emptyState={emptyState}
               scroll={scroll}
             />

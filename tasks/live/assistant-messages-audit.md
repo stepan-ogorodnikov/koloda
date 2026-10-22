@@ -397,7 +397,7 @@ Line numbers are at `5801f741`; when an earlier item moved them, find the code b
   Commit: Delete the cards message status ladder
   Depends on: 6
 
-- [ ] 8. Delete unused chat message props and part types
+- [x] 8. Delete unused chat message props and part types
   Goal (entry 13):
   - Delete `modelName` from `AIChatMessageProps` (`libs/ai-react/src/lib/ai-chat-message.tsx:15`), from
     `AIChatMessagesProps` and its pass-through (`libs/ai-react/src/lib/ai-chat-messages.tsx:21`, :28, :55), and from

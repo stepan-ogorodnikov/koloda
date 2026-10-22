@@ -3,17 +3,9 @@ import { memo } from "react";
 import type { PropsWithChildren, ReactNode } from "react";
 import { tv } from "tailwind-variants";
 
-type InterruptedPart = {
-  type: "interrupted";
-  text: string;
-};
-
-type ChatMessagePart = UIMessagePart<any, any> | InterruptedPart;
-
 export type AIChatMessageProps = {
   role: UIMessage["role"];
-  modelName?: string;
-  parts: ChatMessagePart[];
+  parts: UIMessagePart<any, any>[];
   renderText?: (text: string) => ReactNode;
 };
 
@@ -55,7 +47,7 @@ export function AIChatMessageLayout({ role, children }: AIChatMessageLayoutProps
 }
 
 type MessagePartProps = {
-  part: ChatMessagePart;
+  part: UIMessagePart<any, any>;
   renderText?: (text: string) => ReactNode;
 };
 
@@ -68,8 +60,6 @@ function MessagePart({ part, renderText }: MessagePartProps) {
       // WHY: thinking renders as an activity row on the run, not as a
       // dimmed paragraph after the answer. Skip leftover legacy parts.
       return null;
-    case "interrupted":
-      return <p className="fg-level-4">{part.text}</p>;
     case "source-url":
       return <p className="fg-level-3">{part.title || part.url}</p>;
     case "source-document":
@@ -85,6 +75,6 @@ function MessagePart({ part, renderText }: MessagePartProps) {
   }
 }
 
-function getMessageParts(parts: ChatMessagePart[]) {
+function getMessageParts(parts: UIMessagePart<any, any>[]) {
   return parts.filter((part) => part.type !== "step-start" && part.type !== "reasoning");
 }
