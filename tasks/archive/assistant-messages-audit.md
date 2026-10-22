@@ -1,6 +1,6 @@
 # Assistant messages audit fixes
 
-Status: ready
+Status: done
 Guides: agents/IMPLEMENTATION-PLAN.md, agents/TASKS.md, agents/ASSISTANT-MAP.md, docs/specs/ASSISTANT-MESSAGES.md, docs/specs/ASSISTANT-CONVERSATIONS.md, docs/specs/ASSISTANT-CARD-GENERATION.md, agents/CODE-STYLE.md, agents/CODE-DOCUMENTATION.md, agents/TESTING.md, agents/VERIFY.md, agents/CSS.md, agents/I18N.md, agents/BACKWARDS-COMPATIBILITY.md, agents/FUNCTIONAL-SPECIFICATIONS.md, agents/MARKDOWN.md, agents/REVIEW.md
 Flow: local
 
@@ -528,4 +528,49 @@ Line numbers are at `5801f741`; when an earlier item moved them, find the code b
 
 ## Outcome
 
-<what shipped>
+Shipped, one commit per Plan item:
+
+- Revert keeps the draft typed before the first revert, so Restore after a second revert gives it back.
+- A reload during a revert saves and restores that draft too, as Restore does.
+  ASSISTANT-CONVERSATIONS.md (§Revert State) says so.
+- Text before and after a tool step is separated by a paragraph break, on screen, in copy, and in history.
+- A whitespace-only reasoning delta opens no Thought row and does not reopen a closed one.
+- The Russian Thinking label is "Размышляет"; Thought stays "Размышление".
+- A success run without a saved duration keeps its activity rows and copy action; its status shows no time.
+- Each assistant turn renders through a memoized component, so keystrokes and chunks skip finished turns.
+- ASSISTANT-MESSAGES.md has no error marker or metadata kind, points at ASSISTANT-CONVERSATIONS.md (§Retry) for
+  retry, states the mixed-turn order and the pending rule once, and describes copy and the user message time.
+- Dead surface is deleted: the cards message status ladder and its props, `modelName` on the chat message
+  components, and the `interrupted` part type.
+- Dead `mode` assertions, a misnamed describe, and a duplicate revert-atom case are gone from the tests.
+
+Beyond the item text:
+
+- Item 3's cases live in `libs/ai/src/lib/assistant-tools.test.ts` (§chat tool streaming), which owns the fake-model
+  harness; a second file-level mock of `ai-sdk-ollama` would leak under `isolate: false`.
+  The mock model confirmed that each step's text opens a new `text-start`.
+- Item 7 also dropped the cards message's empty-cards guard; its one caller renders it only when cards exist.
+- Item 9 exports `AIChatMessage` from `@koloda/ai-react`.
+  `handleRetry` keeps its identity across keystrokes and chunks; it changes only with the global AI profile record.
+- Item 11 keeps "A status shows no elapsed time when no duration was saved" in §Message States.
+- Item 13 also dropped the stale `mode` field from a payload cast in `runs/use-run-orchestration.test.ts`.
+
+Entry 10 was fixed by `8400cfe9` before this task; it has no plan item.
+
+Checks on the branch:
+
+- Scoped Vitest per item; each fix's new case failed against the old code.
+- `@koloda/assistant-react` passed in shuffled file orders, seeds 1–8 on one worker; `@koloda/ai` seeds 1–4.
+- `bun run check:push` passed on the tip before Archive.
+- The e2e suites were not run.
+
+Left open:
+
+- Seen while working, not fixed (also on `main`): `libs/ai-react/src/lib/ai-chat-error.test.tsx` fails two cases
+  under `--maxWorkers=1 --sequence.shuffle.files` with seeds 2 and 3.
+  Its file-level `@koloda/core-react` mock misses when a sibling binds the real `useHotkeysSettings` first, and
+  `queriesAtom` is null; it is the shape of the conversation list task's entry 19.
+- Several test files still carry fixtures without the activity `startedAt` and `elapsedSeconds` that the live types
+  require; `tsc -b` skips test files, so they go unnoticed.
+- Manual verify was handed to the human: revert twice then Restore; reload during a revert; text around a tool call;
+  an empty `<think>` block; the Russian labels; a finished card table keeping its selection while the tail streams.
