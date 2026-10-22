@@ -280,7 +280,7 @@ Line numbers are at `5801f741`; when an earlier item moved them, find the code b
   Commit: Give back the pre-revert draft after a reload
   Depends on: 1
 
-- [ ] 3. Separate text segments of a response with a paragraph break
+- [x] 3. Separate text segments of a response with a paragraph break
   Goal (entry 2):
   - In `libs/ai/src/lib/chat-stream.ts` (the part loop at :57-71), handle the SDK's `text-start` part.
     When a new text block starts after text was already emitted in this stream, prefix the next non-empty
@@ -297,6 +297,10 @@ Line numbers are at `5801f741`; when an earlier item moved them, find the code b
     an empty text block between two segments gives exactly one break.
   Constraints: `chat-stream.ts` and its test.
   Leave the runtime accumulator and the reducer's single text part as they are.
+  Done: the mock model confirmed a new `text-start` per step.
+  The cases went into `assistant-tools.test.ts` (§chat tool streaming), which owns the fake-model harness.
+  A second file-level mock of `ai-sdk-ollama` in `chat-stream.test.ts` would leak under `isolate: false`.
+  The single-block case is the existing "keeps text output and single-step behavior" test.
   Done when:
   - `bunx vitest run --config libs/ai/vitest.config.mjs --configLoader runner chat-stream conversations` passes;
   - `bunx vitest run --config libs/assistant/vitest.config.mjs --configLoader runner` passes.

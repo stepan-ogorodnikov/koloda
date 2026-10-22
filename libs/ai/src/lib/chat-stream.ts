@@ -53,10 +53,22 @@ async function runChatStream(
     },
   });
 
+  // WHY: the run stores one text string, so separate text blocks (say, before and
+  // after a tool step) would run together. The break waits for the next non-empty
+  // delta so an empty block adds nothing.
+  let hasEmittedText = false;
+  let shouldBreakBeforeText = false;
   try {
     for await (const part of result.stream) {
-      if (part.type === "text-delta") {
-        onChunk({ kind: "text", text: part.text });
+      if (part.type === "text-start") {
+        shouldBreakBeforeText = hasEmittedText;
+      } else if (part.type === "text-delta") {
+        const text = shouldBreakBeforeText && part.text ? `\n\n${part.text}` : part.text;
+        if (part.text) {
+          hasEmittedText = true;
+          shouldBreakBeforeText = false;
+        }
+        onChunk({ kind: "text", text });
       } else if (part.type === "reasoning-delta") {
         onChunk({ kind: "reasoning", text: part.text });
       } else if (part.type === "tool-call") {

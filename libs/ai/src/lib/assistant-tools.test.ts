@@ -102,6 +102,24 @@ function createToolRoundTripModel() {
   });
 }
 
+/** First call writes text, then asks for a tool; the second call answers with text. */
+function createTextAroundToolModel(textBeforeTool: MockStreamChunk[]) {
+  let callCount = 0;
+  return new MockLanguageModelV3({
+    doStream: async (): Promise<MockStreamResult> => {
+      callCount += 1;
+      if (callCount === 1) {
+        return streamOf([
+          ...textBeforeTool,
+          { type: "tool-call", toolCallId: "call-1", toolName: "list_decks", input: JSON.stringify({}) },
+          { type: "finish", finishReason: { unified: "tool-calls", raw: "tool-calls" }, usage: usage(3, 5) },
+        ]);
+      }
+      return textOnlyChunks();
+    },
+  });
+}
+
 function createTextOnlyModel() {
   return new MockLanguageModelV3({
     doStream: async (): Promise<MockStreamResult> => textOnlyChunks(),
@@ -935,6 +953,37 @@ describe("chat tool streaming", () => {
     ]);
     // Steps reported 3/5 then 30/50; the run must return the accumulated total.
     expect(result).toMatchObject({ promptTokens: 33, completionTokens: 55, totalTokens: 88 });
+  });
+
+  it.each([
+    { label: "one text block", emptyBlock: [] },
+    {
+      label: "an empty text block before the tool call",
+      emptyBlock: [
+        { type: "text-start", id: "text-2" },
+        { type: "text-delta", id: "text-2", delta: "" },
+        { type: "text-end", id: "text-2" },
+      ] satisfies MockStreamChunk[],
+    },
+  ])("separates text before and after a tool step with one paragraph break ($label)", async ({ emptyBlock }) => {
+    fakeModelSlot.model = createTextAroundToolModel([
+      { type: "text-start", id: "text-1" },
+      { type: "text-delta", id: "text-1", delta: "Let me check your decks." },
+      { type: "text-end", id: "text-1" },
+      ...emptyBlock,
+    ]);
+    const chunks: string[] = [];
+
+    await streamChatWithOllama(
+      createChatRequest({ tools: ["list_decks"], executeTool: vi.fn().mockResolvedValue({ decks: [] }) }),
+      (chunk) => {
+        if (chunk.kind === "text") chunks.push(chunk.text);
+      },
+      new AbortController().signal,
+      OLLAMA_OPTIONS,
+    );
+
+    expect(chunks.join("")).toBe("Let me check your decks.\n\nYou have 2 decks.");
   });
 
   it("keeps text output and single-step behavior when no tools are requested", async () => {
