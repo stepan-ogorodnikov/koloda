@@ -192,7 +192,7 @@ msgstr "Выполняется"
 
 #: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:147
 msgid "ai.chat.tool-activity.thinking"
-msgstr "Размышление"
+msgstr "Размышляет"
 
 #: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:147
 msgid "ai.chat.tool-activity.thought"

@@ -331,7 +331,7 @@ Line numbers are at `5801f741`; when an earlier item moved them, find the code b
   Commit: Show no Thought row for whitespace-only reasoning
   Depends on: none
 
-- [ ] 5. Tell Thinking from Thought in Russian
+- [x] 5. Tell Thinking from Thought in Russian
   Goal (entry 5; question 3):
   - In `libs/ai-react/locales/ru/messages.po:194-195`, set `ai.chat.tool-activity.thinking` to "Размышляет".
     `ai.chat.tool-activity.thought` stays "Размышление".
