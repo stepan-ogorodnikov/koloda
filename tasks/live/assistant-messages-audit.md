@@ -474,7 +474,7 @@ Line numbers are at `5801f741`; when an earlier item moved them, find the code b
   Commit: Drop the error marker from the messages spec
   Depends on: none
 
-- [ ] 11. State the mixed-turn order and pending rule once in the messages spec
+- [x] 11. State the mixed-turn order and pending rule once in the messages spec
   Goal (entry 8):
   - The mixed-turn order lives in §Message Display (:73-75).
     The Relationships bullet (:32-33) points at §Message Display instead of ASSISTANT-CARD-GENERATION.md

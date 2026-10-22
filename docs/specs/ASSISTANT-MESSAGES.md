@@ -27,8 +27,7 @@ Together they form a single turn in the conversation, tied to one AI run.
 - An assistant message inherits its state from its run.
 - A message pair maps to exactly one run; retry overwrites that pair in place.
   See ASSISTANT-CONVERSATIONS.md (§Retry).
-- A turn that proposed cards renders as tool activity, the review table, then leftover text.
-  See ASSISTANT-CARD-GENERATION.md (§Card Display).
+- A turn whose run proposed cards is a mixed turn; its order is in §Message Display.
 - Revert hides the target turn and everything after it; the data is removed only by the next submit.
 
 ## Message Types
@@ -55,10 +54,7 @@ A status indicator shows the run state.
 When the same run proposed cards, that turn is mixed:
 tool activity, then the review table, then leftover streamed text, then status.
 Leftover text appears below the table, not above it.
-Once cards are on screen, the pending status is not shown on the table.
-It attaches below the table while the run is still streaming,
-leftover text has not arrived, and no tool or thinking row is still running.
-Tool activity, if any, appears above the table even when there is no leftover text.
+When the pending status shows is in §Message States.
 
 Status indicators appear below assistant messages.
 They show one of:
@@ -89,12 +85,12 @@ The message state maps to the run state:
   A canceled status indicator is shown.
 - **interrupted**: partial content is preserved.
   An interrupted status indicator is shown.
-Elapsed time is included when a duration was saved; crash restore does not count downtime.
-See ASSISTANT-CONVERSATIONS.md (§Restore).
 
 Which of these states offer retry is in ASSISTANT-CONVERSATIONS.md (§Retry).
+A status shows no elapsed time when no duration was saved.
+Which duration a restored run shows is in ASSISTANT-CONVERSATIONS.md (§Restore).
 
-For a mixed chat turn, content is the tool rows, the proposed cards, and leftover text together.
+On a mixed turn, content includes the tool rows and the proposed cards as well as leftover text.
 
 ## Interactions
 
