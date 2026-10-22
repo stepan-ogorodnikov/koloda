@@ -47,23 +47,13 @@ vi.mock("./copy-message-button", () => ({
 }));
 
 vi.mock("./assistant-cards-message", () => ({
-  AssistantCardsMessage: (props: {
-    canAdd: boolean;
-    deckId: string | null;
-    templateId: string | undefined;
-    isGenerating: boolean;
-    showStatus?: boolean;
-  }) => (
-    <div>
-      {props.isGenerating && props.showStatus !== false ? <div data-testid="status-pending" /> : null}
-      <div
-        data-testid="cards-table"
-        data-can-add={String(props.canAdd)}
-        data-deck-id={String(props.deckId)}
-        data-template-id={String(props.templateId)}
-        data-show-status={String(props.showStatus !== false)}
-      />
-    </div>
+  AssistantCardsMessage: (props: { canAdd: boolean; deckId: string | null; templateId: string | undefined }) => (
+    <div
+      data-testid="cards-table"
+      data-can-add={String(props.canAdd)}
+      data-deck-id={String(props.deckId)}
+      data-template-id={String(props.templateId)}
+    />
   ),
 }));
 
@@ -245,7 +235,6 @@ describe("useAssistantMessageRenderer", () => {
     mountRenderer({ r1: run });
     const table = screen.getByTestId("cards-table");
     const note = screen.getByText("Hello");
-    expect(table.getAttribute("data-show-status")).toBe("false");
     expect(table.compareDocumentPosition(note) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     const success = screen.getByTestId("status-success");
     expect(success).toBeTruthy();
@@ -287,7 +276,6 @@ describe("useAssistantMessageRenderer", () => {
     mountRenderer({ r1: run }, { assistantText: "", activeRunId: "r1" });
     const table = screen.getByTestId("cards-table");
     const pending = screen.getByTestId("status-pending");
-    expect(table.getAttribute("data-show-status")).toBe("false");
     expect(screen.queryByText("Hello")).toBeNull();
     expect(table.compareDocumentPosition(pending) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });

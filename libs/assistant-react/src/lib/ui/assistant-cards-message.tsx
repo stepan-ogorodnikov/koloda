@@ -1,5 +1,5 @@
 import type { GeneratedCard } from "@koloda/ai";
-import { AIChatMessageLayout, AIChatMessageStatus } from "@koloda/ai-react";
+import { AIChatMessageLayout } from "@koloda/ai-react";
 import { queriesAtom } from "@koloda/core-react";
 import type { Deck, Template } from "@koloda/srs";
 import { useQuery } from "@tanstack/react-query";
@@ -16,16 +16,6 @@ export type AssistantCardsMessageProps = {
   templateId: Template["id"] | undefined;
   canAdd: boolean;
   isGenerating: boolean;
-  // WHY: chat proposals render run status below leftover text, not on the table.
-  showStatus?: boolean;
-  isCanceled: boolean;
-  isInterrupted?: boolean;
-  isFailed: boolean;
-  canRetry: boolean;
-  onRetry: () => void;
-  elapsedSeconds?: number;
-  startedAt: Date;
-  modelName?: string;
 };
 
 export function AssistantCardsMessage({
@@ -37,15 +27,6 @@ export function AssistantCardsMessage({
   templateId,
   canAdd,
   isGenerating,
-  showStatus = true,
-  isCanceled,
-  isInterrupted = false,
-  isFailed,
-  canRetry,
-  onRetry,
-  elapsedSeconds,
-  startedAt,
-  modelName,
 }: AssistantCardsMessageProps) {
   const { getTemplateQuery } = useAtomValue(queriesAtom);
   const liveTemplateQuery = useQuery({
@@ -63,43 +44,19 @@ export function AssistantCardsMessage({
 
   if (!template) return null;
 
-  const isTerminal = isCanceled || isInterrupted || isFailed;
-  const isSuccess = !isGenerating && !isTerminal;
-  // WHY: Partial cards already received must stay visible beside terminal
-  // status (failed / canceled / interrupted); hiding them drops recoverable output.
-  const showCards = cards.length > 0;
-
   return (
     <AIChatMessageLayout role="assistant">
-      {showStatus && isGenerating && <AIChatMessageStatus state="pending" startedAt={startedAt} />}
-      {showCards && (
-        <AssistantCardsTable
-          runId={runId}
-          cards={cards}
-          cardStatuses={cardStatuses}
-          template={template}
-          deckId={deckId}
-          templateId={templateId}
-          canAdd={canAdd}
-          isGenerating={isGenerating}
-          isTemplateUnavailable={isTemplateUnavailable}
-        />
-      )}
-      {showStatus && isCanceled && (
-        <AIChatMessageStatus state="canceled" elapsedSeconds={elapsedSeconds} canRetry={canRetry} onRetry={onRetry} />
-      )}
-      {showStatus && isInterrupted && (
-        <AIChatMessageStatus
-          state="interrupted"
-          elapsedSeconds={elapsedSeconds}
-          canRetry={canRetry}
-          onRetry={onRetry}
-        />
-      )}
-      {showStatus && isFailed && <AIChatMessageStatus state="failed" canRetry={canRetry} onRetry={onRetry} />}
-      {showStatus && isSuccess && elapsedSeconds !== undefined && showCards && (
-        <AIChatMessageStatus state="success" elapsedSeconds={elapsedSeconds} modelName={modelName} />
-      )}
+      <AssistantCardsTable
+        runId={runId}
+        cards={cards}
+        cardStatuses={cardStatuses}
+        template={template}
+        deckId={deckId}
+        templateId={templateId}
+        canAdd={canAdd}
+        isGenerating={isGenerating}
+        isTemplateUnavailable={isTemplateUnavailable}
+      />
     </AIChatMessageLayout>
   );
 }

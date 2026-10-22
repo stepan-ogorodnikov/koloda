@@ -86,13 +86,10 @@ type RenderCardsMessageOptions = {
   run: AssistantRun;
   runId: string;
   isCurrentRun: boolean;
-  isTail: boolean;
-  handleRetry: (runId: string) => Promise<void>;
-  showStatus?: boolean;
 };
 
 function renderCardsMessage(options: RenderCardsMessageOptions) {
-  const { run, runId, isCurrentRun, isTail, handleRetry, showStatus } = options;
+  const { run, runId, isCurrentRun } = options;
   // WHY: columns always come from the run snapshot. AssistantCardsMessage looks
   // up writeTargetTemplateId for the unavailable marker (ASSISTANT-CARD-GENERATION.md
   // §Card Display).
@@ -113,15 +110,6 @@ function renderCardsMessage(options: RenderCardsMessageOptions) {
       templateId={addTargetTemplateId}
       canAdd={run.cards.length > 0 && !isCurrentRun && addTargetDeckId !== null && addTargetTemplateId !== undefined}
       isGenerating={isCurrentRun}
-      showStatus={showStatus}
-      isCanceled={run.status === "canceled"}
-      isInterrupted={run.status === "interrupted"}
-      isFailed={run.status === "failed"}
-      canRetry={isTail && !!run}
-      onRetry={() => handleRetry(runId)}
-      elapsedSeconds={run.elapsedSeconds ?? undefined}
-      startedAt={run.startedAt}
-      modelName={run.modelName}
     />
   );
 }
@@ -233,19 +221,7 @@ function renderChatMessage(options: RenderChatMessageOptions) {
     run.toolCalls.length > 0 ? (
       <AIToolActivity calls={run.toolCalls} renderText={renderAssistantReasoningMarkdown} />
     ) : null;
-  const cardsBlock =
-    run.cards.length > 0
-      ? renderCardsMessage({
-          run,
-          runId,
-          isCurrentRun,
-          isTail,
-          handleRetry,
-          // WHY: table is done once cards exist. Run status belongs under any
-          // leftover note, not on the table as a second "Working".
-          showStatus: false,
-        })
-      : null;
+  const cardsBlock = run.cards.length > 0 ? renderCardsMessage({ run, runId, isCurrentRun }) : null;
 
   // WHY: table first, leftover text second. The dump is still possible; putting
   // it below keeps the table as the card UI without dropping useful notes.

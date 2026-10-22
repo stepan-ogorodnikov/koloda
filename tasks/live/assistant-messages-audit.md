@@ -370,7 +370,7 @@ Line numbers are at `5801f741`; when an earlier item moved them, find the code b
   Commit: Keep activity rows and copy on a success run without a duration
   Depends on: none
 
-- [ ] 7. Delete the cards message status ladder
+- [x] 7. Delete the cards message status ladder
   Goal (entries 12 and 13, `!!run`):
   - In `ui/assistant-cards-message.tsx`, delete the status ladder (:74, :88-102), `isTerminal` and `isSuccess`
     (:66-67), and the props `showStatus`, `isCanceled`, `isInterrupted`, `isFailed`, `canRetry`, `onRetry`,

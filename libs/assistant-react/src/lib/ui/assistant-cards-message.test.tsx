@@ -10,24 +10,6 @@ import { describe, expect, it, vi } from "vitest";
 import { AssistantCardsMessage } from "./assistant-cards-message";
 import { testId } from "../../test/test-helpers";
 
-vi.mock("@koloda/ai-react", () => ({
-  AIChatMessageLayout: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  AIChatMessageStatus: (props: {
-    state: string;
-    canRetry?: boolean;
-    onRetry?: () => void;
-    elapsedSeconds?: number;
-  }) => (
-    <div data-testid={`status-${props.state}`}>
-      {props.canRetry ? (
-        <button type="button" onClick={props.onRetry}>
-          retry
-        </button>
-      ) : null}
-    </div>
-  ),
-}));
-
 vi.mock("./assistant-cards-table", () => ({
   AssistantCardsTable: ({ cards, isTemplateUnavailable }: { cards: unknown[]; isTemplateUnavailable?: boolean }) => (
     <div data-testid="cards-table" data-unavailable={String(!!isTemplateUnavailable)}>
@@ -58,13 +40,6 @@ const baseProps = {
   templateId: testId(1),
   canAdd: false,
   isGenerating: false,
-  isCanceled: false,
-  isInterrupted: false,
-  isFailed: false,
-  canRetry: true,
-  onRetry: vi.fn(),
-  elapsedSeconds: 4,
-  startedAt: new Date(1000),
 };
 
 function buildQueries(liveTemplate: Template | null): Queries {
@@ -94,47 +69,6 @@ function renderMessage(
 }
 
 describe("AssistantCardsMessage", () => {
-  it.each([
-    { label: "failed", props: { isFailed: true } },
-    { label: "canceled", props: { isCanceled: true } },
-    { label: "interrupted", props: { isInterrupted: true } },
-  ])("keeps partial cards visible for $label runs and exposes retry", ({ label, props }) => {
-    const onRetry = vi.fn();
-    renderMessage({ ...props, onRetry });
-
-    expect(screen.getByTestId("cards-table").textContent).toBe("1 cards");
-    expect(screen.getByTestId(`status-${label}`)).toBeTruthy();
-    screen.getByRole("button", { name: "retry" }).click();
-    expect(onRetry).toHaveBeenCalledOnce();
-  });
-
-  it("hides run status when embedded under leftover chat text", () => {
-    renderMessage({ isGenerating: true, showStatus: false, elapsedSeconds: undefined });
-
-    expect(screen.getByTestId("cards-table")).toBeTruthy();
-    expect(screen.queryByTestId("status-pending")).toBeNull();
-    expect(screen.queryByTestId("status-success")).toBeNull();
-  });
-
-  it("hides the cards table when there are no cards on a failed run", () => {
-    renderMessage({ cards: [], isFailed: true, canRetry: false });
-
-    expect(screen.queryByTestId("cards-table")).toBeNull();
-    expect(screen.getByTestId("status-failed")).toBeTruthy();
-  });
-
-  it.each([
-    { label: "canceled", props: { isCanceled: true } },
-    { label: "interrupted", props: { isInterrupted: true } },
-  ])("shows $label status and retry when elapsedSeconds is missing", ({ label, props }) => {
-    const onRetry = vi.fn();
-    renderMessage({ ...props, elapsedSeconds: undefined, onRetry });
-
-    expect(screen.getByTestId(`status-${label}`)).toBeTruthy();
-    screen.getByRole("button", { name: "retry" }).click();
-    expect(onRetry).toHaveBeenCalledOnce();
-  });
-
   it("keeps the snapshot table and marks the template unavailable when the write target is gone", async () => {
     renderMessage({}, null);
 
