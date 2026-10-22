@@ -312,7 +312,7 @@ Line numbers are at `5801f741`; when an earlier item moved them, find the code b
   Commit: Separate text segments of a response with a paragraph break
   Depends on: none
 
-- [ ] 4. Show no Thought row for whitespace-only reasoning
+- [x] 4. Show no Thought row for whitespace-only reasoning
   Goal (entry 4):
   - In `appendAssistantReasoning` (`state/conversation-run-stream.ts:62-85`), ignore a whitespace-only delta unless
     the trailing activity is a reasoning row with status `running`.

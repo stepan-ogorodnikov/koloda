@@ -212,10 +212,30 @@ describe("conversationReducer", () => {
       ]);
     });
 
-    it("ignores an empty reasoning delta", () => {
+    it.each([
+      { label: "empty", text: "" },
+      { label: "newlines-only", text: "\n\n" },
+      { label: "spaces-only", text: "  " },
+    ])("ignores an $label reasoning delta", ({ text }) => {
       let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
-      state = conversationReducer(state, ["appendAssistantReasoning", { runId: "r1", text: "" }]);
+      state = conversationReducer(state, ["appendAssistantReasoning", { runId: "r1", text }]);
       expect(state.runs.r1?.toolCalls).toEqual([]);
+    });
+
+    it("keeps whitespace inside a running reasoning row", () => {
+      let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
+      state = conversationReducer(state, ["appendAssistantReasoning", { runId: "r1", text: "a\n" }]);
+      state = conversationReducer(state, ["appendAssistantReasoning", { runId: "r1", text: "\n" }]);
+      state = conversationReducer(state, ["appendAssistantReasoning", { runId: "r1", text: "b" }]);
+      expect(state.runs.r1?.toolCalls).toMatchObject([{ kind: "reasoning", text: "a\n\nb", status: "running" }]);
+    });
+
+    it("does not reopen a closed reasoning row for a whitespace-only delta", () => {
+      let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
+      state = conversationReducer(state, ["appendAssistantReasoning", { runId: "r1", text: "plan" }]);
+      state = conversationReducer(state, ["updateAssistantText", { runId: "r1", text: "Answer" }]);
+      state = conversationReducer(state, ["appendAssistantReasoning", { runId: "r1", text: "\n\n" }]);
+      expect(state.runs.r1?.toolCalls).toMatchObject([{ kind: "reasoning", text: "plan", status: "done" }]);
     });
 
     it("stamps startedAt on a new reasoning row and freezes elapsedSeconds when it closes", () => {

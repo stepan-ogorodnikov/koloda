@@ -64,6 +64,10 @@ export function appendAssistantReasoning(draft: ConversationReducerState, payloa
   if (!run || payload.text === "") return;
   const activity = run.toolCalls;
   const last = activity.at(-1);
+  // WHY: an empty `<think>` block arrives as a whitespace-only delta. It must not
+  // open or reopen a row; inside a running thought the spacing is kept.
+  const isRunningThought = last !== undefined && isReasoningActivity(last) && last.status === "running";
+  if (!isRunningThought && payload.text.trim() === "") return;
   if (last && isReasoningActivity(last)) {
     last.text += payload.text;
     last.status = "running";
