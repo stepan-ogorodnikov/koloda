@@ -1,4 +1,4 @@
-import type { AddAIProfileData, AIRuntime, RemoveAIProfileData, UpdateAIProfileData } from "@koloda/ai";
+import type { AddAIProfileData, RemoveAIProfileData, UpdateAIProfileData } from "@koloda/ai";
 import type { ConversationListItem, DeleteConversationData, SetConversationData } from "@koloda/app";
 import type { AllowedSettings, PatchSettingsData, SetSettingsData, SettingsName } from "@koloda/settings";
 import { toConversationListItem } from "@koloda/app";
@@ -47,7 +47,7 @@ export const appQueryOptions = {
 
 export const appSetupMutationOptions = { mutationFn: seedDB };
 
-export const queriesFn = (aiRuntime: AIRuntime): Queries => ({
+export const queriesFn = (): Queries => ({
   getSettingsQuery: <T extends SettingsName>(name: T) => ({
     queryKey: queryKeys.settings.detail(name),
     // WHY: the contract types the result per channel (`AllowedSettings<SettingsName>`);
@@ -221,9 +221,5 @@ export const queriesFn = (aiRuntime: AIRuntime): Queries => ({
   }),
   removeAIProfileMutation: () => ({
     mutationFn: (data: RemoveAIProfileData) => invoke("cmd_remove_ai_profile", { data }),
-  }),
-  getAIProfileModelsQuery: (profileId: string) => ({
-    queryKey: queryKeys.ai.models(profileId),
-    queryFn: () => aiRuntime.listModels(profileId),
   }),
 });

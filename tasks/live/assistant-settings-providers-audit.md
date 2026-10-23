@@ -713,7 +713,7 @@ Item 26 was added during implementation; it is committed before item 2, which it
   Commit: Delete model fields nothing reads
   Depends on: 8
 
-- [ ] 19. Delete an unused AI query, row flag, and type export
+- [x] 19. Delete an unused AI query, row flag, and type export
   Goal (P12):
   - `getAIProfileModelsQuery` from the contract (`libs/core-react/src/lib/queries.ts:108`, `queries-contract.ts:52`),
     both hosts (`apps/web/src/app/queries.ts:201`, `apps/electron-react/src/app/queries.ts:225`), and the test stub

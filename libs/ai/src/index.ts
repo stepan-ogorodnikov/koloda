@@ -11,14 +11,7 @@ export type {
 export { computeConversationTitle, getTextMessageContent } from "./lib/conversations";
 export { AIError, isAIError, toAIError, wrapAIError } from "./lib/error";
 export { chatInputSchema } from "./lib/generation";
-export type {
-  ChatInput,
-  ChatStreamChunk,
-  ChatStreamGenerator,
-  ChatStreamRequest,
-  GeneratedCard,
-  Message,
-} from "./lib/generation";
+export type { ChatInput, ChatStreamChunk, ChatStreamRequest, GeneratedCard, Message } from "./lib/generation";
 export type { AIModel, ModelParameter, StreamUsage } from "./lib/models";
 export { DEFAULT_CHAT_PROMPT_TEMPLATE, GENERATION_TEMPERATURE } from "./lib/prompts";
 export { AI_PROVIDERS, AI_PROVIDER_LABELS } from "./lib/provider-catalog";

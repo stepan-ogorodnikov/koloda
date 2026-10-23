@@ -1,4 +1,4 @@
-import type { AddAIProfileData, AIRuntime } from "@koloda/ai";
+import type { AddAIProfileData } from "@koloda/ai";
 import type { RemoveAIProfileData, UpdateAIProfileData } from "@koloda/ai";
 import type { DeleteConversationData, SetConversationData } from "@koloda/app";
 import type { PatchSettingsData, SetSettingsData, SettingsName } from "@koloda/settings";
@@ -91,7 +91,7 @@ export const webAppQueryOptions = {
 
 export const webSetupMutationOptions = { mutationFn: setupFromScratch };
 
-export const queriesFn = (db: DB, aiRuntime: AIRuntime): Queries => ({
+export const queriesFn = (db: DB): Queries => ({
   getSettingsQuery: <T extends SettingsName>(name: T) => ({
     queryKey: queryKeys.settings.detail(name),
     queryFn: () => getSettings<T>(db, name),
@@ -198,10 +198,6 @@ export const queriesFn = (db: DB, aiRuntime: AIRuntime): Queries => ({
   addAIProfileMutation: () => ({ mutationFn: (data: AddAIProfileData) => addAIProfile(db, data) }),
   updateAIProfileMutation: () => ({ mutationFn: (data: UpdateAIProfileData) => updateAIProfile(db, data) }),
   removeAIProfileMutation: () => ({ mutationFn: (data: RemoveAIProfileData) => removeAIProfile(db, data) }),
-  getAIProfileModelsQuery: (profileId: string) => ({
-    queryKey: queryKeys.ai.models(profileId),
-    queryFn: () => aiRuntime.listModels(profileId),
-  }),
   getAIProfilesQuery: () => ({
     queryKey: queryKeys.ai.profiles(),
     queryFn: () => getAIProfiles(db),

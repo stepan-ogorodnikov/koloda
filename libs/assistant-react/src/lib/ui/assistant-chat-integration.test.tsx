@@ -171,10 +171,6 @@ function buildQueries(): Queries {
     addAIProfileMutation: () => ({ mutationFn: async () => undefined }),
     updateAIProfileMutation: () => ({ mutationFn: async () => undefined }),
     removeAIProfileMutation: () => ({ mutationFn: async () => undefined }),
-    getAIProfileModelsQuery: (profileId: string) => ({
-      queryKey: queryKeys.ai.models(profileId),
-      queryFn: async () => wire.models,
-    }),
     getAIProfilesQuery: () => ({
       queryKey: queryKeys.ai.profiles(),
       queryFn: async () => wire.profiles,

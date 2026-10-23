@@ -1,4 +1,4 @@
-import type { AddAIProfileData, AIModel, AIProfile, RemoveAIProfileData, UpdateAIProfileData } from "@koloda/ai";
+import type { AddAIProfileData, AIProfile, RemoveAIProfileData, UpdateAIProfileData } from "@koloda/ai";
 import type {
   AppError,
   Conversation,
@@ -105,7 +105,6 @@ export type Queries = {
   addAIProfileMutation: () => UseMutationOptions<void, AppError, AddAIProfileData, unknown>;
   updateAIProfileMutation: () => UseMutationOptions<void, AppError, UpdateAIProfileData, unknown>;
   removeAIProfileMutation: () => UseMutationOptions<void, AppError, RemoveAIProfileData, unknown>;
-  getAIProfileModelsQuery: (profileId: string) => AppQueryOptions<AIModel[]>;
   getAIProfilesQuery: () => AppQueryOptions<AIProfile[]>;
 };
 

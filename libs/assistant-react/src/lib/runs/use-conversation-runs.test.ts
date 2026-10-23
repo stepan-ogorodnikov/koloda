@@ -1,4 +1,4 @@
-import type { ChatStreamGenerator, ChatStreamRequest, StreamUsage } from "@koloda/ai";
+import type { ChatStreamRequest, createAIGenerationClient, StreamUsage } from "@koloda/ai";
 import { aiRuntimeAtom } from "@koloda/core-react";
 import { act, renderHook } from "@testing-library/react";
 import { createStore } from "jotai";
@@ -50,7 +50,7 @@ function createHarness() {
     return originalTouch(s, conversationId);
   });
 
-  const chatStreamGenerator = vi.fn<ChatStreamGenerator>();
+  const chatStreamGenerator = vi.fn<ReturnType<typeof createAIGenerationClient>["chat"]>();
   const chatExecutionProfiles: string[] = [];
 
   store.set(aiRuntimeAtom, {

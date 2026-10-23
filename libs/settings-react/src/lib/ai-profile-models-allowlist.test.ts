@@ -79,9 +79,9 @@ describe("buildSettingsModelRows", () => {
   it("lists catalog models and keeps stale allowlist ids checked", () => {
     const draft = createAllowlistDraft(["openai/gpt-4", "gone/model"]);
     expect(buildSettingsModelRows(catalog, draft, "")).toEqual([
-      { id: "openai/gpt-4", name: "GPT-4", isStale: false },
-      { id: "anthropic/claude", name: "Claude", isStale: false },
-      { id: "gone/model", name: "gone/model", isStale: true },
+      { id: "openai/gpt-4", name: "GPT-4" },
+      { id: "anthropic/claude", name: "Claude" },
+      { id: "gone/model", name: "gone/model" },
     ]);
     expect(isSettingsModelRowSelected(draft, "openai/gpt-4")).toBe(true);
     expect(isSettingsModelRowSelected(draft, "gone/model")).toBe(true);
@@ -91,19 +91,15 @@ describe("buildSettingsModelRows", () => {
   it("does not list stale ids while All is selected", () => {
     const draft = setAllowlistMode(createAllowlistDraft(["gone/model"]), "all");
     expect(buildSettingsModelRows(catalog, draft, "")).toEqual([
-      { id: "openai/gpt-4", name: "GPT-4", isStale: false },
-      { id: "anthropic/claude", name: "Claude", isStale: false },
+      { id: "openai/gpt-4", name: "GPT-4" },
+      { id: "anthropic/claude", name: "Claude" },
     ]);
     expect(isSettingsModelRowSelected(draft, "openai/gpt-4")).toBe(true);
   });
 
   it("filters catalog and stale rows by name or id", () => {
     const draft = createAllowlistDraft(["gone/model"]);
-    expect(buildSettingsModelRows(catalog, draft, "claude")).toEqual([
-      { id: "anthropic/claude", name: "Claude", isStale: false },
-    ]);
-    expect(buildSettingsModelRows(catalog, draft, "gone")).toEqual([
-      { id: "gone/model", name: "gone/model", isStale: true },
-    ]);
+    expect(buildSettingsModelRows(catalog, draft, "claude")).toEqual([{ id: "anthropic/claude", name: "Claude" }]);
+    expect(buildSettingsModelRows(catalog, draft, "gone")).toEqual([{ id: "gone/model", name: "gone/model" }]);
   });
 });

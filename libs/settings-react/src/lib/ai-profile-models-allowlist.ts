@@ -10,7 +10,6 @@ export type AllowlistDraft = {
 export type SettingsModelRow = {
   id: string;
   name: string;
-  isStale: boolean;
 };
 
 export function createAllowlistDraft(whitelistModelIds?: string[]): AllowlistDraft {
@@ -55,14 +54,14 @@ export function buildSettingsModelRows(models: AIModel[], draft: AllowlistDraft,
 
   for (const model of models) {
     if (!modelMatchesQuery(model.name, model.id, query)) continue;
-    rows.push({ id: model.id, name: model.name, isStale: false });
+    rows.push({ id: model.id, name: model.name });
   }
 
   if (draft.mode === "selected") {
     for (const id of draft.selectedIds) {
       if (catalogIds.has(id)) continue;
       if (!modelMatchesQuery(id, id, query)) continue;
-      rows.push({ id, name: id, isStale: true });
+      rows.push({ id, name: id });
     }
   }
 
