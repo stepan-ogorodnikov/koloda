@@ -14,21 +14,19 @@ pub struct AIProfile {
     pub id: String,
     pub title: Option<String>,
     pub secrets: AISecrets,
-    // WHY: Default so stored settings without the field still deserialize; hosts set
-    // the real value when returning profiles (key may exist while `apiKey` is redacted).
-    #[serde(default)]
+    // WHY: Advisory in stored rows. Public reads set it from key presence, because a
+    // key may exist while `apiKey` is redacted.
     pub has_secrets: bool,
     // WHY: Unset = all models. A present array is the allowlist (`[]` means none).
-    // Omitted on older settings rows so they keep showing every model.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub whitelist_model_ids: Option<Vec<String>>,
     #[serde(serialize_with = "serialize_timestamp", deserialize_with = "deserialize_timestamp")]
     pub created_at: i64,
 }
 
-// WHY: Settings JSON and IPC use `null` for redacted/absent keys. Legacy `""` and
-// whitespace-only values still deserialize as `None` so older rows keep validating
-// without a migration rewrite and a partial update cannot store a blank key.
+// WHY: Settings JSON and IPC use `null` for redacted/absent keys. A blank or
+// whitespace-only key deserializes as `None`: whitespace is not a key
+// (AI-PROVIDERS.md §Validation), and a partial update cannot store a blank key.
 fn deserialize_api_key<'de, D>(deserializer: D) -> Result<Option<String>, D::Error>
 where
     D: Deserializer<'de>,

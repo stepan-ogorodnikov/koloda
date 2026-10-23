@@ -121,12 +121,14 @@ fn patch_settings_replaces_arrays_wholesale() {
                     "secrets": { "provider": "openrouter", "apiKey": null },
                     "title": "First",
                     "whitelistModelIds": ["openai/gpt-4"],
+                    "hasSecrets": false,
                     "createdAt": "2026-01-01T00:00:00Z"
                 },
                 {
                     "id": "01900000-0000-7000-8000-000000000002",
                     "secrets": { "provider": "openrouter", "apiKey": null },
                     "title": "Second",
+                    "hasSecrets": false,
                     "createdAt": "2026-01-02T00:00:00Z"
                 }
             ]
@@ -143,6 +145,7 @@ fn patch_settings_replaces_arrays_wholesale() {
                     "id": "01900000-0000-7000-8000-000000000001",
                     "secrets": { "provider": "openrouter", "apiKey": null },
                     "title": "Renamed",
+                    "hasSecrets": false,
                     "createdAt": "2026-01-01T00:00:00Z"
                 }
             ]
@@ -297,6 +300,7 @@ fn set_settings_rejects_plaintext_ai_api_key() {
                         "provider": "openrouter",
                         "apiKey": "sk-live-secret-key"
                     },
+                    "hasSecrets": false,
                     "createdAt": "2026-01-01T00:00:00Z"
                 }
             ]
@@ -325,6 +329,7 @@ fn patch_settings_rejects_plaintext_ai_api_key() {
                         "provider": "openrouter",
                         "apiKey": null
                     },
+                    "hasSecrets": false,
                     "createdAt": "2026-01-01T00:00:00Z"
                 }
             ]
@@ -344,6 +349,7 @@ fn patch_settings_rejects_plaintext_ai_api_key() {
                         "provider": "openrouter",
                         "apiKey": "sk-live-secret-key"
                     },
+                    "hasSecrets": false,
                     "createdAt": "2026-01-01T00:00:00Z"
                 }
             ]

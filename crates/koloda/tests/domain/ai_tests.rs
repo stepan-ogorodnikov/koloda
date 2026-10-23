@@ -373,6 +373,7 @@ fn test_ai_profile_deserialization_accepts_iso_string_for_created_at() {
     let data = serde_json::json!({
         "id": "profile-1",
         "secrets": { "provider": "openrouter", "apiKey": null },
+        "hasSecrets": false,
         "createdAt": "2026-01-01T00:00:00Z"
     });
 

@@ -53,7 +53,7 @@ export const ollamaCloudSecretsValidation = z.object({
 });
 
 // WHY: Settings / profile wire format uses `null` for redacted or absent keys.
-// Legacy `""` and whitespace-only values normalize to `null` — the twin of
+// Blank and whitespace-only values normalize to `null` — the twin of
 // `deserialize_api_key` in `crates/koloda/src/domain/ai.rs` — so missing-secret
 // checks stay explicit and a partial update cannot keep a blank key alive.
 const storedApiKey = z

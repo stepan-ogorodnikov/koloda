@@ -47,17 +47,15 @@ function toPublicProfile(profile: {
   id: string;
   title?: string;
   secrets: AISecrets;
-  hasSecrets?: boolean;
   whitelistModelIds?: string[];
   createdAt: string | Date;
 }): AIProfile {
-  // WHY: `hasSecrets` from stored key presence — not from a redacted `apiKey: null`.
-  const hasSecrets = profile.hasSecrets === true || profileHasSecrets(profile.secrets);
   return {
     id: profile.id,
     title: profile.title,
+    // WHY: Web stores the usable key, so presence comes from it; the copy returned here is redacted.
+    hasSecrets: profileHasSecrets(profile.secrets),
     secrets: redactSecrets(profile.secrets),
-    hasSecrets,
     whitelistModelIds: profile.whitelistModelIds,
     createdAt: new Date(profile.createdAt),
   };

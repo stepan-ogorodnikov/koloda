@@ -25,9 +25,9 @@ fn get_api_key(profile_id: &str) -> Result<Option<String>, AppError> {
     get_secret_store()?.get(&get_ai_profile_store_key(profile_id))
 }
 
-// WHY: Keyring reads bypass serde, so whitespace-only entries stored by older
-// builds must count as absent here — the twin of the TS `isPresentApiKey` trim
-// check and of `deserialize_api_key` in domain/ai.rs.
+// WHY: Keyring reads bypass serde, so a whitespace-only entry must count as absent
+// here — the twin of the TS `isPresentApiKey` trim check and of
+// `deserialize_api_key` in domain/ai.rs.
 fn present_key(api_key: Option<String>) -> Option<String> {
     api_key.filter(|key| !key.trim().is_empty())
 }
@@ -108,8 +108,7 @@ fn restore_ai_profile_in_settings(db: &Database, previous: AIProfile) -> Result<
 }
 
 // WHY: Public reads must never ship usable keys. `has_secrets` comes from keyring
-// presence — not from a redacted `api_key: None` — so older settings rows that
-// still deserialize `has_secrets: false` stay correct when a key exists.
+// presence, not from the redacted `api_key: None` or the stored flag.
 fn to_public_profile(profile: AIProfile, has_secrets: bool) -> AIProfile {
     AIProfile {
         secrets: redact_secrets(&profile.secrets),

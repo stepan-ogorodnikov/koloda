@@ -22,6 +22,7 @@ fn test_valid_ai_settings_with_openrouter_profile_redacted() {
                     "provider": "openrouter",
                     "apiKey": null
                 },
+                "hasSecrets": false,
                 "createdAt": "2026-01-01T00:00:00Z"
             }
         ]
@@ -42,6 +43,7 @@ fn test_valid_ai_settings_with_openai_profile_redacted() {
                     "provider": "openai",
                     "apiKey": null
                 },
+                "hasSecrets": false,
                 "createdAt": "2026-01-01T00:00:00Z"
             }
         ]
@@ -62,6 +64,7 @@ fn test_valid_ai_settings_with_legacy_empty_string_api_key() {
                     "provider": "openrouter",
                     "apiKey": ""
                 },
+                "hasSecrets": false,
                 "createdAt": "2026-01-01T00:00:00Z"
             }
         ]
@@ -83,6 +86,7 @@ fn test_ai_settings_with_plaintext_api_key_fails_storage_validation() {
                     "provider": "openrouter",
                     "apiKey": "sk-live-secret-key"
                 },
+                "hasSecrets": false,
                 "createdAt": "2026-01-01T00:00:00Z"
             }
         ]
@@ -110,6 +114,7 @@ fn test_valid_ai_settings_with_lmstudio_profile_without_api_key() {
                     "baseUrl": "http://localhost:1234",
                     "apiKey": null
                 },
+                "hasSecrets": false,
                 "createdAt": "2026-01-01T00:00:00Z"
             }
         ]
@@ -130,6 +135,7 @@ fn test_valid_ai_settings_with_opencode_go_profile_redacted() {
                     "provider": "opencodeGo",
                     "apiKey": null
                 },
+                "hasSecrets": false,
                 "createdAt": "2026-01-01T00:00:00Z"
             }
         ]
@@ -150,6 +156,7 @@ fn test_valid_ai_settings_with_deepseek_profile_redacted() {
                     "provider": "deepseek",
                     "apiKey": null
                 },
+                "hasSecrets": false,
                 "createdAt": "2026-01-01T00:00:00Z"
             }
         ]
@@ -170,6 +177,7 @@ fn test_valid_ai_settings_with_opencode_zen_profile_redacted() {
                     "provider": "opencodeZen",
                     "apiKey": null
                 },
+                "hasSecrets": false,
                 "createdAt": "2026-01-01T00:00:00Z"
             }
         ]
@@ -190,6 +198,7 @@ fn test_valid_ai_settings_with_ollama_cloud_profile_redacted() {
                     "provider": "ollamaCloud",
                     "apiKey": null
                 },
+                "hasSecrets": false,
                 "createdAt": "2026-01-01T00:00:00Z"
             }
         ]
@@ -211,6 +220,7 @@ fn test_valid_ai_settings_with_whitelist_model_ids() {
                     "apiKey": null
                 },
                 "whitelistModelIds": ["openai/gpt-4", "anthropic/claude"],
+                "hasSecrets": false,
                 "createdAt": "2026-01-01T00:00:00Z"
             }
         ]
@@ -232,6 +242,7 @@ fn test_ai_settings_empty_whitelist_model_id_fails() {
                 "id": "01900000-0000-7000-8000-000000000001",
                 "secrets": { "provider": "openrouter", "apiKey": null },
                 "whitelistModelIds": [""],
+                "hasSecrets": false,
                 "createdAt": "2026-01-01T00:00:00Z"
             }
         ]
@@ -301,6 +312,7 @@ fn test_settings_name_ai_validation_valid() {
                     "provider": "ollama",
                     "baseUrl": "http://localhost:11434"
                 },
+                "hasSecrets": false,
                 "createdAt": "2026-01-01T00:00:00Z"
             }
         ]
@@ -318,12 +330,14 @@ fn test_duplicate_profile_ids_fail() {
                 "id": "01900000-0000-7000-8000-0000000000d0",
                 "title": "First",
                 "secrets": { "provider": "ollama", "baseUrl": "http://localhost:11434" },
+                "hasSecrets": false,
                 "createdAt": "2026-01-01T00:00:00Z"
             },
             {
                 "id": "01900000-0000-7000-8000-0000000000d0",
                 "title": "Second",
                 "secrets": { "provider": "ollama", "baseUrl": "http://localhost:11435" },
+                "hasSecrets": false,
                 "createdAt": "2026-01-01T00:00:00Z"
             }
         ]

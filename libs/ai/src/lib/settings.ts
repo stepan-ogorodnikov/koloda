@@ -10,9 +10,9 @@ export const aiProfileValidation = z.object({
   id: z.uuid(),
   title: optionalProfileTitleSchema,
   secrets: aiSecretsValidation,
-  // WHY: Default so stored settings without the field still parse; hosts set the
-  // real value when returning profiles (key may exist while `apiKey` is redacted).
-  hasSecrets: z.boolean().default(false),
+  // WHY: Advisory in stored rows. Public reads set it from key presence, because a
+  // key may exist while `apiKey` is redacted.
+  hasSecrets: z.boolean(),
   // WHY: Unset = all models. A present array is the allowlist (`[]` means none).
   whitelistModelIds: z.array(z.string().min(1, "validation.settings-ai.profiles.whitelist-model-ids")).optional(),
   // WHY: Stored rows carry ISO strings, but the runtime value is a Date on both

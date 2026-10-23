@@ -677,7 +677,7 @@ Item 26 was added during implementation; it is committed before item 2, which it
   Commit: Reject a provider change when updating an AI profile
   Depends on: 14
 
-- [ ] 16. Derive web key presence from the stored secrets
+- [x] 16. Derive web key presence from the stored secrets
   Goal (P15; question 6, default):
   - Web `toPublicProfile` (`apps/web/src/app/ai.ts:55-56`) derives `hasSecrets` from the secrets alone.
   - Drop the `default(false)` older-row fallback on both sides (`settings.ts:13-15`, `domain/ai.rs:18-21`); every
