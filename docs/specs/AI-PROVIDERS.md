@@ -165,6 +165,8 @@ Each provider exposes a list of models fetched at runtime.
 The app fetches models when the user opens the model picker in a conversation,
 and whenever else the list is needed for that profile.
 The list is sorted alphabetically by display name.
+For a provider with a base URL, the list comes from that URL, path included, just as runs do.
+A base URL that runs cannot use fails the model list too.
 
 If the fetch fails or the response is malformed,
 the error is surfaced to the user in the model picker: the profile section shows an error row with a retry action.

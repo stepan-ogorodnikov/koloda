@@ -379,6 +379,13 @@ Out:
   Other settings forms use the same invalidate-then-`setQueryData` pair.
 - Assistant slices 4 and 5 (data access, card generation); they get their own task.
 - Splitting the stored and public AI profile shapes (question 6).
+- Seen during self-review, not fixed (exists on `main`): `libs/settings-react` fails under
+  `--maxWorkers=1 --sequence.shuffle.files`.
+  At `f95547fa`, seeds 4, 5, 6, and 8 fail; seed 4 fails 40 tests.
+  On this branch, seeds 4, 5, and 6 fail the same three `settings-sync-devices.test.tsx` cases ("Unable to find an
+  element with the text: laptop"), and seeds 1–3, 7, and 8 pass.
+  The pair of that file with `settings-ai-profile-models.test.tsx` passes in every order, so the leak needs a wider
+  set; it belongs to a sync or settings-react task.
 
 ## Open questions
 
