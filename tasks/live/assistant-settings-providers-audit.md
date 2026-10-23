@@ -474,7 +474,7 @@ Item 26 was added during implementation; it is committed before item 2, which it
   Commit: Make the ai-react suite pass in every file order
   Depends on: none
 
-- [ ] 3. Fall back to the first allowlisted model
+- [x] 3. Fall back to the first allowlisted model
   Goal (P2):
   - `resolvedModelId` (`use-assistant-profile-selection.ts:110-114`): keep a stored model that is in the catalog.
     Otherwise take the first catalog model the selected profile's allowlist allows (unset allows all; `[]` allows

@@ -107,11 +107,15 @@ export function useAssistantProfileSelection(): UseAssistantProfileSelectionRetu
     replaceGlobalAIProfileState,
   ]);
 
+  const allowlist = selectedProfile?.whitelistModelIds;
   const resolvedModelId = useMemo(() => {
     if (!storedProfileId) return "";
+    // INVARIANT: a stored model stays while the catalog has it, even when the
+    // allowlist later drops it (AI-PROVIDERS.md §Allowlist); only the fallback
+    // honors the allowlist, and an empty one resolves to no model.
     if (storedModelId && models.some((m) => m.id === storedModelId)) return storedModelId;
-    return models[0]?.id ?? "";
-  }, [storedProfileId, storedModelId, models]);
+    return models.find((m) => allowlist === undefined || allowlist.includes(m.id))?.id ?? "";
+  }, [storedProfileId, storedModelId, models, allowlist]);
 
   const modelName = models.find((m) => m.id === resolvedModelId)?.name;
 

@@ -140,6 +140,30 @@ describe("useAssistantProfileSelection without a conversation", () => {
   });
 });
 
+describe("useAssistantProfileSelection model fallback", () => {
+  it.each([
+    { name: "takes the first allowlisted model", allowlist: ["model-2"], stored: null, expected: "model-2" },
+    { name: "resolves no model for an empty allowlist", allowlist: [], stored: null, expected: "" },
+    {
+      name: "keeps a stored model the allowlist dropped",
+      allowlist: ["model-2"],
+      stored: "model-1",
+      expected: "model-1",
+    },
+  ])("$name", async ({ allowlist, stored, expected }) => {
+    const restricted = createAIProfile({ id: "profile-a", createdAt: new Date(1), whitelistModelIds: allowlist });
+    const { result } = renderSelection({
+      profiles: [restricted],
+      models: [modelOne, modelTwo],
+      stored: { profileId: "profile-a", modelId: stored, modelParameters: {} },
+    });
+
+    await waitFor(() => expect(result.current.models).toHaveLength(2));
+    await waitFor(() => expect(result.current.selectedProfile?.id).toBe("profile-a"));
+    expect(result.current.modelId).toBe(expected);
+  });
+});
+
 describe("useAssistantProfileSelection reconciles the global record on load", () => {
   const storedGone: AIProfileState = {
     profileId: "profile-deleted",

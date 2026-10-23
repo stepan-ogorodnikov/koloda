@@ -247,7 +247,8 @@ While Default is selected, the run sends no level.
 Changing the model resets reasoning effort to that model's default, or to Default when it has none.
 A stored reasoning-effort value that does not apply to the newly selected model is ignored.
 
-If a stored model ID is no longer in the provider's list, the first available model is used instead.
+If a stored model ID is no longer in the provider's list, the first model the allowlist allows is used instead.
+With an empty allowlist, no model is selected and sending is disabled.
 
 ## Sending Requests
 
