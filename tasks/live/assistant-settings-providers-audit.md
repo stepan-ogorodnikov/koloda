@@ -1,6 +1,6 @@
 # Assistant settings and AI providers audit fixes
 
-Status: draft
+Status: ready
 Guides: agents/IMPLEMENTATION-PLAN.md, agents/TASKS.md, agents/ASSISTANT-MAP.md, docs/specs/AI-PROVIDERS.md, docs/specs/ASSISTANT-SETTINGS.md, docs/specs/HOTKEYS.md, agents/CODE-STYLE.md, agents/CODE-DOCUMENTATION.md, agents/TESTING.md, agents/VERIFY.md, agents/CSS.md, agents/I18N.md, agents/RUST.md, docs/decisions/TS-RUST-DOMAIN-MIRRORING.md, apps/electron/IPC.md, agents/BACKWARDS-COMPATIBILITY.md, agents/FUNCTIONAL-SPECIFICATIONS.md, agents/MARKDOWN.md, agents/REVIEW.md
 Flow: local
 
@@ -378,7 +378,7 @@ Out:
 - [x] 4. P14: make secrets required, though a stored profile without them then fails the `ai` settings parse? —
   require them (human, 2026-10-23).
 - [x] 5. Flow? — `local`, the default.
-- [ ] 6. P15: stop persisting `hasSecrets`? — open; default below, confirm at plan approval.
+- [x] 6. P15: stop persisting `hasSecrets`? — no; the default below, accepted at plan approval (human, 2026-10-23).
   The stored and public profile are one type on both hosts (`aiProfileValidation`; Rust `AIProfile`, which also
   crosses IPC).
   Not persisting the flag needs a stored/public split, which is more than a local fix.
@@ -391,7 +391,8 @@ Out:
 - [x] 9. P5: fetch other profiles' lists only while the picker is open, or change §Fetching? — fix the code
   (human, 2026-10-23).
 - [x] 10. S2: drop the backdrop from the spec, or make the modal dismissable? — fix the spec (human, 2026-10-23).
-- [ ] 11. P1: the Default item shows only for a model whose rule gives no default — open; confirm at plan approval.
+- [x] 11. P1: show the Default item only for a model whose rule gives no default? — yes, accepted at plan approval
+  (human, 2026-10-23).
   Where the source reports a default (OpenRouter, LM Studio, Ollama, the fallback families), the picker keeps
   showing it, and a run keeps sending it.
   A Default item there would read the same as that level.
