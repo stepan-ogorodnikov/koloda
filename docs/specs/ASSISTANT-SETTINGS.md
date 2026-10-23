@@ -52,7 +52,6 @@ Switching back to Default leaves that custom text in place.
 
 A custom prompt that happens to equal today's built-in text stays Custom.
 It does not follow later product updates to the built-in prompt.
-A previously saved custom prompt stays Custom until the user chooses Default.
 
 There is no preview mode.
 

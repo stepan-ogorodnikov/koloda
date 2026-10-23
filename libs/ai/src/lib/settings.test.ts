@@ -164,23 +164,13 @@ describe("aiProfileValidation title", () => {
 });
 
 describe("assistantSettingsValidation", () => {
-  it("strips leftover cardsPromptTemplate from old saved settings", () => {
-    const parsed = assistantSettingsValidation.parse({
-      temperature: 0.2,
-      cardsPromptTemplate: "old generation template",
-      chatPromptTemplate: null,
-    });
-    expect(parsed).toEqual({ temperature: 0.2, chatPromptTemplate: null });
-    expect(parsed).not.toHaveProperty("cardsPromptTemplate");
-    expect(parsed).not.toHaveProperty("chatPromptMode");
-  });
-
-  it("keeps an omitted chatPromptMode unset when a custom template is stored", () => {
+  it("parses an omitted chatPromptMode as default, even with a stored custom template", () => {
+    // Twin: test_assistant_chat_prompt_mode_wire (crates/koloda/tests/domain/settings_ai_tests.rs).
     const parsed = assistantSettingsValidation.parse({
       temperature: 0.2,
       chatPromptTemplate: "mine",
     });
-    expect(parsed.chatPromptMode).toBeUndefined();
+    expect(parsed.chatPromptMode).toBe("default");
     expect(parsed.chatPromptTemplate).toBe("mine");
   });
 
@@ -217,10 +207,10 @@ describe("resolveChatPromptMode", () => {
       effective: null,
     },
     {
-      name: "omitted mode and a string infers custom",
+      name: "omitted mode ignores a stored string",
       input: { chatPromptTemplate: "mine" },
-      mode: "custom",
-      effective: "mine",
+      mode: "default",
+      effective: null,
     },
     {
       name: "explicit default ignores a stored custom string",

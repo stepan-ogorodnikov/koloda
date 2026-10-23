@@ -609,7 +609,7 @@ Item 26 was added during implementation; it is committed before item 2, which it
   Commit: Delete unused assistant settings surface
   Depends on: 10
 
-- [ ] 12. Default the prompt source when a row has none
+- [x] 12. Default the prompt source when a row has none
   Goal (S4; question 3):
   - TS: `chatPromptMode: chatPromptModeSchema.default("default")` (`settings.ts:36`).
     `resolveChatPromptMode` (`:54-59`) drops the template branch; an absent `assistant` object still resolves to

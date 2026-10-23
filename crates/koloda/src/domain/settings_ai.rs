@@ -22,9 +22,10 @@ fn default_assistant_temperature() -> f64 {
     0.2
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum ChatPromptMode {
+    #[default]
     Default,
     Custom,
 }
@@ -35,10 +36,9 @@ pub struct AssistantSettings {
     #[serde(default = "default_assistant_temperature")]
     pub temperature: f64,
     pub chat_prompt_template: Option<String>,
-    // WHY: Omitted on older settings rows. Inference (null template = default,
-    // any string = custom) lives in TS so existing custom prompts keep working.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub chat_prompt_mode: Option<ChatPromptMode>,
+    // WHY: Default when omitted, mirroring the TS schema's `.default("default")`.
+    #[serde(default)]
+    pub chat_prompt_mode: ChatPromptMode,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]

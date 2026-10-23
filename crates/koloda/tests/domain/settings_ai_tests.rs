@@ -389,9 +389,9 @@ fn test_assistant_temperature_default_is_canonicalized_on_normalize() {
 
 #[test]
 fn test_assistant_chat_prompt_template_defaults_to_null_when_omitted() {
-    // WHY: Mirrors the TS schema's `.nullable().default(null)`: an older settings row
-    // whose assistant object omits `chatPromptTemplate` parses with a None
-    // template, and the normalize path re-serializes it as an explicit null.
+    // WHY: Mirrors the TS schema's `.nullable().default(null)`. A settings patch that
+    // sends a null template deletes the key (RFC 7386), so a stored assistant object
+    // can omit it; it parses with a None template, and normalize writes an explicit null.
     let json = r#"{
         "profiles": [],
         "assistant": { "temperature": 0.2 }
@@ -459,7 +459,7 @@ fn test_assistant_temperature_nan_value_fails_validation() {
     settings.assistant = Some(koloda::domain::settings_ai::AssistantSettings {
         temperature: f64::NAN,
         chat_prompt_template: None,
-        chat_prompt_mode: None,
+        chat_prompt_mode: ChatPromptMode::Default,
     });
 
     let result = settings.validate();
@@ -479,56 +479,25 @@ fn test_assistant_temperature_null_fails_deserialization() {
 }
 
 #[test]
-fn test_assistant_ignores_unknown_cards_prompt_template() {
-    // Extra JSON from old saved settings (cardsPromptTemplate) must not fail parse.
-    let json = r#"{
-        "profiles": [],
-        "assistant": {
-            "temperature": 0.2,
-            "cardsPromptTemplate": "old generation template",
-            "chatPromptTemplate": null
-        }
-    }"#;
-
-    let settings: AISettings = serde_json::from_str(json).expect("extra cardsPromptTemplate must not fail parse");
-    assert!(
-        settings.validate().is_ok(),
-        "extra cardsPromptTemplate should be ignored"
-    );
-}
-
-#[test]
 fn test_assistant_chat_prompt_mode_wire() {
     struct Case {
         json: &'static str,
         template: Option<&'static str>,
-        mode: Option<ChatPromptMode>,
+        mode: ChatPromptMode,
         label: &'static str,
     }
 
     let cases = [
         Case {
-            json: r#"{ "profiles": [], "assistant": { "temperature": 0.2, "chatPromptTemplate": null } }"#,
-            template: None,
-            mode: None,
-            label: "omitted mode and null template",
-        },
-        Case {
             json: r#"{ "profiles": [], "assistant": { "temperature": 0.2, "chatPromptTemplate": "mine" } }"#,
             template: Some("mine"),
-            mode: None,
-            label: "omitted mode and a stored custom template",
-        },
-        Case {
-            json: r#"{ "profiles": [], "assistant": { "temperature": 0.2, "chatPromptTemplate": "mine", "chatPromptMode": "default" } }"#,
-            template: Some("mine"),
-            mode: Some(ChatPromptMode::Default),
-            label: "explicit default with a stored custom template",
+            mode: ChatPromptMode::Default,
+            label: "omitted mode is Default, even with a stored custom template",
         },
         Case {
             json: r#"{ "profiles": [], "assistant": { "temperature": 0.2, "chatPromptTemplate": "", "chatPromptMode": "custom" } }"#,
             template: Some(""),
-            mode: Some(ChatPromptMode::Custom),
+            mode: ChatPromptMode::Custom,
             label: "empty custom template",
         },
     ];

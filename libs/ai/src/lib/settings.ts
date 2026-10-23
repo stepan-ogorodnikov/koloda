@@ -33,7 +33,7 @@ export type ChatPromptMode = z.infer<typeof chatPromptModeSchema>;
 export const assistantSettingsValidation = z.object({
   temperature: z.number().min(0).max(2).default(GENERATION_TEMPERATURE),
   chatPromptTemplate: z.string().nullable().default(null),
-  chatPromptMode: chatPromptModeSchema.optional(),
+  chatPromptMode: chatPromptModeSchema.default("default"),
 });
 
 export type AssistantSettings = z.input<typeof assistantSettingsValidation>;
@@ -50,10 +50,7 @@ export type ChatPromptSettings = {
 };
 
 export function resolveChatPromptMode(settings: ChatPromptSettings): ChatPromptMode {
-  if (settings.chatPromptMode != null) return settings.chatPromptMode;
-  // WHY: omitted mode must follow the saved template so existing custom prompts
-  // keep working; defaulting omitted to "default" would silently switch them.
-  return settings.chatPromptTemplate == null ? "default" : "custom";
+  return settings.chatPromptMode ?? "default";
 }
 
 export function resolveEffectiveChatPromptTemplate(settings: ChatPromptSettings): string | null {
