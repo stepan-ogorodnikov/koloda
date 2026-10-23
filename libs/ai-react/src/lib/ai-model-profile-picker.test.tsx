@@ -25,6 +25,28 @@ function profile(overrides: Partial<AIProfile> = {}): AIProfile {
 
 // Allowlist filtering itself is pinned in filter-profile-models.test.ts; these cases cover what the picker renders.
 describe("AIModelProfilePicker", () => {
+  it("loads other profiles' model lists only once the picker opens", async () => {
+    const listModels = vi.fn(async (_profileId: string) => [gpt]);
+    render(
+      <AIModelProfilePicker
+        profiles={[profile(), profile({ id: "profile-2", title: "Second" })]}
+        profileId="profile-1"
+        modelId="openai/gpt-4"
+        onChange={() => undefined}
+      />,
+      { wrapper: createAppStoreWrapper({ listModels }) },
+    );
+
+    await act(async () => {});
+    expect(listModels.mock.calls.map(([profileId]) => profileId)).toEqual(["profile-1"]);
+
+    fireEvent.click(screen.getByRole("button", { name: /ai.model-picker.label/ }));
+    await act(async () => {});
+
+    expect(listModels.mock.calls.map(([profileId]) => profileId)).toEqual(["profile-1", "profile-2"]);
+    expect(within(screen.getByRole("listbox")).getAllByText("GPT-4")).toHaveLength(2);
+  });
+
   it("shows the empty-models row when an empty-allowlist profile finishes loading", async () => {
     let releaseModels!: (models: AIModel[]) => void;
     const pendingModels = new Promise<AIModel[]>((resolve) => {

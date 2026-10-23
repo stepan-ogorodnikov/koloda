@@ -535,7 +535,7 @@ Item 26 was added during implementation; it is committed before item 2, which it
   Commit: Refresh a profile's model list after edits and on allowlist open
   Depends on: 5
 
-- [ ] 7. Load other profiles' model lists only while the picker is open
+- [x] 7. Load other profiles' model lists only while the picker is open
   Goal (P5; question 9):
   - `ai-model-profile-picker.tsx:59-60`: while the picker is closed, subscribe to the selected profile only; while
     open, to every profile.

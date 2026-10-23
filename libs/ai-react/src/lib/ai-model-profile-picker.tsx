@@ -56,7 +56,12 @@ export function AIModelProfilePicker({
 }: AIModelProfilePickerProps) {
   const { _ } = useLingui();
   const [isOpen, setIsOpen] = useState(false);
-  const profileIds = useMemo(() => profiles.map((profile) => profile.id), [profiles]);
+  // WHY: other profiles' lists load only while the picker is open
+  // (AI-PROVIDERS.md §Fetching); the selected profile's list is needed for submit.
+  const profileIds = useMemo(
+    () => (isOpen ? profiles.map((profile) => profile.id) : profileId ? [profileId] : []),
+    [isOpen, profiles, profileId],
+  );
   const { byProfileId } = useAIProfilesModels(profileIds);
 
   const selectedModelsState = profileId ? byProfileId[profileId] : undefined;
@@ -68,7 +73,8 @@ export function AIModelProfilePicker({
       profiles.map((profile: AIProfile) => {
         const state = byProfileId[profile.id];
         const providerLabel = profile.secrets ? AI_PROVIDER_LABELS[profile.secrets.provider] : "";
-        const status = state?.isError ? "error" : state?.isLoading ? "loading" : "ready";
+        // WHY: a profile not yet subscribed has no state; it is loading, not empty.
+        const status = !state ? "loading" : state.isError ? "error" : state.isLoading ? "loading" : "ready";
         const models = filterProfileModelsForPicker({
           models: state?.models ?? [],
           whitelistModelIds: profile.whitelistModelIds,
