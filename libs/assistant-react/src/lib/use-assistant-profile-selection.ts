@@ -1,6 +1,6 @@
 import type { ModelParameter } from "@koloda/ai";
 import type { AIModel, AISecrets } from "@koloda/ai";
-import { useAIModels, useAIProfiles } from "@koloda/ai-react";
+import { useAIProfiles, useAIProfilesModels } from "@koloda/ai-react";
 import { useAtomValue, useSetAtom } from "jotai";
 import { useCallback, useEffect, useMemo } from "react";
 import { modelChangeSync, parameterChangeSync, profileChangeSync } from "./state/ai-profile-sync";
@@ -40,6 +40,7 @@ export type UseAssistantProfileSelectionReturn = {
 type HandleModelProfileChangeParams = { profileId: string; modelId: string };
 
 const emptyModelParameters: Partial<Record<ModelParameter["type"], string>> = {};
+const noModels: AIModel[] = [];
 
 /**
  * Chat-tree owner of per-conversation AI selection + dual-write to global last-used.
@@ -74,7 +75,11 @@ export function useAssistantProfileSelection(): UseAssistantProfileSelectionRetu
     defaultProfileId,
     missingSecretFieldLabels,
   } = useAIProfiles(storedProfileId);
-  const { models, isLoading: isModelsLoading, isError: isModelsError } = useAIModels(storedProfileId);
+  const { byProfileId } = useAIProfilesModels(storedProfileId ? [storedProfileId] : []);
+  const modelsState = storedProfileId ? byProfileId[storedProfileId] : undefined;
+  const models = modelsState?.models ?? noModels;
+  const isModelsLoading = modelsState?.isLoading ?? false;
+  const isModelsError = modelsState?.isError ?? false;
   const provider = selectedProfile?.secrets?.provider ?? null;
   const hasProfiles = profiles.length > 0;
 

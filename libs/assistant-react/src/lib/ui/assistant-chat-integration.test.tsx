@@ -235,7 +235,7 @@ function createMockAIRuntime(): AIRuntime {
 }
 
 // WHY: Seed the AI profile and model queries so the real `useAIProfiles` and
-// `useAIModels` resolve on first render. A file-level `vi.mock` of
+// `useAIProfilesModels` resolve on first render. A file-level `vi.mock` of
 // `@koloda/ai-react` would leak to sibling files under `isolate: false`.
 function createTestQueryClient(): QueryClient {
   const queryClient = new QueryClient({

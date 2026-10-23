@@ -20,7 +20,7 @@ This README owns the package boundary.
 - Context usage: `ai-chat-context-usage.tsx` — token counter from `usage` / `contextLength` props.
 - AI configuration UI: `ai-model-profile-picker.tsx`
   (presentational — takes `profiles` props; does not call `useAIProfiles`),
-  `ai-model-parameters.tsx`, `use-ai-profiles.ts`, `use-ai-models.ts`, `use-ai-profiles-models.ts`.
+  `ai-model-parameters.tsx`, `use-ai-profiles.ts`, `use-ai-profiles-models.ts`.
   Cascade reset and the chat-tree `useAIProfiles` subscription are owned by assistant-react profile selection.
 - Message list shell: `ai-chat-messages.tsx`, `ai-chat-message.tsx`,
   status/error/elapsed helpers — layout only; message domain rendering is in assistant-react.

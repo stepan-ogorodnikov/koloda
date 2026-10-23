@@ -13,7 +13,7 @@ import type {
 export const queryKeys = {
   ai: {
     profiles: () => ["ai", "profiles"] as const,
-    models: (credentialId: string) => ["ai", "models", credentialId] as const,
+    models: (profileId: string) => ["ai", "models", profileId] as const,
   },
   algorithms: {
     all: () => ["algorithms"] as const,

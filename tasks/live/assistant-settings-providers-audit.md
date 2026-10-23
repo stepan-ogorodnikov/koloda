@@ -507,7 +507,7 @@ Item 26 was added during implementation; it is committed before item 2, which it
   Commit: Send a cleared profile title from the edit dialog
   Depends on: none
 
-- [ ] 5. Build the model-list query in one hook
+- [x] 5. Build the model-list query in one hook
   Goal (P13):
   - Delete `useAIModels` (`libs/ai-react/src/lib/use-ai-models.ts`) and its export.
     `use-assistant-profile-selection.ts:77` reads the stored profile's state from `useAIProfilesModels`.
