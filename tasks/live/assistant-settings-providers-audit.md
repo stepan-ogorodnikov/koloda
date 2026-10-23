@@ -785,7 +785,7 @@ Item 26 was added during implementation; it is committed before item 2, which it
   Commit: Test that saved settings reach runs and every discard path
   Depends on: 10, 12
 
-- [ ] 25. Prove profile writes keep the assistant settings
+- [x] 25. Prove profile writes keep the assistant settings
   Goal (S7):
   - On each host, extend one profile test: seed `assistant` with all three fields, add a profile, and read them back
     field by field.

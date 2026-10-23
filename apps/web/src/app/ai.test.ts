@@ -105,6 +105,23 @@ describe("web AI profile save path", () => {
     });
   });
 
+  it("profile writes keep the assistant settings", async () => {
+    // Twin: profile_writes_keep_the_assistant_settings (crates/koloda/tests/integration/ai_integration_tests.rs).
+    const assistant = { temperature: 0.7, chatPromptTemplate: "mine", chatPromptMode: "custom" };
+    store.set("ai", { profiles: [], assistant });
+    const storedAssistant = () => (store.get("ai") as { assistant?: unknown }).assistant;
+
+    await addAIProfile({} as DB, { title: "OR", secrets: { provider: "openrouter", apiKey: "sk-or" } });
+    expect(storedAssistant()).toEqual(assistant);
+
+    const profileId = storedProfiles()[0]!.id as string;
+    await updateAIProfile({} as DB, { id: profileId, title: "Renamed" });
+    expect(storedAssistant()).toEqual(assistant);
+
+    await removeAIProfile({} as DB, { id: profileId });
+    expect(storedAssistant()).toEqual(assistant);
+  });
+
   it("rejects a provider change on update", async () => {
     // Twin: update_ai_profile_rejects_a_provider_change (crates/koloda/tests/integration/ai_integration_tests.rs).
     seedAiSettings([

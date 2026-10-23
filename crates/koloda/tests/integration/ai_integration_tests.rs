@@ -1,6 +1,8 @@
 use koloda::app::error::error_codes;
 use koloda::domain::ai::AISecrets;
-use koloda::repo::ai;
+use koloda::domain::settings::SettingsName;
+use koloda::repo::{ai, settings};
+use serde_json::json;
 use std::sync::Arc;
 
 use crate::common::test_db;
@@ -700,4 +702,39 @@ fn remove_ai_profile_creates_default_row_when_settings_absent() {
         settings.content["profiles"].as_array().expect("profiles array").len(),
         0
     );
+}
+
+#[test]
+fn profile_writes_keep_the_assistant_settings() {
+    // Twin: "profile writes keep the assistant settings" (apps/web/src/app/ai.test.ts).
+    let _guard = test_store::setup();
+    let db = test_db();
+    let assistant = json!({ "temperature": 0.7, "chatPromptTemplate": "mine", "chatPromptMode": "custom" });
+    settings::set_settings(&db, SettingsName::Ai, json!({ "profiles": [], "assistant": assistant }))
+        .expect("seed AI settings");
+    let read_assistant = || {
+        settings::get_settings(&db, SettingsName::Ai)
+            .expect("read AI settings")
+            .expect("AI settings row")
+            .content["assistant"]
+            .clone()
+    };
+
+    let added = ai::add_ai_profile(
+        &db,
+        Some("OpenRouter".to_string()),
+        AISecrets::OpenRouter {
+            api_key: Some("sk-secret-key".to_string()),
+        },
+    )
+    .expect("profile should be added");
+    assert_eq!(read_assistant(), assistant, "add keeps the assistant settings");
+
+    ai::update_ai_profile(&db, &added.id, Some("Renamed".to_string()), None, None).expect("profile should be updated");
+    assert_eq!(read_assistant(), assistant, "update keeps the assistant settings");
+
+    ai::remove_ai_profile(&db, &added.id).expect("profile should be removed");
+    assert_eq!(read_assistant(), assistant, "remove keeps the assistant settings");
+
+    test_store::teardown(_guard);
 }
