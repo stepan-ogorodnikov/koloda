@@ -142,7 +142,7 @@ describe("overlayFromModelsDev", () => {
     expect(model?.default_reasoning_level).toBe("gateway");
   });
 
-  it("fills context_length and max_completion_tokens from catalog limit when the gateway omitted them", () => {
+  it("fills context_length from catalog limit when the gateway omitted it", () => {
     const catalog = catalogFor("opencode", {
       "deepseek-chat": { limit: { context: 128000, output: 8192 } },
     });
@@ -150,10 +150,9 @@ describe("overlayFromModelsDev", () => {
     const [model] = overlayFromModelsDev([gatewayModel("deepseek-chat")], "opencode", catalog);
 
     expect(model?.context_length).toBe(128000);
-    expect(model?.top_provider).toEqual({ max_completion_tokens: 8192 });
   });
 
-  it("keeps gateway context_length and max_completion_tokens when already set", () => {
+  it("keeps gateway context_length when already set", () => {
     const catalog = catalogFor("opencode", {
       "deepseek-chat": { limit: { context: 128000, output: 8192 } },
     });
@@ -162,7 +161,6 @@ describe("overlayFromModelsDev", () => {
       [
         gatewayModel("deepseek-chat", {
           context_length: 64000,
-          top_provider: { max_completion_tokens: 4096 },
         }),
       ],
       "opencode",
@@ -170,7 +168,6 @@ describe("overlayFromModelsDev", () => {
     );
 
     expect(model?.context_length).toBe(64000);
-    expect(model?.top_provider).toEqual({ max_completion_tokens: 4096 });
   });
 
   it("does not invent limits when the catalog is missing or the id is not in the catalog", () => {
@@ -182,9 +179,7 @@ describe("overlayFromModelsDev", () => {
     const [noCatalog] = overlayFromModelsDev([gatewayModel("deepseek-chat")], "opencode", null);
 
     expect(missingId?.context_length).toBe(0);
-    expect(missingId?.top_provider).toBeUndefined();
     expect(noCatalog?.context_length).toBe(0);
-    expect(noCatalog?.top_provider).toBeUndefined();
   });
 });
 
@@ -231,11 +226,7 @@ describe("fetchOpencodeZenModels catalog join", () => {
       {
         id: "deepseek-chat",
         name: "DeepSeek Chat",
-        description: undefined,
         context_length: 128000,
-        top_provider: { max_completion_tokens: 8192 },
-        architecture: undefined,
-        supported_parameters: undefined,
         supported_reasoning_levels: [
           { effort: "low", description: "" },
           { effort: "high", description: "" },
@@ -333,11 +324,7 @@ describe("fetchOpencodeGoModels catalog join", () => {
       {
         id: "deepseek-chat",
         name: "DeepSeek Chat",
-        description: undefined,
         context_length: 128000,
-        top_provider: { max_completion_tokens: 8192 },
-        architecture: undefined,
-        supported_parameters: undefined,
         supported_reasoning_levels: [
           { effort: "low", description: "" },
           { effort: "high", description: "" },

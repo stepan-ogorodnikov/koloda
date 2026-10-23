@@ -63,8 +63,8 @@ This README owns the package boundary.
   OpenAI joins models.dev effort options by model id (`openai`); DeepSeek joins them by model id (`deepseek`),
   with `resolveReasoningLevelsForModel` as a prefix fallback when the catalog is unavailable or the id is missing;
   OpenCode Zen/Go do the same (`opencode` / `opencode-go`).
-  The same join fills `context_length` and `top_provider.max_completion_tokens` from models.dev
-  `limit.context` / `limit.output` when the gateway omitted them (no prefix fallback).
+  The same join fills `context_length` from models.dev `limit.context` when the gateway omitted it
+  (no prefix fallback).
 - Reasoning extraction: `model-reasoning-extraction.ts` — `wrapModelWithReasoningExtraction`
   strips ` thinking`-tagged chain-of-thought from the text stream.
 - Host runtime contract: `runtime.ts` — `AIRuntime` (`listModels` / `chat` by `profileId`).

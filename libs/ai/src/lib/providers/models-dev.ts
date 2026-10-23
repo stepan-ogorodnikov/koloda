@@ -37,21 +37,9 @@ function positiveTokenLimit(value: unknown): number | undefined {
   return typeof value === "number" && Number.isFinite(value) && value > 0 ? value : undefined;
 }
 
-function limitsFromCatalogRow(row: unknown): { context?: number; output?: number } | undefined {
+function contextLimitFromCatalogRow(row: unknown): number | undefined {
   if (!isPlainObject(row) || !isPlainObject(row.limit)) return undefined;
-  const context = positiveTokenLimit(row.limit.context);
-  const output = positiveTokenLimit(row.limit.output);
-  if (context == null && output == null) return undefined;
-  return { context, output };
-}
-
-function overlayMaxCompletionTokens(
-  existing: AIModel["top_provider"],
-  output: number | undefined,
-): AIModel["top_provider"] {
-  if (existing?.max_completion_tokens != null && existing.max_completion_tokens > 0) return existing;
-  if (output == null) return existing;
-  return { ...existing, max_completion_tokens: output };
+  return positiveTokenLimit(row.limit.context);
 }
 
 function effortLevelsFromCatalogRow(row: unknown): ReasoningLevels | undefined {
@@ -87,24 +75,23 @@ export function overlayFromModelsDev(models: AIModel[], providerKey: string, cat
 
   return models.map((model) => {
     let reasoning: ReasoningLevels | undefined;
-    let limits: { context?: number; output?: number } | undefined;
+    let contextLimit: number | undefined;
     // WHY: prefix fallback is only for a missing catalog or missing id. An exact
     // catalog row with no effort must stay empty — do not invent levels from a prefix.
-    // Limits have no prefix table: fill only from an exact catalog row.
+    // The context limit has no prefix table: fill only from an exact catalog row.
     if (!modelMap) {
       reasoning = resolveReasoningLevelsForModel(model.id);
     } else if (Object.hasOwn(modelMap, model.id)) {
       const row = modelMap[model.id];
       reasoning = effortLevelsFromCatalogRow(row);
-      limits = limitsFromCatalogRow(row);
+      contextLimit = contextLimitFromCatalogRow(row);
     } else {
       reasoning = resolveReasoningLevelsForModel(model.id);
     }
 
     return {
       ...model,
-      context_length: model.context_length > 0 ? model.context_length : (limits?.context ?? model.context_length),
-      top_provider: overlayMaxCompletionTokens(model.top_provider, limits?.output),
+      context_length: model.context_length > 0 ? model.context_length : (contextLimit ?? model.context_length),
       supported_reasoning_levels: model.supported_reasoning_levels ?? reasoning?.levels,
       default_reasoning_level: model.default_reasoning_level ?? reasoning?.default,
     };

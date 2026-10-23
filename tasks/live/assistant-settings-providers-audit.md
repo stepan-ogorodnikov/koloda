@@ -701,7 +701,7 @@ Item 26 was added during implementation; it is committed before item 2, which it
   Commit: Show a failed profile delete in its popover
   Depends on: 6
 
-- [ ] 18. Delete model fields nothing reads
+- [x] 18. Delete model fields nothing reads
   Goal (P11):
   - The output overlay in `models-dev.ts` (`:37-52`, `:104`) and the README clause about it.
   - `AIModel.description`, `top_provider`, `architecture`, `supported_parameters` (`models.ts:4-14`); their copying

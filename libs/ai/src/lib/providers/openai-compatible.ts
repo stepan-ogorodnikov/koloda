@@ -4,12 +4,8 @@ import type { AIModel } from "../models";
 export type OpenAICompatibleModelData = {
   id: string;
   name?: string;
-  description?: string;
   context_length?: number;
   context_window?: number;
-  top_provider?: AIModel["top_provider"];
-  architecture?: AIModel["architecture"];
-  supported_parameters?: string[];
   supported_reasoning_levels?: AIModel["supported_reasoning_levels"];
   default_reasoning_level?: string;
 };
@@ -92,11 +88,7 @@ export async function fetchOpenAICompatibleModelsDetailed(modelsUrl: string, api
     .map((model) => ({
       id: model.id,
       name: model.name ?? model.id,
-      description: model.description,
       context_length: model.context_length ?? model.context_window ?? 0,
-      top_provider: model.top_provider,
-      architecture: model.architecture,
-      supported_parameters: model.supported_parameters,
       supported_reasoning_levels: model.supported_reasoning_levels,
       default_reasoning_level: model.default_reasoning_level,
     }))
