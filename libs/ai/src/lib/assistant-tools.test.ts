@@ -96,7 +96,7 @@ function createToolRoundTripModel() {
           { type: "finish", finishReason: { unified: "tool-calls", raw: "tool-calls" }, usage: usage(3, 5) },
         ]);
       }
-      // Distinct usage so summed totals prove accumulation across steps.
+      // Distinct usage so the run's usage shows which step it came from.
       return textOnlyChunks(usage(30, 50));
     },
   });
@@ -951,8 +951,8 @@ describe("chat tool streaming", () => {
       { kind: "toolCall", call: { id: "call-1", name: "list_decks", input: {} } },
       { kind: "toolResult", callId: "call-1", output: listDecksOutput },
     ]);
-    // Steps reported 3/5 then 30/50; the run must return the accumulated total.
-    expect(result).toMatchObject({ promptTokens: 33, completionTokens: 55, totalTokens: 88 });
+    // Steps reported 3/5 then 30/50; the run returns the last step's usage, not the sum.
+    expect(result).toMatchObject({ promptTokens: 30, completionTokens: 50, totalTokens: 80 });
   });
 
   it.each([

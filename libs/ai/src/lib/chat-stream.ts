@@ -98,8 +98,10 @@ async function runChatStream(
   // WHY: onError may fire without the for-await loop throwing; rethrow so callers still see the failure.
   if (streamedError) throw streamedError;
 
-  // WHY: since AI SDK 7, `usage` totals every tool step; `finalStep.usage` is the last step only.
-  const usage = await result.usage;
+  // WHY: the last step's usage, not `result.usage`, which since AI SDK 7 sums every
+  // tool step. The only reader is the context meter, which compares one request with
+  // the context window, and each step resends the whole conversation.
+  const { usage } = await result.finalStep;
   if (usage.inputTokens == null && usage.outputTokens == null) return undefined;
 
   return {

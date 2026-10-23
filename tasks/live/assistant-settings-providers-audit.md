@@ -564,7 +564,7 @@ Item 26 was added during implementation; it is committed before item 2, which it
   Commit: Build LM Studio's URLs from the base by one rule
   Depends on: none
 
-- [ ] 9. Show the last step's tokens in the context meter
+- [x] 9. Show the last step's tokens in the context meter
   Goal (P7):
   - `runChatStream` (`chat-stream.ts:101-109`): return the last step's usage, not the run total.
     The WHY at `:101` names `finalStep.usage`; use the field the installed `ai` typings give for the last step.
