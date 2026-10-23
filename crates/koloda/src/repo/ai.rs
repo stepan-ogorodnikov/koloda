@@ -202,23 +202,24 @@ pub fn update_ai_profile(
     throw_known_error(error_codes::DB_UPDATE, || {
         let mut settings = get_ai_settings_or_default(db)?;
 
-        let profile_idx = settings.profiles.iter().position(|p| p.id == id);
-        let profile_idx = profile_idx
-            .ok_or_else(|| AppError::new(error_codes::NOT_FOUND_AI_PROFILE, Some("Profile not found".to_string())))?;
+        let existing_profile =
+            settings.profiles.iter_mut().find(|p| p.id == id).ok_or_else(|| {
+                AppError::new(error_codes::NOT_FOUND_AI_PROFILE, Some("Profile not found".to_string()))
+            })?;
 
         if let Some(ref secrets) = secrets {
             secrets.validate_for_input()?;
+            // INVARIANT: a profile keeps its provider (AI-PROVIDERS.md §Editing a Profile).
+            // Twin: `updateAIProfile` in apps/web/src/app/ai.ts.
+            if secrets.provider() != existing_profile.secrets.provider() {
+                return Err(AppError::new(
+                    error_codes::VALIDATION_AI_PROVIDERS_PROVIDER_CHANGED,
+                    None,
+                ));
+            }
         }
 
-        let previous_profile = settings
-            .profiles
-            .get(profile_idx)
-            .ok_or_else(|| AppError::new(error_codes::NOT_FOUND_AI_PROFILE, Some("Profile not found".to_string())))?
-            .clone();
-        let existing_profile = settings
-            .profiles
-            .get_mut(profile_idx)
-            .ok_or_else(|| AppError::new(error_codes::NOT_FOUND_AI_PROFILE, Some("Profile not found".to_string())))?;
+        let previous_profile = existing_profile.clone();
 
         if let Some(ref new_secrets) = secrets {
             existing_profile.secrets = redact_secrets(new_secrets);
@@ -238,18 +239,9 @@ pub fn update_ai_profile(
         set_ai_settings(db, settings)?;
 
         // WHY: Same DB-then-keyring ordering as add. On any keyring failure, roll back.
-        if let Some(ref new_secrets) = secrets {
-            let provider_changed = previous_profile.secrets.provider() != new_secrets.provider();
-            let keyring_result = match new_secrets.api_key() {
-                Some(api_key) => set_api_key(id, api_key),
-                // WHY: Edit forms submit redacted/empty apiKey when the user did not
-                // replace the key. Keep the keyring entry unless the provider changed
-                // (e.g. OpenRouter → Ollama with no key) so an orphaned key cannot
-                // flip `has_secrets` on the next public read.
-                None if provider_changed => remove_api_key(id),
-                None => Ok(()),
-            };
-            if let Err(err) = keyring_result {
+        // Edit forms send no key when the user did not replace it; the stored key stays.
+        if let Some(api_key) = secrets.as_ref().and_then(|s| s.api_key()) {
+            if let Err(err) = set_api_key(id, api_key) {
                 // WHY: Best-effort rollback; prefer the original keyring error over a
                 // secondary settings failure. `?` here would replace the cause.
                 if let Err(_rollback_err) = restore_ai_profile_in_settings(db, previous_profile) {}

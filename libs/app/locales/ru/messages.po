@@ -453,6 +453,10 @@ msgstr "Произошла ошибка"
 msgid "validation.ai-providers.profile-id.duplicate"
 msgstr "Не удалось создать уникальный идентификатор профиля"
 
+#: ../../libs/app/src/lib/error.ts:88
+msgid "validation.ai-providers.provider.changed"
+msgstr "Провайдера профиля нельзя изменить. Создайте новый профиль."
+
 #: ../../libs/app/src/lib/error.ts:77
 msgid "validation.algorithm.fsrs.learning-steps.amount"
 msgstr "Длительность шага обучения должна быть больше нуля"

@@ -1,5 +1,4 @@
 use koloda::app::error::error_codes;
-use koloda::app::secrets::get_secret_store;
 use koloda::domain::ai::AISecrets;
 use koloda::repo::ai;
 use std::sync::Arc;
@@ -396,7 +395,8 @@ fn ai_profile_ollama_cloud_round_trips_via_secret_store() {
 }
 
 #[test]
-fn update_ai_profile_clears_stale_keyring_key_when_new_secrets_have_no_key() {
+fn update_ai_profile_rejects_a_provider_change() {
+    // Twin: "rejects a provider change on update" (apps/web/src/app/ai.test.ts).
     let _guard = test_store::setup();
     let db = test_db();
 
@@ -408,18 +408,8 @@ fn update_ai_profile_clears_stale_keyring_key_when_new_secrets_have_no_key() {
         },
     )
     .expect("profile should be added");
-    let store_key = format!("ai-profile-{}", added.id);
 
-    assert_eq!(
-        get_secret_store()
-            .expect("get secret store")
-            .get(&store_key)
-            .expect("read keyring"),
-        Some("sk-original-key".to_string()),
-        "key should be stored after add"
-    );
-
-    let updated = ai::update_ai_profile(
+    let err = ai::update_ai_profile(
         &db,
         &added.id,
         Some("Local model".to_string()),
@@ -429,36 +419,21 @@ fn update_ai_profile_clears_stale_keyring_key_when_new_secrets_have_no_key() {
         }),
         None,
     )
-    .expect("profile should be updated");
-
-    assert_eq!(
-        get_secret_store()
-            .expect("get secret store")
-            .get(&store_key)
-            .expect("read keyring"),
-        None,
-        "old key must be cleared after updating to a no-key variant"
-    );
+    .expect_err("a provider change must be rejected");
+    assert_eq!(err.code, error_codes::VALIDATION_AI_PROVIDERS_PROVIDER_CHANGED);
 
     let all = ai::get_ai_profiles(&db).expect("should get profiles");
     let retrieved = all.iter().find(|p| p.id == added.id).expect("profile should exist");
-    match &retrieved.secrets {
-        AISecrets::Ollama { api_key, .. } => {
-            assert!(api_key.is_none(), "no old key should leak back into the profile");
-        }
-        other => panic!("expected Ollama secrets after update, got {:?}", other),
-    }
-
-    match &updated.secrets {
-        AISecrets::Ollama { api_key, .. } => {
-            assert!(
-                api_key.is_none(),
-                "returned updated profile should not carry the old key"
-            );
-        }
-        other => panic!("expected Ollama secrets in update return, got {:?}", other),
-    }
-    assert!(!updated.has_secrets);
+    assert_eq!(
+        retrieved.title,
+        Some("OpenRouter".to_string()),
+        "a rejected update writes nothing"
+    );
+    assert!(matches!(retrieved.secrets, AISecrets::OpenRouter { .. }));
+    let secrets = ai::get_ai_profile_secrets(&db, &added.id)
+        .expect("should load secrets")
+        .expect("secrets should exist");
+    assert_eq!(secrets.api_key(), Some("sk-original-key"), "the stored key stays");
 
     test_store::teardown(_guard);
 }
@@ -582,54 +557,6 @@ fn update_ai_profile_rolls_back_settings_when_keyring_set_fails() {
         None,
     )
     .expect_err("update must fail when keyring set fails");
-    assert_eq!(err.code, error_codes::KEYRING);
-
-    let profiles = ai::get_ai_profiles(&db).expect("should get profiles");
-    let retrieved = profiles
-        .iter()
-        .find(|p| p.id == added.id)
-        .expect("profile should remain");
-    assert_eq!(retrieved.title, Some("OpenRouter".to_string()));
-    assert!(retrieved.has_secrets);
-    match &retrieved.secrets {
-        AISecrets::OpenRouter { api_key } => assert!(api_key.is_none()),
-        other => panic!("expected redacted OpenRouter secrets after rollback, got {:?}", other),
-    }
-    let secrets = ai::get_ai_profile_secrets(&db, &added.id)
-        .expect("should load secrets")
-        .expect("secrets should exist");
-    assert_eq!(secrets.api_key(), Some("sk-original-key"));
-
-    test_store::teardown(guard);
-}
-
-#[test]
-fn update_ai_profile_rolls_back_settings_when_keyring_remove_fails() {
-    let (guard, data) = test_store::setup_shared();
-    let db = test_db();
-
-    let added = ai::add_ai_profile(
-        &db,
-        Some("OpenRouter".to_string()),
-        AISecrets::OpenRouter {
-            api_key: Some("sk-original-key".to_string()),
-        },
-    )
-    .expect("profile should be added");
-
-    test_store::replace_store(test_store::FailingRemoveSecretStore::new(Arc::clone(&data)).into_arc());
-
-    let err = ai::update_ai_profile(
-        &db,
-        &added.id,
-        Some("Local model".to_string()),
-        Some(AISecrets::Ollama {
-            base_url: "http://localhost:11434".to_string(),
-            api_key: None,
-        }),
-        None,
-    )
-    .expect_err("update must fail when keyring remove fails");
     assert_eq!(err.code, error_codes::KEYRING);
 
     let profiles = ai::get_ai_profiles(&db).expect("should get profiles");

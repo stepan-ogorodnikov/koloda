@@ -117,6 +117,11 @@ export async function updateAIProfile(db: DB, data: UpdateAIProfileData): Promis
 
   if (data.secrets) {
     validateSecretsForInput(data.secrets);
+    // INVARIANT: a profile keeps its provider (AI-PROVIDERS.md §Editing a Profile).
+    // Twin: `update_ai_profile` in crates/koloda/src/repo/ai.rs.
+    if (data.secrets.provider !== currentSettings.content.profiles[profileIndex]!.secrets.provider) {
+      throw new AppError("validation.ai-providers.provider.changed");
+    }
   }
 
   const newContent = aiSettingsValidation.parse(
@@ -132,10 +137,9 @@ export async function updateAIProfile(db: DB, data: UpdateAIProfileData): Promis
       }
       if (data.secrets !== undefined) {
         const previous = profile.secrets;
-        const providerChanged = previous.provider !== data.secrets.provider;
         // WHY: Edit submits may omit apiKey when the user did not replace it.
-        // Keep the stored key unless the provider changed or a new key was sent.
-        if (!profileHasSecrets(data.secrets) && !providerChanged && profileHasSecrets(previous)) {
+        // Keep the stored key unless a new key was sent.
+        if (!profileHasSecrets(data.secrets) && profileHasSecrets(previous)) {
           profile.secrets = { ...data.secrets, apiKey: previous.apiKey } as AISecrets;
         } else {
           profile.secrets = data.secrets;

@@ -109,6 +109,7 @@ pub mod error_codes {
     pub const VALIDATION_SETTINGS_AI_PROFILES_WHITELIST_MODEL_IDS: &str =
         "validation.settings-ai.profiles.whitelist-model-ids";
     pub const VALIDATION_AI_PROVIDERS_PROFILE_ID_DUPLICATE: &str = "validation.ai-providers.profile-id.duplicate";
+    pub const VALIDATION_AI_PROVIDERS_PROVIDER_CHANGED: &str = "validation.ai-providers.provider.changed";
     pub const VALIDATION_ASSISTANT_SETTINGS_TEMPERATURE_RANGE: &str = "validation.assistant-settings.temperature-range";
 
     pub const VALIDATION_LESSONS_RESULT_CARD_REVIEW_MISMATCH: &str = "validation.lessons.result.card-review-mismatch";

@@ -84,10 +84,12 @@ The new value is shown as a password field and focused automatically.
 The user cannot see the stored key without choosing to replace it.
 
 For base-URL fields, the value is editable as a normal URL input.
+An optional API key, once stored, cannot be cleared by leaving its field empty; deleting the profile removes it.
 
 On success, the profile is updated and the profile list refreshes.
 Editing does not change which profile it is, or when it was created.
 The provider cannot be changed through edit — to use a different provider, the user creates a new profile.
+An edit that names another provider fails with an error and changes nothing.
 
 ### Deleting a Profile
 

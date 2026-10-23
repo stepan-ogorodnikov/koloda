@@ -657,7 +657,7 @@ Item 26 was added during implementation; it is committed before item 2, which it
   Commit: Require secrets on every AI profile
   Depends on: 4, 12
 
-- [ ] 15. Reject a provider change when updating an AI profile
+- [x] 15. Reject a provider change when updating an AI profile
   Goal (P9, P19, P21; question 8):
   - Both hosts reject an update whose secrets name another provider, before any write: web `updateAIProfile`
     (`apps/web/src/app/ai.ts:113-158`), desktop `update_ai_profile` (`repo/ai.rs:209-278`).

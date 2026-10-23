@@ -105,6 +105,32 @@ describe("web AI profile save path", () => {
     });
   });
 
+  it("rejects a provider change on update", async () => {
+    // Twin: update_ai_profile_rejects_a_provider_change (crates/koloda/tests/integration/ai_integration_tests.rs).
+    seedAiSettings([
+      {
+        id: PROFILE_ID,
+        title: "OpenRouter",
+        secrets: { provider: "openrouter", apiKey: "sk-or" },
+        hasSecrets: true,
+        createdAt: CREATED_AT,
+      },
+    ]);
+
+    await expect(
+      updateAIProfile({} as DB, {
+        id: PROFILE_ID,
+        title: "Local model",
+        secrets: { provider: "ollama", baseUrl: "http://localhost:11434" },
+      }),
+    ).rejects.toMatchObject({ code: "validation.ai-providers.provider.changed" });
+
+    expect(storedProfiles()[0]).toMatchObject({
+      title: "OpenRouter",
+      secrets: { provider: "openrouter", apiKey: "sk-or" },
+    });
+  });
+
   it("removes the title when an update sends an empty one", async () => {
     // Twin: update_ai_profile_removes_title_sent_empty (crates/koloda/tests/integration/ai_integration_tests.rs).
     seedAiSettings([
