@@ -41,16 +41,6 @@ pub struct AssistantSettings {
     pub chat_prompt_mode: Option<ChatPromptMode>,
 }
 
-impl Default for AssistantSettings {
-    fn default() -> Self {
-        Self {
-            temperature: 0.2,
-            chat_prompt_template: None,
-            chat_prompt_mode: None,
-        }
-    }
-}
-
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct AISettings {

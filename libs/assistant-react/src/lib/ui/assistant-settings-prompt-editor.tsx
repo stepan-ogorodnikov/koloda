@@ -10,7 +10,6 @@ export type AssistantSettingsPromptEditorProps = {
   defaultTemplate: string;
   onModeChange: (mode: ChatPromptMode) => void;
   onChange: (value: string) => void;
-  isDisabled?: boolean;
 };
 
 export function AssistantSettingsPromptEditor({
@@ -20,7 +19,6 @@ export function AssistantSettingsPromptEditor({
   defaultTemplate,
   onModeChange,
   onChange,
-  isDisabled,
 }: AssistantSettingsPromptEditorProps) {
   const { _ } = useLingui();
   const isDefault = mode === "default";
@@ -34,7 +32,6 @@ export function AssistantSettingsPromptEditor({
           aria-label={_(msg`assistant.settings.system-prompt.mode.label`)}
           selectedKeys={[mode]}
           disallowEmptySelection
-          isDisabled={isDisabled}
           onSelectionChange={([value]) => {
             const next = value?.toString();
             if (next !== "default" && next !== "custom") return;
@@ -44,12 +41,8 @@ export function AssistantSettingsPromptEditor({
             onModeChange(next);
           }}
         >
-          <ToggleGroup.Item id="default" isDisabled={isDisabled}>
-            {_(msg`assistant.settings.system-prompt.mode.default`)}
-          </ToggleGroup.Item>
-          <ToggleGroup.Item id="custom" isDisabled={isDisabled}>
-            {_(msg`assistant.settings.system-prompt.mode.custom`)}
-          </ToggleGroup.Item>
+          <ToggleGroup.Item id="default">{_(msg`assistant.settings.system-prompt.mode.default`)}</ToggleGroup.Item>
+          <ToggleGroup.Item id="custom">{_(msg`assistant.settings.system-prompt.mode.custom`)}</ToggleGroup.Item>
         </ToggleGroup>
       </div>
       <TextField
@@ -57,7 +50,6 @@ export function AssistantSettingsPromptEditor({
         value={isDefault ? defaultTemplate : (templateValue ?? "")}
         aria-label={label}
         isReadOnly={isDefault}
-        isDisabled={isDisabled}
         onChange={onChange}
       >
         <TextField.TextArea variants={{ style: "normal", class: "resize-none grow min-h-0 h-full" }} />

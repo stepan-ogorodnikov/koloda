@@ -597,7 +597,7 @@ Item 26 was added during implementation; it is committed before item 2, which it
   Commit: Discard settings edits on every close
   Depends on: none
 
-- [ ] 11. Delete unused assistant settings surface
+- [x] 11. Delete unused assistant settings surface
   Goal (S8):
   - The `isDisabled` prop of `AssistantSettingsPromptEditor` and its four forwards.
   - `AssistantSettingsFormValues` (`libs/ai/src/lib/settings.ts:47`).

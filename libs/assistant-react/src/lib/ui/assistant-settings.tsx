@@ -36,7 +36,7 @@ export function AssistantSettings({ isOpen, onOpenChange }: AssistantSettingsPro
   const { data } = useQuery(getSettingsQuery("ai"));
   const { mutate } = useMutation(patchSettingsMutation());
 
-  const assistantSettings = data?.content?.assistant as AssistantSettingsType | undefined;
+  const assistantSettings = data?.content?.assistant;
   const defaultValues = toFormValues(assistantSettings);
 
   const form = useAppForm({
@@ -68,8 +68,7 @@ export function AssistantSettings({ isOpen, onOpenChange }: AssistantSettingsPro
   // discard unsaved edits.
   useEffect(() => {
     if (!data) return;
-    const assistant = data.content?.assistant as AssistantSettingsType | undefined;
-    form.reset(toFormValues(assistant));
+    form.reset(toFormValues(data.content?.assistant));
   }, [data, form, isOpen]);
 
   return (

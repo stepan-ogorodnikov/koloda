@@ -44,8 +44,6 @@ export const assistantSettingsFormSchema = z.object({
   chatPromptMode: chatPromptModeSchema,
 });
 
-export type AssistantSettingsFormValues = z.infer<typeof assistantSettingsFormSchema>;
-
 export type ChatPromptSettings = {
   chatPromptMode?: ChatPromptMode;
   chatPromptTemplate?: string | null;
