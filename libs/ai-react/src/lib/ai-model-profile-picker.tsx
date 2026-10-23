@@ -142,7 +142,10 @@ export function AIModelProfilePicker({
             </Select.Header>
             {section.status === "ready" ? (
               section.models.length === 0 ? (
+                // WHY: a distinct key per status row. The listbox throws when an item's id
+                // changes in place, and this row replaces the loading row when the list arrives.
                 <Select.ListBoxItem
+                  key={`empty-${section.id}`}
                   id={`empty-${section.id}`}
                   textValue={_(msg`ai.model-picker.empty-models`)}
                   isDisabled
@@ -160,6 +163,7 @@ export function AIModelProfilePicker({
               )
             ) : (
               <Select.ListBoxItem
+                key={`status-${section.id}`}
                 id={`status-${section.id}`}
                 textValue={
                   section.status === "loading"

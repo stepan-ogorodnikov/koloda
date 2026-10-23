@@ -54,6 +54,7 @@ Done when:
 
 Findings are numbered as in their reports, with a prefix: `P` for providers (slice 7), `S` for settings (slice 6).
 Entries P20, P21, and S11 come from the reports' "seen in passing" notes.
+Entry P22 was found during implementation.
 Line numbers are at `f95547fa`.
 
 ### Providers (slice 7)
@@ -143,7 +144,7 @@ Line numbers are at `f95547fa`.
     The tool budget allows 8 steps (`chat-stream.ts:17`).
   - No spec describes the meter.
 - P8. Risk, Should-fix: the `ai-react` suite fails in some file orders.
-  Decision: fixed by item 2.
+  Decision: fixed by items 26 (the picker test) and 2 (the rest).
   - `libs/ai-react/vitest.config.mjs:17-19` sets `isolate: false`.
     Its WHY says "no file here mocks a module a sibling imports for real".
   - `ai-chat-error.test.tsx:13-20` file-mocks two `@koloda/core-react` hotkey hooks.
@@ -234,7 +235,7 @@ Line numbers are at `f95547fa`.
     (`libs/ai/src/lib/providers/deepseek.ts:21-31`).
     OpenAI and OpenCode start both requests at once (`openai.ts:13-16`).
 - P17. Improvement, Later: repeated tests.
-  Decision: Rust part fixed by item 21; picker part fixed by item 2.
+  Decision: Rust part fixed by item 21; picker part fixed by item 26.
   - Five keyring round-trip tests differ only by provider variant (`ai_integration_tests.rs:242`, `:276`, `:310`,
     `:342`, `:374`); TESTING.md (§Repetition and tables).
   - `ai-model-profile-picker.test.tsx:78`, `:93`, `:108`, and `:138` re-test allowlist rules through module mocks
@@ -265,6 +266,16 @@ Line numbers are at `f95547fa`.
 - P21. Improvement, Later (seen in passing): `update_ai_profile` looks the profile up three times.
   Decision: fixed by item 15.
   - Two of the three not-found branches are unreachable (`repo/ai.rs:219-235`).
+- P22. Risk, Should-fix (found in item 2): an empty-allowlist profile crashes the model picker when its list arrives.
+  Decision: fixed by item 26.
+  - A section shows a loading row while its list loads, then an empty-models row for an empty allowlist
+    (`libs/ai-react/src/lib/ai-model-profile-picker.tsx:145-160`, `:162-163`).
+    Both are `Select.ListBoxItem`s in the same place with different ids, so React reuses the node.
+  - The listbox collection throws "Cannot change the id of an item" when a mounted item's id changes
+    (`react-aria` `dist/private/collections/Document.mjs:219`).
+    The collection is built while the picker is closed too.
+  - So after a reload, a profile with an empty allowlist breaks the composer's picker once its model list loads.
+    The old picker test mocked `@koloda/ui`, so it could not see this.
 
 ### Settings (slice 6)
 
@@ -405,6 +416,7 @@ Out:
 `assistant-react`, and `settings-react`.
 `WEB` stands for `nx run @koloda/web:test-unit`.
 Line numbers are at `f95547fa`; when an earlier item moved them, find the code by its text.
+Item 26 was added during implementation; it is committed before item 2, which it unblocks.
 
 - [x] 1. Leave the reasoning effort unset when the catalog gives no default
   Goal (P1; questions 2 and 11):
@@ -448,15 +460,11 @@ Line numbers are at `f95547fa`; when an earlier item moved them, find the code b
   Depends on: none
 
 - [ ] 2. Make the ai-react suite pass in every file order
-  Goal (P8; P17 picker part):
+  Goal (P8, after item 26 rewrote the picker test):
   - `ai-chat-error.test.tsx:13-20`: drop the file-level `@koloda/core-react` mock.
-    Render `AIChatError` under a Jotai store whose `queriesAtom` serves hotkey settings, as the assistant-react fix
-    did (`8400cfe9`).
-  - Replace the whole-package `@koloda/ui` mocks in `ai-chat-message-status.test.tsx:12-18` and
-    `ai-model-profile-picker.test.tsx:17` with the real package.
-  - Delete the four picker cases that re-test allowlist rules (`ai-model-profile-picker.test.tsx:78`, `:93`, `:108`,
-    `:138`); `filter-profile-models.test.ts:11-75` owns them.
-    Keep the empty-allowlist case (`:123`).
+    Render `AIChatError` with item 26's store wrapper, which serves hotkey settings through `queriesAtom`.
+  - Replace the whole-package `@koloda/ui` mock in `ai-chat-message-status.test.tsx:12-18` with the real package.
+  - Render item 1's `ai-model-parameters.test.tsx` with the same wrapper.
   - Correct the WHY at `libs/ai-react/vitest.config.mjs:17-18` to the rule that now holds.
   Constraints: `libs/ai-react` tests and config only.
   Done when:
@@ -784,6 +792,26 @@ Line numbers are at `f95547fa`; when an earlier item moved them, find the code b
   Manual verify: none — tests only.
   Commit: Prove profile writes keep the assistant settings
   Depends on: 14
+
+- [x] 26. Keep an empty-allowlist section from crashing the model picker
+  Goal (P22; P17 picker part):
+  - `ai-model-profile-picker.tsx`: give the empty-models row and the status row distinct React keys, so the
+    listbox mounts a new item instead of changing an id in place; add a WHY.
+  - Rewrite `ai-model-profile-picker.test.tsx` on real modules: drop the `@koloda/ui`, `motion/react`, and
+    `./use-ai-profiles-models` mocks.
+    A shared wrapper in `libs/ai-react/src/test/test-helpers.tsx` gives a real Jotai store and query client, with
+    hotkey settings and an injected `listModels`.
+  - Delete the four cases that re-test allowlist rules (`:78`, `:93`, `:108`, `:138`);
+    `filter-profile-models.test.ts:11-75` owns them.
+  - Replace the empty-allowlist case (`:123`) with a gated interleaving: open the picker while the list loads,
+    then release it; the empty-models row shows.
+  Done when: `AIR ai-model-profile-picker` passes; the case fails with "Cannot change the id of an item" without the
+  keys.
+  Manual verify (web, an OpenRouter profile):
+  - Settings → AI → models button → Selected → uncheck everything → Save → reload → AI route → the composer
+    renders, and the picker shows the profile with "No models".
+  Commit: Keep an empty-allowlist section from crashing the model picker
+  Depends on: 1
 
 ## Outcome
 

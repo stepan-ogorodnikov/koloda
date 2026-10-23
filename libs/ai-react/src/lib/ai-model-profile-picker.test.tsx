@@ -1,7 +1,7 @@
 import type { AIModel, AIProfile } from "@koloda/ai";
-import { render, screen } from "@testing-library/react";
-import * as React from "react";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
+import { createAppStoreWrapper } from "../test/test-helpers";
 import { AIModelProfilePicker } from "./ai-model-profile-picker";
 
 vi.mock("@lingui/react", () => ({
@@ -10,117 +10,26 @@ vi.mock("@lingui/react", () => ({
   }),
 }));
 
-vi.mock("motion/react", () => ({
-  AnimatePresence: ({ children }: { children: React.ReactNode }) => children,
-}));
-
-vi.mock("@koloda/ui", () => {
-  const Select = Object.assign(
-    ({
-      items,
-      children,
-      emptyContent,
-    }: {
-      items: unknown[];
-      children: (item: unknown) => React.ReactNode;
-      emptyContent?: React.ReactNode;
-    }) => <div>{items.length === 0 ? emptyContent : items.map((item) => children(item))}</div>,
-    {
-      ListBoxSection: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-      Header: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-      Collection: ({ items, children }: { items: unknown[]; children: (item: unknown) => React.ReactNode }) => (
-        <div>{items.map((item) => children(item))}</div>
-      ),
-      ListBoxItem: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-    },
-  );
-
-  return {
-    Select,
-    Fade: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-    Button: (props: { children: React.ReactNode }) => <button type="button">{props.children}</button>,
-    Tooltip: ({ children }: { children: React.ReactNode }) => children,
-  };
-});
-
 const gpt: AIModel = { id: "openai/gpt-4", name: "GPT-4", context_length: 1 };
-const claude: AIModel = { id: "anthropic/claude", name: "Claude", context_length: 1 };
-const gemini: AIModel = { id: "google/gemini", name: "Gemini", context_length: 1 };
-
-vi.mock("./use-ai-profiles-models", () => ({
-  useAIProfilesModels: () => ({
-    byProfileId: {
-      "profile-1": {
-        profileId: "profile-1",
-        models: [gpt, claude, gemini],
-        isLoading: false,
-        isError: false,
-        error: null,
-        refetch: () => undefined,
-      },
-    },
-    states: [],
-  }),
-}));
 
 function profile(overrides: Partial<AIProfile> = {}): AIProfile {
   return {
     id: "profile-1",
     title: "OpenRouter",
     hasSecrets: true,
-    createdAt: "2026-01-01T00:00:00Z",
+    createdAt: new Date("2026-01-01T00:00:00Z"),
     secrets: { provider: "openrouter", apiKey: "key" },
     ...overrides,
   };
 }
 
-describe("AIModelProfilePicker allowlist", () => {
-  it("shows every model when the allowlist is unset", () => {
-    render(
-      <AIModelProfilePicker
-        profiles={[profile()]}
-        profileId="profile-1"
-        modelId="openai/gpt-4"
-        onChange={() => undefined}
-      />,
-    );
-
-    expect(screen.getByText("GPT-4")).toBeTruthy();
-    expect(screen.getByText("Claude")).toBeTruthy();
-    expect(screen.getByText("Gemini")).toBeTruthy();
-  });
-
-  it("filters models by whitelistModelIds", () => {
-    render(
-      <AIModelProfilePicker
-        profiles={[profile({ whitelistModelIds: ["openai/gpt-4", "google/gemini"] })]}
-        profileId="profile-1"
-        modelId="openai/gpt-4"
-        onChange={() => undefined}
-      />,
-    );
-
-    expect(screen.getByText("GPT-4")).toBeTruthy();
-    expect(screen.getByText("Gemini")).toBeTruthy();
-    expect(screen.queryByText("Claude")).toBeNull();
-  });
-
-  it("keeps the selected model visible when it is not allowlisted", () => {
-    render(
-      <AIModelProfilePicker
-        profiles={[profile({ whitelistModelIds: ["openai/gpt-4"] })]}
-        profileId="profile-1"
-        modelId="anthropic/claude"
-        onChange={() => undefined}
-      />,
-    );
-
-    expect(screen.getByText("GPT-4")).toBeTruthy();
-    expect(screen.getByText("Claude")).toBeTruthy();
-    expect(screen.queryByText("Gemini")).toBeNull();
-  });
-
-  it("shows an empty-models state for an empty allowlist without hiding the profile", () => {
+// Allowlist filtering itself is pinned in filter-profile-models.test.ts; these cases cover what the picker renders.
+describe("AIModelProfilePicker", () => {
+  it("shows the empty-models row when an empty-allowlist profile finishes loading", async () => {
+    let releaseModels!: (models: AIModel[]) => void;
+    const pendingModels = new Promise<AIModel[]>((resolve) => {
+      releaseModels = resolve;
+    });
     render(
       <AIModelProfilePicker
         profiles={[profile({ whitelistModelIds: [], title: "Restricted" })]}
@@ -128,24 +37,21 @@ describe("AIModelProfilePicker allowlist", () => {
         modelId=""
         onChange={() => undefined}
       />,
+      { wrapper: createAppStoreWrapper({ listModels: () => pendingModels }) },
     );
 
-    expect(screen.getByText("Restricted")).toBeTruthy();
-    expect(screen.getByText("ai.model-picker.empty-models")).toBeTruthy();
-    expect(screen.queryByText("GPT-4")).toBeNull();
-  });
+    fireEvent.click(screen.getByRole("button", { name: /ai.model-picker.label/ }));
+    const listbox = await screen.findByRole("listbox");
+    expect(within(listbox).getByText("Restricted")).toBeTruthy();
+    expect(within(listbox).getByText("ai.model-picker.loading.label")).toBeTruthy();
 
-  it("hides stale allowlist ids", () => {
-    render(
-      <AIModelProfilePicker
-        profiles={[profile({ whitelistModelIds: ["openai/gpt-4", "gone/model"] })]}
-        profileId="profile-1"
-        modelId="openai/gpt-4"
-        onChange={() => undefined}
-      />,
-    );
+    await act(async () => {
+      releaseModels([gpt]);
+      await pendingModels;
+    });
 
-    expect(screen.getByText("GPT-4")).toBeTruthy();
-    expect(screen.queryByText("gone/model")).toBeNull();
+    const loaded = screen.getByRole("listbox");
+    expect(await within(loaded).findByText("ai.model-picker.empty-models")).toBeTruthy();
+    expect(within(loaded).queryByText("GPT-4")).toBeNull();
   });
 });
