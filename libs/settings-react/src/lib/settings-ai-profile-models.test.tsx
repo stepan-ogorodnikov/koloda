@@ -1,6 +1,6 @@
-import type { AIProfile, UpdateAIProfileData } from "@koloda/ai";
+import type { AIModel, AIProfile, AIRuntime, UpdateAIProfileData } from "@koloda/ai";
 import { AppError } from "@koloda/app";
-import { queriesAtom } from "@koloda/core-react";
+import { aiRuntimeAtom, queriesAtom, queryKeys } from "@koloda/core-react";
 import type { Queries } from "@koloda/core-react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, fireEvent, render, screen } from "@testing-library/react";
@@ -27,22 +27,8 @@ vi.mock("@koloda/core-react", async (importOriginal) => {
   };
 });
 
-vi.mock("@koloda/ai-react", () => ({
-  useAIProfilesModels: () => ({
-    byProfileId: {
-      "00000000-0000-4000-8000-000000000001": {
-        profileId: "00000000-0000-4000-8000-000000000001",
-        models: [],
-        isLoading: false,
-        isError: false,
-        error: null,
-        refetch: () => {},
-      },
-    },
-  }),
-}));
-
 const updateProfile = vi.hoisted(() => vi.fn(async (_data: UpdateAIProfileData) => undefined));
+const listModels = vi.hoisted(() => vi.fn(async (_profileId: string): Promise<AIModel[]> => []));
 
 const profile: AIProfile = {
   id: "00000000-0000-4000-8000-000000000001",
@@ -67,6 +53,7 @@ function buildQueries(): Queries {
 function renderDialog() {
   const store = createStore();
   store.set(queriesAtom as unknown as Parameters<typeof store.set>[0], buildQueries());
+  store.set(aiRuntimeAtom as unknown as Parameters<typeof store.set>[0], { listModels } as unknown as AIRuntime);
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
   });
@@ -79,12 +66,38 @@ function renderDialog() {
     );
   }
 
-  return render(<SettingsAIProfileModels profile={profile} />, { wrapper: Wrapper });
+  return { ...render(<SettingsAIProfileModels profile={profile} />, { wrapper: Wrapper }), queryClient };
 }
 
 describe("SettingsAIProfileModels", () => {
   beforeEach(() => {
     updateProfile.mockClear();
+    listModels.mockReset();
+    listModels.mockResolvedValue([]);
+  });
+
+  it("fetches the profile's models on every open, even with a cached list", async () => {
+    const { queryClient } = renderDialog();
+    queryClient.setQueryData(queryKeys.ai.models(profile.id), [{ id: "old", name: "Old model", context_length: 0 }]);
+    listModels.mockResolvedValue([{ id: "new", name: "New model", context_length: 0 }]);
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "settings.ai.models.trigger" }));
+    });
+
+    expect(await screen.findByText("New model")).toBeTruthy();
+    expect(screen.queryByText("Old model")).toBeNull();
+    expect(listModels).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      fireEvent.click(document.querySelector('button[slot="close"]') as HTMLElement);
+    });
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "settings.ai.models.trigger" }));
+    });
+
+    await screen.findByText("New model");
+    expect(listModels).toHaveBeenCalledTimes(2);
   });
 
   it("shows the catalog message and keeps AppError details behind the details control", async () => {

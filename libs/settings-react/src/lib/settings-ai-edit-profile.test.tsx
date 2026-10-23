@@ -1,6 +1,6 @@
 import type { AIProfile, UpdateAIProfileData } from "@koloda/ai";
 import { AppError } from "@koloda/app";
-import { queriesAtom } from "@koloda/core-react";
+import { queriesAtom, queryKeys } from "@koloda/core-react";
 import type { Queries } from "@koloda/core-react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, fireEvent, render, screen } from "@testing-library/react";
@@ -64,7 +64,7 @@ function renderDialog() {
     );
   }
 
-  return render(<SettingsAIEditProfile profile={profile} />, { wrapper: Wrapper });
+  return { ...render(<SettingsAIEditProfile profile={profile} />, { wrapper: Wrapper }), queryClient };
 }
 
 describe("SettingsAIEditProfile", () => {
@@ -109,5 +109,20 @@ describe("SettingsAIEditProfile", () => {
     });
 
     expect(updateProfile).toHaveBeenCalledWith({ id: profile.id, title: "" });
+  });
+
+  it("drops the profile's cached model list after a save", async () => {
+    const { queryClient } = renderDialog();
+    queryClient.setQueryData(queryKeys.ai.models(profile.id), [{ id: "old", name: "Old model", context_length: 0 }]);
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "settings.ai.edit.trigger" }));
+    });
+    await act(async () => {
+      fireEvent.click(await screen.findByRole("button", { name: "settings.ai.edit.submit" }));
+    });
+
+    expect(updateProfile).toHaveBeenCalledOnce();
+    expect(queryClient.getQueryData(queryKeys.ai.models(profile.id))).toBeUndefined();
   });
 });

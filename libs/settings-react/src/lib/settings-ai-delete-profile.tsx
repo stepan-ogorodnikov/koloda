@@ -26,6 +26,7 @@ export function SettingsAIDeleteProfile({ profile }: SettingsAIDeleteProfileProp
           setIsOpen(false);
           queryClient.invalidateQueries({ queryKey: queryKeys.settings.detail("ai") });
           queryClient.invalidateQueries({ queryKey: queryKeys.ai.profiles() });
+          queryClient.removeQueries({ queryKey: queryKeys.ai.models(profile.id) });
         },
       },
     );

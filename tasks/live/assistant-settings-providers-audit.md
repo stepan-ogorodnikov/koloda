@@ -518,11 +518,13 @@ Item 26 was added during implementation; it is committed before item 2, which it
   Commit: Build the model-list query in one hook
   Depends on: 1
 
-- [ ] 6. Refresh a profile's model list after edits and on allowlist open
+- [x] 6. Refresh a profile's model list after edits and on allowlist open
   Goal (P4):
-  - Edit success (`settings-ai-edit-profile.tsx:25-29`): invalidate `queryKeys.ai.models(profile.id)`.
+  - Edit success (`settings-ai-edit-profile.tsx:25-29`): reset `queryKeys.ai.models(profile.id)`.
+    Invalidating is not enough: model queries do not refetch on mount, so a stale list would stay.
   - Delete success (`settings-ai-delete-profile.tsx:25-29`): remove that query.
-  - The allowlist dialog (`settings-ai-profile-models.tsx:32`) refetches the profile's list each time it opens.
+  - The allowlist dialog (`settings-ai-profile-models.tsx:32`) resets the profile's list each time it opens, so it
+    fetches again; its test now uses the real `useAIProfilesModels` instead of a module mock.
     `refetchOnMount: false` stays for the composer.
   - Tests in `settings-react`: edit invalidates and delete removes the models query; opening the dialog refetches.
   Done when: `SR` passes.

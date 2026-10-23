@@ -26,6 +26,9 @@ export function SettingsAIEditProfile({ profile }: SettingsAIEditProfileProps) {
           setIsOpen(false);
           queryClient.invalidateQueries({ queryKey: queryKeys.settings.detail("ai") });
           queryClient.invalidateQueries({ queryKey: queryKeys.ai.profiles() });
+          // WHY: reset, not invalidate. Model queries do not refetch on mount, so a
+          // stale list fetched with the old secrets would otherwise stay until reload.
+          queryClient.resetQueries({ queryKey: queryKeys.ai.models(profile.id) });
         },
       },
     );

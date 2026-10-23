@@ -40,6 +40,9 @@ export function SettingsAIProfileModels({ profile }: SettingsAIProfileModelsProp
     if (next) {
       setDraft(createAllowlistDraft(profile.whitelistModelIds));
       setSearch("");
+      // WHY: the dialog fetches on every open (AI-PROVIDERS.md §Allowlist). Model
+      // queries do not refetch on mount, so drop the cached list first.
+      queryClient.resetQueries({ queryKey: queryKeys.ai.models(profile.id) });
       return;
     }
     reset();
