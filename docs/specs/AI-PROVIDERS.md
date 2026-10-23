@@ -95,6 +95,7 @@ An edit that names another provider fails with an error and changes nothing.
 
 Deleting permanently removes the profile and its secrets.
 Removing the last profile for a provider does not affect that provider's availability.
+If deleting fails, the confirmation stays open, shows the error, and the profile is kept.
 
 ### Profile List
 

@@ -689,7 +689,7 @@ Item 26 was added during implementation; it is committed before item 2, which it
   Commit: Derive web key presence from the stored secrets
   Depends on: 15
 
-- [ ] 17. Show a failed profile delete in its popover
+- [x] 17. Show a failed profile delete in its popover
   Goal (P10):
   - `SettingsAIDeleteProfile` (`settings-ai-delete-profile.tsx:18`) reads `error` and `reset`.
     It shows the error inline in the popover, as `ai-providers/add-ai-profile-form.tsx:41` does with `db.delete`

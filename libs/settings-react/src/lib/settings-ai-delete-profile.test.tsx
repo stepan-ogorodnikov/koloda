@@ -1,4 +1,5 @@
 import type { AIProfile, RemoveAIProfileData } from "@koloda/ai";
+import { AppError } from "@koloda/app";
 import { queriesAtom, queryKeys } from "@koloda/core-react";
 import type { Queries } from "@koloda/core-react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -89,5 +90,15 @@ describe("SettingsAIDeleteProfile", () => {
 
     expect(removeProfile).toHaveBeenCalledWith({ id: profile.id });
     expect(queryClient.getQueryState(queryKeys.ai.models(profile.id))).toBeUndefined();
+  });
+
+  it("keeps the popover open and shows the error when the delete fails", async () => {
+    removeProfile.mockRejectedValueOnce(new AppError("keyring", "locked"));
+    renderPopover();
+
+    await confirmDelete();
+
+    expect(await screen.findByText("keyring")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "settings.ai.delete.confirm" })).toBeTruthy();
   });
 });

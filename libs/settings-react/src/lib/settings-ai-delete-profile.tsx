@@ -1,6 +1,7 @@
 import type { AIProfile } from "@koloda/ai";
+import { ERROR_MESSAGES, formatAppError } from "@koloda/app";
 import { queriesAtom, queryKeys } from "@koloda/core-react";
-import { Button, DeleteIcon, Dialog } from "@koloda/ui";
+import { Button, DeleteIcon, Dialog, ErrorMessage } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -15,7 +16,7 @@ export function SettingsAIDeleteProfile({ profile }: SettingsAIDeleteProfileProp
   const queryClient = useQueryClient();
   const { _ } = useLingui();
   const { removeAIProfileMutation } = useAtomValue(queriesAtom);
-  const { mutate } = useMutation(removeAIProfileMutation());
+  const { mutate, error, reset } = useMutation(removeAIProfileMutation());
   const [isOpen, setIsOpen] = useState(false);
 
   const handleDelete = () => {
@@ -32,8 +33,13 @@ export function SettingsAIDeleteProfile({ profile }: SettingsAIDeleteProfileProp
     );
   };
 
+  const handleOpenChange = (next: boolean) => {
+    setIsOpen(next);
+    if (!next) reset();
+  };
+
   return (
-    <Dialog.Root isOpen={isOpen} onOpenChange={setIsOpen}>
+    <Dialog.Root isOpen={isOpen} onOpenChange={handleOpenChange}>
       <Button variants={{ style: "ghost", size: "icon" }} aria-label={_(msg`settings.ai.profiles.delete.trigger`)}>
         <div className="p-1 rounded-md group-focus-ring">
           <DeleteIcon className="size-5 min-w-5" strokeWidth={1.75} aria-hidden="true" />
@@ -41,7 +47,7 @@ export function SettingsAIDeleteProfile({ profile }: SettingsAIDeleteProfileProp
       </Button>
       <Dialog.Popover placement="left">
         <Dialog.Body>
-          <Dialog.Content>
+          <Dialog.Content variants={{ class: "flex flex-col gap-4" }}>
             <div className="flex flex-row items-center gap-4">
               {_(msg`settings.ai.delete.message`)}
               <Button variants={{ style: "primary", size: "small" }} onClick={handleDelete}>
@@ -51,6 +57,7 @@ export function SettingsAIDeleteProfile({ profile }: SettingsAIDeleteProfileProp
                 {_(msg`settings.ai.delete.cancel`)}
               </Button>
             </div>
+            {error && <ErrorMessage {...formatAppError(error, _, ERROR_MESSAGES["db.delete"])} layout="inline" />}
           </Dialog.Content>
         </Dialog.Body>
       </Dialog.Popover>
