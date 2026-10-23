@@ -727,7 +727,7 @@ Item 26 was added during implementation; it is committed before item 2, which it
   Commit: Delete an unused AI query, row flag, and type export
   Depends on: none
 
-- [ ] 20. Start DeepSeek's two model requests together
+- [x] 20. Start DeepSeek's two model requests together
   Goal (P16):
   - `fetchDeepSeekModels` (`deepseek.ts:21-31`) passes the unawaited `fetch(…).then(throwForAIResponse)` into
     `Promise.all`, as `openai.ts:13-16` does.

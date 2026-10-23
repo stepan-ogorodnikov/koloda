@@ -15,6 +15,27 @@ function jsonResponse(body: unknown, status = 200): Response {
 }
 
 describe("fetchDeepSeekModels", () => {
+  it("requests the models.dev catalog without waiting for DeepSeek's own list", async () => {
+    let releaseModels!: (response: Response) => void;
+    const fetchMock = vi.fn((input: RequestInfo | URL) => {
+      if (String(input) === DEEPSEEK_MODELS_URL) {
+        return new Promise<Response>((resolve) => {
+          releaseModels = resolve;
+        });
+      }
+      return Promise.resolve(jsonResponse({}));
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const pending = fetchDeepSeekModels("sk-test");
+    await Promise.resolve();
+
+    expect(fetchMock.mock.calls.map(([input]) => String(input))).toEqual([DEEPSEEK_MODELS_URL, MODELS_DEV_API_URL]);
+
+    releaseModels(jsonResponse({ data: [] }));
+    await expect(pending).resolves.toEqual([]);
+  });
+
   it("joins exact models.dev effort metadata and leaves an exact row without efforts empty", async () => {
     const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
       const url = String(input);

@@ -19,14 +19,12 @@ function isDeepSeekModel(value: unknown): value is { id: string } {
 
 export async function fetchDeepSeekModels(apiKey: string): Promise<AIModel[]> {
   const [response, catalog] = await Promise.all([
-    throwForAIResponse(
-      await fetch(DEEPSEEK_MODELS_URL, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${apiKey}`,
-        },
-      }),
-    ),
+    fetch(DEEPSEEK_MODELS_URL, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+    }).then(throwForAIResponse),
     loadModelsDevCatalog(),
   ]);
 
