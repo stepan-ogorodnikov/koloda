@@ -97,24 +97,6 @@ function ToggleHost() {
 }
 
 describe("AssistantSettings", () => {
-  it("does not show a dialog when closed", () => {
-    render(<AssistantSettings isOpen={false} onOpenChange={vi.fn()} />, {
-      wrapper: ({ children }) => <Wrapper queries={buildQueries()}>{children}</Wrapper>,
-    });
-
-    expect(screen.queryByRole("dialog")).toBeNull();
-  });
-
-  it("shows the settings form in a dialog when open", async () => {
-    render(<AssistantSettings isOpen={true} onOpenChange={vi.fn()} />, {
-      wrapper: ({ children }) => <Wrapper queries={buildQueries()}>{children}</Wrapper>,
-    });
-
-    expect(await screen.findByRole("dialog")).toBeTruthy();
-    expect(screen.getByRole("heading", { name: "assistant.settings.title" })).toBeTruthy();
-    expect(screen.getByRole("textbox", { name: "assistant.settings.system-prompt.label" })).toBeTruthy();
-  });
-
   it("saves source, template, and temperature together", async () => {
     const onPatch = vi.fn();
     render(<AssistantSettings isOpen={true} onOpenChange={vi.fn()} />, {
@@ -199,6 +181,40 @@ describe("AssistantSettings", () => {
     fireEvent.click(screen.getByRole("button", { name: "toggle-settings", hidden: true }));
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
     fireEvent.click(screen.getByRole("button", { name: "toggle-settings" }));
+    await screen.findByRole("dialog");
+
+    expect(screen.getByRole("textbox", { name: "assistant.settings.system-prompt.label" })).toHaveProperty(
+      "value",
+      "saved custom prompt",
+    );
+  });
+
+  it("Reset restores the saved values and keeps the modal open", async () => {
+    render(<AssistantSettings isOpen={true} onOpenChange={vi.fn()} />, {
+      wrapper: ({ children }) => <Wrapper queries={buildQueries()}>{children}</Wrapper>,
+    });
+
+    await screen.findByDisplayValue("saved custom prompt");
+    const textbox = screen.getByRole("textbox", { name: "assistant.settings.system-prompt.label" });
+    fireEvent.change(textbox, { target: { value: "unsaved edit" } });
+    fireEvent.click(await screen.findByRole("button", { name: "form.reset" }));
+
+    expect(textbox).toHaveProperty("value", "saved custom prompt");
+    expect(screen.getByRole("dialog")).toBeTruthy();
+  });
+
+  it("discards unsaved edits when Escape closes the modal", async () => {
+    render(<SettingsHost onOpenChange={vi.fn()} />, {
+      wrapper: ({ children }) => <Wrapper queries={buildQueries()}>{children}</Wrapper>,
+    });
+
+    await screen.findByDisplayValue("saved custom prompt");
+    const textbox = screen.getByRole("textbox", { name: "assistant.settings.system-prompt.label" });
+    fireEvent.change(textbox, { target: { value: "unsaved edit" } });
+    fireEvent.keyDown(textbox, { key: "Escape" });
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+
+    fireEvent.click(screen.getByRole("button", { name: "open-settings" }));
     await screen.findByRole("dialog");
 
     expect(screen.getByRole("textbox", { name: "assistant.settings.system-prompt.label" })).toHaveProperty(

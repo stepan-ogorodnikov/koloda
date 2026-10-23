@@ -773,7 +773,7 @@ Item 26 was added during implementation; it is committed before item 2, which it
   Commit: Name the settings twins and give the TS temperature bounds their code
   Depends on: 12
 
-- [ ] 24. Test that saved settings reach runs and every discard path
+- [x] 24. Test that saved settings reach runs and every discard path
   Goal (S6):
   - Test `useAssistantRuntimeConfig` with a real `QueryClient`: seed the `ai` query, read `configRef`, update the
     cache, read again.
