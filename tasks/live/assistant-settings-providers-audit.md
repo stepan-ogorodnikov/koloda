@@ -626,7 +626,7 @@ Item 26 was added during implementation; it is committed before item 2, which it
   Commit: Default the prompt source when a row has none
   Depends on: 11
 
-- [ ] 13. Pin how the system prompt and temperature are sent
+- [x] 13. Pin how the system prompt and temperature are sent
   Goal (S5):
   - One table against the fake-model harness (`assistant-tools.test.ts:28-75`, or a block in `chat-stream.test.ts`
     using the same harness).

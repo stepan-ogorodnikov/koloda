@@ -29,6 +29,7 @@ import {
 } from "./assistant-tools";
 import { streamChatWithOllama } from "./chat-stream";
 import type { ChatStreamRequest } from "./generation";
+import { DEFAULT_CHAT_PROMPT_TEMPLATE } from "./prompts";
 
 // WHY: streamChatWithOllama builds its model via createOllama; swapping the factory
 // lets the real streamText run against a fake model for a genuine tool round-trip.
@@ -1091,6 +1092,53 @@ describe("chat tool streaming", () => {
 // the list/get read tools, stay omitted when the user wrote none, and list_decks
 // truncates them with an explicit flag — never a silent cut. get_deck_cards and
 // propose_cards never carry notes.
+describe("chat request prompt and temperature", () => {
+  function systemMessagesOf(model: MockLanguageModelV3): unknown[] {
+    return (model.doStreamCalls[0]?.prompt ?? [])
+      .filter((message) => message.role === "system")
+      .map((message) => message.content);
+  }
+
+  it.each([
+    {
+      name: "no template sends the built-in prompt, trimmed",
+      template: undefined,
+      system: [DEFAULT_CHAT_PROMPT_TEMPLATE.trim()],
+    },
+    { name: "an empty custom prompt is sent empty", template: "", system: [""] },
+    { name: "a custom prompt is trimmed and its braces stay literal", template: "  x {y}  ", system: ["x {y}"] },
+  ])("$name", async ({ template, system }) => {
+    const model = createTextOnlyModel();
+    fakeModelSlot.model = model;
+
+    await streamChatWithOllama(
+      createChatRequest({ systemPromptTemplate: template }),
+      () => {},
+      new AbortController().signal,
+      OLLAMA_OPTIONS,
+    );
+
+    expect(systemMessagesOf(model)).toEqual(system);
+  });
+
+  it.each([
+    { name: "an unset temperature falls back to 0.2", temperature: undefined, sent: 0.2 },
+    { name: "a set temperature is sent as is", temperature: 0.7, sent: 0.7 },
+  ])("$name", async ({ temperature, sent }) => {
+    const model = createTextOnlyModel();
+    fakeModelSlot.model = model;
+
+    await streamChatWithOllama(
+      createChatRequest({ input: { modelId: "llama3", prompt: "List my decks", temperature } }),
+      () => {},
+      new AbortController().signal,
+      OLLAMA_OPTIONS,
+    );
+
+    expect(model.doStreamCalls[0]?.temperature).toBe(sent);
+  });
+});
+
 describe("entity notes in tool output", () => {
   const template: AssistantToolTemplate = {
     id: "01900000-0000-7000-8000-000000000001",

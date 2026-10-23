@@ -56,6 +56,16 @@ describe("prepareRunRequest", () => {
     });
     expect(prepared!.request).not.toHaveProperty("dataContext");
   });
+
+  it.each([
+    { name: "Default (null) leaves the built-in prompt to the provider call", template: null, sent: undefined },
+    { name: "an empty custom prompt stays empty", template: "", sent: "" },
+    { name: "a custom prompt is passed through", template: "mine", sent: "mine" },
+  ])("$name", ({ template, sent }) => {
+    const prepared = prepareRunRequest(makeConfig({ chatPromptTemplate: template }), "hello", [], {});
+
+    expect(prepared!.request.systemPromptTemplate).toBe(sent);
+  });
 });
 
 describe("prepareRunRequest — retry history", () => {
