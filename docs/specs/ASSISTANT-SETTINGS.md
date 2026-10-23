@@ -19,7 +19,8 @@ They do not belong to a single conversation.
 
 The user opens settings from the assistant footer.
 The conversation stays visible behind the modal, including its title and header menu.
-Closing the modal (close control, Escape, or the backdrop) discards unsaved edits.
+Closing the modal discards unsaved edits, whichever way it closes: the close control, Escape, or the settings hotkey.
+Clicking outside the modal does not close it.
 Whether settings are open is not remembered across reloads.
 
 ## Core model

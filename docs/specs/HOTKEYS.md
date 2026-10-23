@@ -122,7 +122,7 @@ They act on the assistant chat and work while its text field is focused.
 | Interrupt | `Mod+Shift+I` | Cancels the active run. Available only while a run is active. |
 | Focus chat input | `Mod+L` | Moves focus to the chat input. |
 | Open AI model picker | `Mod+Shift+M` | Opens the model picker. |
-| Toggle settings | `Mod+Shift+S` | Opens or closes the assistant settings panel. |
+| Toggle settings | `Mod+Shift+S` | Opens or closes the assistant settings modal. |
 | New conversation | none | Starts a new conversation, when the new conversation button is available. |
 | Previous conversation | none | Opens the previous conversation in the list. |
 | Next conversation | none | Opens the next conversation in the list. |

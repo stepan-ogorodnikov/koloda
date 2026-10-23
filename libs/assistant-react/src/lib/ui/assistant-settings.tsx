@@ -62,24 +62,18 @@ export function AssistantSettings({ isOpen, onOpenChange }: AssistantSettingsPro
     },
   });
 
+  // WHY: `isOpen` is a dependency on purpose. The chat keeps this component, and
+  // its form, mounted while the modal is closed, and the settings toggle closes it
+  // without `onOpenChange`. Resetting on every open-state change makes every close
+  // discard unsaved edits.
   useEffect(() => {
     if (!data) return;
     const assistant = data.content?.assistant as AssistantSettingsType | undefined;
     form.reset(toFormValues(assistant));
-  }, [data, form]);
-
-  const handleOpenChange = (next: boolean) => {
-    // WHY: Overlay can keep the form mounted while closing; reset so the next
-    // open does not restore discarded edits.
-    if (!next) {
-      const assistant = data?.content?.assistant as AssistantSettingsType | undefined;
-      form.reset(toFormValues(assistant));
-    }
-    onOpenChange(next);
-  };
+  }, [data, form, isOpen]);
 
   return (
-    <Dialog.Overlay isOpen={isOpen} onOpenChange={handleOpenChange}>
+    <Dialog.Overlay isOpen={isOpen} onOpenChange={onOpenChange}>
       <Dialog.Modal variants={{ size: "large", class: "w-full max-w-3xl h-[min(48rem,100%)]" }}>
         <Dialog.Body>
           <Dialog.Header>

@@ -578,7 +578,7 @@ Item 26 was added during implementation; it is committed before item 2, which it
   Commit: Show the last step's tokens in the context meter
   Depends on: none
 
-- [ ] 10. Discard settings edits on every close
+- [x] 10. Discard settings edits on every close
   Goal (S1, S2, S11; question 10):
   - `AssistantSettings` (`ui/assistant-settings.tsx`) resets the form whenever `isOpen` turns false, not only in
     `handleOpenChange` (`:71-79`).

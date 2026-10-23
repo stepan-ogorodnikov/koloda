@@ -82,6 +82,20 @@ function SettingsHost(props: Omit<AssistantSettingsProps, "isOpen">) {
   );
 }
 
+// Mirrors AssistantChat: its settings toggle and hotkey flip the open state
+// directly, without going through the overlay's onOpenChange.
+function ToggleHost() {
+  const [isOpen, setIsOpen] = useState(true);
+  return (
+    <>
+      <button type="button" onClick={() => setIsOpen((prev) => !prev)}>
+        toggle-settings
+      </button>
+      <AssistantSettings isOpen={isOpen} onOpenChange={setIsOpen} />
+    </>
+  );
+}
+
 describe("AssistantSettings", () => {
   it("does not show a dialog when closed", () => {
     render(<AssistantSettings isOpen={false} onOpenChange={vi.fn()} />, {
@@ -170,5 +184,26 @@ describe("AssistantSettings", () => {
     );
     const customRadio = screen.getByRole("radio", { name: "assistant.settings.system-prompt.mode.custom" });
     expect(customRadio.getAttribute("aria-checked")).toBe("true");
+  });
+
+  it("discards unsaved edits when the host closes the modal directly", async () => {
+    render(<ToggleHost />, {
+      wrapper: ({ children }) => <Wrapper queries={buildQueries()}>{children}</Wrapper>,
+    });
+
+    await screen.findByDisplayValue("saved custom prompt");
+    fireEvent.change(screen.getByRole("textbox", { name: "assistant.settings.system-prompt.label" }), {
+      target: { value: "unsaved edit" },
+    });
+    // WHY: `hidden` — the open modal hides the rest of the page from the accessibility tree.
+    fireEvent.click(screen.getByRole("button", { name: "toggle-settings", hidden: true }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    fireEvent.click(screen.getByRole("button", { name: "toggle-settings" }));
+    await screen.findByRole("dialog");
+
+    expect(screen.getByRole("textbox", { name: "assistant.settings.system-prompt.label" })).toHaveProperty(
+      "value",
+      "saved custom prompt",
+    );
   });
 });
