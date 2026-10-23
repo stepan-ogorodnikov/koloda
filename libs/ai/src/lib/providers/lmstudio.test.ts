@@ -149,17 +149,42 @@ describe("fetchLmStudioModels", () => {
       },
     ]);
     expect(fetchMock).toHaveBeenCalledWith(
-      new URL("/v1/models", "http://localhost:1234/v1"),
+      new URL("http://localhost:1234/v1/models"),
       expect.objectContaining({
         headers: expect.objectContaining({ Authorization: "Bearer secret-key" }),
       }),
     );
     expect(fetchMock).toHaveBeenCalledWith(
-      new URL("/api/v1/models", "http://localhost:1234/v1"),
+      new URL("http://localhost:1234/api/v1/models"),
       expect.objectContaining({
         headers: expect.objectContaining({ Authorization: "Bearer secret-key" }),
       }),
     );
+  });
+
+  it.each([
+    {
+      baseUrl: "http://localhost:1234/v1/",
+      list: "http://localhost:1234/v1/models",
+      native: "http://localhost:1234/api/v1/models",
+    },
+    {
+      baseUrl: "https://box.lan/lmstudio/v1",
+      list: "https://box.lan/lmstudio/v1/models",
+      native: "https://box.lan/lmstudio/api/v1/models",
+    },
+    {
+      baseUrl: "http://localhost:1234",
+      list: "http://localhost:1234/models",
+      native: "http://localhost:1234/api/v1/models",
+    },
+  ])("keeps the base path of $baseUrl, as chat does", async ({ baseUrl, list, native }) => {
+    const fetchMock = vi.fn(async (_input: RequestInfo | URL) => jsonResponse({ data: [] }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await fetchLmStudioModels(baseUrl);
+
+    expect(fetchMock.mock.calls.map(([input]) => String(input)).sort()).toEqual([native, list].sort());
   });
 
   it("omits reasoning levels when the native models endpoint is unavailable", async () => {

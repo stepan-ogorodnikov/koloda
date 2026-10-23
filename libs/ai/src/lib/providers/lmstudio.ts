@@ -69,8 +69,12 @@ export function overlayLmStudioReasoning(models: AIModel[], catalog: unknown | n
 }
 
 async function loadLmStudioNativeModels(baseUrl: string, apiKey?: string): Promise<unknown | null> {
+  // WHY: the native API sits beside the OpenAI-compatible one under the same prefix:
+  // `<prefix>/v1` ↔ `<prefix>/api/v1`. A base without `/v1` is taken as the prefix.
+  const base = baseUrl.replace(/\/$/, "");
+  const prefix = base.endsWith("/v1") ? base.slice(0, -"/v1".length) : base;
   try {
-    const response = await fetch(new URL("/api/v1/models", baseUrl), {
+    const response = await fetch(new URL(`${prefix}/api/v1/models`), {
       headers: {
         "Content-Type": "application/json",
         ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}),

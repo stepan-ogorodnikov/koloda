@@ -49,10 +49,12 @@ export function resolveReasoningLevelsForModel(id: string): ReasoningLevels | un
   return undefined;
 }
 
-/** Minimal /v1/models listing (id only) — used by LM Studio. */
+/** Minimal `<base>/models` listing (id only) — used by LM Studio and OpenAI. */
 export async function fetchOpenAICompatibleModels(baseUrl: string, apiKey?: string): Promise<AIModel[]> {
+  // WHY: joined like the SDK joins `/chat/completions` (one trailing slash dropped,
+  // the base's path kept), so the list and chat always hit the same server prefix.
   const response = await throwForAIResponse(
-    await fetch(new URL("/v1/models", baseUrl), {
+    await fetch(new URL(`${baseUrl.replace(/\/$/, "")}/models`), {
       headers: {
         "Content-Type": "application/json",
         ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}),

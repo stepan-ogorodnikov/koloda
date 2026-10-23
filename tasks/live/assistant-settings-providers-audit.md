@@ -549,7 +549,7 @@ Item 26 was added during implementation; it is committed before item 2, which it
   Commit: Load other profiles' model lists only while the picker is open
   Depends on: 2, 5
 
-- [ ] 8. Build LM Studio's URLs from the base by one rule
+- [x] 8. Build LM Studio's URLs from the base by one rule
   Goal (P6):
   - `fetchOpenAICompatibleModels` (`openai-compatible.ts:53-55`) requests `${base}/models`, beside the SDK's
     `${base}/chat/completions`; strip a trailing slash the way the SDK does.
