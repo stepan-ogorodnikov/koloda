@@ -115,10 +115,16 @@ describe("settings and review totals integration", () => {
           {
             id: "01900000-0000-7000-8000-000000000001",
             title: "First",
+            secrets: { provider: "openrouter", apiKey: null },
             whitelistModelIds: ["openai/gpt-4"],
             createdAt: "2026-01-01T00:00:00.000Z",
           },
-          { id: "01900000-0000-7000-8000-000000000002", title: "Second", createdAt: "2026-01-02T00:00:00.000Z" },
+          {
+            id: "01900000-0000-7000-8000-000000000002",
+            secrets: { provider: "openrouter", apiKey: null },
+            title: "Second",
+            createdAt: "2026-01-02T00:00:00.000Z",
+          },
         ],
       },
     });
@@ -127,7 +133,12 @@ describe("settings and review totals integration", () => {
       name: "ai",
       content: {
         profiles: [
-          { id: "01900000-0000-7000-8000-000000000001", title: "Renamed", createdAt: "2026-01-01T00:00:00.000Z" },
+          {
+            id: "01900000-0000-7000-8000-000000000001",
+            secrets: { provider: "openrouter", apiKey: null },
+            title: "Renamed",
+            createdAt: "2026-01-01T00:00:00.000Z",
+          },
         ],
       },
     });

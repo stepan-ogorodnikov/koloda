@@ -15,7 +15,7 @@ const SECRETS_LABELS: Record<SecretField, MessageDescriptor> = {
 };
 
 function getMissingSecretFields(profile: AIProfile | null | undefined): SecretField[] {
-  if (!profile?.secrets) return [];
+  if (!profile) return [];
   const entry = getProviderConfig(profile.secrets.provider);
   const missing = entry.getMissingSecretFields(profile.secrets);
   // WHY: Public profiles redact `apiKey`; presence lives on `hasSecrets`.

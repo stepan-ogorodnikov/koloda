@@ -9,14 +9,16 @@ import {
 } from "./settings";
 import type { AISettings } from "./settings";
 
+const secrets = { provider: "openrouter" as const, apiKey: null };
+
 describe("findDuplicateProfileId", () => {
   it.each([
     {
       name: "unique ids",
       settings: {
         profiles: [
-          { id: "a", title: undefined, createdAt: "2026-01-01T00:00:00Z" },
-          { id: "b", title: undefined, createdAt: "2026-01-01T00:00:00Z" },
+          { id: "a", secrets, title: undefined, createdAt: "2026-01-01T00:00:00Z" },
+          { id: "b", secrets, title: undefined, createdAt: "2026-01-01T00:00:00Z" },
         ],
       } satisfies AISettings,
     },
@@ -32,8 +34,8 @@ describe("findDuplicateProfileId", () => {
     const dup = "00000000-0000-0000-0000-000000000000";
     const settings: AISettings = {
       profiles: [
-        { id: dup, title: "First", createdAt: "2026-01-01T00:00:00Z" },
-        { id: dup, title: "Second", createdAt: "2026-01-01T00:00:00Z" },
+        { id: dup, secrets, title: "First", createdAt: "2026-01-01T00:00:00Z" },
+        { id: dup, secrets, title: "Second", createdAt: "2026-01-01T00:00:00Z" },
       ],
     };
     expect(findDuplicateProfileId(settings)).toBe(dup);
@@ -46,8 +48,8 @@ describe("findDuplicateProfileId", () => {
     const dup = "00000000-0000-0000-0000-000000000000";
     const parsed = aiSettingsValidation.parse({
       profiles: [
-        { id: dup, createdAt: "2026-01-01T00:00:00Z" },
-        { id: dup, createdAt: "2026-01-01T00:00:00Z" },
+        { id: dup, secrets, createdAt: "2026-01-01T00:00:00Z" },
+        { id: dup, secrets, createdAt: "2026-01-01T00:00:00Z" },
       ],
     });
     expect(findDuplicateProfileId(parsed)).toBe(dup);
@@ -55,7 +57,7 @@ describe("findDuplicateProfileId", () => {
 });
 
 describe("aiProfileValidation whitelistModelIds", () => {
-  const base = { id: "00000000-0000-0000-0000-000000000000", createdAt: "2026-01-01T00:00:00Z" };
+  const base = { id: "00000000-0000-0000-0000-000000000000", secrets, createdAt: "2026-01-01T00:00:00Z" };
 
   it("leaves the field unset when omitted", () => {
     const parsed = aiProfileValidation.parse(base);
@@ -78,7 +80,7 @@ describe("aiProfileValidation whitelistModelIds", () => {
 });
 
 describe("aiProfileValidation createdAt", () => {
-  const base = { id: "01900000-0000-7000-8000-000000000001" };
+  const base = { id: "01900000-0000-7000-8000-000000000001", secrets };
 
   it("converts a stored ISO string into a Date", () => {
     const parsed = aiProfileValidation.parse({ ...base, createdAt: "2026-01-01T00:00:00.000Z" });
@@ -102,7 +104,7 @@ describe("aiProfileValidation createdAt", () => {
 });
 
 describe("aiProfileValidation id", () => {
-  const base = { createdAt: "2026-01-01T00:00:00Z" };
+  const base = { secrets, createdAt: "2026-01-01T00:00:00Z" };
 
   it("accepts a UUIDv7-shaped id", () => {
     const parsed = aiProfileValidation.parse({ ...base, id: "01900000-0000-7000-8000-000000000001" });
@@ -127,7 +129,7 @@ describe("aiProfileValidation id", () => {
 });
 
 describe("aiProfileValidation title", () => {
-  const base = { id: "01900000-0000-7000-8000-000000000001", createdAt: "2026-01-01T00:00:00Z" };
+  const base = { id: "01900000-0000-7000-8000-000000000001", secrets, createdAt: "2026-01-01T00:00:00Z" };
 
   // WHY: The max counts UTF-16 units; the Rust twin counts UTF-16 explicitly to match
   // (ai_tests.rs title tests) — byte or char counting would diverge on the Cyrillic

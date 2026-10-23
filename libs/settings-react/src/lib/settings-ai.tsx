@@ -28,15 +28,15 @@ export function SettingsAi({ data }: SettingsAiProps) {
       ) : (
         <div className="flex flex-col gap-2">
           {data.map((profile) => {
-            const provider = profile.secrets?.provider;
-            const isUnsupported = provider !== undefined && !providerIds.includes(provider);
+            const provider = profile.secrets.provider;
+            const isUnsupported = !providerIds.includes(provider);
             return (
               <div className="flex flex-col gap-1" key={profile.id}>
                 <div className="flex flex-row items-center gap-4">
                   <div className={profile.title ? undefined : "fg-disabled"}>
                     {profile.title || _(msg`settings.ai.profiles.title.placeholder`)}
                   </div>
-                  <div className="fg-level-2">{provider ? AI_PROVIDER_LABELS[provider] : ""}</div>
+                  <div className="fg-level-2">{AI_PROVIDER_LABELS[provider]}</div>
                   <div className="flex flex-row gap-1">
                     <div>
                       <SettingsAIEditProfile profile={profile} />

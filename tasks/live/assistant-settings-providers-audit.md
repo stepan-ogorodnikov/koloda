@@ -639,7 +639,7 @@ Item 26 was added during implementation; it is committed before item 2, which it
   Commit: Pin how the system prompt and temperature are sent
   Depends on: 9
 
-- [ ] 14. Require secrets on every AI profile
+- [x] 14. Require secrets on every AI profile
   Goal (P14; question 4):
   - TS: `aiProfileValidation.secrets` required (`libs/ai/src/lib/settings.ts:12`); `AddAIProfileData.secrets`
     required and `whitelistModelIds` dropped (`:86-90`).

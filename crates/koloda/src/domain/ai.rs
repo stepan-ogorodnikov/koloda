@@ -13,8 +13,7 @@ use crate::domain::time::{deserialize_timestamp, serialize_timestamp};
 pub struct AIProfile {
     pub id: String,
     pub title: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub secrets: Option<AISecrets>,
+    pub secrets: AISecrets,
     // WHY: Default so stored settings without the field still deserialize; hosts set
     // the real value when returning profiles (key may exist while `apiKey` is redacted).
     #[serde(default)]
@@ -91,9 +90,7 @@ pub enum AISecrets {
 #[serde(rename_all = "camelCase")]
 pub struct AddProfileData {
     pub title: Option<String>,
-    pub secrets: Option<AISecrets>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub whitelist_model_ids: Option<Vec<String>>,
+    pub secrets: AISecrets,
 }
 
 /// Patch for an optional stored field: missing = leave unchanged, `null` = clear, value = set.
@@ -225,9 +222,7 @@ impl AIProfile {
     pub fn validate_for_storage(&self) -> Result<(), AppError> {
         self.validate_id_and_title()?;
 
-        if let Some(secrets) = &self.secrets {
-            secrets.validate_for_storage()?;
-        }
+        self.secrets.validate_for_storage()?;
 
         Self::validate_whitelist_model_ids(self.whitelist_model_ids.as_deref())?;
 

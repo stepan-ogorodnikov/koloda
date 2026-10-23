@@ -31,7 +31,7 @@ export type AIProviderFormConfig = {
   fields: AIProfileProviderField[];
   schema: ZodObject<ZodRawShape>;
   toSecrets: (values: AIProfileFormValues) => AISecrets;
-  fromSecrets: (secrets: AISecrets | undefined) => Pick<AIProfileFormValues, "baseUrl" | "apiKey">;
+  fromSecrets: (secrets: AISecrets) => Pick<AIProfileFormValues, "baseUrl" | "apiKey">;
 };
 
 const titleField: AIProfileProviderField = {
@@ -51,7 +51,7 @@ function apiKeyOnlyConfig(
     }),
     toSecrets: (values) => ({ provider, apiKey: values.apiKey ?? "" }),
     fromSecrets: (secrets) => ({
-      apiKey: secrets?.provider === provider ? (secrets.apiKey ?? "") : "",
+      apiKey: secrets.provider === provider ? (secrets.apiKey ?? "") : "",
     }),
   };
 }
@@ -76,7 +76,7 @@ function baseUrlConfig(
       ...(values.apiKey ? { apiKey: values.apiKey } : {}),
     }),
     fromSecrets: (secrets) => {
-      if (secrets?.provider !== provider) {
+      if (secrets.provider !== provider) {
         return { baseUrl: defaultBaseUrl, apiKey: "" };
       }
       return {
@@ -104,7 +104,7 @@ export function getAddDefaultValues(config: AIProviderFormConfig): AIProfileForm
 
 export function getEditDefaultValues(
   config: AIProviderFormConfig,
-  profile: { title?: string; secrets?: AISecrets },
+  profile: { title?: string; secrets: AISecrets },
 ): AIProfileFormValues {
   return {
     ...getAddDefaultValues(config),

@@ -181,11 +181,10 @@ fn ai_profiles_add_get_and_remove() {
     let added = ai::add_ai_profile(
         &db,
         Some("Local model".to_string()),
-        Some(AISecrets::Ollama {
+        AISecrets::Ollama {
             base_url: "http://localhost:11434".to_string(),
             api_key: None,
-        }),
-        None,
+        },
     )
     .expect("profile should be added");
 
@@ -212,10 +211,9 @@ fn ai_profile_api_key_is_stored_in_secret_store() {
     let profile = ai::add_ai_profile(
         &db,
         Some("Test".to_string()),
-        Some(AISecrets::OpenRouter {
+        AISecrets::OpenRouter {
             api_key: Some("sk-secret-key".to_string()),
-        }),
-        None,
+        },
     )
     .expect("profile should be added");
 
@@ -223,8 +221,8 @@ fn ai_profile_api_key_is_stored_in_secret_store() {
     let retrieved = all.iter().find(|p| p.id == profile.id).expect("profile should exist");
 
     assert!(retrieved.has_secrets);
-    match retrieved.secrets.as_ref() {
-        Some(AISecrets::OpenRouter { api_key }) => {
+    match &retrieved.secrets {
+        AISecrets::OpenRouter { api_key } => {
             assert!(api_key.is_none(), "public read must redact apiKey");
         }
         other => panic!("expected OpenRouter secrets, got {:?}", other),
@@ -246,10 +244,9 @@ fn ai_profile_deepseek_api_key_round_trips_via_secret_store() {
     let added = ai::add_ai_profile(
         &db,
         Some("DeepSeek".to_string()),
-        Some(AISecrets::DeepSeek {
+        AISecrets::DeepSeek {
             api_key: Some("sk-deepseek-secret".to_string()),
-        }),
-        None,
+        },
     )
     .expect("profile should be added");
 
@@ -259,8 +256,8 @@ fn ai_profile_deepseek_api_key_round_trips_via_secret_store() {
         .find(|profile| profile.id == added.id)
         .expect("profile should exist");
     assert!(public.has_secrets);
-    match public.secrets.as_ref() {
-        Some(AISecrets::DeepSeek { api_key }) => assert!(api_key.is_none(), "public read must redact apiKey"),
+    match &public.secrets {
+        AISecrets::DeepSeek { api_key } => assert!(api_key.is_none(), "public read must redact apiKey"),
         other => panic!("expected DeepSeek secrets, got {:?}", other),
     }
 
@@ -280,10 +277,9 @@ fn ai_profile_openai_api_key_round_trips_via_secret_store() {
     let added = ai::add_ai_profile(
         &db,
         Some("OpenAI".to_string()),
-        Some(AISecrets::OpenAi {
+        AISecrets::OpenAi {
             api_key: Some("sk-openai-secret".to_string()),
-        }),
-        None,
+        },
     )
     .expect("profile should be added");
 
@@ -293,8 +289,8 @@ fn ai_profile_openai_api_key_round_trips_via_secret_store() {
         .find(|p| p.id == added.id)
         .expect("profile should exist");
     assert!(public.has_secrets);
-    match public.secrets.as_ref() {
-        Some(AISecrets::OpenAi { api_key }) => assert!(api_key.is_none(), "public read must redact apiKey"),
+    match &public.secrets {
+        AISecrets::OpenAi { api_key } => assert!(api_key.is_none(), "public read must redact apiKey"),
         other => panic!("expected OpenAI secrets, got {:?}", other),
     }
 
@@ -314,10 +310,9 @@ fn ai_profile_opencode_go_round_trips_via_secret_store() {
     let added = ai::add_ai_profile(
         &db,
         Some("OpenCode Go".to_string()),
-        Some(AISecrets::OpencodeGo {
+        AISecrets::OpencodeGo {
             api_key: Some("go-secret-key".to_string()),
-        }),
-        None,
+        },
     )
     .expect("profile should be added");
 
@@ -325,8 +320,8 @@ fn ai_profile_opencode_go_round_trips_via_secret_store() {
     let retrieved = all.iter().find(|p| p.id == added.id).expect("profile should exist");
 
     assert!(retrieved.has_secrets);
-    match retrieved.secrets.as_ref() {
-        Some(AISecrets::OpencodeGo { api_key }) => assert!(api_key.is_none()),
+    match &retrieved.secrets {
+        AISecrets::OpencodeGo { api_key } => assert!(api_key.is_none()),
         other => panic!("expected OpencodeGo secrets, got {:?}", other),
     }
 
@@ -346,10 +341,9 @@ fn ai_profile_opencode_zen_round_trips_via_secret_store() {
     let added = ai::add_ai_profile(
         &db,
         Some("OpenCode Zen".to_string()),
-        Some(AISecrets::OpencodeZen {
+        AISecrets::OpencodeZen {
             api_key: Some("zen-secret-key".to_string()),
-        }),
-        None,
+        },
     )
     .expect("profile should be added");
 
@@ -357,8 +351,8 @@ fn ai_profile_opencode_zen_round_trips_via_secret_store() {
     let retrieved = all.iter().find(|p| p.id == added.id).expect("profile should exist");
 
     assert!(retrieved.has_secrets);
-    match retrieved.secrets.as_ref() {
-        Some(AISecrets::OpencodeZen { api_key }) => assert!(api_key.is_none()),
+    match &retrieved.secrets {
+        AISecrets::OpencodeZen { api_key } => assert!(api_key.is_none()),
         other => panic!("expected OpencodeZen secrets, got {:?}", other),
     }
 
@@ -378,10 +372,9 @@ fn ai_profile_ollama_cloud_round_trips_via_secret_store() {
     let added = ai::add_ai_profile(
         &db,
         Some("Ollama Cloud".to_string()),
-        Some(AISecrets::OllamaCloud {
+        AISecrets::OllamaCloud {
             api_key: Some("cloud-secret-key".to_string()),
-        }),
-        None,
+        },
     )
     .expect("profile should be added");
 
@@ -389,8 +382,8 @@ fn ai_profile_ollama_cloud_round_trips_via_secret_store() {
     let retrieved = all.iter().find(|p| p.id == added.id).expect("profile should exist");
 
     assert!(retrieved.has_secrets);
-    match retrieved.secrets.as_ref() {
-        Some(AISecrets::OllamaCloud { api_key }) => assert!(api_key.is_none()),
+    match &retrieved.secrets {
+        AISecrets::OllamaCloud { api_key } => assert!(api_key.is_none()),
         other => panic!("expected OllamaCloud secrets, got {:?}", other),
     }
 
@@ -410,10 +403,9 @@ fn update_ai_profile_clears_stale_keyring_key_when_new_secrets_have_no_key() {
     let added = ai::add_ai_profile(
         &db,
         Some("OpenRouter".to_string()),
-        Some(AISecrets::OpenRouter {
+        AISecrets::OpenRouter {
             api_key: Some("sk-original-key".to_string()),
-        }),
-        None,
+        },
     )
     .expect("profile should be added");
     let store_key = format!("ai-profile-{}", added.id);
@@ -450,15 +442,15 @@ fn update_ai_profile_clears_stale_keyring_key_when_new_secrets_have_no_key() {
 
     let all = ai::get_ai_profiles(&db).expect("should get profiles");
     let retrieved = all.iter().find(|p| p.id == added.id).expect("profile should exist");
-    match retrieved.secrets.as_ref() {
-        Some(AISecrets::Ollama { api_key, .. }) => {
+    match &retrieved.secrets {
+        AISecrets::Ollama { api_key, .. } => {
             assert!(api_key.is_none(), "no old key should leak back into the profile");
         }
         other => panic!("expected Ollama secrets after update, got {:?}", other),
     }
 
-    match updated.secrets.as_ref() {
-        Some(AISecrets::Ollama { api_key, .. }) => {
+    match &updated.secrets {
+        AISecrets::Ollama { api_key, .. } => {
             assert!(
                 api_key.is_none(),
                 "returned updated profile should not carry the old key"
@@ -479,11 +471,10 @@ fn update_ai_profile_keeps_keyring_when_same_provider_omits_api_key() {
     let added = ai::add_ai_profile(
         &db,
         Some("Local".to_string()),
-        Some(AISecrets::Ollama {
+        AISecrets::Ollama {
             base_url: "http://localhost:11434".to_string(),
             api_key: Some("local-key".to_string()),
-        }),
-        None,
+        },
     )
     .expect("profile should be added");
 
@@ -524,10 +515,9 @@ fn get_ai_profiles_propagates_keyring_error_instead_of_swallowing_it() {
     ai::add_ai_profile(
         &db,
         Some("OpenRouter".to_string()),
-        Some(AISecrets::OpenRouter {
+        AISecrets::OpenRouter {
             api_key: Some("sk-secret-key".to_string()),
-        }),
-        None,
+        },
     )
     .expect("profile should be added under working store");
     test_store::teardown(guard);
@@ -553,10 +543,9 @@ fn add_ai_profile_rolls_back_settings_when_keyring_set_fails() {
     let err = ai::add_ai_profile(
         &db,
         Some("OpenRouter".to_string()),
-        Some(AISecrets::OpenRouter {
+        AISecrets::OpenRouter {
             api_key: Some("sk-secret-key".to_string()),
-        }),
-        None,
+        },
     )
     .expect_err("add must fail when keyring set fails");
     assert_eq!(err.code, error_codes::KEYRING);
@@ -575,10 +564,9 @@ fn update_ai_profile_rolls_back_settings_when_keyring_set_fails() {
     let added = ai::add_ai_profile(
         &db,
         Some("OpenRouter".to_string()),
-        Some(AISecrets::OpenRouter {
+        AISecrets::OpenRouter {
             api_key: Some("sk-original-key".to_string()),
-        }),
-        None,
+        },
     )
     .expect("profile should be added");
 
@@ -603,8 +591,8 @@ fn update_ai_profile_rolls_back_settings_when_keyring_set_fails() {
         .expect("profile should remain");
     assert_eq!(retrieved.title, Some("OpenRouter".to_string()));
     assert!(retrieved.has_secrets);
-    match retrieved.secrets.as_ref() {
-        Some(AISecrets::OpenRouter { api_key }) => assert!(api_key.is_none()),
+    match &retrieved.secrets {
+        AISecrets::OpenRouter { api_key } => assert!(api_key.is_none()),
         other => panic!("expected redacted OpenRouter secrets after rollback, got {:?}", other),
     }
     let secrets = ai::get_ai_profile_secrets(&db, &added.id)
@@ -623,10 +611,9 @@ fn update_ai_profile_rolls_back_settings_when_keyring_remove_fails() {
     let added = ai::add_ai_profile(
         &db,
         Some("OpenRouter".to_string()),
-        Some(AISecrets::OpenRouter {
+        AISecrets::OpenRouter {
             api_key: Some("sk-original-key".to_string()),
-        }),
-        None,
+        },
     )
     .expect("profile should be added");
 
@@ -652,8 +639,8 @@ fn update_ai_profile_rolls_back_settings_when_keyring_remove_fails() {
         .expect("profile should remain");
     assert_eq!(retrieved.title, Some("OpenRouter".to_string()));
     assert!(retrieved.has_secrets);
-    match retrieved.secrets.as_ref() {
-        Some(AISecrets::OpenRouter { api_key }) => assert!(api_key.is_none()),
+    match &retrieved.secrets {
+        AISecrets::OpenRouter { api_key } => assert!(api_key.is_none()),
         other => panic!("expected redacted OpenRouter secrets after rollback, got {:?}", other),
     }
     let secrets = ai::get_ai_profile_secrets(&db, &added.id)
@@ -665,33 +652,6 @@ fn update_ai_profile_rolls_back_settings_when_keyring_remove_fails() {
 }
 
 #[test]
-fn add_ai_profile_persists_whitelist_model_ids() {
-    let _guard = test_store::setup();
-    let db = test_db();
-
-    let added = ai::add_ai_profile(
-        &db,
-        Some("OpenRouter".to_string()),
-        Some(AISecrets::OpenRouter {
-            api_key: Some("sk-secret-key".to_string()),
-        }),
-        Some(vec!["openai/gpt-4".to_string(), "anthropic/claude".to_string()]),
-    )
-    .expect("profile should be added");
-
-    assert_eq!(
-        added.whitelist_model_ids,
-        Some(vec!["openai/gpt-4".to_string(), "anthropic/claude".to_string()])
-    );
-
-    let all = ai::get_ai_profiles(&db).expect("should get profiles");
-    let retrieved = all.iter().find(|p| p.id == added.id).expect("profile should exist");
-    assert_eq!(retrieved.whitelist_model_ids, added.whitelist_model_ids);
-
-    test_store::teardown(_guard);
-}
-
-#[test]
 fn update_ai_profile_sets_clears_and_preserves_whitelist_model_ids() {
     let _guard = test_store::setup();
     let db = test_db();
@@ -699,10 +659,9 @@ fn update_ai_profile_sets_clears_and_preserves_whitelist_model_ids() {
     let added = ai::add_ai_profile(
         &db,
         Some("OpenRouter".to_string()),
-        Some(AISecrets::OpenRouter {
+        AISecrets::OpenRouter {
             api_key: Some("sk-secret-key".to_string()),
-        }),
-        None,
+        },
     )
     .expect("profile should be added");
     assert_eq!(added.whitelist_model_ids, None);
@@ -727,23 +686,28 @@ fn update_ai_profile_sets_clears_and_preserves_whitelist_model_ids() {
 }
 
 #[test]
-fn add_ai_profile_rejects_empty_whitelist_model_id() {
+fn update_ai_profile_rejects_empty_whitelist_model_id() {
     let _guard = test_store::setup();
     let db = test_db();
 
-    let err = ai::add_ai_profile(
+    let added = ai::add_ai_profile(
         &db,
         Some("OpenRouter".to_string()),
-        Some(AISecrets::OpenRouter {
+        AISecrets::OpenRouter {
             api_key: Some("sk-secret-key".to_string()),
-        }),
-        Some(vec!["".to_string()]),
+        },
     )
-    .expect_err("empty model id must fail");
+    .expect("profile should be added");
+
+    let err = ai::update_ai_profile(&db, &added.id, None, None, Some(Some(vec!["".to_string()])))
+        .expect_err("empty model id must fail");
     assert_eq!(err.code, "validation.settings-ai.profiles.whitelist-model-ids");
 
     let profiles = ai::get_ai_profiles(&db).expect("settings read should still work");
-    assert!(profiles.is_empty(), "failed add must not leave a profile in settings");
+    assert_eq!(
+        profiles[0].whitelist_model_ids, None,
+        "failed update must leave the allowlist unset"
+    );
 
     test_store::teardown(_guard);
 }
@@ -755,8 +719,14 @@ fn add_ai_profile_rejects_title_over_max_length() {
 
     // WHY: 129 Cyrillic chars are 258 UTF-8 bytes but 129 UTF-16 units — byte counting
     // would reject a title the TS zod mirror (UTF-16 units) accepts.
-    let err =
-        ai::add_ai_profile(&db, Some("ф".repeat(129)), None, None).expect_err("title over 128 UTF-16 units must fail");
+    let err = ai::add_ai_profile(
+        &db,
+        Some("ф".repeat(129)),
+        AISecrets::OpenRouter {
+            api_key: Some("sk-secret-key".to_string()),
+        },
+    )
+    .expect_err("title over 128 UTF-16 units must fail");
     assert_eq!(err.code, "validation.common.title.too-long");
 
     let profiles = ai::get_ai_profiles(&db).expect("settings read should still work");
@@ -774,10 +744,9 @@ fn update_ai_profile_removes_title_sent_empty() {
     let added = ai::add_ai_profile(
         &db,
         Some("OpenRouter".to_string()),
-        Some(AISecrets::OpenRouter {
+        AISecrets::OpenRouter {
             api_key: Some("sk-secret-key".to_string()),
-        }),
-        None,
+        },
     )
     .expect("profile should be added");
 
@@ -799,10 +768,9 @@ fn update_ai_profile_rejects_title_over_max_length() {
     let added = ai::add_ai_profile(
         &db,
         Some("OpenRouter".to_string()),
-        Some(AISecrets::OpenRouter {
+        AISecrets::OpenRouter {
             api_key: Some("sk-secret-key".to_string()),
-        }),
-        None,
+        },
     )
     .expect("profile should be added");
 
@@ -834,10 +802,9 @@ fn remove_ai_profile_rolls_back_settings_when_keyring_remove_fails() {
     let added = ai::add_ai_profile(
         &db,
         Some("OpenRouter".to_string()),
-        Some(AISecrets::OpenRouter {
+        AISecrets::OpenRouter {
             api_key: Some("sk-original-key".to_string()),
-        }),
-        None,
+        },
     )
     .expect("profile should be added");
 
@@ -881,10 +848,9 @@ fn update_ai_profile_not_found() {
     ai::add_ai_profile(
         &db,
         Some("OpenRouter".to_string()),
-        Some(AISecrets::OpenRouter {
+        AISecrets::OpenRouter {
             api_key: Some("sk-or".to_string()),
-        }),
-        None,
+        },
     )
     .expect("profile should be added");
 

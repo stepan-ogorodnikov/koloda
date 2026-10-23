@@ -6,8 +6,7 @@ import type { DB } from "@koloda/db-sqlite";
 import { getSettings, setSettings } from "@koloda/db-sqlite";
 import { produce } from "immer";
 
-function profileHasSecrets(secrets?: AISecrets): boolean {
-  if (!secrets) return false;
+function profileHasSecrets(secrets: AISecrets): boolean {
   return isPresentApiKey(secrets.apiKey);
 }
 
@@ -47,7 +46,7 @@ function validateSecretsForInput(secrets: AISecrets): void {
 function toPublicProfile(profile: {
   id: string;
   title?: string;
-  secrets?: AISecrets;
+  secrets: AISecrets;
   hasSecrets?: boolean;
   whitelistModelIds?: string[];
   createdAt: string | Date;
@@ -57,7 +56,7 @@ function toPublicProfile(profile: {
   return {
     id: profile.id,
     title: profile.title,
-    secrets: profile.secrets ? redactSecrets(profile.secrets) : undefined,
+    secrets: redactSecrets(profile.secrets),
     hasSecrets,
     whitelistModelIds: profile.whitelistModelIds,
     createdAt: new Date(profile.createdAt),
@@ -78,9 +77,7 @@ export async function getAIProfiles(db: DB): Promise<AIProfile[]> {
 }
 
 export async function addAIProfile(db: DB, data: AddAIProfileData): Promise<void> {
-  if (data.secrets) {
-    validateSecretsForInput(data.secrets);
-  }
+  validateSecretsForInput(data.secrets);
 
   const id = crypto.randomUUID();
 
@@ -89,7 +86,6 @@ export async function addAIProfile(db: DB, data: AddAIProfileData): Promise<void
     title: data.title,
     secrets: data.secrets,
     hasSecrets: profileHasSecrets(data.secrets),
-    whitelistModelIds: data.whitelistModelIds,
     createdAt: new Date(),
   };
 
@@ -136,11 +132,11 @@ export async function updateAIProfile(db: DB, data: UpdateAIProfileData): Promis
       }
       if (data.secrets !== undefined) {
         const previous = profile.secrets;
-        const providerChanged = previous?.provider !== data.secrets.provider;
+        const providerChanged = previous.provider !== data.secrets.provider;
         // WHY: Edit submits may omit apiKey when the user did not replace it.
         // Keep the stored key unless the provider changed or a new key was sent.
         if (!profileHasSecrets(data.secrets) && !providerChanged && profileHasSecrets(previous)) {
-          profile.secrets = { ...data.secrets, apiKey: previous!.apiKey } as AISecrets;
+          profile.secrets = { ...data.secrets, apiKey: previous.apiKey } as AISecrets;
         } else {
           profile.secrets = data.secrets;
         }

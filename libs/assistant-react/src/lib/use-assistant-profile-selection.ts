@@ -80,7 +80,7 @@ export function useAssistantProfileSelection(): UseAssistantProfileSelectionRetu
   const models = modelsState?.models ?? noModels;
   const isModelsLoading = modelsState?.isLoading ?? false;
   const isModelsError = modelsState?.isError ?? false;
-  const provider = selectedProfile?.secrets?.provider ?? null;
+  const provider = selectedProfile?.secrets.provider ?? null;
   const hasProfiles = profiles.length > 0;
 
   useEffect(() => {

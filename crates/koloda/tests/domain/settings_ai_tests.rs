@@ -69,7 +69,7 @@ fn test_valid_ai_settings_with_legacy_empty_string_api_key() {
 
     let settings: AISettings = serde_json::from_str(json).expect("legacy empty apiKey should deserialize");
     settings.validate().unwrap();
-    assert_eq!(settings.profiles[0].secrets.as_ref().and_then(|s| s.api_key()), None);
+    assert_eq!(settings.profiles[0].secrets.api_key(), None);
 }
 
 #[test]
@@ -230,6 +230,7 @@ fn test_ai_settings_empty_whitelist_model_id_fails() {
         "profiles": [
             {
                 "id": "01900000-0000-7000-8000-000000000001",
+                "secrets": { "provider": "openrouter", "apiKey": null },
                 "whitelistModelIds": [""],
                 "createdAt": "2026-01-01T00:00:00Z"
             }

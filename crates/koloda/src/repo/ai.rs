@@ -112,7 +112,7 @@ fn restore_ai_profile_in_settings(db: &Database, previous: AIProfile) -> Result<
 // still deserialize `has_secrets: false` stay correct when a key exists.
 fn to_public_profile(profile: AIProfile, has_secrets: bool) -> AIProfile {
     AIProfile {
-        secrets: profile.secrets.as_ref().map(redact_secrets),
+        secrets: redact_secrets(&profile.secrets),
         has_secrets,
         ..profile
     }
@@ -147,40 +147,28 @@ pub fn get_ai_profile_secrets(db: &Database, profile_id: &str) -> Result<Option<
         let Some(profile) = settings.profiles.into_iter().find(|p| p.id == profile_id) else {
             return Ok(None);
         };
-        let Some(secrets) = profile.secrets else {
-            return Ok(None);
-        };
         let api_key = present_key(get_api_key(&profile.id)?);
         Ok(Some(match api_key {
-            Some(key) => reconstruct_secrets(&secrets, key),
-            None => secrets,
+            Some(key) => reconstruct_secrets(&profile.secrets, key),
+            None => profile.secrets,
         }))
     })
 }
 
-pub fn add_ai_profile(
-    db: &Database,
-    title: Option<String>,
-    secrets: Option<AISecrets>,
-    whitelist_model_ids: Option<Vec<String>>,
-) -> Result<AIProfile, AppError> {
+pub fn add_ai_profile(db: &Database, title: Option<String>, secrets: AISecrets) -> Result<AIProfile, AppError> {
     throw_known_error(error_codes::DB_ADD, || {
         let mut settings = get_ai_settings_or_default(db)?;
         let now = get_current_timestamp()?;
         let profile_id = generate_uuid();
 
-        if let Some(ref secrets) = secrets {
-            secrets.validate_for_input()?;
-        }
+        secrets.validate_for_input()?;
 
-        let secrets_for_db = secrets.as_ref().map(redact_secrets);
-        let has_secrets = secrets.as_ref().and_then(|s| s.api_key()).is_some();
         let profile = AIProfile {
             id: profile_id.clone(),
             title: normalize_optional_title(title),
-            secrets: secrets_for_db,
-            has_secrets,
-            whitelist_model_ids,
+            secrets: redact_secrets(&secrets),
+            has_secrets: secrets.api_key().is_some(),
+            whitelist_model_ids: None,
             created_at: now,
         };
 
@@ -190,14 +178,12 @@ pub fn add_ai_profile(
         settings.profiles.push(profile.clone());
         set_ai_settings(db, settings)?;
 
-        if let Some(ref secrets) = secrets {
-            if let Some(api_key) = secrets.api_key() {
-                if let Err(err) = set_api_key(&profile_id, api_key) {
-                    // WHY: Best-effort rollback; prefer the original keyring error over a
-                    // secondary settings failure. `?` here would replace the cause.
-                    if let Err(_rollback_err) = drop_ai_profile_from_settings(db, &profile_id) {}
-                    return Err(err);
-                }
+        if let Some(api_key) = secrets.api_key() {
+            if let Err(err) = set_api_key(&profile_id, api_key) {
+                // WHY: Best-effort rollback; prefer the original keyring error over a
+                // secondary settings failure. `?` here would replace the cause.
+                if let Err(_rollback_err) = drop_ai_profile_from_settings(db, &profile_id) {}
+                return Err(err);
             }
         }
 
@@ -235,7 +221,7 @@ pub fn update_ai_profile(
             .ok_or_else(|| AppError::new(error_codes::NOT_FOUND_AI_PROFILE, Some("Profile not found".to_string())))?;
 
         if let Some(ref new_secrets) = secrets {
-            existing_profile.secrets = Some(redact_secrets(new_secrets));
+            existing_profile.secrets = redact_secrets(new_secrets);
             // WHY: Stored flag is advisory; public reads re-derive from keyring.
             existing_profile.has_secrets = new_secrets.api_key().is_some();
         }
@@ -253,8 +239,7 @@ pub fn update_ai_profile(
 
         // WHY: Same DB-then-keyring ordering as add. On any keyring failure, roll back.
         if let Some(ref new_secrets) = secrets {
-            let previous_provider = previous_profile.secrets.as_ref().map(|s| s.provider());
-            let provider_changed = previous_provider != Some(new_secrets.provider());
+            let provider_changed = previous_profile.secrets.provider() != new_secrets.provider();
             let keyring_result = match new_secrets.api_key() {
                 Some(api_key) => set_api_key(id, api_key),
                 // WHY: Edit forms submit redacted/empty apiKey when the user did not

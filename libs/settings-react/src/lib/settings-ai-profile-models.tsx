@@ -28,7 +28,6 @@ export function SettingsAIProfileModels({ profile }: SettingsAIProfileModelsProp
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [draft, setDraft] = useState<AllowlistDraft>(() => createAllowlistDraft(profile.whitelistModelIds));
-  const provider = profile.secrets?.provider;
   const { byProfileId } = useAIProfilesModels(isOpen ? [profile.id] : []);
   const modelsState = byProfileId[profile.id];
   const isLoading = modelsState?.isLoading ?? false;
@@ -60,8 +59,6 @@ export function SettingsAIProfileModels({ profile }: SettingsAIProfileModelsProp
       },
     );
   };
-
-  if (!provider) return null;
 
   return (
     <Dialog.Root isOpen={isOpen} onOpenChange={handleOpenChange}>

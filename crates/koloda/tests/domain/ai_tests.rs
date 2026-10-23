@@ -166,9 +166,9 @@ fn test_ai_profile_validate_for_storage_rejects_plaintext_api_key() {
     let profile = AIProfile {
         id: "01900000-0000-7000-8000-000000000001".to_string(),
         title: Some("Main profile".to_string()),
-        secrets: Some(AISecrets::OpenRouter {
+        secrets: AISecrets::OpenRouter {
             api_key: Some("key-123".to_string()),
-        }),
+        },
         has_secrets: true,
         whitelist_model_ids: None,
         created_at: TEST_CREATED_AT,
@@ -183,7 +183,7 @@ fn test_ai_profile_validate_ok_without_secrets() {
     let profile = AIProfile {
         id: "01900000-0000-7000-8000-000000000002".to_string(),
         title: None,
-        secrets: None,
+        secrets: AISecrets::OpenRouter { api_key: None },
         has_secrets: false,
         whitelist_model_ids: None,
         created_at: TEST_CREATED_AT,
@@ -197,7 +197,7 @@ fn test_ai_profile_validate_empty_id_fails() {
     let profile = AIProfile {
         id: "".to_string(),
         title: Some("Profile".to_string()),
-        secrets: None,
+        secrets: AISecrets::OpenRouter { api_key: None },
         has_secrets: false,
         whitelist_model_ids: None,
         created_at: TEST_CREATED_AT,
@@ -215,7 +215,7 @@ fn test_ai_profile_validate_hyphenless_uuid_id_fails() {
     let profile = AIProfile {
         id: "01900000000070008000000000000001".to_string(),
         title: Some("Profile".to_string()),
-        secrets: None,
+        secrets: AISecrets::OpenRouter { api_key: None },
         has_secrets: false,
         whitelist_model_ids: None,
         created_at: TEST_CREATED_AT,
@@ -230,7 +230,7 @@ fn test_ai_profile_validate_non_uuid_id_fails_for_storage() {
     let profile = AIProfile {
         id: "not-a-uuid".to_string(),
         title: Some("Profile".to_string()),
-        secrets: None,
+        secrets: AISecrets::OpenRouter { api_key: None },
         has_secrets: false,
         whitelist_model_ids: None,
         created_at: TEST_CREATED_AT,
@@ -245,7 +245,7 @@ fn test_ai_profile_validate_uuidv7_id_ok() {
     let profile = AIProfile {
         id: "01900000-0000-7000-8000-000000000001".to_string(),
         title: Some("Profile".to_string()),
-        secrets: None,
+        secrets: AISecrets::OpenRouter { api_key: None },
         has_secrets: false,
         whitelist_model_ids: None,
         created_at: TEST_CREATED_AT,
@@ -259,7 +259,7 @@ fn test_ai_profile_validate_title_too_long_fails() {
     let profile = AIProfile {
         id: "01900000-0000-7000-8000-000000000003".to_string(),
         title: Some("a".repeat(129)),
-        secrets: None,
+        secrets: AISecrets::OpenRouter { api_key: None },
         has_secrets: false,
         whitelist_model_ids: None,
         created_at: TEST_CREATED_AT,
@@ -276,7 +276,7 @@ fn test_ai_profile_validate_title_max_length_in_cyrillic_ok() {
     let profile = AIProfile {
         id: "01900000-0000-7000-8000-000000000005".to_string(),
         title: Some("ф".repeat(128)),
-        secrets: None,
+        secrets: AISecrets::OpenRouter { api_key: None },
         has_secrets: false,
         whitelist_model_ids: None,
         created_at: TEST_CREATED_AT,
@@ -290,7 +290,7 @@ fn test_ai_profile_validate_title_one_past_max_length_in_cyrillic_fails() {
     let profile = AIProfile {
         id: "01900000-0000-7000-8000-000000000006".to_string(),
         title: Some("ф".repeat(129)),
-        secrets: None,
+        secrets: AISecrets::OpenRouter { api_key: None },
         has_secrets: false,
         whitelist_model_ids: None,
         created_at: TEST_CREATED_AT,
@@ -305,7 +305,7 @@ fn test_ai_profile_validate_whitespace_only_title_ok() {
     let profile = AIProfile {
         id: "01900000-0000-7000-8000-000000000008".to_string(),
         title: Some("   ".to_string()),
-        secrets: None,
+        secrets: AISecrets::OpenRouter { api_key: None },
         has_secrets: false,
         whitelist_model_ids: None,
         created_at: TEST_CREATED_AT,
@@ -321,7 +321,7 @@ fn test_ai_profile_validate_title_max_length_in_emoji_fails() {
     let profile = AIProfile {
         id: "01900000-0000-7000-8000-000000000007".to_string(),
         title: Some("🦀".repeat(65)),
-        secrets: None,
+        secrets: AISecrets::OpenRouter { api_key: None },
         has_secrets: false,
         whitelist_model_ids: None,
         created_at: TEST_CREATED_AT,
@@ -350,7 +350,7 @@ fn test_ai_profile_serialization_renders_iso_string_for_created_at() {
     let profile = AIProfile {
         id: "01900000-0000-7000-8000-000000000001".to_string(),
         title: None,
-        secrets: None,
+        secrets: AISecrets::OpenRouter { api_key: None },
         has_secrets: false,
         whitelist_model_ids: None,
         created_at: TEST_CREATED_AT,
@@ -372,6 +372,7 @@ fn test_ai_profile_serialization_renders_iso_string_for_created_at() {
 fn test_ai_profile_deserialization_accepts_iso_string_for_created_at() {
     let data = serde_json::json!({
         "id": "profile-1",
+        "secrets": { "provider": "openrouter", "apiKey": null },
         "createdAt": "2026-01-01T00:00:00Z"
     });
 
@@ -385,7 +386,7 @@ fn test_ai_profile_serialization_omits_unset_whitelist() {
     let profile = AIProfile {
         id: "01900000-0000-7000-8000-000000000001".to_string(),
         title: None,
-        secrets: None,
+        secrets: AISecrets::OpenRouter { api_key: None },
         has_secrets: false,
         whitelist_model_ids: None,
         created_at: TEST_CREATED_AT,
@@ -403,7 +404,7 @@ fn test_ai_profile_serialization_keeps_empty_whitelist() {
     let profile = AIProfile {
         id: "01900000-0000-7000-8000-000000000001".to_string(),
         title: None,
-        secrets: None,
+        secrets: AISecrets::OpenRouter { api_key: None },
         has_secrets: false,
         whitelist_model_ids: Some(vec![]),
         created_at: TEST_CREATED_AT,
@@ -422,7 +423,7 @@ fn test_ai_profile_validate_ok_with_whitelist() {
     let profile = AIProfile {
         id: "01900000-0000-7000-8000-000000000001".to_string(),
         title: None,
-        secrets: None,
+        secrets: AISecrets::OpenRouter { api_key: None },
         has_secrets: false,
         whitelist_model_ids: Some(vec!["openai/gpt-4".to_string()]),
         created_at: TEST_CREATED_AT,
@@ -436,7 +437,7 @@ fn test_ai_profile_validate_empty_whitelist_model_id_fails() {
     let profile = AIProfile {
         id: "01900000-0000-7000-8000-000000000001".to_string(),
         title: None,
-        secrets: None,
+        secrets: AISecrets::OpenRouter { api_key: None },
         has_secrets: false,
         whitelist_model_ids: Some(vec!["".to_string()]),
         created_at: TEST_CREATED_AT,

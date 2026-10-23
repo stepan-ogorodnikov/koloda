@@ -16,7 +16,7 @@ export function SettingsAIEditProfile({ profile }: SettingsAIEditProfileProps) {
   const { updateAIProfileMutation } = useAtomValue(queriesAtom);
   const { mutate, isPending, error, reset } = useMutation(updateAIProfileMutation());
   const [isOpen, setIsOpen] = useState(false);
-  const provider = profile.secrets?.provider;
+  const provider = profile.secrets.provider;
 
   const handleSubmit = (data: { title?: string; secrets?: AISecrets }) => {
     mutate(
@@ -38,8 +38,6 @@ export function SettingsAIEditProfile({ profile }: SettingsAIEditProfileProps) {
     setIsOpen(isOpen);
     if (!isOpen) reset();
   };
-
-  if (!provider) return null;
 
   return (
     <Dialog.Root isOpen={isOpen} onOpenChange={handleOpenChange}>

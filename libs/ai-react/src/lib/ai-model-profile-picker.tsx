@@ -72,7 +72,7 @@ export function AIModelProfilePicker({
     (): ProfileSection[] =>
       profiles.map((profile: AIProfile) => {
         const state = byProfileId[profile.id];
-        const providerLabel = profile.secrets ? AI_PROVIDER_LABELS[profile.secrets.provider] : "";
+        const providerLabel = AI_PROVIDER_LABELS[profile.secrets.provider];
         // WHY: a profile not yet subscribed has no state; it is loading, not empty.
         const status = !state ? "loading" : state.isError ? "error" : state.isLoading ? "loading" : "ready";
         const models = filterProfileModelsForPicker({

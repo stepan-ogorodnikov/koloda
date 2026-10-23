@@ -118,12 +118,14 @@ fn patch_settings_replaces_arrays_wholesale() {
             "profiles": [
                 {
                     "id": "01900000-0000-7000-8000-000000000001",
+                    "secrets": { "provider": "openrouter", "apiKey": null },
                     "title": "First",
                     "whitelistModelIds": ["openai/gpt-4"],
                     "createdAt": "2026-01-01T00:00:00Z"
                 },
                 {
                     "id": "01900000-0000-7000-8000-000000000002",
+                    "secrets": { "provider": "openrouter", "apiKey": null },
                     "title": "Second",
                     "createdAt": "2026-01-02T00:00:00Z"
                 }
@@ -139,6 +141,7 @@ fn patch_settings_replaces_arrays_wholesale() {
             "profiles": [
                 {
                     "id": "01900000-0000-7000-8000-000000000001",
+                    "secrets": { "provider": "openrouter", "apiKey": null },
                     "title": "Renamed",
                     "createdAt": "2026-01-01T00:00:00Z"
                 }

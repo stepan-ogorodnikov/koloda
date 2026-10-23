@@ -9,7 +9,7 @@ import { GENERATION_TEMPERATURE } from "./prompts";
 export const aiProfileValidation = z.object({
   id: z.uuid(),
   title: optionalProfileTitleSchema,
-  secrets: aiSecretsValidation.optional(),
+  secrets: aiSecretsValidation,
   // WHY: Default so stored settings without the field still parse; hosts set the
   // real value when returning profiles (key may exist while `apiKey` is redacted).
   hasSecrets: z.boolean().default(false),
@@ -80,8 +80,7 @@ export function findDuplicateProfileId(settings: { profiles: ReadonlyArray<{ id:
 
 export type AddAIProfileData = {
   title?: string;
-  secrets?: AISecrets;
-  whitelistModelIds?: string[];
+  secrets: AISecrets;
 };
 
 export type RemoveAIProfileData = {
