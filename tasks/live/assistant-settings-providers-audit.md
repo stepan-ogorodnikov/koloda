@@ -459,7 +459,7 @@ Item 26 was added during implementation; it is committed before item 2, which it
   Commit: Leave the reasoning effort unset when the catalog gives no default
   Depends on: none
 
-- [ ] 2. Make the ai-react suite pass in every file order
+- [x] 2. Make the ai-react suite pass in every file order
   Goal (P8, after item 26 rewrote the picker test):
   - `ai-chat-error.test.tsx:13-20`: drop the file-level `@koloda/core-react` mock.
     Render `AIChatError` with item 26's store wrapper, which serves hotkey settings through `queriesAtom`.

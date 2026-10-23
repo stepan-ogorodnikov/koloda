@@ -1,12 +1,7 @@
 import type { ModelParameter } from "@koloda/ai";
-import { queriesAtom } from "@koloda/core-react";
-import type { Queries } from "@koloda/core-react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { fireEvent, render, screen, within } from "@testing-library/react";
-import { createStore, Provider as JotaiProvider } from "jotai";
-import type { WritableAtom } from "jotai";
-import type { PropsWithChildren } from "react";
 import { describe, expect, it, vi } from "vitest";
+import { createAppStoreWrapper } from "../test/test-helpers";
 import { AIModelParameters } from "./ai-model-parameters";
 import type { AIModelParametersProps } from "./ai-model-parameters";
 
@@ -25,26 +20,8 @@ function effort(overrides: Partial<ModelParameter>): ModelParameter {
   return { type: "reasoning_effort", value: "", levels: LEVELS, hasDefault: false, ...overrides };
 }
 
-// The listbox reads hotkey settings; no stored row means the defaults.
 function renderParameters(props: AIModelParametersProps) {
-  const store = createStore();
-  store.set(
-    queriesAtom as WritableAtom<Queries, [Queries], unknown>,
-    {
-      getSettingsQuery: () => ({ queryKey: ["settings", "hotkeys"], queryFn: async () => null }),
-    } as unknown as Queries,
-  );
-  const queryClient = new QueryClient();
-
-  function Wrapper({ children }: PropsWithChildren) {
-    return (
-      <QueryClientProvider client={queryClient}>
-        <JotaiProvider store={store}>{children}</JotaiProvider>
-      </QueryClientProvider>
-    );
-  }
-
-  return render(<AIModelParameters {...props} />, { wrapper: Wrapper });
+  return render(<AIModelParameters {...props} />, { wrapper: createAppStoreWrapper() });
 }
 
 function openPicker() {

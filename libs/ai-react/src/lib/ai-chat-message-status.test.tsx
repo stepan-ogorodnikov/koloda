@@ -1,5 +1,4 @@
 import { render, screen } from "@testing-library/react";
-import * as React from "react";
 import { describe, expect, it, vi } from "vitest";
 import { AIChatMessageStatus } from "./ai-chat-message-status";
 
@@ -7,14 +6,6 @@ vi.mock("@lingui/react", () => ({
   useLingui: () => ({
     _: (message: { toString(): string }) => message.toString(),
   }),
-}));
-
-vi.mock("@koloda/ui", () => ({
-  Button: (props: { children: React.ReactNode; onPress?: () => void }) => (
-    <button type="button" onClick={props.onPress}>
-      {props.children}
-    </button>
-  ),
 }));
 
 describe("AIChatMessageStatus", () => {

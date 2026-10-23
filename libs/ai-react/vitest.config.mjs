@@ -15,7 +15,8 @@ export default defineConfig({
   test: {
     pool: "threads",
     // WHY: These files share a worker module registry to skip per-file isolation cost.
-    // A file-level vi.mock leaks for the whole worker; no file here mocks a module a sibling imports for real.
+    // A file-level vi.mock leaks for the whole worker, so files here mock only `@lingui/*`, which none loads for real.
+    // Components that read `@koloda/core-react` render under `src/test/test-helpers.tsx` instead of a module mock.
     isolate: false,
     maxWorkers: 2,
     environment: "jsdom",
