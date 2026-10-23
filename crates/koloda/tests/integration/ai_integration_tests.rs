@@ -236,162 +236,53 @@ fn ai_profile_api_key_is_stored_in_secret_store() {
 }
 
 #[test]
-fn ai_profile_deepseek_api_key_round_trips_via_secret_store() {
-    let _guard = test_store::setup();
-    let db = test_db();
-
-    let added = ai::add_ai_profile(
-        &db,
-        Some("DeepSeek".to_string()),
-        AISecrets::DeepSeek {
-            api_key: Some("sk-deepseek-secret".to_string()),
-        },
-    )
-    .expect("profile should be added");
-
-    let profiles = ai::get_ai_profiles(&db).expect("should get profiles");
-    let public = profiles
-        .iter()
-        .find(|profile| profile.id == added.id)
-        .expect("profile should exist");
-    assert!(public.has_secrets);
-    match &public.secrets {
-        AISecrets::DeepSeek { api_key } => assert!(api_key.is_none(), "public read must redact apiKey"),
-        other => panic!("expected DeepSeek secrets, got {:?}", other),
-    }
-
-    let secrets = ai::get_ai_profile_secrets(&db, &added.id)
-        .expect("should load secrets")
-        .expect("secrets should exist");
-    assert_eq!(secrets.api_key(), Some("sk-deepseek-secret"));
-
-    test_store::teardown(_guard);
-}
-
-#[test]
-fn ai_profile_openai_api_key_round_trips_via_secret_store() {
-    let _guard = test_store::setup();
-    let db = test_db();
-
-    let added = ai::add_ai_profile(
-        &db,
-        Some("OpenAI".to_string()),
+fn api_key_only_profiles_round_trip_via_secret_store() {
+    let cases = [
         AISecrets::OpenAi {
             api_key: Some("sk-openai-secret".to_string()),
         },
-    )
-    .expect("profile should be added");
-
-    let profiles = ai::get_ai_profiles(&db).expect("should get profiles");
-    let public = profiles
-        .iter()
-        .find(|p| p.id == added.id)
-        .expect("profile should exist");
-    assert!(public.has_secrets);
-    match &public.secrets {
-        AISecrets::OpenAi { api_key } => assert!(api_key.is_none(), "public read must redact apiKey"),
-        other => panic!("expected OpenAI secrets, got {:?}", other),
-    }
-
-    let secrets = ai::get_ai_profile_secrets(&db, &added.id)
-        .expect("should load secrets")
-        .expect("secrets should exist");
-    assert_eq!(secrets.api_key(), Some("sk-openai-secret"));
-
-    test_store::teardown(_guard);
-}
-
-#[test]
-fn ai_profile_opencode_go_round_trips_via_secret_store() {
-    let _guard = test_store::setup();
-    let db = test_db();
-
-    let added = ai::add_ai_profile(
-        &db,
-        Some("OpenCode Go".to_string()),
+        AISecrets::DeepSeek {
+            api_key: Some("sk-deepseek-secret".to_string()),
+        },
         AISecrets::OpencodeGo {
-            api_key: Some("go-secret-key".to_string()),
+            api_key: Some("go-secret".to_string()),
         },
-    )
-    .expect("profile should be added");
-
-    let all = ai::get_ai_profiles(&db).expect("should get profiles");
-    let retrieved = all.iter().find(|p| p.id == added.id).expect("profile should exist");
-
-    assert!(retrieved.has_secrets);
-    match &retrieved.secrets {
-        AISecrets::OpencodeGo { api_key } => assert!(api_key.is_none()),
-        other => panic!("expected OpencodeGo secrets, got {:?}", other),
-    }
-
-    let secrets = ai::get_ai_profile_secrets(&db, &added.id)
-        .expect("should load secrets")
-        .expect("secrets should exist");
-    assert_eq!(secrets.api_key(), Some("go-secret-key"));
-
-    test_store::teardown(_guard);
-}
-
-#[test]
-fn ai_profile_opencode_zen_round_trips_via_secret_store() {
-    let _guard = test_store::setup();
-    let db = test_db();
-
-    let added = ai::add_ai_profile(
-        &db,
-        Some("OpenCode Zen".to_string()),
         AISecrets::OpencodeZen {
-            api_key: Some("zen-secret-key".to_string()),
+            api_key: Some("zen-secret".to_string()),
         },
-    )
-    .expect("profile should be added");
-
-    let all = ai::get_ai_profiles(&db).expect("should get profiles");
-    let retrieved = all.iter().find(|p| p.id == added.id).expect("profile should exist");
-
-    assert!(retrieved.has_secrets);
-    match &retrieved.secrets {
-        AISecrets::OpencodeZen { api_key } => assert!(api_key.is_none()),
-        other => panic!("expected OpencodeZen secrets, got {:?}", other),
-    }
-
-    let secrets = ai::get_ai_profile_secrets(&db, &added.id)
-        .expect("should load secrets")
-        .expect("secrets should exist");
-    assert_eq!(secrets.api_key(), Some("zen-secret-key"));
-
-    test_store::teardown(_guard);
-}
-
-#[test]
-fn ai_profile_ollama_cloud_round_trips_via_secret_store() {
-    let _guard = test_store::setup();
-    let db = test_db();
-
-    let added = ai::add_ai_profile(
-        &db,
-        Some("Ollama Cloud".to_string()),
         AISecrets::OllamaCloud {
-            api_key: Some("cloud-secret-key".to_string()),
+            api_key: Some("cloud-secret".to_string()),
         },
-    )
-    .expect("profile should be added");
+    ];
 
-    let all = ai::get_ai_profiles(&db).expect("should get profiles");
-    let retrieved = all.iter().find(|p| p.id == added.id).expect("profile should exist");
+    for secrets in cases {
+        let _guard = test_store::setup();
+        let db = test_db();
+        let provider = secrets.provider();
+        let key = secrets.api_key().expect("each case carries a key").to_string();
 
-    assert!(retrieved.has_secrets);
-    match &retrieved.secrets {
-        AISecrets::OllamaCloud { api_key } => assert!(api_key.is_none()),
-        other => panic!("expected OllamaCloud secrets, got {:?}", other),
+        let added = ai::add_ai_profile(&db, None, secrets).expect("profile should be added");
+
+        let profiles = ai::get_ai_profiles(&db).expect("should get profiles");
+        let public = profiles
+            .iter()
+            .find(|p| p.id == added.id)
+            .expect("profile should exist");
+        assert!(public.has_secrets, "{provider}");
+        assert_eq!(public.secrets.provider(), provider);
+        assert_eq!(
+            public.secrets.api_key(),
+            None,
+            "{provider}: public read must redact apiKey"
+        );
+
+        let stored = ai::get_ai_profile_secrets(&db, &added.id)
+            .expect("should load secrets")
+            .expect("secrets should exist");
+        assert_eq!(stored.api_key(), Some(key.as_str()), "{provider}");
+
+        test_store::teardown(_guard);
     }
-
-    let secrets = ai::get_ai_profile_secrets(&db, &added.id)
-        .expect("should load secrets")
-        .expect("secrets should exist");
-    assert_eq!(secrets.api_key(), Some("cloud-secret-key"));
-
-    test_store::teardown(_guard);
 }
 
 #[test]

@@ -737,7 +737,7 @@ Item 26 was added during implementation; it is committed before item 2, which it
   Commit: Start DeepSeek's two model requests together
   Depends on: none
 
-- [ ] 21. Table the AI keyring round-trip tests
+- [x] 21. Table the AI keyring round-trip tests
   Goal (P17, Rust part):
   - Replace the five round-trip tests (`ai_integration_tests.rs:242`, `:276`, `:310`, `:342`, `:374`) with one
     table over the API-key-only variants.
