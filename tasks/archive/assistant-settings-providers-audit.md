@@ -1,6 +1,6 @@
 # Assistant settings and AI providers audit fixes
 
-Status: ready
+Status: done
 Guides: agents/IMPLEMENTATION-PLAN.md, agents/TASKS.md, agents/ASSISTANT-MAP.md, docs/specs/AI-PROVIDERS.md, docs/specs/ASSISTANT-SETTINGS.md, docs/specs/HOTKEYS.md, agents/CODE-STYLE.md, agents/CODE-DOCUMENTATION.md, agents/TESTING.md, agents/VERIFY.md, agents/CSS.md, agents/I18N.md, agents/RUST.md, docs/decisions/TS-RUST-DOMAIN-MIRRORING.md, apps/electron/IPC.md, agents/BACKWARDS-COMPATIBILITY.md, agents/FUNCTIONAL-SPECIFICATIONS.md, agents/MARKDOWN.md, agents/REVIEW.md
 Flow: local
 
@@ -824,4 +824,63 @@ Item 26 was added during implementation; it is committed before item 2, which it
 
 ## Outcome
 
-Pending.
+Shipped, one commit per Plan item:
+
+- A model whose source gives no default reasoning level now has none.
+  The effort picker lists Default first for it, and choosing Default clears a picked level, so the run sends none and
+  the provider's default applies.
+  The models.dev and LM Studio first-value guesses are gone.
+- With no stored model, the selection falls back to the first allowlisted model; an empty allowlist selects none.
+- The edit dialog sends a cleared title, and both hosts store it as absent.
+- One hook builds the model-list query; the key argument is `profileId`.
+- Editing a profile resets its cached model list, deleting removes it, and the allowlist dialog fetches on every open.
+- The composer's picker loads other profiles' lists only while it is open.
+- An empty-allowlist section no longer crashes the picker when its list arrives (item 26, entry P22).
+- LM Studio's model list, native list, and chat share the base URL's path.
+- The context meter reads the last step of a tool run.
+- The `ai-react` suite passes in every file order, on real `@koloda/ui` and `@koloda/core-react`.
+- Every close of the settings modal discards unsaved edits, the hotkey toggle included.
+- A settings row without a prompt source opens as Default; the old-row inference and its tests are gone.
+- Tests pin how the system prompt and temperature are sent, that saved settings reach runs, the Reset and Escape
+  discard paths, and that profile writes keep the assistant settings on both hosts.
+- Every AI profile has secrets on both hosts; the add-time allowlist is gone.
+- Both hosts reject a provider change on update with `validation.ai-providers.provider.changed`.
+- Web derives `hasSecrets` from its stored key; the `default(false)` fallbacks and older-row comments are gone.
+- A failed delete shows its error in the confirmation.
+- Dead surface is deleted: the output-limit overlay and four unread model fields, `getAIProfileModelsQuery`,
+  `isStale`, the root `ChatStreamGenerator` export, Rust `impl Default for AssistantSettings`, and the prompt
+  editor's `isDisabled`.
+- DeepSeek starts its two model requests together; web wraps model-list errors as desktop does.
+- The temperature range's Rust doc names its TS twins, and the TS bounds carry the range code.
+- AI-PROVIDERS.md, ASSISTANT-SETTINGS.md, HOTKEYS.md, and `agents/ASSISTANT-MAP.md` match the code.
+
+Beyond the item text:
+
+- Item 26 was found in item 2 and committed before it; the picker test rewrite moved into it.
+- Item 6 resets the cached list rather than invalidating it, because model queries do not refetch on mount.
+- Item 14 replaced the add-time empty-model-id test with an update-path one, and deleted the serde test that pinned
+  a public profile without secrets.
+- Item 15 deleted the keyring-remove rollback test of a provider change; that path no longer exists.
+- Item 19 also dropped the now-unused `aiRuntime` parameter of both hosts' `queriesFn`.
+  The runs test types its mock from `createAIGenerationClient` instead of the deleted export.
+- The self-review commit adds the base-URL rule to AI-PROVIDERS.md (§Fetching).
+
+Skipped:
+
+- P18: the desktop-only-provider rule and its per-profile warning stay; the current behavior is correct, per
+  `docs/decisions/APP-ROLES.md` (question 7).
+
+Checks on the branch:
+
+- Scoped Vitest and `cargo test -p koloda` per item; each fix's new case failed against the old code.
+- `@koloda/ai-react` passed on one worker and in shuffled file orders, seeds 1–8; `@koloda/assistant-react`
+  seeds 1–4.
+- `bun run check:push` passed on the tip before Archive.
+- The e2e suites were not run.
+
+Left open:
+
+- Seen during self-review, not fixed (also on `main`): `libs/settings-react` fails under
+  `--maxWorkers=1 --sequence.shuffle.files`; see Scope, Out.
+- Manual verify was handed to the human: the Default effort item, the allowlist fallback and empty allowlist after a
+  reload, clearing a title, lazy model lists in the picker, and closing settings with the hotkey and the backdrop.
