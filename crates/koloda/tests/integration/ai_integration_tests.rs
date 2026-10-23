@@ -766,6 +766,32 @@ fn add_ai_profile_rejects_title_over_max_length() {
 }
 
 #[test]
+fn update_ai_profile_removes_title_sent_empty() {
+    // Twin: "removes the title when an update sends an empty one" (apps/web/src/app/ai.test.ts).
+    let _guard = test_store::setup();
+    let db = test_db();
+
+    let added = ai::add_ai_profile(
+        &db,
+        Some("OpenRouter".to_string()),
+        Some(AISecrets::OpenRouter {
+            api_key: Some("sk-secret-key".to_string()),
+        }),
+        None,
+    )
+    .expect("profile should be added");
+
+    let updated =
+        ai::update_ai_profile(&db, &added.id, Some(String::new()), None, None).expect("profile should be updated");
+    assert_eq!(updated.title, None, "an empty title is stored as absent");
+
+    let profiles = ai::get_ai_profiles(&db).expect("should get profiles");
+    assert_eq!(profiles[0].title, None, "the cleared title must persist");
+
+    test_store::teardown(_guard);
+}
+
+#[test]
 fn update_ai_profile_rejects_title_over_max_length() {
     let _guard = test_store::setup();
     let db = test_db();

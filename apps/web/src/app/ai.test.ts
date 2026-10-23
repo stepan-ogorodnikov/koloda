@@ -105,6 +105,23 @@ describe("web AI profile save path", () => {
     });
   });
 
+  it("removes the title when an update sends an empty one", async () => {
+    // Twin: update_ai_profile_removes_title_sent_empty (crates/koloda/tests/integration/ai_integration_tests.rs).
+    seedAiSettings([
+      {
+        id: PROFILE_ID,
+        title: "OpenRouter",
+        secrets: { provider: "openrouter", apiKey: "sk-or" },
+        hasSecrets: true,
+        createdAt: CREATED_AT,
+      },
+    ]);
+
+    await updateAIProfile({} as DB, { id: PROFILE_ID, title: "" });
+
+    expect(storedProfiles()[0]?.title).toBeUndefined();
+  });
+
   it("throws not-found on update when the ai settings row is absent", async () => {
     // Twin: update_ai_profile_not_found (crates/koloda/tests/integration/ai_integration_tests.rs).
     await expect(updateAIProfile({} as DB, { id: PROFILE_ID, title: "X" })).rejects.toMatchObject({

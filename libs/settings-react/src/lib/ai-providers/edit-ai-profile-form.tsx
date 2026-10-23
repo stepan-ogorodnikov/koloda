@@ -28,17 +28,19 @@ export function EditAIProfileForm({
     validators: { onSubmit: getEditSchema(config, hasSecrets) },
     onSubmit: async ({ value }) => {
       const hasNewApiKey = Boolean(value.apiKey?.trim());
-      // WHY: Omit secrets on title-only edits so hosts keep the keyring/IndexedDB key.
+      // WHY: The title is always sent, the empty string included: hosts store an
+      // empty title as absent, while an omitted title means "leave it unchanged".
+      // Omit secrets on title-only edits so hosts keep the keyring/IndexedDB key.
       // Providers with baseUrl always send secrets; empty apiKey means keep existing.
       if (hasNewApiKey || hasBaseUrlField) {
         onSubmit({
-          title: value.title || undefined,
+          title: value.title,
           secrets: config.toSecrets(value),
         });
         return;
       }
       onSubmit({
-        title: value.title || undefined,
+        title: value.title,
       });
     },
   });

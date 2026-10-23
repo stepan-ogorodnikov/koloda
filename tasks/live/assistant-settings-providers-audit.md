@@ -492,7 +492,7 @@ Item 26 was added during implementation; it is committed before item 2, which it
   Commit: Fall back to the first allowlisted model
   Depends on: none
 
-- [ ] 4. Send a cleared profile title from the edit dialog
+- [x] 4. Send a cleared profile title from the edit dialog
   Goal (P3):
   - `edit-ai-profile-form.tsx:35`, `:41`: send `title: value.title`, the empty string included.
     Both hosts normalize `""` to absent: web through `optionalProfileTitleSchema` (the parse at

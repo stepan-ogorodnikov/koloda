@@ -94,4 +94,20 @@ describe("SettingsAIEditProfile", () => {
     expect(await screen.findByText("SQLITE_BUSY")).toBeTruthy();
     expect(trigger.getAttribute("aria-expanded")).toBe("true");
   });
+
+  it("sends a cleared title so the host can remove it", async () => {
+    renderDialog();
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "settings.ai.edit.trigger" }));
+    });
+    fireEvent.change(await screen.findByRole("textbox", { name: "settings.ai.profiles.title.label" }), {
+      target: { value: "" },
+    });
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "settings.ai.edit.submit" }));
+    });
+
+    expect(updateProfile).toHaveBeenCalledWith({ id: profile.id, title: "" });
+  });
 });
