@@ -13,9 +13,12 @@ const MODELS_DEV_HEADERS = {
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
 };
 
+// WHY: `default` stays unset when the catalog row names none. models.dev rows
+// carry levels only, and guessing one (say, the first) would send that level on
+// every run instead of the provider's default (AI-PROVIDERS.md §Sending Requests).
 type ReasoningLevels = {
   levels: Array<{ effort: string; description: string }>;
-  default: string;
+  default?: string;
 };
 
 let cache: Record<string, unknown> | null = null;
@@ -68,7 +71,7 @@ function effortLevelsFromCatalogRow(row: unknown): ReasoningLevels | undefined {
 
   return {
     levels: values.map((level) => ({ effort: level, description: "" })),
-    default: defaultCandidate ?? values[0],
+    default: defaultCandidate,
   };
 }
 

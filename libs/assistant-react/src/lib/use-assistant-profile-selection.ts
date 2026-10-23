@@ -123,7 +123,7 @@ export function useAssistantProfileSelection(): UseAssistantProfileSelectionRetu
     if (levels && levels.length > 0) {
       const stored = storedModelParameters.reasoning_effort;
       const value = stored && levels.some((l) => l.effort === stored) ? stored : (model?.default_reasoning_level ?? "");
-      params.push({ type: "reasoning_effort", value, levels });
+      params.push({ type: "reasoning_effort", value, levels, hasDefault: model?.default_reasoning_level != null });
     }
 
     return params;

@@ -21,8 +21,10 @@ export function lmStudioReasoningFromCapabilities(capabilities: unknown): LmStud
   );
   if (values.length === 0) return undefined;
 
+  // WHY: no guess when the reported default is missing or unknown; the run then
+  // sends no level, so LM Studio's own default applies.
   const defaultLevel =
-    typeof reasoning.default === "string" && values.includes(reasoning.default) ? reasoning.default : values[0];
+    typeof reasoning.default === "string" && values.includes(reasoning.default) ? reasoning.default : undefined;
 
   return {
     supported_reasoning_levels: values.map((effort) => ({ effort, description: "" })),

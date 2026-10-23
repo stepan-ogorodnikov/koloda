@@ -212,6 +212,7 @@ The app learns the supported levels and the default for a model by a fixed rule 
 
 - OpenRouter reports the levels and the default in its model list.
 - LM Studio reports the levels and the default in the model's capabilities.
+  A model without a valid reported default has no default level.
 - Ollama and Ollama Cloud report only whether a model can think.
   - Thinking GPT-OSS models accept:
     - low
@@ -231,11 +232,19 @@ The app learns the supported levels and the default for a model by a fixed rule 
   When the catalog is unavailable or the ID is missing,
   known DeepSeek model families fall back to fixed built-in levels.
 
+The models.dev catalog gives levels without a default.
+A model whose levels come from it has no default level unless its catalog row names one.
+
 The reasoning-effort picker in the conversation UI lists those levels.
 If no rule yields levels for the model, the picker is hidden.
-The app does not guess levels outside these rules.
+The app does not guess levels outside these rules, and it does not guess a default.
 
-Changing the model resets reasoning effort to that model's default.
+When the model has no default level, the picker lists Default first.
+Default stays selected until the user picks a level.
+Choosing Default again clears the picked level.
+While Default is selected, the run sends no level.
+
+Changing the model resets reasoning effort to that model's default, or to Default when it has none.
 A stored reasoning-effort value that does not apply to the newly selected model is ignored.
 
 If a stored model ID is no longer in the provider's list, the first available model is used instead.

@@ -36,7 +36,7 @@ function catalogFor(providerKey: string, models: Record<string, unknown>): Recor
 }
 
 describe("overlayFromModelsDev", () => {
-  it("applies catalog effort values and defaults to the first value when no default field is set", () => {
+  it("applies catalog effort values and leaves the default unset when no default field is set", () => {
     const catalog = catalogFor("opencode", {
       "deepseek-chat": {
         reasoning: true,
@@ -51,7 +51,7 @@ describe("overlayFromModelsDev", () => {
       { effort: "high", description: "" },
       { effort: "max", description: "" },
     ]);
-    expect(model?.default_reasoning_level).toBe("low");
+    expect(model?.default_reasoning_level).toBeUndefined();
   });
 
   it("uses a catalog default field when it is one of the effort values", () => {
@@ -106,7 +106,7 @@ describe("overlayFromModelsDev", () => {
       { effort: "low", description: "" },
       { effort: "high", description: "" },
     ]);
-    expect(model?.default_reasoning_level).toBe("low");
+    expect(model?.default_reasoning_level).toBeUndefined();
   });
 
   it("uses the prefix table when the id is not in the catalog", () => {
@@ -241,7 +241,7 @@ describe("fetchOpencodeZenModels catalog join", () => {
           { effort: "high", description: "" },
           { effort: "max", description: "" },
         ],
-        default_reasoning_level: "low",
+        default_reasoning_level: undefined,
       },
     ]);
   });
@@ -263,14 +263,14 @@ describe("fetchOpencodeZenModels catalog join", () => {
   it("reuses a successful catalog after a later models.dev failure", async () => {
     const catalogBody = catalogFor("opencode", {
       "deepseek-chat": {
-        reasoning_options: [{ type: "effort", values: ["low", "high", "max"] }],
+        reasoning_options: [{ type: "effort", values: ["low", "high", "max"], default: "high" }],
       },
     });
     const gateway = { data: [{ id: "deepseek-chat" }] };
 
     stubGatewayAndCatalog({ gateway, catalog: jsonResponse(catalogBody) });
     await expect(fetchOpencodeZenModels()).resolves.toMatchObject([
-      { id: "deepseek-chat", default_reasoning_level: "low" },
+      { id: "deepseek-chat", default_reasoning_level: "high" },
     ]);
 
     stubGatewayAndCatalog({ gateway, catalog: new Response("nope", { status: 403 }) });
@@ -282,7 +282,7 @@ describe("fetchOpencodeZenModels catalog join", () => {
           { effort: "high", description: "" },
           { effort: "max", description: "" },
         ],
-        default_reasoning_level: "low",
+        default_reasoning_level: "high",
       },
     ]);
   });
@@ -343,7 +343,7 @@ describe("fetchOpencodeGoModels catalog join", () => {
           { effort: "high", description: "" },
           { effort: "max", description: "" },
         ],
-        default_reasoning_level: "low",
+        default_reasoning_level: undefined,
       },
     ]);
   });
@@ -365,14 +365,14 @@ describe("fetchOpencodeGoModels catalog join", () => {
   it("reuses a successful catalog after a later models.dev failure", async () => {
     const catalogBody = catalogFor("opencode-go", {
       "deepseek-chat": {
-        reasoning_options: [{ type: "effort", values: ["low", "high", "max"] }],
+        reasoning_options: [{ type: "effort", values: ["low", "high", "max"], default: "high" }],
       },
     });
     const gateway = { data: [{ id: "deepseek-chat" }] };
 
     stubGoGatewayAndCatalog({ gateway, catalog: jsonResponse(catalogBody) });
     await expect(fetchOpencodeGoModels()).resolves.toMatchObject([
-      { id: "deepseek-chat", default_reasoning_level: "low" },
+      { id: "deepseek-chat", default_reasoning_level: "high" },
     ]);
 
     stubGoGatewayAndCatalog({ gateway, catalog: new Response("nope", { status: 403 }) });
@@ -384,7 +384,7 @@ describe("fetchOpencodeGoModels catalog join", () => {
           { effort: "high", description: "" },
           { effort: "max", description: "" },
         ],
-        default_reasoning_level: "low",
+        default_reasoning_level: "high",
       },
     ]);
   });

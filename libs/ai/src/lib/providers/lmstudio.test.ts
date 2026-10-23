@@ -34,19 +34,18 @@ describe("lmStudioReasoningFromCapabilities", () => {
     });
   });
 
-  it("falls back to the first option when default is missing or not in the list", () => {
-    expect(
-      lmStudioReasoningFromCapabilities({
-        reasoning: { allowed_options: ["low", "medium", "high"] },
-      }),
-    ).toEqual({
-      supported_reasoning_levels: [
-        { effort: "low", description: "" },
-        { effort: "medium", description: "" },
-        { effort: "high", description: "" },
-      ],
-      default_reasoning_level: "low",
-    });
+  it.each([
+    { name: "missing", reasoning: { allowed_options: ["low", "medium", "high"] } },
+    { name: "not in the list", reasoning: { allowed_options: ["low", "medium", "high"], default: "max" } },
+  ])("leaves the default unset when it is $name", ({ reasoning }) => {
+    const result = lmStudioReasoningFromCapabilities({ reasoning });
+
+    expect(result?.supported_reasoning_levels).toEqual([
+      { effort: "low", description: "" },
+      { effort: "medium", description: "" },
+      { effort: "high", description: "" },
+    ]);
+    expect(result?.default_reasoning_level).toBeUndefined();
   });
 
   it("omits levels when reasoning config is absent or empty", () => {

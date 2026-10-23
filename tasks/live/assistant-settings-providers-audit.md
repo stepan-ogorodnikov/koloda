@@ -406,7 +406,7 @@ Out:
 `WEB` stands for `nx run @koloda/web:test-unit`.
 Line numbers are at `f95547fa`; when an earlier item moved them, find the code by its text.
 
-- [ ] 1. Leave the reasoning effort unset when the catalog gives no default
+- [x] 1. Leave the reasoning effort unset when the catalog gives no default
   Goal (P1; questions 2 and 11):
   - `effortLevelsFromCatalogRow` (`libs/ai/src/lib/providers/models-dev.ts:65-72`): drop the `?? values[0]`.
     With no default candidate, the row has levels and no default; make `ReasoningLevels.default` (`:16-19`) optional.

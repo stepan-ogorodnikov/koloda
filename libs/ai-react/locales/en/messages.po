@@ -202,7 +202,11 @@ msgstr "Thought"
 msgid "ai.chat.tool-activity.tool"
 msgstr "Tool"
 
-#: ../../libs/ai-react/src/lib/ai-model-parameters.tsx:21
+#: ../../libs/ai-react/src/lib/ai-model-parameters.tsx:38
+msgid "ai.model-parameters.reasoning-effort.default"
+msgstr "Default"
+
+#: ../../libs/ai-react/src/lib/ai-model-parameters.tsx:28
 msgid "ai.model-parameters.reasoning-effort.label"
 msgstr "Reasoning effort"
 

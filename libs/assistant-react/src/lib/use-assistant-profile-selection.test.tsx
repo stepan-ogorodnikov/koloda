@@ -91,8 +91,26 @@ describe("useAssistantProfileSelection without a conversation", () => {
     expect(store.get(aiProfileStateAtom)).toEqual({ profileId: "profile-a", modelId: "model-2", modelParameters: {} });
     await waitFor(() => expect(result.current.modelId).toBe("model-2"));
     expect(result.current.modelParameters).toEqual([
-      { type: "reasoning_effort", value: "low", levels: REASONING_LEVELS },
+      { type: "reasoning_effort", value: "low", levels: REASONING_LEVELS, hasDefault: true },
     ]);
+  });
+
+  it("a model without a default level sends none until a level is picked, and clearing returns to none", async () => {
+    const { result } = renderSelection({
+      profiles: [profileA],
+      models: [modelOne],
+      stored: { profileId: "profile-a", modelId: "model-1", modelParameters: {} },
+    });
+    await waitFor(() => expect(result.current.modelId).toBe("model-1"));
+    expect(result.current.modelParameters).toEqual([
+      { type: "reasoning_effort", value: "", levels: REASONING_LEVELS, hasDefault: false },
+    ]);
+
+    act(() => result.current.handleModelParameterChange("reasoning_effort", "high"));
+    expect(result.current.modelParameters[0]?.value).toBe("high");
+
+    act(() => result.current.handleModelParameterChange("reasoning_effort", ""));
+    expect(result.current.modelParameters[0]?.value).toBe("");
   });
 
   it("a profile change resets the global model parameters", async () => {
