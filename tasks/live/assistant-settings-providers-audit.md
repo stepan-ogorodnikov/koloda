@@ -746,7 +746,7 @@ Item 26 was added during implementation; it is committed before item 2, which it
   Commit: Table the AI keyring round-trip tests
   Depends on: 14
 
-- [ ] 22. Wrap web model-list errors like the desktop host
+- [x] 22. Wrap web model-list errors like the desktop host
   Goal (P20):
   - Web `listModels` (`apps/web/src/app/ai-runtime.ts:69-74`) wraps `fetchModels(secrets)` in `wrapAIError`, as
     `apps/electron/src/ai-ipc.ts:181` does.

@@ -1,5 +1,5 @@
 import type { AIRuntime, AISecrets } from "@koloda/ai";
-import { createAIGenerationClient, createAssistantToolExecutor, fetchModels } from "@koloda/ai";
+import { createAIGenerationClient, createAssistantToolExecutor, fetchModels, wrapAIError } from "@koloda/ai";
 import { AppError } from "@koloda/app";
 import type { DB } from "@koloda/db-sqlite";
 import {
@@ -71,7 +71,7 @@ export function createWebAIRuntime(db: DB): AIRuntime {
       // WHY: Match the native host — a missing/secretless profile is an error,
       // not an empty catalog, so the picker shows its error row instead of "No models".
       if (!secrets) throw new AppError("not-found.ai-profile", "No secrets loaded for AI profile");
-      return fetchModels(secrets);
+      return wrapAIError(() => fetchModels(secrets));
     },
     // WHY: Web has no IPC transport — ignore host requestId (logs already recorded it).
     chat: async (profileId, request, onChunk, abortSignal, _requestId) => {
