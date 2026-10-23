@@ -59,7 +59,6 @@ Saving persists the source, the custom prompt, and temperature together.
 Discard restores the last saved values.
 
 An empty custom prompt is allowed and is sent as empty after trimming.
-Invalid temperature is rejected on save; the previous saved settings remain unchanged.
 
 ## How the Prompt Is Sent
 
@@ -80,7 +79,7 @@ Tool descriptions carry their own guidance with either prompt; see ASSISTANT-DAT
 Temperature is a single slider from 0 through 2 in steps of 0.1.
 The built-in default is 0.2.
 
-Values outside 0–2 cannot be saved.
+Values outside 0–2 cannot be saved; the previous saved settings remain unchanged.
 
 ## How Settings Apply to Runs
 
@@ -89,4 +88,4 @@ Changing settings does not rewrite past messages or past runs.
 Saving does not start a run and does not change the active conversation's messages.
 Unsaved Default or Custom does not affect runs.
 
-Temperature omitted or unset falls back to 0.2 for the run.
+An unset temperature uses the built-in default.

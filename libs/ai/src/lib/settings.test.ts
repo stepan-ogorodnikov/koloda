@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   aiProfileValidation,
   aiSettingsValidation,
+  assistantSettingsFormSchema,
   assistantSettingsValidation,
   findDuplicateProfileId,
   resolveChatPromptMode,
@@ -207,6 +208,25 @@ describe("assistantSettingsValidation", () => {
     });
     expect(parsed.chatPromptTemplate).toBe("");
     expect(parsed.chatPromptMode).toBe("custom");
+  });
+});
+
+describe("assistant temperature bounds", () => {
+  it.each([
+    { name: "below 0", temperature: -0.1 },
+    { name: "above 2", temperature: 2.1 },
+  ])("rejects a temperature $name with the shared range code", ({ temperature }) => {
+    // Twin: test_assistant_temperature_below_range_fails / _above_range_fails (settings_ai_tests.rs).
+    for (const schema of [assistantSettingsValidation, assistantSettingsFormSchema]) {
+      const result = schema.safeParse({ temperature, chatPromptTemplate: null, chatPromptMode: "default" });
+      expect(result.error?.issues.map((issue) => issue.message)).toEqual([
+        "validation.assistant-settings.temperature-range",
+      ]);
+    }
+  });
+
+  it.each([0, 2])("accepts the bound %s", (temperature) => {
+    expect(assistantSettingsValidation.safeParse({ temperature }).success).toBe(true);
   });
 });
 

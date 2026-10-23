@@ -756,7 +756,7 @@ Item 26 was added during implementation; it is committed before item 2, which it
   Commit: Wrap web model-list errors like the desktop host
   Depends on: none
 
-- [ ] 23. Name the settings twins and give the TS temperature bounds their code
+- [x] 23. Name the settings twins and give the TS temperature bounds their code
   Goal (S3, S9, S10):
   - The Rust doc on `ASSISTANT_TEMPERATURE_RANGE` (`settings_ai.rs:12-14`) names its TS twins instead of a provider
     list.

@@ -30,8 +30,15 @@ export const chatPromptModeSchema = z.enum(["default", "custom"]);
 
 export type ChatPromptMode = z.infer<typeof chatPromptModeSchema>;
 
+// WHY: Both bounds carry the code desktop returns, so web shows the same message.
+// Twin: `ASSISTANT_TEMPERATURE_RANGE` in crates/koloda/src/domain/settings_ai.rs.
+const assistantTemperature = z
+  .number()
+  .min(0, "validation.assistant-settings.temperature-range")
+  .max(2, "validation.assistant-settings.temperature-range");
+
 export const assistantSettingsValidation = z.object({
-  temperature: z.number().min(0).max(2).default(GENERATION_TEMPERATURE),
+  temperature: assistantTemperature.default(GENERATION_TEMPERATURE),
   chatPromptTemplate: z.string().nullable().default(null),
   chatPromptMode: chatPromptModeSchema.default("default"),
 });
@@ -39,7 +46,7 @@ export const assistantSettingsValidation = z.object({
 export type AssistantSettings = z.input<typeof assistantSettingsValidation>;
 
 export const assistantSettingsFormSchema = z.object({
-  temperature: z.number().min(0).max(2),
+  temperature: assistantTemperature,
   chatPromptTemplate: z.string().nullable(),
   chatPromptMode: chatPromptModeSchema,
 });

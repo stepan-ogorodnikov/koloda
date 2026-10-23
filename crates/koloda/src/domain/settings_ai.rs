@@ -1,6 +1,6 @@
 //! `settings.ai` slice — mirrors `@koloda/ai` `aiSettingsValidation`.
 //!
-//! Profile-id uniqueness and assistant temperature bounds are enforced here and in TS `findDuplicateProfileId`.
+//! Profile-id uniqueness is enforced here and in TS `findDuplicateProfileId`; temperature bounds, below.
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
@@ -9,9 +9,9 @@ use crate::app::error::{error_codes, AppError};
 
 use crate::domain::ai::AIProfile;
 
-/// Accepted `assistant.temperature` range. Covers the common bounds of the
-/// supported providers (openrouter, deepseek, ollama, lmstudio, opencodeGo/Zen, ollamaCloud); adjust
-/// here if a provider legitimately needs a wider range.
+/// Accepted `assistant.temperature` range. TS twins, to change together: `assistantSettingsValidation` and
+/// `assistantSettingsFormSchema` (`libs/ai/src/lib/settings.ts`), `chatInputSchema` (`libs/ai/src/lib/generation.ts`),
+/// and the slider in `libs/assistant-react/src/lib/ui/assistant-settings.tsx`.
 const ASSISTANT_TEMPERATURE_RANGE: std::ops::RangeInclusive<f64> = 0.0..=2.0;
 
 /// Default value for `assistant.temperature`, applied by serde when the field is
