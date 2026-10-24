@@ -10,8 +10,12 @@ import { describe, expect, it, vi } from "vitest";
 import { AssistantCardsTable } from "./assistant-cards-table";
 import { useAssistantCardsTable } from "./use-assistant-cards-table";
 import { makeConversation, makeRun } from "../state/assistant-conversation.fixtures";
-import { conversationsAtom, currentConversationIdAtom } from "../state/conversation-store";
-import type { CardStatus } from "../state/conversation-types";
+import {
+  conversationsAtom,
+  currentConversationIdAtom,
+  dispatchToConversationOnStore,
+} from "../state/conversation-store";
+import type { CardStatus, ConversationReducerState } from "../state/conversation-types";
 import { testId } from "../../test/test-helpers";
 
 const template = {
@@ -205,52 +209,97 @@ describe("AssistantCardsTable selection", () => {
     expect(mutate).toHaveBeenCalledOnce();
   });
 
-  it("settles add statuses on the originating conversation after switching away", async () => {
-    let resolveMutate!: (value: InsertCardsResponse) => void;
-    const mutate = vi.fn(
-      () =>
-        new Promise<InsertCardsResponse>((resolve) => {
-          resolveMutate = resolve;
-        }),
-    );
-
-    const store = createStore();
-    store.set(
-      queriesAtom as unknown as Parameters<typeof store.set>[0],
-      {
-        addCardsMutation: () => ({ mutationFn: mutate }),
-      } as unknown as Queries,
-    );
-    const cards = [makeCard("Front A")];
-    store.set(currentConversationIdAtom, "A");
-    store.set(conversationsAtom, {
+  it("settles Add on the originating conversation after the table unmounts", async () => {
+    const add = gatedAdd();
+    const store = conversationsStore(add.mutate, {
       A: makeConversation("A", {
-        runs: { r1: { ...makeRun("r1", "success"), cards, cardStatuses: { 0: "idle" } } },
+        runs: { r1: { ...makeRun("r1", "success"), cards: [makeCard("Front A")], cardStatuses: { 0: "idle" } } },
       }),
       B: makeConversation("B"),
     });
+    const queryClient = new QueryClient({ defaultOptions: { mutations: { retry: false } } });
+    const invalidate = vi.spyOn(queryClient, "invalidateQueries");
+    const { unmount } = renderProbeOn(store, queryClient);
 
-    const Wrapper = ({ children }: WrapperProps) => (
-      <QueryClientProvider client={new QueryClient({ defaultOptions: { mutations: { retry: false } } })}>
-        <JotaiProvider store={store}>{children}</JotaiProvider>
-      </QueryClientProvider>
-    );
-
-    render(<SelectionProbe />, { wrapper: Wrapper });
     fireEvent.click(screen.getByTestId("add"));
-
     expect(store.get(conversationsAtom)["A"]?.runs["r1"]?.cardStatuses[0]).toBe("pending");
-    await waitFor(() => expect(mutate).toHaveBeenCalledOnce());
+    await waitFor(() => expect(add.mutate).toHaveBeenCalledOnce());
 
+    // Switch away, which unmounts the table, then let the host answer.
     store.set(currentConversationIdAtom, "B");
-    resolveMutate([{}]);
+    unmount();
+    add.resolve([{}]);
 
     await waitFor(() => {
       expect(store.get(conversationsAtom)["A"]?.runs["r1"]?.cardStatuses[0]).toBe("success");
     });
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: queryKeys.cards.deck({ deckId: testId(1) }) });
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: queryKeys.lessons.all() });
     expect(store.get(conversationsAtom)["B"]?.runs["r1"]).toBeUndefined();
   });
+
+  it("drops a late Add result once a retry has cleared the run's cards", async () => {
+    const add = gatedAdd();
+    const store = conversationsStore(add.mutate, {
+      A: makeConversation("A", {
+        runs: {
+          r1: {
+            ...makeRun("r1", "canceled"),
+            reason: "user",
+            cards: [makeCard("Front A")],
+            cardStatuses: { 0: "idle" },
+          },
+        },
+      }),
+    });
+    const queryClient = new QueryClient({ defaultOptions: { mutations: { retry: false } } });
+    const invalidate = vi.spyOn(queryClient, "invalidateQueries");
+    renderProbeOn(store, queryClient);
+
+    fireEvent.click(screen.getByTestId("add"));
+    await waitFor(() => expect(add.mutate).toHaveBeenCalledOnce());
+
+    // Retry reuses the run id and clears its cards before the host answers.
+    dispatchToConversationOnStore(store, "A", ["restartRun", { runId: "r1" }]);
+    add.resolve([{}]);
+
+    await waitFor(() => expect(invalidate).toHaveBeenCalled());
+    expect(store.get(conversationsAtom)["A"]?.runs["r1"]?.cardStatuses).toEqual({});
+  });
 });
+
+function gatedAdd() {
+  let resolve!: (value: InsertCardsResponse) => void;
+  const mutate = vi.fn<AddCards>(
+    () =>
+      new Promise<InsertCardsResponse>((settle) => {
+        resolve = settle;
+      }),
+  );
+  return { mutate, resolve: (value: InsertCardsResponse) => resolve(value) };
+}
+
+function conversationsStore(mutate: AddCards, conversations: Record<string, ConversationReducerState>) {
+  const store = createStore();
+  store.set(
+    queriesAtom as unknown as Parameters<typeof store.set>[0],
+    {
+      addCardsMutation: () => ({ mutationFn: mutate }),
+    } as unknown as Queries,
+  );
+  store.set(currentConversationIdAtom, Object.keys(conversations)[0] ?? null);
+  store.set(conversationsAtom, conversations);
+  return store;
+}
+
+function renderProbeOn(store: ReturnType<typeof createStore>, queryClient: QueryClient) {
+  const Wrapper = ({ children }: WrapperProps) => (
+    <QueryClientProvider client={queryClient}>
+      <JotaiProvider store={store}>{children}</JotaiProvider>
+    </QueryClientProvider>
+  );
+  return render(<SelectionProbe />, { wrapper: Wrapper });
+}
 
 function SelectionProbe() {
   const conversationId = useAtomValue(currentConversationIdAtom);
@@ -281,23 +330,8 @@ function mountProbe(
   mutate: AddCards = addAll,
   queryClient = new QueryClient(),
 ) {
-  const store = createStore();
-  store.set(
-    queriesAtom as unknown as Parameters<typeof store.set>[0],
-    {
-      addCardsMutation: () => ({ mutationFn: mutate }),
-    } as unknown as Queries,
-  );
   const run = { ...makeRun("r1", "success"), cards, cardStatuses };
-  store.set(currentConversationIdAtom, "c1");
-  store.set(conversationsAtom, { c1: makeConversation("c1", { runs: { r1: run } }) });
-
-  const Wrapper = ({ children }: WrapperProps) => (
-    <QueryClientProvider client={queryClient}>
-      <JotaiProvider store={store}>{children}</JotaiProvider>
-    </QueryClientProvider>
-  );
-
-  render(<SelectionProbe />, { wrapper: Wrapper });
+  const store = conversationsStore(mutate, { c1: makeConversation("c1", { runs: { r1: run } }) });
+  renderProbeOn(store, queryClient);
   return store;
 }

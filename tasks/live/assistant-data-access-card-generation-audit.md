@@ -361,7 +361,7 @@ Decision: decided (open question 3); fixed by items 21 and 22.
   Commit: Type the add mocks as the host's per-card response
   Depends on: none
 
-- [ ] 2. Settle Add from the mutation promise so statuses survive unmount
+- [x] 2. Settle Add from the mutation promise so statuses survive unmount
   Goal: In `libs/assistant-react/src/lib/ui/use-assistant-cards-table.tsx`, `handleAddCards` passes its settle and
   invalidate callbacks to `mutation.mutate` (`:130-148`).
   TanStack runs those callbacks only while the table is mounted, so a conversation switch or a route change drops them:

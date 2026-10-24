@@ -1,16 +1,16 @@
 import type { GeneratedCard } from "@koloda/ai";
 import { queriesAtom, queryKeys } from "@koloda/core-react";
-import type { Deck, Template } from "@koloda/srs";
+import type { Deck, InsertCardsResponse, Template } from "@koloda/srs";
 import { transformGeneratedCards } from "@koloda/srs";
 import { Table, createSelectionColumnHelper, useSelectionTable } from "@koloda/ui";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useAtomValue, useSetAtom } from "jotai";
+import { useAtomValue, useSetAtom, useStore } from "jotai";
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { AssistantCardsTableSelectCell } from "./assistant-cards-table-select-cell";
 import { AssistantCardsTableSelectHeader } from "./assistant-cards-table-select-header";
 import { setAssistantCardStatusAtom } from "../state/conversation-actions";
 import type { CardStatus } from "../state/conversation-types";
-import { currentConversationIdAtom } from "../state/conversation-store";
+import { conversationsAtom, currentConversationIdAtom } from "../state/conversation-store";
 
 export type CardWithStatus = GeneratedCard & { status: CardStatus };
 
@@ -33,6 +33,7 @@ export function useAssistantCardsTable(options: UseAssistantCardsTableOptions) {
   const mutation = useMutation(addCardsMutation());
   const setCardStatus = useSetAtom(setAssistantCardStatusAtom);
   const conversationId = useAtomValue(currentConversationIdAtom);
+  const store = useStore();
 
   const cardsWithStatus: CardWithStatus[] = useMemo(
     () => cards.map((card, index) => ({ ...card, status: cardStatuses[index] ?? "idle" })),
@@ -112,7 +113,7 @@ export function useAssistantCardsTable(options: UseAssistantCardsTableOptions) {
   const hasSelection = selectedIndices.length > 0;
   const isAdding = mutation.isPending;
 
-  const handleAddCards = useCallback(() => {
+  const handleAddCards = useCallback(async () => {
     if (!conversationId || !template || !deckId || !templateId || selectedIndices.length === 0) return;
 
     const cardsToCreate = selectedIndices
@@ -127,36 +128,46 @@ export function useAssistantCardsTable(options: UseAssistantCardsTableOptions) {
       setCardStatus({ conversationId, runId, index, status: "pending" });
     }
 
-    mutation.mutate(cardsToCreate, {
-      onSuccess: (response) => {
-        queryClient.invalidateQueries({ queryKey: queryKeys.cards.deck({ deckId }) });
-        queryClient.invalidateQueries({ queryKey: queryKeys.lessons.all() });
-        for (let i = 0; i < selectedIndices.length; i++) {
-          const index = selectedIndices[i];
-          const result = response[i];
-          setCardStatus({ conversationId, runId, index, status: result?.error ? "error" : "success" });
-        }
-        // WORKAROUND: Success rows are no longer selectable, and v9 deselect
-        // keeps non-selectable rows unless deselectAll clears the whole map.
-        table.toggleAllRowsSelected(false, { deselectAll: true });
-      },
-      onError: () => {
-        for (const index of selectedIndices) {
-          setCardStatus({ conversationId, runId, index, status: "error" });
-        }
-      },
-    });
+    // INVARIANT: retry reuses the run id and clears its cards, so a late result
+    // writes a row only while the run still holds the very card that was sent.
+    const sent = selectedIndices.map((index) => ({ index, card: cards[index] }));
+    const settle = ({ index, card }: (typeof sent)[number], status: CardStatus) => {
+      const run = store.get(conversationsAtom)[conversationId]?.runs[runId];
+      if (run?.cards[index] !== card || run.cardStatuses[index] !== "pending") return;
+      setCardStatus({ conversationId, runId, index, status });
+    };
+
+    // WHY: settle from the promise, not per-call `mutate` callbacks. TanStack
+    // drops those once the table unmounts (conversation switch, route change),
+    // which left rows pending and the deck caches stale.
+    let response: InsertCardsResponse;
+    try {
+      response = await mutation.mutateAsync(cardsToCreate);
+    } catch {
+      for (const entry of sent) settle(entry, "error");
+      return;
+    }
+    queryClient.invalidateQueries({ queryKey: queryKeys.cards.deck({ deckId }) });
+    queryClient.invalidateQueries({ queryKey: queryKeys.lessons.all() });
+    for (const [i, entry] of sent.entries()) {
+      settle(entry, response[i]?.error ? "error" : "success");
+    }
+    // WORKAROUND: Success rows are no longer selectable, and v9 deselect
+    // keeps non-selectable rows unless deselectAll clears the whole map.
+    table.toggleAllRowsSelected(false, { deselectAll: true });
   }, [
     conversationId,
     runId,
     template,
     selectedIndices,
+    cards,
     cardsWithStatus,
     deckId,
     templateId,
     mutation,
     queryClient,
     setCardStatus,
+    store,
     table,
   ]);
 
