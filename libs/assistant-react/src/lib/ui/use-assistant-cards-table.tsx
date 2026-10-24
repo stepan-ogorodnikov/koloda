@@ -1,7 +1,6 @@
 import type { GeneratedCard } from "@koloda/ai";
 import { queriesAtom, queryKeys } from "@koloda/core-react";
 import type { Deck, InsertCardsResponse, Template, TemplateFields } from "@koloda/srs";
-import { transformGeneratedCards } from "@koloda/srs";
 import { Table, createSelectionColumnHelper, useSelectionTable } from "@koloda/ui";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAtomValue, useSetAtom, useStore } from "jotai";
@@ -117,8 +116,7 @@ export function useAssistantCardsTable(options: UseAssistantCardsTableOptions) {
     const cardsToCreate = selectedIndices
       .map((index) => cardsWithStatus[index])
       .filter((card): card is NonNullable<typeof card> => card !== undefined)
-      .map((card) => transformGeneratedCards([card], deckId, templateId))
-      .flat();
+      .map((card) => ({ deckId, templateId, content: card.content }));
 
     if (cardsToCreate.length === 0) return;
 

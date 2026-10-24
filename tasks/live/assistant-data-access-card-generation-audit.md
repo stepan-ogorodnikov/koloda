@@ -444,7 +444,7 @@ Decision: decided (open question 3); fixed by items 21 and 22.
   Commit: Pass the saved template fields to the cards table and serializer
   Depends on: 2, 3
 
-- [ ] 6. Inline the card insert payload and drop srs's AI dependency
+- [x] 6. Inline the card insert payload and drop srs's AI dependency
   Goal: `ui/use-assistant-cards-table.tsx:118-122` calls `transformGeneratedCards([card], deckId, templateId)` once per card
   and flattens the result (C8).
   The helper (`libs/srs/src/lib/assistant-cards-generation.ts` and its test, exported at `libs/srs/src/index.ts:22`) is the

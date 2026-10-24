@@ -19,7 +19,6 @@ export type {
 } from "./lib/algorithms";
 export { DEFAULT_FSRS_ALGORITHM, FSRS_GRADES, LEARNING_STEPS_UNITS } from "./lib/algorithms-fsrs";
 export type { AlgorithmFSRS } from "./lib/algorithms-fsrs";
-export { transformGeneratedCards } from "./lib/assistant-cards-generation";
 export {
   ATTACHMENT_MAX_BYTES,
   ATTACHMENT_MIMES,

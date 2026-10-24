@@ -1,14 +1,14 @@
 # @koloda/srs
 
 SRS domain logic: zod schemas, FSRS integration, lesson/review rules,
-markdown helpers, and pure transforms from AI card output to insert DTOs.
+and markdown helpers.
 Framework-agnostic — no React, no DB access, no conversation state.
 
 ## Where it sits
 
 Consumed by `@koloda/db-sqlite` (repo validation), `@koloda/srs-react`,
 `@koloda/assistant-react`, `@koloda/core-react` (query types), and app query layers.
-Depends on `@koloda/app`, `@koloda/settings`, and `@koloda/ai`.
+Depends on `@koloda/app` and `@koloda/settings`.
 Desktop mirrors live in `crates/koloda/src/domain/`; keep TS and Rust aligned when fields change.
 
 ## Architectural Map
@@ -23,7 +23,6 @@ Desktop mirrors live in `crates/koloda/src/domain/`; keep TS and Rust aligned wh
 - Progress: `progress.ts` — shared progress-field bounds, error-code maps, and validation for cards and reviews.
 - Attachments: `attachments.ts` — attachment meta and add schemas, magic-byte format sniffing, size cap, ref pattern.
 - Markdown: `markdown.ts` — `markdownToHtml` (marked + DOMPurify); attachment refs render as `<img data-attachment-id>`.
-- AI bridge (pure): `assistant-cards-generation.ts` — `transformGeneratedCards()` (`GeneratedCard` → `InsertCardData`).
 
 ### Does NOT own (prevent scope creep)
 

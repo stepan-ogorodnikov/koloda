@@ -31,9 +31,6 @@
   "include": ["src/**/*.ts"],
   "references": [
     {
-      "path": "../ai/tsconfig.lib.json"
-    },
-    {
       "path": "../app/tsconfig.lib.json"
     },
     {
