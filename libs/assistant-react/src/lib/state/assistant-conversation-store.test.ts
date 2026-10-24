@@ -496,13 +496,7 @@ describe("updatedAt stamping (only on run start)", () => {
     const ts = seedUpdatedAt(store, "A");
     advanceClock();
 
-    dispatchTo(store, "A", [
-      "restartRun",
-      {
-        runId: "r1",
-        templateFields: null,
-      },
-    ]);
+    dispatchTo(store, "A", ["restartRun", { runId: "r1" }]);
     expect(store.get(conversationsAtom)["A"]!.updatedAt!.getTime()).toBe(ts + CLOCK_STEP_MS);
   });
 
@@ -512,7 +506,7 @@ describe("updatedAt stamping (only on run start)", () => {
     action: ConversationReducerAction;
     /** Conversation fixture overrides (commitRevert needs pre-existing messages + a finished run). */
     buildOverrides?: Partial<ConversationReducerState>;
-    /** Overrides the default seedUpdatedAt baseline (addCard self-seeds via its own startRun). */
+    /** Overrides the default seedUpdatedAt baseline (addToolCall self-seeds via its own startRun). */
     baseline?: (store: ReturnType<typeof createStore>) => number;
     /** Setup dispatch after baseline capture, before advanceClock (commitRevert arms revert state first). */
     prefixDispatch?: (store: ReturnType<typeof createStore>) => void;
@@ -523,7 +517,7 @@ describe("updatedAt stamping (only on run start)", () => {
   // timestamp exactly as the last run-start left it. One table keeps that negative
   // surface exhaustive without nine copy-pasted tests. Rows deliberately preserve the
   // original runIds ("seed" vs "r1") and payload shapes; per-row hooks exist only where
-  // the setup genuinely differs (addCard captures its own startRun bump as baseline;
+  // the setup genuinely differs (addToolCall captures its own startRun bump as baseline;
   // commitRevert needs revert state armed before the timed dispatch).
   const negativeCases: UpdatedAtNegativeCase[] = [
     {
@@ -531,8 +525,8 @@ describe("updatedAt stamping (only on run start)", () => {
       action: ["updateAssistantText", { runId: "seed", text: "chunk" }],
     },
     {
-      label: "addCard (streaming chunk)",
-      action: ["addCard", { runId: "r1", card: { content: {} } }],
+      label: "addToolCall (streaming chunk)",
+      action: ["addToolCall", { runId: "r1", call: { id: "call-1", name: "list_decks", input: {} } }],
       baseline: (store) => {
         dispatchTo(store, "A", ["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]);
         return store.get(conversationsAtom)["A"]!.updatedAt!.getTime();

@@ -11,6 +11,35 @@ function testId(n: number): string {
   return `01900000-0000-7000-8000-${n.toString(16).padStart(12, "0")}`;
 }
 
+const proposeOutput = {
+  deckId: testId(5),
+  deckTitle: "Spanish verbs",
+  templateId: testId(1),
+  templateFields: [
+    { id: testId(10), title: "Front", type: "text", isRequired: true },
+    { id: testId(11), title: "Back", type: "markdown", isRequired: true },
+    { id: testId(12), title: "Hint", type: "text", isRequired: false },
+  ],
+  cards: [{ fields: { Front: "hola", Back: "hello", Hint: "greeting" } }],
+  rejectedCount: 0,
+};
+
+function withProposeCall(
+  state: ConversationReducerState,
+  callId: string,
+  output: unknown,
+  error?: unknown,
+): ConversationReducerState {
+  const next = conversationReducer(state, [
+    "addToolCall",
+    { runId: "r1", call: { id: callId, name: "propose_cards", input: { deckId: testId(5), cards: [] } } },
+  ]);
+  return conversationReducer(next, [
+    "setToolCallResult",
+    error !== undefined ? { runId: "r1", callId, error } : { runId: "r1", callId, output },
+  ]);
+}
+
 describe("conversationReducer", () => {
   describe("submitTurn", () => {
     it("creates a new run with streaming status and sets activeRunId", () => {
@@ -36,23 +65,6 @@ describe("conversationReducer", () => {
       vi.useRealTimers();
     });
 
-    it("stamps templateFields when provided", () => {
-      const fields = [{ id: testId(1), title: "Front", type: "text" as const, isRequired: true }];
-
-      const state = conversationReducer(initialConversationState, [
-        "submitTurn",
-        {
-          runId: "r1",
-          text: "hello",
-          kind: "chat-text",
-          assistantText: "",
-          templateFields: fields,
-        },
-      ]);
-
-      expect(state.runs["r1"].templateFields).toEqual(fields);
-    });
-
     it("leaves modelName undefined when not provided", () => {
       const state = conversationReducer(initialConversationState, [
         "submitTurn",
@@ -74,22 +86,6 @@ describe("conversationReducer", () => {
       ]);
 
       expect(state.runs["r1"].dataAccess).toBeUndefined();
-    });
-  });
-
-  describe("addCard", () => {
-    it("adds a card to the run's cards array and seeds idle status", () => {
-      let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
-      state = conversationReducer(state, [
-        "addCard",
-        {
-          runId: "r1",
-          card: { content: { "1": { text: "Front" } } },
-        },
-      ]);
-      expect(state.runs["r1"].cards).toHaveLength(1);
-      expect(state.runs["r1"].cards[0].content["1"].text).toBe("Front");
-      expect(state.runs["r1"].cardStatuses).toEqual({ 0: "idle" });
     });
   });
 
@@ -388,35 +384,6 @@ describe("conversationReducer", () => {
 
       expect(next).toEqual(state);
     });
-
-    const proposeOutput = {
-      deckId: testId(5),
-      deckTitle: "Spanish verbs",
-      templateId: testId(1),
-      templateFields: [
-        { id: testId(10), title: "Front", type: "text", isRequired: true },
-        { id: testId(11), title: "Back", type: "markdown", isRequired: true },
-        { id: testId(12), title: "Hint", type: "text", isRequired: false },
-      ],
-      cards: [{ fields: { Front: "hola", Back: "hello", Hint: "greeting" } }],
-      rejectedCount: 0,
-    };
-
-    function withProposeCall(
-      state: ConversationReducerState,
-      callId: string,
-      output: unknown,
-      error?: unknown,
-    ): ConversationReducerState {
-      const next = conversationReducer(state, [
-        "addToolCall",
-        { runId: "r1", call: { id: callId, name: "propose_cards", input: { deckId: testId(5), cards: [] } } },
-      ]);
-      return conversationReducer(next, [
-        "setToolCallResult",
-        error !== undefined ? { runId: "r1", callId, error } : { runId: "r1", callId, output },
-      ]);
-    }
 
     it("maps a successful propose_cards output onto run cards, templateFields, and write targets", () => {
       let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
@@ -805,19 +772,8 @@ describe("conversationReducer", () => {
       vi.useFakeTimers();
       vi.setSystemTime(0);
 
-      let state = reduce([
-        [
-          "submitTurn",
-          {
-            runId: "r1",
-            text: "hello",
-            kind: "chat-text",
-            assistantText: "",
-            templateFields: [{ id: testId(1), title: "Front", type: "text" as const, isRequired: true }],
-          },
-        ],
-        ["addCard", { runId: "r1", card: { content: {} } }],
-      ]);
+      let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
+      state = withProposeCall(state, "call-1", proposeOutput);
       state = conversationReducer(state, ["runFailed", { runId: "r1", error: { message: "boom" } }]);
 
       vi.setSystemTime(10_000);
@@ -839,18 +795,9 @@ describe("conversationReducer", () => {
 
     it("restart of a successful run is a no-op", () => {
       let state = reduce([
-        [
-          "submitTurn",
-          {
-            runId: "r1",
-            text: "hello",
-            kind: "chat-text",
-            assistantText: "good answer",
-            templateFields: [{ id: testId(1), title: "Front", type: "text" as const, isRequired: true }],
-          },
-        ],
-        ["addCard", { runId: "r1", card: { content: {} } }],
+        ["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "good answer" }],
       ]);
+      state = withProposeCall(state, "call-1", proposeOutput);
       state = conversationReducer(state, ["completeRun", { runId: "r1" }]);
       expect(state.runs["r1"].status).toBe("success");
       expect(state.activeRunId).toBeNull();

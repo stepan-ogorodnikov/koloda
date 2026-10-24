@@ -405,7 +405,7 @@ Decision: decided (open question 3); fixed by items 21 and 22.
   Commit: Show the unavailable notice when the write-target deck is gone
   Depends on: none
 
-- [ ] 4. Remove cards-mode leftovers from the reducer and run payloads
+- [x] 4. Remove cards-mode leftovers from the reducer and run payloads
   Goal: Two leftovers of cards mode (C5, C6).
   (a) `addCard` is in the reducer action table (`libs/assistant-react/src/lib/state/conversation-reducer.ts:30`, import
   `:12`), but only tests dispatch it.

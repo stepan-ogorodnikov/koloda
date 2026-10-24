@@ -1,4 +1,3 @@
-import type { TemplateFields } from "@koloda/srs";
 import type { TextUIPart } from "ai";
 import type { ConversationReducerState } from "./conversation-types";
 import { isReasoningActivity } from "./conversation-types";
@@ -89,13 +88,12 @@ export function appendAssistantReasoning(draft: ConversationReducerState, payloa
 
 type StartRunPayload = {
   runId: string;
-  templateFields?: TemplateFields | null;
   modelName?: string;
 };
 
 function startRun(draft: ConversationReducerState, payload: StartRunPayload) {
   draft.activeRunId = payload.runId;
-  draft.runs[payload.runId] = makeRun(payload.runId, payload.templateFields, payload.modelName);
+  draft.runs[payload.runId] = makeRun(payload.runId, payload.modelName);
 }
 
 type SubmitTurnPayload = {
@@ -103,7 +101,6 @@ type SubmitTurnPayload = {
   text: string;
   kind: "chat-text";
   assistantText: string;
-  templateFields?: TemplateFields | null;
   modelName?: string;
 };
 
@@ -114,7 +111,6 @@ export function submitTurn(draft: ConversationReducerState, payload: SubmitTurnP
   addUserMessage(draft, { runId: payload.runId, text: payload.text });
   startRun(draft, {
     runId: payload.runId,
-    templateFields: payload.templateFields,
     modelName: payload.modelName,
   });
   addAssistantMessage(draft, {

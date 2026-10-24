@@ -1,4 +1,3 @@
-import type { TemplateFields } from "@koloda/srs";
 import type { UIMessage } from "ai";
 import type { AssistantRun, ConversationReducerState, RevertState } from "./conversation-types";
 import { isReasoningActivity } from "./conversation-types";
@@ -15,18 +14,14 @@ export function getVisibleMessages(messages: UIMessage[], revertState: RevertSta
   return messages.slice(0, userMessageIndex);
 }
 
-export function makeRun(
-  runId: string,
-  templateFields: TemplateFields | null | undefined,
-  modelName?: string,
-): AssistantRun {
+export function makeRun(runId: string, modelName?: string): AssistantRun {
   return {
     id: runId,
     status: "streaming",
     cards: [],
     cardStatuses: {},
     toolCalls: [],
-    templateFields: templateFields ?? null,
+    templateFields: null,
     startedAt: new Date(),
     elapsedSeconds: null,
     modelName,

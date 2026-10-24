@@ -9,7 +9,7 @@ import {
   submitTurn,
   updateAssistantText,
 } from "./conversation-run-stream";
-import { addCard, addToolCall, setCardStatus, setToolCallResult } from "./conversation-run-tools";
+import { addToolCall, setCardStatus, setToolCallResult } from "./conversation-run-tools";
 import {
   commitRevert,
   dismissRunError,
@@ -27,7 +27,6 @@ const actions = {
   appendAssistantReasoning,
   submitTurn,
   rollbackSubmitTurn,
-  addCard,
   setCardStatus,
   addToolCall,
   setToolCallResult,

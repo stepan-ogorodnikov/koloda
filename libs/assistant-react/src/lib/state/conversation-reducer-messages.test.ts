@@ -263,10 +263,11 @@ describe("conversationReducer", () => {
 
   describe("setCardStatus", () => {
     it("updates the status of a card by index", () => {
-      let state = reduce([
-        ["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }],
-        ["addCard", { runId: "r1", card: { content: {} } }],
-      ]);
+      let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
+      state = {
+        ...state,
+        runs: { r1: { ...state.runs["r1"], cards: [{ content: {} }], cardStatuses: { 0: "idle" } } },
+      };
       state = conversationReducer(state, ["setCardStatus", { runId: "r1", index: 0, status: "success" }]);
       expect(state.runs["r1"].cardStatuses).toEqual({ 0: "success" });
     });
