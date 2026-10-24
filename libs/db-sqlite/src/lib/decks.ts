@@ -30,8 +30,9 @@ export async function addDeck(db: DB, data: InsertDeckData) {
     const payload = insertDeckSchema.parse(data);
 
     // WHY: one lock hold for the whole add, so a read issued once the add has
-    // started queues behind the insert. The assistant's deck refresh after a
-    // canceled add_deck relies on it, as desktop's single worker thread gives.
+    // started sees the new deck — the order desktop's single worker thread gives.
+    // It backs the assistant's deck refresh when a run ends mid add_deck; today
+    // the web run ends only after this call returns, so that refresh does not need it.
     return db.transaction(async (tx) => {
       const algorithm = await getAlgorithm(tx, payload.algorithmId);
       if (!algorithm) throw new AppError("not-found.decks.add.algorithm", `Algorithm id: ${payload.algorithmId}`);

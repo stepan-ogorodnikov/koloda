@@ -50,9 +50,11 @@ export function notifyAddDeckWritten(store: AssistantJotaiStore, event: Assistan
 // abort signal only before the host call, and the runtime drops the result
 // after an abort, so the deck may exist with no recorded success. Read the run
 // before the terminal event marks the call failed.
-// INVARIANT: the refetch lands after the write only because both hosts run data
-// calls in call order — the desktop addon on one worker thread, web SQLite
-// behind one lock that `addDeck` holds for its whole call.
+// INVARIANT: the refetch must land after the write. Web ends the run only once
+// the host call settles (the AI SDK waits for it), so the deck is written by then.
+// Desktop ends the run at once; the addon's single worker thread orders the
+// refetch behind a write main has already queued. A desktop cancel during
+// add_deck's earlier reads can still refetch before the write lands.
 export function notifyAddDeckStillRunning(store: AssistantJotaiStore, event: AssistantEvent): void {
   if (event.type !== "runTerminated") return;
   const run = store.get(conversationsAtom)[event.conversationId]?.runs[event.runId];

@@ -342,6 +342,16 @@ Decision: decided (open question 3); fixed by items 21 and 22.
   cache refresh is item 10. (Human, 2026-10-24.)
 - [x] 5. Flow — `local` (the default) or `remote` (CI on every push)?
   Decided: `local`. (Human, 2026-10-24: go with the recommendation.)
+- [ ] 6. D4 residual on desktop — item 10's deck refresh can still miss the deck. — open
+  Self-review found that `add_deck`'s executor reads templates, settings, and algorithms before it calls `createDeck`.
+  Web is safe: the AI SDK ends an aborted stream only once the host call settles, so the run ends after the write.
+  Desktop is not: the renderer ends the run on cancel at once, before main has queued the write.
+  A cancel during those reads refetches the deck list first and caches it for the 60 s `staleTime`.
+  The row reads Canceled (item 23), and the deck shows after the cache goes stale or on the next deck change.
+  Options: (a) stop `add_deck` before `createDeck` once the run is canceled, which needs the abort signal in the
+  executor; (b) have main report the finished write to the renderer after a cancel (IPC contract change);
+  (c) accept the gap.
+  Recommendation: (a). A canceled request then creates no deck, and the refresh covers the only write left in flight.
 
 ## Plan
 
