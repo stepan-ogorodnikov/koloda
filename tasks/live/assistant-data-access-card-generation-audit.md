@@ -482,7 +482,7 @@ Decision: decided (open question 3); fixed by items 21 and 22.
   Commit: Keep card selection in one spec section and cite headings in e2e
   Depends on: 3
 
-- [ ] 8. Keep tool-row counts and titles when a long output is shortened
+- [x] 8. Keep tool-row counts and titles when a long output is shortened
   Goal: The spec's §Visibility (`docs/specs/ASSISTANT-DATA-ACCESS.md:167-173`) requires a successful row to show how many
   came back, or the deck or template title (D1).
   `boundToolOutput` (`libs/assistant-react/src/lib/state/conversation-run-tools.ts:74-92`) replaces any output over 2,000

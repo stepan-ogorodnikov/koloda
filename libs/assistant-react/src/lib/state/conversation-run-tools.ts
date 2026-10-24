@@ -70,6 +70,7 @@ export function setToolCallResult(draft: ConversationReducerState, payload: SetT
 // grow the blob unboundedly.
 const MAX_TOOL_OUTPUT_CHARS = 2000;
 const MAX_TOOL_OUTPUT_PREVIEW_CHARS = 400;
+const LIST_OUTPUT_KEYS = ["decks", "templates", "algorithms"] as const;
 
 export function boundToolOutput(output: unknown): unknown {
   if (output === null || typeof output !== "object") return output;
@@ -79,9 +80,15 @@ export function boundToolOutput(output: unknown): unknown {
   const totalCards = record.totalCards;
   const rejectedCount = record.rejectedCount;
   const cards = record.cards;
+  const title = record.title;
+  const list = LIST_OUTPUT_KEYS.map((key) => record[key]).find(Array.isArray);
   return {
     isTruncated: true,
-    itemCount: Array.isArray(output) ? output.length : Object.keys(output).length,
+    // WHY: tool rows headline a list tool's count and a get/add tool's title
+    // (spec Visibility), so the bounded record keeps both. The list is named, not
+    // found by key order; without one, the key count only marks the shape.
+    itemCount: Array.isArray(output) ? output.length : (list?.length ?? Object.keys(output).length),
+    ...(typeof title === "string" ? { title } : {}),
     ...(typeof totalCards === "number" && Number.isFinite(totalCards) ? { totalCards } : {}),
     // WHY: both card-tool headlines count the returned cards, not the deck's
     // total. Keep that count and proposal drops when truncating (spec Visibility).

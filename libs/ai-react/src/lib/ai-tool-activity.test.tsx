@@ -52,19 +52,43 @@ describe("AIToolActivity", () => {
       countLabel: "ai.chat.tool-activity.algorithms",
       count: 2,
     },
-  ])("renders a $name success row from the array length", ({ name, label, output, countLabel, count }) => {
-    plural.mockClear();
-    render(<AIToolActivity calls={[call({ id: "c1", name, status: "success", output })]} />);
+    {
+      name: "list_decks",
+      label: "ai.chat.tool-activity.list-decks",
+      output: { isTruncated: true, itemCount: 14, preview: '{"decks":[' },
+      countLabel: "ai.chat.tool-activity.decks",
+      count: 14,
+    },
+    {
+      name: "list_templates",
+      label: "ai.chat.tool-activity.list-templates",
+      output: { isTruncated: true, itemCount: 9, preview: '{"templates":[' },
+      countLabel: "ai.chat.tool-activity.templates",
+      count: 9,
+    },
+    {
+      name: "list_algorithms",
+      label: "ai.chat.tool-activity.list-algorithms",
+      output: { isTruncated: true, itemCount: 6, preview: '{"algorithms":[' },
+      countLabel: "ai.chat.tool-activity.algorithms",
+      count: 6,
+    },
+  ])(
+    "renders a $name success row from the list length (count $count)",
+    ({ name, label, output, countLabel, count }) => {
+      plural.mockClear();
+      render(<AIToolActivity calls={[call({ id: "c1", name, status: "success", output })]} />);
 
-    expect(screen.getByText(label)).toBeTruthy();
-    expect(plural.mock.calls).toEqual([[count, { other: countLabel }]]);
-    expect(screen.getByText(countLabel)).toBeTruthy();
-    expect(activityDots(screen.getByRole("button", { name: new RegExp(label.replaceAll(".", "\\.")) }))).toHaveLength(
-      1,
-    );
-    expect(screen.queryByLabelText("ai.chat.tool-activity.running")).toBeNull();
-    expect(screen.queryByLabelText("ai.chat.tool-activity.failed")).toBeNull();
-  });
+      expect(screen.getByText(label)).toBeTruthy();
+      expect(plural.mock.calls).toEqual([[count, { other: countLabel }]]);
+      expect(screen.getByText(countLabel)).toBeTruthy();
+      expect(activityDots(screen.getByRole("button", { name: new RegExp(label.replaceAll(".", "\\.")) }))).toHaveLength(
+        1,
+      );
+      expect(screen.queryByLabelText("ai.chat.tool-activity.running")).toBeNull();
+      expect(screen.queryByLabelText("ai.chat.tool-activity.failed")).toBeNull();
+    },
+  );
 
   it("renders an add_deck success row with the deck title", () => {
     render(

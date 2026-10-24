@@ -252,15 +252,19 @@ describe("conversationReducer", () => {
       expect(state.runs["r1"].toolCalls?.[0]?.output).toEqual(output);
     });
 
-    it("bounds outputs one char past the persist cap to a summary + preview", () => {
+    it("bounds a list_decks output one char past the persist cap and keeps its deck count", () => {
       let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
       state = conversationReducer(state, [
         "addToolCall",
         { runId: "r1", call: { id: "call-1", name: "list_decks", input: {} } },
       ]);
-      let payload = "";
-      while (JSON.stringify({ decks: payload }).length <= 2000) payload += "x";
-      const output = { decks: payload };
+      const decks = [
+        { deckId: testId(1), title: "Spanish", notes: "" },
+        { deckId: testId(2), title: "German", notes: "" },
+        { deckId: testId(3), title: "French", notes: "" },
+      ];
+      while (JSON.stringify({ decks }).length <= 2000) decks[2].notes += "x";
+      const output = { decks };
       expect(JSON.stringify(output).length).toBe(2001);
 
       state = conversationReducer(state, ["setToolCallResult", { runId: "r1", callId: "call-1", output }]);
@@ -271,9 +275,24 @@ describe("conversationReducer", () => {
         preview: string;
       };
       expect(stored.isTruncated).toBe(true);
-      expect(stored.itemCount).toBe(1);
+      expect(stored.itemCount).toBe(3);
       expect(stored.preview).toHaveLength(400);
       expect(JSON.stringify(stored).length).toBeLessThan(JSON.stringify(output).length);
+    });
+
+    it("keeps the title of a get_deck output it bounds", () => {
+      let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
+      state = conversationReducer(state, [
+        "addToolCall",
+        { runId: "r1", call: { id: "call-1", name: "get_deck", input: { deckId: testId(5) } } },
+      ]);
+      const output = { deckId: testId(5), title: "Spanish verbs", cardCount: 3, notes: "n".repeat(3000) };
+
+      state = conversationReducer(state, ["setToolCallResult", { runId: "r1", callId: "call-1", output }]);
+
+      const stored = state.runs["r1"].toolCalls?.[0]?.output as { isTruncated: boolean; title?: string };
+      expect(stored.isTruncated).toBe(true);
+      expect(stored.title).toBe("Spanish verbs");
     });
 
     it.each([

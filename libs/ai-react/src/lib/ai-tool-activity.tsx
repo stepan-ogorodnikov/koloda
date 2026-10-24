@@ -358,17 +358,17 @@ function toolCallSummaries(call: AIToolCallRecord, translate: I18n["_"]): string
   // WHY: compact counts exist only for these output shapes; unknown tools
   // must stay name-only (commit 5 copy decision / Visibility UI).
   if (call.name === "list_decks") {
-    const deckCount = namedArrayLength(call.output, "decks");
+    const deckCount = namedArrayLength(call.output, "decks") ?? namedInteger(call.output, "itemCount");
     if (deckCount !== null) return [translate(msg`${plural(deckCount, { other: "ai.chat.tool-activity.decks" })}`)];
   }
   if (call.name === "list_templates") {
-    const templateCount = namedArrayLength(call.output, "templates");
+    const templateCount = namedArrayLength(call.output, "templates") ?? namedInteger(call.output, "itemCount");
     if (templateCount !== null) {
       return [translate(msg`${plural(templateCount, { other: "ai.chat.tool-activity.templates" })}`)];
     }
   }
   if (call.name === "list_algorithms") {
-    const algorithmCount = namedArrayLength(call.output, "algorithms");
+    const algorithmCount = namedArrayLength(call.output, "algorithms") ?? namedInteger(call.output, "itemCount");
     if (algorithmCount !== null) {
       return [translate(msg`${plural(algorithmCount, { other: "ai.chat.tool-activity.algorithms" })}`)];
     }
@@ -430,7 +430,8 @@ function namedInteger(value: unknown, key: string): number | null {
 /**
  * Detects the bounded summary the conversation reducer persists for oversized
  * tool payloads: the live full value never reaches the run record, only
- * `{ isTruncated: true, itemCount, preview }` does.
+ * `{ isTruncated: true, itemCount, title?, totalCards?, acceptedCount?, rejectedCount?, preview }` does.
+ * `itemCount` is a list tool's list length, else the payload's key count.
  */
 function boundedToolPayload(value: unknown): { itemCount: number; preview: string } | null {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
