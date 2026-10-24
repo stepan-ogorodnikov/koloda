@@ -119,7 +119,10 @@ describe("AssistantCardsTable selection", () => {
     expect((screen.getByRole("button", { name: "assistant.add" }) as HTMLButtonElement).disabled).toBe(false);
   });
 
-  it("replaces Add with the unavailable notice and drops selection when the template is gone", () => {
+  it.each([
+    ["template", "assistant.template-unavailable"],
+    ["deck", "assistant.deck-unavailable"],
+  ] as const)("replaces Add with the unavailable notice and drops selection when the %s is gone", (target, notice) => {
     render(
       <AssistantCardsTable
         runId="r1"
@@ -130,14 +133,14 @@ describe("AssistantCardsTable selection", () => {
         templateId={1}
         canAdd={true}
         isGenerating={false}
-        isTemplateUnavailable
+        unavailableTarget={target}
       />,
       { wrapper: Wrapper },
     );
 
     expect(screen.queryAllByRole("checkbox")).toHaveLength(0);
     expect(screen.queryByRole("button", { name: "assistant.add" })).toBeNull();
-    expect(screen.getByText("assistant.template-unavailable")).toBeTruthy();
+    expect(screen.getByText(notice)).toBeTruthy();
   });
 
   it("clears idle selection after a successful add so Add stays disabled", async () => {

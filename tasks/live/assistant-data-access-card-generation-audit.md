@@ -386,7 +386,7 @@ Decision: decided (open question 3); fixed by items 21 and 22.
   Commit: Settle Add from the mutation promise so statuses survive unmount
   Depends on: 1
 
-- [ ] 3. Show the unavailable notice when the write-target deck is gone
+- [x] 3. Show the unavailable notice when the write-target deck is gone
   Goal: `libs/assistant-react/src/lib/ui/assistant-cards-message.tsx:31-43` checks only the live template.
   A deleted write-target deck leaves Add enabled, because the renderer's `canAdd`
   (`ui/use-assistant-message-renderer.tsx:112`) reads the stored ids, and every selected card then fails with

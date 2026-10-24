@@ -5,6 +5,7 @@ import type { Deck, Template } from "@koloda/srs";
 import { useQuery } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
 import { AssistantCardsTable } from "./assistant-cards-table";
+import type { AssistantCardsTableProps } from "./assistant-cards-table";
 import type { CardStatus } from "../state/conversation-types";
 
 export type AssistantCardsMessageProps = {
@@ -28,7 +29,13 @@ export function AssistantCardsMessage({
   canAdd,
   isGenerating,
 }: AssistantCardsMessageProps) {
-  const { getTemplateQuery } = useAtomValue(queriesAtom);
+  const { getDeckQuery, getTemplateQuery } = useAtomValue(queriesAtom);
+  const liveDeckQuery = useQuery({
+    ...(deckId !== null
+      ? getDeckQuery(deckId)
+      : { queryKey: ["assistant", "live-deck", "none"] as const, queryFn: async () => null }),
+    enabled: deckId !== null,
+  });
   const liveTemplateQuery = useQuery({
     ...(templateId !== undefined
       ? getTemplateQuery(templateId)
@@ -36,11 +43,16 @@ export function AssistantCardsMessage({
     enabled: templateId !== undefined,
   });
 
-  // WHY: §Card Display — if the write-target template is gone, keep the snapshot
-  // table and mark it unavailable. Missing snapshot is a different case (copy
+  // WHY: §Card Display — if a write target is gone, keep the snapshot table and
+  // mark it unavailable; Add would fail every card. Deck first, the order the
+  // hosts report add errors in. Missing snapshot is a different case (copy
   // falls back to text); do not treat it as this marker.
-  const isTemplateUnavailable =
-    !!template && templateId !== undefined && liveTemplateQuery.isSuccess && liveTemplateQuery.data == null;
+  let unavailableTarget: AssistantCardsTableProps["unavailableTarget"];
+  if (template && deckId !== null && liveDeckQuery.isSuccess && liveDeckQuery.data == null) {
+    unavailableTarget = "deck";
+  } else if (template && templateId !== undefined && liveTemplateQuery.isSuccess && liveTemplateQuery.data == null) {
+    unavailableTarget = "template";
+  }
 
   if (!template) return null;
 
@@ -55,7 +67,7 @@ export function AssistantCardsMessage({
         templateId={templateId}
         canAdd={canAdd}
         isGenerating={isGenerating}
-        isTemplateUnavailable={isTemplateUnavailable}
+        unavailableTarget={unavailableTarget}
       />
     </AIChatMessageLayout>
   );

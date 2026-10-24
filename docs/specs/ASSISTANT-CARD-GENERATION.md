@@ -91,9 +91,10 @@ On success, the table and an elapsed time display appear with the rest of the tu
 On cancellation, the cards received before cancellation remain visible with a canceled status.
 On failure, the partial cards remain visible with a failed status and a retry button.
 
-If the template used for generation no longer exists, the table is rebuilt from the fields saved with the run.
+If the write-target deck or template no longer exists, the table is rebuilt from the fields saved with the run.
 The table still renders as a read-only snapshot: there is no selection column and no add button.
-The unavailable notice replaces the add button.
+The unavailable notice replaces the add button and names the missing deck or template.
+When both are missing, it names the deck.
 
 If no cards were accepted, the review table is not shown.
 
@@ -156,7 +157,7 @@ The add button is disabled when:
 - There is no write-target deck
 - There is no write-target template
 
-If the write-target template no longer exists, add is unavailable; see §Card Display.
+If the write-target deck or template no longer exists, add is unavailable; see §Card Display.
 
 ## Conversation History
 

@@ -6,7 +6,7 @@ import { useLingui } from "@lingui/react";
 import type { CardStatus } from "../state/conversation-types";
 import { useAssistantCardsTable } from "./use-assistant-cards-table";
 
-type AssistantCardsTableProps = {
+export type AssistantCardsTableProps = {
   runId: string;
   cards: GeneratedCard[];
   cardStatuses: Record<number, CardStatus>;
@@ -15,7 +15,7 @@ type AssistantCardsTableProps = {
   templateId: Template["id"] | undefined;
   canAdd: boolean;
   isGenerating: boolean;
-  isTemplateUnavailable?: boolean;
+  unavailableTarget?: "deck" | "template";
 };
 
 export function AssistantCardsTable({
@@ -27,7 +27,7 @@ export function AssistantCardsTable({
   templateId,
   canAdd,
   isGenerating,
-  isTemplateUnavailable = false,
+  unavailableTarget,
 }: AssistantCardsTableProps) {
   const { _ } = useLingui();
 
@@ -38,7 +38,7 @@ export function AssistantCardsTable({
     template,
     deckId,
     templateId,
-    isSelectionEnabled: !isTemplateUnavailable,
+    isSelectionEnabled: unavailableTarget === undefined,
   });
 
   return (
@@ -49,10 +49,10 @@ export function AssistantCardsTable({
           <Table.Body table={table} />
         </Table.Root>
       </div>
-      {isTemplateUnavailable ? (
+      {unavailableTarget ? (
         <p className="self-center flex items-center justify-center gap-2 min-w-60 fg-level-3">
           <AlertIcon className="size-5 min-w-5" strokeWidth={1.75} aria-hidden="true" />
-          {_(msg`assistant.template-unavailable`)}
+          {unavailableTarget === "deck" ? _(msg`assistant.deck-unavailable`) : _(msg`assistant.template-unavailable`)}
         </p>
       ) : (
         <Button
