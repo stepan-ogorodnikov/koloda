@@ -330,16 +330,6 @@ describe("useRunOrchestration — always-chat submit", () => {
     expect(command.input.kind).toBe("chat");
     if (command.input.kind !== "chat") throw new Error("expected chat submit");
     expect(command.input.request.tools).toEqual(CHAT_TOOLS);
-    expect(command.input.request.tools).toEqual([
-      "list_decks",
-      "list_templates",
-      "list_algorithms",
-      "get_deck",
-      "get_template",
-      "get_deck_cards",
-      "add_deck",
-      "propose_cards",
-    ]);
     expect(command.input.request).not.toHaveProperty("dataContext");
   });
 

@@ -162,16 +162,6 @@ describe("prepareRunRequest — data access", () => {
 
     expect(prepared).not.toBeNull();
     expect(prepared!.request.tools).toEqual(CHAT_TOOLS);
-    expect(prepared!.request.tools).toEqual([
-      "list_decks",
-      "list_templates",
-      "list_algorithms",
-      "get_deck",
-      "get_template",
-      "get_deck_cards",
-      "add_deck",
-      "propose_cards",
-    ]);
     expect(prepared!.request).not.toHaveProperty("dataContext");
   });
 });

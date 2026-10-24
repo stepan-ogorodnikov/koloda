@@ -633,7 +633,7 @@ Decision: decided (open question 3); fixed by items 21 and 22.
   Commit: Test the tool stream's abort, step budget, and tool errors
   Depends on: none
 
-- [ ] 15. Derive the chat tool list in tests from the registry only
+- [x] 15. Derive the chat tool list in tests from the registry only
   Goal: `libs/assistant-react/src/lib/runs/prepare-run-request.test.ts:165-173` and `runs/use-run-orchestration.test.ts:335-344`
   each compare `request.tools` with an eight-name literal list (D9).
   Delete both literal lists.
