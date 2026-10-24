@@ -36,8 +36,7 @@ The model can inspect existing cards through a tool before it proposes new ones.
   `get_template`, `get_deck_cards`, `add_deck`, and `propose_cards`
 - **Tool activity** — the visible record of tool calls, kept on the run
   Reasoning rows share that list; see ASSISTANT-MESSAGES.md (§Message Content).
-- **Budgets** — caps on tool output: 200 cards per deck list,
-  8,000 serialized characters, 200 accepted cards per proposal
+- **Budgets** — caps on what a tool returns or accepts; see §Budgets
 
 ### Relationships
 
@@ -171,6 +170,10 @@ A successful call also shows a short summary next to its label:
 - `get_template` — the template title
 - `get_deck_cards` — how many cards came back
 - `propose_cards` — how many cards were accepted, and how many were skipped when any were dropped
+
+An input or output longer than 2,000 characters is kept shortened on its row.
+Expanding the row shows its first 400 characters, labeled as a truncated input or output.
+The summary next to the label still shows the count or title.
 
 Those rows live on the run, not in the conversation history sent on later turns.
 See ASSISTANT-CONVERSATIONS.md (§Conversation History).

@@ -511,7 +511,7 @@ Decision: decided (open question 3); fixed by items 21 and 22.
   Commit: Keep tool-row counts and titles when a long output is shortened
   Depends on: none
 
-- [ ] 9. Describe shortened tool rows and the budget glossary in the data spec
+- [x] 9. Describe shortened tool rows and the budget glossary in the data spec
   Goal: (a) §Visibility of `docs/specs/ASSISTANT-DATA-ACCESS.md` (`:153-183`) must describe what the user sees (D2).
   An input or output over 2,000 characters is kept as a 400-character preview, labeled "Input (truncated)" or
   "Output (truncated)" (`state/conversation-run-tools.ts:71-72`; `ai-tool-activity.tsx:185-189`, `:222-237`).
