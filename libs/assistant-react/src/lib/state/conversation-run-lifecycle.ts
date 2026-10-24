@@ -79,7 +79,9 @@ export function transitionRun(draft: ConversationReducerState, runId: string, ev
   // success keeps no note, which restore would reject as corrupt.
   if (run.status !== "success") run.stopNote = undefined;
   finishRunningReasoning(run);
-  finishRunningTools(run);
+  // WHY: a call the user canceled did not fail — an add_deck write may even have
+  // landed. Failure and interruption keep error (ASSISTANT-DATA-ACCESS.md §Visibility).
+  finishRunningTools(run, terminationReason === "user" ? "canceled" : "error");
   stampElapsed(run);
   clearActiveIfRun(draft, runId);
   logAssistantStructured({

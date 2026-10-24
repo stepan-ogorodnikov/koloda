@@ -13,24 +13,24 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
-#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:373
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:374
 msgid "{algorithmCount, plural, other {ai.chat.tool-activity.algorithms}}"
 msgstr "{algorithmCount, plural, one {# preset} other {# presets}}"
 
-#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:390
-#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:396
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:391
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:397
 msgid "{cardCount, plural, other {ai.chat.tool-activity.cards}}"
 msgstr "{cardCount, plural, one {# card} other {# cards}}"
 
-#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:362
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:363
 msgid "{deckCount, plural, other {ai.chat.tool-activity.decks}}"
 msgstr "{deckCount, plural, one {# deck} other {# decks}}"
 
-#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:400
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:401
 msgid "{rejectedCount, plural, other {ai.chat.tool-activity.skipped}}"
 msgstr "{rejectedCount, plural, one {# skipped} other {# skipped}}"
 
-#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:367
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:368
 msgid "{templateCount, plural, other {ai.chat.tool-activity.templates}}"
 msgstr "{templateCount, plural, one {# template} other {# templates}}"
 
@@ -134,6 +134,10 @@ msgstr "Send"
 #: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:348
 msgid "ai.chat.tool-activity.add-deck"
 msgstr "Create deck"
+
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:357
+msgid "ai.chat.tool-activity.canceled"
+msgstr "Canceled"
 
 #: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:238
 #: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:293

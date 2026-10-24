@@ -564,6 +564,13 @@ describe("coerceConversationState", () => {
         error: "deck missing",
         ...timing,
       },
+      {
+        id: "call-3",
+        name: "add_deck",
+        input: { title: "Spanish" },
+        status: "canceled" as const,
+        ...timing,
+      },
     ];
 
     it("keeps toolCalls intact across a save→restore roundtrip (JSON wire shape)", () => {

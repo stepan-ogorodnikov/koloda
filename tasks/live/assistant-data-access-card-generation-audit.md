@@ -798,7 +798,7 @@ Decision: decided (open question 3); fixed by items 21 and 22.
   Commit: Show the step-budget note under the run's status
   Depends on: 21
 
-- [ ] 23. Mark calls the user cancels as canceled, not failed
+- [x] 23. Mark calls the user cancels as canceled, not failed
   Goal: When a user cancels a run, its running tool calls end as failed. The helper that does this is
   `state/conversation-run-helpers.ts:57-66`, and it runs for every termination (`state/conversation-run-lifecycle.ts:84-85`).
   That is accurate for an error and wrong for a cancel the user asked for. For `add_deck`, it also tells the user the deck was

@@ -89,7 +89,7 @@ const runStatusField = z.enum(["streaming", "success", "failed", "canceled", "in
 
 const cardStatusField = z.enum(["idle", "pending", "success", "error"]);
 
-const toolCallStatusField = z.enum(["running", "success", "error"]);
+const toolCallStatusField = z.enum(["running", "success", "error", "canceled"]);
 
 /**
  * Tool activity recorded on the run. Shape mirrors `RunToolCall`; unknown

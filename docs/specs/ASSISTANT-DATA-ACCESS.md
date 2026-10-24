@@ -159,6 +159,9 @@ Tool traffic is visible in the chat feed as compact rows on that assistant messa
 - Any other tool shows the protocol id.
 - A running call is marked as running.
 - A failed call is marked failed.
+- A call still running when the user cancels the run is marked canceled, not failed.
+  It may still have finished: a deck that `add_deck` was writing can exist.
+- A call still running when the run fails or is interrupted is marked failed.
 - Expanding a row shows the protocol id, the input, and the output or error.
 - Tool and reasoning rows start collapsed, including while a call or thinking is in progress.
 - The user can expand or collapse the row.

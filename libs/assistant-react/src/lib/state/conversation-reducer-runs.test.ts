@@ -535,12 +535,13 @@ describe("conversationReducer", () => {
   });
 
   describe("terminal tool activity", () => {
-    it.each<{ action: ConversationReducerAction }>([
-      { action: ["completeRun", { runId: "r1" }] },
-      { action: ["runFailed", { runId: "r1", error: { message: "boom" } }] },
-      { action: ["cancelRun", { runId: "r1" }] },
-      { action: ["interruptRun", { runId: "r1", reason: "app_shutdown" }] },
-    ])("closes running tools and preserves finished tools on $action.0", ({ action }) => {
+    it.each<{ action: ConversationReducerAction; closed: "error" | "canceled" }>([
+      { action: ["completeRun", { runId: "r1" }], closed: "error" },
+      { action: ["runFailed", { runId: "r1", error: { message: "boom" } }], closed: "error" },
+      // WHY: a user cancel is not a tool failure — the call may even have finished.
+      { action: ["cancelRun", { runId: "r1" }], closed: "canceled" },
+      { action: ["interruptRun", { runId: "r1", reason: "app_shutdown" }], closed: "error" },
+    ])("closes running tools as $closed and preserves finished tools on $action.0", ({ action, closed }) => {
       vi.useFakeTimers();
       try {
         vi.setSystemTime(0);
@@ -566,8 +567,8 @@ describe("conversationReducer", () => {
         expect(state.runs["r1"].toolCalls).toMatchObject([
           { id: "success", status: "success", elapsedSeconds: 1, output: { decks: [] } },
           { id: "error", status: "error", elapsedSeconds: 1, error: "unavailable" },
-          { id: "running-1", status: "error", elapsedSeconds: 4 },
-          { id: "running-2", status: "error", elapsedSeconds: 4 },
+          { id: "running-1", status: closed, elapsedSeconds: 4 },
+          { id: "running-2", status: closed, elapsedSeconds: 4 },
         ]);
       } finally {
         vi.useRealTimers();

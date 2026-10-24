@@ -72,7 +72,7 @@ export type AIToolCallRecord = {
   id: string;
   name: string;
   input: unknown;
-  status: "running" | "success" | "error";
+  status: "running" | "success" | "error" | "canceled";
   output?: unknown;
   error?: unknown;
   startedAt?: Date;
@@ -354,6 +354,7 @@ function toolCallSummaries(call: AIToolCallRecord, translate: I18n["_"]): string
   // WHY: the translator param must not be named `_`. Lingui treats `_()` as the
   // t-macro and extracts nested `plural()` as `{0}`, which does not match the SWC runtime id.
   if (call.status === "error") return [translate(msg`ai.chat.tool-activity.failed`)];
+  if (call.status === "canceled") return [translate(msg`ai.chat.tool-activity.canceled`)];
   if (call.status !== "success") return [];
   // WHY: compact counts exist only for these output shapes; any other tool
   // shows its label alone, never a guessed summary (spec Visibility).

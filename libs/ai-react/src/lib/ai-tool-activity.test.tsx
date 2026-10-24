@@ -303,6 +303,19 @@ describe("AIToolActivity", () => {
     expect(screen.getByText("ai.chat.tool-activity.failed")).toBeTruthy();
   });
 
+  it("marks a canceled row canceled, not failed", () => {
+    render(
+      <AIToolActivity
+        calls={[call({ id: "c1", name: "add_deck", status: "canceled", input: { title: "Spanish" } })]}
+      />,
+    );
+
+    expect(screen.getByText("ai.chat.tool-activity.add-deck")).toBeTruthy();
+    expect(screen.getByText("ai.chat.tool-activity.canceled")).toBeTruthy();
+    expect(screen.queryByLabelText("ai.chat.tool-activity.failed")).toBeNull();
+    expect(screen.queryByLabelText("ai.chat.tool-activity.running")).toBeNull();
+  });
+
   it("renders an unknown tool by protocol id", () => {
     render(
       <AIToolActivity calls={[call({ id: "c1", name: "search_cards", status: "success", input: { q: "hola" } })]} />,

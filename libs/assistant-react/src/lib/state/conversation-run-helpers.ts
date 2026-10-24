@@ -48,12 +48,12 @@ export function finishRunningReasoning(run: AssistantRun) {
   }
 }
 
-export function finishRunningTools(run: AssistantRun) {
+export function finishRunningTools(run: AssistantRun, status: "error" | "canceled") {
   // WHY: a run ending without a tool result must not leave its activity
-  // spinning. Match restore's error status, but freeze elapsed time now.
+  // spinning. Freeze elapsed time now; restore closes a crashed call as error.
   for (const entry of run.toolCalls) {
     if (!isReasoningActivity(entry) && entry.status === "running") {
-      entry.status = "error";
+      entry.status = status;
       stampActivityElapsed(entry);
     }
   }

@@ -12,7 +12,7 @@ export type RunTerminationReason = "user" | "app_shutdown" | "crash_recovery";
 
 export type InterruptedReason = Exclude<RunTerminationReason, "user">;
 
-export type ToolCallStatus = "running" | "success" | "error";
+export type ToolCallStatus = "running" | "success" | "error" | "canceled";
 
 /**
  * Tool activity recorded on the run — mirrors `cards`/`cardStatuses` on the
