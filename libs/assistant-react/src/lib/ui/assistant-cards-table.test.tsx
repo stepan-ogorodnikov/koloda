@@ -1,7 +1,7 @@
 import { queriesAtom, queryKeys } from "@koloda/core-react";
 import type { Queries } from "@koloda/core-react";
 import type { GeneratedCard } from "@koloda/ai";
-import type { InsertCardsResponse, Template } from "@koloda/srs";
+import type { InsertCardsResponse, TemplateFields } from "@koloda/srs";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { useAtomValue, createStore, Provider as JotaiProvider } from "jotai";
@@ -18,17 +18,7 @@ import {
 import type { CardStatus, ConversationReducerState } from "../state/conversation-types";
 import { testId } from "../../test/test-helpers";
 
-const template = {
-  id: testId(1),
-  title: "T",
-  content: {
-    fields: [{ id: testId(1), title: "Front", type: "text", isRequired: true }],
-    layout: [{ field: testId(1), operation: "display" as const }],
-  },
-  createdAt: new Date(0),
-  updatedAt: new Date(0),
-  isLocked: false,
-} as unknown as Template;
+const templateFields: TemplateFields = [{ id: testId(1), title: "Front", type: "text", isRequired: true }];
 
 function makeCard(text: string): GeneratedCard {
   return { content: { [testId(1)]: { text } } };
@@ -65,7 +55,7 @@ function renderTable(cards: GeneratedCard[], cardStatuses: Record<number, CardSt
       runId="r1"
       cards={cards}
       cardStatuses={cardStatuses}
-      template={template}
+      templateFields={templateFields}
       deckId={1}
       templateId={1}
       canAdd={true}
@@ -92,7 +82,7 @@ describe("AssistantCardsTable selection", () => {
         runId="r1"
         cards={[makeCard("Front A"), makeCard("Front B")]}
         cardStatuses={{ 0: "idle", 1: "idle" }}
-        template={template}
+        templateFields={templateFields}
         deckId={1}
         templateId={1}
         canAdd={true}
@@ -128,7 +118,7 @@ describe("AssistantCardsTable selection", () => {
         runId="r1"
         cards={[makeCard("Front A")]}
         cardStatuses={{ 0: "idle" }}
-        template={template}
+        templateFields={templateFields}
         deckId={1}
         templateId={1}
         canAdd={true}
@@ -312,7 +302,7 @@ function SelectionProbe() {
     runId: "r1",
     cards: run?.cards ?? [],
     cardStatuses: run?.cardStatuses ?? {},
-    template,
+    templateFields,
     deckId: testId(1),
     templateId: testId(1),
   });

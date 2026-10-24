@@ -426,7 +426,7 @@ Decision: decided (open question 3); fixed by items 21 and 22.
   Commit: Remove cards-mode leftovers from the reducer and run payloads
   Depends on: none
 
-- [ ] 5. Pass the saved template fields to the cards table and serializer
+- [x] 5. Pass the saved template fields to the cards table and serializer
   Goal: `makeHistoricalTemplate` (`libs/assistant-react/src/lib/state/assistant-messages.ts:77`) builds a whole `Template`
   with a sentinel id, so the cards table and `serializeGeneratedCards` can take a `Template` (C7).
   They read only `content.fields`.

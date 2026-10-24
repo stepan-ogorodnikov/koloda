@@ -34,7 +34,7 @@ const baseProps = {
   runId: "r1",
   cards: [{ content: { [testId(1)]: { text: "Front A" } } }],
   cardStatuses: { 0: "idle" as const },
-  template,
+  templateFields: template.content.fields,
   deckId: testId(1),
   templateId: testId(1),
   canAdd: false,

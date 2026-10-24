@@ -59,7 +59,7 @@ describe("message metadata readers and card serialization", () => {
       }),
     ];
 
-    expect(serializeGeneratedCards(cards, template)).toBe(
+    expect(serializeGeneratedCards(cards, template.content.fields)).toBe(
       "## Card 1\n**Front**: Question one\n**Back**: Answer one\n\n" +
         "## Card 2\n**Front**: Question two\n**Back**: Answer two",
     );

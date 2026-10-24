@@ -1,5 +1,5 @@
 import type { GeneratedCard } from "@koloda/ai";
-import type { Deck, Template } from "@koloda/srs";
+import type { Deck, Template, TemplateFields } from "@koloda/srs";
 import { AlertIcon, Button, Table } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
@@ -10,7 +10,7 @@ export type AssistantCardsTableProps = {
   runId: string;
   cards: GeneratedCard[];
   cardStatuses: Record<number, CardStatus>;
-  template: Template;
+  templateFields: TemplateFields;
   deckId: Deck["id"] | null;
   templateId: Template["id"] | undefined;
   canAdd: boolean;
@@ -22,7 +22,7 @@ export function AssistantCardsTable({
   runId,
   cards,
   cardStatuses,
-  template,
+  templateFields,
   deckId,
   templateId,
   canAdd,
@@ -35,7 +35,7 @@ export function AssistantCardsTable({
     runId,
     cards,
     cardStatuses,
-    template,
+    templateFields,
     deckId,
     templateId,
     isSelectionEnabled: unavailableTarget === undefined,

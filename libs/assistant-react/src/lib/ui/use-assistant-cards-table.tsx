@@ -1,6 +1,6 @@
 import type { GeneratedCard } from "@koloda/ai";
 import { queriesAtom, queryKeys } from "@koloda/core-react";
-import type { Deck, InsertCardsResponse, Template } from "@koloda/srs";
+import type { Deck, InsertCardsResponse, Template, TemplateFields } from "@koloda/srs";
 import { transformGeneratedCards } from "@koloda/srs";
 import { Table, createSelectionColumnHelper, useSelectionTable } from "@koloda/ui";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -20,14 +20,14 @@ type UseAssistantCardsTableOptions = {
   runId: string;
   cards: GeneratedCard[];
   cardStatuses: Record<number, CardStatus>;
-  template: Template | null | undefined;
+  templateFields: TemplateFields;
   deckId: Deck["id"] | null;
   templateId: Template["id"] | undefined;
   isSelectionEnabled?: boolean;
 };
 
 export function useAssistantCardsTable(options: UseAssistantCardsTableOptions) {
-  const { runId, cards, cardStatuses, template, deckId, templateId, isSelectionEnabled = true } = options;
+  const { runId, cards, cardStatuses, templateFields, deckId, templateId, isSelectionEnabled = true } = options;
   const queryClient = useQueryClient();
   const { addCardsMutation } = useAtomValue(queriesAtom);
   const mutation = useMutation(addCardsMutation());
@@ -41,9 +41,7 @@ export function useAssistantCardsTable(options: UseAssistantCardsTableOptions) {
   );
 
   const columns = useMemo(() => {
-    if (!template) return [];
-
-    const fieldColumns = (template.content?.fields || []).map((field) =>
+    const fieldColumns = templateFields.map((field) =>
       columnHelper.accessor((row) => row.content[field.id]?.text || "", {
         id: field.id.toString(),
         header: field.title,
@@ -67,7 +65,7 @@ export function useAssistantCardsTable(options: UseAssistantCardsTableOptions) {
     });
 
     return columnHelper.columns([selectionColumn, ...fieldColumns]);
-  }, [template, isSelectionEnabled]);
+  }, [templateFields, isSelectionEnabled]);
 
   const table = useSelectionTable({
     data: cardsWithStatus,
@@ -114,7 +112,7 @@ export function useAssistantCardsTable(options: UseAssistantCardsTableOptions) {
   const isAdding = mutation.isPending;
 
   const handleAddCards = useCallback(async () => {
-    if (!conversationId || !template || !deckId || !templateId || selectedIndices.length === 0) return;
+    if (!conversationId || !deckId || !templateId || selectedIndices.length === 0) return;
 
     const cardsToCreate = selectedIndices
       .map((index) => cardsWithStatus[index])
@@ -158,7 +156,6 @@ export function useAssistantCardsTable(options: UseAssistantCardsTableOptions) {
   }, [
     conversationId,
     runId,
-    template,
     selectedIndices,
     cards,
     cardsWithStatus,

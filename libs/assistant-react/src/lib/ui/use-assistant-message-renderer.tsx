@@ -10,7 +10,6 @@ import {
   getAssistantMetadata,
   getMessageRunId,
   getUserMessageCreatedAt,
-  makeHistoricalTemplate,
   serializeGeneratedCards,
 } from "../state/assistant-messages";
 import type { AssistantRun } from "../state/conversation-types";
@@ -92,9 +91,8 @@ type RenderCardsMessageOptions = {
 function renderCardsMessage(options: RenderCardsMessageOptions) {
   const { run, runId, isCurrentRun } = options;
   // WHY: columns always come from the run snapshot. AssistantCardsMessage looks
-  // up writeTargetTemplateId for the unavailable marker (ASSISTANT-CARD-GENERATION.md
-  // §Card Display).
-  const cardsTemplate = run.templateFields ? makeHistoricalTemplate(run.templateFields) : null;
+  // up the write-target deck and template for the unavailable marker
+  // (ASSISTANT-CARD-GENERATION.md §Card Display).
 
   // INVARIANT: Add uses writeTargetDeckId / writeTargetTemplateId only.
   // Missing either disables add.
@@ -106,7 +104,7 @@ function renderCardsMessage(options: RenderCardsMessageOptions) {
       runId={runId}
       cards={run.cards}
       cardStatuses={run.cardStatuses}
-      template={cardsTemplate}
+      templateFields={run.templateFields}
       deckId={addTargetDeckId}
       templateId={addTargetTemplateId}
       canAdd={run.cards.length > 0 && !isCurrentRun && addTargetDeckId !== null && addTargetTemplateId !== undefined}
@@ -220,9 +218,7 @@ const AssistantTurn = memo(function AssistantTurn({
   // WHY: copy mirrors the rendered turn — cards first, leftover text second —
   // reusing the history serialization so multi-line card markdown survives.
   const cardsCopy =
-    run.cards.length > 0 && run.templateFields
-      ? serializeGeneratedCards(run.cards, makeHistoricalTemplate(run.templateFields))
-      : null;
+    run.cards.length > 0 && run.templateFields ? serializeGeneratedCards(run.cards, run.templateFields) : null;
   const copyText = [cardsCopy, text].filter(Boolean).join("\n\n");
   const copyAction = copyText ? <CopyMessageButton text={copyText} /> : null;
   // WHY: tool + thinking traffic lives on the run, not message parts — the

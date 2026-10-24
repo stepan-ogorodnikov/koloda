@@ -1,6 +1,6 @@
 import { getTextMessageContent } from "@koloda/ai";
 import type { GeneratedCard, Message } from "@koloda/ai";
-import type { Template, TemplateFields } from "@koloda/srs";
+import type { TemplateFields } from "@koloda/srs";
 import type { TextUIPart, UIMessage } from "ai";
 
 export type AssistantMessageMetadata = { kind: "chat-text"; runId: string };
@@ -60,32 +60,18 @@ export function createTextMessage(
   return { id, role, metadata, parts: [part] };
 }
 
-export function serializeGeneratedCards(cards: GeneratedCard[], template: Template) {
+export function serializeGeneratedCards(cards: GeneratedCard[], fields: TemplateFields) {
   return cards
     .map((card, index) =>
       [
         `## Card ${index + 1}`,
-        ...template.content.fields.map((field) => {
+        ...fields.map((field) => {
           const value = card.content[field.id]?.text?.trim() ?? "";
           return `**${field.title}**: ${value}`;
         }),
       ].join("\n"),
     )
     .join("\n\n");
-}
-
-export function makeHistoricalTemplate(fields: TemplateFields): Template {
-  return {
-    id: "01900000-0000-7000-8000-000000000000",
-    title: "",
-    content: {
-      fields,
-      layout: fields.map((field) => ({ field: field.id, operation: "display" as const })),
-    },
-    createdAt: new Date(0),
-    updatedAt: new Date(0),
-    isLocked: true,
-  };
 }
 
 export function buildConversationMessages(
@@ -117,9 +103,8 @@ export function buildConversationMessages(
     // completed before the stream stopped. Failed/canceled stay excluded.
     if (run && (run.status === "success" || run.status === "interrupted") && run.cards.length > 0) {
       // WHY: Chat proposals serialize against the fields captured on that run.
-      const cardTemplate = run.templateFields ? makeHistoricalTemplate(run.templateFields) : null;
-      if (cardTemplate) {
-        const cardContent = serializeGeneratedCards(run.cards, cardTemplate);
+      if (run.templateFields) {
+        const cardContent = serializeGeneratedCards(run.cards, run.templateFields);
         if (cardContent) parts.push(cardContent);
       }
     }
