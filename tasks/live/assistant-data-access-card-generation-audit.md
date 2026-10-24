@@ -1,7 +1,7 @@
 # Assistant data access and card generation audit fixes
 
-Status: draft
-Guides: agents/IMPLEMENTATION-PLAN.md, agents/TASKS.md, agents/ASSISTANT-MAP.md, docs/specs/ASSISTANT-CARD-GENERATION.md, docs/specs/ASSISTANT-DATA-ACCESS.md, agents/ADD-ASSISTANT-TOOL.md, agents/CODE-STYLE.md, agents/CODE-DOCUMENTATION.md, agents/TESTING.md, agents/VERIFY.md, agents/I18N.md, agents/BACKWARDS-COMPATIBILITY.md, agents/FUNCTIONAL-SPECIFICATIONS.md, agents/MARKDOWN.md, libs/srs/README.md, apps/web-e2e/README.md, apps/electron-e2e/README.md, libs/e2e/README.md
+Status: ready
+Guides: agents/IMPLEMENTATION-PLAN.md, agents/TASKS.md, agents/ASSISTANT-MAP.md, docs/specs/ASSISTANT-CARD-GENERATION.md, docs/specs/ASSISTANT-DATA-ACCESS.md, agents/ADD-ASSISTANT-TOOL.md, agents/CODE-STYLE.md, agents/CODE-DOCUMENTATION.md, agents/TESTING.md, agents/VERIFY.md, agents/I18N.md, agents/BACKWARDS-COMPATIBILITY.md, agents/FUNCTIONAL-SPECIFICATIONS.md, agents/MARKDOWN.md, libs/srs/README.md, apps/web-e2e/README.md, apps/electron-e2e/README.md, libs/e2e/README.md, apps/electron/IPC.md, libs/native-ipc/README.md, docs/specs/ASSISTANT-MESSAGES.md
 Flow: local
 
 ## Intent
@@ -27,9 +27,14 @@ It read the cited lines and did not run tests.
 Done when, in user-visible terms:
 
 - After Add, the card statuses and the deck's card list update even if the user switched conversation first.
-  A reload never re-adds cards that were already added.
+  Once an Add has settled, a reload never re-adds its cards.
 - A deleted write-target deck shows the unavailable notice, not an Add button that fails every card.
 - A tool row for a long list shows its count, and a get_deck or add_deck row shows its title.
+- A card with an empty required field never reaches the table; the model gets it back in the same turn.
+- An Add that fails to reach the host leaves its rows selectable again.
+- A tool call the user cancels reads Canceled, not Failed.
+- A long template list previews its notes, and `get_template` returns the full note.
+- A run that stops at the step budget says so under its status.
 - The Russian truncated output label matches the plain one.
 - `bun run check:push` passes on the tip, and every plan item is one commit with a `Task:` trailer.
 
@@ -163,7 +168,7 @@ Decision: fixed by item 7.
   None of the cited lines holds its rule now.
 
 C11 — Product decision, Later. Cards that cannot be saved are accepted, selected, and fail without a reason.
-Decision: needs-decision (open question 1).
+Decision: decided (open question 1); fixed by items 18 and 19.
 
 - A proposal keeps any card with one non-empty value (`libs/ai/src/lib/assistant-tools.ts:545-561`; the WHY at `:558`
   makes required fields a save-time check).
@@ -198,7 +203,7 @@ Decision: fixed by item 8.
   and asserts `itemCount` 1; `:176-190` asserts `itemCount` 1 for a `propose_cards` input.
 
 D2 — Spec drift, Later. The spec does not describe two visible tool-row behaviors.
-Decision: fixed by item 9.
+Decision: fixed by items 9 and 23.
 
 - §Visibility (`docs/specs/ASSISTANT-DATA-ACCESS.md:153-183`) does not describe the shortened row.
   A payload over 2,000 characters is kept as a 400-character preview labeled "Output (truncated)" or "Input (truncated)"
@@ -217,7 +222,7 @@ Decision: fixed by item 9.
 
 D4 — Risk, Later. A cancel while `add_deck` is writing keeps the deck, but the row shows failed and the caches are not
 refreshed.
-Decision: cache refresh fixed by item 10; the row label is needs-decision (open question 4).
+Decision: cache refresh fixed by item 10; the row label is decided (open question 4), fixed by item 23.
 
 - The binder checks the abort signal only before the host call (`libs/ai/src/lib/assistant-tools.ts:315-320`), so a
   write already in progress finishes.
@@ -307,7 +312,7 @@ Decision: fixed by item 17.
   The input pair is consistent ("Ввод" / "Ввод (сокращён)", `:154` and `:158`).
 
 D12 — Product decision, Later. `list_templates` and `list_algorithms` return each note whole; `list_decks` previews them.
-Decision: needs-decision (open question 2).
+Decision: decided (open question 2); fixed by item 20.
 
 - `libs/ai/src/lib/assistant-tools.ts:104-106` limits `list_decks` notes to 150 characters, so that a long deck list "cannot
   crowd the context".
@@ -316,7 +321,7 @@ Decision: needs-decision (open question 2).
 - Twenty templates with full notes add about 20k characters to one result.
 
 D13 — Product decision, Later. When the step budget runs out, the run ends as an ordinary success.
-Decision: needs-decision (open question 3).
+Decision: decided (open question 3); fixed by items 21 and 22.
 
 - `libs/ai/src/lib/chat-stream.ts:49` stops after eight steps, and `runChatStream` returns normally.
   Nothing in the run record says the budget was hit.
@@ -324,18 +329,19 @@ Decision: needs-decision (open question 3).
 
 ## Open questions
 
-- [ ] 1. C11 — A card with an empty required field is accepted at proposal and fails at Add.
-  Count it as rejected at proposal, so the model retries it in the same turn (as unmappable cards already are)?
-  Or show the per-card reason on error rows and let them be selected again? — open
-- [ ] 2. D12 — `list_decks` previews notes at 150 characters; `list_templates` and `list_algorithms` return them whole.
-  Preview every list tool's note and give `get_template` the full note?
-  Algorithms have no single-get tool, so they need their own answer. — open
-- [ ] 3. D13 — When the step budget ends a run, the run finishes as an ordinary success.
-  Should the run record a reason, or end as its own outcome? — open
-- [ ] 4. D4 — A cancel during an `add_deck` write leaves the deck in place and marks the row failed.
-  Item 10 refreshes the caches either way.
-  Should the row keep reading failed, or show another state? — open
-- [ ] 5. Flow — `local` (the default) or `remote` (CI on every push)? — open
+- [x] 1. C11 — A card with an empty required field is accepted at proposal and fails at Add.
+  Decided: reject it at proposal, so the model retries it in the same turn; a request that fails to reach the host
+  returns its rows to idle; a per-card host error stays `error`. (Human, 2026-10-24: go with the recommendation.)
+- [x] 2. D12 — `list_decks` previews notes at 150 characters; `list_templates` and `list_algorithms` return them whole.
+  Decided: preview notes in `list_decks` and `list_templates`; `get_template` returns the full note; `list_algorithms`
+  stays whole. (Human, 2026-10-24.)
+- [x] 3. D13 — When the step budget ends a run, the run finishes as an ordinary success.
+  Decided: record a visible reason on the run, and keep the status `success`. (Human, 2026-10-24.)
+- [x] 4. D4 — A cancel during an `add_deck` write leaves the deck in place and marks the row failed.
+  Decided: a user cancel shows its running tool rows as canceled, not failed; failure and interruption stay failed; the
+  cache refresh is item 10. (Human, 2026-10-24.)
+- [x] 5. Flow — `local` (the default) or `remote` (CI on every push)?
+  Decided: `local`. (Human, 2026-10-24: go with the recommendation.)
 
 ## Plan
 
@@ -485,8 +491,10 @@ Decision: needs-decision (open question 3).
   The reducer stores that value on the live row too (`:64`).
   `toolCallSummaries` (`libs/ai-react/src/lib/ai-tool-activity.tsx:353-400`) reads arrays and strings a bounded record no
   longer has.
-  Fix: in `boundToolOutput`, keep a top-level string `title` when present, and set `itemCount` to the length of the output's
-  first top-level array field (`decks`, `templates`, `algorithms`), falling back to the key count when there is none.
+  Fix: in `boundToolOutput`, keep a top-level string `title` when present.
+  Set `itemCount` to the length of the `decks`, `templates`, or `algorithms` array when the output has one, by name, not by
+  key order; fall back to the key count when it has none.
+  `itemCount` is read only to recognise the bounded shape (`ai-tool-activity.tsx:439`), so the new meaning breaks no reader.
   In `toolCallSummaries`, the three list tools then read `itemCount` from the bounded record, as the card tools already fall
   back to `acceptedCount`.
   Update the bounded-shape comment at `ai-tool-activity.tsx:428-434` to the real shape.
@@ -503,19 +511,18 @@ Decision: needs-decision (open question 3).
   Commit: Keep tool-row counts and titles when a long output is shortened
   Depends on: none
 
-- [ ] 9. Describe shortened tool rows and run-end failures in the data spec
+- [ ] 9. Describe shortened tool rows and the budget glossary in the data spec
   Goal: (a) §Visibility of `docs/specs/ASSISTANT-DATA-ACCESS.md` (`:153-183`) must describe what the user sees (D2).
   An input or output over 2,000 characters is kept as a 400-character preview, labeled "Input (truncated)" or
   "Output (truncated)" (`state/conversation-run-tools.ts:71-72`; `ai-tool-activity.tsx:185-189`, `:222-237`).
-  A call still running when its run ends (canceled, failed, or interrupted) shows as failed
-  (`state/conversation-run-helpers.ts:57-66`, called from `state/conversation-run-lifecycle.ts:84-85`).
-  §Persistence (`:216-221`) covers only the crash case; point it at §Visibility for the run-end rule instead of restating it.
+  §Persistence (`:216-221`) covers only the crash case, and stays as it is.
+  Item 23 adds the run-end rule to §Visibility.
   (b) The Core model glossary's Budgets entry (`:39-40`) restates three numbers, and §Budgets (`:184-199`) has four (D3).
   Replace the glossary's numbers with "caps on what a tool returns or accepts; see §Budgets", and keep the numbers in §Budgets.
   Constraints: docs only. Follow `agents/FUNCTIONAL-SPECIFICATIONS.md`: state each rule once, and add no Edge Cases section.
-  Done when: the glossary has no numbers, and §Visibility states both behaviors.
+  Done when: the glossary has no numbers, and §Visibility states the shortened-row rule.
   Manual verify: none — spec text only.
-  Commit: Describe shortened tool rows and run-end failures in the data spec
+  Commit: Describe shortened tool rows and the budget glossary in the data spec
   Depends on: none
 
 - [ ] 10. Refresh deck queries when a run ends with add_deck still writing
@@ -529,12 +536,24 @@ Decision: needs-decision (open question 3).
   Fix in the engine's emit adapter (`libs/assistant-react/src/lib/runs/assistant-engine-instance.ts:26-29`): before the terminal
   event of a run is dispatched, if that run still has an `add_deck` call in `running` status, invalidate the same deck
   queries that `notifyAddDeckWritten` invalidates.
-  Do not change the row's status here (open question 4).
+  Do not change the row's status here; item 23 does that (open question 4).
+  The refresh fires when the run ends, which can be before the host commits the deck.
+  It sees the deck only if the refetch queues behind the write.
+  Desktop holds: the addon runs each NAPI call whole on one `koloda-db` worker thread, in call order
+  (`apps/electron/src-rust/src/lib.rs:194`; `apps/electron/src/koloda-db.ts` header).
+  Web does not yet: `addDeck` (`libs/db-sqlite/src/lib/decks.ts:28-46`) takes the SQLite lock three times (algorithm read,
+  template read, insert), so a refetch can run between them and cache the old list for the 60 s `staleTime`.
+  Run web `addDeck` inside `db.transaction`.
+  It holds the lock for the whole call (`libs/db-sqlite/src/lib/db.ts:257-272`).
+  Pass `tx` to `getAlgorithm`, `getTemplate`, and `getDeck` inside it, as `algorithms.ts:57` does.
+  Calling the locked `db` inside the transaction would wait on its own lock.
+  The result is unchanged; only the lock is held once.
+  State the ordering assumption in the WHY beside the refresh.
   Constraints: the cache refresh stays in the shell, outside `libs/ai` and the binders (`agents/ADD-ASSISTANT-TOOL.md`).
   Read the run through `readConversationState`, which the adapter already passes.
   Done when: a test in `add-deck-query-invalidation.test.tsx` (or beside the emit adapter) drives a terminal event with an
   `add_deck` call still running and asserts the deck queries are invalidated; the existing cases still pass; and the
-  assistant-react vitest command passes.
+  assistant-react and db-sqlite vitest commands pass.
   Manual verify: none — the window is one local insert, and the unit test drives the emit path.
   Commit: Refresh deck queries when a run ends with add_deck still writing
   Depends on: none
@@ -563,10 +582,16 @@ Decision: needs-decision (open question 3).
   a cast that compiles even when the members disagree (D6).
   Type `registerAiIpc`'s parameter as
   `Pick<KolodaDb, "getDecks" | "getTemplates" | "getAlgorithms" | "getCards" | "getCardCounts" | "getSettings" | "addDeck">`
-  from `apps/electron/src/koloda-db.ts`, plus `{ getAiProfileSecrets(profileId: string): Promise<unknown> }`.
+  from `apps/electron/src/koloda-db.ts`.
+  Intersect it with a named secrets type, `{ getAiProfileSecrets(profileId: string): Promise<unknown> }`.
+  Delete the local `KolodaDb` type in `ai-ipc.ts`.
   Secrets stay off the mirror (its INVARIANT, `koloda-db.ts:8-11`).
-  Read how `getAiProfileSecrets` reaches `db` before removing the cast.
-  If only that member needs the cast, keep the cast for it alone, with a WHY, so the compiler checks the seven data methods.
+  So `getAiProfileSecrets` reaches `db` only through a cast: the addon instance has it, and the mirror omits it on purpose
+  (`data-ipc.ts:93-97`).
+  Keep a cast at `data-ipc.ts:97`, narrowed to `db as KolodaDb & <the secrets type>`.
+  The seven data methods then come from the mirror itself, so they cannot drift; the cast adds only the secrets method.
+  If the compiler then reports a mismatch in `createChatToolExecutor` (`ai-ipc.ts:126-140`), fix the mapping there.
+  Do not cast it away: that mismatch is the drift this item exists to catch.
   Done when: `nx run @koloda/electron:typecheck` and `nx run @koloda/electron:test:unit` pass.
   Manual verify: none — type-only change in the desktop host.
   Commit: Type the AI IPC data source from the NAPI mirror
@@ -651,6 +676,150 @@ Decision: needs-decision (open question 3).
   Manual verify: Russian UI: expand a truncated tool row; the output label reads "Результат (сокращён)" and the input label
   reads "Ввод (сокращён)".
   Commit: Match the Russian truncated output label to the plain one
+  Depends on: none
+
+- [ ] 18. Reject a proposed card that leaves a required field empty
+  Goal: A proposal keeps any card with one non-empty value (`libs/ai/src/lib/assistant-tools.ts:545-561`,
+  `shapeProposedCardFields`).
+  So a card with an empty required field is accepted, selected, and fails at Add with an icon-only error (C11).
+  Decided (open question 1): reject it at proposal, so the model gets it back in the same turn through the existing
+  rejection path.
+  Reject the card in `shapeProposedCardFields` when any field whose `isRequired` is true has empty text.
+  The template fields carry `isRequired` (`assistant-tools.ts:122`).
+  The existing counting then sets `rejectedCount`.
+  Replace the WHY at `:558`, which says required fields are a save-time check.
+  The messages must then name the cause, or the model cannot fix the card.
+  `proposeCardsRejectedMessage` (`:205-208`) gives the cause as "(empty, unmappable, or over the 200-card cap)".
+  `PROPOSE_CARDS_RETRY_MESSAGE` (`:202-203`), sent when every card is rejected, asks only for the exact titles.
+  Neither fits a card whose titles were right and whose required field was empty.
+  Have `shapeProposedCardFields` report the titles of the empty required fields instead of a bare null.
+  When any card was rejected for that, both messages name those titles and ask the model to fill them.
+  Constraints: `libs/ai` shaping and its tests, plus the spec.
+  Update the propose_cards cases in `libs/ai/src/lib/assistant-tools.test.ts` that assert the one-value rule (for example,
+  `{ Front, Answer }` accepted with an empty required Back).
+  Update the message assertions (`assistant-tools.test.ts:658`, `:696`, `:704`, `:746`, `:846`) to the new signatures.
+  Keep the 200-card cap as it is.
+  Spec: §How Cards Are Proposed states the required-field check once, at proposal; §Card Structure drops its save-time
+  statement.
+  Done when: the libs/ai vitest command passes; a proposal with an empty required field returns `rejectedCount` 1 and a
+  message that names that field; a proposal with every required field filled is unchanged.
+  Manual verify: web: in a deck whose template has a required second field, ask the assistant for cards without that field;
+  no row with an empty required cell appears.
+  Commit: Reject a proposed card that leaves a required field empty
+  Depends on: none
+
+- [ ] 19. Return rows to idle when Add's request fails
+  Goal: `handleAddCards`'s `onError` (`libs/assistant-react/src/lib/ui/use-assistant-cards-table.tsx:143-147`) marks every
+  selected card `error`.
+  Decided (open question 1): a request that fails to reach the host is transient, so its rows go back to `idle`, still
+  selected, and Add can be pressed again.
+  Per-card errors in a host response (`onSuccess`, `result.error`, `:134-138`) stay `error`, which is terminal.
+  Set `idle` in the catch path that item 2 introduces, and keep the selection, so `hasSelection` re-enables Add.
+  Constraints: this changes the same handler that item 2 rewrites; build on item 2.
+  Spec: §Adding Cards to Deck says "On a network error, all selected cards are marked as error". Change it to say the rows
+  return to idle, so the user can add them again. §Card Status: say that error is terminal for per-card results.
+  Tests: the rejected-request case added in item 1 now expects idle, selected rows and an enabled Add; the per-card error
+  case still expects `error`.
+  Done when: the assistant-react vitest command passes.
+  Manual verify: none — a request failure cannot be forced by hand without breaking the app; the rejected-mutation test
+  drives the branch.
+  Commit: Return rows to idle when Add's request fails
+  Depends on: 1, 2
+
+- [ ] 20. Preview template notes in list_templates like deck notes
+  Goal: `list_decks` cuts a note to 150 characters and sets `notesTruncated`, using
+  `ASSISTANT_TOOL_NOTE_PREVIEW_CHAR_BUDGET` (`libs/ai/src/lib/assistant-tools.ts:106`; the preview is applied around `:465-471`).
+  `list_templates` returns each note whole (`shapeListTemplatesOutput`, `:331-340`), so twenty templates with full notes add
+  about 20k characters to one result (D12).
+  Decided (open question 2): preview template notes in `list_templates` with the same budget and the same `notesTruncated` flag.
+  `get_template` already returns the full note (`:401`).
+  `list_algorithms` stays whole: presets are few, and there is no single-get tool.
+  Constraints: reuse the list_decks preview logic rather than adding a second copy.
+  Spec: §Budgets (`docs/specs/ASSISTANT-DATA-ACCESS.md:186-188`) says list_decks and list_templates cut notes at 150
+  characters, get_template returns the full note, and list_algorithms returns notes whole.
+  Tests: in `libs/ai/src/lib/assistant-tools.test.ts`, the "entity notes in tool output" cases (near `:1142-1160`): the
+  list_templates case now expects a preview and `notesTruncated` for a long note; the get_template case is unchanged.
+  Done when: the libs/ai vitest command passes.
+  Manual verify: none — the change is in model-facing tool output; the user sees it only through the model's reply.
+  Commit: Preview template notes in list_templates like deck notes
+  Depends on: none
+
+- [ ] 21. Carry the step-budget stop to the run as a note
+  Goal: When the eight-step budget ends a tool run, the run finishes as an ordinary success
+  (`libs/ai/src/lib/chat-stream.ts:49`, `stopWhen`; `runChatStream` returns normally, `:89-97`), and nothing records the stop (D13).
+  Decided (open question 3): record a visible reason, and keep the status `success`.
+  Steps:
+  (1) Detect the stop in `runChatStream` by counting steps, not from the provider's finish reason.
+  In `ai` 7.0.126, `streamText` starts another step only while every tool call has an output and the stop condition is unmet.
+  Otherwise it emits `finish` with the last step's `finishReason` as the provider reported it, so do not rely on that value.
+  Count `start-step` parts, and note whether the current step emitted a `tool-call`.
+  The budget ended the run when the count reaches `CHAT_TOOL_STEP_BUDGET` and the last step emitted a tool call.
+  Emit the stop only after the abort and error checks that follow the loop, so a failed or canceled stream never carries it.
+  (2) Send it as a stream chunk.
+  `ChatStreamChunk` (`libs/ai/src/lib/generation.ts:33`) has only text and reasoning kinds; add a kind for the budget stop.
+  `AiStreamEvent` carries `ChatStreamChunk` as is (`libs/native-ipc/src/index.ts:160`), so Electron forwards the new kind.
+  Update `apps/electron/IPC.md` (AI channels) in the same commit.
+  Add the kind to `RunChunk` (`libs/assistant/src/lib/assistant-protocol.ts:45-50`).
+  The runtime already forwards non-text chunks unchanged (`libs/assistant/src/lib/conversation-runtime.ts:245-255`).
+  Map the kind to a reducer action in `libs/assistant-react/src/lib/runs/assistant-event-to-action.ts`.
+  (3) Store it on the run as its own optional field, for example `stopNote: "step_budget"`.
+  Do not add it to `RunTerminationReason`: `reason` means why a run did not finish, and three things enforce that.
+  `InterruptedReason` is `Exclude<RunTerminationReason, "user">` (`state/conversation-types.ts:14`), so a new value would
+  become a valid interrupt reason.
+  `transitionRun` clears `reason` on complete (`state/conversation-run-lifecycle.ts:64`).
+  The restore schema rejects any reason on a success run (`persistence/conversation-persistence-schema.ts:195-221`).
+  The restore schema accepts the new field on a success run only.
+  `transitionRun` clears it on fail, cancel, and interrupt.
+  Otherwise a cancel that lands between the chunk and the completion would store a canceled run that restore rejects.
+  Constraints: the note is metadata only and never enters the history sent to the model. Restore keeps it.
+  Tests: the item 14 eight-call case asserts the stop chunk; a run that finishes in fewer steps emits none.
+  The reducer stores the field from the chunk and clears it on cancel.
+  Restore keeps it on a success run and rejects it on any other status.
+  Done when: the vitest command for each lib touched passes (`libs/ai`, `libs/assistant`, `libs/assistant-react`, and
+  `libs/native-ipc` if it has tests); `nx run @koloda/electron:typecheck` passes.
+  Manual verify: none — the stop happens only at the step budget, which a person cannot reach reliably by hand. Item 22 owns
+  the visible copy and its manual check.
+  Commit: Carry the step-budget stop to the run as a note
+  Depends on: 14
+
+- [ ] 22. Show the step-budget note under the run's status
+  Goal: With item 21 in place, a run that stopped at the step budget carries the note, but nothing shows it (D13).
+  Render a note under the run's status line, in the same place as the other run-status copy, saying that the assistant
+  stopped at its tool-step limit. The status itself stays `success`.
+  Copy: add the message to `libs/ai-react/locales/en/messages.po` and `ru`, next to the `ai.chat.message.status.*` keys
+  (`en/messages.po:80-96`), then compile both apps (`agents/I18N.md`).
+  Spec: §Tools (`docs/specs/ASSISTANT-DATA-ACCESS.md:129`, "the run stops") and the status copy in
+  `docs/specs/ASSISTANT-MESSAGES.md` (§Message States) name the note.
+  Constraints: the note is UI only; it must not enter the history sent to the model.
+  Tests: a render test of the status line with the budget reason, checking the en and ru labels.
+  Done when: the libs/ai-react and libs/assistant-react vitest commands pass, and both app lingui compiles run.
+  Manual verify: web: a run that reaches the step budget shows the note under its status; a finished run shows none.
+  Reaching the budget by hand is unreliable. If no prompt does it, the render test stands in, and the human checks the ru copy.
+  Commit: Show the step-budget note under the run's status
+  Depends on: 21
+
+- [ ] 23. Mark calls the user cancels as canceled, not failed
+  Goal: When a user cancels a run, its running tool calls end as failed. The helper that does this is
+  `state/conversation-run-helpers.ts:57-66`, and it runs for every termination (`state/conversation-run-lifecycle.ts:84-85`).
+  That is accurate for an error and wrong for a cancel the user asked for. For `add_deck`, it also tells the user the deck was
+  not created when it may have been (D4).
+  Decided (open question 4): a user cancel shows its running calls as canceled. Failure and interruption keep failed.
+  Steps: add `canceled` to the persisted tool-call status enum
+  (`libs/assistant-react/src/lib/persistence/conversation-persistence-schema.ts:134`,
+  `z.enum(["running", "success", "error"])`) and to the `ToolCallStatus` type (`state/conversation-types.ts`).
+  Pass the helper the run's termination reason, and set `canceled` only for a user cancel.
+  Render "Canceled" in `libs/ai-react/src/lib/ai-tool-activity.tsx` next to the existing failed copy
+  (`ai.chat.tool-activity.failed`), with en and ru keys, then compile both apps.
+  Spec: §Visibility (`docs/specs/ASSISTANT-DATA-ACCESS.md:153-183`): a call still running when the user cancels is marked
+  canceled; one still running when the run fails or is interrupted is marked failed.
+  §Persistence keeps the crash rule (failed).
+  Constraints: restore keeps canceled rows as canceled; `add_deck`'s row follows the same rule.
+  Tests: a reducer test for a cancel versus a failure; an ai-tool-activity test for the canceled label; a restore test for a
+  canceled row.
+  Done when: the libs/assistant-react and libs/ai-react vitest commands pass, and both lingui compiles run.
+  Manual verify: web: cancel a run while a tool row still reads Running; the row reads Canceled, not Failed. If the call
+  finishes too fast to catch by hand, the unit tests stand in.
+  Commit: Mark calls the user cancels as canceled, not failed
   Depends on: none
 
 ## Outcome
