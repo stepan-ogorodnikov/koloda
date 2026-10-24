@@ -206,12 +206,4 @@ describe("toSubmitCommand / toRetryCommand", () => {
       },
     });
   });
-
-  it("builds a retry command without embedding data access", () => {
-    const prepared = prepareRunRequest(makeConfig(), "hello", [], {});
-    expect(prepared).not.toBeNull();
-    const command = toRetryCommand("conv-1", "run-1", prepared!);
-
-    expect(command.input).not.toHaveProperty("dataAccess");
-  });
 });

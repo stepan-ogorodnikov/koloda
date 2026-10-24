@@ -30,8 +30,8 @@ export function createExecutionIdentity(cfg: AssistantConversationConfig): Assis
  * stream. Centralizing the guard stack here is what lets `handleRetry`
  * execute only after validation.
  *
- * Prep is chat-only. A stored `dataAccess` snapshot is never embedded into
- * the request (tools, not injection).
+ * Prep is chat-only. No user data is embedded into the request; the model
+ * reads it through tools.
  */
 export function prepareRunRequest(
   cfg: AssistantConversationConfig,

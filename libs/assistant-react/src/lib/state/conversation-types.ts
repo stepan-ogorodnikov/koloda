@@ -1,7 +1,6 @@
 import type { GeneratedCard, ModelParameter, StreamUsage } from "@koloda/ai";
 import type { AssistantRunError } from "@koloda/assistant";
 import type { TemplateFields } from "@koloda/srs";
-import type { DataAccessSnapshot } from "../runs/data-access";
 import type { UIMessage } from "ai";
 
 export type CardStatus = "idle" | "pending" | "success" | "error";
@@ -71,8 +70,6 @@ export type AssistantRun = {
   elapsedSeconds: number | null;
   modelName?: string;
   usage?: StreamUsage;
-  /** Optional restore field from v1 injection. New submits omit it; malformed values fail as corrupt. */
-  dataAccess?: DataAccessSnapshot;
 };
 
 export type RevertState = {

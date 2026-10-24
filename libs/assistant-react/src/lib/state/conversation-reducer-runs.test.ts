@@ -1,5 +1,4 @@
 import { describe, expect, it, vi } from "vitest";
-import type { DataAccessSnapshot } from "../runs/data-access";
 import { conversationReducer } from "./conversation-reducer";
 import { initialConversationState } from "./conversation-types";
 import { findLatestErroredRun, hasRetryableTurn } from "./conversation-run-helpers";
@@ -72,20 +71,6 @@ describe("conversationReducer", () => {
       ]);
 
       expect(state.runs["r1"].modelName).toBeUndefined();
-    });
-
-    it("leaves dataAccess undefined on submit (legacy rows restore it)", () => {
-      const state = conversationReducer(initialConversationState, [
-        "submitTurn",
-        {
-          runId: "r1",
-          text: "hello",
-          kind: "chat-text",
-          assistantText: "",
-        },
-      ]);
-
-      expect(state.runs["r1"].dataAccess).toBeUndefined();
     });
   });
 
@@ -997,21 +982,6 @@ describe("conversationReducer", () => {
       state = conversationReducer(state, ["restartRun", { runId: "r2" }]);
 
       expect(state.dismissedRunErrorId).toBe("r1");
-    });
-
-    it("keeps the stored data access snapshot on restart", () => {
-      const dataAccess: DataAccessSnapshot = { context: "User decks:", manifest: { decks: [], writeTarget: null } };
-      let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
-      // WHY: new submits omit dataAccess; legacy rows carry it from restore.
-      state = {
-        ...state,
-        runs: { ...state.runs, r1: { ...state.runs["r1"]!, dataAccess } },
-      };
-      state = conversationReducer(state, ["runFailed", { runId: "r1", error: { message: "boom" } }]);
-
-      state = conversationReducer(state, ["restartRun", { runId: "r1" }]);
-
-      expect(state.runs["r1"].dataAccess).toBe(dataAccess);
     });
   });
 });

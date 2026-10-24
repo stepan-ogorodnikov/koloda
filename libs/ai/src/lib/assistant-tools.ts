@@ -15,7 +15,7 @@ export type DeckSummaryOutput = {
   deckId: string;
   title: string;
   cardCount: number;
-  /** Null mirrors the v1 data-access manifest: the deck's template was not among the resolved set. */
+  /** Null when the deck's template was not among the templates read for this call. */
   templateTitle: string | null;
   fieldTitles: string[];
   /**

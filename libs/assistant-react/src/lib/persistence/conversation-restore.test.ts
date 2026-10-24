@@ -4,7 +4,6 @@ import { fromPersistedState, normalizeRestoredConversation, toPersistedState } f
 import { coerceConversationState } from "./conversation-persistence-schema";
 import type { RestoreIssue } from "./conversation-persistence-schema";
 import { CONVERSATION_SCHEMA_VERSION } from "./conversation-schema-version";
-import type { DataAccessSnapshot } from "../runs/data-access";
 import { initialConversationState } from "../state/conversation-types";
 import { findLatestErroredRun } from "../state/conversation-run-helpers";
 import type { ConversationReducerState } from "../state/conversation-types";
@@ -441,7 +440,7 @@ describe("coerceConversationState", () => {
     });
   });
 
-  describe("run dataAccess coercion", () => {
+  describe("run dataAccess residue", () => {
     function makeStateWithRun(run: Record<string, unknown>) {
       return {
         ...storedRow,
@@ -466,196 +465,12 @@ describe("coerceConversationState", () => {
       };
     }
 
-    const fullSnapshot: DataAccessSnapshot = {
-      context: "User decks:\n- Deck: Spanish — 12 cards — Template: Basic (Front, Back)",
-      manifest: {
-        decks: [
-          { deckId: testId(3), title: "Spanish", cardCount: 12, templateTitle: "Basic" },
-          { deckId: testId(7), title: "Kanji", cardCount: 40, templateTitle: null },
-        ],
-        writeTarget: {
-          isMissing: false,
-          deckId: testId(3),
-          title: "Spanish",
-          totalCards: 12,
-          listedCards: 10,
-          fullFieldCards: 4,
-          isCapped: false,
-          isTruncated: true,
-        },
-      },
-    };
-
-    it("keeps dataAccess intact across a save→restore roundtrip (JSON wire shape)", () => {
-      const state: ConversationReducerState = {
-        ...storedRow,
-        id: "conv-1",
-        runs: {
-          r1: {
-            id: "r1",
-            status: "success",
-            cards: [],
-            cardStatuses: {},
-            toolCalls: [],
-            templateFields: null,
-            startedAt: new Date(1000),
-            elapsedSeconds: 1,
-            dataAccess: fullSnapshot,
-          },
-        },
-      };
-      // WHY: JSON round-trip simulates the wire — Dates leave as ISO strings,
-      // so asserting a restored Date instance proves the row was coerced, not
-      // passed through.
-      const persisted = JSON.parse(JSON.stringify(toPersistedState(state))) as unknown;
-      const restored = expectOk(persisted);
-      expect(restored.runs["r1"]?.startedAt).toBeInstanceOf(Date);
-      expect(restored.runs["r1"]?.startedAt.getTime()).toBe(1000);
-      expect(restored.runs["r1"]?.dataAccess).toEqual(fullSnapshot);
-    });
-
-    it("restores rows saved before data access unchanged (no dataAccess snapshot)", () => {
-      const coerced = expectOk(makeStateWithRun(baseRun()));
-      expect(coerced.runs["r1"].dataAccess).toBeUndefined();
-    });
-
-    it("rejects a wrong-typed dataAccess value as corrupt", () => {
-      expect(expectCorrupt(makeStateWithRun(baseRun({ dataAccess: "yes" }))).length).toBeGreaterThan(0);
-      expect(expectCorrupt(makeStateWithRun(baseRun({ dataAccess: null }))).length).toBeGreaterThan(0);
-      expect(
-        expectCorrupt(
-          makeStateWithRun(baseRun({ dataAccess: { context: 5, manifest: { decks: [], writeTarget: null } } })),
-        ).length,
-      ).toBeGreaterThan(0);
-      expect(
-        expectCorrupt(
-          makeStateWithRun(
-            baseRun({
-              dataAccess: {
-                ...fullSnapshot,
-                manifest: {
-                  ...fullSnapshot.manifest,
-                  decks: [{ deckId: testId(3), title: "Spanish", cardCount: "12", templateTitle: "Basic" }],
-                },
-              },
-            }),
-          ),
-        ).length,
-      ).toBeGreaterThan(0);
-      expect(
-        expectCorrupt(
-          makeStateWithRun(
-            baseRun({
-              dataAccess: {
-                ...fullSnapshot,
-                manifest: {
-                  ...fullSnapshot.manifest,
-                  decks: [{ deckId: testId(3), title: "Spanish", cardCount: 12, templateTitle: 7 }],
-                },
-              },
-            }),
-          ),
-        ).length,
-      ).toBeGreaterThan(0);
-      expect(
-        expectCorrupt(
-          makeStateWithRun(
-            baseRun({
-              dataAccess: {
-                ...fullSnapshot,
-                manifest: {
-                  ...fullSnapshot.manifest,
-                  writeTarget: { ...(fullSnapshot.manifest.writeTarget as object), isCapped: "no" },
-                },
-              },
-            }),
-          ),
-        ).length,
-      ).toBeGreaterThan(0);
-    });
-
-    it("rejects a manifest with a missing required field as corrupt", () => {
-      expect(expectCorrupt(makeStateWithRun(baseRun({ dataAccess: { context: "x" } }))).length).toBeGreaterThan(0);
-      expect(
-        expectCorrupt(
-          makeStateWithRun(
-            baseRun({
-              dataAccess: {
-                context: "x",
-                manifest: { decks: [{ deckId: testId(3), title: "Spanish", cardCount: 12 }], writeTarget: null },
-              },
-            }),
-          ),
-        ).length,
-      ).toBeGreaterThan(0);
-      expect(
-        expectCorrupt(
-          makeStateWithRun(
-            baseRun({
-              dataAccess: {
-                context: "x",
-                manifest: {
-                  decks: [],
-                  writeTarget: {
-                    isMissing: false,
-                    deckId: testId(3),
-                    title: "Spanish",
-                    listedCards: 10,
-                    fullFieldCards: 4,
-                    isCapped: false,
-                    isTruncated: true,
-                  },
-                },
-              },
-            }),
-          ),
-        ).length,
-      ).toBeGreaterThan(0);
-    });
-
-    it("rejects a writeTarget whose isMissing flag does not match its record as corrupt", () => {
-      expect(
-        expectCorrupt(
-          makeStateWithRun(
-            baseRun({ dataAccess: { context: "x", manifest: { decks: [], writeTarget: { isMissing: false } } } }),
-          ),
-        ).length,
-      ).toBeGreaterThan(0);
-      expect(
-        expectCorrupt(
-          makeStateWithRun(
-            baseRun({ dataAccess: { context: "x", manifest: { decks: [], writeTarget: { isMissing: "true" } } } }),
-          ),
-        ).length,
-      ).toBeGreaterThan(0);
-    });
-
-    it("accepts legal edge shapes: empty context, empty decks, null writeTarget, missing-deck marker", () => {
-      const coerced = expectOk(
-        makeStateWithRun(baseRun({ dataAccess: { context: "", manifest: { decks: [], writeTarget: null } } })),
-      );
-      expect(coerced.runs["r1"]?.dataAccess).toEqual({ context: "", manifest: { decks: [], writeTarget: null } });
-
-      const marker = expectOk(
-        makeStateWithRun(
-          baseRun({ dataAccess: { context: "", manifest: { decks: [], writeTarget: { isMissing: true } } } }),
-        ),
-      );
-      expect(marker.runs["r1"]?.dataAccess?.manifest.writeTarget).toEqual({ isMissing: true });
-    });
-
-    it("strips unknown extra keys inside the manifest instead of failing the row", () => {
-      const coerced = expectOk(
-        makeStateWithRun(
-          baseRun({
-            dataAccess: {
-              context: "x",
-              manifest: { decks: [], writeTarget: null, futureField: 1 },
-            },
-          }),
-        ),
-      );
-      expect(coerced.runs["r1"]?.dataAccess?.manifest).toEqual({ decks: [], writeTarget: null });
+    // WHY: older rows may still carry the retired submit-time snapshot. It is
+    // never read, so even a malformed value must not block restore.
+    it("restores a run whose stored row carries a malformed dataAccess value, dropping the key", () => {
+      const coerced = expectOk(makeStateWithRun(baseRun({ dataAccess: { context: 5 } })));
+      expect(coerced.runs["r1"]?.status).toBe("success");
+      expect(coerced.runs["r1"]).not.toHaveProperty("dataAccess");
     });
   });
 

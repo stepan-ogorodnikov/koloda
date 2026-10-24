@@ -89,48 +89,6 @@ const runStatusField = z.enum(["streaming", "success", "failed", "canceled", "in
 
 const cardStatusField = z.enum(["idle", "pending", "success", "error"]);
 
-/**
- * `dataAccess` snapshot: the submit-time context text plus its manifest. The
- * shape mirrors `DataAccessManifest` (`../runs/data-access.ts`) — the single
- * source of truth; do not invent a parallel persistence-only shape. Unknown
- * extra keys are stripped like the rest of the row, but known-shape violations
- * (a string where a UUID belongs, a missing required field, a write target
- * whose `isMissing` flag does not match its record) fail the whole row.
- */
-const deckSummaryField = z.object({
-  deckId: z.uuid(),
-  title: z.string(),
-  cardCount: z.number(),
-  templateTitle: z.string().nullable(),
-});
-
-// INVARIANT: `isMissing` is the discriminator — a present write target is
-// either the missing-deck marker or the full record, never a mix of both.
-const writeTargetField = z.discriminatedUnion("isMissing", [
-  z.object({ isMissing: z.literal(true) }),
-  z.object({
-    isMissing: z.literal(false),
-    deckId: z.uuid(),
-    title: z.string(),
-    totalCards: z.number(),
-    listedCards: z.number(),
-    fullFieldCards: z.number(),
-    isCapped: z.boolean(),
-    isTruncated: z.boolean(),
-  }),
-]);
-
-const dataAccessManifestField = z.object({
-  decks: z.array(deckSummaryField),
-  /** Null on chat runs — chat never includes card contents. */
-  writeTarget: writeTargetField.nullable(),
-});
-
-const dataAccessSnapshotField = z.object({
-  context: z.string(),
-  manifest: dataAccessManifestField,
-});
-
 const toolCallStatusField = z.enum(["running", "success", "error"]);
 
 /**
@@ -178,10 +136,6 @@ const runSchema: z.ZodType<AssistantRun> = z
     modelName: z.string().optional(),
     usage: passthroughField,
     error: errorField,
-    // INVARIANT: optional so rows saved before data access restore unchanged;
-    // when present it must validate — a malformed manifest fails the row as
-    // corrupt rather than silently dropping the snapshot from the run.
-    dataAccess: dataAccessSnapshotField.optional(),
     // INVARIANT: a malformed array fails the row as corrupt rather than
     // silently dropping tool history from the run.
     toolCalls: z.array(activityField),
@@ -238,7 +192,6 @@ const runSchema: z.ZodType<AssistantRun> = z
       modelName: run.modelName,
       usage: run.usage as StreamUsage | undefined,
       error: run.error,
-      dataAccess: run.dataAccess,
       toolCalls: run.toolCalls as RunActivity[],
       writeTargetDeckId: run.writeTargetDeckId,
       writeTargetTemplateId: run.writeTargetTemplateId,

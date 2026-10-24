@@ -35,8 +35,6 @@ export function transitionRun(draft: ConversationReducerState, runId: string, ev
     run.startedAt = new Date();
     run.elapsedSeconds = null;
     run.modelName = event.modelName !== undefined ? event.modelName : run.modelName;
-    // WHY: restart leaves the stored dataAccess snapshot untouched - retry
-    // reuses the runId, so the recorded snapshot stays authoritative.
     run.usage = undefined;
     run.error = undefined;
     draft.activeRunId = runId;

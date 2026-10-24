@@ -14,9 +14,7 @@ import {
   currentConversationIdAtom,
   upsertConversationAtom,
 } from "../state/conversation-store";
-import type { DataAccessSnapshot } from "./data-access";
 import { useRunOrchestration } from "./use-run-orchestration";
-import { testId } from "../../test/test-helpers";
 
 // WHY: `handleRetry` must validate before starting a stream so an invalid
 // retry (no prompt/profile/model) never reaches the engine.
@@ -343,10 +341,6 @@ describe("useRunOrchestration — always-chat submit", () => {
       "propose_cards",
     ]);
     expect(command.input.request).not.toHaveProperty("dataContext");
-
-    const runId = readState().activeRunId;
-    expect(runId).not.toBeNull();
-    expect(readState().runs[runId!].dataAccess).toBeUndefined();
   });
 
   it("submit is chat+tools without a conversation deck", async () => {
@@ -387,17 +381,8 @@ describe("useRunOrchestration — retry always chat", () => {
     store.set(currentConversationIdAtom, id);
   }
 
-  function addFailedChatRun(runId: string, dataAccess?: DataAccessSnapshot) {
+  function addFailedChatRun(runId: string) {
     dispatch(["submitTurn", { runId, text: "hello", kind: "chat-text", assistantText: "" }]);
-    // WHY: new submits omit dataAccess; legacy rows carry it from restore.
-    // Set directly to simulate a restored snapshot.
-    if (dataAccess) {
-      const current = readState();
-      store.set(upsertConversationAtom, {
-        ...current,
-        runs: { ...current.runs, [runId]: { ...current.runs[runId]!, dataAccess } },
-      });
-    }
     dispatch(["runFailed", { runId, error: { message: "boom" } }]);
   }
 
@@ -419,33 +404,7 @@ describe("useRunOrchestration — retry always chat", () => {
     return dispatchCommand.mock.calls[index]![0] as Extract<AssistantCommand, { type: "retry" }>;
   }
 
-  it("chat retry with a stored snapshot is inert: no request embed, still sends tools", async () => {
-    seedConversation("conv-1");
-    const stored: DataAccessSnapshot = {
-      context: "User decks:\n- Deck: Old — 1 card — Template: Default (Front, Back)",
-      manifest: {
-        decks: [{ deckId: testId(1), title: "Old", cardCount: 1, templateTitle: "Default" }],
-        writeTarget: null,
-      },
-    };
-    addFailedChatRun("run-1", stored);
-
-    const { result } = orchestrate();
-    await act(async () => {
-      await result.current.handleRetry("run-1");
-    });
-
-    expect(dispatchCommand).toHaveBeenCalledTimes(1);
-    const command = retryCommand();
-    // WHY: the stored v1 snapshot lives only on the run record as inert
-    // metadata; the retry command never carries it and restart preserves it.
-    expect(command.input).not.toHaveProperty("dataAccess");
-    expect(command.input.request).not.toHaveProperty("dataContext");
-    expect(command.input.request).toMatchObject({ tools: CHAT_TOOLS });
-    expect(readState().runs["run-1"].dataAccess).toBe(stored);
-  });
-
-  it("chat retry without a snapshot still sends tools", async () => {
+  it("chat retry still sends tools", async () => {
     seedConversation("conv-1");
     addFailedChatRun("run-1");
 
@@ -456,7 +415,6 @@ describe("useRunOrchestration — retry always chat", () => {
 
     expect(dispatchCommand).toHaveBeenCalledTimes(1);
     const command = retryCommand();
-    expect(command.input).not.toHaveProperty("dataAccess");
     expect(command.input.request).not.toHaveProperty("dataContext");
     expect(command.input.request).toMatchObject({ tools: CHAT_TOOLS });
   });

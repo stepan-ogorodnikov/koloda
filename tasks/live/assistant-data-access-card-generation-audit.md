@@ -597,7 +597,7 @@ Decision: decided (open question 3); fixed by items 21 and 22.
   Commit: Type the AI IPC data source from the NAPI mirror
   Depends on: none
 
-- [ ] 13. Delete the legacy dataAccess snapshot from runs and restore
+- [x] 13. Delete the legacy dataAccess snapshot from runs and restore
   Goal: The `dataAccess` snapshot is still a run field and a restore schema, validated and tested, but nothing reads it (D7).
   Its submit-time injection was removed (`agents/ASSISTANT-MAP.md:55`).
   Remove the field from `libs/assistant-react/src/lib/state/conversation-types.ts:4` and `:75`; its schema in
