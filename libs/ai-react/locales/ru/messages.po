@@ -179,7 +179,7 @@ msgstr "Результат"
 
 #: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:233
 msgid "ai.chat.tool-activity.output-truncated"
-msgstr "Вывод (сокращён)"
+msgstr "Результат (сокращён)"
 
 #: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:349
 msgid "ai.chat.tool-activity.propose-cards"

@@ -663,7 +663,7 @@ Decision: decided (open question 3); fixed by items 21 and 22.
   Commit: Drop sync tool data reads and fix the stale tool comments
   Depends on: none
 
-- [ ] 17. Match the Russian truncated output label to the plain one
+- [x] 17. Match the Russian truncated output label to the plain one
   Goal: In `libs/ai-react/locales/ru/messages.po`, `ai.chat.tool-activity.output-truncated` (`:182`) reads "Вывод (сокращён)",
   while `ai.chat.tool-activity.output` (`:178`) reads "Результат" (D11).
   Change `:182` to "Результат (сокращён)".
