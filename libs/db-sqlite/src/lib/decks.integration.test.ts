@@ -127,6 +127,19 @@ describe("decks repository integration", () => {
     expect(await getDeck(db, deck.id)).toMatchObject({ title: "Trimmed deck" });
   });
 
+  // WHY: the assistant refreshes deck caches when a run ends mid add_deck, and
+  // that refetch must not cache the list from before the insert.
+  it("completes an add before a read issued while the add is running", async () => {
+    const { db } = testDb;
+    const { algorithm, template } = await seedDeckContext(db, { deck: { title: "Seeded" } });
+
+    const adding = addDeck(db, { title: "Spanish", algorithmId: algorithm.id, templateId: template.id });
+    const reading = getDecks(db);
+
+    expect((await reading).map((deck) => deck.title)).toEqual(expect.arrayContaining(["Seeded", "Spanish"]));
+    await adding;
+  });
+
   it("rejects add/update when algorithm or template is missing", async () => {
     const { db } = testDb;
     const { deck, algorithm, template } = await seedDeckContext(db);

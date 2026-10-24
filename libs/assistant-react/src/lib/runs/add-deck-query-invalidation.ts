@@ -45,3 +45,20 @@ export function notifyAddDeckWritten(store: AssistantJotaiStore, event: Assistan
   if (call?.name !== ASSISTANT_TOOL_SPECS.add_deck.name || call.status !== "success") return;
   invalidateAddDeckQueries?.();
 }
+
+// WHY: a run can end while add_deck is still writing. The binder checks the
+// abort signal only before the host call, and the runtime drops the result
+// after an abort, so the deck may exist with no recorded success. Read the run
+// before the terminal event marks the call failed.
+// INVARIANT: the refetch lands after the write only because both hosts run data
+// calls in call order — the desktop addon on one worker thread, web SQLite
+// behind one lock that `addDeck` holds for its whole call.
+export function notifyAddDeckStillRunning(store: AssistantJotaiStore, event: AssistantEvent): void {
+  if (event.type !== "runTerminated") return;
+  const run = store.get(conversationsAtom)[event.conversationId]?.runs[event.runId];
+  const isAddDeckRunning = run?.toolCalls.some(
+    (entry) =>
+      !isReasoningActivity(entry) && entry.name === ASSISTANT_TOOL_SPECS.add_deck.name && entry.status === "running",
+  );
+  if (isAddDeckRunning) invalidateAddDeckQueries?.();
+}

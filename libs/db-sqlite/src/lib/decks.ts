@@ -29,19 +29,24 @@ export async function addDeck(db: DB, data: InsertDeckData) {
   return throwKnownError("db.add", async () => {
     const payload = insertDeckSchema.parse(data);
 
-    const algorithm = await getAlgorithm(db, payload.algorithmId);
-    if (!algorithm) throw new AppError("not-found.decks.add.algorithm", `Algorithm id: ${payload.algorithmId}`);
-    const template = await getTemplate(db, payload.templateId);
-    if (!template) throw new AppError("not-found.decks.add.template", `Template id: ${payload.templateId}`);
+    // WHY: one lock hold for the whole add, so a read issued once the add has
+    // started queues behind the insert. The assistant's deck refresh after a
+    // canceled add_deck relies on it, as desktop's single worker thread gives.
+    return db.transaction(async (tx) => {
+      const algorithm = await getAlgorithm(tx, payload.algorithmId);
+      if (!algorithm) throw new AppError("not-found.decks.add.algorithm", `Algorithm id: ${payload.algorithmId}`);
+      const template = await getTemplate(tx, payload.templateId);
+      if (!template) throw new AppError("not-found.decks.add.template", `Template id: ${payload.templateId}`);
 
-    const rowId = mintedUuidv7();
-    await db.run(
-      `INSERT INTO decks (id, title, algorithm_id, template_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, NULL)`,
-      [rowId, payload.title, payload.algorithmId, payload.templateId, nowMs()],
-    );
-    const result = await getDeck(db, rowId);
-    if (!result) throw new Error("no row returned");
-    return result;
+      const rowId = mintedUuidv7();
+      await tx.run(
+        `INSERT INTO decks (id, title, algorithm_id, template_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, NULL)`,
+        [rowId, payload.title, payload.algorithmId, payload.templateId, nowMs()],
+      );
+      const result = await getDeck(tx, rowId);
+      if (!result) throw new Error("no row returned");
+      return result;
+    });
   });
 }
 

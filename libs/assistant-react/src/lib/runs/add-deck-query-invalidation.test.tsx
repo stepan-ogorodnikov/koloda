@@ -7,7 +7,7 @@ import type { PropsWithChildren } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { initialConversationState } from "../state/conversation-types";
 import type { ConversationReducerState } from "../state/conversation-types";
-import { dispatchToConversationOnStore, upsertConversationAtom } from "../state/conversation-store";
+import { conversationsAtom, dispatchToConversationOnStore, upsertConversationAtom } from "../state/conversation-store";
 import { resetAssistantEngineForTests } from "./assistant-persistence-host";
 import { getAssistantEngine } from "./assistant-engine-instance";
 import { useAssistantEngineHost } from "./use-assistant-engine-host";
@@ -92,6 +92,43 @@ describe("add_deck query invalidation", () => {
       { queryKey: queryKeys.algorithms.decksAll() },
       { queryKey: queryKeys.templates.decksAll() },
     ]);
+    unmount();
+  });
+
+  it("invalidates deck caches when the run is canceled while add_deck is still writing", async () => {
+    let markWriting!: () => void;
+    const isWriting = new Promise<void>((resolve) => {
+      markWriting = resolve;
+    });
+    const { store, invalidate, unmount } = mount(
+      async (_profileId, request: ChatStreamRequest, _onChunk, abortSignal) => {
+        const onToolEvent = request.onToolEvent;
+        if (!onToolEvent) throw new Error("expected onToolEvent");
+        onToolEvent({ kind: "toolCall", call: { id: "add-1", name: "add_deck", input: { title: "Spanish" } } });
+        markWriting();
+        // The host write never sees the signal; only the stream does.
+        await new Promise<never>((_resolve, reject) => {
+          abortSignal.addEventListener("abort", () => reject(new DOMException("Aborted", "AbortError")));
+        });
+        return undefined;
+      },
+    );
+
+    void runChat(store, true);
+    await isWriting;
+    expect(invalidate).not.toHaveBeenCalled();
+
+    await getAssistantEngine().dispatch({ type: "cancel", conversationId: "conv-1", runId: "run-1" });
+
+    await vi.waitFor(() => {
+      expect(invalidate.mock.calls.map((call) => call[0])).toEqual([
+        { queryKey: queryKeys.decks.all() },
+        { queryKey: queryKeys.lessons.all({}) },
+        { queryKey: queryKeys.algorithms.decksAll() },
+        { queryKey: queryKeys.templates.decksAll() },
+      ]);
+    });
+    expect(store.get(conversationsAtom)["conv-1"]?.runs["run-1"]?.status).toBe("canceled");
     unmount();
   });
 

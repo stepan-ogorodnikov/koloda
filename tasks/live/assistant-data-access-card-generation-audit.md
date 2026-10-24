@@ -525,7 +525,7 @@ Decision: decided (open question 3); fixed by items 21 and 22.
   Commit: Describe shortened tool rows and the budget glossary in the data spec
   Depends on: none
 
-- [ ] 10. Refresh deck queries when a run ends with add_deck still writing
+- [x] 10. Refresh deck queries when a run ends with add_deck still writing
   Goal: A cancel during an `add_deck` write does not stop the host write, because the binder checks the signal only before the
   host call (`libs/ai/src/lib/assistant-tools.ts:315-320`).
   The runtime then drops the tool events (`libs/assistant/src/lib/conversation-runtime.ts:284-289`), so the reducer marks the
