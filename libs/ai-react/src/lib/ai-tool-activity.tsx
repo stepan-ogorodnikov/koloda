@@ -355,8 +355,8 @@ function toolCallSummaries(call: AIToolCallRecord, translate: I18n["_"]): string
   // t-macro and extracts nested `plural()` as `{0}`, which does not match the SWC runtime id.
   if (call.status === "error") return [translate(msg`ai.chat.tool-activity.failed`)];
   if (call.status !== "success") return [];
-  // WHY: compact counts exist only for these output shapes; unknown tools
-  // must stay name-only (commit 5 copy decision / Visibility UI).
+  // WHY: compact counts exist only for these output shapes; any other tool
+  // shows its label alone, never a guessed summary (spec Visibility).
   if (call.name === "list_decks") {
     const deckCount = namedArrayLength(call.output, "decks") ?? namedInteger(call.output, "itemCount");
     if (deckCount !== null) return [translate(msg`${plural(deckCount, { other: "ai.chat.tool-activity.decks" })}`)];

@@ -643,7 +643,7 @@ Decision: decided (open question 3); fixed by items 21 and 22.
   Commit: Derive the chat tool list in tests from the registry only
   Depends on: none
 
-- [ ] 16. Drop sync tool data reads and fix the stale tool comments
+- [x] 16. Drop sync tool data reads and fix the stale tool comments
   Goal: `AssistantToolDataSource` in `libs/ai/src/lib/assistant-tool-executor.ts:24-45` accepts sync returns
   (`Promise<X> | X`) only for the test fixtures (`assistant-tool-executor.test.ts:44-57`) (D10).
   Make each member async, and wrap the fixtures' values in async functions.

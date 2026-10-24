@@ -261,6 +261,8 @@ export const ASSISTANT_TOOL_SPECS = {
     description:
       "Create an empty flashcard deck. Call list_templates first for templateId; do not ask the user for ids. algorithmId only when the user asked for a specific algorithm (via list_algorithms); otherwise omit and use the app default. This creates an empty deck only; inventing cards still requires propose_cards. Does not edit templates or algorithms.",
     inputSchema: z.object({
+      // WHY: 255 repeats ENTITY_TITLE_MAX_LENGTH (`@koloda/app` titles.ts); the root
+      // barrel cannot import `@koloda/app` (libs/ai README).
       title: z.preprocess((value) => (typeof value === "string" ? value.trim() : value), z.string().min(1).max(255)),
       templateId: z.uuid(),
       algorithmId: z.uuid().optional(),
@@ -280,8 +282,8 @@ export const ASSISTANT_TOOL_SPECS = {
 export type AssistantToolName = keyof typeof ASSISTANT_TOOL_SPECS;
 
 /**
- * Tool activity during a chat run, shaped to map one-to-one onto the run-record
- * tool chunk kinds planned for the engine protocol — hosts forward it unchanged.
+ * Tool activity during a chat run. The engine protocol's run chunks take these
+ * kinds verbatim; Electron sends a tool error over IPC as text.
  */
 export type AssistantToolEvent =
   | { kind: "toolCall"; call: { id: string; name: string; input: unknown } }

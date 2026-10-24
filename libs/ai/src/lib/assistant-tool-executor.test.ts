@@ -41,10 +41,10 @@ const algorithm = {
 
 function makeDataSource(overrides: Partial<Parameters<typeof createAssistantToolExecutor>[0]> = {}) {
   const data = {
-    getDecks: () => [{ id: DECK_ID, title: "Spanish", templateId: TEMPLATE_ID }],
-    getTemplates: () => [template],
-    getAlgorithms: () => [algorithm],
-    getCards: () => [
+    getDecks: async () => [{ id: DECK_ID, title: "Spanish", templateId: TEMPLATE_ID }],
+    getTemplates: async () => [template],
+    getAlgorithms: async () => [algorithm],
+    getCards: async () => [
       {
         id: "01900000-0000-7000-8000-000000000009",
         deckId: DECK_ID,
@@ -52,9 +52,9 @@ function makeDataSource(overrides: Partial<Parameters<typeof createAssistantTool
         content: { [FRONT_ID]: { text: "hola" } },
       },
     ],
-    getCardCounts: () => ({ [DECK_ID]: 3 }),
-    getDefaultAlgorithmId: () => ALGORITHM_ID,
-    createDeck: () => {
+    getCardCounts: async () => ({ [DECK_ID]: 3 }),
+    getDefaultAlgorithmId: async () => ALGORITHM_ID,
+    createDeck: async () => {
       throw new Error("createDeck should not be called");
     },
   };
@@ -69,7 +69,7 @@ describe("createAssistantToolExecutor", () => {
   });
 
   it("list_decks reports zero for a deck without cards", async () => {
-    const executor = createAssistantToolExecutor(makeDataSource({ getCardCounts: () => ({}) }));
+    const executor = createAssistantToolExecutor(makeDataSource({ getCardCounts: async () => ({}) }));
     const output = (await executor("list_decks", {})) as { decks: Array<{ deckId: string; cardCount: number }> };
     expect(output.decks[0]?.cardCount).toBe(0);
   });
@@ -83,7 +83,7 @@ describe("createAssistantToolExecutor", () => {
   });
 
   it("list_templates returns an empty list when there are no templates", async () => {
-    const executor = createAssistantToolExecutor(makeDataSource({ getTemplates: () => [] }));
+    const executor = createAssistantToolExecutor(makeDataSource({ getTemplates: async () => [] }));
     const output = (await executor("list_templates", {})) as { templates: unknown[] };
     expect(output.templates).toEqual([]);
   });
@@ -97,7 +97,7 @@ describe("createAssistantToolExecutor", () => {
   });
 
   it("list_algorithms returns an empty list when there are no algorithms", async () => {
-    const executor = createAssistantToolExecutor(makeDataSource({ getAlgorithms: () => [] }));
+    const executor = createAssistantToolExecutor(makeDataSource({ getAlgorithms: async () => [] }));
     const output = (await executor("list_algorithms", {})) as { algorithms: unknown[] };
     expect(output.algorithms).toEqual([]);
   });
@@ -106,7 +106,7 @@ describe("createAssistantToolExecutor", () => {
     let cardReads = 0;
     const executor = createAssistantToolExecutor(
       makeDataSource({
-        getCards: () => {
+        getCards: async () => {
           cardReads += 1;
           return [];
         },
@@ -127,7 +127,7 @@ describe("createAssistantToolExecutor", () => {
     let cardReads = 0;
     const executor = createAssistantToolExecutor(
       makeDataSource({
-        getCards: () => {
+        getCards: async () => {
           cardReads += 1;
           return [];
         },
@@ -143,8 +143,8 @@ describe("createAssistantToolExecutor", () => {
     let cardReads = 0;
     const executor = createAssistantToolExecutor(
       makeDataSource({
-        getDecks: () => [{ id: DECK_ID, title: "Spanish", templateId: MISSING_TEMPLATE_ID }],
-        getCards: () => {
+        getDecks: async () => [{ id: DECK_ID, title: "Spanish", templateId: MISSING_TEMPLATE_ID }],
+        getCards: async () => {
           cardReads += 1;
           return [];
         },
@@ -165,11 +165,11 @@ describe("createAssistantToolExecutor", () => {
     let cardReads = 0;
     const executor = createAssistantToolExecutor(
       makeDataSource({
-        getDecks: () => {
+        getDecks: async () => {
           deckReads += 1;
           return [{ id: DECK_ID, title: "Spanish", templateId: TEMPLATE_ID }];
         },
-        getCards: () => {
+        getCards: async () => {
           cardReads += 1;
           return [];
         },
@@ -193,11 +193,11 @@ describe("createAssistantToolExecutor", () => {
     let cardReads = 0;
     const executor = createAssistantToolExecutor(
       makeDataSource({
-        getDecks: () => {
+        getDecks: async () => {
           deckReads += 1;
           return [{ id: DECK_ID, title: "Spanish", templateId: TEMPLATE_ID }];
         },
-        getCards: () => {
+        getCards: async () => {
           cardReads += 1;
           return [];
         },
@@ -214,7 +214,7 @@ describe("createAssistantToolExecutor", () => {
     let cardReads = 0;
     const executor = createAssistantToolExecutor(
       makeDataSource({
-        getCards: () => {
+        getCards: async () => {
           cardReads += 1;
           return [];
         },
@@ -230,8 +230,8 @@ describe("createAssistantToolExecutor", () => {
     let cardReads = 0;
     const executor = createAssistantToolExecutor(
       makeDataSource({
-        getDecks: () => [{ id: DECK_ID, title: "Spanish", templateId: MISSING_TEMPLATE_ID }],
-        getCards: () => {
+        getDecks: async () => [{ id: DECK_ID, title: "Spanish", templateId: MISSING_TEMPLATE_ID }],
+        getCards: async () => {
           cardReads += 1;
           return [];
         },
@@ -246,16 +246,16 @@ describe("createAssistantToolExecutor", () => {
   it("add_deck returns the stored deck with field titles and does not read cards", async () => {
     const createdId = "01900000-0000-7000-8000-000000000099";
     let cardReads = 0;
-    const createDeck = vi.fn((input: { title: string; templateId: string; algorithmId: string }) => ({
+    const createDeck = vi.fn(async (input: { title: string; templateId: string; algorithmId: string }) => ({
       id: createdId,
       ...input,
     }));
-    const getDefaultAlgorithmId = vi.fn(() => ALGORITHM_ID);
+    const getDefaultAlgorithmId = vi.fn(async () => ALGORITHM_ID);
     const executor = createAssistantToolExecutor(
       makeDataSource({
         createDeck,
         getDefaultAlgorithmId,
-        getCards: () => {
+        getCards: async () => {
           cardReads += 1;
           return [];
         },
@@ -288,7 +288,7 @@ describe("createAssistantToolExecutor", () => {
 
   it("add_deck does not create a deck when the template is missing", async () => {
     const createDeck = vi.fn();
-    const getDefaultAlgorithmId = vi.fn(() => ALGORITHM_ID);
+    const getDefaultAlgorithmId = vi.fn(async () => ALGORITHM_ID);
     const executor = createAssistantToolExecutor(makeDataSource({ createDeck, getDefaultAlgorithmId }));
 
     await expect(executor("add_deck", { title: "Spanish", templateId: MISSING_TEMPLATE_ID })).rejects.toThrow(
@@ -301,7 +301,7 @@ describe("createAssistantToolExecutor", () => {
   it("add_deck does not create a deck when the requested algorithm is missing", async () => {
     const missingAlgorithmId = "01900000-0000-7000-8000-000000000032";
     const createDeck = vi.fn();
-    const getDefaultAlgorithmId = vi.fn(() => ALGORITHM_ID);
+    const getDefaultAlgorithmId = vi.fn(async () => ALGORITHM_ID);
     const executor = createAssistantToolExecutor(makeDataSource({ createDeck, getDefaultAlgorithmId }));
 
     await expect(
@@ -313,7 +313,7 @@ describe("createAssistantToolExecutor", () => {
 
   it("add_deck stores the default algorithm id when algorithmId is omitted", async () => {
     const createdId = "01900000-0000-7000-8000-000000000099";
-    const createDeck = vi.fn((input: { title: string; templateId: string; algorithmId: string }) => ({
+    const createDeck = vi.fn(async (input: { title: string; templateId: string; algorithmId: string }) => ({
       id: createdId,
       ...input,
     }));
@@ -337,7 +337,7 @@ describe("createAssistantToolExecutor", () => {
     const missingAlgorithmId = "01900000-0000-7000-8000-000000000032";
     const createDeck = vi.fn();
     const executor = createAssistantToolExecutor(
-      makeDataSource({ createDeck, getDefaultAlgorithmId: () => missingAlgorithmId }),
+      makeDataSource({ createDeck, getDefaultAlgorithmId: async () => missingAlgorithmId }),
     );
 
     await expect(executor("add_deck", { title: "Spanish", templateId: TEMPLATE_ID })).rejects.toThrow(

@@ -123,7 +123,7 @@ Shaping and budgets stay in `@koloda/ai`.
 
 **Electron** — `apps/electron/src/ai-ipc.ts`:
 
-- Build the executor over NAPI `KolodaDb` (sync reads).
+- Build the executor over NAPI `KolodaDb`; every addon method returns a Promise.
 - Recreate `executeTool` on the main side; functions do not cross IPC.
 - Forward `onToolEvent` on the existing AI stream channel.
 

@@ -19,18 +19,15 @@ import type {
 /**
  * Data access the assistant tools need. Injected by the host so this module
  * stays I/O-free (libs/ai holds shaping and budgets only — hosts bind the DB).
- * Each fn may be sync (NAPI) or async (web SQLite); `await` normalizes both.
  */
 export type AssistantToolDataSource = {
-  getDecks: () =>
-    | Promise<Array<{ id: string; title: string; templateId: string; notes?: string | null }>>
-    | Array<{ id: string; title: string; templateId: string; notes?: string | null }>;
-  getTemplates: () => Promise<AssistantToolTemplate[]> | AssistantToolTemplate[];
-  getAlgorithms: () => Promise<AssistantToolAlgorithm[]> | AssistantToolAlgorithm[];
-  getCards: (params: { deckId: string }) => Promise<AssistantToolCard[]> | AssistantToolCard[];
-  getCardCounts: () => Promise<Record<string, number>> | Record<string, number>;
+  getDecks: () => Promise<Array<{ id: string; title: string; templateId: string; notes?: string | null }>>;
+  getTemplates: () => Promise<AssistantToolTemplate[]>;
+  getAlgorithms: () => Promise<AssistantToolAlgorithm[]>;
+  getCards: (params: { deckId: string }) => Promise<AssistantToolCard[]>;
+  getCardCounts: () => Promise<Record<string, number>>;
   /** App default algorithm — the same id manual deck create stores when the user does not pick one. */
-  getDefaultAlgorithmId: () => Promise<string> | string;
+  getDefaultAlgorithmId: () => Promise<string>;
   /**
    * Persist an empty deck. Called only after template and algorithm resolution succeed.
    * `algorithmId` is always explicit here; the host does not invent cards.
@@ -39,9 +36,7 @@ export type AssistantToolDataSource = {
     title: string;
     templateId: string;
     algorithmId: string;
-  }) =>
-    | Promise<{ id: string; title: string; templateId: string; algorithmId: string }>
-    | { id: string; title: string; templateId: string; algorithmId: string };
+  }) => Promise<{ id: string; title: string; templateId: string; algorithmId: string }>;
 };
 
 /**
