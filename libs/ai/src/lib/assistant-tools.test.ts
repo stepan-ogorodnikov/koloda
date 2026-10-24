@@ -590,29 +590,45 @@ describe("tool output shaping", () => {
     expect(output.isCapped).toBe(true);
   });
 
-  it("truncates within the serialized char budget before the cap is reached", () => {
-    // WHY: each entry serializes to ~7.1k chars, so the second never fits the
+  it("skips a card past the serialized char budget and keeps filling with later cards", () => {
+    // WHY: each big entry serializes to ~7.1k chars, so the second never fits the
     // 8k budget — truncation comes from the budget, not the 200-card cap.
     const bigText = "x".repeat(3_500);
+    const big = { "01900000-0000-7000-8000-00000000000a": bigText, "01900000-0000-7000-8000-00000000000b": bigText };
     const cards = [
-      card({
-        "01900000-0000-7000-8000-00000000000a": bigText,
-        "01900000-0000-7000-8000-00000000000b": bigText,
-      }),
-      card({
-        "01900000-0000-7000-8000-00000000000a": bigText,
-        "01900000-0000-7000-8000-00000000000b": bigText,
-      }),
-      card({
-        "01900000-0000-7000-8000-00000000000a": "small",
-        "01900000-0000-7000-8000-00000000000b": "tiny",
-      }),
+      card(big),
+      card({ "01900000-0000-7000-8000-00000000000a": "uno", "01900000-0000-7000-8000-00000000000b": "one" }),
+      card(big),
+      card({ "01900000-0000-7000-8000-00000000000a": "dos", "01900000-0000-7000-8000-00000000000b": "two" }),
+      card({ "01900000-0000-7000-8000-00000000000a": "tres", "01900000-0000-7000-8000-00000000000b": "three" }),
+    ];
+
+    const output = shapeGetDeckCardsOutput(deck, cards);
+
+    expect(output.totalCards).toBe(5);
+    expect(output.cards).toEqual([
+      { fields: { Front: bigText, Back: bigText } },
+      { fields: { Front: "uno", Back: "one" } },
+      { fields: { Front: "dos", Back: "two" } },
+      { fields: { Front: "tres", Back: "three" } },
+    ]);
+    expect(output.isCapped).toBe(true);
+  });
+
+  it("lists the fitting cards when the first card alone is over the char budget", () => {
+    const cards = [
+      card({ "01900000-0000-7000-8000-00000000000a": "x".repeat(9_000), "01900000-0000-7000-8000-00000000000b": "" }),
+      card({ "01900000-0000-7000-8000-00000000000a": "hola", "01900000-0000-7000-8000-00000000000b": "hello" }),
+      card({ "01900000-0000-7000-8000-00000000000a": "gato", "01900000-0000-7000-8000-00000000000b": "cat" }),
     ];
 
     const output = shapeGetDeckCardsOutput(deck, cards);
 
     expect(output.totalCards).toBe(3);
-    expect(output.cards).toEqual([{ fields: { Front: bigText, Back: bigText } }]);
+    expect(output.cards).toEqual([
+      { fields: { Front: "hola", Back: "hello" } },
+      { fields: { Front: "gato", Back: "cat" } },
+    ]);
     expect(output.isCapped).toBe(true);
   });
 });

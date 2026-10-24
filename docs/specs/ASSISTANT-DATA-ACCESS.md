@@ -192,6 +192,7 @@ The other reads return notes whole (they hold at most 1,024 characters, the same
 
 Card lists returned by `get_deck_cards` are capped at 200 cards per deck.
 They are also budgeted at 8,000 characters of serialized card content.
+A card too long for what is left of the budget is skipped; later cards that fit are still returned.
 The true deck size is still reported.
 When fewer cards are returned than the deck holds, the result says so.
 An oversized deck degrades to the capped list.

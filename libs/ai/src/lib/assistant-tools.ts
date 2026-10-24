@@ -438,7 +438,9 @@ export function shapeGetDeckCardsOutput(
     // WHY: the model consumes tool output as JSON, so the budget is spent on what is
     // actually serialized (entry length plus array separator), not a parallel rendering.
     const cost = JSON.stringify(entry).length + (listed.length > 0 ? 1 : 0);
-    if (usedChars + cost > ASSISTANT_TOOL_CARD_LIST_CHAR_BUDGET) break;
+    // WHY: skip, not stop and not cut. One long card must not hide the cards after
+    // it, and a cut card would show the model content the deck does not hold.
+    if (usedChars + cost > ASSISTANT_TOOL_CARD_LIST_CHAR_BUDGET) continue;
     usedChars += cost;
     listed.push(entry);
   }

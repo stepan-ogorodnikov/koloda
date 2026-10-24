@@ -558,7 +558,7 @@ Decision: decided (open question 3); fixed by items 21 and 22.
   Commit: Refresh deck queries when a run ends with add_deck still writing
   Depends on: none
 
-- [ ] 11. Skip an oversized card in deck reads instead of stopping
+- [x] 11. Skip an oversized card in deck reads instead of stopping
   Goal: `shapeGetDeckCardsOutput` (`libs/ai/src/lib/assistant-tools.ts:428-452`) stops at the first entry that does not fit
   the 8,000-character card budget (`break` at `:441`).
   A first card over the budget returns zero cards from a full deck, and a long card at position 3 hides every card after it
