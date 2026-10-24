@@ -1,6 +1,6 @@
 # Assistant data access and card generation audit fixes
 
-Status: ready
+Status: done
 Guides: agents/IMPLEMENTATION-PLAN.md, agents/TASKS.md, agents/ASSISTANT-MAP.md, docs/specs/ASSISTANT-CARD-GENERATION.md, docs/specs/ASSISTANT-DATA-ACCESS.md, agents/ADD-ASSISTANT-TOOL.md, agents/CODE-STYLE.md, agents/CODE-DOCUMENTATION.md, agents/TESTING.md, agents/VERIFY.md, agents/I18N.md, agents/BACKWARDS-COMPATIBILITY.md, agents/FUNCTIONAL-SPECIFICATIONS.md, agents/MARKDOWN.md, libs/srs/README.md, apps/web-e2e/README.md, apps/electron-e2e/README.md, libs/e2e/README.md, apps/electron/IPC.md, libs/native-ipc/README.md, docs/specs/ASSISTANT-MESSAGES.md
 Flow: local
 
@@ -857,4 +857,62 @@ Decision: decided (open question 3); fixed by items 21 and 22.
 
 ## Outcome
 
-Not yet. Filled at Done, with the skipped and needs-decision entries restated there (`agents/TASKS.md`, §Audit-sourced tasks).
+Shipped, one commit per Plan item.
+Every finding is fixed except D8's file move (Skipped).
+C4 was fixed earlier by `286e708b` (messages task), with no plan item.
+
+- Add settles from the mutation promise, so statuses and the deck and lesson queries update after the table unmounts
+  (C1, item 2).
+- A deleted write-target deck shows the unavailable notice, not an Add button that fails every card (C2, item 3).
+- Add mocks resolve the host's per-card response, not the `{ insertedIds }` shape no host returns (C3, item 1).
+- The `addCard` reducer action and the submit-time `templateFields` in runs are gone (C5, C6, item 4).
+- The cards table and serializer get the saved template fields, not a fake `Template` (C7, item 5).
+- The card insert payload is inlined, and `@koloda/srs` no longer depends on `@koloda/ai` (C8, item 6).
+- The initial-selection rule appears once in the spec, and the e2e twins cite headings, not line numbers
+  (C9, C10, item 7).
+- Tool rows keep their counts and titles when a long output is shortened (D1, item 8).
+- The data spec describes shortened tool rows and the budget glossary (D2, D3, item 9).
+- A run that ends while `add_deck` is still writing refreshes the deck queries (D4 cache, item 10).
+- `get_deck_cards` skips an oversized card instead of stopping at it (D5, item 11).
+- The AI IPC data source is typed from the NAPI mirror (D6, item 12).
+- The legacy `dataAccess` snapshot is gone from runs and restore (D7, item 13).
+- Tool-stream tests cover abort, the step budget, and tool errors (D8, item 14).
+- The chat tool list in tests is derived from the registry only (D9, item 15).
+- Sync tool data reads are dropped, and the stale tool comments are fixed (D10, item 16).
+- The Russian truncated-output label matches the plain one (D11, item 17).
+- A proposed card with an empty required field is rejected at proposal, so the model retries it in the same turn
+  (C11, item 18).
+- A request that fails to reach the host returns its rows to idle; a per-card host error stays `error`
+  (C11, item 19).
+- `list_templates` previews notes like `list_decks`; `get_template` returns the full note (D12, item 20).
+- A run that stops at the step budget finishes as a success with a visible reason (D13, item 21).
+- That note shows under the run's status (D13, item 22).
+- A user cancel marks its running tool rows Canceled, not Failed; failure and interruption stay Failed
+  (D2, D4 label, item 23).
+- An `add_deck` run canceled before its write creates no deck: the binder hands the run's signal to the executor, which
+  checks it before `createDeck` (D4 residual, item 24).
+
+Skipped:
+
+- D8's file move.
+  The report asked that the `chat tool streaming` block move to `chat-stream.test.ts`.
+  The fake-model harness lives in `assistant-tools.test.ts`.
+  The assistant-messages task kept these cases there, because a second file-level mock of `ai-sdk-ollama` would leak
+  under `isolate: false` (`tasks/archive/assistant-messages-audit.md`, Outcome).
+  Item 14 rewrote the cases where they are.
+  Revisit only together with the harness.
+
+Needs decision: none.
+The human decided all six open questions on 2026-10-24.
+
+Handed off, not fixed here:
+
+- `libs/srs-react/src/lib/cards/add-card.tsx:58-65` refreshes from per-call `mutate` callbacks and drops the
+  invalidation when the dialog unmounts.
+  It is the same defect as C1, seen in passing (Scope, Out).
+  It belongs to the cards slice (`docs/specs/CARDS.md`).
+
+Checks on the branch:
+
+- `bun run check:push` passed on the tip before Archive.
+- Not recorded as run: the Playwright e2e suites and the Plan's manual verify steps.
