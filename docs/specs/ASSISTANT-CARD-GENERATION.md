@@ -44,8 +44,8 @@ It goes through the same lifecycle: streaming, success, failure, cancellation, o
 ## Card Structure
 
 Each proposed card has a value for each field in the target deck's template.
-A card with no values across all fields is discarded.
-A card with at least one field value is kept.
+Optional fields may be empty.
+Which cards are dropped is in §How Cards Are Proposed.
 
 ## How Cards Are Proposed
 
@@ -65,9 +65,12 @@ The write target is the deck id and template id on that tool call.
 An empty proposal does not create a review table.
 An accepted list of 0 cards does not set a write target.
 Invalid cards and cards past the proposal cap are dropped from the accepted list.
+A card is invalid when every field is empty, or when a required field is empty.
+So no card reaches the review table with a required field empty.
 Dropped cards do not fail the tool call and are never silently omitted.
 The result reports how many were dropped and includes a message whenever any were dropped.
 It also carries the deck's field titles, so the model can retry those cards with them.
+When a required field was left empty, the message names it, so the model can fill it and propose again in the same turn.
 See ASSISTANT-DATA-ACCESS.md (§Budgets) for the cap.
 If the tool accepts 0 cards, that message asks the model to call `propose_cards` again with those titles.
 The run itself is not failed by an empty or invalid proposal.

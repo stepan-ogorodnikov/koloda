@@ -204,13 +204,20 @@ export const PROPOSE_CARDS_RETRY_MESSAGE =
 
 export function proposeCardsRejectedMessage(rejectedCount: number): string {
   const noun = rejectedCount === 1 ? "card was" : "cards were";
-  return `${rejectedCount} ${noun} not accepted (empty, unmappable, or over the ${ASSISTANT_TOOL_MAX_CARDS_PER_DECK}-card cap). Call propose_cards again for those cards with cards[].fields keyed by the exact titles in templateFields. Do not write the cards as markdown.`;
+  return `${rejectedCount} ${noun} not accepted (empty, missing a required field, unmappable, or over the ${ASSISTANT_TOOL_MAX_CARDS_PER_DECK}-card cap). Call propose_cards again for those cards with cards[].fields keyed by the exact titles in templateFields. Do not write the cards as markdown.`;
 }
 
-function proposeCardsOutputMessage(acceptedCount: number, rejectedCount: number): string | undefined {
+function proposeCardsOutputMessage(
+  acceptedCount: number,
+  rejectedCount: number,
+  emptyRequiredTitles: string[],
+): string | undefined {
   if (rejectedCount === 0) return undefined;
-  if (acceptedCount === 0) return PROPOSE_CARDS_RETRY_MESSAGE;
-  return proposeCardsRejectedMessage(rejectedCount);
+  const message = acceptedCount === 0 ? PROPOSE_CARDS_RETRY_MESSAGE : proposeCardsRejectedMessage(rejectedCount);
+  // WHY: titles alone cannot explain this drop — the model keyed them right but
+  // left a required field empty, so name the fields it has to fill.
+  if (emptyRequiredTitles.length === 0) return message;
+  return `${message} Required fields left empty: ${emptyRequiredTitles.join(", ")}. Fill them in every card.`;
 }
 
 export const ASSISTANT_TOOL_SPECS = {
@@ -495,11 +502,13 @@ export function shapeProposeCardsOutput(
 ): ProposeCardsOutput {
   const templateFields = deck.template.content.fields;
   const accepted: ProposeCardsOutput["cards"] = [];
+  const emptyRequiredTitles = new Set<string>();
   let rejectedCount = 0;
   for (const card of cards) {
-    const fields = shapeProposedCardFields(card.fields, templateFields);
-    if (fields == null) {
+    const shaped = shapeProposedCardFields(card.fields, templateFields);
+    if (shaped == null || "emptyRequiredTitles" in shaped) {
       rejectedCount += 1;
+      for (const title of shaped?.emptyRequiredTitles ?? []) emptyRequiredTitles.add(title);
       continue;
     }
     // WHY: extras past the per-deck cap count as rejected so the model sees how
@@ -508,10 +517,14 @@ export function shapeProposeCardsOutput(
       rejectedCount += 1;
       continue;
     }
-    accepted.push({ fields });
+    accepted.push({ fields: shaped.fields });
   }
 
-  const message = proposeCardsOutputMessage(accepted.length, rejectedCount);
+  const message = proposeCardsOutputMessage(
+    accepted.length,
+    rejectedCount,
+    templateFields.filter((field) => emptyRequiredTitles.has(field.title)).map((field) => field.title),
+  );
   return {
     deckId: deck.id,
     deckTitle: deck.title,
@@ -546,11 +559,13 @@ function lookupProposedFieldText(inputFields: Record<string, string>, field: { i
   return "";
 }
 
+/** `null` for a card with no values; `emptyRequiredTitles` for one that leaves a required field empty. */
 function shapeProposedCardFields(
   inputFields: Record<string, string>,
   fields: AssistantToolTemplate["content"]["fields"],
-): Record<string, string> | null {
+): { fields: Record<string, string> } | { emptyRequiredTitles: string[] } | null {
   const mapped: Record<string, string> = {};
+  const emptyRequiredTitles: string[] = [];
   let hasNonEmpty = false;
   for (const field of fields) {
     // WHY: models often send lowercase titles or field ids instead of the exact
@@ -558,10 +573,13 @@ function shapeProposedCardFields(
     const text = lookupProposedFieldText(inputFields, field);
     mapped[field.title] = text;
     if (text.length > 0) hasNonEmpty = true;
+    else if (field.isRequired) emptyRequiredTitles.push(field.title);
   }
-  // WHY: required fields are save-time; proposal keeps any card with at least one value.
   if (!hasNonEmpty) return null;
-  return mapped;
+  // WHY: Add would fail such a card on its required field, so it is rejected here
+  // while the model can still fill it in the same turn.
+  if (emptyRequiredTitles.length > 0) return { emptyRequiredTitles };
+  return { fields: mapped };
 }
 
 function isStringRecord(value: unknown): value is Record<string, string> {

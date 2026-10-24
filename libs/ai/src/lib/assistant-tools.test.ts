@@ -688,18 +688,38 @@ describe("propose_cards output shaping", () => {
     expect(output.message).toBe(proposeCardsRejectedMessage(2));
   });
 
-  it("keeps cards that have any value even if a required field is blank", () => {
+  it("rejects a card that leaves a required field blank and names the field", () => {
     const output = shapeProposeCardsOutput(deck, [
       { fields: { Front: "hola", Hint: "greeting" } },
       { fields: { Front: "gato", Back: "cat" } },
     ]);
 
-    expect(output.cards).toEqual([
-      { fields: { Front: "hola", Back: "", Hint: "greeting" } },
-      { fields: { Front: "gato", Back: "cat", Hint: "" } },
+    expect(output.cards).toEqual([{ fields: { Front: "gato", Back: "cat", Hint: "" } }]);
+    expect(output.rejectedCount).toBe(1);
+    expect(output.message).toBe(
+      `${proposeCardsRejectedMessage(1)} Required fields left empty: Back. Fill them in every card.`,
+    );
+  });
+
+  it("names every blank required field, in template order, when no card is accepted", () => {
+    const output = shapeProposeCardsOutput(deck, [
+      { fields: { Back: "hello" } },
+      { fields: { Hint: "only optional" } },
     ]);
-    expect(output.rejectedCount).toBe(0);
-    expect(output.message).toBeUndefined();
+
+    expect(output.cards).toEqual([]);
+    expect(output.rejectedCount).toBe(2);
+    expect(output.message).toBe(
+      `${PROPOSE_CARDS_RETRY_MESSAGE} Required fields left empty: Front, Back. Fill them in every card.`,
+    );
+  });
+
+  it("rejects a key that matches no field as a blank required field", () => {
+    const output = shapeProposeCardsOutput(deck, [{ fields: { Front: "hola", Answer: "hello" } }]);
+
+    expect(output.cards).toEqual([]);
+    expect(output.rejectedCount).toBe(1);
+    expect(output.message).toContain("Required fields left empty: Back.");
   });
 
   it("accepts lowercase field titles and field-id keys", () => {
@@ -734,8 +754,15 @@ describe("propose_cards output shaping", () => {
     expect(output.message).toBe(proposeCardsRejectedMessage(1));
   });
 
-  it("keeps a card with only an optional field value", () => {
-    const output = shapeProposeCardsOutput(deck, [{ fields: { Hint: "only optional" } }]);
+  it("keeps a card with one value when the template requires no field", () => {
+    const optionalDeck = {
+      ...deck,
+      template: {
+        ...template,
+        content: { fields: template.content.fields.map((field) => ({ ...field, isRequired: false })) },
+      },
+    };
+    const output = shapeProposeCardsOutput(optionalDeck, [{ fields: { Hint: "only optional" } }]);
 
     expect(output.cards).toEqual([{ fields: { Front: "", Back: "", Hint: "only optional" } }]);
     expect(output.rejectedCount).toBe(0);

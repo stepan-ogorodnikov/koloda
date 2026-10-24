@@ -378,10 +378,10 @@ describe("createAssistantToolExecutor", () => {
     expect(output.cards).toEqual([
       { fields: { Front: "hola", Back: "hello" } },
       { fields: { Front: "gato", Back: "1" } },
-      { fields: { Front: "x", Back: "" } },
     ]);
-    expect(output.rejectedCount).toBe(1);
-    expect(output.message).toMatch(/1 card was not accepted/);
+    expect(output.rejectedCount).toBe(2);
+    expect(output.message).toMatch(/2 cards were not accepted/);
+    expect(output.message).toContain("Required fields left empty: Back.");
   });
 
   it("rejects unknown tool names", async () => {

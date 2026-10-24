@@ -678,7 +678,7 @@ Decision: decided (open question 3); fixed by items 21 and 22.
   Commit: Match the Russian truncated output label to the plain one
   Depends on: none
 
-- [ ] 18. Reject a proposed card that leaves a required field empty
+- [x] 18. Reject a proposed card that leaves a required field empty
   Goal: A proposal keeps any card with one non-empty value (`libs/ai/src/lib/assistant-tools.ts:545-561`,
   `shapeProposedCardFields`).
   So a card with an empty required field is accepted, selected, and fails at Add with an icon-only error (C11).
