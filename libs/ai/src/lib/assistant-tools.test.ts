@@ -121,12 +121,13 @@ function createTextAroundToolModel(textBeforeTool: MockStreamChunk[]) {
   });
 }
 
-/** Asks for list_decks on every step and never answers. */
-function createEndlessToolModel() {
+/** Asks for list_decks on the first `toolSteps` calls, then answers with text. */
+function createToolStepsModel(toolSteps: number) {
   let callCount = 0;
   return new MockLanguageModelV3({
     doStream: async (): Promise<MockStreamResult> => {
       callCount += 1;
+      if (callCount > toolSteps) return textOnlyChunks();
       return streamOf([
         { type: "tool-call", toolCallId: `call-${callCount}`, toolName: "list_decks", input: JSON.stringify({}) },
         { type: "finish", finishReason: { unified: "tool-calls", raw: "tool-calls" }, usage: usage(3, 5) },
@@ -1105,14 +1106,15 @@ describe("chat tool streaming", () => {
     ]);
   });
 
-  it("ends a run that keeps calling tools after eight model calls", async () => {
-    const model = createEndlessToolModel();
+  it("ends a run that keeps calling tools after eight model calls and says so", async () => {
+    const model = createToolStepsModel(Number.POSITIVE_INFINITY);
     fakeModelSlot.model = model;
     const executeTool = vi.fn().mockResolvedValue({ decks: [] });
+    const onChunk = vi.fn();
 
     const result = await streamChatWithOllama(
       createChatRequest({ tools: ["list_decks"], executeTool }),
-      vi.fn(),
+      onChunk,
       new AbortController().signal,
       OLLAMA_OPTIONS,
     );
@@ -1120,6 +1122,23 @@ describe("chat tool streaming", () => {
     expect(model.doStreamCalls).toHaveLength(8);
     expect(executeTool).toHaveBeenCalledTimes(8);
     expect(result).toMatchObject({ promptTokens: 3, completionTokens: 5 });
+    expect(onChunk.mock.calls).toEqual([[{ kind: "stepBudgetReached" }]]);
+  });
+
+  it("does not report the step budget when the eighth step answers", async () => {
+    const model = createToolStepsModel(7);
+    fakeModelSlot.model = model;
+    const onChunk = vi.fn();
+
+    await streamChatWithOllama(
+      createChatRequest({ tools: ["list_decks"], executeTool: vi.fn().mockResolvedValue({ decks: [] }) }),
+      onChunk,
+      new AbortController().signal,
+      OLLAMA_OPTIONS,
+    );
+
+    expect(model.doStreamCalls).toHaveLength(8);
+    expect(onChunk.mock.calls).toEqual([[{ kind: "text", text: "You have " }], [{ kind: "text", text: "2 decks." }]]);
   });
 
   it("records a failing host tool as a tool error and lets the model answer", async () => {

@@ -744,7 +744,7 @@ Decision: decided (open question 3); fixed by items 21 and 22.
   Commit: Preview template notes in list_templates like deck notes
   Depends on: none
 
-- [ ] 21. Carry the step-budget stop to the run as a note
+- [x] 21. Carry the step-budget stop to the run as a note
   Goal: When the eight-step budget ends a tool run, the run finishes as an ordinary success
   (`libs/ai/src/lib/chat-stream.ts:49`, `stopWhen`; `runChatStream` returns normally, `:89-97`), and nothing records the stop (D13).
   Decided (open question 3): record a visible reason, and keep the status `success`.

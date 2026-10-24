@@ -29,8 +29,12 @@ export type ChatStreamRequest = {
 /**
  * A provider stream delta: plain assistant text, or reasoning content pulled
  * out of reasoning models (rendered as dimmed text, never sent as history).
+ * `stepBudgetReached` comes last, when the tool-step budget ended the run.
  */
-export type ChatStreamChunk = { kind: "text"; text: string } | { kind: "reasoning"; text: string };
+export type ChatStreamChunk =
+  | { kind: "text"; text: string }
+  | { kind: "reasoning"; text: string }
+  | { kind: "stepBudgetReached" };
 
 export type ChatStreamGenerator = (
   request: ChatStreamRequest,

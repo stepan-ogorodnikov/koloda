@@ -136,6 +136,7 @@ const runSchema: z.ZodType<AssistantRun> = z
     modelName: z.string().optional(),
     usage: passthroughField,
     error: errorField,
+    stopNote: z.literal("step_budget").optional(),
     // INVARIANT: a malformed array fails the row as corrupt rather than
     // silently dropping tool history from the run.
     toolCalls: z.array(activityField),
@@ -146,6 +147,12 @@ const runSchema: z.ZodType<AssistantRun> = z
     writeTargetTemplateId: z.uuid().optional(),
   })
   .superRefine((run, ctx) => {
+    // INVARIANT: only a success run carries a stop note. A streaming checkpoint
+    // can hold it between the chunk and completion; restore drops it when it
+    // interrupts that run.
+    if (run.stopNote !== undefined && run.status !== "success" && run.status !== "streaming") {
+      ctx.addIssue({ code: "custom", path: ["stopNote"], message: `${run.status} runs must not carry a stop note` });
+    }
     // INVARIANT: canceled → reason:user; interrupted → app_shutdown|crash_recovery;
     // success/failed/streaming must not carry a termination reason.
     if (run.status === "canceled") {
@@ -192,6 +199,7 @@ const runSchema: z.ZodType<AssistantRun> = z
       modelName: run.modelName,
       usage: run.usage as StreamUsage | undefined,
       error: run.error,
+      stopNote: run.stopNote,
       toolCalls: run.toolCalls as RunActivity[],
       writeTargetDeckId: run.writeTargetDeckId,
       writeTargetTemplateId: run.writeTargetTemplateId,

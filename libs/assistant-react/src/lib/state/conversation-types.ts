@@ -70,6 +70,10 @@ export type AssistantRun = {
   elapsedSeconds: number | null;
   modelName?: string;
   usage?: StreamUsage;
+  // INVARIANT: success runs only, and a streaming run until it ends. A note on how a
+  // finished run stopped, never why a run did not finish — that is `reason`.
+  // Never sent to the model.
+  stopNote?: "step_budget";
 };
 
 export type RevertState = {

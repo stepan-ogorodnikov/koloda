@@ -2,7 +2,15 @@ import { dispatchReducerAction } from "@koloda/core-react";
 import type { ReducerAction } from "@koloda/core-react";
 import { produce } from "immer";
 import type { ConversationReducerState } from "./conversation-types";
-import { cancelRun, completeRun, interruptRun, restartRun, runFailed, setUsage } from "./conversation-run-lifecycle";
+import {
+  cancelRun,
+  completeRun,
+  interruptRun,
+  markStepBudgetReached,
+  restartRun,
+  runFailed,
+  setUsage,
+} from "./conversation-run-lifecycle";
 import {
   appendAssistantReasoning,
   rollbackSubmitTurn,
@@ -35,6 +43,7 @@ const actions = {
   cancelRun,
   interruptRun,
   restartRun,
+  markStepBudgetReached,
   setUsage,
   setAIProfile,
   setAIModel,

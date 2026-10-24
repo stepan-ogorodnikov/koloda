@@ -75,6 +75,7 @@ export function normalizeRestoredConversation(state: ConversationReducerState): 
         ...run,
         status: "interrupted",
         reason: "crash_recovery",
+        stopNote: undefined,
       };
       runChanged = true;
       didNormalize = true;

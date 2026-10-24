@@ -46,6 +46,7 @@ export type RunStartSnapshot = {
 export type RunChunk =
   | { kind: "assistantText"; text: string }
   | { kind: "reasoning"; text: string }
+  | { kind: "stepBudgetReached" }
   | { kind: "usage"; usage: StreamUsage }
   | AssistantToolEvent;
 

@@ -389,6 +389,52 @@ describe("coerceConversationState", () => {
     });
   });
 
+  describe("run stopNote coercion", () => {
+    function makeStateWithRun(run: Record<string, unknown>) {
+      return {
+        ...storedRow,
+        id: "conv-1",
+        createdAt: new Date(1),
+        messages: [],
+        runs: { r1: run },
+      };
+    }
+
+    function baseRun(overrides: Record<string, unknown> = {}) {
+      return {
+        id: "r1",
+        status: "success",
+        cards: [],
+        cardStatuses: {},
+        templateFields: null,
+        startedAt: new Date(1),
+        elapsedSeconds: 1,
+        toolCalls: [],
+        ...overrides,
+      };
+    }
+
+    // WHY: a streaming checkpoint holds the note between the chunk and completion.
+    it.each(["success", "streaming"])("keeps the step-budget note on a %s run", (status) => {
+      const restored = expectOk(makeStateWithRun(baseRun({ status, stopNote: "step_budget" })));
+      expect(restored.runs["r1"].stopNote).toBe("step_budget");
+    });
+
+    it.each<Record<string, unknown>>([
+      { status: "failed", error: { message: "boom" } },
+      { status: "canceled", reason: "user" },
+      { status: "interrupted", reason: "crash_recovery" },
+    ])("rejects the note on a $status run", (overrides) => {
+      expect(
+        expectCorrupt(makeStateWithRun(baseRun({ ...overrides, stopNote: "step_budget" }))).length,
+      ).toBeGreaterThan(0);
+    });
+
+    it("rejects an unknown note", () => {
+      expect(expectCorrupt(makeStateWithRun(baseRun({ stopNote: "tired" }))).length).toBeGreaterThan(0);
+    });
+  });
+
   // WHY: `TemplateFields` is an *array* of field objects
   // (`Template["content"]["fields"]`), not a record. Validating it as a record
   // would fail every proposal run on restore. These pin array-or-null.
@@ -979,6 +1025,8 @@ describe("normalizeRestoredConversation", () => {
           templateFields: null,
           startedAt: new Date(5000),
           elapsedSeconds: null,
+          // A checkpoint saved after the step-budget chunk, before completion.
+          stopNote: "step_budget",
         },
       },
     };
@@ -988,6 +1036,7 @@ describe("normalizeRestoredConversation", () => {
     expect(next.runs["r1"]?.status).toBe("interrupted");
     expect(next.runs["r1"]?.reason).toBe("crash_recovery");
     expect(next.runs["r1"]?.elapsedSeconds).toBeNull();
+    expect(next.runs["r1"]?.stopNote).toBeUndefined();
     expect(next.messages).toHaveLength(2);
     expect(next.messages[1]?.parts).toEqual([{ type: "text", text: "partial reply" }]);
     expect(next.activeRunId).toBeNull();

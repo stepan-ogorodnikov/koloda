@@ -56,7 +56,8 @@ The three commands and the `AiStreamEvent` union are part of the `DataIpc` contr
 - `cmd_ai_list_models` `{ profileId }` — model list; secrets load in main, never cross IPC.
 - `cmd_ai_chat_stream` `{ requestId, profileId, request }` — returns immediately; the run streams events
   on the `ai:stream` channel (`AI_STREAM_CHANNEL` from the contract), all keyed by `requestId`:
-  - `chunk` — assistant text delta
+  - `chunk` — a `ChatStreamChunk`: an assistant text or reasoning delta, or `stepBudgetReached` once the tool-step
+    budget ends the run
   - `toolCall` — the model invoked an assistant tool
   - `toolResult` — tool output or error text (raw errors do not survive structured clone)
   - `done` — final usage

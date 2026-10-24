@@ -58,9 +58,14 @@ async function runChatStream(
   // delta so an empty block adds nothing.
   let hasEmittedText = false;
   let shouldBreakBeforeText = false;
+  let stepCount = 0;
+  let hasStepToolCall = false;
   try {
     for await (const part of result.stream) {
-      if (part.type === "text-start") {
+      if (part.type === "start-step") {
+        stepCount += 1;
+        hasStepToolCall = false;
+      } else if (part.type === "text-start") {
         shouldBreakBeforeText = hasEmittedText;
       } else if (part.type === "text-delta") {
         const text = shouldBreakBeforeText && part.text ? `\n\n${part.text}` : part.text;
@@ -72,6 +77,7 @@ async function runChatStream(
       } else if (part.type === "reasoning-delta") {
         onChunk({ kind: "reasoning", text: part.text });
       } else if (part.type === "tool-call") {
+        hasStepToolCall = true;
         onToolEvent?.({ kind: "toolCall", call: { id: part.toolCallId, name: part.toolName, input: part.input } });
       } else if (part.type === "tool-result") {
         onToolEvent?.({ kind: "toolResult", callId: part.toolCallId, output: part.output });
@@ -97,6 +103,11 @@ async function runChatStream(
 
   // WHY: onError may fire without the for-await loop throwing; rethrow so callers still see the failure.
   if (streamedError) throw streamedError;
+
+  // WHY: steps are counted, not read from the last `finish` part, whose finishReason
+  // is whatever the provider reported. streamText starts another step while every
+  // tool call has a result, so a last step that called a tool ended on the budget.
+  if (stepCount >= CHAT_TOOL_STEP_BUDGET && hasStepToolCall) onChunk({ kind: "stepBudgetReached" });
 
   // WHY: the last step's usage, not `result.usage`, which since AI SDK 7 sums every
   // tool step. The only reader is the context meter, which compares one request with

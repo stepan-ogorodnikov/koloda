@@ -31,6 +31,15 @@ describe("assistantEventToReducerAction", () => {
       }),
     ).toEqual(["appendAssistantReasoning", { runId: "r1", text: "plan" }]);
 
+    expect(
+      assistantEventToReducerAction({
+        type: "runChunk",
+        conversationId: "c1",
+        runId: "r1",
+        chunk: { kind: "stepBudgetReached" },
+      }),
+    ).toEqual(["markStepBudgetReached", { runId: "r1" }]);
+
     const usage = { promptTokens: 1, completionTokens: 2, totalTokens: 3 };
     expect(
       assistantEventToReducerAction({

@@ -37,6 +37,7 @@ export function transitionRun(draft: ConversationReducerState, runId: string, ev
     run.modelName = event.modelName !== undefined ? event.modelName : run.modelName;
     run.usage = undefined;
     run.error = undefined;
+    run.stopNote = undefined;
     draft.activeRunId = runId;
     // WHY: retry reuses the run id; a later fail must count as a new failure,
     // and a later finish away from the conversation as unread.
@@ -74,6 +75,9 @@ export function transitionRun(draft: ConversationReducerState, runId: string, ev
     run.reason = "user";
     terminationReason = "user";
   }
+  // WHY: the step-budget chunk arrives before the run ends; an end other than
+  // success keeps no note, which restore would reject as corrupt.
+  if (run.status !== "success") run.stopNote = undefined;
   finishRunningReasoning(run);
   finishRunningTools(run);
   stampElapsed(run);
@@ -119,6 +123,11 @@ type RestartRunPayload = {
 // run nor conjure one from nothing.
 export function restartRun(draft: ConversationReducerState, payload: RestartRunPayload) {
   transitionRun(draft, payload.runId, { type: "restart", modelName: payload.modelName });
+}
+
+export function markStepBudgetReached(draft: ConversationReducerState, payload: RunIdPayload) {
+  const run = draft.runs[payload.runId];
+  if (run?.status === "streaming") run.stopNote = "step_budget";
 }
 
 type SetUsagePayload = { runId: string; usage: StreamUsage };

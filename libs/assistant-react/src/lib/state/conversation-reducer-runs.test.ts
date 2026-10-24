@@ -771,6 +771,41 @@ describe("conversationReducer", () => {
     });
   });
 
+  describe("markStepBudgetReached", () => {
+    function streamedToBudget(): ConversationReducerState {
+      return reduce([
+        ["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }],
+        ["markStepBudgetReached", { runId: "r1" }],
+      ]);
+    }
+
+    it("keeps the note on a run that completes", () => {
+      const state = conversationReducer(streamedToBudget(), ["completeRun", { runId: "r1" }]);
+
+      expect(state.runs["r1"].status).toBe("success");
+      expect(state.runs["r1"].stopNote).toBe("step_budget");
+    });
+
+    it.each<[string, ConversationReducerAction]>([
+      ["cancel", ["cancelRun", { runId: "r1" }]],
+      ["failure", ["runFailed", { runId: "r1", error: { message: "boom" } }]],
+      ["interruption", ["interruptRun", { runId: "r1", reason: "app_shutdown" }]],
+    ])("drops the note when the run ends by %s", (_label, action) => {
+      const state = conversationReducer(streamedToBudget(), action);
+
+      expect(state.runs["r1"].stopNote).toBeUndefined();
+    });
+
+    it("leaves a finished run without a note untouched", () => {
+      let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
+      state = conversationReducer(state, ["completeRun", { runId: "r1" }]);
+
+      const next = conversationReducer(state, ["markStepBudgetReached", { runId: "r1" }]);
+
+      expect(next.runs["r1"].stopNote).toBeUndefined();
+    });
+  });
+
   describe("restartRun", () => {
     it("resets run status to streaming, clears cards and statuses, and sets activeRunId", () => {
       vi.useFakeTimers();
