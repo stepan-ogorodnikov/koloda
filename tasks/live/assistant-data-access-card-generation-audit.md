@@ -345,7 +345,7 @@ Decision: decided (open question 3); fixed by items 21 and 22.
 
 ## Plan
 
-- [ ] 1. Type the add mocks as the host's per-card response
+- [x] 1. Type the add mocks as the host's per-card response
   Goal: Every Add mock in the assistant tests resolves `{ insertedIds: [...] }`, a shape no host returns (C3).
   Type them as `InsertCardsResponse` from `@koloda/srs` (`libs/srs/src/lib/cards.ts:96`): an array with one
   `{ error? }` per sent card, in input order.

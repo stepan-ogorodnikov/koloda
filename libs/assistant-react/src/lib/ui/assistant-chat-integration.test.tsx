@@ -149,7 +149,7 @@ function buildQueries(): Queries {
     }),
     getCardsQuery: (params) => ({ queryKey: queryKeys.cards.deck(params), queryFn: async () => [] }),
     addCardMutation: () => ({ mutationFn: async () => undefined }),
-    addCardsMutation: () => ({ mutationFn: async () => ({ insertedIds: [] }) }),
+    addCardsMutation: () => ({ mutationFn: async (cards) => cards.map(() => ({})) }),
     updateCardMutation: () => ({ mutationFn: async () => undefined }),
     deleteCardMutation: () => ({ mutationFn: async () => undefined }),
     deleteCardsMutation: () => ({ mutationFn: async () => undefined }),

@@ -1,7 +1,7 @@
 import { queriesAtom, queryKeys } from "@koloda/core-react";
 import type { Queries } from "@koloda/core-react";
 import type { GeneratedCard } from "@koloda/ai";
-import type { Template } from "@koloda/srs";
+import type { InsertCardsResponse, Template } from "@koloda/srs";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { useAtomValue, createStore, Provider as JotaiProvider } from "jotai";
@@ -30,9 +30,13 @@ function makeCard(text: string): GeneratedCard {
   return { content: { [testId(1)]: { text } } };
 }
 
+type AddCards = (cards: unknown[]) => Promise<InsertCardsResponse>;
+
+const addAll: AddCards = async (cards) => cards.map(() => ({}));
+
 function buildQueries(): Queries {
   return {
-    addCardsMutation: () => ({ mutationFn: async () => ({ insertedIds: [] }) }),
+    addCardsMutation: () => ({ mutationFn: addAll }),
   } as unknown as Queries;
 }
 
@@ -133,7 +137,7 @@ describe("AssistantCardsTable selection", () => {
   });
 
   it("clears idle selection after a successful add so Add stays disabled", async () => {
-    const mutate = vi.fn(async () => ({ insertedIds: [] }));
+    const mutate = vi.fn(addAll);
     mountProbe([makeCard("Front A"), makeCard("Front B")], { 0: "idle", 1: "idle" }, mutate);
 
     expect(screen.getByTestId("has-selection").textContent).toBe("true");
@@ -146,7 +150,7 @@ describe("AssistantCardsTable selection", () => {
   it("refreshes deck cards and lessons after add, not AI settings", async () => {
     const queryClient = new QueryClient({ defaultOptions: { mutations: { retry: false } } });
     const invalidate = vi.spyOn(queryClient, "invalidateQueries");
-    const mutate = vi.fn(async () => ({ insertedIds: [] }));
+    const mutate = vi.fn(addAll);
     mountProbe([makeCard("Front A")], { 0: "idle" }, mutate, queryClient);
 
     fireEvent.click(screen.getByTestId("add"));
@@ -158,7 +162,7 @@ describe("AssistantCardsTable selection", () => {
   });
 
   it("does not re-add persisted success cards when Add is invoked", async () => {
-    const mutate = vi.fn(async () => ({ insertedIds: [] }));
+    const mutate = vi.fn(addAll);
     mountProbe([makeCard("Front A"), makeCard("Front B")], { 0: "success", 1: "success" }, mutate);
 
     expect(screen.getByTestId("has-selection").textContent).toBe("false");
@@ -167,11 +171,45 @@ describe("AssistantCardsTable selection", () => {
     await waitFor(() => expect(mutate).not.toHaveBeenCalled());
   });
 
+  it("maps each per-card host result to its row, in input order", async () => {
+    const mutate = vi.fn<AddCards>(async () => [{}, { error: { code: "not-found.cards.add.deck" } }]);
+    const store = mountProbe([makeCard("Front A"), makeCard("Front B")], { 0: "idle", 1: "idle" }, mutate);
+
+    fireEvent.click(screen.getByTestId("add"));
+
+    await waitFor(() => {
+      expect(store.get(conversationsAtom)["c1"]?.runs["r1"]?.cardStatuses).toEqual({ 0: "success", 1: "error" });
+    });
+  });
+
+  it("marks only the sent cards error when the add request rejects", async () => {
+    const mutate = vi.fn<AddCards>(async () => {
+      throw new Error("host unreachable");
+    });
+    const store = mountProbe(
+      [makeCard("Front A"), makeCard("Front B"), makeCard("Front C")],
+      { 0: "idle", 1: "idle", 2: "success" },
+      mutate,
+      new QueryClient({ defaultOptions: { mutations: { retry: false } } }),
+    );
+
+    fireEvent.click(screen.getByTestId("add"));
+
+    await waitFor(() => {
+      expect(store.get(conversationsAtom)["c1"]?.runs["r1"]?.cardStatuses).toEqual({
+        0: "error",
+        1: "error",
+        2: "success",
+      });
+    });
+    expect(mutate).toHaveBeenCalledOnce();
+  });
+
   it("settles add statuses on the originating conversation after switching away", async () => {
-    let resolveMutate!: (value: { insertedIds: number[] }) => void;
+    let resolveMutate!: (value: InsertCardsResponse) => void;
     const mutate = vi.fn(
       () =>
-        new Promise<{ insertedIds: number[] }>((resolve) => {
+        new Promise<InsertCardsResponse>((resolve) => {
           resolveMutate = resolve;
         }),
     );
@@ -205,7 +243,7 @@ describe("AssistantCardsTable selection", () => {
     await waitFor(() => expect(mutate).toHaveBeenCalledOnce());
 
     store.set(currentConversationIdAtom, "B");
-    resolveMutate({ insertedIds: [1] });
+    resolveMutate([{}]);
 
     await waitFor(() => {
       expect(store.get(conversationsAtom)["A"]?.runs["r1"]?.cardStatuses[0]).toBe("success");
@@ -240,7 +278,7 @@ function SelectionProbe() {
 function mountProbe(
   cards: GeneratedCard[],
   cardStatuses: Record<number, CardStatus>,
-  mutate: () => Promise<{ insertedIds: number[] }> = async () => ({ insertedIds: [] }),
+  mutate: AddCards = addAll,
   queryClient = new QueryClient(),
 ) {
   const store = createStore();
@@ -261,4 +299,5 @@ function mountProbe(
   );
 
   render(<SelectionProbe />, { wrapper: Wrapper });
+  return store;
 }
