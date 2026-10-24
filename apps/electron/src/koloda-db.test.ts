@@ -36,7 +36,7 @@ function mirrorMethods(): string[] {
   const start = source.indexOf("export interface KolodaDb {");
   if (start === -1) throw new Error("KolodaDb interface not found in koloda-db.ts");
   const block = source.slice(start, source.indexOf("\n}", start));
-  return [...block.matchAll(/^ {2}(\w+)\(.*\): .+;$/gm)].map((match) => match[1]);
+  return [...block.matchAll(/^ {2}(\w+)(?:<[^>]+>)?\(.*\): .+;$/gm)].map((match) => match[1]);
 }
 
 describe("KolodaDb NAPI mirror parity", () => {

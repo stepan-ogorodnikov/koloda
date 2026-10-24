@@ -1,6 +1,7 @@
 import { ipcMain } from "electron";
 import type { DataOnlyChannel, IpcArgs, IpcResult } from "@koloda/native-ipc";
 import { registerAiIpc } from "./ai-ipc";
+import type { AiProfileSecretsSource } from "./ai-ipc";
 import { assertAppSender } from "./app-sender";
 import type { KolodaDb } from "./koloda-db";
 
@@ -94,5 +95,5 @@ export function registerDataIpc(db: KolodaDb) {
   // WHY: ai-ipc is the single main-side secrets consumer. The addon instance
   // carries `getAiProfileSecrets`, which `KolodaDb` deliberately omits so data
   // handlers cannot reach secrets; restore the ai-ipc surface at this one call.
-  registerAiIpc(db as KolodaDb & Parameters<typeof registerAiIpc>[0]);
+  registerAiIpc(db as KolodaDb & AiProfileSecretsSource);
 }

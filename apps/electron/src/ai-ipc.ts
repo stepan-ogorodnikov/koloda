@@ -1,12 +1,4 @@
-import type {
-  AISecrets,
-  AssistantToolAlgorithm,
-  AssistantToolCard,
-  AssistantToolEvent,
-  ChatStreamChunk,
-  ChatStreamRequest,
-  AssistantToolTemplate,
-} from "@koloda/ai";
+import type { AISecrets, AssistantToolEvent, ChatStreamChunk, ChatStreamRequest } from "@koloda/ai";
 import {
   AIError,
   aiSecretsValidation,
@@ -22,22 +14,19 @@ import { AI_STREAM_CHANNEL } from "@koloda/native-ipc";
 import type { IpcMainInvokeEvent, WebContents } from "electron";
 import { ipcMain } from "electron";
 import { assertAppSender } from "./app-sender";
+import type { KolodaDb } from "./koloda-db";
 
-type KolodaDb = {
+// INVARIANT: the data methods are picked from the NAPI mirror, so a mirror change
+// fails to compile here. Secrets are typed apart: the mirror omits them on purpose.
+export type AiProfileSecretsSource = {
   getAiProfileSecrets: (profileId: string) => Promise<unknown>;
-  getDecks: () => Promise<Array<{ id: string; title: string; templateId: string; notes?: string | null }>>;
-  getTemplates: () => Promise<AssistantToolTemplate[]>;
-  getAlgorithms: () => Promise<AssistantToolAlgorithm[]>;
-  getCards: (params: { deckId: string }) => Promise<AssistantToolCard[]>;
-  getCardCounts: () => Promise<Array<{ deckId: string; count: number }>>;
-  getSettings: (params: { name: "learning" }) => Promise<{ content: { defaults: { algorithm: string } } } | null>;
-  addDeck: (data: { title: string; templateId: string; algorithmId: string }) => Promise<{
-    id: string;
-    title: string;
-    templateId: string;
-    algorithmId: string;
-  }>;
 };
+
+type AiIpcDb = Pick<
+  KolodaDb,
+  "getDecks" | "getTemplates" | "getAlgorithms" | "getCards" | "getCardCounts" | "getSettings" | "addDeck"
+> &
+  AiProfileSecretsSource;
 
 // INVARIANT: Correlate concurrent streams by requestId; abort must cancel only that run.
 const activeControllers = new Map<string, AbortController>();
@@ -64,7 +53,7 @@ function throwIpcError(error: unknown): never {
   throw new Error(JSON.stringify({ code, details: message }));
 }
 
-async function loadSecrets(db: KolodaDb, profileId: string): Promise<AISecrets> {
+async function loadSecrets(db: AiIpcDb, profileId: string): Promise<AISecrets> {
   let raw: unknown;
   try {
     raw = await db.getAiProfileSecrets(profileId);
@@ -116,14 +105,14 @@ function toToolErrorMessage(error: unknown): string {
 
 // INVARIANT: main-side executor over the NAPI KolodaDb surface. Shaping and
 // budgets live in @koloda/ai.
-async function readDefaultAlgorithmId(db: KolodaDb): Promise<string> {
+async function readDefaultAlgorithmId(db: AiIpcDb): Promise<string> {
   const learning = await db.getSettings({ name: "learning" });
   const algorithmId = learning?.content.defaults.algorithm;
   if (!algorithmId) throw new Error("Algorithm not found: default");
   return algorithmId;
 }
 
-function createChatToolExecutor(db: KolodaDb) {
+function createChatToolExecutor(db: AiIpcDb) {
   return createAssistantToolExecutor({
     getDecks: () => db.getDecks(),
     getTemplates: () => db.getTemplates(),
@@ -160,7 +149,7 @@ function sendToolEvent(sender: WebContents, requestId: string, toolEvent: Assist
 // WHY: functions do not cross IPC — the renderer strips them; main recreates the
 // executor over KolodaDb and streams tool events back on the existing channel.
 function bindChatTools(
-  db: KolodaDb,
+  db: AiIpcDb,
   sender: WebContents,
   requestId: string,
   request: ChatStreamRequest,
@@ -173,7 +162,7 @@ function bindChatTools(
   };
 }
 
-export function registerAiIpc(db: KolodaDb) {
+export function registerAiIpc(db: AiIpcDb) {
   ipcMain.handle("cmd_ai_list_models", async (event, args: IpcArgs<"cmd_ai_list_models">) => {
     assertAppSender(event);
     try {

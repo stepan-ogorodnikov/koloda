@@ -122,7 +122,7 @@ export interface KolodaDb {
   getTemplateDecks(params: { id: string }): Promise<DeckWithOnlyTitle[]>;
 
   // Settings
-  getSettings(params: { name: SettingsName }): Promise<AllowedSettings<SettingsName> | null>;
+  getSettings<T extends SettingsName>(params: { name: T }): Promise<AllowedSettings<T> | null>;
   setSettings(params: SetSettingsData<SettingsName>): Promise<AllowedSettings<SettingsName>>;
   patchSettings(params: PatchSettingsData<SettingsName>): Promise<AllowedSettings<SettingsName>>;
 

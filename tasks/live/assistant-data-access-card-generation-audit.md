@@ -575,7 +575,7 @@ Decision: decided (open question 3); fixed by items 21 and 22.
   Commit: Skip an oversized card in deck reads instead of stopping
   Depends on: none
 
-- [ ] 12. Type the AI IPC data source from the NAPI mirror
+- [x] 12. Type the AI IPC data source from the NAPI mirror
   Goal: `apps/electron/src/ai-ipc.ts:26-40` declares a second, narrower `KolodaDb` (seven data methods plus
   `getAiProfileSecrets`).
   `apps/electron/src/data-ipc.ts:97` joins it to the real mirror with `db as KolodaDb & Parameters<typeof registerAiIpc>[0]`,
