@@ -618,7 +618,7 @@ Decision: decided (open question 3); fixed by items 21 and 22.
   Commit: Delete the legacy dataAccess snapshot from runs and restore
   Depends on: none
 
-- [ ] 14. Test the tool stream's abort, step budget, and tool errors
+- [x] 14. Test the tool stream's abort, step budget, and tool errors
   Goal: The `chat tool streaming` block in `libs/ai/src/lib/assistant-tools.test.ts` (`:910-1093`) has an abort case at `:1009`
   that passes whatever the code does (D8).
   Production executors never receive a signal (`AssistantToolExecutor`, `assistant-tools.ts:293`), but this test's executor

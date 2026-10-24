@@ -121,6 +121,20 @@ function createTextAroundToolModel(textBeforeTool: MockStreamChunk[]) {
   });
 }
 
+/** Asks for list_decks on every step and never answers. */
+function createEndlessToolModel() {
+  let callCount = 0;
+  return new MockLanguageModelV3({
+    doStream: async (): Promise<MockStreamResult> => {
+      callCount += 1;
+      return streamOf([
+        { type: "tool-call", toolCallId: `call-${callCount}`, toolName: "list_decks", input: JSON.stringify({}) },
+        { type: "finish", finishReason: { unified: "tool-calls", raw: "tool-calls" }, usage: usage(3, 5) },
+      ]);
+    },
+  });
+}
+
 function createTextOnlyModel() {
   return new MockLanguageModelV3({
     doStream: async (): Promise<MockStreamResult> => textOnlyChunks(),
@@ -1022,40 +1036,85 @@ describe("chat tool streaming", () => {
     expect(model.doStreamCalls[0]?.tools).toBeUndefined();
   });
 
-  it("aborts cleanly mid-tool-run when the executor honors the abort signal", async () => {
+  it("rejects with an AbortError mid-tool-run though the host call ignores the signal", async () => {
     const controller = new AbortController();
     fakeModelSlot.model = createSingleToolCallModel();
     const events: AssistantToolEvent[] = [];
-    // The executor hangs like an in-flight query and settles only on abort.
+    // WHY: production executors never receive the signal, so the host call keeps
+    // running past the cancel — like an add_deck write already in flight.
+    let markExecuting!: () => void;
+    const isExecuting = new Promise<void>((resolve) => {
+      markExecuting = resolve;
+    });
+    let finishHostCall!: (value: unknown) => void;
     const executeTool = vi.fn(
       () =>
-        new Promise<never>((_, reject) => {
-          controller.signal.addEventListener("abort", () => reject(new DOMException("Aborted", "AbortError")), {
-            once: true,
-          });
-          // The user cancels while this query is in flight.
-          controller.abort();
+        new Promise<unknown>((resolve) => {
+          finishHostCall = resolve;
+          markExecuting();
         }),
     );
 
-    // WHY: with no completed step recorded, the SDK rejects usage with the abort
-    // reason; the stream must surface it unwrapped so callers can classify cancel.
-    const error = await streamChatWithOllama(
+    const streaming = streamChatWithOllama(
       createChatRequest({ tools: ["get_deck_cards"], executeTool, onToolEvent: (event) => events.push(event) }),
       vi.fn(),
       controller.signal,
       OLLAMA_OPTIONS,
     ).catch((caught: unknown) => caught);
+    await isExecuting;
+    controller.abort();
+    // WHY: the SDK ends an aborted stream only once the in-flight host call
+    // settles, then drops that call's result.
+    finishHostCall({ cards: [] });
+    const error = await streaming;
 
     expect(error).toBeInstanceOf(DOMException);
     expect((error as DOMException).name).toBe("AbortError");
-    expect(executeTool).toHaveBeenCalledWith("get_deck_cards", { deckId: "01900000-0000-7000-8000-000000000007" });
     expect(events).toEqual([
       {
         kind: "toolCall",
         call: { id: "call-1", name: "get_deck_cards", input: { deckId: "01900000-0000-7000-8000-000000000007" } },
       },
     ]);
+  });
+
+  it("ends a run that keeps calling tools after eight model calls", async () => {
+    const model = createEndlessToolModel();
+    fakeModelSlot.model = model;
+    const executeTool = vi.fn().mockResolvedValue({ decks: [] });
+
+    const result = await streamChatWithOllama(
+      createChatRequest({ tools: ["list_decks"], executeTool }),
+      vi.fn(),
+      new AbortController().signal,
+      OLLAMA_OPTIONS,
+    );
+
+    expect(model.doStreamCalls).toHaveLength(8);
+    expect(executeTool).toHaveBeenCalledTimes(8);
+    expect(result).toMatchObject({ promptTokens: 3, completionTokens: 5 });
+  });
+
+  it("records a failing host tool as a tool error and lets the model answer", async () => {
+    const model = createToolRoundTripModel();
+    fakeModelSlot.model = model;
+    const executeTool = vi.fn().mockRejectedValue(new Error("Deck not found: 9"));
+    const events: AssistantToolEvent[] = [];
+    const onChunk = vi.fn();
+
+    await streamChatWithOllama(
+      createChatRequest({ tools: ["list_decks"], executeTool, onToolEvent: (event) => events.push(event) }),
+      onChunk,
+      new AbortController().signal,
+      OLLAMA_OPTIONS,
+    );
+
+    expect(events).toEqual([
+      { kind: "toolCall", call: { id: "call-1", name: "list_decks", input: {} } },
+      { kind: "toolResult", callId: "call-1", error: expect.objectContaining({ message: "Deck not found: 9" }) },
+    ]);
+    expect(model.doStreamCalls).toHaveLength(2);
+    expect(onChunk.mock.calls).toEqual([[{ kind: "text", text: "You have " }], [{ kind: "text", text: "2 decks." }]]);
   });
 
   it("does not start the host tool when the run is canceled as its tool call arrives", async () => {
