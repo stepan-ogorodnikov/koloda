@@ -54,7 +54,7 @@ export function createAssistantToolExecutor(data: AssistantToolDataSource): Assi
     return { deck, template };
   };
 
-  return async (name, input) => {
+  return async (name, input, abortSignal) => {
     if (name === "list_decks") {
       const [decks, templates, counts] = await Promise.all([
         data.getDecks(),
@@ -127,6 +127,10 @@ export function createAssistantToolExecutor(data: AssistantToolDataSource): Assi
       if (!algorithms.some((row) => row.id === algorithmId)) {
         throw new Error(`Algorithm not found: ${algorithmId}`);
       }
+      // WHY: the reads above can outlast a cancel, and on desktop the renderer
+      // refreshes deck caches as soon as the run ends. Never start the write for a
+      // canceled run; a write already under way finishes, and that refresh follows it.
+      abortSignal?.throwIfAborted();
       const created = await data.createDeck({ title, templateId, algorithmId });
       return shapeAddDeckOutput(created, template);
     }

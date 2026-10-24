@@ -108,6 +108,7 @@ It may call them to read data, create an empty deck, or propose cards.
   The algorithm id is optional and comes from `list_algorithms`.
   Without one, the app stores the same default algorithm as manual deck create.
   This writes the deck immediately.
+  If the user cancels the run before the write starts, no deck is created; a write already under way finishes.
   A missing template or algorithm fails the call and leaves no deck.
   It does not create cards, edit templates, or edit algorithms.
   Inventing cards still requires `propose_cards`.

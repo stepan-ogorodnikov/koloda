@@ -52,9 +52,9 @@ export function notifyAddDeckWritten(store: AssistantJotaiStore, event: Assistan
 // before the terminal event marks the call failed.
 // INVARIANT: the refetch must land after the write. Web ends the run only once
 // the host call settles (the AI SDK waits for it), so the deck is written by then.
-// Desktop ends the run at once; the addon's single worker thread orders the
-// refetch behind a write main has already queued. A desktop cancel during
-// add_deck's earlier reads can still refetch before the write lands.
+// Desktop ends the run at once, but add_deck skips its write once main sees the
+// cancel, so only a write main already queued remains, and the addon's single
+// worker thread orders the refetch behind it.
 export function notifyAddDeckStillRunning(store: AssistantJotaiStore, event: AssistantEvent): void {
   if (event.type !== "runTerminated") return;
   const run = store.get(conversationsAtom)[event.conversationId]?.runs[event.runId];

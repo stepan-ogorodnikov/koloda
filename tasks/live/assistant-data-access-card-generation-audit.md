@@ -342,7 +342,8 @@ Decision: decided (open question 3); fixed by items 21 and 22.
   cache refresh is item 10. (Human, 2026-10-24.)
 - [x] 5. Flow — `local` (the default) or `remote` (CI on every push)?
   Decided: `local`. (Human, 2026-10-24: go with the recommendation.)
-- [ ] 6. D4 residual on desktop — item 10's deck refresh can still miss the deck. — open
+- [x] 6. D4 residual on desktop — item 10's deck refresh can still miss the deck.
+  Decided: (a); fixed by item 24. (Human, 2026-10-24.)
   Self-review found that `add_deck`'s executor reads templates, settings, and algorithms before it calls `createDeck`.
   Web is safe: the AI SDK ends an aborted stream only once the host call settles, so the run ends after the write.
   Desktop is not: the renderer ends the run on cancel at once, before main has queued the write.
@@ -831,6 +832,28 @@ Decision: decided (open question 3); fixed by items 21 and 22.
   finishes too fast to catch by hand, the unit tests stand in.
   Commit: Mark calls the user cancels as canceled, not failed
   Depends on: none
+
+- [x] 24. Skip the add_deck write once the run is canceled
+  Goal: Open question 6 (decided (a)).
+  `add_deck`'s executor reads templates, settings, and algorithms before `createDeck`
+  (`libs/ai/src/lib/assistant-tool-executor.ts`), and the binder checks the abort signal only before the executor starts.
+  On desktop the renderer ends the run and refreshes deck caches as soon as the user cancels.
+  A cancel during those reads therefore refetches the deck list before the write and caches it for 60 s.
+  Pass the run's abort signal from the binder to the executor as an optional third argument of `AssistantToolExecutor`.
+  Check it in `add_deck` right before `createDeck`, so a canceled run never starts the write.
+  A write already under way still finishes, and item 10's refresh follows it on both hosts.
+  Update the INVARIANT beside `notifyAddDeckStillRunning` to the new ordering.
+  Spec: `docs/specs/ASSISTANT-DATA-ACCESS.md` §Tools, `add_deck`: a cancel before the write starts creates no deck; a
+  write already under way finishes.
+  Constraints: the cache refresh stays in the shell; hosts pass the executor through unchanged.
+  Tests: in `assistant-tool-executor.test.ts`, a cancel while the algorithm read is in flight rejects with
+  `AbortError` and never calls `createDeck`; in `assistant-tools.test.ts`, the binder hands the run's signal to the
+  host executor.
+  Done when: the libs/ai vitest command passes, the executor case fails without the check, and
+  `bun run check:push` passes.
+  Manual verify: none — the window is a few local reads; the executor test drives it.
+  Commit: Skip the add_deck write once the run is canceled
+  Depends on: 10
 
 ## Outcome
 

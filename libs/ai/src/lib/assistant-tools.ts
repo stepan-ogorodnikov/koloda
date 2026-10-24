@@ -305,7 +305,7 @@ export type AssistantToolEvent =
 export type OnToolEvent = (event: AssistantToolEvent) => void;
 
 /** Host-supplied. This module does not perform the call. */
-export type AssistantToolExecutor = (name: string, input: unknown) => Promise<unknown>;
+export type AssistantToolExecutor = (name: string, input: unknown, abortSignal?: AbortSignal) => Promise<unknown>;
 
 export type BindAssistantToolsOptions = {
   names: string[];
@@ -332,7 +332,7 @@ export function bindAssistantTools({ names, execute }: BindAssistantToolsOptions
         // consumer, so a cancel on that part lands first. Never start a host tool (add_deck
         // writes) for a run the user already canceled.
         abortSignal?.throwIfAborted();
-        return execute(name, input);
+        return execute(name, input, abortSignal);
       },
     });
   }

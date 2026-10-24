@@ -1000,7 +1000,7 @@ describe("chat tool streaming", () => {
     );
 
     // The binder dispatched to the host executor with the parsed input...
-    expect(executeTool).toHaveBeenCalledWith("list_decks", {});
+    expect(executeTool).toHaveBeenCalledWith("list_decks", {}, expect.any(AbortSignal));
     // ...the result streamed back to the model as the second step's tool message...
     expect(model.doStreamCalls).toHaveLength(2);
     expect(toolResultOutputsOf(1, model)).toEqual([{ type: "json", value: listDecksOutput }]);
@@ -1161,6 +1161,34 @@ describe("chat tool streaming", () => {
     ]);
     expect(model.doStreamCalls).toHaveLength(2);
     expect(onChunk.mock.calls).toEqual([[{ kind: "text", text: "You have " }], [{ kind: "text", text: "2 decks." }]]);
+  });
+
+  it("hands the run's abort signal to the host executor", async () => {
+    const controller = new AbortController();
+    fakeModelSlot.model = createSingleToolCallModel();
+    let receivedSignal: AbortSignal | undefined;
+    let finishHostCall!: (value: unknown) => void;
+    const executeTool = vi.fn(
+      (_name: string, _input: unknown, abortSignal?: AbortSignal) =>
+        new Promise<unknown>((resolve) => {
+          receivedSignal = abortSignal;
+          finishHostCall = resolve;
+        }),
+    );
+
+    const streaming = streamChatWithOllama(
+      createChatRequest({ tools: ["get_deck_cards"], executeTool }),
+      vi.fn(),
+      controller.signal,
+      OLLAMA_OPTIONS,
+    ).catch((caught: unknown) => caught);
+    await vi.waitFor(() => expect(executeTool).toHaveBeenCalledOnce());
+    expect(receivedSignal?.aborted).toBe(false);
+
+    controller.abort();
+    expect(receivedSignal?.aborted).toBe(true);
+    finishHostCall({ cards: [] });
+    await streaming;
   });
 
   it("does not start the host tool when the run is canceled as its tool call arrives", async () => {
