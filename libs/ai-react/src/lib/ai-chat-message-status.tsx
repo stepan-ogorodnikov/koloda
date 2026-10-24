@@ -24,7 +24,6 @@ export type AIChatMessageStatusProps =
       state: Exclude<AIChatMessageStatusState, "pending">;
       startedAt?: Date;
       elapsedSeconds?: number;
-      /** Success only: the run ended because the model hit the tool step limit. */
       isStepBudgetReached?: boolean;
     });
 

@@ -568,7 +568,6 @@ function lookupProposedFieldText(inputFields: Record<string, string>, field: { i
   return "";
 }
 
-/** `null` for a card with no values; `emptyRequiredTitles` for one that leaves a required field empty. */
 function shapeProposedCardFields(
   inputFields: Record<string, string>,
   fields: AssistantToolTemplate["content"]["fields"],

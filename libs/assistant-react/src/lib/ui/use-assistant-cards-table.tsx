@@ -141,8 +141,8 @@ export function useAssistantCardsTable(options: UseAssistantCardsTableOptions) {
       response = await mutation.mutateAsync(cardsToCreate);
     } catch {
       // WHY: a request that never reached the host is transient, so its rows go
-      // back to idle and stay selected for another Add. Only a per-card host
-      // result is terminal (ASSISTANT-CARD-GENERATION.md §Card Status).
+      // back to idle for another Add (still selected while the table stays
+      // mounted). Only a per-card host result is terminal (§Card Status).
       for (const entry of sent) settle(entry, "idle");
       return;
     }

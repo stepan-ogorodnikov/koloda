@@ -82,7 +82,7 @@ The message state maps to the run state:
   It is hidden while a tool or thinking row is still running, and once assistant text is streaming.
 - **success**: full content is displayed.
   An elapsed time indicator is shown.
-  When the run ended because the model hit the tool step limit, a note under the status says so.
+  When the run stopped because the model hit the tool step limit, a note says so.
   The run still counts as a success, and the note is never sent to the model.
 - **failed**: partial content is preserved.
   A failed status indicator is shown.

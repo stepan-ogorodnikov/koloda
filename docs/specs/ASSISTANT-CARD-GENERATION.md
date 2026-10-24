@@ -148,7 +148,7 @@ If either write target is missing, add is disabled.
 
 Before the request is sent, all selected cards are marked as pending.
 On success, each card is individually marked as success or error based on its own result.
-If the request fails to reach the deck, the selected cards return to idle and stay selected, so the user can add them again.
+If the request fails to reach the deck, the selected cards return to idle, so the user can add them again.
 
 After a successful add, the deck's card list is refreshed.
 The selection is cleared — all rows are deselected.

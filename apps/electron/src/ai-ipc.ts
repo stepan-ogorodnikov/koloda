@@ -16,12 +16,12 @@ import { ipcMain } from "electron";
 import { assertAppSender } from "./app-sender";
 import type { KolodaDb } from "./koloda-db";
 
-// INVARIANT: the data methods are picked from the NAPI mirror, so a mirror change
-// fails to compile here. Secrets are typed apart: the mirror omits them on purpose.
 export type AiProfileSecretsSource = {
   getAiProfileSecrets: (profileId: string) => Promise<unknown>;
 };
 
+// INVARIANT: the data methods are picked from the NAPI mirror, so a mirror change
+// fails to compile here. Secrets are typed apart: the mirror omits them on purpose.
 type AiIpcDb = Pick<
   KolodaDb,
   "getDecks" | "getTemplates" | "getAlgorithms" | "getCards" | "getCardCounts" | "getSettings" | "addDeck"
