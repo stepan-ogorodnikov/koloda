@@ -90,7 +90,7 @@ describe("AssistantCardsTable selection", () => {
       />,
     );
 
-    // INVARIANT: spec — "All rows are initially selected"; late-arriving rows
+    // INVARIANT: §Card Selection — "all generated cards are selected"; late-arriving rows
     // must be selected too, without dropping the user's existing selection.
     expect(selectionStates()).toEqual([true, true]);
   });

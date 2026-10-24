@@ -463,7 +463,7 @@ Decision: decided (open question 3); fixed by items 21 and 22.
   Commit: Inline the card insert payload and drop srs's AI dependency
   Depends on: 2
 
-- [ ] 7. Keep card selection in one spec section and cite headings in e2e
+- [x] 7. Keep card selection in one spec section and cite headings in e2e
   Goal: (a) The initial-selection rule appears three times in `docs/specs/ASSISTANT-CARD-GENERATION.md` (C9): the Selection
   glossary entry (`:33`), §Card Display (`:86`), and §Card Selection (`:134`).
   Keep it in §Card Selection only, and drop the other two.

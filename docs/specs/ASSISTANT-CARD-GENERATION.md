@@ -30,7 +30,7 @@ It goes through the same lifecycle: streaming, success, failure, cancellation, o
 - **Write target** — the deck and template of the run's accepted proposal
 - **Review table** — accepted cards on the assistant message, with selection and one column per field
 - **Card status** — idle, pending, success, or error; tracked per card
-- **Selection** — which idle cards the add button will send; all cards start selected
+- **Selection** — which idle cards the add button will send
 
 ### Relationships
 
@@ -83,7 +83,6 @@ A later proposal for the same deck appends more cards.
 Accepted cards appear as a table on the same assistant message as the rest of that turn.
 
 The table has a selection column and one column per template field.
-All rows are initially selected.
 
 Where the table sits in the turn, and where the pending status goes, is in ASSISTANT-MESSAGES.md (§Message Display).
 

@@ -100,7 +100,7 @@ test("adds exactly the selected proposed cards to the deck", async ({ page }) =>
     // WHY: Exact match — the raw tool-call JSON payloads also quote the field text.
     await expect(alphaRow).toBeVisible({ timeout: 20_000 });
     await expect(betaRow).toBeVisible();
-    // All rows start selected (ASSISTANT-CARD-GENERATION.md:74).
+    // All rows start selected (ASSISTANT-CARD-GENERATION.md (§Card Selection)).
     await expect(alphaRow.getByRole("checkbox")).toBeChecked();
     await expect(betaRow.getByRole("checkbox")).toBeChecked();
     await expect(selectAll).toBeChecked();
@@ -117,12 +117,12 @@ test("adds exactly the selected proposed cards to the deck", async ({ page }) =>
     const gammaRow = proposedRow(page, "Gamma front");
     await expect(gammaRow).toBeVisible({ timeout: 20_000 });
     // Appended rows arrive selected while the user's deselection survives —
-    // both selection invariants from ASSISTANT-CARD-GENERATION.md:74/:116.
+    // both selection invariants from ASSISTANT-CARD-GENERATION.md (§Card Selection).
     await expect(gammaRow.getByRole("checkbox")).toBeChecked();
     await expect(alphaRow.getByRole("checkbox")).toBeChecked();
     await expect(betaRow.getByRole("checkbox")).not.toBeChecked();
     // 2 of 3 idle rows selected: the header is unchecked AND indeterminate
-    // (ASSISTANT-CARD-GENERATION.md:112-113). React-aria sets `indeterminate`
+    // (ASSISTANT-CARD-GENERATION.md (§Card Selection)). React-aria sets `indeterminate`
     // directly on the input element, so it is read as a DOM property.
     await expect(selectAll).toHaveJSProperty("indeterminate", true);
 
@@ -138,7 +138,7 @@ test("adds exactly the selected proposed cards to the deck", async ({ page }) =>
     await addButton.click();
 
     // After a successful add the selection is cleared and each card is marked
-    // per-card; the table itself stays rendered (ASSISTANT-CARD-GENERATION.md:129-130).
+    // per-card; the table itself stays rendered (ASSISTANT-CARD-GENERATION.md (§Adding Cards to Deck)).
     await expect(alphaRow.getByLabel("Success", { exact: true })).toBeVisible();
     await expect(gammaRow.getByLabel("Success", { exact: true })).toBeVisible();
     await expect(betaRow.getByRole("checkbox")).toBeVisible();
@@ -209,7 +209,7 @@ test("retries a failed cards run against the current deck state", async ({ page 
     const runOneListDecks = log.getByRole("button", { name: listDecksHeadlineText(deckCount), exact: true });
     await expect(runOneListDecks).toBeVisible();
     await expect(log.getByRole("button", { name: "Propose cards 1 card", exact: true })).toBeVisible();
-    // Partial output survives the failure (ASSISTANT-CARD-GENERATION.md:82).
+    // Partial output survives the failure (ASSISTANT-CARD-GENERATION.md (§Card Display)).
     // WHY: Exact match — the tool-call JSON payloads also quote the field text.
     await expect(log.getByText("First run front", { exact: true })).toBeVisible();
     await expect(log.getByText("Failed to get a response")).toBeVisible();
@@ -242,7 +242,7 @@ test("retries a failed cards run against the current deck state", async ({ page 
 
     await log.getByRole("button", { name: "Retry" }).click();
 
-    // Previous cards are cleared and replaced (ASSISTANT-CARD-GENERATION.md:151).
+    // Previous cards are cleared and replaced (ASSISTANT-CARD-GENERATION.md (§Retry)).
     await expect(log.getByText("First run front", { exact: true })).toHaveCount(0);
     // Retried tools execute against the decks as they are now — the second
     // deck was created after the original run failed, so the list_decks count
