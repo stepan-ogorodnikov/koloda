@@ -64,7 +64,7 @@ that is not a substitute for full field metadata (types, required, field ids) wh
 - It can read each deck's, template's, and preset's notes: the user's own short text about why the entity exists.
   Notes are user-written context; no tool writes them.
   The tool descriptions present them as background, not instructions; see §Tool Guidance.
-  `list_decks` returns a preview of deck notes; the other reads return them whole.
+  `list_decks` and `list_templates` return a preview of the notes; the other reads return them whole.
   See §Budgets.
   Notes are omitted when the user wrote none.
 - It can then fetch one deck's existing cards, as field-title-to-text pairs, within a budget.
@@ -91,7 +91,7 @@ It may call them to read data, create an empty deck, or propose cards.
 
 - `list_decks` — every deck's id, name, card count, template title, and field titles,
   plus a preview of each deck's notes.
-- `list_templates` — every template's id, title, and field titles, plus the template's notes when present.
+- `list_templates` — every template's id, title, and field titles, plus a preview of each template's notes.
 - `list_algorithms` — every preset's id, title, and FSRS settings, plus the preset's notes when present.
   Users call algorithms presets.
 - `get_deck` — one deck's id, name, card count, template title,
@@ -186,7 +186,7 @@ See ASSISTANT-CARD-GENERATION.md (§Conversation History) for the markdown forma
 
 ### Budgets
 
-Notes in `list_decks` rows are capped at 150 characters.
+Notes in `list_decks` and `list_templates` rows are capped at 150 characters.
 When a note was cut, the result says so; truncation is never silent.
 The other reads return notes whole (they hold at most 1,024 characters, the same limit the user's edit form enforces).
 

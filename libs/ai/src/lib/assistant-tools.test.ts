@@ -1251,12 +1251,23 @@ describe("entity notes in tool output", () => {
     notes: "Source: chapter 3 exercises",
   };
 
-  it("list_templates carries the template note", () => {
-    expect(shapeListTemplatesOutput([template]).templates[0]?.notes).toBe("Source: chapter 3 exercises");
+  it("list_templates truncates long notes and marks the truncation explicitly", () => {
+    const output = shapeListTemplatesOutput([
+      { ...template, notes: "a".repeat(ASSISTANT_TOOL_NOTE_PREVIEW_CHAR_BUDGET + 1) },
+      { ...template, notes: "a".repeat(ASSISTANT_TOOL_NOTE_PREVIEW_CHAR_BUDGET) },
+      template,
+    ]);
+    expect(output.templates[0]?.notes).toBe("a".repeat(ASSISTANT_TOOL_NOTE_PREVIEW_CHAR_BUDGET));
+    expect(output.templates[0]?.notesTruncated).toBe(true);
+    expect(output.templates[1]?.notes).toHaveLength(ASSISTANT_TOOL_NOTE_PREVIEW_CHAR_BUDGET);
+    expect(output.templates[1]).not.toHaveProperty("notesTruncated");
+    expect(output.templates[2]?.notes).toBe("Source: chapter 3 exercises");
   });
 
-  it("get_template carries the full template note", () => {
-    expect(shapeGetTemplateOutput(template).notes).toBe("Source: chapter 3 exercises");
+  it("get_template returns the note whole", () => {
+    const output = shapeGetTemplateOutput({ ...template, notes: "a".repeat(400) });
+    expect(output.notes).toHaveLength(400);
+    expect(output).not.toHaveProperty("notesTruncated");
   });
 
   it("omits notes when the user wrote none", () => {
@@ -1265,7 +1276,7 @@ describe("entity notes in tool output", () => {
     expect(shapeGetTemplateOutput({ ...template, notes: null })).not.toHaveProperty("notes");
   });
 
-  it("list_algorithms carries the algorithm note", () => {
+  it("list_algorithms carries the algorithm note whole", () => {
     const content = {
       type: "fsrs" as const,
       retention: 90,
@@ -1277,8 +1288,11 @@ describe("entity notes in tool output", () => {
     };
     const output = shapeListAlgorithmsOutput([
       { id: "01900000-0000-7000-8000-000000000021", title: "Default", content, notes: "Vocabulary preset" },
+      { id: "01900000-0000-7000-8000-000000000022", title: "Long note", content, notes: "a".repeat(400) },
     ]);
     expect(output.algorithms[0]?.notes).toBe("Vocabulary preset");
+    // WHY: presets are few and no tool reads one preset, so list_algorithms keeps notes whole.
+    expect(output.algorithms[1]?.notes).toHaveLength(400);
   });
 
   it("get_deck returns the note whole", () => {

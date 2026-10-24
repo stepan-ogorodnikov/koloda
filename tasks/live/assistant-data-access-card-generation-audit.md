@@ -726,7 +726,7 @@ Decision: decided (open question 3); fixed by items 21 and 22.
   Commit: Return rows to idle when Add's request fails
   Depends on: 1, 2
 
-- [ ] 20. Preview template notes in list_templates like deck notes
+- [x] 20. Preview template notes in list_templates like deck notes
   Goal: `list_decks` cuts a note to 150 characters and sets `notesTruncated`, using
   `ASSISTANT_TOOL_NOTE_PREVIEW_CHAR_BUDGET` (`libs/ai/src/lib/assistant-tools.ts:106`; the preview is applied around `:465-471`).
   `list_templates` returns each note whole (`shapeListTemplatesOutput`, `:331-340`), so twenty templates with full notes add
