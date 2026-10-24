@@ -24,6 +24,8 @@ export type AIChatMessageStatusProps =
       state: Exclude<AIChatMessageStatusState, "pending">;
       startedAt?: Date;
       elapsedSeconds?: number;
+      /** Success only: the run ended because the model hit the tool step limit. */
+      isStepBudgetReached?: boolean;
     });
 
 type RetryActionProps = {
@@ -84,7 +86,7 @@ export function AIChatMessageStatus(props: AIChatMessageStatusProps) {
 
   if (state === "success") {
     const hasTime = typeof elapsedSeconds === "number";
-    return (
+    const statusLine = (
       <div className="flex flex-row items-center gap-2 px-3">
         {(modelName || hasTime) && (
           <p className="fg-level-4 flex flex-row items-center gap-1">
@@ -94,6 +96,14 @@ export function AIChatMessageStatus(props: AIChatMessageStatusProps) {
           </p>
         )}
         {actions}
+      </div>
+    );
+    if (!props.isStepBudgetReached) return statusLine;
+    // WHY: the run still succeeded; the note only explains why the reply may stop short.
+    return (
+      <div className="flex flex-col gap-1">
+        {statusLine}
+        <p className="fg-level-4 px-3">{_(msg`ai.chat.message.status.step-budget`)}</p>
       </div>
     );
   }

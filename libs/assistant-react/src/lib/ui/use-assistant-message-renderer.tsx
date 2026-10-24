@@ -144,6 +144,7 @@ function renderRunStatus(options: RenderRunStatusOptions): ReactNode {
         state="success"
         elapsedSeconds={run.elapsedSeconds ?? undefined}
         modelName={run.modelName}
+        isStepBudgetReached={run.stopNote === "step_budget"}
         actions={copyAction}
       />
     );

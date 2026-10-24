@@ -51,6 +51,15 @@ describe("AIChatMessageStatus", () => {
       expect(container.textContent).toBe("copy");
       expect(container.querySelector("p")).toBeNull();
     });
+
+    it("adds the step-budget note under the status line only when the budget ended the run", () => {
+      const { rerender } = render(<AIChatMessageStatus state="success" elapsedSeconds={5} isStepBudgetReached />);
+      expect(screen.getByText("ai.chat.message.status.step-budget")).toBeTruthy();
+      expect(screen.getByText(/5/)).toBeTruthy();
+
+      rerender(<AIChatMessageStatus state="success" elapsedSeconds={5} />);
+      expect(screen.queryByText("ai.chat.message.status.step-budget")).toBeNull();
+    });
   });
 
   describe("retry on terminal states", () => {

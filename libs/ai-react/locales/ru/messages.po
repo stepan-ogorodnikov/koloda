@@ -72,35 +72,39 @@ msgstr "Поле ввода сообщения"
 msgid "ai.chat.input.placeholder"
 msgstr "Введите сообщение"
 
-#: ../../libs/ai-react/src/lib/ai-chat-message-status.tsx:79
+#: ../../libs/ai-react/src/lib/ai-chat-message-status.tsx:81
 msgid "ai.chat.message.retry"
 msgstr "Повторить"
 
-#: ../../libs/ai-react/src/lib/ai-chat-message-status.tsx:106
+#: ../../libs/ai-react/src/lib/ai-chat-message-status.tsx:115
 msgid "ai.chat.message.status.canceled"
 msgstr "Отменено"
 
-#: ../../libs/ai-react/src/lib/ai-chat-message-status.tsx:105
+#: ../../libs/ai-react/src/lib/ai-chat-message-status.tsx:114
 msgid "ai.chat.message.status.canceled-in"
 msgstr "Отменено через"
 
-#: ../../libs/ai-react/src/lib/ai-chat-message-status.tsx:128
+#: ../../libs/ai-react/src/lib/ai-chat-message-status.tsx:137
 msgid "ai.chat.message.status.failed"
 msgstr "Не удалось выполнить запрос"
 
-#: ../../libs/ai-react/src/lib/ai-chat-message-status.tsx:118
+#: ../../libs/ai-react/src/lib/ai-chat-message-status.tsx:127
 msgid "ai.chat.message.status.interrupted"
 msgstr "Прервано"
 
-#: ../../libs/ai-react/src/lib/ai-chat-message-status.tsx:117
+#: ../../libs/ai-react/src/lib/ai-chat-message-status.tsx:126
 msgid "ai.chat.message.status.interrupted-in"
 msgstr "Прервано через"
 
-#: ../../libs/ai-react/src/lib/ai-chat-message-status.tsx:82
+#: ../../libs/ai-react/src/lib/ai-chat-message-status.tsx:84
 msgid "ai.chat.message.status.pending"
 msgstr "Обработка"
 
-#: ../../libs/ai-react/src/lib/ai-chat-messages.tsx:42
+#: ../../libs/ai-react/src/lib/ai-chat-message-status.tsx:106
+msgid "ai.chat.message.status.step-budget"
+msgstr "Остановлено на лимите шагов с инструментами"
+
+#: ../../libs/ai-react/src/lib/ai-chat-messages.tsx:40
 msgid "ai.chat.messages.label"
 msgstr "Поток сообщений"
 
@@ -112,8 +116,8 @@ msgstr "У выбранного профиля отсутствуют необх
 msgid "ai.chat.profile-data-missing.hint"
 msgstr "Перейдите в настройки, чтобы отредактировать профиль и добавить недостающие данные"
 
-#: ../../libs/ai-react/src/lib/ai-chat-messages.tsx:73
-#: ../../libs/ai-react/src/lib/ai-chat-messages.tsx:76
+#: ../../libs/ai-react/src/lib/ai-chat-messages.tsx:65
+#: ../../libs/ai-react/src/lib/ai-chat-messages.tsx:68
 msgid "ai.chat.scroll-to-latest.label"
 msgstr "К последнему сообщению"
 
@@ -210,52 +214,52 @@ msgstr "По умолчанию"
 msgid "ai.model-parameters.reasoning-effort.label"
 msgstr "Интеллект"
 
-#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:147
-#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:150
+#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:156
+#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:159
 msgid "ai.model-picker.empty-models"
 msgstr "Нет моделей"
 
-#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:167
-#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:194
+#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:177
+#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:204
 msgid "ai.model-picker.error.label"
 msgstr "Ошибка"
 
-#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:172
-#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:175
+#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:182
+#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:185
 msgid "ai.model-picker.error.retry"
 msgstr "Обновить"
 
-#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:109
+#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:115
 msgid "ai.model-picker.label"
 msgstr "Выбор языковой модели"
 
-#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:96
-#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:166
-#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:190
+#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:102
+#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:176
+#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:200
 msgid "ai.model-picker.loading.label"
 msgstr "Загрузка"
 
-#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:127
+#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:133
 msgid "ai.model-picker.no-profiles.add"
 msgstr "Добавить профиль"
 
-#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:126
+#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:132
 msgid "ai.model-picker.no-profiles.empty"
 msgstr "Нет профилей ИИ"
 
-#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:98
+#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:104
 msgid "ai.model-picker.not-selected"
 msgstr "Не выбрана"
 
-#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:99
+#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:105
 msgid "ai.model-picker.placeholder"
 msgstr "Выберите модель"
 
-#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:111
+#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:117
 msgid "ai.model-picker.search.label"
 msgstr "Поиск по моделям"
 
-#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:112
+#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:118
 msgid "ai.model-picker.search.placeholder"
 msgstr "Поиск по моделям"
 

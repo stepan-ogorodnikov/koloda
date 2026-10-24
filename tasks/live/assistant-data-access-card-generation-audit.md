@@ -782,7 +782,7 @@ Decision: decided (open question 3); fixed by items 21 and 22.
   Commit: Carry the step-budget stop to the run as a note
   Depends on: 14
 
-- [ ] 22. Show the step-budget note under the run's status
+- [x] 22. Show the step-budget note under the run's status
   Goal: With item 21 in place, a run that stopped at the step budget carries the note, but nothing shows it (D13).
   Render a note under the run's status line, in the same place as the other run-status copy, saying that the assistant
   stopped at its tool-step limit. The status itself stays `success`.

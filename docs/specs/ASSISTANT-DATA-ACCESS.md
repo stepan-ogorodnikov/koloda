@@ -126,6 +126,7 @@ The run continues and the failure is visible.
 
 The model may call tools a limited number of times in one run.
 If it keeps calling instead of answering, the run stops.
+It still ends as a success, with a note under its status; see ASSISTANT-MESSAGES.md (§Message States).
 
 ### Tool Guidance
 

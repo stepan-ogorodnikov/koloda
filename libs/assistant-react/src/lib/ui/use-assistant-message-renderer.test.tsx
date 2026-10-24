@@ -30,9 +30,10 @@ vi.mock("@koloda/ai-react", () => ({
     canRetry?: boolean;
     onRetry?: () => void;
     elapsedSeconds?: number;
+    isStepBudgetReached?: boolean;
     actions?: React.ReactNode;
   }) => (
-    <div data-testid={`status-${props.state}`}>
+    <div data-testid={`status-${props.state}`} data-step-budget={String(!!props.isStepBudgetReached)}>
       {props.actions}
       {props.canRetry ? (
         <button type="button" onClick={props.onRetry}>
@@ -174,6 +175,17 @@ describe("useAssistantMessageRenderer", () => {
 
     expect(screen.getByTestId("tool-activity").textContent).toBe("thinking");
     expect(screen.getByTestId("copy-button")).toBeTruthy();
+  });
+
+  it.each([
+    { label: "a chat turn", cards: [], stopNote: "step_budget" as const, expected: "true" },
+    { label: "a card turn", cards: [sampleCard], stopNote: "step_budget" as const, expected: "true" },
+    { label: "a chat turn", cards: [], stopNote: undefined, expected: "false" },
+  ])("passes the step-budget note on $label (stopNote $stopNote)", ({ cards, stopNote, expected }) => {
+    const run = { ...makeRun("r1", "success"), cards, templateFields: sampleFields, stopNote };
+    mountRenderer({ r1: run });
+
+    expect(screen.getByTestId("status-success").getAttribute("data-step-budget")).toBe(expected);
   });
 
   it("renders tool activity on a streaming chat message", () => {
