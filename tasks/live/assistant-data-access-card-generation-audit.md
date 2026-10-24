@@ -708,7 +708,7 @@ Decision: decided (open question 3); fixed by items 21 and 22.
   Commit: Reject a proposed card that leaves a required field empty
   Depends on: none
 
-- [ ] 19. Return rows to idle when Add's request fails
+- [x] 19. Return rows to idle when Add's request fails
   Goal: `handleAddCards`'s `onError` (`libs/assistant-react/src/lib/ui/use-assistant-cards-table.tsx:143-147`) marks every
   selected card `error`.
   Decided (open question 1): a request that fails to reach the host is transient, so its rows go back to `idle`, still

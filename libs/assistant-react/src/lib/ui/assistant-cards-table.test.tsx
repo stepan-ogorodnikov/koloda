@@ -179,7 +179,7 @@ describe("AssistantCardsTable selection", () => {
     });
   });
 
-  it("marks only the sent cards error when the add request rejects", async () => {
+  it("returns the sent cards to idle and selected when the add request rejects", async () => {
     const mutate = vi.fn<AddCards>(async () => {
       throw new Error("host unreachable");
     });
@@ -192,14 +192,20 @@ describe("AssistantCardsTable selection", () => {
 
     fireEvent.click(screen.getByTestId("add"));
 
+    expect(store.get(conversationsAtom)["c1"]?.runs["r1"]?.cardStatuses).toEqual({
+      0: "pending",
+      1: "pending",
+      2: "success",
+    });
     await waitFor(() => {
       expect(store.get(conversationsAtom)["c1"]?.runs["r1"]?.cardStatuses).toEqual({
-        0: "error",
-        1: "error",
+        0: "idle",
+        1: "idle",
         2: "success",
       });
     });
     expect(mutate).toHaveBeenCalledOnce();
+    expect(screen.getByTestId("has-selection").textContent).toBe("true");
   });
 
   it("settles Add on the originating conversation after the table unmounts", async () => {

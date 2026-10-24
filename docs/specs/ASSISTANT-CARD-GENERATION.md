@@ -113,10 +113,12 @@ The status transitions are:
 
 **idle** → **pending** → **success** | **error**
 
+A pending card returns to **idle** when the add request fails to reach the deck; see §Adding Cards to Deck.
+
 - **idle**: the card was generated and is available for selection
 - **pending**: the card is being added to the deck
 - **success**: the card was successfully added to the deck
-- **error**: adding the card to the deck failed
+- **error**: the deck rejected the card; error is final, and the card cannot be added again
 
 Status is per-card, not per-run.
 Some cards in a run can succeed while others fail.
@@ -146,7 +148,7 @@ If either write target is missing, add is disabled.
 
 Before the request is sent, all selected cards are marked as pending.
 On success, each card is individually marked as success or error based on its own result.
-On a network error, all selected cards are marked as error.
+If the request fails to reach the deck, the selected cards return to idle and stay selected, so the user can add them again.
 
 After a successful add, the deck's card list is refreshed.
 The selection is cleared — all rows are deselected.
