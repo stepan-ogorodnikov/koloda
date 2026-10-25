@@ -99,5 +99,5 @@ export type {
   SyncStatus,
   SyncStop,
 } from "./lib/sync";
-export { formatTimestamp, timeFieldFormatOptions } from "./lib/timestamp-format";
+export { dateFnsLocale, formatTimestamp, timeFieldFormatOptions } from "./lib/timestamp-format";
 export type { TimestampFormatter, TimestampKind } from "./lib/timestamp-format";

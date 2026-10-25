@@ -532,7 +532,7 @@ Line numbers are at `aeb9282b`; when an earlier item moved them, find the code b
   Commit: Keep unrevealed answers out of reach until submit
   Depends on: 7
 
-- [ ] 9. Show grade intervals in the interface language
+- [x] 9. Show grade intervals in the interface language
   Goal (L8):
   - Export the date-fns locale mapping (`dateFnsLocale`, `libs/app/src/lib/timestamp-format.ts:24-26`) from
     `libs/app/src/index.ts`.

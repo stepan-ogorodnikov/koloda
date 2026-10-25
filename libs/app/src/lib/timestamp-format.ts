@@ -21,7 +21,7 @@ const CLOCK_TIME_OPTIONS: Intl.DateTimeFormatOptions = { hour: "numeric", minute
 const DATETIME_TIME_OPTIONS: Intl.DateTimeFormatOptions = { hour: "2-digit", minute: "2-digit" };
 const LONG_DATETIME_OPTIONS: Intl.DateTimeFormatOptions = { ...LONG_DATE_OPTIONS, ...DATETIME_TIME_OPTIONS };
 
-function dateFnsLocale(locale: string): Locale {
+export function dateFnsLocale(locale: string): Locale {
   return locale === "ru" ? ru : enUS;
 }
 
