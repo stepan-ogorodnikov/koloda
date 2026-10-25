@@ -33,6 +33,7 @@ export function CardsTable({ deckId, controlsNode }: CardsTableProps) {
   const { getCardsQuery, getDeckQuery } = useAtomValue(queriesAtom);
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: PAGE_SIZES[0] });
   const [columnVisibility, setColumnVisibility] = useState<ColumnVisibilityState>({
+    templateId: false,
     createdAt: false,
     updatedAt: false,
   });
@@ -100,6 +101,15 @@ export function CardsTable({ deckId, controlsNode }: CardsTableProps) {
           size: 14,
           cell: (cell) => <CardsTableCell cell={cell} />,
         }),
+        // WHY: the template filter is a column filter so selection treats it like the others:
+        // hidden rows stay selected but drop out of the count and the bulk delete.
+        columnHelper.accessor("templateId", {
+          enableHiding: false,
+          enableGlobalFilter: false,
+          enableSorting: false,
+          filterFn: (row, columnId, filterValue: Template["id"][]) =>
+            filterValue.length === 0 || filterValue.includes(row.getValue(columnId)),
+        }),
         columnHelper.accessor("createdAt", {
           header: _(msg`cards.table.columns.created-at`),
           enableGlobalFilter: false,
@@ -143,15 +153,9 @@ export function CardsTable({ deckId, controlsNode }: CardsTableProps) {
     [_, templates, templateMapRef],
   );
 
-  const filteredCards = useMemo(
-    () =>
-      filters.templateIds.length === 0 ? cards : cards.filter((card) => filters.templateIds.includes(card.templateId)),
-    [cards, filters.templateIds],
-  );
-
   const table = useCardsTable({
     columns,
-    data: filteredCards,
+    data: cards,
     getRowId: (row) => row.id,
     state: {
       pagination,
@@ -160,6 +164,7 @@ export function CardsTable({ deckId, controlsNode }: CardsTableProps) {
       columnFilters: [
         { id: "state", value: filters.state },
         { id: "dueAt", value: filters.dueAt },
+        { id: "templateId", value: filters.templateIds },
       ],
       rowSelection,
     },
@@ -190,7 +195,7 @@ export function CardsTable({ deckId, controlsNode }: CardsTableProps) {
     table.setPageIndex(0);
   };
 
-  const selectedIds = table.getSelectedRowModel().rows.map((row) => row.original.id);
+  const selectedIds = table.getFilteredSelectedRowModel().rows.map((row) => row.original.id);
 
   if (templateError && !isReady) return <QueryError error={templateError} onRetry={refetchTemplates} />;
   if (!isReady) return null;

@@ -190,6 +190,8 @@ The table supports:
 
 - selecting individual cards, or all cards on the current page at once
 - bulk delete on the selected cards
+  - Selection survives search and filters.
+    The selection count and bulk delete cover only the selected cards that match them.
 - filtering by state, by due status (overdue or not yet due), and by template when more than one template is in use
   - An untouched card has no due time and matches "not yet due", not "overdue"
 - full-text search across the card content

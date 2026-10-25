@@ -527,7 +527,7 @@ Line numbers are at `b662537e`; when an earlier item moved them, find the code b
   Commit: Save a form by hotkey only when it has changes
   Depends on: none
 
-- [ ] 7. Delete only the selected cards the table shows
+- [x] 7. Delete only the selected cards the table shows
   Goal (C10; question 2):
   - Take the bulk delete ids from `table.getFilteredSelectedRowModel()` (`cards-table.tsx:177`).
     The selection count and the delete then cover only selected cards that match the search and filters.

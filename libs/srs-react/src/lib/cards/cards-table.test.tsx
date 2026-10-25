@@ -7,9 +7,16 @@ import { I18nProvider } from "@lingui/react";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { createStore, Provider as JotaiProvider } from "jotai";
+import type { PropsWithChildren } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { createCard, createDeck, createQueryClient, createTemplate, testId } from "../../test/test-helpers";
 import { CardsTable } from "./cards-table";
+
+// WHY: NumberFlow renders its digits inside a custom element that jsdom leaves empty.
+vi.mock("@number-flow/react", () => ({
+  default: ({ value }: { value: number }) => <span>{value}</span>,
+  NumberFlowGroup: ({ children }: PropsWithChildren) => <>{children}</>,
+}));
 
 i18n.loadAndActivate({ locale: "en", messages: {} });
 
@@ -111,5 +118,88 @@ describe("CardsTable pagination", () => {
     await waitFor(() => expect(footerRange()).toEqual(["16", "20", "20"]));
     expect(bodyRowTexts()).toHaveLength(5);
     expect(bodyRowTexts()[0]).toContain("card 16");
+  });
+});
+
+function selectAll() {
+  fireEvent.click(document.querySelector<HTMLInputElement>("thead input[type=checkbox]")!);
+}
+
+function rowCheckbox(text: string) {
+  const row = [...document.querySelectorAll("tbody tr")].find((tr) => tr.textContent?.includes(text));
+  return row!.querySelector<HTMLInputElement>("input[type=checkbox]")!;
+}
+
+function selectionCount() {
+  return screen.getByText("cards-table.selection.label").previousElementSibling?.textContent;
+}
+
+async function bulkDelete() {
+  fireEvent.click(screen.getByRole("button", { name: /cards-table.selection.delete.trigger/ }));
+  fireEvent.click(await screen.findByRole("button", { name: "cards-table.selection.delete.confirm" }));
+}
+
+function toggleTemplateFilter(controls: HTMLElement, title: string) {
+  fireEvent.click(within(controls).getByRole("button", { name: "cards-table.filters.trigger" }));
+  fireEvent.click(screen.getByRole("checkbox", { name: title }));
+  fireEvent.keyDown(screen.getByRole("dialog"), { key: "Escape" });
+}
+
+describe("CardsTable selection", () => {
+  it("bulk deletes only the selected cards that the search shows", async () => {
+    const cards = createCards(3);
+    const { controls, deleteCards } = setup(cards);
+    await waitFor(() => expect(bodyRowTexts()).toHaveLength(3));
+    selectAll();
+
+    fireEvent.change(within(controls).getByRole("searchbox"), { target: { value: "card 1" } });
+    await waitFor(() => expect(bodyRowTexts()).toHaveLength(1));
+    expect(selectionCount()).toBe("1");
+    await bulkDelete();
+
+    await waitFor(() => expect(deleteCards).toHaveBeenCalledTimes(1));
+    expect(deleteCards.mock.calls[0][0]).toEqual({ ids: [cards[0].id] });
+  });
+
+  it("keeps cards hidden by the template filter selected but out of the bulk delete", async () => {
+    const t1 = createTemplate();
+    const t2 = createTemplate({
+      id: testId(2),
+      title: "Question and answer",
+      content: {
+        fields: [
+          { id: testId(201), title: "Question", type: "text", isRequired: true },
+          { id: testId(202), title: "Answer", type: "text", isRequired: true },
+        ],
+        layout: [
+          { field: testId(201), operation: "display" },
+          { field: testId(202), operation: "reveal" },
+        ],
+      },
+    });
+    const [first, second] = createCards(2);
+    const other = createCard({
+      id: testId(200),
+      templateId: t2.id,
+      content: { [testId(201)]: { text: "other question" }, [testId(202)]: { text: "other answer" } },
+    });
+    const { controls, deleteCards } = setup([first, second, other], { templates: [t1, t2] });
+    await waitFor(() => expect(bodyRowTexts()).toHaveLength(3));
+    selectAll();
+
+    toggleTemplateFilter(controls, t1.title);
+    await waitFor(() => expect(bodyRowTexts()).toHaveLength(2));
+    expect(selectionCount()).toBe("2");
+
+    toggleTemplateFilter(controls, t1.title);
+    await waitFor(() => expect(bodyRowTexts()).toHaveLength(3));
+    expect(rowCheckbox("other question").checked).toBe(true);
+
+    toggleTemplateFilter(controls, t1.title);
+    await waitFor(() => expect(bodyRowTexts()).toHaveLength(2));
+    await bulkDelete();
+
+    await waitFor(() => expect(deleteCards).toHaveBeenCalledTimes(1));
+    expect(deleteCards.mock.calls[0][0]).toEqual({ ids: [first.id, second.id] });
   });
 });
