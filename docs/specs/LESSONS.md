@@ -53,6 +53,8 @@ Each count is a badge.
 A badge with a non-zero count starts a lesson of that type for that deck (or for all decks on the aggregate row).
 A badge with zero is disabled and shows "0".
 
+The counts refresh every minute while the Dashboard is open, so a card shows soon after it comes due.
+
 ## Today's Progress
 
 The Dashboard shows how many cards of each type have already been studied today, against that type's daily limit.

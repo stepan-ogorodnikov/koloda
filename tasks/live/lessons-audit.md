@@ -680,7 +680,7 @@ Line numbers are at `aeb9282b`; when an earlier item moved them, find the code b
   Commit: Default the Learn daily limit to unlimited
   Depends on: none
 
-- [ ] 17. Refresh the Dashboard lesson counts every minute
+- [x] 17. Refresh the Dashboard lesson counts every minute
   Goal (L18; question 5):
   - `libs/srs-react/src/lib/lessons/lessons.tsx:14`: add `refetchInterval: 60_000` to the overview query.
   - WHY: the counts are cards ready now, which change with the clock, and no mutation invalidates the clock.

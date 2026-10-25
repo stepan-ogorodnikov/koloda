@@ -11,7 +11,11 @@ import { LessonsTable } from "./lessons-table";
 export function Lessons() {
   const isMobile = useMediaQuery(`(width < ${getCSSVar("--breakpoint-wd")})`);
   const { getLessonsQuery } = useAtomValue(queriesAtom);
-  const query = useQuery(getLessonsQuery());
+  const query = useQuery({
+    ...getLessonsQuery(),
+    // WHY: the counts are cards ready now, so they change with the clock, which no mutation invalidates.
+    refetchInterval: 60_000,
+  });
 
   return (
     <div className="w-full wd:max-w-180 mx-auto p-4">
