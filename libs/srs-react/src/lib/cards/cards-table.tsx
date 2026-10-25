@@ -174,6 +174,22 @@ export function CardsTable({ deckId, controlsNode }: CardsTableProps) {
     },
   });
 
+  // WHY: `autoResetPageIndex` is off (cardsTableOptions), so the table keeps the page across refetches.
+  // A shorter list (delete, refetch) would leave it past the last page, empty with no page buttons.
+  const lastPageIndex = Math.max(0, table.getPageCount() - 1);
+  if (pagination.pageIndex > lastPageIndex) setPagination({ ...pagination, pageIndex: lastPageIndex });
+
+  const updateFilters: typeof setFilters = (value) => {
+    setFilters(value);
+    table.setPageIndex(0);
+  };
+
+  const updateSearch = (value: string) => {
+    setSearchValue(value);
+    table.setGlobalFilter(value);
+    table.setPageIndex(0);
+  };
+
   const selectedIds = table.getSelectedRowModel().rows.map((row) => row.original.id);
 
   if (templateError && !isReady) return <QueryError error={templateError} onRetry={refetchTemplates} />;
@@ -184,7 +200,7 @@ export function CardsTable({ deckId, controlsNode }: CardsTableProps) {
       {controlsNode &&
         createPortal(
           <div className="grow flex flex-row items-center gap-4">
-            <CardsTableFilters filters={filters} setFilters={setFilters} templates={templates} />
+            <CardsTableFilters filters={filters} setFilters={updateFilters} templates={templates} />
             <CardsTableColumnsVisibility
               columns={table.getAllColumns()}
               onColumnVisibilityChange={(columnId, isVisible) => table.getColumn(columnId)?.toggleVisibility(isVisible)}
@@ -194,22 +210,13 @@ export function CardsTable({ deckId, controlsNode }: CardsTableProps) {
             <SearchField
               aria-label={_(msg`cards-table.search.label`)}
               value={searchValue}
-              onChange={(value) => {
-                setSearchValue(value as string);
-                table.setGlobalFilter(value as string);
-              }}
+              onChange={(value) => updateSearch(value as string)}
               onKeyDown={(e) => e.continuePropagation()}
             >
               <SearchField.Group>
                 <SearchField.Icon />
                 <SearchField.Input placeholder={_(msg`cards-table.search.placeholder`)} />
-                <SearchField.ClearButton
-                  isHidden={!searchValue}
-                  onClick={() => {
-                    setSearchValue("");
-                    table.setGlobalFilter("");
-                  }}
-                />
+                <SearchField.ClearButton isHidden={!searchValue} onClick={() => updateSearch("")} />
               </SearchField.Group>
             </SearchField>
           </div>,

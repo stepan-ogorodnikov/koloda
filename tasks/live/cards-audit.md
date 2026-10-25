@@ -375,7 +375,7 @@ Their dirs are `libs/srs-react`, `libs/srs`, `libs/ui`, `libs/db-sqlite`, and `a
 `RS` stands for `cargo test -p koloda`.
 Line numbers are at `b662537e`; when an earlier item moved them, find the code by its text.
 
-- [ ] 1. Keep the cards table on a page that has rows
+- [x] 1. Keep the cards table on a page that has rows
   Goal (C2):
   - `CardsTable` (`libs/srs-react/src/lib/cards/cards-table.tsx`):
     - set `pageIndex` to 0 when the search changes (`:197-200`, the clear button `:208-211`) or a filter changes (the

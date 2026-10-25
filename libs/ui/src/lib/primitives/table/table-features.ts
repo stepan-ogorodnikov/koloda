@@ -62,6 +62,8 @@ export const selectionTableFeatures = tableFeatures({
 
 export const cardsTableOptions = tableOptions({
   features: cardsTableFeatures,
+  // WHY: the default resets to page 1 whenever `data` changes, and the cards table refetches its
+  // list after every edit. The cards table resets the page on search and filter, and clamps it.
   autoResetPageIndex: false,
 });
 
