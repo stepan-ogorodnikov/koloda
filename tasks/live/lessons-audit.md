@@ -1,6 +1,6 @@
 # Lessons audit fixes
 
-Status: draft
+Status: ready
 Guides: agents/IMPLEMENTATION-PLAN.md, agents/TASKS.md, docs/specs/LESSONS.md, docs/specs/CARDS.md, docs/specs/LEARNING-SETTINGS.md, agents/CODE-STYLE.md, agents/CODE-DOCUMENTATION.md, agents/TESTING.md, agents/VERIFY.md, agents/CSS.md, agents/I18N.md, agents/RUST.md, docs/decisions/TS-RUST-DOMAIN-MIRRORING.md, agents/BACKWARDS-COMPATIBILITY.md, agents/FUNCTIONAL-SPECIFICATIONS.md, agents/MARKDOWN.md, apps/web-e2e/README.md, apps/electron-e2e/README.md, libs/e2e/README.md, agents/REVIEW.md
 Flow: local
 
@@ -329,7 +329,8 @@ Line numbers are at `aeb9282b`.
   Stored settings keep their values (human, 2026-10-25).
 - [x] 5. L18: should the Dashboard counts follow due times? — refetch them every 60 s while the Dashboard is open
   (human, 2026-10-25).
-- [x] 6. Flow? — `local`, the default; not asked.
+- [x] 6. Flow? — `local`, the default.
+- [x] 7. Plan approved as written (human, 2026-10-25).
 
 ## Plan
 
