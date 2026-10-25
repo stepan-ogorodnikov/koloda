@@ -40,6 +40,8 @@ export function LessonCardField({
       <div
         className={lessonCardContentField({ isHiddenUntilSubmit })}
         data-is-submitted={content.form.isSubmitted || undefined}
+        // WHY: transparency alone leaves the answer to screen readers, selection, and find-in-page.
+        inert={isHiddenUntilSubmit && !content.form.isSubmitted}
       >
         <FieldComponent
           value={actualValue}

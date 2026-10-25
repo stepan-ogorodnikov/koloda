@@ -512,7 +512,7 @@ Line numbers are at `aeb9282b`; when an earlier item moved them, find the code b
   Commit: Hide a markdown type field until submit and focus the first text one
   Depends on: 6
 
-- [ ] 8. Keep unrevealed answers out of reach until submit
+- [x] 8. Keep unrevealed answers out of reach until submit
   Goal (L10):
   - `lesson-card-field.tsx:39`: set `inert` on the field wrapper while it is hidden until submit.
     That is a reveal item, or item 7's non-text type item, on an unsubmitted card.
