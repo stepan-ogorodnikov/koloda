@@ -77,8 +77,7 @@ If no deck is set, the lesson includes cards from all decks.
 Opening a lesson disables navigation hotkeys for the duration of the dialog.
 Closing the lesson restores them and refreshes the available counts and today's review totals.
 
-While the lesson dialog is open, Escape and the "Close popover" hotkey have the same effect.
-What that effect is depends on the current phase.
+How Escape and the "Close popover" hotkey close the dialog is in §Phases.
 
 Only one lesson dialog can be active.
 If a lesson is already open, a second start request is ignored.
@@ -91,18 +90,15 @@ That system does not see system keys and does not warn about them.
 
 Configurable hotkeys:
 
-- The "Close popover" hotkey closes or interrupts the lesson, same as `Escape`.
-  What it does depends on the phase; see §Phases.
+- The "Close popover" hotkey closes or interrupts the lesson; see §Phases.
 - The "Submit" hotkey submits the init form and the current study card while a text field is focused.
 - The "Again", "Hard", "Good", and "Easy" hotkeys grade the submitted card.
   They fire on key release while studying.
 
 System keys are not configurable and are not checked for conflicts:
 
-- `Escape` closes or interrupts the lesson, same as "Close popover".
-  What it does depends on the phase; see §Phases.
-- `Enter` or `Space` submit the current card, unless focus is in a text input or textarea.
-  `Enter` without modifiers in a type-answer field still submits; `Space` there inserts a space.
+- `Escape` closes or interrupts the lesson; see §Phases.
+- `Enter` or `Space` submit the current card; see §Submitting a Card.
 
 Overlapping a configurable hotkey with a system key is HOTKEYS.md.
 
@@ -143,7 +139,7 @@ Each field is capped at the available count for that type.
 The "Total" amount is the sum of the three and is not edited directly.
 
 The "Start" button is disabled while the "Total" amount is zero.
-Escape or "Close popover" closes the dialog without starting.
+Closing from init is in §Phases.
 
 ### Default Amounts
 
@@ -199,7 +195,7 @@ depending on whether the card has been submitted yet.
 Text fields support all three operations.
 For a type field, the user edits in a text area.
 The first text type field in the layout is focused automatically.
-Enter without modifiers submits the card from a type field.
+Submitting from a type field is in §Submitting a Card.
 
 After submit, a typed text answer is compared to the real value.
 Comparison ignores leading and trailing whitespace and letter case.
@@ -240,8 +236,7 @@ Choosing a grade:
 3. Queues that result to be saved
 4. Advances to the next card, or finishes the lesson if none remain
 
-Grade hotkeys fire on key release while studying.
-They use the configured "Again", "Hard", "Good", and "Easy" bindings.
+Grade hotkeys are in §Hotkeys.
 
 ### Learn Ahead
 
@@ -289,21 +284,18 @@ The content area shows "Done".
 If card data fails to load after the user starts the lesson, the lesson is also finished.
 No cards are studied.
 The content area shows the load error instead of "Done".
+The lesson also finishes with the load error when the counts, totals, or learning settings fail to load at open.
 
 The footer shows "Close", focused by default.
-Escape or "Close popover" also closes the dialog.
+Closing is in §Phases.
 
 ## Early Termination
 
-While cards are loading or being studied, closing the lesson requires confirmation.
-That includes the dialog close control, Escape, and "Close popover".
+Closing while cards are loading or being studied asks for confirmation; see §Phases.
 
 The confirmation offers "Continue studying" or "Close".
 "Continue studying" dismisses the confirmation and leaves the current card as it was.
 "Close" ends the lesson immediately.
-
-In the preparing, configuring, and finished phases, close, Escape,
-and "Close popover" end the lesson without that confirmation.
 
 Ending a lesson mid-study does not undo grades that were already saved.
 What happens to results not yet saved is in §Persisting Results.

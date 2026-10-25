@@ -698,7 +698,7 @@ Line numbers are at `aeb9282b`; when an earlier item moved them, find the code b
   Commit: Refresh the Dashboard lesson counts every minute
   Depends on: none
 
-- [ ] 18. Describe a failed lesson prepare and point repeated key rules home
+- [x] 18. Describe a failed lesson prepare and point repeated key rules home
   Goal (L6, L7) in LESSONS.md:
   - §Completion: when the counts, today's totals, or the learning settings fail to load as the dialog opens, the
     lesson finishes the same way, with that error.
