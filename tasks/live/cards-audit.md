@@ -667,7 +667,7 @@ Line numbers are at `b662537e`; when an earlier item moved them, find the code b
   Commit: Submit a card preview with Enter or Space, as in a lesson
   Depends on: none
 
-- [ ] 13. Offer preview from the card details view
+- [x] 13. Offer preview from the card details view
   Goal (C21; question 3):
   - `CardDetails` actions (`card-details.tsx:138-150`): a Preview button beside Reset and Delete.
     It opens `CardPreview` for the saved card with its own template (`card.templateId`).

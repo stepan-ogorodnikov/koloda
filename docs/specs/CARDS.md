@@ -163,7 +163,7 @@ Reset does not ask for confirmation.
 
 ## Card Preview
 
-The user can preview a card without saving any changes.
+The user can preview a card from the table or from the card details view, without saving any changes.
 Preview renders the card against its template the same way a lesson does — field operations,
 submit, reveal, and typed-answer comparison behave as in a lesson.
 

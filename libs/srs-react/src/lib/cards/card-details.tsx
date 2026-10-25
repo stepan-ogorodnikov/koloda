@@ -3,13 +3,24 @@ import { toFormErrors } from "@koloda/app";
 import { queriesAtom, queryKeys, useTimestampFormatter } from "@koloda/core-react";
 import type { Card, UpdateCardValues } from "@koloda/srs";
 import { getUpdateCardSchema, updateCardSchema as schema } from "@koloda/srs";
-import { Button, FormLayout, Label, QueryState, TextField, UndoIcon, useAppForm } from "@koloda/ui";
+import {
+  Button,
+  Dialog,
+  FormLayout,
+  Label,
+  PreviewIcon,
+  QueryState,
+  TextField,
+  UndoIcon,
+  useAppForm,
+} from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { CardContentTextArea } from "./card-content-text-area";
+import { CardPreview } from "./card-preview";
 import { CardReviews } from "./card-reviews";
 import { CardState } from "./card-state";
 import { DeleteCard } from "./delete-card";
@@ -25,6 +36,7 @@ export function CardDetails({ card }: CardDetailsProps) {
   const template = query.data;
   const { mutate } = useMutation(updateCardMutation());
   const resetProgressMutation = useMutation(resetCardProgressMutation());
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const form = useAppForm({
     defaultValues: card as UpdateCardValues,
     validators: { onSubmit: template ? getUpdateCardSchema(template) : schema },
@@ -139,6 +151,18 @@ export function CardDetails({ card }: CardDetailsProps) {
           <FormLayout.Section term={_(msg`card.labels.actions`)}>
             <FormLayout.Section.Content>
               <div className="flex flex-row flex-wrap items-center gap-2">
+                <Dialog.Root isOpen={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
+                  <Button variants={{ style: "primary" }}>
+                    <PreviewIcon className="size-4 min-w-4" strokeWidth={2} aria-hidden="true" />
+                    {_(msg`preview-card.trigger`)}
+                  </Button>
+                  <CardPreview
+                    isOpen={isPreviewOpen}
+                    onOpenChange={setIsPreviewOpen}
+                    card={card}
+                    templateId={card.templateId}
+                  />
+                </Dialog.Root>
                 {!!card.state && (
                   <Button variants={{ style: "primary" }} onClick={handleProgressReset}>
                     <UndoIcon className="size-4 min-w-4" strokeWidth={2} aria-hidden="true" />
