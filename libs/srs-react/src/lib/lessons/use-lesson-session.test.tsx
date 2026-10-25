@@ -7,6 +7,7 @@ import { createStore, Provider as JotaiProvider } from "jotai";
 import type { PropsWithChildren } from "react";
 import { describe, expect, it, vi } from "vitest";
 import {
+  createCard,
   createLessonData,
   createLessonsResult,
   createQueryClient,
@@ -292,6 +293,51 @@ describe("useLessonSession", () => {
       expect(store.get(lessonPhaseAtom)).toBe("studying");
     });
     expect(store.get(lessonContentAtom)?.index).toBe(0);
+  });
+
+  it("loads fresh card data when a lesson reopens with the same amounts", async () => {
+    const getLessonData = vi
+      .fn()
+      .mockResolvedValueOnce(createLessonData({ cards: [createCard({ id: testId(1) })] }))
+      .mockResolvedValueOnce(createLessonData({ cards: [createCard({ id: testId(2) })] }));
+    const { store, queryClient, Wrapper } = createWrapper({
+      queries: buildQueries({
+        getLessonDataQuery: (params) => ({ queryKey: queryKeys.lessons.data(params), queryFn: getLessonData }),
+      }),
+    });
+    const { result } = renderHook(() => useLessonSession(), { wrapper: Wrapper });
+
+    async function startStudying() {
+      act(() => {
+        store.set(openLessonAtom, REQUEST);
+      });
+      await waitFor(() => {
+        expect(store.get(lessonPhaseAtom)).toBe("configuring");
+      });
+      act(() => {
+        store.set(submitLessonSetupAtom);
+      });
+      await waitFor(() => {
+        expect(store.get(lessonPhaseAtom)).toBe("studying");
+      });
+    }
+
+    await startStudying();
+    expect(store.get(lessonContentAtom)?.card.id).toBe(testId(1));
+
+    act(() => {
+      result.current.closeLesson();
+    });
+    // WHY: a user cannot reopen in the same task as the close. Let the closed session's entry go first,
+    // as it does in the app between the two clicks.
+    await waitFor(() => {
+      const entries = queryClient.getQueryCache().findAll({ queryKey: ["lesson_data"] });
+      expect(entries.some(({ state }) => state.data !== undefined)).toBe(false);
+    });
+    await startStudying();
+
+    expect(store.get(lessonContentAtom)?.card.id).toBe(testId(2));
+    expect(getLessonData).toHaveBeenCalledTimes(2);
   });
 
   it("invalidates lesson queries from the explicit close path", async () => {

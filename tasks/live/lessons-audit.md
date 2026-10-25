@@ -377,7 +377,7 @@ Line numbers are at `aeb9282b`; when an earlier item moved them, find the code b
   Commit: Study each card with its own template
   Depends on: none
 
-- [ ] 2. Load fresh card data each time a lesson starts
+- [x] 2. Load fresh card data each time a lesson starts
   Goal (L1; closes A2):
   - Lesson-data query (`libs/srs-react/src/lib/lessons/use-lesson-session.ts:64-76`): add `gcTime: 0`.
   - WHY above it: the session keeps the first successful result (`lesson-reducer.ts:262-263`), so a cached entry

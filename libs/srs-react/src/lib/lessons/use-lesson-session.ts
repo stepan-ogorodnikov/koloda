@@ -73,6 +73,10 @@ export function useLessonSession(): UseLessonSessionResult {
       filters: setup?.filters ?? { deckIds: [] },
     }),
     enabled: isLoadingCards,
+    // WHY: the session keeps the first successful result, so a cached entry would replay an old
+    // snapshot when a lesson reopens with the same amounts and grade over newer progress. The entry
+    // goes once its key loses this observer, which every close does by resetting setup.
+    gcTime: 0,
   });
 
   useEffect(() => {
