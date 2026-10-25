@@ -3,9 +3,9 @@ import type { Deck } from "@koloda/srs";
 import { getCSSVar, QueryState } from "@koloda/ui";
 import { useMediaQuery } from "@react-hook/media-query";
 import { useQuery } from "@tanstack/react-query";
-import { useAtom, useAtomValue } from "jotai";
+import { useAtomValue } from "jotai";
 import { AnimatePresence } from "motion/react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { AddCard } from "../cards/add-card";
 import { CardsStack } from "../cards/cards-stack";
 import { CardsTable } from "../cards/cards-table";
@@ -18,12 +18,11 @@ export function DeckCards({ deckId }: DeckCardsProps) {
   const { getDeckQuery, getCardsQuery } = useAtomValue(queriesAtom);
   const { data } = useQuery(getDeckQuery(deckId));
   const query = useQuery(getCardsQuery({ deckId }));
-  const [view, setView] = useAtom(cardsViewAtom);
+  const chosenView = useAtomValue(cardsViewAtom);
   const [portalContainer, setPortalContainer] = useState<HTMLDivElement | null>(null);
 
-  useEffect(() => {
-    if (isMobile) setView("stack");
-  }, [isMobile, setView]);
+  // WHY: narrow screens force the stack without overwriting the chosen view, so widening restores it.
+  const view = isMobile ? "stack" : chosenView;
 
   if (!data) return null;
 

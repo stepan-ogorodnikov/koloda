@@ -701,7 +701,7 @@ Line numbers are at `b662537e`; when an earlier item moved them, find the code b
   Commit: Show a failed progress reset
   Depends on: 13
 
-- [ ] 15. Keep the chosen card view across narrow screens
+- [x] 15. Keep the chosen card view across narrow screens
   Goal (C14):
   - `DeckCards` (`libs/srs-react/src/lib/decks/deck-cards.tsx:24-26`): drop the effect that writes `"stack"` into
     `cardsViewAtom`.
