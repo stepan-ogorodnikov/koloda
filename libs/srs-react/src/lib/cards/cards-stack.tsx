@@ -20,7 +20,9 @@ export function CardsStack({ deckId, controlsNode }: CardsTableProps) {
   const { getCardsQuery } = useAtomValue(queriesAtom);
   const { data: cards = [] } = useQuery(getCardsQuery({ deckId }));
   const [index, setIndex] = useState(0);
-  const card = cards[index];
+  // WHY: a delete shrinks the list under the stored index; show the last card instead of none.
+  const position = Math.min(index, Math.max(cards.length - 1, 0));
+  const card = cards[position];
 
   return (
     <>
@@ -31,23 +33,23 @@ export function CardsStack({ deckId, controlsNode }: CardsTableProps) {
               <Button
                 variants={{ style: "bordered", size: "icon" }}
                 aria-label={_(msg`cards-stack.navigation.prev`)}
-                isDisabled={index === 0}
-                onClick={() => setIndex((prev) => prev - 1)}
+                isDisabled={position === 0}
+                onClick={() => setIndex(position - 1)}
               >
                 <ArrowLeftIcon className="size-5 min-w-5" strokeWidth={2} aria-hidden="true" />
               </Button>
               <Button
                 variants={{ style: "bordered", size: "icon" }}
                 aria-label={_(msg`cards-stack.navigation.next`)}
-                isDisabled={index >= cards.length - 1}
-                onClick={() => setIndex((prev) => prev + 1)}
+                isDisabled={position >= cards.length - 1}
+                onClick={() => setIndex(position + 1)}
               >
                 <ArrowRightIcon className="size-5 min-w-5" strokeWidth={2} aria-hidden="true" />
               </Button>
             </div>
             {cards.length > 0 && (
               <div className="flex flex-row items-center gap-1">
-                <AnimatedNumber className="fg-level-2 numbers-text tabular-nums" value={index + 1} />
+                <AnimatedNumber className="fg-level-2 numbers-text tabular-nums" value={position + 1} />
                 <span className="text-sm fg-level-4">/</span>
                 <AnimatedNumber className="fg-level-2 numbers-text tabular-nums" value={cards.length} />
               </div>

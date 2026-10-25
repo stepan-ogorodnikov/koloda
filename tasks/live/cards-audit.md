@@ -481,7 +481,7 @@ Line numbers are at `b662537e`; when an earlier item moved them, find the code b
   Commit: Keep the add-card refresh when the dialog closes mid-add
   Depends on: 2
 
-- [ ] 5. Keep the stack view on a card after a delete
+- [x] 5. Keep the stack view on a card after a delete
   Goal (C3):
   - `CardsStack` (`cards-stack.tsx:22-23`): derive `position = Math.min(index, Math.max(cards.length - 1, 0))`.
     Use it for the card (`:23`, `:60`), the counter (`:50`), both button guards (`:34`, `:42`), and as the base for
