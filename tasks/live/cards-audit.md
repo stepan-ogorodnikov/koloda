@@ -766,7 +766,7 @@ Line numbers are at `b662537e`; when an earlier item moved them, find the code b
   Commit: Clean up card view residue
   Depends on: 5, 7, 14
 
-- [ ] 19. Match CARDS.md to the card views and keep one home per rule
+- [x] 19. Match CARDS.md to the card views and keep one home per rule
   Goal (C7, C8) in CARDS.md:
   - §Table View (line 181): rows show content, state, and due time.
     The creation and update columns start hidden, and the Columns menu shows them.

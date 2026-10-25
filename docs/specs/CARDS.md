@@ -13,7 +13,7 @@ Accepting generated cards into a deck is covered; how those cards are generated 
 
 A card is a unit of study inside a deck.
 It carries user-visible content shaped by a template, plus scheduling state that determines when it comes up for review.
-A card belongs to exactly one deck and uses exactly one template.
+A card uses exactly one template.
 
 ## Core model
 
@@ -46,9 +46,6 @@ Content for fields that are not on the card's template is not stored.
 
 In the management UI, every field is edited and shown as plain text, including markdown fields.
 Rendered markdown appears only in preview and lessons.
-
-Having any card on a template locks that template.
-See TEMPLATES.md (§Locking).
 
 ## Rendered Markdown
 
@@ -118,7 +115,8 @@ Other cards in the batch with valid templates still succeed.
 The card details view shows the card's editable content and its state.
 If the card has been graded, it also shows the due time,
 the visible scheduling numbers, review history, and a reset action.
-It always shows creation and update timestamps and a delete action.
+It always shows the creation time and a delete action.
+The update time shows once the content has been edited.
 
 Editing only changes the content.
 The card's deck, template, state, and scheduling data are not modified.
@@ -143,7 +141,7 @@ Resetting progress or deleting the card removes the history.
 The user can delete a single card or a selected group of cards.
 Delete asks for confirmation.
 Deleting is irreversible from the user perspective.
-The card's review history is removed with it.
+What happens to the card's reviews is in §Review History.
 
 If the user selects zero cards, the bulk delete is not available.
 The deck itself is not deleted by removing its cards.
@@ -154,7 +152,7 @@ The user can reset a graded card's progress back to a fresh state.
 The card's content stays the same; only its scheduling is wiped.
 
 - Every scheduling field is reset to its default value.
-- The card's full review history is removed.
+- Review history: see §Review History.
 - The card becomes indistinguishable from a freshly added card,
   except for its creation time, its update time, and its content.
 
@@ -179,7 +177,8 @@ On narrow screens the stack view is forced and the view toggle is hidden.
 ### Table View
 
 The table view shows every card in a paginated, sortable table.
-Each row shows the card's content, its state, its due time (if scheduled), and timestamps for creation and last update.
+Each row shows the card's content, its state, and its due time (if scheduled).
+The creation and update time columns start hidden; the user can show them like any other column.
 Content cells show raw text, not rendered markdown.
 Per-row actions let the user preview, edit, or delete the card.
 
