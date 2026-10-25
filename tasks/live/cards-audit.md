@@ -734,7 +734,7 @@ Line numbers are at `b662537e`; when an earlier item moved them, find the code b
   Commit: Refuse to render markdown without a DOM
   Depends on: none
 
-- [ ] 17. Give the column utility test distinct field ids per template
+- [x] 17. Give the column utility test distinct field ids per template
   Goal (C19):
   - `cards-table-utility.test.ts:5-21`: derive field ids from the template id, so two templates never share ids.
   - Rewrite "getFieldId returns correct field id for each template" (`:72`) and the mixed case (`:90`).
