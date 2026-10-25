@@ -7,10 +7,8 @@ import type { LessonContent } from "./lesson-reducer";
 const lessonCardContentField = tv({
   base: "flex flex-col w-full prose wd:prose-xl",
   variants: {
-    operation: {
-      display: "",
-      reveal: "opacity-0 data-is-submitted:opacity-100 animate-opacity",
-      type: "",
+    isHiddenUntilSubmit: {
+      true: "opacity-0 data-is-submitted:opacity-100 animate-opacity",
     },
   },
 });
@@ -30,13 +28,19 @@ export function LessonCardField({
 }: LessonCardFieldProps) {
   if (!field || !content) return null;
 
+  // WHY: a markdown field has no typing input, so a "type" item on it hides its value until submit,
+  // like reveal (LESSONS.md §Field Operations).
+  const isHiddenUntilSubmit = operation === "reveal" || (operation === "type" && field.type !== "text");
   const actualValue = content.card.content[field.id]?.text || "";
   const userValue = content.form.data[field.id] || "";
   const FieldComponent = fieldTypeComponents[field.type];
 
   return (
     <LayoutGroup>
-      <div className={lessonCardContentField({ operation })} data-is-submitted={content.form.isSubmitted || undefined}>
+      <div
+        className={lessonCardContentField({ isHiddenUntilSubmit })}
+        data-is-submitted={content.form.isSubmitted || undefined}
+      >
         <FieldComponent
           value={actualValue}
           operation={operation}

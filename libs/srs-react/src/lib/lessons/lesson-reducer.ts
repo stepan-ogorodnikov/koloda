@@ -300,7 +300,8 @@ export function createLessonCardForm(template: LessonTemplate): LessonContent["f
   const canSubmit = template.layout.reduce((acc, x) => acc || x.operation !== "display", false);
 
   return {
-    firstInputFieldId: template.layout.find((x) => x.operation === "type")?.field?.id,
+    // WHY: only a text field has a typing input; a markdown "type" item has nothing to focus.
+    firstInputFieldId: template.layout.find((x) => x.operation === "type" && x.field?.type === "text")?.field?.id,
     data: {},
     isSubmitted: !canSubmit,
   };

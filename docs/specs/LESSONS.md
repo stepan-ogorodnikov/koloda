@@ -196,7 +196,7 @@ depending on whether the card has been submitted yet.
 
 Text fields support all three operations.
 For a type field, the user edits in a text area.
-The first type field in the layout is focused automatically.
+The first text type field in the layout is focused automatically.
 Enter without modifiers submits the card from a type field.
 
 After submit, a typed text answer is compared to the real value.
@@ -206,6 +206,7 @@ If they do not match, the typed answer is shown as incorrect and the correct val
 
 Markdown fields are rendered as formatted content; see CARDS.md (§Rendered Markdown).
 They participate in reveal visibility through the layout, but they do not present a typing input.
+A markdown field set to type behaves like reveal: it is hidden until the card is submitted.
 
 If every field in the layout is display-only, there is nothing to submit.
 The card is treated as already submitted and grade buttons appear immediately.

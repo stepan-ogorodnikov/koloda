@@ -484,7 +484,7 @@ Line numbers are at `aeb9282b`; when an earlier item moved them, find the code b
   Commit: Share the lesson card form builder with preview
   Depends on: 1
 
-- [ ] 7. Hide a markdown type field until submit and focus the first text one
+- [x] 7. Hide a markdown type field until submit and focus the first text one
   Goal (L5; question 3):
   - Builder (item 6): `firstInputFieldId` is the first "type" item whose field is a text field.
   - `lesson-card-field.tsx` (`:7-16`, `:39`): a "type" item on a non-text field is hidden until submit, the same way

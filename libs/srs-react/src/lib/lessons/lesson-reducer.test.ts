@@ -1,5 +1,6 @@
 import type { LearningSettings } from "@koloda/app";
 import { SEED_TEMPLATE_TYPE_BACK_FIELD_ID } from "@koloda/app";
+import type { LessonTemplate } from "@koloda/srs";
 import {
   convertTemplateToLessonTemplate,
   createReviewFromReviewFSRS,
@@ -16,7 +17,12 @@ import {
   createTodaysReviewTotals,
   testId,
 } from "../../test/test-helpers";
-import { calculateInitialLessonAmounts, lessonReducer, lessonReducerDefault } from "./lesson-reducer";
+import {
+  calculateInitialLessonAmounts,
+  createLessonCardForm,
+  lessonReducer,
+  lessonReducerDefault,
+} from "./lesson-reducer";
 import type { LessonReducerState } from "./lesson-reducer";
 
 type LessonAction = Parameters<typeof lessonReducer>[1];
@@ -524,6 +530,29 @@ describe("lessonReducer", () => {
 
     expect(repeated).toBe(openState);
     expect(repeated.request).toEqual({ type: "total" });
+  });
+});
+
+describe("createLessonCardForm", () => {
+  const markdownField = { id: testId(11), title: "Notes", type: "markdown", isRequired: false } as const;
+  const textField = { id: testId(12), title: "Answer", type: "text", isRequired: true } as const;
+
+  function typeItem(field: typeof markdownField | typeof textField): LessonTemplate["layout"][number] {
+    return { field, fieldId: field.id, operation: "type" };
+  }
+
+  it.each([
+    {
+      name: "a markdown type item before a text one",
+      layout: [typeItem(markdownField), typeItem(textField)],
+      expected: textField.id,
+    },
+    { name: "a markdown type item alone", layout: [typeItem(markdownField)], expected: undefined },
+  ])("focuses only a text type field: $name", ({ layout, expected }) => {
+    const form = createLessonCardForm({ id: testId(1), layout });
+
+    expect(form.firstInputFieldId).toBe(expected);
+    expect(form.isSubmitted).toBe(false);
   });
 });
 
