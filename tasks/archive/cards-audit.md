@@ -1,6 +1,6 @@
 # Cards audit fixes
 
-Status: ready
+Status: done
 Guides: agents/IMPLEMENTATION-PLAN.md, agents/TASKS.md, docs/specs/CARDS.md, docs/specs/TEMPLATES.md, docs/specs/DECKS.md, docs/specs/HOTKEYS.md, agents/CODE-STYLE.md, agents/CODE-DOCUMENTATION.md, agents/TESTING.md, agents/VERIFY.md, agents/CSS.md, agents/I18N.md, agents/RUST.md, docs/decisions/TS-RUST-DOMAIN-MIRRORING.md, agents/BACKWARDS-COMPATIBILITY.md, agents/FUNCTIONAL-SPECIFICATIONS.md, agents/MARKDOWN.md, apps/web-e2e/README.md, apps/electron-e2e/README.md, libs/e2e/README.md, agents/REVIEW.md
 Flow: local
 
@@ -12,19 +12,17 @@ It also takes the templates and decks findings that add cache refreshes to the s
 - The cards audit covered the behavior owned by `docs/specs/CARDS.md`.
   That is card content, scheduling state, adding (single and batch), editing, review history, deleting, resetting
   progress, preview, the table and stack views, and what rendered markdown may contain.
-  Its report was `tmp/audits/cards.md`.
 - Its findings 1 and 18 were fixed by `tasks/archive/lessons-audit.md` (items 1 and 6).
   They are recorded here, not planned.
-- The templates audit (`tmp/audits/templates.md`) finding 1 is a stale lock status.
+- The templates audit finding 1 is a stale lock status.
   Its fix adds a template refresh to the card paths here.
-- The decks audit (`tmp/audits/decks.md`) finding 5 is stale Dashboard data after a deck edit or delete.
+- The decks audit finding 5 is stale Dashboard data after a deck edit or delete.
   Deck delete is a fifth site for cards finding 9.
 - `tasks/archive/assistant-data-access-card-generation-audit.md` (Scope, Out) handed over `add-card.tsx`.
   It refreshes from per-call `mutate` callbacks, the same defect as that task's card generation C1.
   It is entry C22.
 
 All three audits read `d32fb02e` (`main`).
-Git ignores the reports.
 This file restates every finding and its evidence, so neither the next session nor the archive reader needs them.
 
 Triage checked each finding again at `b662537e`, where this task branches.
@@ -337,7 +335,7 @@ C22 was handed over by the assistant task and re-checked at triage.
 ### Out
 
 - The other findings of `templates.md` and `decks.md`, and the other audit reports.
-  They are triaged separately; `tmp/audits/PROGRESS.md` holds their order.
+  They are triaged separately.
 - `hotkeys.md` findings 1, 8, and 14 (hotkey scopes are flags), for the hotkeys triage (question 1).
   Item 6 removes one symptom that finding 1 lists: the exiting pristine card form no longer saves on `Mod+S`.
   The `form` scope still switches off when two forms overlap; the hotkeys triage should record what item 6 closed.
@@ -807,6 +805,43 @@ Line numbers are at `b662537e`; when an earlier item moved them, find the code b
   Commit: Cover card reset, table paging, and stack delete in both e2e suites
   Depends on: 1, 3, 5
 
+- [x] 21. Give the first pagination test a 15 second budget
+  Goal: CI's `checks` timed out at the default 5 second limit on "returns to the first page when a search narrows the rows"
+    in two runs of the Archive commit `9c4f4603`. Locally the test takes about 1.2 s, and the file's first test pays
+    the cold table render. Give that one test a 15 second budget with a WHY comment. The 40-card fixture stays, as item 1 plans.
+  Constraints: `libs/srs-react/src/lib/cards/cards-table.test.tsx` only.
+  Done when: `SR cards-table` passes, and `bun run check:push` passes on the tip.
+  Commit: Give the first pagination test a 15 second budget
+  Depends on: 1
+
 ## Outcome
 
-<what shipped>
+Shipped, one commit per Plan item, all 21 done. Item 21 came after the Archive commit: CI's `checks` timed out on one test twice, so the Archive commit was redone. Every cards finding in scope is fixed, except those listed under Left out. The cards audit's findings 1 and 18 were fixed earlier by `lessons-audit` (items 1 and 6).
+
+- The cards table stays on a page that has rows after a search, filter, or delete (C2).
+- Selection and bulk delete cover only the selected cards that the search and filters show (C10). The template filter is a column filter, so every filter behaves the same.
+- Table column headers and the template filter follow the templates the cards use (C5).
+- Template lock status, today's totals, and Dashboard deck titles refresh after card and deck changes, including deck delete (T1, C9, D5).
+- Closing the add-card dialog mid-add still refreshes the deck's queries, and Add cannot run twice (C22).
+- Deleting in the stack view keeps a card on screen with a true counter (C3).
+- `Mod+S` on an unchanged form does nothing, in all seven `Controls` forms (C4).
+- Web card insert rejects invalid progress fields, as desktop does (C11).
+- Neither host stores content keys outside the card's template, on add, batch add, and update (C12).
+- Card preview submits with Enter or Space and focuses "Continue", as in a lesson (C6).
+- The card details view offers preview of the saved card, so narrow screens can preview (C21).
+- A failed progress reset shows its error (C13).
+- Widening the window restores the chosen card view (C14).
+- Markdown refuses to render without a DOM instead of returning unsanitized HTML (C15).
+- CARDS.md matches the card views, including which timestamps show, and each rule has one home (C7, C8). Leftover card view surface and style residue is gone (C20).
+- Tests: web card repo updates, bulk delete, and a full-field roundtrip (C16); desktop reset, the stack view, and table paging in both e2e suites (C17); the column utility test uses distinct field ids per template (C19).
+
+Verified: `bun run check:push` passed on the tip before archiving, and again after item 21. The web and desktop e2e suites were not run; item 20 adds typecheck only, per `agents/VERIFY.md`. The manual checks in the Plan (`card-edit`, `cards-table`, `card-delete`, and `template-lock` on both hosts) are the human's to run and are not verified here.
+
+Left out, each with its own triage:
+
+- `hotkeys.md` findings 1, 8, and 14 (hotkey scopes are flags). Item 6 closes one symptom of finding 1; the `form` scope still switches off when two forms overlap.
+- `host-desync.md` finding 2 (rows validated on read). Item 10 closes the web write path that reached it.
+- The editor twins: `decks.md` findings 4 and 6, `algorithms.md` findings 6 and 11, `learning-settings.md` finding 2, and `media.md` findings 1 and 4. Item 4 closes add-card's pending-submit shape; `media.md` finding 4's insertion block stays there.
+- The other card paths with per-call `mutate` callbacks (update, reset, and the three deletes). None resets its mutation on close, so they lose their refresh only if the deck page unmounts mid-write. Seen, not planned.
+- Sync apply of card content from another device. Item 11 changes only local writes.
+- The other findings of `templates.md` and `decks.md`, and the other audit reports.
