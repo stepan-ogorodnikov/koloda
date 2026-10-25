@@ -1,11 +1,14 @@
 import type { LearningSettings } from "@koloda/app";
 import { SEED_TEMPLATE_TYPE_BACK_FIELD_ID } from "@koloda/app";
+import { convertTemplateToLessonTemplate } from "@koloda/srs";
 import type * as KolodaSrsModule from "@koloda/srs";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   createCard,
+  createDeck,
   createLessonData,
   createLessonsResult,
+  createTemplate,
   createTodaysReviewTotals,
   testId,
 } from "../../test/test-helpers";
@@ -336,6 +339,19 @@ describe("lessonReducer", () => {
 
     expect(state.phase).toBe("finished");
     expect(state.session?.content).toBeNull();
+  });
+
+  it("studies a card with its own template when its deck has moved to another", () => {
+    const cardTemplate = createTemplate({ id: testId(1) });
+    const deckTemplate = createTemplate({ id: testId(2) });
+    const state = startLesson({
+      lessonData: createLessonData({
+        decks: [createDeck({ templateId: deckTemplate.id })],
+        templates: [convertTemplateToLessonTemplate(deckTemplate), convertTemplateToLessonTemplate(cardTemplate)],
+      }),
+    });
+
+    expect(state.session?.content?.template.id).toBe(cardTemplate.id);
   });
 
   it("updates and submits the card form only while studying", () => {

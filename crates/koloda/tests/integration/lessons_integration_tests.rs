@@ -1,8 +1,9 @@
 use koloda::app::error::error_codes;
 use koloda::domain::cards::UpdateCardProgress;
+use koloda::domain::decks::{UpdateDeckData, UpdateDeckValues};
 use koloda::domain::lessons::{GetLessonDataParams, GetLessonsParams, LessonAmounts, LessonFilters, LessonResultData};
 use koloda::domain::reviews::InsertReviewData;
-use koloda::repo::lessons;
+use koloda::repo::{decks, lessons};
 
 use crate::common::fixtures::{add_algorithm, add_card, add_deck, add_template, insert_card_row};
 use crate::common::test_db;
@@ -366,6 +367,50 @@ fn get_lesson_data_returns_related_decks_templates_and_algorithms() {
     assert_eq!(lesson_data.templates[0].id, template_id);
     assert_eq!(lesson_data.algorithms.len(), 1);
     assert_eq!(lesson_data.algorithms[0].id, algorithm_id);
+}
+
+#[test]
+fn get_lesson_data_carries_each_cards_own_template_after_its_deck_switches() {
+    let db = test_db();
+    let algorithm_id = add_algorithm(&db, "FSRS");
+    let card_template_id = add_template(&db, "Basic");
+    let deck_id = add_deck(&db, &algorithm_id, &card_template_id, "Deck");
+    add_card(&db, &deck_id, &card_template_id, "question");
+    let deck_template_id = add_template(&db, "Other");
+    decks::update_deck(
+        &db,
+        UpdateDeckData {
+            id: deck_id.clone(),
+            values: UpdateDeckValues {
+                title: "Deck".to_string(),
+                algorithm_id: algorithm_id.clone(),
+                template_id: deck_template_id,
+                notes: None,
+            },
+        },
+    )
+    .expect("deck template should change");
+
+    let lesson_data = lessons::get_lesson_data(
+        &db,
+        &GetLessonDataParams {
+            due_at: 1_000,
+            filters: LessonFilters {
+                deck_ids: Some(vec![deck_id]),
+            },
+            amounts: LessonAmounts {
+                untouched: 1,
+                learn: 0,
+                review: 0,
+                total: 1,
+            },
+        },
+    )
+    .expect("lesson data query should succeed")
+    .expect("lesson data should exist");
+
+    let template_ids: Vec<&str> = lesson_data.templates.iter().map(|t| t.id.as_str()).collect();
+    assert_eq!(template_ids, vec![card_template_id.as_str()]);
 }
 
 #[test]

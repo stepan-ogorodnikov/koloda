@@ -211,31 +211,32 @@ fn lesson_layout(content: &crate::domain::templates::TemplateContent) -> Vec<Les
         .collect()
 }
 
-// Twin of web `getLessonTemplates` (`libs/db-sqlite/src/lib/lessons.ts`): one DISTINCT join over
-// the lesson decks, `id` + `content` only — everything else is derived from content.
-fn get_lesson_templates(db: &Database, deck_ids: &[String]) -> Result<Vec<LessonTemplate>, AppError> {
+// Twin of web `getLessonTemplates` (`libs/db-sqlite/src/lib/lessons.ts`): the lesson cards' own
+// templates, `id` + `content` only — everything else is derived from content.
+// INVARIANT: not the decks' current templates; a deck's template can change after its cards were
+// added (CARDS.md §Relationships).
+fn get_lesson_templates(db: &Database, template_ids: &[String]) -> Result<Vec<LessonTemplate>, AppError> {
     throw_known_error(error_codes::DB_GET, || {
-        if deck_ids.is_empty() {
+        if template_ids.is_empty() {
             return Ok(Vec::new());
         }
 
-        let placeholders: Vec<String> = deck_ids
+        let placeholders: Vec<String> = template_ids
             .iter()
             .enumerate()
             .map(|(i, _)| format!("?{}", i + 1))
             .collect();
         let sql = format!(
             r#"
-            SELECT DISTINCT t.id, t.content
+            SELECT t.id, t.content
             FROM templates t
-            JOIN decks d ON d.template_id = t.id
-            WHERE d.id IN ({})
+            WHERE t.id IN ({})
             "#,
             placeholders.join(", ")
         );
 
         db.with_conn(|conn| {
-            let params: Vec<&dyn rusqlite::ToSql> = deck_ids.iter().map(|id| id as &dyn rusqlite::ToSql).collect();
+            let params: Vec<&dyn rusqlite::ToSql> = template_ids.iter().map(|id| id as &dyn rusqlite::ToSql).collect();
             let mut stmt = conn.prepare(&sql)?;
             let templates = stmt
                 .query_map(params.as_slice(), |row| {
@@ -308,10 +309,11 @@ pub fn get_lesson_data(db: &Database, params: &GetLessonDataParams) -> Result<Op
         }
 
         let unique_deck_ids = unique_ids_in_order(cards.iter().map(|c| c.deck_id.as_str()));
+        let unique_template_ids = unique_ids_in_order(cards.iter().map(|c| c.template_id.as_str()));
 
         let lesson_decks = crate::repo::decks::get_decks_by_ids(db, &unique_deck_ids)?;
 
-        let lesson_templates = get_lesson_templates(db, &unique_deck_ids)?;
+        let lesson_templates = get_lesson_templates(db, &unique_template_ids)?;
         let lesson_algorithms = get_lesson_algorithms(db, &unique_deck_ids)?;
 
         Ok(Some(LessonData {

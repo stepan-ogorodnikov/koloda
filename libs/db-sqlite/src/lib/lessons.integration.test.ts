@@ -1,9 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { addCard, getCards } from "./cards";
+import { updateDeck } from "./decks";
 import { getLessonCards, getLessons, getLessonData, submitLessonResult } from "./lessons";
 import { getReviews } from "./reviews";
 import type { TestDb } from "../test/test-helpers";
-import { createCardContent, createTestDb, seedDeckContext } from "../test/test-helpers";
+import { createCardContent, createTestDb, seedDeckContext, seedTemplate } from "../test/test-helpers";
 
 describe("lessons repository integration", () => {
   let testDb: TestDb;
@@ -172,6 +173,31 @@ describe("lessons repository integration", () => {
     expect(Object.keys(lessonData?.templates[0] ?? {}).sort()).toEqual(["id", "layout"]);
     expect(Object.keys(lessonData?.templates[0]?.layout[0] ?? {}).sort()).toEqual(["field", "fieldId", "operation"]);
     expect(Object.keys(lessonData?.algorithms[0] ?? {}).sort()).toEqual(["content", "id"]);
+  });
+
+  it("carries each card's own template after its deck switches to another", async () => {
+    const { db } = testDb;
+    const { deck, template: cardTemplate, algorithm } = await seedDeckContext(db);
+    await addCard(db, {
+      deckId: deck.id,
+      templateId: cardTemplate.id,
+      content: createCardContent(cardTemplate),
+      state: 0,
+    });
+    const deckTemplate = await seedTemplate(db, { title: "Other" });
+    await updateDeck(db, {
+      id: deck.id,
+      values: { title: deck.title, algorithmId: algorithm.id, templateId: deckTemplate.id },
+    });
+
+    const lessonData = await getLessonData(
+      db,
+      new Date("2026-01-10T12:00:00.000Z"),
+      { deckIds: [deck.id] },
+      { untouched: 1, learn: 0, review: 0, total: 1 },
+    );
+
+    expect(lessonData?.templates.map(({ id }) => id)).toEqual([cardTemplate.id]);
   });
 
   it("returns null when no cards match requested amounts", async () => {

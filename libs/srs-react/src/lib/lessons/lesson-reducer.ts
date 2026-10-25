@@ -319,7 +319,7 @@ function moveToNextCard(draft: LessonReducerState) {
       continue;
     }
 
-    const template = templates.find(({ id }) => id === deck.templateId);
+    const template = templates.find(({ id }) => id === card.templateId);
     if (!template) {
       index++;
       continue;

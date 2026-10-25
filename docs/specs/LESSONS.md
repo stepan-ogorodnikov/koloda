@@ -40,7 +40,8 @@ Closing the dialog clears the session.
 - Available counts come from the user's decks and due times.
 - Amounts are chosen at init, then used to load lesson data.
 - Today's review totals and daily limits appear on the Dashboard and at init; see §Today's Progress.
-- Each card in the session uses its deck's template and algorithm.
+- Each card in the session uses its own template; see CARDS.md (§Relationships).
+  It uses its deck's algorithm.
 - Grading a card queues its result to be saved and advances to the next card.
 
 ## Lessons Overview
@@ -179,7 +180,7 @@ Cards are included in this order:
 2. "Learn" cards that are due, soonest due first
 3. "Review" cards that are due, soonest due first
 
-Each card is shown using its deck's template layout.
+Each card is shown using its own template's layout; see CARDS.md (§Relationships).
 The layout is an ordered list of fields.
 Each field has an operation that controls how it appears during study.
 

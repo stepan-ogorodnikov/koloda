@@ -7,6 +7,7 @@ import type {
   LessonFilters,
   LessonResultData,
   LessonsResult,
+  Template,
 } from "@koloda/srs";
 import {
   cardRowSchema,
@@ -147,16 +148,17 @@ export async function getLessonAlgorithms(db: DB, deckIds: Deck["id"][]) {
   });
 }
 
-export async function getLessonTemplates(db: DB, deckIds: Deck["id"][]) {
+// INVARIANT: lesson templates are the cards' own, not their decks' current ones (CARDS.md §Relationships).
+// A deck's template can change after its cards were added. Twin of Rust `get_lesson_templates`.
+export async function getLessonTemplates(db: DB, templateIds: Template["id"][]) {
   return throwKnownError("db.get", async () => {
-    if (!deckIds.length) return [];
+    if (!templateIds.length) return [];
 
     const result = await db.all(
-      `SELECT DISTINCT t.id, t.content
+      `SELECT t.id, t.content
        FROM templates t
-       JOIN decks d ON d.template_id = t.id
-       WHERE d.id IN (${placeholders(deckIds.length)})`,
-      deckIds,
+       WHERE t.id IN (${placeholders(templateIds.length)})`,
+      templateIds,
     );
     const templates = parseRows(lessonTemplateRowSchema, result);
 
@@ -177,11 +179,15 @@ export async function getLessonData(
   if (lessonCards.length === 0) return null;
 
   const deckIdsSet = new Set<Deck["id"]>();
-  for (const { deckId } of lessonCards) deckIdsSet.add(deckId);
+  const templateIdsSet = new Set<Template["id"]>();
+  for (const { deckId, templateId } of lessonCards) {
+    deckIdsSet.add(deckId);
+    templateIdsSet.add(templateId);
+  }
   const deckIds = Array.from(deckIdsSet);
 
   const lessonDecks = await getDecks(db, deckIds);
-  const lessonTemplates = await getLessonTemplates(db, deckIds);
+  const lessonTemplates = await getLessonTemplates(db, Array.from(templateIdsSet));
   const lessonAlgorithms = await getLessonAlgorithms(db, deckIds);
 
   return lessonDecks && lessonTemplates && lessonAlgorithms

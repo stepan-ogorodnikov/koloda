@@ -339,7 +339,7 @@ Line numbers are at `aeb9282b`.
 `RS` stands for `cargo test -p koloda`.
 Line numbers are at `aeb9282b`; when an earlier item moved them, find the code by its text.
 
-- [ ] 1. Study each card with its own template
+- [x] 1. Study each card with its own template
   Goal (C1; question 2):
   - Web `getLessonTemplates` (`libs/db-sqlite/src/lib/lessons.ts:150-165`): take template ids, not deck ids.
     Select `FROM templates t WHERE t.id IN (…)` with no deck join.
@@ -363,7 +363,8 @@ Line numbers are at `aeb9282b`; when an earlier item moved them, find the code b
     - a reducer case: a card whose `templateId` is not its deck's studies with its own template.
   Constraints:
   - Keep `LessonData` and its IPC shape; `templates` stays a list of `LessonTemplate`.
-  - Keep the slim `id` + `content` projection and `DISTINCT` on both hosts.
+  - Keep the slim `id` + `content` projection on both hosts.
+    Implemented without `DISTINCT`: with no join, the ids are unique primary keys.
   Done when:
   - `DB lessons`, `RS lesson`, and `SR lesson-reducer` pass;
   - the new web and Rust cases fail against the deck join.
