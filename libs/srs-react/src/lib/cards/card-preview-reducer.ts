@@ -3,6 +3,7 @@ import { dispatchReducerAction } from "@koloda/core-react";
 import type { Card, Template } from "@koloda/srs";
 import { convertTemplateToLessonTemplate } from "@koloda/srs";
 import { produce } from "immer";
+import { createLessonCardForm } from "../lessons/lesson-reducer";
 import type { LessonContent } from "../lessons/lesson-reducer";
 
 export type CardPreviewReducerState = {
@@ -33,16 +34,11 @@ function templateUpdated(draft: CardPreviewReducerState, payload: Template) {
 function setContent(draft: CardPreviewReducerState) {
   if (draft.template && draft.card) {
     const template = convertTemplateToLessonTemplate(draft.template);
-    const canSubmit = template.layout.reduce((acc, x) => acc || x.operation !== "display", false);
 
     draft.content = {
       index: 0,
       startedAt: 0,
-      form: {
-        firstInputFieldId: template.layout.find((x) => x.operation === "type")?.field?.id,
-        data: {},
-        isSubmitted: !canSubmit,
-      },
+      form: createLessonCardForm(template),
       card: draft.card,
       template,
       grades: [],

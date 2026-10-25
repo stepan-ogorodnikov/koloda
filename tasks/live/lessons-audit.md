@@ -471,7 +471,7 @@ Line numbers are at `aeb9282b`; when an earlier item moved them, find the code b
   Commit: Test learn-ahead at its cutoff on the real grade helpers
   Depends on: 4
 
-- [ ] 6. Share the lesson card form builder with preview
+- [x] 6. Share the lesson card form builder with preview
   Goal (C18):
   - Export one builder from `lesson-reducer.ts` that turns a `LessonTemplate` into the card form: the display-only
     `canSubmit` rule, `firstInputFieldId`, empty `data`, and `isSubmitted`.

@@ -294,6 +294,18 @@ function prepareFailed(draft: LessonReducerState, error: unknown) {
   terminalizeLoadError(draft, error);
 }
 
+// INVARIANT: the one home for a shown card's starting form; card preview builds its form here too.
+export function createLessonCardForm(template: LessonTemplate): LessonContent["form"] {
+  // WHY: display-only layouts have nothing to submit — show grades immediately.
+  const canSubmit = template.layout.reduce((acc, x) => acc || x.operation !== "display", false);
+
+  return {
+    firstInputFieldId: template.layout.find((x) => x.operation === "type")?.field?.id,
+    data: {},
+    isSubmitted: !canSubmit,
+  };
+}
+
 function moveToNextCard(draft: LessonReducerState) {
   if (!draft.session) return;
 
@@ -325,17 +337,10 @@ function moveToNextCard(draft: LessonReducerState) {
       continue;
     }
 
-    // WHY: display-only layouts have nothing to submit — show grades immediately.
-    const canSubmit = template.layout.reduce((acc, x) => acc || x.operation !== "display", false);
-
     draft.session.content = {
       index,
       startedAt: Date.now(),
-      form: {
-        firstInputFieldId: template.layout.find((x) => x.operation === "type")?.field?.id,
-        data: {},
-        isSubmitted: !canSubmit,
-      },
+      form: createLessonCardForm(template),
       card,
       template,
       grades: getCardGrades(card, algorithm),
