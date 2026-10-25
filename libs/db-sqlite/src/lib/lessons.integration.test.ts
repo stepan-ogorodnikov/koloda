@@ -348,12 +348,11 @@ describe("lessons repository integration", () => {
       isIgnored: false,
     };
 
-    const insertedReview = await submitLessonResult(db, { card: updatedCard, review });
+    await submitLessonResult(db, { card: updatedCard, review });
     const storedCards = await getCards(db, { deckId: deck.id });
     const storedCard = storedCards.find((item) => item.id === card.id);
     const storedReviews = await getReviews(db, { cardId: card.id });
 
-    expect(insertedReview).toMatchObject(review);
     expect(storedCard).toMatchObject({
       id: card.id,
       state: 2,

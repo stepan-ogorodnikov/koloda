@@ -16,13 +16,12 @@ import {
   lessonAlgorithmRowSchema,
   lessonDeckSchema,
   lessonTemplateRowSchema,
-  reviewRowSchema,
   updateCardProgressSchema,
 } from "@koloda/srs";
-import { CARD_SELECT, REVIEW_SELECT } from "./columns";
+import { CARD_SELECT } from "./columns";
 import type { DB } from "./db";
 import { getDecks } from "./decks";
-import { parseRow, parseRows } from "./parse-rows";
+import { parseRows } from "./parse-rows";
 import { FSRS_LEARNING, FSRS_NEW, FSRS_RELEARNING, FSRS_REVIEW, nowMs, placeholders } from "./sql";
 
 function sumLessonAmounts(decks: LessonDeck[]): LessonAmounts {
@@ -190,14 +189,12 @@ export async function getLessonData(
   const lessonTemplates = await getLessonTemplates(db, Array.from(templateIdsSet));
   const lessonAlgorithms = await getLessonAlgorithms(db, deckIds);
 
-  return lessonDecks && lessonTemplates && lessonAlgorithms
-    ? {
-        cards: lessonCards,
-        decks: lessonDecks,
-        templates: lessonTemplates,
-        algorithms: lessonAlgorithms,
-      }
-    : null;
+  return {
+    cards: lessonCards,
+    decks: lessonDecks,
+    templates: lessonTemplates,
+    algorithms: lessonAlgorithms,
+  };
 }
 
 export async function submitLessonResult(db: DB, { card, review }: LessonResultData) {
@@ -210,7 +207,7 @@ export async function submitLessonResult(db: DB, { card, review }: LessonResultD
     const progress = updateCardProgressSchema.parse(card);
     const reviewData = insertReviewSchema.parse(review);
 
-    return db.transaction(async (tx) => {
+    await db.transaction(async (tx) => {
       await tx.run(
         `UPDATE cards
          SET state = ?, due_at = ?, stability = ?, difficulty = ?,
@@ -251,9 +248,6 @@ export async function submitLessonResult(db: DB, { card, review }: LessonResultD
           nowMs(),
         ],
       );
-
-      const result = await tx.get(`SELECT ${REVIEW_SELECT} FROM reviews WHERE id = ? LIMIT 1`, [reviewId]);
-      return parseRow(reviewRowSchema, result);
     });
   });
 }

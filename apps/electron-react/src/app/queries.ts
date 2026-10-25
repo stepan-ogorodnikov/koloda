@@ -178,12 +178,7 @@ export const queriesFn = (): Queries => ({
     queryFn: () => invoke("cmd_get_lesson_data", { params }),
   }),
   submitLessonResultMutation: () => ({
-    // WHY: Rust replies `Result<()>` (contract `void`); `Queries` keeps
-    // `Review | undefined`, so the adapter adapts instead of promising a Review.
-    mutationFn: async (data: LessonResultData) => {
-      await invoke("cmd_submit_lesson_result", { data });
-      return undefined;
-    },
+    mutationFn: (data: LessonResultData) => invoke("cmd_submit_lesson_result", { data }),
   }),
   getReviewsQuery: (params: GetReviewsData) => ({
     queryKey: queryKeys.reviews.card(params),

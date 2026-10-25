@@ -608,7 +608,7 @@ Line numbers are at `aeb9282b`; when an earlier item moved them, find the code b
   Commit: Delete lesson store tests that repeat reducer cases
   Depends on: none
 
-- [ ] 14. Drop the lesson repo's dead branch and unused review return
+- [x] 14. Drop the lesson repo's dead branch and unused review return
   Goal (L16):
   - `getLessonData` (`libs/db-sqlite/src/lib/lessons.ts:187-194`): return the data object directly.
   - Web `submitLessonResult`: drop the review re-read (`:249-250`) and return nothing.
@@ -616,6 +616,8 @@ Line numbers are at `aeb9282b`; when an earlier item moved them, find the code b
     the desktop.
   - `lessons.integration.test.ts:255`: read the saved review with `getReviews`.
   Constraints: keep the empty-match `null` (`lessons.ts:177`).
+    Implemented: the desktop adapter (`apps/electron-react/src/app/queries.ts`) now returns `invoke` directly.
+    Its WHY existed only to adapt `void` to `Review | undefined`.
   Done when: `DB lessons` and `bun run typecheck` pass.
   Manual verify: none — no behavior change; the uploader ignores the value.
   Commit: Drop the lesson repo's dead branch and unused review return
