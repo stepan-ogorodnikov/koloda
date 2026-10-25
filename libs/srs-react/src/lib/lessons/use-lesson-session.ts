@@ -108,6 +108,9 @@ export function useLessonSession(): UseLessonSessionResult {
   useEffect(() => {
     if (phase !== "preparing" || !request) return;
     if (!hasFetchedLearningSettings || !lessons || !todayReviewTotals) return;
+    // WHY: a reopened dialog first gets cached counts that a card change marked stale, while they
+    // refetch. The reducer keeps the first initialize, so wait for the refetch to settle.
+    if (isFetchingLearningSettings || isFetchingLessons || isFetchingTodayReviewTotals) return;
 
     initialize({
       request,
@@ -115,7 +118,18 @@ export function useLessonSession(): UseLessonSessionResult {
       lessons,
       todayReviewTotals,
     });
-  }, [phase, request, hasFetchedLearningSettings, learningSettings, lessons, todayReviewTotals, initialize]);
+  }, [
+    phase,
+    request,
+    hasFetchedLearningSettings,
+    learningSettings,
+    lessons,
+    todayReviewTotals,
+    isFetchingLearningSettings,
+    isFetchingLessons,
+    isFetchingTodayReviewTotals,
+    initialize,
+  ]);
 
   useEffect(() => {
     if (phase !== "loading-cards" || !hasLoadedLessonData) return;

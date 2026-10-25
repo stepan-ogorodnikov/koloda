@@ -274,6 +274,58 @@ describe("useLessonSession", () => {
     expect(store.get(lessonContentAtom)).toBeUndefined();
   });
 
+  it("initializes a reopened lesson from refetched counts, not stale cached ones", async () => {
+    const updatedLessons = createLessonsResult({ total: { untouched: 9, total: 9 } });
+    let lessons = TOTAL_LESSONS;
+    const pendingRefetches: Array<() => void> = [];
+    const { store, queryClient, Wrapper } = createWrapper({
+      queries: buildQueries({
+        getLessonsQuery: (filters) => ({
+          queryKey: queryKeys.lessons.all(filters),
+          queryFn: () => {
+            const result = lessons;
+            if (result === TOTAL_LESSONS) return Promise.resolve(result);
+            return new Promise((resolve) => {
+              pendingRefetches.push(() => resolve(result));
+            });
+          },
+        }),
+      }),
+    });
+    const { result } = renderHook(() => useLessonSession(), { wrapper: Wrapper });
+
+    act(() => {
+      store.set(openLessonAtom, REQUEST);
+    });
+    await waitFor(() => {
+      expect(store.get(lessonPhaseAtom)).toBe("configuring");
+    });
+    act(() => {
+      result.current.closeLesson();
+    });
+    await waitFor(() => {
+      expect(queryClient.isFetching()).toBe(0);
+    });
+
+    // A card change while the dialog is closed marks every lesson count stale.
+    lessons = updatedLessons;
+    await act(() => queryClient.invalidateQueries({ queryKey: queryKeys.lessons.all() }));
+    act(() => {
+      store.set(openLessonAtom, REQUEST);
+    });
+    await waitFor(() => {
+      expect(pendingRefetches).toHaveLength(1);
+    });
+    act(() => {
+      pendingRefetches[0]?.();
+    });
+
+    await waitFor(() => {
+      expect(store.get(lessonPhaseAtom)).toBe("configuring");
+    });
+    expect(store.get(lessonSetupAtom)?.available).toEqual(updatedLessons.total);
+  });
+
   it("loads card data once after setup is submitted", async () => {
     const { store, Wrapper } = createWrapper();
     renderHook(() => useLessonSession(), { wrapper: Wrapper });

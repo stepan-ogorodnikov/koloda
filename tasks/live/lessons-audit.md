@@ -400,7 +400,7 @@ Line numbers are at `aeb9282b`; when an earlier item moved them, find the code b
   Commit: Load fresh card data each time a lesson starts
   Depends on: none
 
-- [ ] 3. Wait for fresh counts before initializing a lesson
+- [x] 3. Wait for fresh counts before initializing a lesson
   Goal (L2):
   - Initialize effect (`use-lesson-session.ts:104-114`): return while `isFetchingLearningSettings`,
     `isFetchingLessons`, or `isFetchingTodayReviewTotals` is true, and add them to its dependencies.
