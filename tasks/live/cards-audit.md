@@ -402,7 +402,7 @@ Line numbers are at `b662537e`; when an earlier item moved them, find the code b
   Commit: Keep the cards table on a page that has rows
   Depends on: none
 
-- [ ] 2. Refresh template lock status after cards change
+- [x] 2. Refresh template lock status after cards change
   Goal (T1):
   - Invalidate `queryKeys.templates.all()` on success in the six paths that add or remove cards:
     - `libs/srs-react/src/lib/cards/add-card.tsx:50-51`;
@@ -422,6 +422,8 @@ Line numbers are at `b662537e`; when an earlier item moved them, find the code b
   - The six handlers are wiring, with no unit test of their own (`agents/TESTING.md` §When tests are required).
     The lock specs are their regression home.
   - Do not run either e2e suite.
+  - Implemented: both lock specs now wait for the delete popover to close before leaving the deck.
+    It closes in the success handler, so the refresh has run; leaving earlier unmounts the row and drops it.
   Done when:
   - `ER sync-events` passes, and the extended case fails without the new key;
   - `nx run web-e2e:typecheck` and `nx run electron-e2e:typecheck` pass.

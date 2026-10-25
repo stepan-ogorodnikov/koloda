@@ -148,6 +148,7 @@ export function useAssistantCardsTable(options: UseAssistantCardsTableOptions) {
     }
     queryClient.invalidateQueries({ queryKey: queryKeys.cards.deck({ deckId }) });
     queryClient.invalidateQueries({ queryKey: queryKeys.lessons.all() });
+    queryClient.invalidateQueries({ queryKey: queryKeys.templates.all() });
     for (const [i, entry] of sent.entries()) {
       settle(entry, response[i]?.error ? "error" : "success");
     }

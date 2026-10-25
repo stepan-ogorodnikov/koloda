@@ -32,6 +32,8 @@ export function DeleteDeck({ id }: DeleteDeckProps) {
           // WHY: deck usage counts feed the delete guards on presets and templates.
           queryClient.invalidateQueries({ queryKey: queryKeys.algorithms.decksAll() });
           queryClient.invalidateQueries({ queryKey: queryKeys.templates.decksAll() });
+          // WHY: deleting the deck deletes its cards, which can unlock their templates.
+          queryClient.invalidateQueries({ queryKey: queryKeys.templates.all() });
           queryClient.removeQueries({ queryKey: queryKeys.decks.detail(id) });
           navigate({ to: "/decks" });
         },

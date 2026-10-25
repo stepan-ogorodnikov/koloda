@@ -10,7 +10,7 @@ const LESSONS: readonly QueryKey[] = [queryKeys.lessons.all(), ["lesson_data"], 
 // INVARIANT: every kind the engine can change has an entry; rows it applies change nowhere else.
 // Each entry lists the query prefixes whose screens read that kind's rows.
 export const SYNC_KIND_QUERY_KEYS: Record<SyncKind, readonly QueryKey[]> = {
-  cards: [queryKeys.cards.all(), ...LESSONS],
+  cards: [queryKeys.cards.all(), queryKeys.templates.all(), ...LESSONS],
   reviews: [["reviews"], ...LESSONS],
   decks: [queryKeys.decks.all(), queryKeys.algorithms.decksAll(), queryKeys.templates.decksAll(), ...LESSONS],
   templates: [queryKeys.templates.all(), queryKeys.templates.decksAll(), queryKeys.cards.all(), ["lesson_data"]],

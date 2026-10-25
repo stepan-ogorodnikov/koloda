@@ -49,6 +49,7 @@ export function AddCard({ deckId, templateId }: AddCardProps) {
         onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: queryKeys.cards.deck({ deckId }) });
           queryClient.invalidateQueries({ queryKey: queryKeys.lessons.all() });
+          queryClient.invalidateQueries({ queryKey: queryKeys.templates.all() });
           formApi.reset();
           firstFieldRef.current?.focus();
         },

@@ -48,7 +48,6 @@ test("locks template when card is added and unlocks when card is deleted", async
   await expect(page).toHaveURL(
     /\/templates\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/,
   );
-  await page.reload();
   await expect(page.getByText("Locked", { exact: true })).toBeVisible();
 
   // Delete card
@@ -60,6 +59,8 @@ test("locks template when card is added and unlocks when card is deleted", async
   const deletePopover = page.getByRole("dialog");
   await expect(deletePopover).toBeVisible();
   await deletePopover.getByRole("button", { name: "Delete", exact: true }).click();
+  // The popover closes in the delete's success handler, which also refreshes the template.
+  await expect(deletePopover).not.toBeVisible();
 
   // Ensure template gets unlocked again
   await openSection(page, "Templates");
@@ -67,6 +68,5 @@ test("locks template when card is added and unlocks when card is deleted", async
   await expect(page).toHaveURL(
     /\/templates\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/,
   );
-  await page.reload();
   await expect(page.getByText("Not locked", { exact: true })).toBeVisible();
 });
