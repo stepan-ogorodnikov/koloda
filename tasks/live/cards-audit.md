@@ -574,7 +574,7 @@ Line numbers are at `b662537e`; when an earlier item moved them, find the code b
   Commit: Build the cards table columns and filter from the cards' templates
   Depends on: 1
 
-- [ ] 9. Test web card updates, bulk delete, and a full-field roundtrip
+- [x] 9. Test web card updates, bulk delete, and a full-field roundtrip
   Goal (C16):
   - `libs/db-sqlite/src/lib/cards.integration.test.ts`:
     - a full-field roundtrip: add a card with every insert field set, read it back, compare field by field
@@ -593,6 +593,7 @@ Line numbers are at `b662537e`; when an earlier item moved them, find the code b
     (`crates/koloda/src/migrations/V1__init.sql:27`).
     Build the template-less card with foreign keys off in the fixture.
   Constraints: tests only; no repo code changes.
+    Implemented: the Rust `delete_cards_removes_only_selected_cards` now also checks the reviews, as its web twin does.
   Done when: `DB cards` and `RS card` pass.
   Manual verify: none — tests only.
   Commit: Test web card updates, bulk delete, and a full-field roundtrip

@@ -1,6 +1,7 @@
 use koloda::app::error::error_codes;
 use koloda::domain::cards::{
-    Card, DeleteCardData, DeleteCardsData, InsertCardData, ResetCardProgressData, UpdateCardProgress,
+    Card, DeleteCardData, DeleteCardsData, InsertCardData, ResetCardProgressData, UpdateCardData, UpdateCardProgress,
+    UpdateCardValues,
 };
 use koloda::domain::lessons::LessonResultData;
 use koloda::domain::reviews::{GetReviewsData, InsertReviewData};
@@ -500,14 +501,31 @@ fn delete_cards_removes_only_selected_cards() {
     let first_card_id = add_card(&db, &deck_id, &template_id, "first");
     let second_card_id = add_card(&db, &deck_id, &template_id, "second");
     let third_card_id = add_card(&db, &deck_id, &template_id, "third");
+    for card_id in [&first_card_id, &second_card_id, &third_card_id] {
+        insert_review_row(&db, card_id, 2, 0, 1_800_000_000_000);
+    }
 
     cards::delete_cards(
         &db,
         DeleteCardsData {
-            ids: vec![first_card_id, third_card_id],
+            ids: vec![first_card_id.clone(), third_card_id.clone()],
         },
     )
     .expect("batch delete should succeed");
+
+    let review_count = |card_id: &str| {
+        reviews::get_reviews(
+            &db,
+            GetReviewsData {
+                card_id: card_id.to_string(),
+            },
+        )
+        .expect("reviews query should succeed")
+        .len()
+    };
+    assert_eq!(review_count(&first_card_id), 0);
+    assert_eq!(review_count(&third_card_id), 0);
+    assert_eq!(review_count(&second_card_id), 1);
 
     let remaining_cards = cards::get_cards(&db, &deck_id).expect("cards query should succeed");
     assert_eq!(remaining_cards.len(), 1);
@@ -533,4 +551,105 @@ fn delete_cards_with_empty_ids_is_a_noop() {
 
     let saved_card = cards::get_card(&db, &card_id).expect("card lookup should succeed");
     assert!(saved_card.is_some(), "empty batch delete should not remove cards");
+}
+
+fn add_scheduled_card(db: &koloda::app::db::Database) -> (String, Card) {
+    let algorithm_id = add_algorithm(db, "FSRS");
+    let template_id = add_template(db, "Basic");
+    let deck_id = add_deck(db, &algorithm_id, &template_id, "Deck");
+    let card = cards::add_card(
+        db,
+        InsertCardData {
+            deck_id,
+            template_id: template_id.clone(),
+            content: card_content("question", "answer"),
+            state: Some(2),
+            due_at: Some(1_900_000_000_000),
+            stability: Some(3.25),
+            difficulty: Some(6.5),
+            scheduled_days: Some(7),
+            learning_steps: Some(4),
+            reps: Some(11),
+            lapses: Some(5),
+            last_reviewed_at: Some(1_800_000_000_000),
+        },
+    )
+    .expect("card should be created");
+    (template_id, card)
+}
+
+#[test]
+fn update_card_changes_only_content_and_moves_update_time() {
+    let db = test_db();
+    let (_, card) = add_scheduled_card(&db);
+    let content = card_content("edited question", "answer");
+
+    let updated = cards::update_card(
+        &db,
+        UpdateCardData {
+            id: card.id.clone(),
+            values: UpdateCardValues {
+                content: content.clone(),
+            },
+        },
+    )
+    .expect("update should succeed");
+
+    assert!(updated.updated_at.is_some(), "an edit stamps the update time");
+    assert_eq!(
+        updated,
+        Card {
+            content,
+            updated_at: updated.updated_at,
+            ..card
+        }
+    );
+}
+
+#[test]
+fn update_card_rejects_a_missing_card_or_template() {
+    type Arrange = fn(&koloda::app::db::Database) -> String;
+    let cases: [(&str, Arrange, &str); 2] = [
+        (
+            "missing card",
+            |db| {
+                add_scheduled_card(db);
+                "01900000-0000-7000-8000-0000000f423f".to_string()
+            },
+            error_codes::NOT_FOUND_CARDS_UPDATE_CARD,
+        ),
+        (
+            "template gone",
+            |db| {
+                let (template_id, card) = add_scheduled_card(db);
+                // WHY: the template foreign key blocks this delete; only a corrupt or synced row reaches it.
+                db.with_conn(|conn| {
+                    conn.execute_batch("PRAGMA foreign_keys = OFF")?;
+                    conn.execute("DELETE FROM templates WHERE id = ?1", [&template_id])?;
+                    conn.execute_batch("PRAGMA foreign_keys = ON")?;
+                    Ok(())
+                })
+                .expect("template should be removed");
+                card.id
+            },
+            error_codes::NOT_FOUND_CARDS_UPDATE_TEMPLATE,
+        ),
+    ];
+
+    for (name, arrange, code) in cases {
+        let db = test_db();
+        let id = arrange(&db);
+
+        let result = cards::update_card(
+            &db,
+            UpdateCardData {
+                id,
+                values: UpdateCardValues {
+                    content: card_content("question", "answer"),
+                },
+            },
+        );
+
+        assert_eq!(result.unwrap_err().code, code, "{name}");
+    }
 }
