@@ -19,6 +19,7 @@ import {
   openLessonAtom,
   receiveLessonDataAtom,
   selectLessonGradeAtom,
+  submitLessonCardAtom,
   submitLessonSetupAtom,
 } from "./lesson-actions";
 import { lessonUploadHeadAtom, lessonUploadLogAtom } from "./lesson-selectors";
@@ -65,7 +66,9 @@ function enqueueTwoUploads(store: ReturnType<typeof createStore>) {
       cards: [createCard({ id: testId(1) }), createCard({ id: testId(2) })],
     }),
   );
+  store.set(submitLessonCardAtom);
   store.set(selectLessonGradeAtom, 2);
+  store.set(submitLessonCardAtom);
   store.set(selectLessonGradeAtom, 2);
 }
 

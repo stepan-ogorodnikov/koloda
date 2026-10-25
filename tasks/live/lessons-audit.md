@@ -422,7 +422,7 @@ Line numbers are at `aeb9282b`; when an earlier item moved them, find the code b
   Commit: Wait for fresh counts before initializing a lesson
   Depends on: none
 
-- [ ] 4. Grade only a submitted card with no close confirmation open
+- [x] 4. Grade only a submitted card with no close confirmation open
   Goal (L3, L4, and the submit-first half of L13):
   - `gradeSelected` (`lesson-reducer.ts:368-391`): return while the card is not submitted
     (`content.form.isSubmitted` false) or `isTerminationRequested` is set.
@@ -436,6 +436,7 @@ Line numbers are at `aeb9282b`; when an earlier item moved them, find the code b
     - an empty card load while termination is requested finishes with the flag cleared.
   - Submit before grading in the existing grading cases (`:359`, `:444`).
   Constraints: the reducer and its test only; the hotkey registrations in `lesson-studying.tsx` stay.
+    Implemented: `lesson-uploader.test.tsx`'s fixture graded without submitting, so it now submits first.
   Done when:
   - `SR lesson-reducer` passes;
   - each new case fails when its guard is removed.

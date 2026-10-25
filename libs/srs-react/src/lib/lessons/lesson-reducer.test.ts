@@ -416,6 +416,7 @@ describe("lessonReducer", () => {
     });
 
     vi.setSystemTime(new Date("2024-01-01T02:00:00.000Z"));
+    state = lessonReducer(state, ["cardSubmitted"]);
     state = lessonReducer(state, ["gradeSelected", 0]);
 
     expect(state.phase).toBe("studying");
@@ -472,6 +473,7 @@ describe("lessonReducer", () => {
     });
 
     let state = startLesson({ lessonData: createLessonData() });
+    state = lessonReducer(state, ["cardSubmitted"]);
     state = lessonReducer(state, ["gradeSelected", 0]);
 
     expect(state.phase).toBe("finished");
@@ -489,6 +491,41 @@ describe("lessonReducer", () => {
     state = lessonReducer(state, ["terminationRequested", false]);
     expect(state.isTerminationRequested).toBe(false);
     expect(state.phase).toBe("studying");
+  });
+
+  it("ignores a grade until the card is submitted", () => {
+    const studying = startLesson({ lessonData: createLessonData() });
+
+    expect(lessonReducer(studying, ["gradeSelected", 2])).toBe(studying);
+  });
+
+  it("ignores submit and grades while the close confirmation is open, and grades once it is dismissed", () => {
+    const grade = { card: { id: 10 }, log: { rating: 3 } } as any;
+    getCardGradesMock.mockReturnValue([grade]);
+    createCardFromCardFSRSMock.mockReturnValue(createCard({ id: testId(1), state: 2 }));
+    createReviewFromReviewFSRSMock.mockReturnValue({ rating: 3 });
+    const studying = startLesson({ lessonData: createLessonData() });
+
+    const confirmingUnsubmitted = lessonReducer(studying, ["terminationRequested", true]);
+    expect(lessonReducer(confirmingUnsubmitted, ["cardSubmitted"])).toBe(confirmingUnsubmitted);
+
+    const submitted = lessonReducer(studying, ["cardSubmitted"]);
+    const confirmingSubmitted = lessonReducer(submitted, ["terminationRequested", true]);
+    expect(lessonReducer(confirmingSubmitted, ["gradeSelected", 0])).toBe(confirmingSubmitted);
+
+    const continued = lessonReducer(confirmingSubmitted, ["terminationRequested", false]);
+    const graded = lessonReducer(continued, ["gradeSelected", 0]);
+    expect(graded.upload.queue).toHaveLength(1);
+    expect(graded.phase).toBe("finished");
+  });
+
+  it("clears the close confirmation when an empty card load finishes the lesson", () => {
+    let state = startLesson({ shouldSubmitSetup: true });
+    state = lessonReducer(state, ["terminationRequested", true]);
+    state = lessonReducer(state, ["lessonDataReceived", createLessonData({ cards: [] })]);
+
+    expect(state.phase).toBe("finished");
+    expect(state.isTerminationRequested).toBe(false);
   });
 
   it("resets completely on close and discards a queued upload", () => {

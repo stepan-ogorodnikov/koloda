@@ -347,11 +347,14 @@ function moveToNextCard(draft: LessonReducerState) {
   // WHY: no card at index (empty load) or every remaining row lacked deck/algorithm/template joins.
   if (typeof draft.session.content?.index === "number") draft.session.content.index++;
   draft.phase = "finished";
+  // WHY: an empty load can finish while the close confirmation is open; there is no card to go back to.
+  draft.isTerminationRequested = false;
   updateProgressAmounts(draft);
 }
 
 function cardSubmitted(draft: LessonReducerState) {
   if (draft.phase !== "studying") return;
+  if (draft.isTerminationRequested) return;
   if (draft.session?.content && !draft.session.content.form.isSubmitted) draft.session.content.form.isSubmitted = true;
 }
 
@@ -368,6 +371,9 @@ function cardFormUpdated(draft: LessonReducerState, { key, value }: CardFormUpda
 function gradeSelected(draft: LessonReducerState, payload: number) {
   if (draft.phase !== "studying") return;
   if (!draft.session?.content) return;
+  // INVARIANT: grade only a submitted card with no close confirmation open. The grade hotkeys
+  // reach here in either state; the reducer is the one home for the rule.
+  if (!draft.session.content.form.isSubmitted || draft.isTerminationRequested) return;
 
   const grade = draft.session.content.grades[payload];
   const time = Math.min(Date.now() - draft.session.content.startedAt, MAX_REVIEW_TIME_MS);
