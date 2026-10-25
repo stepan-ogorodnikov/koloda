@@ -549,7 +549,7 @@ Line numbers are at `aeb9282b`; when an earlier item moved them, find the code b
   Commit: Show grade intervals in the interface language
   Depends on: none
 
-- [ ] 10. Treat a cleared lesson amount as zero
+- [x] 10. Treat a cleared lesson amount as zero
   Goal (L9):
   - `amountUpdated` (`lesson-reducer.ts:245-251`): store 0 when the value is not a number (`NaN`).
   - A reducer case: clearing New while Learn has 2 leaves New at 0 and Total at 2, and `setupSubmitted` still moves

@@ -243,6 +243,14 @@ describe("lessonReducer", () => {
     expect(ignored.setup?.amounts.learn).toBe(0);
   });
 
+  it("counts a cleared amount as zero, so the lesson can still start", () => {
+    let state = startLesson();
+    state = lessonReducer(state, ["amountUpdated", { type: "untouched", value: Number.NaN }]);
+
+    expect(state.setup?.amounts).toEqual({ untouched: 0, learn: 1, review: 1, total: 2 });
+    expect(lessonReducer(state, ["setupSubmitted"]).phase).toBe("loading-cards");
+  });
+
   it("rejects setupSubmitted when the total is zero and otherwise enters loading-cards", () => {
     const zero = startLesson({
       lessons: createLessonsResult(),

@@ -245,7 +245,8 @@ type AmountUpdatedPayload = {
 function amountUpdated(draft: LessonReducerState, { type, value }: AmountUpdatedPayload) {
   if (draft.phase !== "configuring" || !draft.setup) return;
 
-  draft.setup.amounts[type] = value;
+  // WHY: react-aria's NumberField commits a cleared field as NaN, which would make Total NaN.
+  draft.setup.amounts[type] = Number.isNaN(value) ? 0 : value;
   const { untouched, learn, review } = draft.setup.amounts;
   draft.setup.amounts.total = Number(untouched) + Number(learn) + Number(review);
 }
