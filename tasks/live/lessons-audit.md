@@ -623,7 +623,7 @@ Line numbers are at `aeb9282b`; when an earlier item moved them, find the code b
   Commit: Drop the lesson repo's dead branch and unused review return
   Depends on: 11
 
-- [ ] 15. Drive a lesson by keyboard in the e2e suites
+- [x] 15. Drive a lesson by keyboard in the e2e suites
   Goal (L11):
   - Add one flow to `apps/web-e2e/src/lesson-controls.spec.ts` and its twin in `apps/electron-e2e/src`.
     Use the default bindings.

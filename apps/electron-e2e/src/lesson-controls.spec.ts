@@ -108,3 +108,57 @@ test("terminates lesson mid-study with confirmation and returns to dashboard", a
   await expect(lessonDialog).not.toBeVisible();
   await expect(page).toHaveURL(/\/dashboard$/);
 });
+
+// LESSONS.md (§Hotkeys, §Submitting a Card, §Early Termination) with the default bindings.
+test("drives a lesson by keyboard: Space submits, a grade key grades, and Close popover closes", async ({ page }) => {
+  const deckTitle = "E2E Keyboard Deck";
+
+  await setupApp(page);
+  await setLearnAheadLimit(page, 0, 0);
+  await createDeckWithCards(page, deckTitle, [
+    { front: "Keyboard Q1", back: "Keyboard A1" },
+    { front: "Keyboard Q2", back: "Keyboard A2" },
+  ]);
+  const lessonDialog = await startLesson(page, deckTitle, 2);
+  const backTextbox = page.getByRole("textbox", { name: "Back" });
+  const continueButton = page.getByRole("button", { name: "Continue", exact: true });
+  const goodButton = page.getByRole("button", { name: "Good" });
+
+  // Leave the type field, so single-key hotkeys reach the lesson
+  await expect(backTextbox).toBeVisible({ timeout: 10_000 });
+  await expect(lessonDialog.getByText("Keyboard Q1")).toBeVisible();
+  await backTextbox.blur();
+
+  // A grade key before submit leaves the card unanswered
+  await page.keyboard.press("3");
+  await expect(continueButton).toBeVisible();
+  await expect(goodButton).not.toBeVisible();
+
+  // Space submits, and the "Good" key grades on release
+  await page.keyboard.press("Space");
+  await expect(goodButton).toBeVisible();
+  await page.keyboard.press("3");
+  await expect(lessonDialog.getByText("Keyboard Q2")).toBeVisible();
+
+  // A grade key behind the close confirmation leaves the card as it was
+  await expect(backTextbox).toBeVisible();
+  await backTextbox.blur();
+  await page.keyboard.press("Space");
+  await expect(goodButton).toBeVisible();
+  await page.keyboard.press("Escape");
+  const terminationDialog = page.getByRole("dialog").filter({
+    has: page.getByRole("button", { name: "Continue studying" }),
+  });
+  await expect(terminationDialog).toBeVisible();
+  await page.keyboard.press("3");
+  await terminationDialog.getByRole("button", { name: "Continue studying" }).click();
+  await expect(terminationDialog).not.toBeVisible();
+  await expect(lessonDialog.getByText("Keyboard Q2")).toBeVisible();
+  await expect(goodButton).toBeVisible();
+
+  // Grade the last card by key, then close the finished lesson with "Close popover"
+  await page.keyboard.press("3");
+  await expect(lessonDialog.getByText("Done")).toBeVisible();
+  await page.keyboard.press("Alt+C");
+  await expect(lessonDialog).not.toBeVisible();
+});
