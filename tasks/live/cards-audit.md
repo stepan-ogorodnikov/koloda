@@ -642,7 +642,7 @@ Line numbers are at `b662537e`; when an earlier item moved them, find the code b
   Commit: Keep only template fields in stored card content
   Depends on: 10
 
-- [ ] 12. Submit a card preview with Enter or Space, as in a lesson
+- [x] 12. Submit a card preview with Enter or Space, as in a lesson
   Goal (C6):
   - `CardPreview` (`libs/srs-react/src/lib/cards/card-preview.tsx`):
     - Enter and Space submit while the preview is open and focus is not in a text field.
