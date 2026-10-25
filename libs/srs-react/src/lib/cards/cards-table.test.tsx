@@ -110,6 +110,7 @@ async function goToLastPage() {
 }
 
 describe("CardsTable pagination", () => {
+  // WHY: this is the file's first table render. It takes about 1.2 s locally and timed out at 5 s on a loaded CI runner.
   it("returns to the first page when a search narrows the rows", async () => {
     const { controls } = setup(createCards(40));
     await waitFor(() => expect(bodyRowTexts()).toHaveLength(15));
@@ -121,7 +122,7 @@ describe("CardsTable pagination", () => {
 
     await waitFor(() => expect(bodyRowTexts()).toHaveLength(11));
     expect(footerRange()).toEqual(["1", "11", "11"]);
-  });
+  }, 15_000);
 
   it("moves to the new last page when a refetch drops the current one", async () => {
     const cards = createCards(40);
