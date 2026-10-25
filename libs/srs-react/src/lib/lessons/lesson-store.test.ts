@@ -2,30 +2,14 @@ import { createStore } from "jotai";
 import { describe, expect, it } from "vitest";
 import { createLessonData, createLessonsResult, createTodaysReviewTotals, testId } from "../../test/test-helpers";
 import {
-  closeLessonStateAtom,
   initializeLessonAtom,
   lessonAtom,
   openLessonAtom,
   receiveLessonDataAtom,
   submitLessonSetupAtom,
-  updateLessonAmountAtom,
 } from "./lesson-actions";
 import { lessonReducerDefault } from "./lesson-reducer";
-import {
-  lessonAmountsAtom,
-  lessonAvailableAtom,
-  lessonContentAtom,
-  lessonHasSessionAtom,
-  lessonIsOpenAtom,
-  lessonPhaseAtom,
-  lessonProgressAtom,
-  lessonRequestAtom,
-  lessonSessionCardsAtom,
-  lessonSetupAtom,
-  lessonTerminationRequestedAtom,
-  lessonUploadHeadAtom,
-  lessonUploadLogAtom,
-} from "./lesson-selectors";
+import { lessonHasSessionAtom, lessonIsOpenAtom, lessonPhaseAtom, lessonRequestAtom } from "./lesson-selectors";
 import { lessonStateAtom } from "./lesson-store";
 
 const TOTAL_LESSONS = createLessonsResult({
@@ -50,13 +34,6 @@ const TOTAL_TODAY_REVIEW_TOTALS = createTodaysReviewTotals({
     review: 3,
   },
 });
-
-const TOTAL_EXPECTED_AMOUNTS = {
-  untouched: 2,
-  learn: 1,
-  review: 1,
-  total: 4,
-};
 
 const REQUEST = { type: "total" as const, deckId: testId(7) };
 
@@ -94,44 +71,6 @@ describe("lessonAtom launch", () => {
 });
 
 describe("lesson command atoms", () => {
-  it("opens into preparing, then initialize configures amounts", () => {
-    const store = createStore();
-
-    store.set(openLessonAtom, REQUEST);
-    expect(store.get(lessonPhaseAtom)).toBe("preparing");
-    expect(store.get(lessonRequestAtom)).toEqual(REQUEST);
-
-    store.set(initializeLessonAtom, initializePayload());
-    expect(store.get(lessonPhaseAtom)).toBe("configuring");
-    expect(store.get(lessonAmountsAtom)).toEqual(TOTAL_EXPECTED_AMOUNTS);
-  });
-
-  it("edits amounts while configuring", () => {
-    const store = createStore();
-    store.set(openLessonAtom, REQUEST);
-    store.set(initializeLessonAtom, initializePayload());
-
-    store.set(updateLessonAmountAtom, { type: "untouched", value: 1 });
-
-    expect(store.get(lessonAmountsAtom)).toEqual({ ...TOTAL_EXPECTED_AMOUNTS, untouched: 1, total: 3 });
-  });
-
-  it("does not overwrite an amount edit with repeated initialize", () => {
-    const store = createStore();
-    store.set(openLessonAtom, REQUEST);
-    store.set(initializeLessonAtom, initializePayload());
-    store.set(updateLessonAmountAtom, { type: "untouched", value: 1 });
-    const afterEdit = store.get(lessonStateAtom);
-
-    store.set(initializeLessonAtom, {
-      ...initializePayload(),
-      learnAheadLimit: [1, 0],
-    });
-
-    expect(store.get(lessonStateAtom)).toBe(afterEdit);
-    expect(store.get(lessonAmountsAtom)).toEqual({ ...TOTAL_EXPECTED_AMOUNTS, untouched: 1, total: 3 });
-  });
-
   it("preserves identity for open while already open", () => {
     const store = createStore();
     store.set(openLessonAtom, REQUEST);
@@ -142,59 +81,9 @@ describe("lesson command atoms", () => {
     expect(store.get(lessonStateAtom)).toBe(preparing);
     expect(store.get(lessonRequestAtom)).toEqual(REQUEST);
   });
-
-  it("closes and resets every session field", () => {
-    const store = createStore();
-    store.set(openLessonAtom, REQUEST);
-    store.set(initializeLessonAtom, initializePayload());
-    store.set(updateLessonAmountAtom, { type: "learn", value: 0 });
-
-    store.set(closeLessonStateAtom);
-
-    const state = store.get(lessonStateAtom);
-    expect(state).toEqual(lessonReducerDefault);
-    expect(state.phase).toBe("closed");
-    expect(state.request).toBeNull();
-    expect(state.setup).toBeNull();
-    expect(state.session).toBeNull();
-    expect(state.isTerminationRequested).toBe(false);
-    expect(state.upload).toEqual({ queue: [], log: {} });
-    expect(store.get(lessonIsOpenAtom)).toBe(false);
-    expect(store.get(lessonContentAtom)).toBeUndefined();
-    expect(store.get(lessonProgressAtom)).toBeUndefined();
-    expect(store.get(lessonUploadHeadAtom)).toBeUndefined();
-    expect(store.get(lessonUploadLogAtom)).toEqual({});
-  });
 });
 
 describe("lesson selectors", () => {
-  it("exposes the expected slices after initialize", () => {
-    const store = createStore();
-    store.set(openLessonAtom, REQUEST);
-    store.set(initializeLessonAtom, initializePayload());
-
-    expect(store.get(lessonPhaseAtom)).toBe("configuring");
-    expect(store.get(lessonIsOpenAtom)).toBe(true);
-    expect(store.get(lessonRequestAtom)).toEqual(REQUEST);
-    expect(store.get(lessonSetupAtom)).toMatchObject({
-      filters: { deckIds: [testId(7)] },
-      available: TOTAL_LESSONS.total,
-      reviewTotals: TOTAL_TODAY_REVIEW_TOTALS.reviewTotals,
-      dailyLimits: TOTAL_TODAY_REVIEW_TOTALS.dailyLimits,
-      amounts: TOTAL_EXPECTED_AMOUNTS,
-      learnAheadLimit: [0, 30],
-    });
-    expect(store.get(lessonAmountsAtom)).toEqual(TOTAL_EXPECTED_AMOUNTS);
-    expect(store.get(lessonAvailableAtom)).toEqual(TOTAL_LESSONS.total);
-    expect(store.get(lessonContentAtom)).toBeUndefined();
-    expect(store.get(lessonSessionCardsAtom)).toBeUndefined();
-    expect(store.get(lessonHasSessionAtom)).toBe(false);
-    expect(store.get(lessonProgressAtom)).toBeUndefined();
-    expect(store.get(lessonTerminationRequestedAtom)).toBe(false);
-    expect(store.get(lessonUploadHeadAtom)).toBeUndefined();
-    expect(store.get(lessonUploadLogAtom)).toEqual({});
-  });
-
   it("reports session presence after lesson data is received", () => {
     const store = createStore();
     store.set(openLessonAtom, REQUEST);

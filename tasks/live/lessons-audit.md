@@ -597,7 +597,7 @@ Line numbers are at `aeb9282b`; when an earlier item moved them, find the code b
   Commit: Test that a failed lesson upload is marked as an error
   Depends on: none
 
-- [ ] 13. Delete lesson store tests that repeat reducer cases
+- [x] 13. Delete lesson store tests that repeat reducer cases
   Goal (L14):
   - In `lesson-store.test.ts`, delete `:97`, `:109`, `:119`, `:146` (reducer cases through the store) and `:171`
     (selector inventory).
