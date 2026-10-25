@@ -177,12 +177,23 @@ describe("cards repository integration", () => {
     expect(await getCards(db, { deckId: deck.id })).toEqual([]);
   });
 
-  it("addCard does not store a content key outside the template", async () => {
+  // WHY: twin of Rust `card_writes_store_only_the_template_fields`.
+  it.each<{ name: string; write: (db: DB, data: InsertCardData) => Promise<unknown> }>([
+    { name: "addCard", write: (db, data) => addCard(db, data) },
+    { name: "addCards", write: (db, data) => addCards(db, [data]) },
+    {
+      name: "updateCard",
+      write: async (db, data) => {
+        const card = await addCard(db, data);
+        return updateCard(db, { id: card.id, values: { content: data.content } });
+      },
+    },
+  ])("$name does not store a content key outside the template", async ({ write }) => {
     const { db } = testDb;
     const { deck, template } = await seedDeckContext(db);
     const content = createCardContent(template);
 
-    await addCard(db, {
+    await write(db, {
       deckId: deck.id,
       templateId: template.id,
       content: { ...content, [MISSING_ID]: { text: "stray" } },

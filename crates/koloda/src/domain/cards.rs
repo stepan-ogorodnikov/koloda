@@ -276,3 +276,13 @@ fn validate_content(content: &CardContent, template_fields: &[TemplateField]) ->
 
     Ok(())
 }
+
+// WHY: twin of `@koloda/srs` `getCardContentValidation`, whose `z.object` strips keys it does not list.
+// Values for fields outside the card's template are not stored (CARDS.md §Card Content).
+pub fn template_content(content: &CardContent, template_fields: &[TemplateField]) -> CardContent {
+    content
+        .iter()
+        .filter(|(key, _)| template_fields.iter().any(|field| field.id == **key))
+        .map(|(key, value)| (key.clone(), value.clone()))
+        .collect()
+}

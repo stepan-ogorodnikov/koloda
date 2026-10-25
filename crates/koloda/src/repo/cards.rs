@@ -11,8 +11,8 @@ use crate::app::db::{parse_json_column, Database};
 use crate::app::error::{error_codes, throw_known_error, AppError};
 use crate::app::utility::{get_current_timestamp, minted_uuidv7};
 use crate::domain::cards::{
-    Card, CardContent, CardCount, CardState, DeleteCardData, DeleteCardsData, InsertCardData, ResetCardProgressData,
-    UpdateCardData,
+    template_content, Card, CardContent, CardCount, CardState, DeleteCardData, DeleteCardsData, InsertCardData,
+    ResetCardProgressData, UpdateCardData,
 };
 use crate::domain::templates::Template;
 use std::collections::HashMap;
@@ -230,7 +230,7 @@ fn insert_card_data(db: &Database, data: &InsertCardData, template: &Template) -
     data.validate(&template.content.fields)?;
 
     let now = get_current_timestamp()?;
-    let content = serde_json::to_string(&data.content)?;
+    let content = serde_json::to_string(&template_content(&data.content, &template.content.fields))?;
 
     let id = db.with_transaction(|tx| {
         let id = minted_uuidv7(None);
@@ -288,7 +288,8 @@ pub fn update_card(db: &Database, data: UpdateCardData) -> Result<Card, AppError
         data.values.validate(&template.content.fields)?;
 
         let now = get_current_timestamp()?;
-        let content = serde_json::to_string(&data.values.content)?;
+        let values_content = template_content(&data.values.content, &template.content.fields);
+        let content = serde_json::to_string(&values_content)?;
 
         db.with_transaction(|tx| {
             // WHY: the sync engine applies remote envelopes over this connection between two lock
@@ -305,7 +306,7 @@ pub fn update_card(db: &Database, data: UpdateCardData) -> Result<Card, AppError
                 params![content, now, data.id],
             )?;
 
-            if current.content != data.values.content {
+            if current.content != values_content {
                 Capture::begin(tx)?.write(
                     &data.id,
                     Some(&current.deck_id),

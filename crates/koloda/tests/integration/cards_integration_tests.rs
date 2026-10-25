@@ -1,7 +1,7 @@
 use koloda::app::error::error_codes;
 use koloda::domain::cards::{
-    Card, DeleteCardData, DeleteCardsData, InsertCardData, ResetCardProgressData, UpdateCardData, UpdateCardProgress,
-    UpdateCardValues,
+    Card, CardContent, CardContentField, DeleteCardData, DeleteCardsData, InsertCardData, ResetCardProgressData,
+    UpdateCardData, UpdateCardProgress, UpdateCardValues,
 };
 use koloda::domain::lessons::LessonResultData;
 use koloda::domain::reviews::{GetReviewsData, InsertReviewData};
@@ -651,5 +651,67 @@ fn update_card_rejects_a_missing_card_or_template() {
         );
 
         assert_eq!(result.unwrap_err().code, code, "{name}");
+    }
+}
+
+fn insert_data(deck_id: &str, template_id: &str, content: CardContent) -> InsertCardData {
+    InsertCardData {
+        deck_id: deck_id.to_string(),
+        template_id: template_id.to_string(),
+        content,
+        state: None,
+        due_at: None,
+        stability: None,
+        difficulty: None,
+        scheduled_days: None,
+        learning_steps: None,
+        reps: None,
+        lapses: None,
+        last_reviewed_at: None,
+    }
+}
+
+#[test]
+fn card_writes_store_only_the_template_fields() {
+    type Write = fn(&koloda::app::db::Database, &str, &str, CardContent);
+    let cases: [(&str, Write); 3] = [
+        ("add", |db, deck_id, template_id, content| {
+            cards::add_card(db, insert_data(deck_id, template_id, content)).expect("add should succeed");
+        }),
+        ("batch add", |db, deck_id, template_id, content| {
+            let results = cards::add_cards(db, vec![insert_data(deck_id, template_id, content)])
+                .expect("batch add should succeed");
+            assert!(results[0].error.is_none(), "batch item should succeed");
+        }),
+        ("update", |db, deck_id, template_id, content| {
+            let id = add_card(db, deck_id, template_id, "question");
+            cards::update_card(
+                db,
+                UpdateCardData {
+                    id,
+                    values: UpdateCardValues { content },
+                },
+            )
+            .expect("update should succeed");
+        }),
+    ];
+
+    for (name, write) in cases {
+        let db = test_db();
+        let algorithm_id = add_algorithm(&db, "FSRS");
+        let template_id = add_template(&db, "Basic");
+        let deck_id = add_deck(&db, &algorithm_id, &template_id, "Deck");
+        let mut content = card_content("question", "answer");
+        content.insert(
+            "01900000-0000-7000-8000-0000000f423f".to_string(),
+            CardContentField {
+                text: "stray".to_string(),
+            },
+        );
+
+        write(&db, &deck_id, &template_id, content);
+
+        let stored = cards::get_cards(&db, &deck_id).expect("cards query should succeed");
+        assert_eq!(stored[0].content, card_content("question", "answer"), "{name}");
     }
 }

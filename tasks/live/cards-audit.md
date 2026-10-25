@@ -618,7 +618,7 @@ Line numbers are at `b662537e`; when an earlier item moved them, find the code b
   Commit: Validate progress fields on web card insert
   Depends on: 9
 
-- [ ] 11. Keep only template fields in stored card content
+- [x] 11. Keep only template fields in stored card content
   Goal (C12; question 4):
   - Rule on both hosts: a content key that is not a field of the card's template is dropped on add, batch add, and
     update.

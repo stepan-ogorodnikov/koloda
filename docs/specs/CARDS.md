@@ -42,6 +42,7 @@ A card's content is a set of text values, one per field on its template.
 Required fields must have a non-empty value.
 Optional fields accept an empty value.
 Every field of the template must be present in the content.
+Content for fields that are not on the card's template is not stored.
 
 In the management UI, every field is edited and shown as plain text, including markdown fields.
 Rendered markdown appears only in preview and lessons.
