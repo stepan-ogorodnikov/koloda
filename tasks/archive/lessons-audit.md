@@ -1,6 +1,6 @@
 # Lessons audit fixes
 
-Status: ready
+Status: done
 Guides: agents/IMPLEMENTATION-PLAN.md, agents/TASKS.md, docs/specs/LESSONS.md, docs/specs/CARDS.md, docs/specs/LEARNING-SETTINGS.md, agents/CODE-STYLE.md, agents/CODE-DOCUMENTATION.md, agents/TESTING.md, agents/VERIFY.md, agents/CSS.md, agents/I18N.md, agents/RUST.md, docs/decisions/TS-RUST-DOMAIN-MIRRORING.md, agents/BACKWARDS-COMPATIBILITY.md, agents/FUNCTIONAL-SPECIFICATIONS.md, agents/MARKDOWN.md, apps/web-e2e/README.md, apps/electron-e2e/README.md, libs/e2e/README.md, agents/REVIEW.md
 Flow: local
 
@@ -719,4 +719,33 @@ Line numbers are at `aeb9282b`; when an earlier item moved them, find the code b
 
 ## Outcome
 
-<what shipped>
+Shipped, one commit per Plan item, all 18 done. Every lessons finding (L1 to L19), cards findings 1 and 18, and
+algorithms finding 2 are fixed. None was skipped or left for a decision.
+
+- A lesson studies each card with its own template, not its deck's current one (C1). CARDS.md §Relationships is the
+  one home, and LESSONS.md points to it.
+- Reopening a lesson loads fresh cards and fresh algorithm parameters; the lesson data is dropped when its session
+  ends (L1, A2).
+- A deck lesson waits for fresh Dashboard counts before it initializes (L2).
+- The grade keys act only on a submitted card, and not while the close confirmation is open (L3, L4, L13).
+- The learn-ahead cutoff is tested on the real grade helpers (L13).
+- The lesson and card preview share one card form builder (C18).
+- A markdown "type" field is hidden until submit, and focus goes to the first text type field or to Continue (L5).
+- An unrevealed answer is out of reach until submit: hidden from screen readers, selection, and find-in-page (L10).
+- Grade intervals follow the interface language (L8).
+- A cleared amount field counts as 0, so Start still works (L9).
+- The web host has twins for study order and relearning, and the rollback tests reach the transaction on both hosts
+  (L12, L15, L19).
+- A failed lesson upload is marked as an error (L15).
+- Store tests that repeat reducer cases are deleted, and so is the dead branch and unused review return in the web
+  lesson repo (L14, L16).
+- The lesson's keyboard path is driven in the e2e suites (L11).
+- A fresh install's Learn daily limit is unlimited and does not count toward Total; stored settings keep their values
+  (L17).
+- The Dashboard lesson counts refetch every 60 seconds while the Dashboard is open (L18).
+- LESSONS.md describes a failed prepare, and each repeated close and key rule points to one home (L6, L7).
+
+Left out on purpose: the rest of `cards.md` and the other audit reports, which are triaged separately. Cards finding 9
+(card delete and reset leave today's totals stale) and the `add-card.tsx` invalidation on unmount also stay with the
+cards triage. `hotkeys.md` findings 1, 8, and 14 stay with the hotkeys triage. The host-desync triage should record
+that L12, L15, and L16 are fixed here.
