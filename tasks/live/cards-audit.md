@@ -434,7 +434,7 @@ Line numbers are at `b662537e`; when an earlier item moved them, find the code b
   Commit: Refresh template lock status after cards change
   Depends on: none
 
-- [ ] 3. Refresh today's totals and deck titles after card and deck changes
+- [x] 3. Refresh today's totals and deck titles after card and deck changes
   Goal (C9, D5):
   - Invalidate `queryKeys.lessons.todayReviewTotals()` on success in the five paths that delete reviews:
     - reset: `card-details.tsx:55-57`;

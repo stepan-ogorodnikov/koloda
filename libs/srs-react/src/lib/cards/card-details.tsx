@@ -55,6 +55,7 @@ export function CardDetails({ card }: CardDetailsProps) {
           queryClient.invalidateQueries({ queryKey: queryKeys.cards.deck({ deckId: card.deckId }) });
           queryClient.invalidateQueries({ queryKey: queryKeys.reviews.card({ cardId: card.id }) });
           queryClient.invalidateQueries({ queryKey: queryKeys.lessons.all() });
+          queryClient.invalidateQueries({ queryKey: queryKeys.lessons.todayReviewTotals() });
         },
       },
     );
