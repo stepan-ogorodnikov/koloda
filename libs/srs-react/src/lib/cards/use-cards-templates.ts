@@ -9,7 +9,9 @@ export function useCardsTemplates(cards: Card[] | undefined, deckTemplateId?: Te
 
   const templateIds = useMemo(() => {
     const ids = new Set(cards?.map((c) => c.templateId) ?? []);
-    if (deckTemplateId !== undefined) ids.add(deckTemplateId);
+    // WHY: headers and the template filter follow the cards' templates. The deck's current one
+    // stands in only for a deck with no cards, so its empty table still has headers.
+    if (ids.size === 0 && deckTemplateId !== undefined) ids.add(deckTemplateId);
     return [...ids].sort();
   }, [cards, deckTemplateId]);
 

@@ -77,6 +77,23 @@ function createCards(count: number) {
   );
 }
 
+function createQuestionTemplate() {
+  return createTemplate({
+    id: testId(2),
+    title: "Question and answer",
+    content: {
+      fields: [
+        { id: testId(201), title: "Question", type: "text", isRequired: true },
+        { id: testId(202), title: "Answer", type: "text", isRequired: true },
+      ],
+      layout: [
+        { field: testId(201), operation: "display" },
+        { field: testId(202), operation: "reveal" },
+      ],
+    },
+  });
+}
+
 function bodyRowTexts() {
   return [...document.querySelectorAll("tbody tr")].map((row) => row.textContent ?? "");
 }
@@ -163,20 +180,7 @@ describe("CardsTable selection", () => {
 
   it("keeps cards hidden by the template filter selected but out of the bulk delete", async () => {
     const t1 = createTemplate();
-    const t2 = createTemplate({
-      id: testId(2),
-      title: "Question and answer",
-      content: {
-        fields: [
-          { id: testId(201), title: "Question", type: "text", isRequired: true },
-          { id: testId(202), title: "Answer", type: "text", isRequired: true },
-        ],
-        layout: [
-          { field: testId(201), operation: "display" },
-          { field: testId(202), operation: "reveal" },
-        ],
-      },
-    });
+    const t2 = createQuestionTemplate();
     const [first, second] = createCards(2);
     const other = createCard({
       id: testId(200),
@@ -201,5 +205,30 @@ describe("CardsTable selection", () => {
 
     await waitFor(() => expect(deleteCards).toHaveBeenCalledTimes(1));
     expect(deleteCards.mock.calls[0][0]).toEqual({ ids: [first.id, second.id] });
+  });
+});
+
+function headerTexts() {
+  return [...document.querySelectorAll("thead th")].map((th) => th.textContent?.trim()).filter(Boolean);
+}
+
+describe("CardsTable content columns", () => {
+  it("names the columns and the template filter after the cards' templates, not the deck's", async () => {
+    const t1 = createTemplate();
+    const t2 = createQuestionTemplate();
+    const { controls } = setup(createCards(2), { templates: [t1, t2], deckTemplateId: t2.id });
+    await waitFor(() => expect(bodyRowTexts()).toHaveLength(2));
+
+    expect(headerTexts().slice(0, 2)).toEqual(["Front", "Back"]);
+    fireEvent.click(within(controls).getByRole("button", { name: "cards-table.filters.trigger" }));
+    await screen.findByRole("dialog");
+    expect(screen.queryByText("cards-table.filters.template")).toBeNull();
+  });
+
+  it("names the columns after the deck's template while the deck has no cards", async () => {
+    const t2 = createQuestionTemplate();
+    setup([], { templates: [createTemplate(), t2], deckTemplateId: t2.id });
+
+    await waitFor(() => expect(headerTexts().slice(0, 2)).toEqual(["Question", "Answer"]));
   });
 });

@@ -553,7 +553,7 @@ Line numbers are at `b662537e`; when an earlier item moved them, find the code b
   Commit: Delete only the selected cards the table shows
   Depends on: 1
 
-- [ ] 8. Build the cards table columns and filter from the cards' templates
+- [x] 8. Build the cards table columns and filter from the cards' templates
   Goal (C5):
   - `useCardsTemplates` (`use-cards-templates.ts:10-14`): add the deck's template only when there are no cards.
     An empty table then still has headers.
