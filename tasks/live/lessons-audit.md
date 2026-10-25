@@ -447,7 +447,7 @@ Line numbers are at `aeb9282b`; when an earlier item moved them, find the code b
   Commit: Grade only a submitted card with no close confirmation open
   Depends on: none
 
-- [ ] 5. Test learn-ahead at its cutoff on the real grade helpers
+- [x] 5. Test learn-ahead at its cutoff on the real grade helpers
   Goal (the rest of L13):
   - Drop the file-level `vi.mock("@koloda/srs")` and its hoisted mocks (`lesson-reducer.test.ts:15-30`, `:157-162`).
     Rewrite the grading cases on the real helpers under fake timers.

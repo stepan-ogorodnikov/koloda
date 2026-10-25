@@ -1,7 +1,11 @@
 import type { LearningSettings } from "@koloda/app";
 import { SEED_TEMPLATE_TYPE_BACK_FIELD_ID } from "@koloda/app";
-import { convertTemplateToLessonTemplate } from "@koloda/srs";
-import type * as KolodaSrsModule from "@koloda/srs";
+import {
+  convertTemplateToLessonTemplate,
+  createReviewFromReviewFSRS,
+  createUpdateCardProgress,
+  getCardGrades,
+} from "@koloda/srs";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   createCard,
@@ -14,23 +18,6 @@ import {
 } from "../../test/test-helpers";
 import { calculateInitialLessonAmounts, lessonReducer, lessonReducerDefault } from "./lesson-reducer";
 import type { LessonReducerState } from "./lesson-reducer";
-
-const { getCardGradesMock, createCardFromCardFSRSMock, createReviewFromReviewFSRSMock } = vi.hoisted(() => ({
-  getCardGradesMock: vi.fn(),
-  createCardFromCardFSRSMock: vi.fn(),
-  createReviewFromReviewFSRSMock: vi.fn(),
-}));
-
-vi.mock("@koloda/srs", async () => {
-  const actual = await vi.importActual<typeof KolodaSrsModule>("@koloda/srs");
-
-  return {
-    ...actual,
-    getCardGrades: getCardGradesMock,
-    createCardFromCardFSRS: createCardFromCardFSRSMock,
-    createReviewFromReviewFSRS: createReviewFromReviewFSRSMock,
-  };
-});
 
 type LessonAction = Parameters<typeof lessonReducer>[1];
 
@@ -158,9 +145,6 @@ function queuedUploadItem() {
 
 afterEach(() => {
   vi.useRealTimers();
-  getCardGradesMock.mockReset();
-  createCardFromCardFSRSMock.mockReset();
-  createReviewFromReviewFSRSMock.mockReset();
 });
 
 describe("lessonReducer", () => {
@@ -372,106 +356,68 @@ describe("lessonReducer", () => {
     expect(state.session?.content?.form.isSubmitted).toBe(true);
   });
 
-  it("queues a graded review, caps review time, and learns ahead when the next due card is near", () => {
+  it("queues the chosen grade's result, caps review time, and learns ahead when the next due card is near", () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2024-01-01T00:00:00.000Z"));
+    const lessonData = createLessonData();
+    const [card, algorithm] = [lessonData.cards[0]!, lessonData.algorithms[0]!];
+    // Grades are computed when the card is shown, so compute the expected ones at that time.
+    const [again] = getCardGrades(card, algorithm);
 
-    const learnedAheadCard = createCard({
-      id: testId(2),
-      state: 1,
-      dueAt: new Date("2024-01-01T00:10:00.000Z"),
-    });
-    const grade = {
-      card: {
-        state: 1,
-        due: new Date("2024-01-01T00:10:00.000Z"),
-        stability: 1,
-        difficulty: 1,
-        scheduled_days: 0,
-        learning_steps: 1,
-        reps: 1,
-        lapses: 0,
-        last_review: new Date("2024-01-01T02:00:00.000Z"),
-      },
-      log: { rating: 3 },
-    } as any;
-
-    getCardGradesMock.mockReturnValue([grade, grade, grade, grade]);
-    createCardFromCardFSRSMock.mockReturnValue(learnedAheadCard);
-    createReviewFromReviewFSRSMock.mockReturnValue({
-      rating: 3,
-      state: 1,
-      dueAt: new Date("2024-01-01T00:10:00.000Z"),
-      stability: 1,
-      difficulty: 1,
-      scheduledDays: 0,
-      learningSteps: 1,
-    });
-
-    let state = startLesson({
-      learnAheadLimit: [0, 30],
-      lessonData: createLessonData({
-        cards: [createCard({ id: testId(1) })],
-      }),
-    });
-
+    let state = startLesson({ learnAheadLimit: [0, 30], lessonData });
     vi.setSystemTime(new Date("2024-01-01T02:00:00.000Z"));
     state = lessonReducer(state, ["cardSubmitted"]);
     state = lessonReducer(state, ["gradeSelected", 0]);
 
-    expect(state.phase).toBe("studying");
     expect(state.upload.queue).toHaveLength(1);
-    // INVARIANT: the queue item is the wire payload — exactly the submit fields, not the session Card.
-    expect(state.upload.queue[0]?.card).toEqual({
-      id: testId(1),
-      state: 1,
-      dueAt: new Date("2024-01-01T00:10:00.000Z"),
-      stability: 1,
-      difficulty: 1,
-      scheduledDays: 0,
-      learningSteps: 1,
-      reps: 1,
-      lapses: 0,
-      lastReviewedAt: new Date("2024-01-01T02:00:00.000Z"),
-    });
     expect(state.upload.queue[0]?.index).toBe(0);
     // INVARIANT: the queue item is the wire payload — exactly the submit fields, not the session Card.
+    expect(state.upload.queue[0]?.card).toEqual(createUpdateCardProgress(card.id, again!.card));
     expect(state.upload.queue[0]?.review).toEqual({
-      rating: 3,
-      state: 1,
-      dueAt: new Date("2024-01-01T00:10:00.000Z"),
-      stability: 1,
-      difficulty: 1,
-      scheduledDays: 0,
-      learningSteps: 1,
-      cardId: testId(1),
+      ...createReviewFromReviewFSRS(again!.log),
+      cardId: card.id,
       isIgnored: false,
       time: 60 * 60 * 1000,
     });
-    expect(state.session?.data.cards).toHaveLength(2);
+    expect(state.upload.queue[0]?.review.rating).toBe(1);
+    expect(state.phase).toBe("studying");
     expect(state.session?.content?.index).toBe(1);
-    expect(state.session?.content?.card.id).toBe(testId(2));
+    expect(state.session?.content?.card).toMatchObject({
+      id: card.id,
+      deckId: card.deckId,
+      templateId: card.templateId,
+      content: card.content,
+    });
     expect(state.session?.progress).toEqual({
       done: { untouched: 1, learn: 0, review: 0, total: 1 },
       pending: { untouched: 0, learn: 1, review: 0, total: 1 },
     });
-    expect(getCardGradesMock).toHaveBeenCalledTimes(2);
+  });
+
+  it.each([
+    { name: "a due time exactly at the cutoff is not appended", minutesPastDue: 0, isAppended: false },
+    { name: "a cutoff one minute past the due time is appended", minutesPastDue: 1, isAppended: true },
+    { name: "no learn-ahead limit appends nothing", minutesPastDue: null, isAppended: false },
+  ])("learn-ahead: $name", ({ minutesPastDue, isAppended }) => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2024-01-01T00:00:00.000Z"));
+    const lessonData = createLessonData();
+    const [card, algorithm] = [lessonData.cards[0]!, lessonData.algorithms[0]!];
+    const [again] = getCardGrades(card, algorithm);
+    const minutesToDue = (again!.card.due.getTime() - Date.now()) / 60_000;
+    const minutes = minutesToDue + (minutesPastDue ?? 0);
+    const learnAheadLimit: [number, number] | undefined =
+      minutesPastDue === null ? undefined : [Math.floor(minutes / 60), minutes % 60];
+
+    let state = startLesson({ learnAheadLimit, lessonData });
+    state = lessonReducer(state, ["cardSubmitted"]);
+    state = lessonReducer(state, ["gradeSelected", 0]);
+
+    expect(state.session?.data.cards).toHaveLength(isAppended ? 2 : 1);
+    expect(state.phase).toBe(isAppended ? "studying" : "finished");
   });
 
   it("finishes the lesson when the last card is graded", () => {
-    const grade = { card: { id: 10 }, log: { rating: 3 } } as any;
-    getCardGradesMock.mockReturnValue([grade]);
-    createCardFromCardFSRSMock.mockReturnValue(createCard({ id: testId(1), state: 2 }));
-    createReviewFromReviewFSRSMock.mockReturnValue({
-      rating: 3,
-      state: 2,
-      dueAt: new Date("2024-01-02T00:00:00.000Z"),
-      stability: 1,
-      difficulty: 1,
-      scheduledDays: 1,
-      learningSteps: 0,
-    });
-
     let state = startLesson({ lessonData: createLessonData() });
     state = lessonReducer(state, ["cardSubmitted"]);
     state = lessonReducer(state, ["gradeSelected", 0]);
@@ -500,10 +446,6 @@ describe("lessonReducer", () => {
   });
 
   it("ignores submit and grades while the close confirmation is open, and grades once it is dismissed", () => {
-    const grade = { card: { id: 10 }, log: { rating: 3 } } as any;
-    getCardGradesMock.mockReturnValue([grade]);
-    createCardFromCardFSRSMock.mockReturnValue(createCard({ id: testId(1), state: 2 }));
-    createReviewFromReviewFSRSMock.mockReturnValue({ rating: 3 });
     const studying = startLesson({ lessonData: createLessonData() });
 
     const confirmingUnsubmitted = lessonReducer(studying, ["terminationRequested", true]);

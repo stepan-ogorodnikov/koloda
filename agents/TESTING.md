@@ -236,7 +236,7 @@ Process singletons leak across files the same way; reset them in the test that d
 A file-level mock there replaces a module that siblings import for real:
 
 - `ui`: `query-error.test.tsx` mocks `@lingui/react`; siblings need the real catalog text.
-- `srs-react`: `lesson-reducer.test.ts` mocks `@koloda/srs`; later files import the real module.
+- `srs-react`: `optimize-algorithm.test.tsx` mocks `@koloda/core-react`; later files import the real module.
 
 Other `isolate: false` libs file-mock `@lingui/react` too and pass, because no sibling imports it for real.
 `db-sqlite` also sets `fileParallelism: false`.
