@@ -132,4 +132,53 @@ describe("useLessonUploader", () => {
       expect(store.get(lessonStateAtom).upload.queue).toEqual([]);
     });
   });
+
+  it("marks a failed save as an error, does not retry it, and moves on to the next result", async () => {
+    const submitted: LessonResultData[] = [];
+    const pending: Array<{ resolve: () => void; reject: () => void }> = [];
+    const store = createStore();
+    const queryClient = createQueryClient();
+    store.set(queriesAtom, {
+      submitLessonResultMutation: () => ({
+        mutationFn: (data: LessonResultData) => {
+          submitted.push(data);
+          return new Promise<undefined>((resolve, reject) => {
+            pending.push({ resolve: () => resolve(undefined), reject: () => reject(new Error("save failed")) });
+          });
+        },
+      }),
+    } as unknown as Queries);
+    enqueueTwoUploads(store);
+
+    function Wrapper({ children }: PropsWithChildren) {
+      return (
+        <QueryClientProvider client={queryClient}>
+          <JotaiProvider store={store}>{children}</JotaiProvider>
+        </QueryClientProvider>
+      );
+    }
+
+    renderHook(() => useLessonUploader(), { wrapper: Wrapper });
+    await waitFor(() => {
+      expect(submitted).toHaveLength(1);
+    });
+
+    await act(async () => {
+      pending[0]?.reject();
+    });
+    await waitFor(() => {
+      expect(store.get(lessonUploadLogAtom)[0]).toBe("error");
+      expect(submitted).toHaveLength(2);
+    });
+    expect(submitted[1]?.review.cardId).toBe(testId(2));
+
+    await act(async () => {
+      pending[1]?.resolve();
+    });
+    await waitFor(() => {
+      expect(store.get(lessonUploadLogAtom)[1]).toBe("success");
+      expect(store.get(lessonStateAtom).upload.queue).toEqual([]);
+    });
+    expect(submitted).toHaveLength(2);
+  });
 });

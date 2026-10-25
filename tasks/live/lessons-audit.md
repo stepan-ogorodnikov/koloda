@@ -584,7 +584,7 @@ Line numbers are at `aeb9282b`; when an earlier item moved them, find the code b
   Commit: Add the web lesson twins and make the rollback tests reach the transaction
   Depends on: none
 
-- [ ] 12. Test that a failed lesson upload is marked as an error
+- [x] 12. Test that a failed lesson upload is marked as an error
   Goal (the uploader half of L15):
   - `lesson-uploader.test.tsx`: the first submit rejects and the second resolves, through gated promises.
     Expect the first result logged `error`, no retry, and the second uploaded and logged `success`.
