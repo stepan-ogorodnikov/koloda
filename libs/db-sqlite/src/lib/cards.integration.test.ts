@@ -152,6 +152,46 @@ describe("cards repository integration", () => {
     });
   });
 
+  // WHY: twin of Rust `add_card_rejects_invalid_progress_state`; the web insert used to store the row first.
+  it("addCard rejects invalid progress fields and stores no row", async () => {
+    const { db } = testDb;
+    const { deck, template } = await seedDeckContext(db);
+
+    await expect(
+      addCard(db, { deckId: deck.id, templateId: template.id, content: createCardContent(template), state: 999 }),
+    ).rejects.toMatchObject({
+      issues: expect.arrayContaining([expect.objectContaining({ message: "validation.cards-progress.state" })]),
+    });
+    expect(await getCards(db, { deckId: deck.id })).toEqual([]);
+  });
+
+  it("addCards reports invalid progress fields per item and stores no row", async () => {
+    const { db } = testDb;
+    const { deck, template } = await seedDeckContext(db);
+
+    const result = await addCards(db, [
+      { deckId: deck.id, templateId: template.id, content: createCardContent(template), reps: -1 },
+    ]);
+
+    expect(result).toEqual([{ error: { code: "validation.cards-progress.reps" } }]);
+    expect(await getCards(db, { deckId: deck.id })).toEqual([]);
+  });
+
+  it("addCard does not store a content key outside the template", async () => {
+    const { db } = testDb;
+    const { deck, template } = await seedDeckContext(db);
+    const content = createCardContent(template);
+
+    await addCard(db, {
+      deckId: deck.id,
+      templateId: template.id,
+      content: { ...content, [MISSING_ID]: { text: "stray" } },
+    });
+    const [stored] = await getCards(db, { deckId: deck.id });
+
+    expect(stored?.content).toEqual(content);
+  });
+
   it("addCard rejects a missing deck", async () => {
     const { db } = testDb;
     const { template } = await seedDeckContext(db);

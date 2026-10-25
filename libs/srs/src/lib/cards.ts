@@ -79,7 +79,9 @@ export function getCardContentValidation(fields: TemplateFields) {
 
 export function getInsertCardSchema(template: Template) {
   const contentValidation = getCardContentValidation(template.content.fields);
-  return z.object({ ...insertCardSchema.shape, ...contentValidation });
+  // WHY: spreading `.shape` drops `insertCardSchema`'s refinement, so the progress check is re-applied.
+  // Rust `InsertCardData::validate` checks the same fields on every insert.
+  return z.object({ ...insertCardSchema.shape, ...contentValidation }).superRefine(refineCardProgress);
 }
 
 export const insertCardSchema = cardFieldsSchema.omit({ id: true }).superRefine(refineCardProgress);

@@ -599,7 +599,7 @@ Line numbers are at `b662537e`; when an earlier item moved them, find the code b
   Commit: Test web card updates, bulk delete, and a full-field roundtrip
   Depends on: none
 
-- [ ] 10. Validate progress fields on web card insert
+- [x] 10. Validate progress fields on web card insert
   Goal (C11, and C12's web `addCard` half):
   - `getInsertCardSchema` (`libs/srs/src/lib/cards.ts:80-83`): re-apply `refineCardProgress`.
     Spreading `insertCardSchema.shape` drops its `superRefine` (`:85`).

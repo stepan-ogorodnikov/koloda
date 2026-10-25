@@ -79,9 +79,9 @@ export async function addCard(db: DB, data: InsertCardData) {
     const template = await getTemplate(db, data.templateId);
     if (!template) throw new AppError("not-found.cards.add.template");
     const schema = getInsertCardSchema(template);
-    schema.parse(data);
+    const validated = schema.parse(data);
 
-    return insertCardRow(db, data);
+    return insertCardRow(db, validated);
   });
 }
 
