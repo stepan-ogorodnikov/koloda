@@ -60,6 +60,10 @@ That switch still applies when the type is unlimited.
 
 Total has only a cap.
 
+On first setup, Total is 200.
+New is 50 and Review is 200, and both count toward Total.
+Learn is unlimited and does not count toward Total.
+
 Zero is a hard cap for that limit.
 That limit has no remaining room.
 Any cards of that type already studied today are over that type's limit.

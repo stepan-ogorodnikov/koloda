@@ -31,7 +31,7 @@ describe("learningSettingsValidation", () => {
     expect(result.dailyLimits).toEqual({
       total: 200,
       untouched: { value: 50, counts: true },
-      learn: { value: 0, counts: false },
+      learn: { value: null, counts: false },
       review: { value: 200, counts: true },
     });
   });
@@ -45,7 +45,7 @@ describe("learningSettingsValidation", () => {
     expect(result.dailyLimits).toEqual({
       total: 200,
       untouched: { value: 50, counts: true },
-      learn: { value: 0, counts: false },
+      learn: { value: null, counts: false },
       review: { value: 200, counts: true },
     });
   });
@@ -131,7 +131,7 @@ describe("learningSettingsValidation", () => {
       dailyLimits: {
         total: 200,
         untouched: { value: 50, counts: true },
-        learn: { value: 0, counts: false },
+        learn: { value: null, counts: false },
         review: { value: 200, counts: true },
       },
       dayStartsAt: "05:00",

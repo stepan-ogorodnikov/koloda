@@ -2,7 +2,7 @@
 //!
 //! `day_starts_at` must use zero-padded `hh:mm`; keep in sync with TS `parseDayStartsAt`.
 //! Missing-field defaults mirror the TS `.default()`s: `dailyLimits.total` 200,
-//! `untouched` {50, true}, `learn` {0, false}, `review` {200, true},
+//! `untouched` {50, true}, `learn` {unlimited, false}, `review` {200, true},
 //! `dayStartsAt` "05:00", `learnAheadLimit` [0, 30]. The `dailyLimits` key
 //! itself stays required, same as the TS twin (only its contents default).
 //! Daily-limit caps are `Option<u32>`: `None` is unlimited, `Some(0)` is a hard
@@ -205,7 +205,7 @@ fn default_untouched_limit() -> CountedDailyLimit {
 
 fn default_learn_limit() -> CountedDailyLimit {
     CountedDailyLimit {
-        value: Some(0),
+        value: None,
         counts: false,
     }
 }
@@ -263,7 +263,7 @@ enum CountedDailyLimitPartial {
 
 fn deserialize_counted_limit_with<'de, D>(
     deserializer: D,
-    default_value: u32,
+    default_value: Option<u32>,
     default_counts: bool,
 ) -> Result<CountedDailyLimit, D::Error>
 where
@@ -276,7 +276,7 @@ where
     // Do not map per-type `0` to unlimited.
     match Option::<CountedDailyLimitPartial>::deserialize(deserializer)? {
         None => Ok(CountedDailyLimit {
-            value: Some(default_value),
+            value: default_value,
             counts: default_counts,
         }),
         Some(CountedDailyLimitPartial::Value(value)) => Ok(CountedDailyLimit {
@@ -285,7 +285,7 @@ where
         }),
         Some(CountedDailyLimitPartial::Object { value, counts }) => Ok(CountedDailyLimit {
             value: match value {
-                OptionalLimitValue::Missing => Some(default_value),
+                OptionalLimitValue::Missing => default_value,
                 OptionalLimitValue::Unlimited => None,
                 OptionalLimitValue::Capped(n) => Some(n),
             },
@@ -298,21 +298,21 @@ fn deserialize_untouched_limit<'de, D>(deserializer: D) -> Result<CountedDailyLi
 where
     D: Deserializer<'de>,
 {
-    deserialize_counted_limit_with(deserializer, 50, true)
+    deserialize_counted_limit_with(deserializer, Some(50), true)
 }
 
 fn deserialize_learn_limit<'de, D>(deserializer: D) -> Result<CountedDailyLimit, D::Error>
 where
     D: Deserializer<'de>,
 {
-    deserialize_counted_limit_with(deserializer, 0, false)
+    deserialize_counted_limit_with(deserializer, None, false)
 }
 
 fn deserialize_review_limit<'de, D>(deserializer: D) -> Result<CountedDailyLimit, D::Error>
 where
     D: Deserializer<'de>,
 {
-    deserialize_counted_limit_with(deserializer, 200, true)
+    deserialize_counted_limit_with(deserializer, Some(200), true)
 }
 
 /// Tuple fields are (hours, minutes).

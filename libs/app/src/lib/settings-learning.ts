@@ -45,7 +45,7 @@ export const learningDailyLimitValidation = z.object({
   counts: z.boolean(),
 });
 
-function createLearningDailyLimitValidation(defaultValue: number, defaultCounts: boolean) {
+function createLearningDailyLimitValidation(defaultValue: number | null, defaultCounts: boolean) {
   return z.preprocess(
     (value) => {
       if (typeof value === "number") return { value, counts: true };
@@ -123,7 +123,7 @@ const dailyLimitsValidation = withCountedLimitRefines(
   z.object({
     total: dailyLimitCapValidation.default(200),
     untouched: createLearningDailyLimitValidation(50, true),
-    learn: createLearningDailyLimitValidation(0, false),
+    learn: createLearningDailyLimitValidation(null, false),
     review: createLearningDailyLimitValidation(200, true),
   }),
 );

@@ -22,12 +22,13 @@ test("validates and resets the learning settings form", async ({ page }) => {
   const newField = page.getByRole("textbox", { name: "New" });
   const saveButton = page.locator("form").getByRole("button", { name: "Save", exact: true });
   const learnSwitch = page.getByRole("switch", { name: "Counts towards total" }).nth(1);
+  const learnUnlimited = page.getByRole("switch", { name: "Unlimited" }).nth(2);
 
   const initialAlgorithm = await page.getByRole("button", { name: "Default algorithm" }).innerText();
   const initialTemplate = await page.getByRole("button", { name: "Default template" }).innerText();
   const initialTotal = await totalField.inputValue();
   const initialNew = await newField.inputValue();
-  const initialLearn = await learnField.inputValue();
+  await expect(learnUnlimited).toBeChecked();
   const initialReview = await reviewField.inputValue();
   const initialHours = await hoursField.inputValue();
   const initialMinutes = await minutesField.inputValue();
@@ -40,6 +41,7 @@ test("validates and resets the learning settings form", async ({ page }) => {
   await saveButton.click();
   await expect(page.getByText("New can't be more than total")).toBeVisible();
 
+  await clickSwitch(learnUnlimited);
   await learnField.click();
   await learnField.fill("10");
   await learnField.blur();
@@ -102,7 +104,7 @@ test("validates and resets the learning settings form", async ({ page }) => {
   await expect(page.getByRole("button", { name: "Default template" })).toContainText(initialTemplate);
   await expect(totalField).toHaveValue(initialTotal);
   await expect(newField).toHaveValue(initialNew);
-  await expect(learnField).toHaveValue(initialLearn);
+  await expect(learnUnlimited).toBeChecked();
   await expect(reviewField).toHaveValue(initialReview);
   await expect(hoursField).toHaveValue(initialHours);
   await expect(minutesField).toHaveValue(initialMinutes);

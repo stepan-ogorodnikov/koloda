@@ -76,7 +76,7 @@ describe("settings and review totals integration", () => {
           total: 40,
           untouched: { value: 10, counts: true },
           learn: { value: 5, counts: false },
-          review: { value: 20, counts: true },
+          review: { value: 20, counts: false },
         },
         dayStartsAt: "05:00",
         learnAheadLimit: [0, 30],
@@ -87,20 +87,20 @@ describe("settings and review totals integration", () => {
       name: "learning",
       content: {
         dailyLimits: {
-          learn: { value: null },
+          review: { value: null },
         },
       },
     });
 
     // Twin: patch_settings_deletes_null_keys_so_schema_defaults_refill
     // (crates/koloda/tests/integration/settings_integration_tests.rs). A patched
-    // null deletes `value`; the learn default (0) refills while `counts` survives.
+    // null deletes `value`; the review default (200) refills while `counts` survives.
     expect(result.content).toMatchObject({
       dailyLimits: {
         total: 40,
-        learn: { value: 0, counts: false },
+        learn: { value: 5, counts: false },
         untouched: { value: 10, counts: true },
-        review: { value: 20, counts: true },
+        review: { value: 200, counts: false },
       },
     });
   });

@@ -642,7 +642,7 @@ Line numbers are at `aeb9282b`; when an earlier item moved them, find the code b
   Commit: Drive a lesson by keyboard in the e2e suites
   Depends on: 4
 
-- [ ] 16. Default the Learn daily limit to unlimited
+- [x] 16. Default the Learn daily limit to unlimited
   Goal (L17; question 4):
   - TS: `createLearningDailyLimitValidation` (`libs/app/src/lib/settings-learning.ts:48-58`) accepts a `null`
     default, and Learn (`:126`) defaults to `null`, not counting toward Total.
@@ -663,6 +663,13 @@ Line numbers are at `aeb9282b`; when an earlier item moved them, find the code b
     A row without `learn` now reads as unlimited; the app always writes the field, so only hand-edited rows change.
   - Check the e2e lesson and learning-settings form specs on both hosts for expectations built on Learn 0.
     Update them as twins, typecheck only.
+  - Implemented:
+    - The patch-refill twins (`settings-reviews.integration.test.ts`,
+      `patch_settings_deletes_null_keys_so_schema_defaults_refill`) showed the refill through Learn's default.
+      A `null` default cannot show it, so both now patch Review (default 200, stored `counts: false`).
+    - Rust had no `learn: {}` twin; `test_empty_counted_limit_objects_fill_per_type_defaults` adds it.
+    - `settings-learning-form.spec.ts` on both hosts turns Learn's Unlimited off before typing into it.
+      After Discard it checks that the Unlimited switch is on again.
   Done when:
   - `APP settings-learning` and `RS settings_learning` pass;
   - the twin cases fail against the old default;

@@ -127,7 +127,7 @@ fn test_empty_daily_limits_object_fills_defaults() {
     assert_eq!(settings.daily_limits.total, Some(200));
     assert_eq!(settings.daily_limits.untouched.value, Some(50));
     assert!(settings.daily_limits.untouched.counts);
-    assert_eq!(settings.daily_limits.learn.value, Some(0));
+    assert_eq!(settings.daily_limits.learn.value, None);
     assert!(!settings.daily_limits.learn.counts);
     assert_eq!(settings.daily_limits.review.value, Some(200));
     assert!(settings.daily_limits.review.counts);
@@ -142,7 +142,27 @@ fn test_partial_daily_limits_fill_per_type_defaults() {
     assert_eq!(settings.daily_limits.total, Some(200));
     assert_eq!(settings.daily_limits.untouched.value, Some(20));
     assert!(settings.daily_limits.untouched.counts);
-    assert_eq!(settings.daily_limits.learn.value, Some(0));
+    assert_eq!(settings.daily_limits.learn.value, None);
+    assert!(!settings.daily_limits.learn.counts);
+    assert_eq!(settings.daily_limits.review.value, Some(200));
+    assert!(settings.daily_limits.review.counts);
+    settings.validate().unwrap();
+}
+
+#[test]
+fn test_empty_counted_limit_objects_fill_per_type_defaults() {
+    // WHY: Twin of TS `fills per-type defaults for empty limit objects`.
+    let json = build_learning_settings_json(
+        r#"{"untouched": {}, "learn": {}, "review": {}}"#,
+        r#""04:00""#,
+        "[4, 0]",
+    );
+
+    let settings: LearningSettings =
+        serde_json::from_str(&json).expect("Should deserialize with defaulted limit objects");
+    assert_eq!(settings.daily_limits.untouched.value, Some(50));
+    assert!(settings.daily_limits.untouched.counts);
+    assert_eq!(settings.daily_limits.learn.value, None);
     assert!(!settings.daily_limits.learn.counts);
     assert_eq!(settings.daily_limits.review.value, Some(200));
     assert!(settings.daily_limits.review.counts);

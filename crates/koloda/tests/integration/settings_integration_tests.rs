@@ -74,7 +74,7 @@ fn patch_settings_deletes_null_keys_so_schema_defaults_refill() {
             "total": 40,
             "untouched": counted_daily_limit(10, true),
             "learn": counted_daily_limit(5, false),
-            "review": counted_daily_limit(20, true),
+            "review": counted_daily_limit(20, false),
         },
         "dayStartsAt": "05:00",
         "learnAheadLimit": [0, 30],
@@ -87,7 +87,7 @@ fn patch_settings_deletes_null_keys_so_schema_defaults_refill() {
         SettingsName::Learning,
         json!({
             "dailyLimits": {
-                "learn": {
+                "review": {
                     "value": null
                 }
             }
@@ -97,14 +97,17 @@ fn patch_settings_deletes_null_keys_so_schema_defaults_refill() {
 
     // Twin: "deletes a patched null key so the schema default refills" in
     // libs/db-sqlite/src/lib/settings-reviews.integration.test.ts. RFC 7386
-    // deletes `value`; the learn default (0) refills while `counts` survives.
+    // deletes `value`; the review default (200) refills while `counts` survives.
     assert_eq!(patched.content["dailyLimits"]["total"], 40);
-    assert_eq!(patched.content["dailyLimits"]["learn"], counted_daily_limit(0, false));
+    assert_eq!(patched.content["dailyLimits"]["learn"], counted_daily_limit(5, false));
     assert_eq!(
         patched.content["dailyLimits"]["untouched"],
         counted_daily_limit(10, true)
     );
-    assert_eq!(patched.content["dailyLimits"]["review"], counted_daily_limit(20, true));
+    assert_eq!(
+        patched.content["dailyLimits"]["review"],
+        counted_daily_limit(200, false)
+    );
 }
 
 #[test]
