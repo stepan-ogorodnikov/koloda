@@ -129,7 +129,7 @@ function Controls() {
   useAppHotkey(
     submit,
     () => {
-      if (form.state.canSubmit) form.handleSubmit();
+      if (form.state.isDirty && form.state.canSubmit) form.handleSubmit();
     },
     "form",
   );

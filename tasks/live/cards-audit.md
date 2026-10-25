@@ -500,7 +500,7 @@ Line numbers are at `b662537e`; when an earlier item moved them, find the code b
   Commit: Keep the stack view on a card after a delete
   Depends on: none
 
-- [ ] 6. Save a form by hotkey only when it has changes
+- [x] 6. Save a form by hotkey only when it has changes
   Goal (C4):
   - `Controls` submit hotkey (`libs/ui/src/lib/primitives/form/form.tsx:129-135`): submit only when the form is dirty
     and can submit.
@@ -514,6 +514,8 @@ Line numbers are at `b662537e`; when an earlier item moved them, find the code b
   - The submit hotkey and HOTKEYS.md line 66 only.
   - Discard (`:136-142`) already checks `isDirty`.
   - Scope ownership (`:124-127`) is `hotkeys.md` finding 1; leave it.
+  - Implemented: the `libs/ui` test setup's `@koloda/core-react` mock had a stale `forms` key with no bindings.
+    `Controls` reads `form`, so it could not render there; the mock now has `form` with `Mod+S` and `Mod+D`.
   Done when:
   - `UI form-controls` passes;
   - the unchanged case fails without the check;

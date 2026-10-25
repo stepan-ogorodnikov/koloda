@@ -63,7 +63,7 @@ The **form** runtime scope gates these hotkeys.
 
 | Action | Default | Effect |
 | --- | --- | --- |
-| Save | `Mod+S` | Submits the open form. Does nothing while the form cannot be submitted. |
+| Save | `Mod+S` | Submits the open form. Does nothing while the form is unchanged or cannot be submitted. |
 | Discard | `Mod+D` | Restores the form's last saved values. Does nothing while the form is unchanged. |
 
 ### Interface

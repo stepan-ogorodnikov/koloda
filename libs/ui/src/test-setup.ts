@@ -51,9 +51,9 @@ vi.mock("@koloda/core-react", async () => {
         focusPrev: ["k"],
         toggleSidebarControls: [],
       },
-      forms: {
-        submit: [],
-        reset: [],
+      form: {
+        submit: ["Mod+S"],
+        reset: ["Mod+D"],
       },
     }),
     useHotkeysStatus: () => ({
