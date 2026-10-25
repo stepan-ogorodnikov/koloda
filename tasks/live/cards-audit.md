@@ -456,7 +456,7 @@ Line numbers are at `b662537e`; when an earlier item moved them, find the code b
   Commit: Refresh today's totals and deck titles after card and deck changes
   Depends on: none
 
-- [ ] 4. Keep the add-card refresh when the dialog closes mid-add
+- [x] 4. Keep the add-card refresh when the dialog closes mid-add
   Goal (C22):
   - `AddCard` `onSubmit` (`add-card.tsx:47-56`): `await mutateAsync(value)` in a `try`/`catch`.
     On success, run the invalidations (with item 2's templates key), `formApi.reset()`, and the focus.

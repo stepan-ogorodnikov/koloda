@@ -25,7 +25,7 @@ export function AddCard({ deckId, templateId }: AddCardProps) {
   const { getTemplateQuery, addCardMutation } = useAtomValue(queriesAtom);
   const query = useQuery(getTemplateQuery(templateId));
   const template = query.data;
-  const { mutate, error, reset } = useMutation(addCardMutation());
+  const { mutateAsync, error, reset } = useMutation(addCardMutation());
   const content = useMemo(
     () => (template ? template.content.fields.reduce((acc, x) => ({ ...acc, [`${x.id}`]: { text: "" } }), {}) : {}),
     [template],
@@ -45,15 +45,20 @@ export function AddCard({ deckId, templateId }: AddCardProps) {
     defaultValues: { content, deckId, templateId } as InsertCardData,
     validators: { onSubmit: template ? getInsertCardSchema(template) : schema },
     onSubmit: async ({ formApi, value }) => {
-      mutate(value, {
-        onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: queryKeys.cards.deck({ deckId }) });
-          queryClient.invalidateQueries({ queryKey: queryKeys.lessons.all() });
-          queryClient.invalidateQueries({ queryKey: queryKeys.templates.all() });
-          formApi.reset();
-          firstFieldRef.current?.focus();
-        },
-      });
+      // WHY: await the add, not per-call `mutate` callbacks. Closing the dialog calls `reset()`,
+      // which detaches the mutation observer, and TanStack then drops those callbacks.
+      // Awaiting also keeps the form submitting, so Add cannot start a second add meanwhile.
+      try {
+        await mutateAsync(value);
+      } catch {
+        // WHY: the dialog renders the failure from the mutation's `error`.
+        return;
+      }
+      queryClient.invalidateQueries({ queryKey: queryKeys.cards.deck({ deckId }) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.lessons.all() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.templates.all() });
+      formApi.reset();
+      firstFieldRef.current?.focus();
     },
   });
 
