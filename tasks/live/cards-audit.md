@@ -1,6 +1,6 @@
 # Cards audit fixes
 
-Status: draft
+Status: ready
 Guides: agents/IMPLEMENTATION-PLAN.md, agents/TASKS.md, docs/specs/CARDS.md, docs/specs/TEMPLATES.md, docs/specs/DECKS.md, docs/specs/HOTKEYS.md, agents/CODE-STYLE.md, agents/CODE-DOCUMENTATION.md, agents/TESTING.md, agents/VERIFY.md, agents/CSS.md, agents/I18N.md, agents/RUST.md, docs/decisions/TS-RUST-DOMAIN-MIRRORING.md, agents/BACKWARDS-COMPATIBILITY.md, agents/FUNCTIONAL-SPECIFICATIONS.md, agents/MARKDOWN.md, apps/web-e2e/README.md, apps/electron-e2e/README.md, libs/e2e/README.md, agents/REVIEW.md
 Flow: local
 
@@ -365,7 +365,7 @@ C22 was handed over by the assistant task and re-checked at triage.
 - [x] 4. C12: unknown content keys? — dropped on both hosts on add, batch add, and update; no new error code (human,
   2026-10-25).
 - [x] 5. Flow? — `local`, the default.
-- [ ] 6. Plan approval — open.
+- [x] 6. Plan approved as written (human, 2026-10-25).
 
 ## Plan
 
