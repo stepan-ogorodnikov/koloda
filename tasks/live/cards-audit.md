@@ -686,7 +686,7 @@ Line numbers are at `b662537e`; when an earlier item moved them, find the code b
   Commit: Offer preview from the card details view
   Depends on: 12
 
-- [ ] 14. Show a failed progress reset
+- [x] 14. Show a failed progress reset
   Goal (C13):
   - Render `resetProgressMutation.error` beside the reset action (`card-details.tsx:50-61`, `:141-146`).
     Use `ErrorMessage` with `formatAppError(error, _, ERROR_MESSAGES["db.update"])`, as `DeleteCard` does

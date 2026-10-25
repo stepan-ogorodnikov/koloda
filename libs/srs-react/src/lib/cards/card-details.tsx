@@ -1,11 +1,12 @@
 import type { ZodIssue } from "@koloda/app";
-import { toFormErrors } from "@koloda/app";
+import { ERROR_MESSAGES, formatAppError, toFormErrors } from "@koloda/app";
 import { queriesAtom, queryKeys, useTimestampFormatter } from "@koloda/core-react";
 import type { Card, UpdateCardValues } from "@koloda/srs";
 import { getUpdateCardSchema, updateCardSchema as schema } from "@koloda/srs";
 import {
   Button,
   Dialog,
+  ErrorMessage,
   FormLayout,
   Label,
   PreviewIcon,
@@ -170,6 +171,12 @@ export function CardDetails({ card }: CardDetailsProps) {
                   </Button>
                 )}
                 <DeleteCard id={card.id} deckId={card.deckId} />
+                {resetProgressMutation.error && (
+                  <ErrorMessage
+                    layout="inline"
+                    {...formatAppError(resetProgressMutation.error, _, ERROR_MESSAGES["db.update"])}
+                  />
+                )}
               </div>
             </FormLayout.Section.Content>
           </FormLayout.Section>
