@@ -8,12 +8,12 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
 import { AnimatePresence } from "motion/react";
 
-type DeleteDeckProps = {
+type DeleteCardProps = {
   id: Card["id"];
   deckId: Deck["id"];
 };
 
-export function DeleteCard({ id, deckId }: DeleteDeckProps) {
+export function DeleteCard({ id, deckId }: DeleteCardProps) {
   const queryClient = useQueryClient();
   const { _ } = useLingui();
   const { deleteCardMutation } = useAtomValue(queriesAtom);

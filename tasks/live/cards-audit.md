@@ -747,7 +747,7 @@ Line numbers are at `b662537e`; when an earlier item moved them, find the code b
   Commit: Give the column utility test distinct field ids per template
   Depends on: none
 
-- [ ] 18. Clean up card view residue
+- [x] 18. Clean up card view residue
   Goal (C20):
   - `cards-stack.tsx:13`: rename `CardsTableProps` to `CardsStackProps`.
   - `delete-card.tsx:11`: rename `DeleteDeckProps` to `DeleteCardProps`.
@@ -758,6 +758,8 @@ Line numbers are at `b662537e`; when an earlier item moved them, find the code b
   - `libs/srs-react/locales/en/messages.po:430`: "Delete this card with all its reviews?".
     Extract and compile both apps per `agents/I18N.md`; the Russian text is unchanged.
   Constraints: no behavior change except the English prompt.
+    Implemented: the extract also rewrote source-line comments in six other catalogs; those were left out.
+    Only the `srs-react` catalogs and the two compiled app catalogs changed.
   Done when: `SR` and `bun run typecheck` pass.
   Manual verify (web):
   - A deck → Cards → Delete card on a row → the prompt reads "Delete this card with all its reviews?".

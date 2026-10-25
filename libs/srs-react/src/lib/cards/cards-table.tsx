@@ -90,7 +90,7 @@ export function CardsTable({ deckId, controlsNode }: CardsTableProps) {
           header: _(msg`cards.table.columns.due-at`),
           enableGlobalFilter: false,
           filterFn: (row, columnId, filterValue: { isOverdue: boolean; isNotDue: boolean }) => {
-            const value = row.getValue(columnId) as string | null;
+            const value = row.getValue<Card["dueAt"]>(columnId);
             const isDue = value ? new Date(value).getTime() <= new Date().getTime() : false;
             const isNotDue = !value || new Date(value) > new Date();
             if (filterValue.isOverdue && filterValue.isNotDue) return true;

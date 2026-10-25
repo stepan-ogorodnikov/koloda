@@ -86,8 +86,8 @@ export function CardDetails({ card }: CardDetailsProps) {
         >
           <FormLayout.Section>
             <form.Timestamps>
-              <form.CreatedAt timestamp={card?.createdAt} />
-              <form.UpdatedAt timestamp={card?.updatedAt} />
+              <form.CreatedAt timestamp={card.createdAt} />
+              <form.UpdatedAt timestamp={card.updatedAt} />
             </form.Timestamps>
           </FormLayout.Section>
           {data.content.fields.map(({ id, title, type }) => (

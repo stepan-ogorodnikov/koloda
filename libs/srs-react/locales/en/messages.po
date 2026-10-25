@@ -23,7 +23,7 @@ msgstr "This preset is used by {0, plural, one {# deck} other {# decks}}."
 msgid "{0, plural, other {optimize-algorithm.review-count.#}}"
 msgstr "Based on {0, plural, one {# review} other {# reviews}}."
 
-#: ../../libs/srs-react/src/lib/cards/cards-table-selection-controls.tsx:56
+#: ../../libs/srs-react/src/lib/cards/cards-table-selection-controls.tsx:58
 msgid "{selectedCount, plural, other {cards-table.selection.label}}"
 msgstr "selected"
 
@@ -49,16 +49,16 @@ msgstr "New preset"
 msgid "add-algorithm.trigger"
 msgstr "New preset"
 
-#: ../../libs/srs-react/src/lib/cards/add-card.tsx:133
+#: ../../libs/srs-react/src/lib/cards/add-card.tsx:139
 msgid "add-card.submit"
 msgstr "Create card"
 
-#: ../../libs/srs-react/src/lib/cards/add-card.tsx:88
+#: ../../libs/srs-react/src/lib/cards/add-card.tsx:94
 msgid "add-cards.title"
 msgstr "Add card"
 
-#: ../../libs/srs-react/src/lib/cards/add-card.tsx:79
-#: ../../libs/srs-react/src/lib/cards/add-card.tsx:80
+#: ../../libs/srs-react/src/lib/cards/add-card.tsx:85
+#: ../../libs/srs-react/src/lib/cards/add-card.tsx:86
 msgid "add-cards.trigger"
 msgstr "Add cards"
 
@@ -186,7 +186,7 @@ msgstr "Delete relearning step number {0}"
 msgid "algorithm.relearning-steps.unit.{0}"
 msgstr "Time period for relearning step number {0}"
 
-#: ../../libs/srs-react/src/lib/cards/card-details.tsx:144
+#: ../../libs/srs-react/src/lib/cards/card-details.tsx:170
 msgid "card.action.reset-progress"
 msgstr "Reset progress"
 
@@ -198,65 +198,65 @@ msgstr "Embed image"
 msgid "card.content.insert-image"
 msgstr "Insert image"
 
-#: ../../libs/srs-react/src/lib/cards/card-details.tsx:138
+#: ../../libs/srs-react/src/lib/cards/card-details.tsx:152
 msgid "card.labels.actions"
 msgstr "Actions"
 
-#: ../../libs/srs-react/src/lib/cards/card-details.tsx:118
+#: ../../libs/srs-react/src/lib/cards/card-details.tsx:132
 msgid "card.labels.difficulty"
 msgstr "Difficulty"
 
-#: ../../libs/srs-react/src/lib/cards/card-details.tsx:104
+#: ../../libs/srs-react/src/lib/cards/card-details.tsx:118
 #: ../../libs/srs-react/src/lib/cards/cards-table-filters.tsx:80
 msgid "card.labels.due-at"
 msgstr "Due"
 
-#: ../../libs/srs-react/src/lib/cards/card-details.tsx:125
+#: ../../libs/srs-react/src/lib/cards/card-details.tsx:139
 msgid "card.labels.lapses"
 msgstr "Lapses"
 
-#: ../../libs/srs-react/src/lib/cards/card-details.tsx:132
+#: ../../libs/srs-react/src/lib/cards/card-details.tsx:146
 msgid "card.labels.reviews"
 msgstr "Reviews"
 
-#: ../../libs/srs-react/src/lib/cards/card-details.tsx:111
+#: ../../libs/srs-react/src/lib/cards/card-details.tsx:125
 msgid "card.labels.stability"
 msgstr "Stability"
 
-#: ../../libs/srs-react/src/lib/cards/card-details.tsx:98
+#: ../../libs/srs-react/src/lib/cards/card-details.tsx:112
 #: ../../libs/srs-react/src/lib/cards/cards-table-filters.tsx:62
 msgid "card.labels.state"
 msgstr "Status"
 
-#: ../../libs/srs-react/src/lib/cards/card-state.tsx:6
+#: ../../libs/srs-react/src/lib/cards/card-state.tsx:7
 msgid "card.state.learn"
 msgstr "Learning"
 
-#: ../../libs/srs-react/src/lib/cards/card-state.tsx:8
+#: ../../libs/srs-react/src/lib/cards/card-state.tsx:9
 msgid "card.state.relearn"
 msgstr "Relearning"
 
-#: ../../libs/srs-react/src/lib/cards/card-state.tsx:7
+#: ../../libs/srs-react/src/lib/cards/card-state.tsx:8
 msgid "card.state.review"
 msgstr "Review"
 
-#: ../../libs/srs-react/src/lib/cards/card-state.tsx:5
+#: ../../libs/srs-react/src/lib/cards/card-state.tsx:6
 msgid "card.state.untouched"
 msgstr "New"
 
-#: ../../libs/srs-react/src/lib/cards/cards-stack.tsx:41
+#: ../../libs/srs-react/src/lib/cards/cards-stack.tsx:43
 msgid "cards-stack.navigation.next"
 msgstr "Go to next card"
 
-#: ../../libs/srs-react/src/lib/cards/cards-stack.tsx:33
+#: ../../libs/srs-react/src/lib/cards/cards-stack.tsx:35
 msgid "cards-stack.navigation.prev"
 msgstr "Go to previous card"
 
-#: ../../libs/srs-react/src/lib/cards/cards-table-columns-visibility.tsx:65
+#: ../../libs/srs-react/src/lib/cards/cards-table-columns-visibility.tsx:64
 msgid "cards-table.columns-menu.title"
 msgstr "Table Columns"
 
-#: ../../libs/srs-react/src/lib/cards/cards-table-columns-visibility.tsx:60
+#: ../../libs/srs-react/src/lib/cards/cards-table-columns-visibility.tsx:59
 msgid "cards-table.columns-menu.trigger"
 msgstr "Columns"
 
@@ -280,47 +280,47 @@ msgstr "Template"
 msgid "cards-table.filters.trigger"
 msgstr "Filters"
 
-#: ../../libs/srs-react/src/lib/cards/cards-table.tsx:195
+#: ../../libs/srs-react/src/lib/cards/cards-table.tsx:216
 msgid "cards-table.search.label"
 msgstr "Search cards"
 
-#: ../../libs/srs-react/src/lib/cards/cards-table.tsx:205
+#: ../../libs/srs-react/src/lib/cards/cards-table.tsx:223
 msgid "cards-table.search.placeholder"
 msgstr "Search"
 
-#: ../../libs/srs-react/src/lib/cards/cards-table-selection-controls.tsx:90
+#: ../../libs/srs-react/src/lib/cards/cards-table-selection-controls.tsx:92
 msgid "cards-table.selection.clear"
 msgstr "Clear"
 
-#: ../../libs/srs-react/src/lib/cards/cards-table-selection-controls.tsx:81
+#: ../../libs/srs-react/src/lib/cards/cards-table-selection-controls.tsx:83
 msgid "cards-table.selection.delete.cancel"
 msgstr "Cancel"
 
-#: ../../libs/srs-react/src/lib/cards/cards-table-selection-controls.tsx:78
+#: ../../libs/srs-react/src/lib/cards/cards-table-selection-controls.tsx:80
 msgid "cards-table.selection.delete.confirm"
 msgstr "Delete"
 
-#: ../../libs/srs-react/src/lib/cards/cards-table-selection-controls.tsx:62
+#: ../../libs/srs-react/src/lib/cards/cards-table-selection-controls.tsx:64
 msgid "cards-table.selection.delete.trigger"
 msgstr "Delete"
 
-#: ../../libs/srs-react/src/lib/cards/cards-table.tsx:104
+#: ../../libs/srs-react/src/lib/cards/cards-table.tsx:114
 msgid "cards.table.columns.created-at"
 msgstr "Created"
 
-#: ../../libs/srs-react/src/lib/cards/cards-table.tsx:89
+#: ../../libs/srs-react/src/lib/cards/cards-table.tsx:90
 msgid "cards.table.columns.due-at"
 msgstr "Due"
 
-#: ../../libs/srs-react/src/lib/cards/cards-table.tsx:81
+#: ../../libs/srs-react/src/lib/cards/cards-table.tsx:82
 msgid "cards.table.columns.state"
 msgstr "Status"
 
-#: ../../libs/srs-react/src/lib/cards/cards-table.tsx:110
+#: ../../libs/srs-react/src/lib/cards/cards-table.tsx:120
 msgid "cards.table.columns.updated-at"
 msgstr "Updated"
 
-#: ../../libs/srs-react/src/lib/cards/cards-table-selection-controls.tsx:73
+#: ../../libs/srs-react/src/lib/cards/cards-table-selection-controls.tsx:75
 msgid "cards.table.selection.delete-confirm"
 msgstr "Are you sure you want to delete selected cards?"
 
@@ -374,15 +374,15 @@ msgstr "Done"
 msgid "clone-template.trigger"
 msgstr "Clone template"
 
-#: ../../libs/srs-react/src/lib/decks/deck-details.tsx:96
+#: ../../libs/srs-react/src/lib/decks/deck-details.tsx:98
 msgid "deck.actions.label"
 msgstr "Actions"
 
-#: ../../libs/srs-react/src/lib/decks/deck-details.tsx:81
+#: ../../libs/srs-react/src/lib/decks/deck-details.tsx:83
 msgid "deck.inputs.notes.label"
 msgstr "Notes"
 
-#: ../../libs/srs-react/src/lib/decks/deck-details.tsx:73
+#: ../../libs/srs-react/src/lib/decks/deck-details.tsx:75
 msgid "deck.inputs.title.label"
 msgstr "Title"
 
@@ -414,39 +414,39 @@ msgstr "Successor preset"
 msgid "delete-algorithm.trigger"
 msgstr "Delete preset"
 
-#: ../../libs/srs-react/src/lib/cards/cards-table-cell-delete-card.tsx:69
-#: ../../libs/srs-react/src/lib/cards/delete-card.tsx:52
+#: ../../libs/srs-react/src/lib/cards/cards-table-cell-delete-card.tsx:71
+#: ../../libs/srs-react/src/lib/cards/delete-card.tsx:54
 msgid "delete-card.cancel"
 msgstr "Cancel"
 
-#: ../../libs/srs-react/src/lib/cards/cards-table-cell-delete-card.tsx:66
-#: ../../libs/srs-react/src/lib/cards/delete-card.tsx:54
+#: ../../libs/srs-react/src/lib/cards/cards-table-cell-delete-card.tsx:68
+#: ../../libs/srs-react/src/lib/cards/delete-card.tsx:56
 msgid "delete-card.confirm"
 msgstr "Delete"
 
-#: ../../libs/srs-react/src/lib/cards/cards-table-cell-delete-card.tsx:62
-#: ../../libs/srs-react/src/lib/cards/delete-card.tsx:48
+#: ../../libs/srs-react/src/lib/cards/cards-table-cell-delete-card.tsx:64
+#: ../../libs/srs-react/src/lib/cards/delete-card.tsx:50
 msgid "delete-card.message"
-msgstr "Delete this card with all it's reviews?"
+msgstr "Delete this card with all its reviews?"
 
-#: ../../libs/srs-react/src/lib/cards/cards-table-cell-delete-card.tsx:46
-#: ../../libs/srs-react/src/lib/cards/delete-card.tsx:40
+#: ../../libs/srs-react/src/lib/cards/cards-table-cell-delete-card.tsx:48
+#: ../../libs/srs-react/src/lib/cards/delete-card.tsx:42
 msgid "delete-card.trigger"
 msgstr "Delete card"
 
-#: ../../libs/srs-react/src/lib/decks/delete-deck.tsx:56
+#: ../../libs/srs-react/src/lib/decks/delete-deck.tsx:59
 msgid "delete-deck.cancel"
 msgstr "Cancel"
 
-#: ../../libs/srs-react/src/lib/decks/delete-deck.tsx:58
+#: ../../libs/srs-react/src/lib/decks/delete-deck.tsx:61
 msgid "delete-deck.confirm"
 msgstr "Delete deck"
 
-#: ../../libs/srs-react/src/lib/decks/delete-deck.tsx:52
+#: ../../libs/srs-react/src/lib/decks/delete-deck.tsx:55
 msgid "delete-deck.message"
 msgstr "Are you sure you want to delete this deck and all its cards and reviews?"
 
-#: ../../libs/srs-react/src/lib/decks/delete-deck.tsx:44
+#: ../../libs/srs-react/src/lib/decks/delete-deck.tsx:47
 msgid "delete-deck.trigger"
 msgstr "Delete deck"
 
@@ -494,7 +494,7 @@ msgstr "Close"
 msgid "lesson.completion.message"
 msgstr "Done"
 
-#: ../../libs/srs-react/src/lib/cards/card-preview.tsx:64
+#: ../../libs/srs-react/src/lib/cards/card-preview.tsx:83
 #: ../../libs/srs-react/src/lib/lessons/lesson-footer.tsx:67
 msgid "lesson.content.submit"
 msgstr "Continue"
@@ -626,6 +626,7 @@ msgstr "Optimize weights"
 msgid "optimize-algorithm.trigger"
 msgstr "Optimize"
 
+#: ../../libs/srs-react/src/lib/cards/card-details.tsx:158
 #: ../../libs/srs-react/src/lib/cards/cards-table-cell-preview-card.tsx:18
 msgid "preview-card.trigger"
 msgstr "Preview Card"

@@ -7,22 +7,23 @@ import { Button, Checkbox, ColumnsIcon, Dialog, Draggable } from "@koloda/ui";
 import type { CardsTableFeatures } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
-import type { Column, RowData } from "@tanstack/react-table";
+import type { Card } from "@koloda/srs";
+import type { Column } from "@tanstack/react-table";
 import { useState } from "react";
 
 const verticalAxisModifiers: Modifiers = [RestrictToVerticalAxis];
 
-type CardsTableColumnsVisibilityProps<TData extends RowData> = {
-  columns: Column<CardsTableFeatures, TData>[];
+type CardsTableColumnsVisibilityProps = {
+  columns: Column<CardsTableFeatures, Card>[];
   onColumnVisibilityChange: (columnId: string, isVisible: boolean) => void;
-  onColumnOrderChange?: (newOrder: string[]) => void;
+  onColumnOrderChange: (newOrder: string[]) => void;
 };
 
-export function CardsTableColumnsVisibility<TData extends RowData>({
+export function CardsTableColumnsVisibility({
   columns,
   onColumnVisibilityChange,
   onColumnOrderChange,
-}: CardsTableColumnsVisibilityProps<TData>) {
+}: CardsTableColumnsVisibilityProps) {
   const { _ } = useLingui();
   const [items, setItems] = useState<string[]>(columns.map(({ id }) => id));
 
@@ -46,9 +47,7 @@ export function CardsTableColumnsVisibility<TData extends RowData>({
         newOrder.splice(newIndex, 0, movedItem);
 
         setItems(newOrder);
-        if (onColumnOrderChange) {
-          onColumnOrderChange(newOrder);
-        }
+        onColumnOrderChange(newOrder);
       }
     }
   };

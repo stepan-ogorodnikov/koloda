@@ -10,12 +10,12 @@ import { useState } from "react";
 import { createPortal } from "react-dom";
 import { CardDetails } from "./card-details";
 
-type CardsTableProps = {
+type CardsStackProps = {
   deckId: Deck["id"];
   controlsNode: HTMLDivElement | null;
 };
 
-export function CardsStack({ deckId, controlsNode }: CardsTableProps) {
+export function CardsStack({ deckId, controlsNode }: CardsStackProps) {
   const { _ } = useLingui();
   const { getCardsQuery } = useAtomValue(queriesAtom);
   const { data: cards = [] } = useQuery(getCardsQuery({ deckId }));
