@@ -73,3 +73,41 @@ test("bulk deletes multiple selected cards", async ({ page }) => {
   // Verify all cards are removed
   await expect(deleteButtons).toHaveCount(0);
 });
+
+test("deletes the last card in the stack view and shows the one before it", async ({ page }) => {
+  const deckTitle = "E2E Stack Delete Deck";
+
+  await setupWeb(page);
+  await createDeck(page, deckTitle);
+  await page.getByRole("tab", { name: "Cards" }).click();
+  await addCard(page, "Card One", "ans1");
+  await addCard(page, "Card Two", "ans2");
+  await addCard(page, "Card Three", "ans3");
+
+  // WHY: the stack keeps the leaving card mounted until its exit ends, so wait for one form.
+  const frontField = page.getByRole("textbox", { name: "Front" });
+  const expectStackCard = async (front: string) => {
+    await expect(frontField).toHaveCount(1);
+    await expect(frontField).toHaveValue(front);
+  };
+
+  await page.getByLabel("Stack", { exact: true }).click();
+  await expectStackCard("Card One");
+  const nextCard = page.getByRole("button", { name: "Go to next card" });
+  await nextCard.click();
+  await expectStackCard("Card Two");
+  await nextCard.click();
+  await expectStackCard("Card Three");
+
+  // Delete the last card from its details
+  await page.getByRole("button", { name: "Delete card" }).click();
+  const deleteDialog = page.getByRole("dialog");
+  await expect(deleteDialog).toBeVisible();
+  await deleteDialog.getByRole("button", { name: "Delete", exact: true }).click();
+  await expect(deleteDialog).not.toBeVisible();
+
+  // The stack moves to the new last card
+  await expectStackCard("Card Two");
+  await expect(nextCard).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Go to previous card" })).toBeEnabled();
+});

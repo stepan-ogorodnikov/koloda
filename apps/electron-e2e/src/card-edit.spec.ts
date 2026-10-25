@@ -1,11 +1,19 @@
 import { expect } from "@playwright/test";
+import type { Page } from "@playwright/test";
 import { test } from "./fixtures";
-import { createDeckWithCard, openSection } from "@koloda/e2e";
+import { createDeckWithCard, openSection, setLearnAheadLimit, startDeckLesson } from "@koloda/e2e";
 import { setupApp, setupPageDefaults } from "./helpers";
 
 test.beforeEach(async ({ page }) => {
   await setupPageDefaults(page);
 });
+
+// Today's progress on the Dashboard: the Total row's count of reviews made today.
+async function expectStudiedToday(page: Page, count: number) {
+  await openSection(page, "Dashboard");
+  const totalRow = page.getByText("Total").first().locator("..");
+  await expect(totalRow.getByText(`${count}`, { exact: true })).toBeVisible();
+}
 
 test("edits card content fields and verifies changes persist", async ({ page }) => {
   const deckTitle = "E2E Edit Card Deck";
@@ -82,4 +90,59 @@ test("opens card preview and verifies content in lesson-like format", async ({ p
   // Close the preview
   await page.keyboard.press("Escape");
   await expect(previewDialog).not.toBeVisible();
+});
+
+test("resets card progress and verifies card returns to New state", async ({ page }) => {
+  const deckTitle = "E2E Reset Card Deck";
+  const cardFront = "Reset Card Content";
+  const cardBack = "Answer";
+
+  await setupApp(page);
+  await setLearnAheadLimit(page, 0, 0);
+  await createDeckWithCard(page, deckTitle, cardFront, cardBack);
+
+  // Grade the card to move it out of "New" state
+  const lessonDialog = await startDeckLesson(page, deckTitle, 1);
+
+  const backTextbox = page.getByRole("textbox", { name: "Back" });
+  const doneMessage = lessonDialog.getByText("Done");
+
+  await expect(backTextbox).toBeVisible({ timeout: 10_000 });
+  await backTextbox.fill(cardBack);
+  await page.getByRole("button", { name: "Continue" }).click();
+  await page.getByRole("button", { name: "Good" }).click();
+  await expect(doneMessage).toBeVisible();
+  await page.getByRole("button", { name: "Close" }).click();
+  await expect(lessonDialog).not.toBeVisible();
+  await expectStudiedToday(page, 1);
+
+  // Navigate to the deck and open the card edit dialog
+  await openSection(page, "Decks");
+  await page.getByRole("link", { name: deckTitle, exact: true }).click();
+  await page.getByRole("tab", { name: "Cards" }).click();
+
+  // The card should no longer be "New"
+  const newBadges = page.getByRole("row").locator("text=New");
+  await expect(newBadges).toHaveCount(0);
+
+  // Open card edit and reset progress
+  await page.getByRole("button", { name: "Edit card" }).click();
+
+  const editDialog = page.getByRole("dialog");
+  await expect(editDialog).toBeVisible();
+
+  const resetButton = editDialog.getByRole("button", { name: "Reset progress" });
+  await expect(resetButton).toBeVisible();
+  await resetButton.click();
+  await expect(resetButton).not.toBeVisible();
+
+  // Close dialog and verify card is "New" again
+  await page.keyboard.press("Escape");
+  await expect(editDialog).not.toBeVisible();
+
+  // The card should now show "New" state
+  await expect(page.getByRole("row").locator("text=New")).toHaveCount(1);
+
+  // Resetting removes the card's review, so today's progress no longer counts it
+  await expectStudiedToday(page, 0);
 });

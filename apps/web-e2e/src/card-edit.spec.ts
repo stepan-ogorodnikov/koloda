@@ -1,10 +1,18 @@
 import { expect, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
 import { createDeckWithCard, openSection, setLearnAheadLimit, startDeckLesson } from "@koloda/e2e";
 import { setupWeb, setupPageDefaults } from "./helpers";
 
 test.beforeEach(async ({ page }) => {
   await setupPageDefaults(page);
 });
+
+// Today's progress on the Dashboard: the Total row's count of reviews made today.
+async function expectStudiedToday(page: Page, count: number) {
+  await openSection(page, "Dashboard");
+  const totalRow = page.getByText("Total").first().locator("..");
+  await expect(totalRow.getByText(`${count}`, { exact: true })).toBeVisible();
+}
 
 test("edits card content fields and verifies changes persist", async ({ page }) => {
   const deckTitle = "E2E Edit Card Deck";
@@ -105,6 +113,7 @@ test("resets card progress and verifies card returns to New state", async ({ pag
   await expect(doneMessage).toBeVisible();
   await page.getByRole("button", { name: "Close" }).click();
   await expect(lessonDialog).not.toBeVisible();
+  await expectStudiedToday(page, 1);
 
   // Navigate to the deck and open the card edit dialog
   await openSection(page, "Decks");
@@ -132,4 +141,7 @@ test("resets card progress and verifies card returns to New state", async ({ pag
 
   // The card should now show "New" state
   await expect(page.getByRole("row").locator("text=New")).toHaveCount(1);
+
+  // Resetting removes the card's review, so today's progress no longer counts it
+  await expectStudiedToday(page, 0);
 });

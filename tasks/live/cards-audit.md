@@ -786,7 +786,7 @@ Line numbers are at `b662537e`; when an earlier item moved them, find the code b
   Commit: Match CARDS.md to the card views and keep one home per rule
   Depends on: 7, 11, 13
 
-- [ ] 20. Cover card reset, table paging, and stack delete in both e2e suites
+- [x] 20. Cover card reset, table paging, and stack delete in both e2e suites
   Goal (C17, and the reset half of C9):
   - Port the web reset flow (`apps/web-e2e/src/card-edit.spec.ts:86`) to `apps/electron-e2e/src/card-edit.spec.ts`.
     In both copies, check today's progress on the Dashboard before and after the reset.
@@ -799,6 +799,9 @@ Line numbers are at `b662537e`; when an earlier item moved them, find the code b
   Constraints:
   - Do not run either suite (`agents/VERIFY.md`).
   - Typecheck only: `nx run web-e2e:typecheck` and `nx run electron-e2e:typecheck`.
+  - Implemented: the stack flow checks the shown card and the disabled "Go to next card", not the counter digits.
+    NumberFlow draws them in its shadow root and names itself through `ElementInternals`.
+    Item 5's unit case pins the counter.
   Done when: both typechecks pass.
   Manual verify: the human runs `card-edit`, `cards-table`, `card-delete`, and `template-lock` on both hosts.
   Commit: Cover card reset, table paging, and stack delete in both e2e suites

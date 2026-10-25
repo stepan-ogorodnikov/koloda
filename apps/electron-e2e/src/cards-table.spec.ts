@@ -189,3 +189,27 @@ test("toggles column visibility in the cards table", async ({ page }) => {
   await page.keyboard.press("Escape");
   await expect(page.getByRole("columnheader", { name: "Created", exact: true })).not.toBeVisible();
 });
+
+test("returns to the first page when a search from a later page narrows the cards", async ({ page }) => {
+  test.setTimeout(120_000);
+  const deckTitle = "E2E Paging Search Deck";
+
+  await setupApp(page);
+  // One more card than a page holds, so the last one is on page 2.
+  await createDeckWithCards(
+    page,
+    deckTitle,
+    Array.from({ length: 16 }, (_, i) => ({ front: `Card ${i + 1}`, back: "a" })),
+  );
+
+  const rows = cardRows(page);
+  await page.getByRole("button", { name: "Go to next page" }).click();
+  await expect(rows).toHaveCount(1);
+  await expect(rows.filter({ hasText: "Card 16" })).toBeVisible();
+
+  // Only card 3 matches; it is on page 1
+  await page.getByRole("searchbox", { name: "Search cards" }).fill("Card 3");
+
+  await expect(rows).toHaveCount(1);
+  await expect(rows.filter({ hasText: "Card 3" })).toBeVisible();
+});
