@@ -564,7 +564,7 @@ Line numbers are at `aeb9282b`; when an earlier item moved them, find the code b
   Commit: Treat a cleared lesson amount as zero
   Depends on: none
 
-- [ ] 11. Add the web lesson twins and make the rollback tests reach the transaction
+- [x] 11. Add the web lesson twins and make the rollback tests reach the transaction
   Goal (L12, the twin half of L15, L19):
   - In `libs/db-sqlite/src/lib/lessons.integration.test.ts`, add twins of:
     - `get_lesson_cards_applies_limits_due_at_and_deck_filters` (`lessons_integration_tests.rs:262`): draw order,

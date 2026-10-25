@@ -133,8 +133,17 @@ fn submit_lesson_result_rolls_back_when_review_insert_fails() {
     let template_id = add_template(&db, "Basic");
     let deck_id = add_deck(&db, &algorithm_id, &template_id, "Deck");
     let card_id = add_card(&db, &deck_id, &template_id, "question");
+    // WHY: a valid result cannot fail the insert on its own, and a mismatched card id fails
+    // validation before the transaction. The trigger fails the insert after the card update ran.
+    db.with_conn(|conn| {
+        conn.execute_batch(
+            "CREATE TRIGGER fail_review_insert BEFORE INSERT ON reviews BEGIN SELECT RAISE(ABORT, 'forced'); END;",
+        )?;
+        Ok(())
+    })
+    .expect("trigger should be created");
 
-    let result = lessons::submit_lesson_result(
+    let err = lessons::submit_lesson_result(
         &db,
         LessonResultData {
             card: UpdateCardProgress {
@@ -150,7 +159,7 @@ fn submit_lesson_result_rolls_back_when_review_insert_fails() {
                 last_reviewed_at: Some(1_800_000_000_000),
             },
             review: InsertReviewData {
-                card_id: "01900000-0000-7000-8000-0000000f423f".to_string(),
+                card_id: card_id.clone(),
                 rating: 3,
                 state: 2,
                 due_at: 1_900_000_000_000,
@@ -162,12 +171,10 @@ fn submit_lesson_result_rolls_back_when_review_insert_fails() {
                 is_ignored: false,
             },
         },
-    );
+    )
+    .expect_err("the forced review insert failure should fail the submit");
 
-    assert!(
-        result.is_err(),
-        "foreign key violation should fail insert and rollback transaction"
-    );
+    assert_eq!(err.code, error_codes::DB_UPDATE);
 
     let card_after = koloda::repo::cards::get_card(&db, &card_id)
         .expect("card query should succeed")

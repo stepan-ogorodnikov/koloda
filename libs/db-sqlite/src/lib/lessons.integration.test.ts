@@ -4,7 +4,7 @@ import { updateDeck } from "./decks";
 import { getLessonCards, getLessons, getLessonData, submitLessonResult } from "./lessons";
 import { getReviews } from "./reviews";
 import type { TestDb } from "../test/test-helpers";
-import { createCardContent, createTestDb, seedDeckContext, seedTemplate } from "../test/test-helpers";
+import { createCardContent, createTestDb, seedDeck, seedDeckContext, seedTemplate } from "../test/test-helpers";
 
 describe("lessons repository integration", () => {
   let testDb: TestDb;
@@ -115,6 +115,76 @@ describe("lessons repository integration", () => {
       review: 1,
       total: 3,
     });
+  });
+
+  // Twin of Rust `get_lesson_cards_applies_limits_due_at_and_deck_filters`.
+  it("draws new cards oldest first, then the soonest due learn and review cards, within the deck filter", async () => {
+    const { db } = testDb;
+    const { deck, template, algorithm } = await seedDeckContext(db);
+    const otherDeck = await seedDeck(db, { algorithmId: algorithm.id, templateId: template.id });
+    vi.useFakeTimers({ toFake: ["Date"] });
+
+    async function addCardAt(createdAt: number, deckId: string, state: number, dueAt?: number) {
+      vi.setSystemTime(createdAt);
+      const card = await addCard(db, {
+        deckId,
+        templateId: template.id,
+        content: createCardContent(template),
+        state,
+        dueAt: dueAt === undefined ? undefined : new Date(dueAt),
+      });
+      return card.id;
+    }
+
+    const untouchedFirst = await addCardAt(10, deck.id, 0);
+    await addCardAt(20, deck.id, 0);
+    const learnEarliestDue = await addCardAt(30, deck.id, 1, 800);
+    await addCardAt(40, deck.id, 1, 900);
+    await addCardAt(50, deck.id, 1, 1_100);
+    const reviewEarliestDue = await addCardAt(60, deck.id, 2, 700);
+    await addCardAt(70, deck.id, 2, 1_200);
+    await addCardAt(80, otherDeck.id, 0);
+    await addCardAt(90, otherDeck.id, 1, 600);
+    await addCardAt(100, otherDeck.id, 2, 500);
+
+    const cards = await getLessonCards(
+      db,
+      new Date(1_000),
+      { deckIds: [deck.id] },
+      { untouched: 1, learn: 1, review: 1, total: 3 },
+    );
+
+    expect(cards.map(({ id }) => id)).toEqual([untouchedFirst, learnEarliestDue, reviewEarliestDue]);
+    expect(cards.every(({ deckId }) => deckId === deck.id)).toBe(true);
+  });
+
+  // Twin of Rust `get_lesson_cards_treats_state_three_as_learn`.
+  it("draws due relearning cards as learn", async () => {
+    const { db } = testDb;
+    const { deck, template } = await seedDeckContext(db);
+    const relearningDue = await addCard(db, {
+      deckId: deck.id,
+      templateId: template.id,
+      content: createCardContent(template),
+      state: 3,
+      dueAt: new Date(900),
+    });
+    await addCard(db, {
+      deckId: deck.id,
+      templateId: template.id,
+      content: createCardContent(template),
+      state: 3,
+      dueAt: new Date(1_100),
+    });
+
+    const cards = await getLessonCards(
+      db,
+      new Date(1_000),
+      { deckIds: [deck.id] },
+      { untouched: 0, learn: 1, review: 0, total: 1 },
+    );
+
+    expect(cards.map(({ id, state }) => ({ id, state }))).toEqual([{ id: relearningDue.id, state: 3 }]);
   });
 
   it("assembles lesson cards, decks, templates, and algorithms together", async () => {
@@ -294,6 +364,54 @@ describe("lessons repository integration", () => {
     expect(storedReviews).toHaveLength(1);
     expect(storedReviews[0]).toMatchObject(review);
     expect(storedReviews[0]?.createdAt).toEqual(new Date("2026-01-10T12:00:00.000Z"));
+  });
+
+  // Twin of Rust `submit_lesson_result_rolls_back_when_review_insert_fails`.
+  it("rolls back the card update when the review insert fails", async () => {
+    const { db } = testDb;
+    const { deck, template } = await seedDeckContext(db);
+    const card = await addCard(db, {
+      deckId: deck.id,
+      templateId: template.id,
+      content: createCardContent(template),
+      state: 0,
+    });
+    // WHY: a valid result cannot fail the insert on its own; the trigger fails it inside the transaction,
+    // after the card update ran.
+    await db.run(`CREATE TRIGGER fail_review_insert BEFORE INSERT ON reviews BEGIN SELECT RAISE(ABORT, 'forced'); END`);
+
+    await expect(
+      submitLessonResult(db, {
+        card: {
+          id: card.id,
+          state: 2,
+          dueAt: new Date("2026-01-12T12:00:00.000Z"),
+          stability: 4.5,
+          difficulty: 2.25,
+          scheduledDays: 2,
+          learningSteps: 0,
+          reps: 1,
+          lapses: 0,
+          lastReviewedAt: new Date("2026-01-10T12:00:00.000Z"),
+        },
+        review: {
+          cardId: card.id,
+          rating: 3,
+          state: 2,
+          dueAt: new Date("2026-01-12T12:00:00.000Z"),
+          stability: 4.5,
+          difficulty: 2.25,
+          scheduledDays: 2,
+          learningSteps: 0,
+          time: 1250,
+          isIgnored: false,
+        },
+      }),
+    ).rejects.toMatchObject({ code: "db.update" });
+
+    const [storedCard] = await getCards(db, { deckId: deck.id });
+    expect(storedCard).toMatchObject({ id: card.id, state: 0, reps: 0, dueAt: null });
+    expect(await getReviews(db, { cardId: card.id })).toHaveLength(0);
   });
 
   it("rejects out-of-bounds progress and persists nothing", async () => {
