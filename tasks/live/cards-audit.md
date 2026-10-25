@@ -719,7 +719,7 @@ Line numbers are at `b662537e`; when an earlier item moved them, find the code b
   Commit: Keep the chosen card view across narrow screens
   Depends on: none
 
-- [ ] 16. Refuse to render markdown without a DOM
+- [x] 16. Refuse to render markdown without a DOM
   Goal (C15):
   - `markdownToHtml` (`libs/srs/src/lib/markdown.ts:37`): throw when `DOMPurify.isSupported` is false.
   - WHY on the throw: DOMPurify returns its input unchanged without a DOM.

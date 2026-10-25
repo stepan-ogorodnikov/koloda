@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 
+import DOMPurify from "dompurify";
 import { describe, expect, it } from "vitest";
 import { markdownToHtml } from "./markdown";
 
@@ -63,5 +64,16 @@ describe("markdownToHtml attachment refs", () => {
     ["uppercase hex", `attachment:${id.toUpperCase()}`],
   ])("shows a malformed ref (%s) as its alt text", (_, href) => {
     expect(markdownToHtml(`![label](${href})`, { shouldKeepAttachmentImages: true })).toBe("<p>label</p>\n");
+  });
+
+  it("refuses to render without a DOM instead of returning unsanitized HTML", () => {
+    const isSupported = DOMPurify.isSupported;
+    // WHY: this lib shares modules across test files, so the instance must be restored.
+    DOMPurify.isSupported = false;
+    try {
+      expect(() => markdownToHtml('<img src="x" onerror="alert(1)">')).toThrow();
+    } finally {
+      DOMPurify.isSupported = isSupported;
+    }
   });
 });

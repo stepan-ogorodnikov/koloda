@@ -34,7 +34,9 @@ export function markdownToHtml(
   const html = cardMarkdown.parse(markdown, { async: false }) as string;
   // WHY: CSS can load a remote image via url(), from a <style> tag or a style attribute.
   const config = { FORBID_TAGS: ["style"], FORBID_ATTR: ["style"] };
-  if (!DOMPurify.isSupported) return DOMPurify.sanitize(html, config);
+  // WHY: without a DOM, DOMPurify returns its input unchanged. Every caller renders in the browser,
+  // so a missing DOM is a wiring bug; returning the HTML would show it unsanitized.
+  if (!DOMPurify.isSupported) throw new Error("markdownToHtml needs a DOM to sanitize");
   const fragment = DOMPurify.sanitize(html, { ...config, RETURN_DOM_FRAGMENT: true });
   // WHY: browsers draw a broken-image icon for an image without a source, so its alt text
   // takes its place. Attachment images stay only for a caller that resolves them.
