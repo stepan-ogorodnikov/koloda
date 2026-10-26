@@ -4,29 +4,27 @@
 
 Covers decks: creating with defaults, editing title, notes, algorithm, and template, and cascade delete.
 It also covers how decks relate to cards, lessons, and the assistant.
-Does not cover card browsing, reset progress, preview, lesson session flow, algorithm or template editing.
+Does not cover card browsing, reset progress, preview, lesson session flow, algorithm or template editing, or how
+the assistant reads and creates decks.
 Those are covered by CARDS.md, LESSONS.md, ALGORITHMS.md, TEMPLATES.md, and ASSISTANT-DATA-ACCESS.md.
 
 ## What it is
 
 A deck is a titled collection of cards that shares one algorithm and one current template.
 It can also carry optional notes.
-The algorithm schedules grades for cards in the deck.
-The current template is used when the user adds cards manually or generates cards into this deck.
 
 ## Core model
 
 - **Deck** — a titled collection with an algorithm and a current template
 - **Notes** — optional text the user writes about the deck
-- **Current template** — the template offered for new cards added to this deck
+- **Current template** — the deck's template for new cards (§Relationships)
 
 ### Relationships
 
 - See CARDS.md (§Relationships) for deck membership and a card's own template.
+- Cards added manually or generated into the deck use its current template.
 - Cards do not store an algorithm of their own; they use the deck's algorithm at grade time.
-- Deleting a deck deletes its cards and those cards' review history.
-- See LEARNING-SETTINGS.md (§Defaults) for the algorithm and template offered when creating a deck.
-- Lessons can target one deck or all decks; available counts are computed per deck.
+- See LESSONS.md (§Lessons Overview) for lessons per deck and across all decks.
 
 ## Adding Decks
 
@@ -72,11 +70,9 @@ Changing notes does not change the deck's cards.
 It does not change how those cards are scheduled.
 See ASSISTANT-DATA-ACCESS.md (§Resources) for how the assistant reads notes.
 
-Changing the algorithm affects future grading for cards in this deck.
+A changed algorithm or template applies as §Relationships describes.
 See ALGORITHMS.md (§What it is) for when existing scheduling numbers change.
-
-Changing the template changes which template is used for newly added cards.
-See CARDS.md (§Relationships) for existing cards.
+See CARDS.md (§Relationships) for cards that already exist.
 
 Invalid values are rejected on save.
 The previous saved deck remains unchanged.

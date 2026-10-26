@@ -517,7 +517,7 @@ Line numbers are at `0fcd9722`; when an earlier item moved them, find the code b
   Commit: Say how title and notes length is counted
   Depends on: 9
 
-- [ ] 11. Keep one home per deck rule in DECKS.md
+- [x] 11. Keep one home per deck rule in DECKS.md
   Goal (D3), in DECKS.md:
   - §Relationships owns the template rule (cards added or generated into the deck use its current template) and the
     algorithm rule (line 26).
@@ -530,6 +530,8 @@ Line numbers are at `0fcd9722`; when an earlier item moved them, find the code b
   Constraints:
   - DECKS.md only, with no change in meaning.
   - Items 9 and 10 edit other lines of this file; keep their text.
+  - Implemented: Scope line 7 now names the assistant topic left out (how the assistant reads and creates decks).
+    The pointer to ASSISTANT-DATA-ACCESS.md stays.
   Done when:
   - `bun run check:markdown` passes;
   - every `§` pointer names an existing heading.
