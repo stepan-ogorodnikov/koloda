@@ -26,32 +26,37 @@ fn update_data(algorithm_id: &str, template_id: &str) -> UpdateDeckData {
 }
 
 #[test]
-fn test_insert_deck_malformed_algorithm_id_fails_with_dedicated_code() {
-    // Twin of the TS `rejects a malformed algorithmId` case — `z.uuid()`
-    // rejects what the repo existence check used to report as not-found.
-    let err = insert_data("not-a-uuid", TEMPLATE_ID).validate().unwrap_err();
-    assert_eq!(err.code, "validation.decks.algorithm");
-}
+fn test_deck_malformed_ids_fail_with_dedicated_codes() {
+    // Twin of the TS `deckValidation references` table: both sides report these codes
+    // before any repo existence check runs.
+    let cases: &[(&str, &str, &str, &str)] = &[
+        (
+            "malformed algorithm id",
+            "not-a-uuid",
+            TEMPLATE_ID,
+            "validation.decks.algorithm",
+        ),
+        (
+            "non-uuid template id",
+            ALGORITHM_ID,
+            "simple",
+            "validation.decks.template",
+        ),
+        (
+            "hyphenless algorithm id",
+            "01900000000070008000000000000001",
+            TEMPLATE_ID,
+            "validation.decks.algorithm",
+        ),
+        ("empty template id", ALGORITHM_ID, "", "validation.decks.template"),
+    ];
 
-#[test]
-fn test_insert_deck_malformed_template_id_fails_with_dedicated_code() {
-    let err = insert_data(ALGORITHM_ID, "simple").validate().unwrap_err();
-    assert_eq!(err.code, "validation.decks.template");
-}
-
-#[test]
-fn test_update_deck_malformed_algorithm_id_fails_with_dedicated_code() {
-    let err = update_data("01900000000070008000000000000001", TEMPLATE_ID)
-        .values
-        .validate()
-        .unwrap_err();
-    assert_eq!(err.code, "validation.decks.algorithm");
-}
-
-#[test]
-fn test_update_deck_malformed_template_id_fails_with_dedicated_code() {
-    let err = update_data(ALGORITHM_ID, "").values.validate().unwrap_err();
-    assert_eq!(err.code, "validation.decks.template");
+    for (name, algorithm_id, template_id, expected_code) in cases {
+        let insert = insert_data(algorithm_id, template_id).validate().unwrap_err();
+        assert_eq!(insert.code, *expected_code, "insert with {name}");
+        let update = update_data(algorithm_id, template_id).values.validate().unwrap_err();
+        assert_eq!(update.code, *expected_code, "update with {name}");
+    }
 }
 
 #[test]

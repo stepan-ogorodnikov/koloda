@@ -462,13 +462,15 @@ Line numbers are at `0fcd9722`; when an earlier item moved them, find the code b
   Commit: Test web deck notes and cascade isolation, and Rust title trimming
   Depends on: none
 
-- [ ] 8. Table the Rust deck title and reference tests
+- [x] 8. Table the Rust deck title and reference tests
   Goal (D9):
   - `decks_title_tests.rs:5-76`: one table of title and expected result (the code, or ok), replacing the six tests.
   - `decks_validation_tests.rs:28-55`: one table over the DTO (insert, update) and the field, asserting the code,
     replacing the four tests.
   - Write each table and delete the tests it replaces in this commit (`agents/TESTING.md` §Repetition and tables).
   Constraints: the two test files.
+    Implemented: each reference row runs on both insert and update, so the table checks eight cells where the old
+    tests checked four.
   Done when: `RS --test domain deck` passes with the same rows.
   Manual verify: none — tests only.
   Commit: Table the Rust deck title and reference tests
