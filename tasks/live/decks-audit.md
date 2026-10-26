@@ -11,7 +11,7 @@ It also takes the "editor twins": the same two form defects in the preset, templ
 
 - The decks audit covered the behavior owned by `docs/specs/DECKS.md`.
   That is adding decks with defaults, editing title, notes, algorithm, and template, cascade delete, and the deck list.
-  The report was `tmp/audits/decks.md`, written at `d32fb02e` (`main`).
+  The audit report (`decks.md` in the audit series) was written at `d32fb02e` (`main`).
 - Its finding 5 was fixed by `tasks/archive/cards-audit.md` (item 3, `e884a0f7`).
   It is recorded here, not planned.
 - The algorithms audit (same commit) finding 6 is the preset editor's twin of decks finding 4.
