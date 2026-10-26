@@ -2,7 +2,7 @@ import { toFormErrors } from "@koloda/app";
 import { queriesAtom, queryKeys } from "@koloda/core-react";
 import type { Deck, UpdateDeckValues } from "@koloda/srs";
 import { updateDeckSchema as schema } from "@koloda/srs";
-import { FormLayout, formLayout, Label, TextField, useAppForm } from "@koloda/ui";
+import { FormLayout, formLayout, Label, TextField, useAppForm, useRefreshPristineFields } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -13,6 +13,9 @@ import { TemplatePicker } from "../templates/template-picker";
 import { DeleteDeck } from "./delete-deck";
 
 type DeckDetailsProps = { id: Deck["id"] };
+
+// INVARIANT: one path per deck sync group (crates/koloda-sync-proto/PROTOCOL.md, Field groups and merge).
+const DECK_SYNC_GROUPS = ["title", "notes", "algorithmId", "templateId"] as const;
 
 export function DeckDetails({ id }: DeckDetailsProps) {
   const queryClient = useQueryClient();
@@ -47,6 +50,7 @@ export function DeckDetails({ id }: DeckDetailsProps) {
       );
     },
   });
+  useRefreshPristineFields(form, data, DECK_SYNC_GROUPS);
 
   useEffect(() => {
     if (data?.id) form.reset();

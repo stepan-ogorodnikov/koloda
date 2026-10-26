@@ -331,7 +331,7 @@ Line numbers are at `0fcd9722`; when an earlier item moved them, find the code b
   Commit: Await the add in the add and clone dialogs
   Depends on: 1
 
-- [ ] 3. Keep synced values in deck fields the user has not edited
+- [x] 3. Keep synced values in deck fields the user has not edited
   Goal (D4):
   - New hook in `libs/ui/src/lib/primitives/form/`, exported from `@koloda/ui`:
     `useRefreshPristineFields(form, latest, paths)`.
@@ -359,6 +359,14 @@ Line numbers are at `0fcd9722`; when an earlier item moved them, find the code b
   Constraints:
   - The hook, `deck-details.tsx`, SYNC.md, and the test.
   - The path list is wiring, with no test of its own (`agents/TESTING.md` §When tests are required).
+  - Implemented: the hook compares values, not field meta.
+    A group follows the new data while its shown value still equals the data the form last saw.
+    TanStack keeps a field's `isDirty` set after an edit is undone, so a meta check would keep a changed-back field
+    stale.
+    The tests are: untouched group follows while an edited one stays; a nested edit keeps its whole group; a field
+    changed and changed back follows.
+    The "unchanged `latest` sets nothing" case was dropped: no behavior can observe it.
+  - Implemented: the SYNC.md sentence moved to item 4; it describes every edit form, which is true only after item 4.
   Done when:
   - `UI use-refresh-pristine-fields` passes;
   - the first two cases fail if the dirty check ignores descendants or ancestors;
@@ -379,11 +387,15 @@ Line numbers are at `0fcd9722`; when an earlier item moved them, find the code b
     `["defaults.algorithm", "defaults.template", "dailyLimits", "dayStartsAt", "learnAheadLimit"]`.
     `initialValues` is a new object each render; the hook compares by value, so it sets nothing then.
   - LEARNING-SETTINGS.md line 121 stays: Save still persists the whole payload.
+  - SYNC.md, after "Screens that show synced data refresh as changes arrive." (line 210), moved here from item 3:
+    an open edit form keeps the user's unsaved changes, and its other fields take the synced values.
+    So saving does not undo the other device's change.
   Constraints:
-  - The three editors only; wiring of item 3's hook, with no test of its own.
+  - The three editors and SYNC.md; wiring of item 3's hook, with no test of its own.
   - The add and clone dialogs do not sync while open; leave them.
   Done when:
-  - `SR`, `SE`, and `bun run typecheck` pass.
+  - `SR`, `SE`, and `bun run typecheck` pass;
+  - `bun run check:markdown` passes.
   Manual verify (desktop, two devices in one space):
   - A: Settings → Learning → change the New limit, do not save; B: set "Start of the day" to 06:00.
   - On A the day start shows 06:00; Save → both devices keep 06:00 and A's New limit.
