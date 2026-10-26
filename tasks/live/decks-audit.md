@@ -539,7 +539,7 @@ Line numbers are at `0fcd9722`; when an earlier item moved them, find the code b
   Commit: Keep one home per deck rule in DECKS.md
   Depends on: 9, 10
 
-- [ ] 12. Check deck flows by outcome in both e2e suites
+- [x] 12. Check deck flows by outcome in both e2e suites
   Goal (D10), on both hosts, step for step:
   - `deck-add.spec.ts`: the empty-title step (`:39-49`) asserts "Title can't be empty".
     After each custom add (`fillAndSubmitDeck`, `:12-30`), open Details and check the chosen preset and template.
@@ -554,6 +554,10 @@ Line numbers are at `0fcd9722`; when an earlier item moved them, find the code b
   Constraints:
   - Do not run either suite (`agents/VERIFY.md`).
   - Shared steps go in `libs/e2e` only if its README says so.
+  - Implemented: every add in `deck-add` now checks Details, with the host's seeded defaults for the parts not picked.
+    The notes edit and the empty-title save extend the existing `deck-edit` flow; the missing link is its own case.
+    `deck-delete` checks the empty deck's exact prompt, and the new flow waits for the Dashboard's "Deck" column
+    header before checking that the row is gone.
   Done when: `nx run web-e2e:typecheck` and `nx run electron-e2e:typecheck` pass.
   Manual verify: the human runs `deck-add`, `deck-edit`, `deck-delete`, and `deck-reset` on both hosts.
   Commit: Check deck flows by outcome in both e2e suites

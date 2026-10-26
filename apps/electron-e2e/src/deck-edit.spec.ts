@@ -1,43 +1,26 @@
 import { expect } from "@playwright/test";
 import { test } from "./fixtures";
-import { createDeck, openSection } from "@koloda/e2e";
+import { createAlgorithm, createDeck, createTemplate, openSection } from "@koloda/e2e";
 import { setupApp, setupPageDefaults } from "./helpers";
 
 test.beforeEach(async ({ page }) => {
   await setupPageDefaults(page);
 });
 
-test("edits deck title, algorithm, and template via the Details tab and verifies persistence", async ({ page }) => {
+test("edits deck title, notes, algorithm, and template via the Details tab and verifies persistence", async ({
+  page,
+}) => {
   const deckTitle = "E2E Edit Deck";
   const updatedTitle = "E2E Updated Deck";
   const algorithmTitle = "E2E Algorithm";
   const templateTitle = "E2E Template";
+  const notes = "E2E deck notes";
 
   await setupApp(page);
 
-  // Create a second algorithm to pick later
-  await openSection(page, "Presets");
-  await page.getByRole("button", { name: "New preset", exact: true }).click();
-  const algoDialog = page.getByRole("dialog");
-  await expect(algoDialog).toBeVisible();
-  await algoDialog.getByLabel("Title", { exact: true }).fill(algorithmTitle);
-  await algoDialog.getByRole("button", { name: "Create", exact: true }).click();
-  await algoDialog.getByRole("link", { name: "Go to the new preset", exact: true }).click();
-  await expect(page).toHaveURL(
-    /\/algorithms\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/,
-  );
-
-  // Create a second template to pick later
-  await openSection(page, "Templates");
-  await page.getByRole("button", { name: "New template", exact: true }).click();
-  const templateDialog = page.getByRole("dialog");
-  await expect(templateDialog).toBeVisible();
-  await templateDialog.getByLabel("Title", { exact: true }).fill(templateTitle);
-  await templateDialog.getByRole("button", { name: "Create", exact: true }).click();
-  await templateDialog.getByRole("link", { name: "Go to the new template", exact: true }).click();
-  await expect(page).toHaveURL(
-    /\/templates\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/,
-  );
+  // Create a second algorithm and template to pick later
+  await createAlgorithm(page, algorithmTitle);
+  await createTemplate(page, templateTitle);
 
   // Create a deck
   await createDeck(page, deckTitle);
@@ -51,11 +34,13 @@ test("edits deck title, algorithm, and template via the Details tab and verifies
   await expect(detailsPanel.getByRole("button", { name: /Preset$/ })).toContainText("Default");
   await expect(detailsPanel.getByRole("button", { name: /Template$/ })).toContainText("Default");
 
-  // Change title, algorithm, and template all at once
+  // Change title, notes, algorithm, and template all at once
   const titleField = detailsPanel.getByRole("textbox", { name: "Title", exact: true });
   await titleField.clear();
   await titleField.fill(updatedTitle);
   await titleField.blur();
+  const notesField = detailsPanel.getByRole("textbox", { name: "Notes", exact: true });
+  await notesField.fill(notes);
 
   await detailsPanel.getByRole("button", { name: /Preset$/ }).click();
   const algoOption = page.getByRole("option", { name: algorithmTitle, exact: true });
@@ -76,6 +61,7 @@ test("edits deck title, algorithm, and template via the Details tab and verifies
 
   // The form must stay on the saved values so Discard restores the last save
   await expect(detailsPanel.getByRole("textbox", { name: "Title", exact: true })).toHaveValue(updatedTitle);
+  await expect(notesField).toHaveValue(notes);
   await expect(detailsPanel.getByRole("button", { name: /Preset$/ })).toContainText(algorithmTitle);
   await expect(detailsPanel.getByRole("button", { name: /Template$/ })).toContainText(templateTitle);
 
@@ -95,6 +81,26 @@ test("edits deck title, algorithm, and template via the Details tab and verifies
   await detailsTab.click();
 
   await expect(detailsPanel.getByRole("textbox", { name: "Title", exact: true })).toHaveValue(updatedTitle);
+  await expect(notesField).toHaveValue(notes);
   await expect(detailsPanel.getByRole("button", { name: /Preset$/ })).toContainText(algorithmTitle);
   await expect(detailsPanel.getByRole("button", { name: /Template$/ })).toContainText(templateTitle);
+
+  // An empty title is rejected on save, and the saved deck keeps its title
+  await titleField.clear();
+  await titleField.blur();
+  await saveButton.click();
+  await expect(page.locator("form").getByText("Title can't be empty", { exact: true })).toBeVisible();
+  await discardButton.click();
+  await expect(titleField).toHaveValue(updatedTitle);
+  await expect(page.getByRole("link", { name: updatedTitle, exact: true })).toBeVisible();
+});
+
+test("shows not found for a missing deck link", async ({ page }) => {
+  await setupApp(page);
+
+  // WHY: resolve against the current origin; the Electron context has no `baseURL`.
+  const origin = new URL(page.url()).origin;
+  await page.goto(`${origin}/decks/01900000-0000-7000-8000-0000000f423f`);
+
+  await expect(page.getByRole("heading", { name: "Not found", exact: true })).toBeVisible();
 });

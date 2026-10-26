@@ -7,6 +7,10 @@ test.beforeEach(async ({ page }) => {
   await setupPageDefaults(page);
 });
 
+// The seeded learning defaults: preset "Simple", template "Type".
+const DEFAULT_PRESET = "Simple";
+const DEFAULT_TEMPLATE = "Type";
+
 type FillAndSubmitDeckOptions = { preset?: string; template?: string };
 
 async function fillAndSubmitDeck(page: Page, dialog: Locator, title: string, options: FillAndSubmitDeckOptions = {}) {
@@ -27,6 +31,14 @@ async function fillAndSubmitDeck(page: Page, dialog: Locator, title: string, opt
 
   await expect(page).toHaveURL(/\/decks\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/);
   await expect(page.getByRole("heading", { name: title, exact: true })).toBeVisible();
+
+  // The saved deck holds the chosen preset and template, and the defaults for the rest
+  await page.getByRole("tab", { name: "Details", exact: true }).click();
+  const detailsPanel = page.getByRole("tabpanel", { name: "Details", exact: true });
+  await expect(detailsPanel.getByRole("button", { name: /Preset$/ })).toContainText(options.preset ?? DEFAULT_PRESET);
+  await expect(detailsPanel.getByRole("button", { name: /Template$/ })).toContainText(
+    options.template ?? DEFAULT_TEMPLATE,
+  );
 }
 
 test("validates required title and adds decks with default and custom options", async ({ page }) => {
@@ -47,6 +59,7 @@ test("validates required title and adds decks with default and custom options", 
 
   await expect(dialog).toBeVisible();
   await expect(dialog.getByRole("heading", { name: "New deck", exact: true })).toBeVisible();
+  await expect(dialog.getByText("Title can't be empty", { exact: true })).toBeVisible();
 
   // Success 1: default preset and template
   await fillAndSubmitDeck(page, dialog, "Deck With Defaults");

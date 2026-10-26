@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { createDeck, openSection } from "@koloda/e2e";
+import { createAlgorithm, createDeck, createTemplate } from "@koloda/e2e";
 import { setupWeb, setupPageDefaults } from "./helpers";
 
 test.beforeEach(async ({ page }) => {
@@ -14,29 +14,9 @@ test("discards changes to deck details and resets form to persisted state", asyn
 
   await setupWeb(page);
 
-  // Create a second algorithm to pick later
-  await openSection(page, "Presets");
-  await page.getByRole("button", { name: "New preset", exact: true }).click();
-  const algoDialog = page.getByRole("dialog");
-  await expect(algoDialog).toBeVisible();
-  await algoDialog.getByLabel("Title", { exact: true }).fill(algorithmTitle);
-  await algoDialog.getByRole("button", { name: "Create", exact: true }).click();
-  await algoDialog.getByRole("link", { name: "Go to the new preset", exact: true }).click();
-  await expect(page).toHaveURL(
-    /\/algorithms\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/,
-  );
-
-  // Create a second template to pick later
-  await openSection(page, "Templates");
-  await page.getByRole("button", { name: "New template", exact: true }).click();
-  const templateDialog = page.getByRole("dialog");
-  await expect(templateDialog).toBeVisible();
-  await templateDialog.getByLabel("Title", { exact: true }).fill(templateTitle);
-  await templateDialog.getByRole("button", { name: "Create", exact: true }).click();
-  await templateDialog.getByRole("link", { name: "Go to the new template", exact: true }).click();
-  await expect(page).toHaveURL(
-    /\/templates\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/,
-  );
+  // Create a second algorithm and template to pick later
+  await createAlgorithm(page, algorithmTitle);
+  await createTemplate(page, templateTitle);
 
   // Create a deck
   await createDeck(page, deckTitle);
