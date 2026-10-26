@@ -279,7 +279,7 @@ Their dirs are `libs/srs-react`, `libs/srs`, `libs/ui`, `libs/db-sqlite`, `libs/
 `RS` stands for `cargo test -p koloda`.
 Line numbers are at `0fcd9722`; when an earlier item moved them, find the code by its text.
 
-- [ ] 1. Seed the new deck's preset and template from the defaults
+- [x] 1. Seed the new deck's preset and template from the defaults
   Goal (D1, and D8's component test):
   - `AddDeck` default values (`add-deck.tsx:36`): seed `algorithmId` from `defaultAlgorithmAtom` and `templateId`
     from `defaultTemplateAtom` (`useAtomValue`, `@koloda/core-react`).

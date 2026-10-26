@@ -1,4 +1,3 @@
-import { defaultTemplateAtom } from "@koloda/core-react";
 import { queriesAtom } from "@koloda/core-react";
 import type { Template } from "@koloda/srs";
 import { Select } from "@koloda/ui";
@@ -7,7 +6,6 @@ import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useQuery } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
-import { useEffect } from "react";
 
 type TemplatePickerProps = Omit<SelectProps<Template>, "value" | "onChange" | "items" | "children"> & {
   value: Template["id"];
@@ -17,12 +15,7 @@ type TemplatePickerProps = Omit<SelectProps<Template>, "value" | "onChange" | "i
 export function TemplatePicker({ value, onChange, ...props }: TemplatePickerProps) {
   const { _ } = useLingui();
   const { getTemplatesQuery } = useAtomValue(queriesAtom);
-  const defaultTemplate = useAtomValue(defaultTemplateAtom);
   const { data } = useQuery(getTemplatesQuery());
-
-  useEffect(() => {
-    if (!value) onChange(defaultTemplate);
-  }, [value, onChange, defaultTemplate]);
 
   if (!data) return null;
 
@@ -30,7 +23,7 @@ export function TemplatePicker({ value, onChange, ...props }: TemplatePickerProp
     <Select
       label={_(msg`template-picker.label`)}
       items={data}
-      value={value || defaultTemplate}
+      value={value}
       onChange={(key) => {
         if (typeof key === "string") onChange(key);
       }}

@@ -1,5 +1,5 @@
 import { toFormErrors } from "@koloda/app";
-import { queriesAtom, queryKeys } from "@koloda/core-react";
+import { defaultAlgorithmAtom, defaultTemplateAtom, queriesAtom, queryKeys } from "@koloda/core-react";
 import { insertDeckSchema as schema } from "@koloda/srs";
 import type { Deck, InsertDeckData } from "@koloda/srs";
 import {
@@ -29,11 +29,13 @@ export function AddDeck() {
   const { _ } = useLingui();
   const { addDeckMutation } = useAtomValue(queriesAtom);
   const isMotionOn = useMotionSetting();
+  const defaultAlgorithm = useAtomValue(defaultAlgorithmAtom);
+  const defaultTemplate = useAtomValue(defaultTemplateAtom);
   const { mutate, isSuccess } = useMutation(addDeckMutation());
   const { linkRef, newId, clearNewId, handleCreated, isLinkVisible } = useEntityCreatedLink<Deck["id"]>(isSuccess);
   const [isOpen, setIsOpen] = useState(false);
   const form = useAppForm({
-    defaultValues: { title: "", algorithmId: "", templateId: "" } as InsertDeckData,
+    defaultValues: { title: "", algorithmId: defaultAlgorithm, templateId: defaultTemplate } as InsertDeckData,
     validators: { onSubmit: schema },
     listeners: {
       onChange: () => {
