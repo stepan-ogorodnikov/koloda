@@ -31,7 +31,7 @@ export function AddDeck() {
   const isMotionOn = useMotionSetting();
   const defaultAlgorithm = useAtomValue(defaultAlgorithmAtom);
   const defaultTemplate = useAtomValue(defaultTemplateAtom);
-  const { mutate, isSuccess } = useMutation(addDeckMutation());
+  const { mutateAsync, isSuccess } = useMutation(addDeckMutation());
   const { linkRef, newId, clearNewId, handleCreated, isLinkVisible } = useEntityCreatedLink<Deck["id"]>(isSuccess);
   const [isOpen, setIsOpen] = useState(false);
   const form = useAppForm({
@@ -43,20 +43,22 @@ export function AddDeck() {
       },
     },
     onSubmit: async ({ value, formApi }) => {
-      mutate(schema.parse({ ...value }), {
-        onSuccess: (returning) => {
-          formApi.reset();
-          handleCreated(returning);
-          queryClient.invalidateQueries({ queryKey: queryKeys.decks.all() });
-          queryClient.invalidateQueries({ queryKey: queryKeys.lessons.all({}) });
-          // WHY: deck usage counts feed the delete guards on presets and templates.
-          queryClient.invalidateQueries({ queryKey: queryKeys.algorithms.decksAll() });
-          queryClient.invalidateQueries({ queryKey: queryKeys.templates.decksAll() });
-        },
-        onError: (error) => {
-          formApi.setErrorMap({ onSubmit: toFormErrors(error) });
-        },
-      });
+      // WHY: await the add so the form stays submitting until it settles; canSubmit stays
+      // false meanwhile, so a second press cannot add twice.
+      let returning;
+      try {
+        returning = await mutateAsync(schema.parse(value));
+      } catch (error) {
+        formApi.setErrorMap({ onSubmit: toFormErrors(error) });
+        return;
+      }
+      formApi.reset();
+      handleCreated(returning);
+      queryClient.invalidateQueries({ queryKey: queryKeys.decks.all() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.lessons.all({}) });
+      // WHY: deck usage counts feed the delete guards on presets and templates.
+      queryClient.invalidateQueries({ queryKey: queryKeys.algorithms.decksAll() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.templates.decksAll() });
     },
   });
   const formErrorMap = useStore(form.store, (state) => state.errorMap);

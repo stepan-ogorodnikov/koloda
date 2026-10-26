@@ -27,7 +27,7 @@ export function AddTemplate() {
   const { _ } = useLingui();
   const { addTemplateMutation } = useAtomValue(queriesAtom);
   const isMotionOn = useMotionSetting();
-  const { mutate, isSuccess } = useMutation(addTemplateMutation());
+  const { mutateAsync, isSuccess } = useMutation(addTemplateMutation());
   const { linkRef, newId, clearNewId, handleCreated, isLinkVisible } = useEntityCreatedLink<Template["id"]>(isSuccess);
   const [isOpen, setIsOpen] = useState(false);
   const form = useAppForm({
@@ -39,16 +39,18 @@ export function AddTemplate() {
       },
     },
     onSubmit: async ({ value, formApi }) => {
-      mutate(schema.parse({ ...value }), {
-        onSuccess: (returning) => {
-          formApi.reset();
-          handleCreated(returning);
-          queryClient.invalidateQueries({ queryKey: queryKeys.templates.all() });
-        },
-        onError: (error) => {
-          formApi.setErrorMap({ onSubmit: toFormErrors(error) });
-        },
-      });
+      // WHY: await the add so the form stays submitting until it settles; canSubmit stays
+      // false meanwhile, so a second press cannot add twice.
+      let returning;
+      try {
+        returning = await mutateAsync(schema.parse(value));
+      } catch (error) {
+        formApi.setErrorMap({ onSubmit: toFormErrors(error) });
+        return;
+      }
+      formApi.reset();
+      handleCreated(returning);
+      queryClient.invalidateQueries({ queryKey: queryKeys.templates.all() });
     },
   });
 

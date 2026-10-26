@@ -307,7 +307,7 @@ Line numbers are at `0fcd9722`; when an earlier item moved them, find the code b
   Commit: Seed the new deck's preset and template from the defaults
   Depends on: none
 
-- [ ] 2. Await the add in the add and clone dialogs
+- [x] 2. Await the add in the add and clone dialogs
   Goal (D6, A11's clone bullet, and D11's spreads):
   - In `add-deck.tsx:43-58`, `add-algorithm.tsx:42`, `add-template.tsx:42`, `clone-template.tsx:33`, and
     `clone-algorithm.tsx:33`: `await mutateAsync(schema.parse(value))` in a `try`/`catch`, as `add-card.tsx:47-62`

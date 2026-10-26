@@ -4,7 +4,7 @@ import type { Deck, InsertDeckData } from "@koloda/srs";
 import { i18n } from "@lingui/core";
 import { I18nProvider } from "@lingui/react";
 import { QueryClientProvider } from "@tanstack/react-query";
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { createStore, Provider as JotaiProvider } from "jotai";
 import { describe, expect, it, vi } from "vitest";
 import { createAlgorithm, createQueryClient, createTemplate, testId } from "../../test/test-helpers";
@@ -90,5 +90,18 @@ describe("AddDeck", () => {
       algorithmId: customAlgorithm.id,
       templateId: defaultTemplate.id,
     });
+  });
+
+  it("does not start a second add while the first is pending", async () => {
+    const { addDeck } = setup();
+    await openAndTypeTitle("German");
+    const form = screen.getByLabelText("add-deck.inputs.title.label").closest("form")!;
+
+    fireEvent.submit(form);
+    await waitFor(() => expect(addDeck).toHaveBeenCalledTimes(1));
+    fireEvent.submit(form);
+    await act(async () => {});
+
+    expect(addDeck).toHaveBeenCalledTimes(1);
   });
 });

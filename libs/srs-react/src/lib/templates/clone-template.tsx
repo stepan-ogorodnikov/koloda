@@ -18,7 +18,7 @@ export function CloneTemplate({ id }: CloneTemplateProps) {
   const { _ } = useLingui();
   const { cloneTemplateMutation } = useAtomValue(queriesAtom);
   const isMotionOn = useMotionSetting();
-  const { mutate, isSuccess } = useMutation(cloneTemplateMutation());
+  const { mutateAsync, isSuccess } = useMutation(cloneTemplateMutation());
   const { linkRef, newId, clearNewId, handleCreated, isLinkVisible } = useEntityCreatedLink<Template["id"]>(isSuccess);
   const [isOpen, setIsOpen] = useState(false);
   const form = useAppForm({
@@ -30,16 +30,18 @@ export function CloneTemplate({ id }: CloneTemplateProps) {
       },
     },
     onSubmit: async ({ value, formApi }) => {
-      mutate(schema.parse(value), {
-        onSuccess: (returning) => {
-          formApi.reset();
-          handleCreated(returning);
-          queryClient.invalidateQueries({ queryKey: queryKeys.templates.all() });
-        },
-        onError: (error) => {
-          formApi.setErrorMap({ onSubmit: toFormErrors(error) });
-        },
-      });
+      // WHY: await the clone so the form stays submitting until it settles; canSubmit stays
+      // false meanwhile, so a second press cannot clone twice.
+      let returning;
+      try {
+        returning = await mutateAsync(schema.parse(value));
+      } catch (error) {
+        formApi.setErrorMap({ onSubmit: toFormErrors(error) });
+        return;
+      }
+      formApi.reset();
+      handleCreated(returning);
+      queryClient.invalidateQueries({ queryKey: queryKeys.templates.all() });
     },
   });
   const formErrorMap = useStore(form.store, (state) => state.errorMap);
