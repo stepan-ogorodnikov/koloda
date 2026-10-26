@@ -5,7 +5,7 @@ import type { ResolvedLearningSettings } from "@koloda/app";
 import { queriesAtom, queryKeys, timeFormatAtom } from "@koloda/core-react";
 import { AlgorithmPicker } from "@koloda/srs-react";
 import { TemplatePicker } from "@koloda/srs-react";
-import { formLayout, Label, NumberField, Switch, TimeField, useAppForm } from "@koloda/ui";
+import { formLayout, Label, NumberField, Switch, TimeField, useAppForm, useRefreshPristineFields } from "@koloda/ui";
 import { FormLayout } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
@@ -18,6 +18,15 @@ import { useRef } from "react";
 const wholeNumberFormatOptions: Intl.NumberFormatOptions = { useGrouping: false, maximumFractionDigits: 0 };
 
 export type SettingsLearningProps = { data: ResolvedLearningSettings };
+
+// INVARIANT: one path per learning sync key (crates/koloda-sync-proto/PROTOCOL.md, Field groups and merge).
+const LEARNING_SYNC_GROUPS = [
+  "defaults.algorithm",
+  "defaults.template",
+  "dailyLimits",
+  "dayStartsAt",
+  "learnAheadLimit",
+] as const;
 
 export type DailyLimitCapFieldProps = {
   label: string;
@@ -82,6 +91,7 @@ export function SettingsLearning({ data }: SettingsLearningProps) {
       );
     },
   });
+  useRefreshPristineFields(form, initialValues, LEARNING_SYNC_GROUPS);
 
   const unlimitedLabel = _(msg`settings.learning.limits.unlimited`);
 

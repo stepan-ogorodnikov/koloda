@@ -207,6 +207,8 @@ Sync also runs by itself:
 
 A change made on one device usually shows on the others within seconds.
 Screens that show synced data refresh as changes arrive.
+An open edit form keeps the user's unsaved changes, and its other fields take the synced values.
+So saving does not undo the other device's change.
 
 ## When Sync Stops
 

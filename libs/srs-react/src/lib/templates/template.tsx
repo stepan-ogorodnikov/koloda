@@ -2,7 +2,17 @@ import { toFormErrors } from "@koloda/app";
 import { queriesAtom, queryKeys } from "@koloda/core-react";
 import type { Template as TemplateType, UpdateTemplateValues } from "@koloda/srs";
 import { updateTemplateSchema as schema } from "@koloda/srs";
-import { FormLayout, formLayout, Label, LockIcon, NotFound, TextField, UnlockIcon, useAppForm } from "@koloda/ui";
+import {
+  FormLayout,
+  formLayout,
+  Label,
+  LockIcon,
+  NotFound,
+  TextField,
+  UnlockIcon,
+  useAppForm,
+  useRefreshPristineFields,
+} from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -14,6 +24,10 @@ import { TemplateFields } from "./template-fields";
 import { TemplateLayout } from "./template-layout";
 
 type TemplateProps = { id: TemplateType["id"] };
+
+// INVARIANT: one path per template sync group (crates/koloda-sync-proto/PROTOCOL.md, Field groups and merge).
+// `content` is the structure group: fields and layout move together.
+const TEMPLATE_SYNC_GROUPS = ["title", "notes", "content"] as const;
 
 export function Template({ id }: TemplateProps) {
   const queryClient = useQueryClient();
@@ -40,6 +54,7 @@ export function Template({ id }: TemplateProps) {
       );
     },
   });
+  useRefreshPristineFields(form, data, TEMPLATE_SYNC_GROUPS);
 
   useEffect(() => {
     if (data?.id) form.reset();

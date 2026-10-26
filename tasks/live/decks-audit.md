@@ -378,7 +378,7 @@ Line numbers are at `0fcd9722`; when an earlier item moved them, find the code b
   Commit: Keep synced values in deck fields the user has not edited
   Depends on: none
 
-- [ ] 4. Keep synced values in the preset, template, and learning editors
+- [x] 4. Keep synced values in the preset, template, and learning editors
   Goal (A6, L2, and D4's template editor):
   - `Algorithm` (`algorithm.tsx:25-27`): `useRefreshPristineFields(form, data, ["title", "notes", "content"])`.
   - `Template` (`template.tsx:24-26`): the same paths.

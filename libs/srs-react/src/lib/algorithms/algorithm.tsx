@@ -3,7 +3,17 @@ import { queriesAtom, queryKeys } from "@koloda/core-react";
 import type { Algorithm as AlgorithmType, UpdateAlgorithmValues } from "@koloda/srs";
 import { updateAlgorithmSchema as schema } from "@koloda/srs";
 import { NotFound } from "@koloda/ui";
-import { FormLayout, formLayout, Label, NumberField, Slider, Switch, TextField, useAppForm } from "@koloda/ui";
+import {
+  FormLayout,
+  formLayout,
+  Label,
+  NumberField,
+  Slider,
+  Switch,
+  TextField,
+  useAppForm,
+  useRefreshPristineFields,
+} from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -15,6 +25,9 @@ import { DeleteAlgorithm } from "./delete-algorithm";
 import { OptimizeAlgorithm } from "./optimize-algorithm";
 
 type AlgorithmProps = { id: AlgorithmType["id"] };
+
+// INVARIANT: one path per algorithm sync group (crates/koloda-sync-proto/PROTOCOL.md, Field groups and merge).
+const ALGORITHM_SYNC_GROUPS = ["title", "notes", "content"] as const;
 
 export function Algorithm({ id }: AlgorithmProps) {
   const queryClient = useQueryClient();
@@ -41,6 +54,7 @@ export function Algorithm({ id }: AlgorithmProps) {
       );
     },
   });
+  useRefreshPristineFields(form, data, ALGORITHM_SYNC_GROUPS);
 
   useEffect(() => {
     if (data?.id) form.reset();
