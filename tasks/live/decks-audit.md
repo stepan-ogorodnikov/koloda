@@ -1,6 +1,6 @@
 # Decks audit fixes
 
-Status: draft
+Status: ready
 Guides: agents/IMPLEMENTATION-PLAN.md, agents/TASKS.md, docs/specs/DECKS.md, docs/specs/ALGORITHMS.md, docs/specs/TEMPLATES.md, docs/specs/LEARNING-SETTINGS.md, docs/specs/SYNC.md, agents/CODE-STYLE.md, agents/CODE-DOCUMENTATION.md, agents/TESTING.md, agents/VERIFY.md, agents/I18N.md, agents/RUST.md, docs/decisions/TS-RUST-DOMAIN-MIRRORING.md, agents/BACKWARDS-COMPATIBILITY.md, agents/FUNCTIONAL-SPECIFICATIONS.md, agents/MARKDOWN.md, apps/web-e2e/README.md, apps/electron-e2e/README.md, libs/e2e/README.md, agents/REVIEW.md
 Flow: local
 
@@ -266,9 +266,9 @@ Entries use the report's numbers with a prefix: `D` for decks, `A` for algorithm
 - [x] 4. D2: how is length counted? — reword the three specs; both hosts keep counting UTF-16 units (human,
   2026-10-26).
 - [x] 5. D12: what does the confirmation state? — the card count; no review count (human, 2026-10-26).
-- [ ] 6. Confirm D1 in a production build before item 1? — open, optional.
+- [x] 6. Confirm D1 in a production build before item 1? — not taken; the plan was approved without it.
   The jsdom probe without StrictMode reproduces it at `0fcd9722`; the fix and its test hold either way.
-- [ ] 7. Plan approval — open.
+- [x] 7. Plan approved as written (human, 2026-10-26).
 
 ## Plan
 
