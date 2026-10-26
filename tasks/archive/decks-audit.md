@@ -1,6 +1,6 @@
 # Decks audit fixes
 
-Status: ready
+Status: done
 Guides: agents/IMPLEMENTATION-PLAN.md, agents/TASKS.md, docs/specs/DECKS.md, docs/specs/ALGORITHMS.md, docs/specs/TEMPLATES.md, docs/specs/LEARNING-SETTINGS.md, docs/specs/SYNC.md, agents/CODE-STYLE.md, agents/CODE-DOCUMENTATION.md, agents/TESTING.md, agents/VERIFY.md, agents/I18N.md, agents/RUST.md, docs/decisions/TS-RUST-DOMAIN-MIRRORING.md, agents/BACKWARDS-COMPATIBILITY.md, agents/FUNCTIONAL-SPECIFICATIONS.md, agents/MARKDOWN.md, apps/web-e2e/README.md, apps/electron-e2e/README.md, libs/e2e/README.md, agents/REVIEW.md
 Flow: local
 
@@ -565,4 +565,40 @@ Line numbers are at `0fcd9722`; when an earlier item moved them, find the code b
 
 ## Outcome
 
-<what shipped>
+Shipped, one commit per Plan item, all 12 done, plus one self-review commit that dropped a scratch path from Intent.
+Every finding in scope is fixed.
+The decks audit's finding 5 was fixed earlier by `cards-audit` (item 3).
+
+- New deck seeds the default preset and template, so an add with only a title works in production builds (D1).
+- Add and Clone in the deck, preset, and template dialogs await the write, so a quick second press cannot create a
+  second entity (D6, A11's clone bullet).
+- On desktop, the deck, preset, template, and learning settings editors keep synced values in groups the user has not
+  changed, so saving does not undo another device's change (D4, A6, L2).
+  One shared hook in `libs/ui` does it; SYNC.md states the rule.
+- A malformed preset or template id reports `validation.decks.algorithm` or `validation.decks.template` on both hosts
+  (D7).
+- The delete confirmation states the deck's card count, in English and Russian (D12).
+- DECKS.md, ALGORITHMS.md, and TEMPLATES.md say that some characters, such as emoji, count as two toward the length
+  limits (D2).
+  DECKS.md has one home per rule (D3).
+- Residue is gone: the mount-only form resets, a redundant invalidation, and the copied add-deck refresh, now shared
+  from `libs/core-react` (D11).
+- Tests: a non-StrictMode add-deck component test and double-submit cases for five dialogs; a web full-field deck
+  roundtrip with notes and a cascade isolation check; a Rust padded-title twin; tabled Rust title and reference tests
+  (D8, D9); deck e2e flows checked by outcome on both hosts (D10).
+
+Verified: `bun run check:push` passed on the tip before archiving.
+The web and desktop e2e suites were not run; item 12's cases are typechecked only, per `agents/VERIFY.md`.
+D1 was not checked in a production browser build; its component test runs without StrictMode.
+The manual checks in the Plan are the human's to run and are not verified here.
+
+Left out, each with its own triage:
+
+- The other findings of `algorithms.md` and `learning-settings.md`, and all of `templates.md`.
+  ALGORITHMS.md line 43 (a summary bullet repeating the title rule) is `algorithms.md` finding 4.
+- `media.md` findings 1 and 4 (the image editor's state follows the field's text).
+- The preset and template add specs' empty-title step (`algorithms.md` and `templates.md` finding 10).
+- The e2e suites run on dev servers under StrictMode, which hid D1; for the "e2e suites" concern audit.
+- `insertDeckSchema` accepts notes that both hosts drop (`templates.md` finding 13).
+- The Details save and the deck delete keep their per-call `mutate` callbacks; they lose their refresh only if the
+  page unmounts mid-write. Seen, not planned.
