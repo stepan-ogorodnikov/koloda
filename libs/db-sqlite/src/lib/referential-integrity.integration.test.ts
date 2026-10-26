@@ -44,6 +44,16 @@ describe("referential integrity integration", () => {
   it("deleting a deck deletes its cards after leaf-first review and card deletes", async () => {
     const { db } = testDb;
     const { deck, template } = await seedDeckContext(db);
+    const otherDeck = await seedDeck(db, {
+      title: "Other deck",
+      algorithmId: deck.algorithmId,
+      templateId: template.id,
+    });
+    const otherCard = await addCard(db, {
+      deckId: otherDeck.id,
+      templateId: template.id,
+      content: createCardContent(template),
+    });
 
     const card = await addCard(db, {
       deckId: deck.id,
@@ -77,9 +87,8 @@ describe("referential integrity integration", () => {
 
     expect(await getCards(db, { deckId: deck.id })).toEqual([]);
     expect(await getReviews(db, { cardId: card.id })).toEqual([]);
-
-    const [{ count }] = await db.all("SELECT COUNT(*) AS count FROM cards");
-    expect(Number(count)).toBe(0);
+    // Twin of the other-deck check in `delete_deck_removes_deck_and_cascades_cards_and_reviews`.
+    expect((await getCards(db, { deckId: otherDeck.id })).map((row) => row.id)).toEqual([otherCard.id]);
   });
 
   it("deleting a card deletes its reviews after a leaf-first review delete", async () => {

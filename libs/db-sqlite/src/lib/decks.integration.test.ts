@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import type { TestDb } from "../test/test-helpers";
-import { createTestDb, MISSING_ID, seedDeckContext } from "../test/test-helpers";
-import { addDeck, deleteDeck, getDeck, getDecks, updateDeck } from "./decks";
+import { createTestDb, MISSING_ID, seedAlgorithm, seedDeckContext, seedTemplate } from "../test/test-helpers";
+import { addDeck, getDeck, getDecks, updateDeck } from "./decks";
 
 describe("decks repository integration", () => {
   let testDb: TestDb;
@@ -14,36 +14,33 @@ describe("decks repository integration", () => {
     await testDb.close();
   });
 
-  it("round-trips deck create, read, update, and delete", async () => {
+  // Twin of `update_deck_round_trips_every_field` in `crates/koloda/tests/integration/decks_integration_tests.rs`.
+  it("round-trips every deck field through an update, and clears notes", async () => {
     const { db } = testDb;
-    const { deck, algorithm, template } = await seedDeckContext(db, { deck: { title: "Original" } });
+    const { deck } = await seedDeckContext(db, { deck: { title: "Original" } });
+    const otherAlgorithm = await seedAlgorithm(db, { title: "Other FSRS" });
+    const otherTemplate = await seedTemplate(db, { title: "Other" });
+    const values = { title: "Renamed", algorithmId: otherAlgorithm.id, templateId: otherTemplate.id };
 
-    expect(await getDeck(db, deck.id)).toMatchObject({
-      id: deck.id,
-      title: "Original",
-      algorithmId: algorithm.id,
-      templateId: template.id,
-    });
-    expect(await getDecks(db)).toHaveLength(1);
+    await updateDeck(db, { id: deck.id, values: { ...values, notes: "Deck notes" } });
+    const stored = await getDeck(db, deck.id);
 
-    const updated = await updateDeck(db, {
+    expect(stored?.updatedAt).toBeInstanceOf(Date);
+    expect(stored).toEqual({
       id: deck.id,
-      values: {
-        title: "Renamed",
-        algorithmId: algorithm.id,
-        templateId: template.id,
-      },
+      ...values,
+      notes: "Deck notes",
+      createdAt: deck.createdAt,
+      updatedAt: stored?.updatedAt,
     });
 
-    expect(updated).toMatchObject({ id: deck.id, title: "Renamed" });
-    expect(await getDeck(db, deck.id)).toMatchObject({ title: "Renamed" });
+    await updateDeck(db, { id: deck.id, values: { ...values, notes: "" } });
 
-    await deleteDeck(db, { id: deck.id });
-
-    expect(await getDeck(db, deck.id)).toBeNull();
-    expect(await getDecks(db)).toEqual([]);
+    expect((await getDeck(db, deck.id))?.notes).toBeUndefined();
   });
 
+  // WHY: the title rule itself lives in `libs/srs` (`titles.test.ts`); this checks that the repo
+  // rejects before it writes, so the saved deck is unchanged.
   it("rejects deck updates with an empty title", async () => {
     const { db } = testDb;
     const { deck, algorithm, template } = await seedDeckContext(db);
@@ -67,50 +64,6 @@ describe("decks repository integration", () => {
     });
 
     expect(await getDeck(db, deck.id)).toMatchObject({ title: deck.title });
-  });
-
-  it("rejects deck adds with an empty title", async () => {
-    const { db } = testDb;
-    const { deck, algorithm, template } = await seedDeckContext(db);
-
-    await expect(
-      addDeck(db, {
-        title: "",
-        algorithmId: algorithm.id,
-        templateId: template.id,
-      }),
-    ).rejects.toMatchObject({
-      issues: expect.arrayContaining([
-        expect.objectContaining({
-          message: "validation.common.title.too-short",
-          path: ["title"],
-        }),
-      ]),
-    });
-
-    expect(await getDecks(db)).toEqual([deck]);
-  });
-
-  it("rejects deck adds with a whitespace-only title", async () => {
-    const { db } = testDb;
-    const { deck, algorithm, template } = await seedDeckContext(db);
-
-    await expect(
-      addDeck(db, {
-        title: "   ",
-        algorithmId: algorithm.id,
-        templateId: template.id,
-      }),
-    ).rejects.toMatchObject({
-      issues: expect.arrayContaining([
-        expect.objectContaining({
-          message: "validation.common.title.too-short",
-          path: ["title"],
-        }),
-      ]),
-    });
-
-    expect(await getDecks(db)).toEqual([deck]);
   });
 
   it("stores deck titles without leading or trailing whitespace", async () => {

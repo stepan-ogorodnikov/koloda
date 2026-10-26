@@ -55,6 +55,45 @@ fn update_deck_round_trips_every_field() {
     );
 }
 
+// Twin of the web `stores deck titles without leading or trailing whitespace` case.
+#[test]
+fn add_and_update_store_deck_titles_trimmed() {
+    let db = test_db();
+    let algorithm_id = add_algorithm(&db, "FSRS");
+    let template_id = add_template(&db, "Basic");
+    let deck = decks::add_deck(
+        &db,
+        InsertDeckData {
+            title: "  Padded deck  ".to_string(),
+            algorithm_id: algorithm_id.clone(),
+            template_id: template_id.clone(),
+        },
+    )
+    .expect("deck should be created");
+    let added = decks::get_deck(&db, &deck.id)
+        .expect("deck query should succeed")
+        .expect("deck should exist");
+    assert_eq!(added.title, "Padded deck");
+
+    decks::update_deck(
+        &db,
+        UpdateDeckData {
+            id: deck.id.clone(),
+            values: UpdateDeckValues {
+                title: "  Renamed deck  ".to_string(),
+                algorithm_id,
+                template_id,
+                notes: None,
+            },
+        },
+    )
+    .expect("deck should be updated");
+    let updated = decks::get_deck(&db, &deck.id)
+        .expect("deck query should succeed")
+        .expect("deck should exist");
+    assert_eq!(updated.title, "Renamed deck");
+}
+
 #[test]
 fn add_deck_rejects_missing_algorithm() {
     let db = test_db();

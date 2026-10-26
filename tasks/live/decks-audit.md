@@ -439,7 +439,7 @@ Line numbers are at `0fcd9722`; when an earlier item moved them, find the code b
   Commit: Give malformed deck references their catalog codes
   Depends on: none
 
-- [ ] 7. Test web deck notes and cascade isolation, and Rust title trimming
+- [x] 7. Test web deck notes and cascade isolation, and Rust title trimming
   Goal (D8):
   - `decks.integration.test.ts`:
     - replace the roundtrip (`:17-45`) with a full-field one: change title, notes, algorithm, and template, and compare
@@ -452,6 +452,9 @@ Line numbers are at `0fcd9722`; when an earlier item moved them, find the code b
   - `decks_integration_tests.rs`: add and update with a padded title store it trimmed (`repo/decks.rs:139`, `:187`).
     Twin of web `decks.integration.test.ts:116-130`.
   Constraints: tests only; no repo code changes.
+    Implemented: the kept title case is the update one; it also checks that the saved deck is unchanged (DECKS.md
+    lines 79-80).
+    The new roundtrip drops the old test's delete steps; the cascade test covers delete.
   Done when:
   - `DB decks referential` and `RS deck` pass;
   - the Rust case fails if either trim is removed.
