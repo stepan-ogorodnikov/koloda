@@ -16,7 +16,8 @@ Web implements `Queries` with `@koloda/db-sqlite`; desktop implements it via Ele
 - Query contract: `queries.ts` — `Queries` (settings, conversations, algorithms, templates, decks,
   cards, lessons, reviews, attachments, AI profiles);
   `queries-contract.ts` — runtime check that an injected `Queries` implements every method.
-- Query keys: `query-keys.ts` — centralized key builders.
+- Query keys: `query-keys.ts` — centralized key builders;
+  `invalidate-deck-queries.ts` — the refresh after a deck is added, shared by the add dialog and the assistant.
 - Atoms: `atoms.ts` — theme/lang/defaults, `aiProvidersAtom`, `appEntryAtom`, `queriesAtom`;
   `ai-runtime.ts` — `aiRuntimeAtom` (host-injected `AIRuntime`; the AIRuntime seam);
   `attachment-from-url.ts` — `addAttachmentFromUrlAtom` (set only by the desktop app);

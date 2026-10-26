@@ -1,7 +1,5 @@
 import { ASSISTANT_TOOL_SPECS } from "@koloda/ai";
 import type { AssistantEvent } from "@koloda/assistant";
-import { queryKeys } from "@koloda/core-react";
-import type { QueryClient } from "@tanstack/react-query";
 import { conversationsAtom } from "../state/conversation-store";
 import type { RunToolCall } from "../state/conversation-types";
 import { isReasoningActivity } from "../state/conversation-types";
@@ -10,14 +8,6 @@ import type { AssistantJotaiStore } from "./assistant-engine-instance";
 // WHY: engine emit runs outside React. The app shell registers the QueryClient
 // callback here and clears it on unmount — never an escaped Effect Event.
 let invalidateAddDeckQueries: (() => void) | null = null;
-
-export function invalidateDeckQueriesAfterAddDeck(queryClient: QueryClient): void {
-  queryClient.invalidateQueries({ queryKey: queryKeys.decks.all() });
-  queryClient.invalidateQueries({ queryKey: queryKeys.lessons.all({}) });
-  // WHY: deck usage counts feed the delete guards on presets and templates.
-  queryClient.invalidateQueries({ queryKey: queryKeys.algorithms.decksAll() });
-  queryClient.invalidateQueries({ queryKey: queryKeys.templates.decksAll() });
-}
 
 export function registerAddDeckQueryInvalidator(invalidate: () => void): () => void {
   invalidateAddDeckQueries = invalidate;

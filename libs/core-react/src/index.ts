@@ -18,6 +18,7 @@ export { DEFAULT_HOTKEYS_SCOPES, hotkeysScopesAtom, useHotkeysStatus } from "./l
 export type { AppHotkeyScope, RuntimeScope } from "./lib/hooks/use-hotkeys-status";
 export { useTitle } from "./lib/hooks/use-title";
 export { useTimestampFormatter } from "./lib/hooks/use-timestamp-formatter";
+export { invalidateDeckQueriesAfterAddDeck } from "./lib/invalidate-deck-queries";
 export { optimizerQueriesAtom } from "./lib/optimizer";
 export type { OptimizationProgress, OptimizeAlgorithmOptions, OptimizerQueries } from "./lib/optimizer";
 export { queriesAtom } from "./lib/queries";

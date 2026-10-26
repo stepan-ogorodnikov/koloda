@@ -1,7 +1,8 @@
-import { invalidateDeckQueriesAfterAddDeck, registerAddDeckQueryInvalidator } from "./add-deck-query-invalidation";
+import { registerAddDeckQueryInvalidator } from "./add-deck-query-invalidation";
 import { ensureAssistantEngine } from "./assistant-engine-instance";
 import type { AssistantJotaiStore } from "./assistant-engine-instance";
 import { SHUTDOWN_FLUSH_TIMEOUT_MS } from "@koloda/assistant";
+import { invalidateDeckQueriesAfterAddDeck } from "@koloda/core-react";
 import {
   conversationsAtom,
   dispatchToConversationOnStore,

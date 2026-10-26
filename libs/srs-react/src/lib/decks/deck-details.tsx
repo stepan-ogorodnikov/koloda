@@ -7,7 +7,6 @@ import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
-import { useEffect } from "react";
 import { AlgorithmPicker } from "../algorithms/algorithm-picker";
 import { TemplatePicker } from "../templates/template-picker";
 import { DeleteDeck } from "./delete-deck";
@@ -32,7 +31,6 @@ export function DeckDetails({ id }: DeckDetailsProps) {
         {
           onSuccess: (returning) => {
             queryClient.invalidateQueries({ queryKey: queryKeys.decks.all() });
-            queryClient.invalidateQueries({ queryKey: queryKeys.decks.detail(id) });
             // WHY: the Dashboard's lesson rows carry the deck title.
             queryClient.invalidateQueries({ queryKey: queryKeys.lessons.all() });
             // WHY: deck usage counts feed the delete guards on presets and templates.
@@ -51,10 +49,6 @@ export function DeckDetails({ id }: DeckDetailsProps) {
     },
   });
   useRefreshPristineFields(form, data, DECK_SYNC_GROUPS);
-
-  useEffect(() => {
-    if (data?.id) form.reset();
-  }, [data?.id, form]);
 
   if (!data) return null;
 

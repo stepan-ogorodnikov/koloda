@@ -403,7 +403,7 @@ Line numbers are at `0fcd9722`; when an earlier item moved them, find the code b
   Commit: Keep synced values in the preset, template, and learning editors
   Depends on: 3
 
-- [ ] 5. Drop editor residue and share the add-deck refresh
+- [x] 5. Drop editor residue and share the add-deck refresh
   Goal (D11):
   - Drop the mount-only `form.reset()` effects (`deck-details.tsx:51-53`, `algorithm.tsx:45-47`,
     `template.tsx:44-46`).

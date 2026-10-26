@@ -1,5 +1,10 @@
 import { toFormErrors } from "@koloda/app";
-import { defaultAlgorithmAtom, defaultTemplateAtom, queriesAtom, queryKeys } from "@koloda/core-react";
+import {
+  defaultAlgorithmAtom,
+  defaultTemplateAtom,
+  invalidateDeckQueriesAfterAddDeck,
+  queriesAtom,
+} from "@koloda/core-react";
 import { insertDeckSchema as schema } from "@koloda/srs";
 import type { Deck, InsertDeckData } from "@koloda/srs";
 import {
@@ -54,11 +59,7 @@ export function AddDeck() {
       }
       formApi.reset();
       handleCreated(returning);
-      queryClient.invalidateQueries({ queryKey: queryKeys.decks.all() });
-      queryClient.invalidateQueries({ queryKey: queryKeys.lessons.all({}) });
-      // WHY: deck usage counts feed the delete guards on presets and templates.
-      queryClient.invalidateQueries({ queryKey: queryKeys.algorithms.decksAll() });
-      queryClient.invalidateQueries({ queryKey: queryKeys.templates.decksAll() });
+      invalidateDeckQueriesAfterAddDeck(queryClient);
     },
   });
   const formErrorMap = useStore(form.store, (state) => state.errorMap);

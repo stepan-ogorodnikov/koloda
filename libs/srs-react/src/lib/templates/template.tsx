@@ -17,7 +17,6 @@ import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
-import { useEffect } from "react";
 import { CloneTemplate } from "./clone-template";
 import { DeleteTemplate } from "./delete-template";
 import { TemplateFields } from "./template-fields";
@@ -55,10 +54,6 @@ export function Template({ id }: TemplateProps) {
     },
   });
   useRefreshPristineFields(form, data, TEMPLATE_SYNC_GROUPS);
-
-  useEffect(() => {
-    if (data?.id) form.reset();
-  }, [data?.id, form]);
 
   if (isSuccess && data === null) return <NotFound />;
 
