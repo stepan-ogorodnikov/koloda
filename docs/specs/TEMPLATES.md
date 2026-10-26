@@ -110,6 +110,7 @@ Saving persists title, notes, fields, and layout together.
 Discard restores the last saved values.
 
 The template title is required and at most 255 characters long.
+Some characters, such as emoji, count as two toward this limit.
 Leading and trailing whitespace is stripped before a title is saved.
 A title that is empty or contains only whitespace is rejected.
 Empty field titles are allowed.
@@ -118,6 +119,7 @@ Notes are optional.
 Leading and trailing whitespace is stripped before notes are saved.
 Notes that are empty or contain only whitespace are not kept.
 Notes are limited to 1,024 characters.
+Some characters, such as emoji, count as two toward this limit.
 Changing notes does not change fields or layout.
 It does not change lock status.
 See ASSISTANT-DATA-ACCESS.md (§Resources) for how the assistant reads notes.

@@ -71,6 +71,7 @@ After a successful add, the dialog offers a link to open the new algorithm.
 Changing the title again clears that success state so another add can be submitted.
 
 The title is required and at most 255 characters long.
+Some characters, such as emoji, count as two toward this limit.
 Leading and trailing whitespace is stripped before a title is saved.
 A title that is empty or contains only whitespace is rejected.
 
@@ -95,6 +96,7 @@ Notes are optional.
 Leading and trailing whitespace is stripped before notes are saved.
 Notes that are empty or contain only whitespace are not kept.
 Notes are limited to 1,024 characters.
+Some characters, such as emoji, count as two toward this limit.
 Changing notes does not change scheduling parameters.
 See ASSISTANT-DATA-ACCESS.md (§Resources) for how the assistant reads notes.
 

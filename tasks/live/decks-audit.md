@@ -503,12 +503,15 @@ Line numbers are at `0fcd9722`; when an earlier item moved them, find the code b
   Commit: State the card count in the deck delete confirmation
   Depends on: none
 
-- [ ] 10. Say how title and notes length is counted
+- [x] 10. Say how title and notes length is counted
   Goal (D2; question 4):
   - DECKS.md lines 38 and 68, ALGORITHMS.md lines 43, 73, and 97, TEMPLATES.md lines 112 and 120.
     Each keeps its limit and says that some characters, such as emoji, count as two.
   - The three specs move together (`agents/FUNCTIONAL-SPECIFICATIONS.md`, Principles); word them the same.
   Constraints: the three specs only; no code change.
+    Implemented: one identical sentence follows each title and notes rule.
+    ALGORITHMS.md line 43 is a summary bullet that `algorithms.md` finding 4 flags as a restatement; it is left for
+    that triage.
   Done when: `bun run check:markdown` passes.
   Manual verify: none — spec only.
   Commit: Say how title and notes length is counted
