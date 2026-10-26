@@ -424,7 +424,7 @@ Line numbers are at `0fcd9722`; when an earlier item moved them, find the code b
   Commit: Drop editor residue and share the add-deck refresh
   Depends on: 2, 4
 
-- [ ] 6. Give malformed deck references their catalog codes
+- [x] 6. Give malformed deck references their catalog codes
   Goal (D7):
   - `deckValidation` (`libs/srs/src/lib/decks.ts:12-13`): `algorithmId: z.uuid({ message:
     "validation.decks.algorithm" })` and `templateId: z.uuid({ message: "validation.decks.template" })`, as

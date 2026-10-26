@@ -7,22 +7,33 @@ function validDeck() {
   return { id: ID, title: "German", algorithmId: ID, templateId: ID };
 }
 
-// Twin of `crates/koloda/tests/domain/decks_validation_tests.rs` — the Rust
-// side reports dedicated `validation.decks.*` codes for these shapes; the TS
-// side rejects them via `z.uuid()` before any existence check runs.
+// Twin of `crates/koloda/tests/domain/decks_validation_tests.rs`: both sides report the
+// dedicated `validation.decks.*` codes before any existence check runs.
 describe("deckValidation references", () => {
   it("accepts well-formed uuid references", () => {
     expect(deckValidation.safeParse(validDeck()).success).toBe(true);
   });
 
   it.each([
-    { name: "malformed algorithmId", payload: { ...validDeck(), algorithmId: "not-a-uuid" } },
-    { name: "non-uuid templateId", payload: { ...validDeck(), templateId: "simple" } },
-    { name: "hyphenless algorithmId", payload: { ...validDeck(), algorithmId: "01900000000070008000000000000001" } },
-    { name: "empty templateId", payload: { ...validDeck(), templateId: "" } },
-  ])("rejects $name", ({ payload }) => {
+    {
+      name: "malformed algorithmId",
+      payload: { ...validDeck(), algorithmId: "not-a-uuid" },
+      code: "validation.decks.algorithm",
+    },
+    {
+      name: "non-uuid templateId",
+      payload: { ...validDeck(), templateId: "simple" },
+      code: "validation.decks.template",
+    },
+    {
+      name: "hyphenless algorithmId",
+      payload: { ...validDeck(), algorithmId: "01900000000070008000000000000001" },
+      code: "validation.decks.algorithm",
+    },
+    { name: "empty templateId", payload: { ...validDeck(), templateId: "" }, code: "validation.decks.template" },
+  ])("rejects $name with its code", ({ payload, code }) => {
     const result = deckValidation.safeParse(payload);
-    expect(result.success).toBe(false);
+    expect(result.error?.issues.map((issue) => issue.message)).toEqual([code]);
   });
 });
 

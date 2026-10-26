@@ -1,16 +1,14 @@
 import type { UpdateData } from "@koloda/app";
 import { timestampsValidation } from "@koloda/app";
 import { z } from "zod";
-import { algorithmValidation } from "./algorithms";
 import { optionalEntityNotesSchema, requiredEntityTitleSchema } from "@koloda/app";
-import { templateValidation } from "./templates";
 
 export const deckValidation = z.object({
   id: z.uuid(),
   title: requiredEntityTitleSchema,
   notes: optionalEntityNotesSchema,
-  algorithmId: algorithmValidation.shape.id,
-  templateId: templateValidation.shape.id,
+  algorithmId: z.uuid({ message: "validation.decks.algorithm" }),
+  templateId: z.uuid({ message: "validation.decks.template" }),
 });
 
 export const deckRowSchema = deckValidation.extend(timestampsValidation.shape);
