@@ -476,7 +476,7 @@ Line numbers are at `0fcd9722`; when an earlier item moved them, find the code b
   Commit: Table the Rust deck title and reference tests
   Depends on: none
 
-- [ ] 9. State the card count in the deck delete confirmation
+- [x] 9. State the card count in the deck delete confirmation
   Goal (D12):
   - `DeleteDeck` (`delete-deck.tsx`): read the deck's cards from `getCardsQuery({ deckId: id })`; the route loader
     already ensures it (`_.decks.$deckId.tsx:19`).
@@ -492,6 +492,8 @@ Line numbers are at `0fcd9722`; when an earlier item moved them, find the code b
   Constraints:
   - `delete-deck.tsx`, the catalogs, and DECKS.md.
   - Copy and wiring, with no unit test of its own; item 12's delete flow asserts the count.
+  - Implemented: the web extract also rewrote source-line comments in five other libs' catalogs; those were left out.
+    Each plural form was rendered from the compiled web catalogs for 0, 1, 2, 5, and 21 cards in both languages.
   Done when:
   - `SR`, `bun run typecheck`, and `bun run check:markdown` pass.
   Manual verify (web):

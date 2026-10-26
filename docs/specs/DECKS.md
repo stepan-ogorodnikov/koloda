@@ -84,7 +84,9 @@ Opening a missing or invalid deck link shows not found.
 ## Deleting Decks
 
 Delete asks for confirmation.
-The confirmation states that the deck and all of its cards and reviews will be removed.
+The confirmation states how many cards the deck holds.
+It says that the deck, those cards, and their reviews will be removed.
+For a deck without cards, it asks only about the deck.
 
 On success:
 

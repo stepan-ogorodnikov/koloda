@@ -23,29 +23,33 @@ msgstr "{0, plural, one {# колода использует} few {# колод�
 msgid "{0, plural, other {optimize-algorithm.review-count.#}}"
 msgstr "На основе {0, plural, one {# повторения} few {# повторений} many {# повторений} other {# повторения}}."
 
+#: ../../libs/srs-react/src/lib/decks/delete-deck.tsx:57
+msgid "{cardCount, plural, other {delete-deck.message}}"
+msgstr "{cardCount, plural, =0 {Вы уверены, что хотите удалить эту колоду?} one {Вы уверены, что хотите удалить эту колоду и её # карточку с повторениями?} few {Вы уверены, что хотите удалить эту колоду и её # карточки с повторениями?} many {Вы уверены, что хотите удалить эту колоду и её # карточек с повторениями?} other {Вы уверены, что хотите удалить эту колоду и её # карточки с повторениями?}}"
+
 #: ../../libs/srs-react/src/lib/cards/cards-table-selection-controls.tsx:58
 msgid "{selectedCount, plural, other {cards-table.selection.label}}"
 msgstr "{selectedCount, plural, one {выбрана} few {выбраны} many {выбрано} other {выбрано} }"
 
-#: ../../libs/srs-react/src/lib/algorithms/add-algorithm.tsx:85
-#: ../../libs/srs-react/src/lib/algorithms/add-algorithm.tsx:90
+#: ../../libs/srs-react/src/lib/algorithms/add-algorithm.tsx:87
+#: ../../libs/srs-react/src/lib/algorithms/add-algorithm.tsx:92
 msgid "add-algorithm.inputs.title.label"
 msgstr "Название"
 
-#: ../../libs/srs-react/src/lib/algorithms/add-algorithm.tsx:109
+#: ../../libs/srs-react/src/lib/algorithms/add-algorithm.tsx:111
 msgid "add-algorithm.redirect.link"
 msgstr "Перейти"
 
-#: ../../libs/srs-react/src/lib/algorithms/add-algorithm.tsx:116
+#: ../../libs/srs-react/src/lib/algorithms/add-algorithm.tsx:118
 msgid "add-algorithm.submit"
 msgstr "Создать"
 
-#: ../../libs/srs-react/src/lib/algorithms/add-algorithm.tsx:79
+#: ../../libs/srs-react/src/lib/algorithms/add-algorithm.tsx:81
 msgid "add-algorithm.title"
 msgstr "Новый алгоритм"
 
-#: ../../libs/srs-react/src/lib/algorithms/add-algorithm.tsx:64
-#: ../../libs/srs-react/src/lib/algorithms/add-algorithm.tsx:65
+#: ../../libs/srs-react/src/lib/algorithms/add-algorithm.tsx:66
+#: ../../libs/srs-react/src/lib/algorithms/add-algorithm.tsx:67
 msgid "add-algorithm.trigger"
 msgstr "Новый алгоритм"
 
@@ -62,89 +66,89 @@ msgstr "Добавить карточку"
 msgid "add-cards.trigger"
 msgstr "Добавить карточки"
 
-#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:95
+#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:100
 msgid "add-deck.inputs.title.label"
 msgstr "Название"
 
-#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:120
+#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:125
 msgid "add-deck.redirect.link"
 msgstr "Перейти"
 
-#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:127
+#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:132
 msgid "add-deck.submit"
 msgstr "Создать"
 
-#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:127
+#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:132
 msgid "add-deck.success"
 msgstr "Успешно"
 
-#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:84
+#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:89
 msgid "add-deck.title"
 msgstr "Новая колода"
 
-#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:69
-#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:70
+#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:74
+#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:75
 msgid "add-deck.trigger"
 msgstr "Новая колода"
 
-#: ../../libs/srs-react/src/lib/templates/add-template.tsx:90
+#: ../../libs/srs-react/src/lib/templates/add-template.tsx:92
 msgid "add-template.inputs.title.label"
 msgstr "Название"
 
-#: ../../libs/srs-react/src/lib/templates/add-template.tsx:109
+#: ../../libs/srs-react/src/lib/templates/add-template.tsx:111
 msgid "add-template.redirect.link"
 msgstr "Перейти"
 
-#: ../../libs/srs-react/src/lib/templates/add-template.tsx:116
+#: ../../libs/srs-react/src/lib/templates/add-template.tsx:118
 msgid "add-template.submit"
 msgstr "Создать"
 
-#: ../../libs/srs-react/src/lib/templates/add-template.tsx:79
+#: ../../libs/srs-react/src/lib/templates/add-template.tsx:81
 msgid "add-template.title"
 msgstr "Новый шаблон"
 
-#: ../../libs/srs-react/src/lib/templates/add-template.tsx:64
-#: ../../libs/srs-react/src/lib/templates/add-template.tsx:65
+#: ../../libs/srs-react/src/lib/templates/add-template.tsx:66
+#: ../../libs/srs-react/src/lib/templates/add-template.tsx:67
 msgid "add-template.trigger"
 msgstr "Новый шаблон"
 
-#: ../../libs/srs-react/src/lib/algorithms/algorithm-picker.tsx:31
+#: ../../libs/srs-react/src/lib/algorithms/algorithm-picker.tsx:24
 msgid "algorithm-picker.label"
 msgstr "Алгоритм"
 
-#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:147
+#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:156
 msgid "algorithm.actions.label"
 msgstr "Действия"
 
-#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:110
+#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:119
 msgid "algorithm.inputs.is-fuzz-enabled.label"
 msgstr "Добавить случайный разброс"
 
-#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:128
+#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:137
 msgid "algorithm.inputs.learning-steps.label"
 msgstr "Интервалы заучивания"
 
-#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:142
+#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:151
 msgid "algorithm.inputs.maximum-interval.label"
 msgstr "Максимальный интервал"
 
-#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:79
+#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:88
 msgid "algorithm.inputs.notes.label"
 msgstr "Заметки"
 
-#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:131
+#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:140
 msgid "algorithm.inputs.relearning-steps.label"
 msgstr "Интервалы переучивания"
 
-#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:94
+#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:103
 msgid "algorithm.inputs.retention.label"
 msgstr "Коэфициент"
 
-#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:71
+#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:80
 msgid "algorithm.inputs.title.label"
 msgstr "Название"
 
-#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:119
+#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:128
 msgid "algorithm.inputs.weights.label"
 msgstr "Веса"
 
@@ -334,55 +338,55 @@ msgstr "По одной"
 msgid "cards.views.table"
 msgstr "Таблица"
 
-#: ../../libs/srs-react/src/lib/algorithms/clone-algorithm.tsx:76
+#: ../../libs/srs-react/src/lib/algorithms/clone-algorithm.tsx:78
 msgid "clone-algorithm.inputs.title.label"
 msgstr "Название"
 
-#: ../../libs/srs-react/src/lib/algorithms/clone-algorithm.tsx:93
+#: ../../libs/srs-react/src/lib/algorithms/clone-algorithm.tsx:95
 msgid "clone-algorithm.redirect.link"
 msgstr "Перейти"
 
-#: ../../libs/srs-react/src/lib/algorithms/clone-algorithm.tsx:100
+#: ../../libs/srs-react/src/lib/algorithms/clone-algorithm.tsx:102
 msgid "clone-algorithm.submit"
 msgstr "Создать"
 
-#: ../../libs/srs-react/src/lib/algorithms/clone-algorithm.tsx:100
+#: ../../libs/srs-react/src/lib/algorithms/clone-algorithm.tsx:102
 msgid "clone-algorithm.success"
 msgstr "Успешно"
 
-#: ../../libs/srs-react/src/lib/algorithms/clone-algorithm.tsx:56
+#: ../../libs/srs-react/src/lib/algorithms/clone-algorithm.tsx:58
 msgid "clone-algorithm.trigger"
 msgstr "Создать копию"
 
-#: ../../libs/srs-react/src/lib/templates/clone-template.tsx:76
+#: ../../libs/srs-react/src/lib/templates/clone-template.tsx:78
 msgid "clone-template.inputs.title.label"
 msgstr "Название"
 
-#: ../../libs/srs-react/src/lib/templates/clone-template.tsx:93
+#: ../../libs/srs-react/src/lib/templates/clone-template.tsx:95
 msgid "clone-template.redirect.link"
 msgstr "Перейти"
 
-#: ../../libs/srs-react/src/lib/templates/clone-template.tsx:100
+#: ../../libs/srs-react/src/lib/templates/clone-template.tsx:102
 msgid "clone-template.submit"
 msgstr "Создать"
 
-#: ../../libs/srs-react/src/lib/templates/clone-template.tsx:100
+#: ../../libs/srs-react/src/lib/templates/clone-template.tsx:102
 msgid "clone-template.success"
 msgstr "Успешно"
 
-#: ../../libs/srs-react/src/lib/templates/clone-template.tsx:56
+#: ../../libs/srs-react/src/lib/templates/clone-template.tsx:58
 msgid "clone-template.trigger"
 msgstr "Создать копию"
 
-#: ../../libs/srs-react/src/lib/decks/deck-details.tsx:98
+#: ../../libs/srs-react/src/lib/decks/deck-details.tsx:96
 msgid "deck.actions.label"
 msgstr "Действия"
 
-#: ../../libs/srs-react/src/lib/decks/deck-details.tsx:83
+#: ../../libs/srs-react/src/lib/decks/deck-details.tsx:81
 msgid "deck.inputs.notes.label"
 msgstr "Заметки"
 
-#: ../../libs/srs-react/src/lib/decks/deck-details.tsx:75
+#: ../../libs/srs-react/src/lib/decks/deck-details.tsx:73
 msgid "deck.inputs.title.label"
 msgstr "Название"
 
@@ -434,19 +438,15 @@ msgstr "Подтвердите удаление карточки"
 msgid "delete-card.trigger"
 msgstr "Удалить карточку"
 
-#: ../../libs/srs-react/src/lib/decks/delete-deck.tsx:59
+#: ../../libs/srs-react/src/lib/decks/delete-deck.tsx:61
 msgid "delete-deck.cancel"
 msgstr "Отменить"
 
-#: ../../libs/srs-react/src/lib/decks/delete-deck.tsx:61
+#: ../../libs/srs-react/src/lib/decks/delete-deck.tsx:63
 msgid "delete-deck.confirm"
 msgstr "Удалить"
 
-#: ../../libs/srs-react/src/lib/decks/delete-deck.tsx:55
-msgid "delete-deck.message"
-msgstr "Вы уверены, что хотите удалить эту колоду и все её карточки и повторения?"
-
-#: ../../libs/srs-react/src/lib/decks/delete-deck.tsx:47
+#: ../../libs/srs-react/src/lib/decks/delete-deck.tsx:49
 msgid "delete-deck.trigger"
 msgstr "Удалить колоду"
 
@@ -631,11 +631,11 @@ msgstr "Оптимизировать"
 msgid "preview-card.trigger"
 msgstr "Предпросмотр карточки"
 
-#: ../../libs/srs-react/src/lib/templates/template-picker.tsx:31
+#: ../../libs/srs-react/src/lib/templates/template-picker.tsx:24
 msgid "template-picker.label"
 msgstr "Шаблон"
 
-#: ../../libs/srs-react/src/lib/templates/template.tsx:108
+#: ../../libs/srs-react/src/lib/templates/template.tsx:118
 msgid "template.actions.label"
 msgstr "Действия"
 
@@ -664,15 +664,15 @@ msgstr "Без названия"
 msgid "template.fields.inputs.type.label"
 msgstr "Тип"
 
-#: ../../libs/srs-react/src/lib/templates/template.tsx:97
+#: ../../libs/srs-react/src/lib/templates/template.tsx:107
 msgid "template.fields.label"
 msgstr "Поля"
 
-#: ../../libs/srs-react/src/lib/templates/template.tsx:78
+#: ../../libs/srs-react/src/lib/templates/template.tsx:88
 msgid "template.inputs.notes.label"
 msgstr "Заметки"
 
-#: ../../libs/srs-react/src/lib/templates/template.tsx:70
+#: ../../libs/srs-react/src/lib/templates/template.tsx:80
 msgid "template.inputs.title.label"
 msgstr "Название"
 
@@ -684,18 +684,18 @@ msgstr "Поле"
 msgid "template.layout.inputs.operation.label"
 msgstr "Действие"
 
-#: ../../libs/srs-react/src/lib/templates/template.tsx:103
+#: ../../libs/srs-react/src/lib/templates/template.tsx:113
 msgid "template.layout.label"
 msgstr "Раскладка"
 
-#: ../../libs/srs-react/src/lib/templates/template.tsx:92
+#: ../../libs/srs-react/src/lib/templates/template.tsx:102
 msgid "template.status.locked"
 msgstr "Заблокирован"
 
-#: ../../libs/srs-react/src/lib/templates/template.tsx:84
+#: ../../libs/srs-react/src/lib/templates/template.tsx:94
 msgid "template.status.title"
 msgstr "Статус"
 
-#: ../../libs/srs-react/src/lib/templates/template.tsx:92
+#: ../../libs/srs-react/src/lib/templates/template.tsx:102
 msgid "template.status.unlocked"
 msgstr "Не заблокирован"

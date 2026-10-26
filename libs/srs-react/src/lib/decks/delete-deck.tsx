@@ -2,9 +2,9 @@ import { ERROR_MESSAGES, formatAppError } from "@koloda/app";
 import { queriesAtom, queryKeys } from "@koloda/core-react";
 import type { Deck } from "@koloda/srs";
 import { DeleteDialog, ErrorMessage, Fade } from "@koloda/ui";
-import { msg } from "@lingui/core/macro";
+import { msg, plural } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useAtomValue } from "jotai";
 import { AnimatePresence } from "motion/react";
@@ -15,8 +15,10 @@ export function DeleteDeck({ id }: DeleteDeckProps) {
   const queryClient = useQueryClient();
   const { _ } = useLingui();
   const navigate = useNavigate({ from: "/decks/$deckId" });
-  const { deleteDeckMutation } = useAtomValue(queriesAtom);
+  const { deleteDeckMutation, getCardsQuery } = useAtomValue(queriesAtom);
   const { mutate, error, reset } = useMutation(deleteDeckMutation());
+  const { data: cards } = useQuery(getCardsQuery({ deckId: id }));
+  const cardCount = cards?.length ?? 0;
 
   const handleOpenChange = (isOpen: boolean) => {
     if (isOpen) reset();
@@ -52,7 +54,7 @@ export function DeleteDeck({ id }: DeleteDeckProps) {
               <ErrorMessage {...formatAppError(error, _, ERROR_MESSAGES["db.delete"])} />
             </Fade>
           ) : (
-            <Fade>{_(msg`delete-deck.message`)}</Fade>
+            <Fade>{_(msg`${plural(cardCount, { other: "delete-deck.message" })}`)}</Fade>
           )}
         </AnimatePresence>
         <DeleteDialog.Actions>

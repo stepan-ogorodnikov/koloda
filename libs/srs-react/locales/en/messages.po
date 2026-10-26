@@ -23,29 +23,33 @@ msgstr "This preset is used by {0, plural, one {# deck} other {# decks}}."
 msgid "{0, plural, other {optimize-algorithm.review-count.#}}"
 msgstr "Based on {0, plural, one {# review} other {# reviews}}."
 
+#: ../../libs/srs-react/src/lib/decks/delete-deck.tsx:57
+msgid "{cardCount, plural, other {delete-deck.message}}"
+msgstr "{cardCount, plural, =0 {Are you sure you want to delete this deck?} one {Are you sure you want to delete this deck and its # card with its reviews?} other {Are you sure you want to delete this deck and its # cards with their reviews?}}"
+
 #: ../../libs/srs-react/src/lib/cards/cards-table-selection-controls.tsx:58
 msgid "{selectedCount, plural, other {cards-table.selection.label}}"
 msgstr "selected"
 
-#: ../../libs/srs-react/src/lib/algorithms/add-algorithm.tsx:85
-#: ../../libs/srs-react/src/lib/algorithms/add-algorithm.tsx:90
+#: ../../libs/srs-react/src/lib/algorithms/add-algorithm.tsx:87
+#: ../../libs/srs-react/src/lib/algorithms/add-algorithm.tsx:92
 msgid "add-algorithm.inputs.title.label"
 msgstr "Title"
 
-#: ../../libs/srs-react/src/lib/algorithms/add-algorithm.tsx:109
+#: ../../libs/srs-react/src/lib/algorithms/add-algorithm.tsx:111
 msgid "add-algorithm.redirect.link"
 msgstr "Go to the new preset"
 
-#: ../../libs/srs-react/src/lib/algorithms/add-algorithm.tsx:116
+#: ../../libs/srs-react/src/lib/algorithms/add-algorithm.tsx:118
 msgid "add-algorithm.submit"
 msgstr "Create"
 
-#: ../../libs/srs-react/src/lib/algorithms/add-algorithm.tsx:79
+#: ../../libs/srs-react/src/lib/algorithms/add-algorithm.tsx:81
 msgid "add-algorithm.title"
 msgstr "New preset"
 
-#: ../../libs/srs-react/src/lib/algorithms/add-algorithm.tsx:64
-#: ../../libs/srs-react/src/lib/algorithms/add-algorithm.tsx:65
+#: ../../libs/srs-react/src/lib/algorithms/add-algorithm.tsx:66
+#: ../../libs/srs-react/src/lib/algorithms/add-algorithm.tsx:67
 msgid "add-algorithm.trigger"
 msgstr "New preset"
 
@@ -62,89 +66,89 @@ msgstr "Add card"
 msgid "add-cards.trigger"
 msgstr "Add cards"
 
-#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:95
+#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:100
 msgid "add-deck.inputs.title.label"
 msgstr "Title"
 
-#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:120
+#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:125
 msgid "add-deck.redirect.link"
 msgstr "Go to the new deck"
 
-#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:127
+#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:132
 msgid "add-deck.submit"
 msgstr "Add deck"
 
-#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:127
+#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:132
 msgid "add-deck.success"
 msgstr "Done"
 
-#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:84
+#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:89
 msgid "add-deck.title"
 msgstr "New deck"
 
-#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:69
-#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:70
+#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:74
+#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:75
 msgid "add-deck.trigger"
 msgstr "New deck"
 
-#: ../../libs/srs-react/src/lib/templates/add-template.tsx:90
+#: ../../libs/srs-react/src/lib/templates/add-template.tsx:92
 msgid "add-template.inputs.title.label"
 msgstr "Title"
 
-#: ../../libs/srs-react/src/lib/templates/add-template.tsx:109
+#: ../../libs/srs-react/src/lib/templates/add-template.tsx:111
 msgid "add-template.redirect.link"
 msgstr "Go to the new template"
 
-#: ../../libs/srs-react/src/lib/templates/add-template.tsx:116
+#: ../../libs/srs-react/src/lib/templates/add-template.tsx:118
 msgid "add-template.submit"
 msgstr "Create"
 
-#: ../../libs/srs-react/src/lib/templates/add-template.tsx:79
+#: ../../libs/srs-react/src/lib/templates/add-template.tsx:81
 msgid "add-template.title"
 msgstr "New template"
 
-#: ../../libs/srs-react/src/lib/templates/add-template.tsx:64
-#: ../../libs/srs-react/src/lib/templates/add-template.tsx:65
+#: ../../libs/srs-react/src/lib/templates/add-template.tsx:66
+#: ../../libs/srs-react/src/lib/templates/add-template.tsx:67
 msgid "add-template.trigger"
 msgstr "New template"
 
-#: ../../libs/srs-react/src/lib/algorithms/algorithm-picker.tsx:31
+#: ../../libs/srs-react/src/lib/algorithms/algorithm-picker.tsx:24
 msgid "algorithm-picker.label"
 msgstr "Preset"
 
-#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:147
+#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:156
 msgid "algorithm.actions.label"
 msgstr "Actions"
 
-#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:110
+#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:119
 msgid "algorithm.inputs.is-fuzz-enabled.label"
 msgstr "Apply fuzz factor"
 
-#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:128
+#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:137
 msgid "algorithm.inputs.learning-steps.label"
 msgstr "Learning steps"
 
-#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:142
+#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:151
 msgid "algorithm.inputs.maximum-interval.label"
 msgstr "Maximum interval"
 
-#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:79
+#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:88
 msgid "algorithm.inputs.notes.label"
 msgstr "Notes"
 
-#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:131
+#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:140
 msgid "algorithm.inputs.relearning-steps.label"
 msgstr "Relearning steps"
 
-#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:94
+#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:103
 msgid "algorithm.inputs.retention.label"
 msgstr "Retention"
 
-#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:71
+#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:80
 msgid "algorithm.inputs.title.label"
 msgstr "Title"
 
-#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:119
+#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:128
 msgid "algorithm.inputs.weights.label"
 msgstr "Weights"
 
@@ -334,55 +338,55 @@ msgstr "Stack"
 msgid "cards.views.table"
 msgstr "Table"
 
-#: ../../libs/srs-react/src/lib/algorithms/clone-algorithm.tsx:76
+#: ../../libs/srs-react/src/lib/algorithms/clone-algorithm.tsx:78
 msgid "clone-algorithm.inputs.title.label"
 msgstr "Title"
 
-#: ../../libs/srs-react/src/lib/algorithms/clone-algorithm.tsx:93
+#: ../../libs/srs-react/src/lib/algorithms/clone-algorithm.tsx:95
 msgid "clone-algorithm.redirect.link"
 msgstr "Go to the new preset"
 
-#: ../../libs/srs-react/src/lib/algorithms/clone-algorithm.tsx:100
+#: ../../libs/srs-react/src/lib/algorithms/clone-algorithm.tsx:102
 msgid "clone-algorithm.submit"
 msgstr "Clone"
 
-#: ../../libs/srs-react/src/lib/algorithms/clone-algorithm.tsx:100
+#: ../../libs/srs-react/src/lib/algorithms/clone-algorithm.tsx:102
 msgid "clone-algorithm.success"
 msgstr "Done"
 
-#: ../../libs/srs-react/src/lib/algorithms/clone-algorithm.tsx:56
+#: ../../libs/srs-react/src/lib/algorithms/clone-algorithm.tsx:58
 msgid "clone-algorithm.trigger"
 msgstr "Clone preset"
 
-#: ../../libs/srs-react/src/lib/templates/clone-template.tsx:76
+#: ../../libs/srs-react/src/lib/templates/clone-template.tsx:78
 msgid "clone-template.inputs.title.label"
 msgstr "Title"
 
-#: ../../libs/srs-react/src/lib/templates/clone-template.tsx:93
+#: ../../libs/srs-react/src/lib/templates/clone-template.tsx:95
 msgid "clone-template.redirect.link"
 msgstr "Go to the new template"
 
-#: ../../libs/srs-react/src/lib/templates/clone-template.tsx:100
+#: ../../libs/srs-react/src/lib/templates/clone-template.tsx:102
 msgid "clone-template.submit"
 msgstr "Clone"
 
-#: ../../libs/srs-react/src/lib/templates/clone-template.tsx:100
+#: ../../libs/srs-react/src/lib/templates/clone-template.tsx:102
 msgid "clone-template.success"
 msgstr "Done"
 
-#: ../../libs/srs-react/src/lib/templates/clone-template.tsx:56
+#: ../../libs/srs-react/src/lib/templates/clone-template.tsx:58
 msgid "clone-template.trigger"
 msgstr "Clone template"
 
-#: ../../libs/srs-react/src/lib/decks/deck-details.tsx:98
+#: ../../libs/srs-react/src/lib/decks/deck-details.tsx:96
 msgid "deck.actions.label"
 msgstr "Actions"
 
-#: ../../libs/srs-react/src/lib/decks/deck-details.tsx:83
+#: ../../libs/srs-react/src/lib/decks/deck-details.tsx:81
 msgid "deck.inputs.notes.label"
 msgstr "Notes"
 
-#: ../../libs/srs-react/src/lib/decks/deck-details.tsx:75
+#: ../../libs/srs-react/src/lib/decks/deck-details.tsx:73
 msgid "deck.inputs.title.label"
 msgstr "Title"
 
@@ -434,19 +438,15 @@ msgstr "Delete this card with all its reviews?"
 msgid "delete-card.trigger"
 msgstr "Delete card"
 
-#: ../../libs/srs-react/src/lib/decks/delete-deck.tsx:59
+#: ../../libs/srs-react/src/lib/decks/delete-deck.tsx:61
 msgid "delete-deck.cancel"
 msgstr "Cancel"
 
-#: ../../libs/srs-react/src/lib/decks/delete-deck.tsx:61
+#: ../../libs/srs-react/src/lib/decks/delete-deck.tsx:63
 msgid "delete-deck.confirm"
 msgstr "Delete deck"
 
-#: ../../libs/srs-react/src/lib/decks/delete-deck.tsx:55
-msgid "delete-deck.message"
-msgstr "Are you sure you want to delete this deck and all its cards and reviews?"
-
-#: ../../libs/srs-react/src/lib/decks/delete-deck.tsx:47
+#: ../../libs/srs-react/src/lib/decks/delete-deck.tsx:49
 msgid "delete-deck.trigger"
 msgstr "Delete deck"
 
@@ -631,11 +631,11 @@ msgstr "Optimize"
 msgid "preview-card.trigger"
 msgstr "Preview Card"
 
-#: ../../libs/srs-react/src/lib/templates/template-picker.tsx:31
+#: ../../libs/srs-react/src/lib/templates/template-picker.tsx:24
 msgid "template-picker.label"
 msgstr "Template"
 
-#: ../../libs/srs-react/src/lib/templates/template.tsx:108
+#: ../../libs/srs-react/src/lib/templates/template.tsx:118
 msgid "template.actions.label"
 msgstr "Actions"
 
@@ -664,15 +664,15 @@ msgstr "Untitled"
 msgid "template.fields.inputs.type.label"
 msgstr "Type"
 
-#: ../../libs/srs-react/src/lib/templates/template.tsx:97
+#: ../../libs/srs-react/src/lib/templates/template.tsx:107
 msgid "template.fields.label"
 msgstr "Fields"
 
-#: ../../libs/srs-react/src/lib/templates/template.tsx:78
+#: ../../libs/srs-react/src/lib/templates/template.tsx:88
 msgid "template.inputs.notes.label"
 msgstr "Notes"
 
-#: ../../libs/srs-react/src/lib/templates/template.tsx:70
+#: ../../libs/srs-react/src/lib/templates/template.tsx:80
 msgid "template.inputs.title.label"
 msgstr "Title"
 
@@ -684,18 +684,18 @@ msgstr "Field"
 msgid "template.layout.inputs.operation.label"
 msgstr "Operation"
 
-#: ../../libs/srs-react/src/lib/templates/template.tsx:103
+#: ../../libs/srs-react/src/lib/templates/template.tsx:113
 msgid "template.layout.label"
 msgstr "Layout"
 
-#: ../../libs/srs-react/src/lib/templates/template.tsx:92
+#: ../../libs/srs-react/src/lib/templates/template.tsx:102
 msgid "template.status.locked"
 msgstr "Locked"
 
-#: ../../libs/srs-react/src/lib/templates/template.tsx:84
+#: ../../libs/srs-react/src/lib/templates/template.tsx:94
 msgid "template.status.title"
 msgstr "Status"
 
-#: ../../libs/srs-react/src/lib/templates/template.tsx:92
+#: ../../libs/srs-react/src/lib/templates/template.tsx:102
 msgid "template.status.unlocked"
 msgstr "Not locked"
