@@ -53,10 +53,10 @@ test("discards changes to algorithm details and resets form to persisted state",
   await relearningStepField.fill("888");
   await relearningStepField.blur();
 
-  // Change maximum interval
+  // Change maximum interval away from the default 36500
   const maxIntervalField = page.getByRole("textbox", { name: "Maximum interval" });
   await maxIntervalField.click();
-  await maxIntervalField.fill("36500");
+  await maxIntervalField.fill("30000");
   await maxIntervalField.blur();
 
   // Click "Discard" to reset the form

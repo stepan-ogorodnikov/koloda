@@ -584,7 +584,7 @@ Line numbers are at `9a60b418`; when an earlier item moved them, find the code b
   Commit: Optimize a preset in a desktop e2e flow
   Depends on: none
 
-- [ ] 12. Check preset flows by outcome in both e2e suites
+- [x] 12. Check preset flows by outcome in both e2e suites
   Goal (A10), on both hosts, step for step:
   - `algorithm-reset.spec.ts:58`: fill a maximum interval other than the default 36500, so Discard's check (`:76`)
     can fail.
@@ -600,6 +600,10 @@ Line numbers are at `9a60b418`; when an earlier item moved them, find the code b
   Constraints:
   - Do not run either suite (`agents/VERIFY.md`).
   - Shared steps go in `libs/e2e` only if its README says so.
+    Implemented: the successor flow creates its successor preset and picks it, so the deck check does not depend on
+    each host's seeded presets.
+    The renamed flow creates the preset it deletes, on both hosts.
+    The edit flow saves the first learning step as 5, notes, and weights, and checks "Invalid FSRS weights".
   Done when: `nx run web-e2e:typecheck` and `nx run electron-e2e:typecheck` pass.
   Manual verify: the human runs `algorithm-add`, `algorithm-edit`, `algorithm-delete`, and `algorithm-reset` on both
   hosts.

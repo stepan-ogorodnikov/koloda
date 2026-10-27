@@ -21,6 +21,7 @@ test("validates required title and adds an algorithm", async ({ page }) => {
 
   await expect(dialog).toBeVisible();
   await expect(dialog.getByRole("heading", { name: "New preset", exact: true })).toBeVisible();
+  await expect(dialog.getByText("Title can't be empty", { exact: true })).toBeVisible();
 
   // Success
   await titleField.fill("My Test Algorithm");
