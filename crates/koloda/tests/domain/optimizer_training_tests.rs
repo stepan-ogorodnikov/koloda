@@ -23,6 +23,8 @@ fn gaps(set: &koloda::domain::optimizer::TrainingSet) -> Vec<Vec<u32>> {
 
 #[test]
 fn gap_across_utc_midnight_counts_one_day_even_minutes_apart() {
+    // WHY: twin of the ts-fsrs day count, pinned by "counts one elapsed day across UTC midnight, even minutes apart"
+    // (libs/srs/src/lib/algorithms-fsrs.test.ts); the optimizer must count days as the scheduler does.
     let set = build_training_set(&[
         review("a", "1", 3, CardState::New, "2026-01-01T23:50:00Z"),
         review("a", "2", 3, CardState::Learning, "2026-01-02T00:10:00Z"),

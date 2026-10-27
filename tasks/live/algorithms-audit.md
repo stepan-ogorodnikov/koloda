@@ -411,7 +411,7 @@ Line numbers are at `9a60b418`; when an earlier item moved them, find the code b
   Commit: Cap w17 and w18 as the scheduler does before scoring
   Depends on: 3
 
-- [ ] 5. Pin ts-fsrs and test its UTC day count
+- [x] 5. Pin ts-fsrs and test its UTC day count
   Goal (A7; question 3):
   - `package.json:72`: `"ts-fsrs": "5.2.3"`.
     Run `bun install` so `bun.lock` records the exact specifier.
@@ -425,6 +425,10 @@ Line numbers are at `9a60b418`; when an earlier item moved them, find the code b
   - FSRS-OPTIMIZER.md §Ruling, the crate-pin bullet: ts-fsrs is pinned exactly too.
     A bump of either can change the day count or the cap.
   Constraints: `package.json`, `bun.lock`, the two tests, and FSRS-OPTIMIZER.md.
+    Implemented: ts-fsrs exposes the count only on deprecated fields, so the test reads it through scheduling.
+    A Good grade minutes after 23:55 UTC but past midnight gives the same stability as one 24 hours later, and a
+    different one from a grade on the same date.
+    `bun install` ran offline and changed only the specifier in `bun.lock`.
   Done when:
   - `SRS algorithms-fsrs` and `RS --test domain optimizer_training` pass;
   - `bun install --frozen-lockfile` passes;

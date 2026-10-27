@@ -161,6 +161,23 @@ describe("createFSRSAlgorithm", () => {
     }
   });
 
+  it("counts one elapsed day across UTC midnight, even minutes apart", () => {
+    // WHY: the optimizer counts days the same way (docs/decisions/FSRS-OPTIMIZER.md).
+    // Rust twin: `gap_across_utc_midnight_counts_one_day_even_minutes_apart` (optimizer_training_tests.rs).
+    // The count is read through the stability it schedules; ts-fsrs exposes it only on deprecated fields.
+    const instance = createFSRSAlgorithm({ ...DEFAULT_FSRS_ALGORITHM, isFuzzEnabled: false });
+    const lastReview = new Date("2026-01-01T23:55:00.000Z");
+    const card = { ...createReviewedCard(lastReview), last_review: lastReview };
+    const stabilityAt = (at: string) => instance.repeat(card, new Date(at))[Rating.Good].card.stability;
+
+    const sameDate = stabilityAt("2026-01-01T23:59:00.000Z");
+    const acrossMidnight = stabilityAt("2026-01-02T00:05:00.000Z");
+    const nextDay = stabilityAt("2026-01-02T23:55:00.000Z");
+
+    expect(acrossMidnight).toBe(nextDay);
+    expect(acrossMidnight).not.toBe(sameDate);
+  });
+
   it("maps isFuzzEnabled onto generatorParameters.enable_fuzz", () => {
     const fuzzy = createFSRSAlgorithm({ ...DEFAULT_FSRS_ALGORITHM, isFuzzEnabled: true });
     const noFuzz = createFSRSAlgorithm({ ...DEFAULT_FSRS_ALGORITHM, isFuzzEnabled: false });

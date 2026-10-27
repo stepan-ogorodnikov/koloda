@@ -9,6 +9,8 @@
   It holds exactly `FSRS6_WEIGHT_COUNT` numbers, the model ts-fsrs schedules with.
 - The crate is pinned to an exact version, because a bump can change the fitted weights or the model it trains.
   A bump must keep training FSRS-6 until the scheduler moves.
+- ts-fsrs is pinned to an exact version too, because a bump can change the day count or the cap below.
+  A `libs/srs` test pins each of them, beside its Rust twin.
 - Days between reviews are counted the way ts-fsrs counts elapsed days: differences of UTC calendar dates.
   They are not counted by the learning day (`dayStartsAt`).
 - With two or more relearning steps, ts-fsrs caps w17 and w18 lower than the crate trains them.
