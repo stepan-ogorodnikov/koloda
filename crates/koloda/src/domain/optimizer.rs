@@ -150,7 +150,6 @@ pub struct FitScores {
 #[serde(tag = "status", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum OptimizationOutcome {
     NotEnoughData {
-        review_count: usize,
         based_on: AlgorithmFSRS,
     },
     NoImprovement {
@@ -197,10 +196,7 @@ pub fn optimize(input: &OptimizationInput, progress: &OptimizationProgress) -> R
     let set = build_training_set(&input.reviews);
     let based_on = input.content.clone();
     if set.items.is_empty() {
-        return Ok(OptimizationOutcome::NotEnoughData {
-            review_count: set.review_count,
-            based_on,
-        });
+        return Ok(OptimizationOutcome::NotEnoughData { based_on });
     }
 
     let trained = compute_parameters(ComputeParametersInput {
@@ -228,10 +224,7 @@ pub fn optimize(input: &OptimizationInput, progress: &OptimizationProgress) -> R
     let current = parse_weights(&input.content.weights)?;
     // WHY: score the weights as they will be stored, after rounding, not the raw training output.
     let found = parse_weights(&weights)?;
-    let (current, optimized) = match (
-        score(&current, &set.items, progress),
-        score(&found, &set.items, progress),
-    ) {
+    let (current, optimized) = match (score(&current, &set, progress), score(&found, &set, progress)) {
         (Ok(current), Ok(optimized)) => (current, optimized),
         (Err(FSRSError::Interrupted), _) | (_, Err(FSRSError::Interrupted)) => {
             return Ok(OptimizationOutcome::Cancelled)
@@ -258,8 +251,11 @@ pub fn optimize(input: &OptimizationInput, progress: &OptimizationProgress) -> R
     }
 }
 
-fn score(weights: &[f32], items: &[FSRSItem], progress: &OptimizationProgress) -> Result<FitScores, FSRSError> {
-    let evaluation = FSRS::new(weights)?.evaluate(items.to_vec(), |_| !is_aborted(progress))?;
+// WHY: `evaluate_with_card_ids` walks each card's history once; `evaluate` replays every prefix item, and each run
+// scores twice. The crate documents the same predictions and log loss for both.
+fn score(weights: &[f32], set: &TrainingSet, progress: &OptimizationProgress) -> Result<FitScores, FSRSError> {
+    let evaluation = FSRS::new(weights)?
+        .evaluate_with_card_ids(set.items.clone(), set.card_indices.clone(), |_| !is_aborted(progress))?;
     Ok(FitScores {
         log_loss: f64::from(evaluation.log_loss),
         rmse: f64::from(evaluation.rmse_bins),

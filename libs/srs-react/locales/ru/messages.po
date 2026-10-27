@@ -19,7 +19,7 @@ msgid "{0, plural, other {delete-algorithm.used-by-#-decks}}"
 msgstr "{0, plural, one {# колода использует} few {# колоды используют} many {# колод используют} other {# колоды используют} } этот алгоритм"
 
 #. placeholder {0}: result.reviewCount
-#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:193
+#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:194
 msgid "{0, plural, other {optimize-algorithm.review-count.#}}"
 msgstr "На основе {0, plural, one {# повторения} few {# повторений} many {# повторений} other {# повторения}}."
 
@@ -565,10 +565,6 @@ msgstr "Применить"
 msgid "optimize-algorithm.cancel"
 msgstr "Отмена"
 
-#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:180
-msgid "optimize-algorithm.cancelled"
-msgstr "Оптимизация отменена."
-
 #: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:134
 msgid "optimize-algorithm.close"
 msgstr "Закрыть"
@@ -577,15 +573,15 @@ msgstr "Закрыть"
 msgid "optimize-algorithm.discard"
 msgstr "Отказаться"
 
-#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:189
+#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:190
 msgid "optimize-algorithm.improved"
 msgstr "Найдены веса, которые лучше подходят к вашим повторениям."
 
-#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:190
+#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:191
 msgid "optimize-algorithm.no-improvement"
 msgstr "Текущие веса уже лучше всего подходят к вашим повторениям."
 
-#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:182
+#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:183
 msgid "optimize-algorithm.not-enough-data"
 msgstr "Пока недостаточно повторений. Веса подбираются по карточкам, которые повторяли снова в другой день."
 
@@ -598,23 +594,23 @@ msgstr "Попробовать снова"
 msgid "optimize-algorithm.running"
 msgstr "Подбираем веса по вашим повторениям…"
 
-#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:212
+#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:213
 msgid "optimize-algorithm.scores.caption"
 msgstr "Ошибка предсказания, чем меньше, тем лучше"
 
-#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:206
+#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:207
 msgid "optimize-algorithm.scores.current"
 msgstr "Текущие"
 
-#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:207
+#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:208
 msgid "optimize-algorithm.scores.found"
 msgstr "Новые"
 
-#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:216
+#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:217
 msgid "optimize-algorithm.scores.log-loss"
 msgstr "Log loss"
 
-#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:217
+#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:218
 msgid "optimize-algorithm.scores.rmse"
 msgstr "RMSE"
 

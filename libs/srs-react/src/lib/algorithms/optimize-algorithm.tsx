@@ -176,8 +176,9 @@ function OptimizationResult({ result }: OptimizationResultProps) {
   const { _ } = useLingui();
 
   switch (result.status) {
+    // WHY: never shown — every cancel here goes through `stop`, which clears `runRef` first, so the result is dropped.
     case "cancelled":
-      return <p>{_(msg`optimize-algorithm.cancelled`)}</p>;
+      return null;
     case "notEnoughData":
       return <p>{_(msg`optimize-algorithm.not-enough-data`)}</p>;
     case "noImprovement":

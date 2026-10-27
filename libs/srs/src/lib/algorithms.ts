@@ -45,7 +45,7 @@ export type AlgorithmFitScores = { logLoss: number; rmse: number };
  * `basedOn` is the saved content the run read; applying is refused once the stored content differs from it.
  */
 export type AlgorithmOptimization =
-  | { status: "notEnoughData"; reviewCount: number; basedOn: AlgorithmFSRS }
+  | { status: "notEnoughData"; basedOn: AlgorithmFSRS }
   | {
       status: "noImprovement";
       reviewCount: number;

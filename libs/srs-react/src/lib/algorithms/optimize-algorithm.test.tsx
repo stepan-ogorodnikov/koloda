@@ -115,7 +115,7 @@ describe("OptimizeAlgorithm", () => {
 
   it.each([
     ["no improvement", { status: "noImprovement", reviewCount: 120, basedOn: ALGORITHM.content, ...SCORES }],
-    ["not enough data", { status: "notEnoughData", reviewCount: 0, basedOn: ALGORITHM.content }],
+    ["not enough data", { status: "notEnoughData", basedOn: ALGORITHM.content }],
   ] as const)("offers nothing to apply after %s", async (_case, result) => {
     renderWith(
       <OptimizeAlgorithm id={ALGORITHM.id} isDisabled={false} onApplied={() => {}} />,

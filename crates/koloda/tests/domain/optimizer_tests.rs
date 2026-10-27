@@ -165,7 +165,6 @@ fn histories_without_a_later_day_are_not_enough_data() {
         assert_eq!(
             outcome,
             OptimizationOutcome::NotEnoughData {
-                review_count: 0,
                 based_on: fsrs_algorithm_content(),
             },
             "{case}"

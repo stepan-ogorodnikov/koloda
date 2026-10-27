@@ -19,7 +19,7 @@ msgid "{0, plural, other {delete-algorithm.used-by-#-decks}}"
 msgstr "This preset is used by {0, plural, one {# deck} other {# decks}}."
 
 #. placeholder {0}: result.reviewCount
-#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:193
+#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:194
 msgid "{0, plural, other {optimize-algorithm.review-count.#}}"
 msgstr "Based on {0, plural, one {# review} other {# reviews}}."
 
@@ -565,10 +565,6 @@ msgstr "Apply"
 msgid "optimize-algorithm.cancel"
 msgstr "Cancel"
 
-#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:180
-msgid "optimize-algorithm.cancelled"
-msgstr "Optimization was cancelled."
-
 #: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:134
 msgid "optimize-algorithm.close"
 msgstr "Close"
@@ -577,15 +573,15 @@ msgstr "Close"
 msgid "optimize-algorithm.discard"
 msgstr "Discard"
 
-#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:189
+#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:190
 msgid "optimize-algorithm.improved"
 msgstr "Found weights that fit your reviews better."
 
-#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:190
+#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:191
 msgid "optimize-algorithm.no-improvement"
 msgstr "The current weights already fit your reviews best."
 
-#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:182
+#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:183
 msgid "optimize-algorithm.not-enough-data"
 msgstr "Not enough reviews yet. Weights are learned from cards reviewed again on a later day."
 
@@ -598,23 +594,23 @@ msgstr "Try again"
 msgid "optimize-algorithm.running"
 msgstr "Fitting the weights to your reviews…"
 
-#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:212
+#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:213
 msgid "optimize-algorithm.scores.caption"
 msgstr "Prediction error, lower is better"
 
-#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:206
+#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:207
 msgid "optimize-algorithm.scores.current"
 msgstr "Current"
 
-#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:207
+#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:208
 msgid "optimize-algorithm.scores.found"
 msgstr "New"
 
-#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:216
+#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:217
 msgid "optimize-algorithm.scores.log-loss"
 msgstr "Log loss"
 
-#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:217
+#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:218
 msgid "optimize-algorithm.scores.rmse"
 msgstr "RMSE"
 

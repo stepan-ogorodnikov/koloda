@@ -312,7 +312,7 @@ Line numbers are at `9a60b418`; when an earlier item moved them, find the code b
   Commit: Resolve an optimization cancelled before it starts as cancelled
   Depends on: none
 
-- [ ] 2. Drop unused optimizer outcome parts and score each card once
+- [x] 2. Drop unused optimizer outcome parts and score each card once
   Goal (A11: the count, the cancelled copy, scoring):
   - Drop `review_count` from `OptimizationOutcome::NotEnoughData` (`domain/optimizer.rs:152-155`, `:196-199`) and
     `reviewCount` from its TS twin (`libs/srs/src/lib/algorithms.ts:48`).
