@@ -188,7 +188,8 @@ describe("algorithms repository integration", () => {
     expect(await getAlgorithm(db, algorithm.id)).not.toBeNull();
   });
 
-  // Twin of `update_algorithm_round_trips_every_field` in `crates/koloda/tests/integration/algorithms_integration_tests.rs`.
+  // Twin of `update_algorithm_round_trips_every_field`
+  // in `crates/koloda/tests/integration/algorithms_integration_tests.rs`.
   it("round-trips every algorithm field through an update, and clears notes", async () => {
     const { db } = testDb;
     const algorithm = await seedAlgorithm(db);

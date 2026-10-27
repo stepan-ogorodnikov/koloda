@@ -222,10 +222,11 @@ pub fn optimize(input: &OptimizationInput, progress: &OptimizationProgress) -> R
             Some(format!("{} weights: {:?}", trained.len(), trained)),
         ));
     }
-    // WHY: on a small set the pinned crate does not train (fsrs 6.6.2, `compute_parameters`). Below 8 training items
-    // it returns `DEFAULT_PARAMETERS`; below 64, or when every item is a card's first, it fits only the four initial
-    // stabilities and keeps the other defaults. Those paths copy the constant and training moves the weights off it,
-    // so equal weights mean nothing was learned. A crate bump revisits this (docs/decisions/FSRS-OPTIMIZER.md).
+    // WHY: on a small set the pinned crate does not train (fsrs 6.6.2, `compute_parameters`).
+    // Below 8 training items it returns `DEFAULT_PARAMETERS`. Below 64, or when every item is a card's first, it fits
+    // only the four initial stabilities and keeps the other defaults. Those paths copy the constant, and training
+    // moves the long-term weights off it, so equal weights mean nothing was learned.
+    // A crate bump revisits this (docs/decisions/FSRS-OPTIMIZER.md).
     if trained.get(4..) == DEFAULT_PARAMETERS.get(4..) {
         if is_aborted(progress) {
             return Ok(OptimizationOutcome::Cancelled);
@@ -271,9 +272,10 @@ pub fn optimize(input: &OptimizationInput, progress: &OptimizationProgress) -> R
     }
 }
 
-// INVARIANT: twin of ts-fsrs 5.2.3 `clipParameters`, which the scheduler runs each time it loads weights. With two or
-// more relearning steps it caps w17 and w18 at a ceiling from the raw w11, w13, and w14. The crate trains under a looser
-// ceiling (its square root) and scores with a single step, so the optimizer applies this one before scoring and storing.
+// INVARIANT: twin of ts-fsrs 5.2.3 `clipParameters`, which the scheduler runs each time it loads weights.
+// With two or more relearning steps it caps w17 and w18 at a ceiling from the raw w11, w13, and w14.
+// The crate trains under the square root of that ceiling, which is looser, and scores with a single step.
+// So the optimizer applies this cap before it scores and stores weights.
 pub fn cap_w17_w18(weights: &mut [f32], relearning_steps: usize) {
     if relearning_steps <= 1 {
         return;
