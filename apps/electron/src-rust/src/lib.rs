@@ -8,7 +8,7 @@ use koloda::domain::lessons::GetLessonsParams;
 use koloda::domain::settings::SettingsName;
 use koloda::repo;
 use napi::bindgen_prelude::*;
-use napi::threadsafe_function::ThreadSafeCallContext;
+use napi::threadsafe_function::{ThreadSafeCallContext, ThreadsafeFunctionCallMode};
 use napi::{Env, JsFunction, JsObject};
 use napi_derive::napi;
 use optimizer::{OptimizerHost, ProgressCallback};
@@ -365,8 +365,14 @@ impl KolodaDb {
             &self.optimizer_jobs,
             "Optimizer",
             move |optimizer: &Arc<OptimizerHost>| {
+                let report = |current: usize, total: usize| {
+                    on_progress.call(
+                        serde_json::json!({ "requestId": request_id, "current": current, "total": total }),
+                        ThreadsafeFunctionCallMode::NonBlocking,
+                    );
+                };
                 let outcome = optimizer
-                    .run(&request_id, &id, &progress, &on_progress)
+                    .run(&request_id, &id, &progress, report)
                     .map_err(to_napi_error)?;
                 to_value(&outcome)
             },

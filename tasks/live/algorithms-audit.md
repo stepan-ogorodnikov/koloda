@@ -547,7 +547,7 @@ Line numbers are at `9a60b418`; when an earlier item moved them, find the code b
   Commit: Test algorithm rows, validation codes, and optimize dialog edges
   Depends on: 2, 7
 
-- [ ] 10. Test the optimizer host's queued cancel and cleanup
+- [x] 10. Test the optimizer host's queued cancel and cleanup
   Goal (A8, the addon):
   - `OptimizerHost::run` (`apps/electron/src-rust/src/optimizer.rs:52-84`): take progress as a plain callback of
     `(current, total)`, so a Rust test can run it without a JS environment.
@@ -559,6 +559,8 @@ Line numbers are at `9a60b418`; when an earlier item moved them, find the code b
     - a cancel for an unknown id does nothing.
     These pin the host's side of the INVARIANT: a cancel that arrives before the run starts is honored.
   Constraints: the addon's `optimizer.rs` and its `lib.rs` call site; no wire change.
+    Implemented: the queued case also checks that the other registered run resolves as usual (Not enough reviews).
+    The unknown-id cancel sits in the cleanup test.
   Done when:
   - `ADDON` passes;
   - the first case fails if `register` moves into `run`.
