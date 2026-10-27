@@ -143,16 +143,20 @@ describe("algorithms repository integration", () => {
     expect(await getAlgorithmDecks(db, successor.id)).toEqual([{ id: deck.id, title: deck.title }]);
   });
 
-  it("rejects deleting a referenced algorithm without a valid successor", async () => {
+  it.each([
+    ["a missing successor", MISSING_ID],
+    ["no successor", undefined],
+  ])("rejects deleting a referenced algorithm with %s", async (_case, successorId) => {
     const { db } = testDb;
-    const { algorithm } = await seedDeckContext(db);
+    const { algorithm, deck } = await seedDeckContext(db);
     await seedAlgorithm(db, { title: "Other" });
 
-    await expect(deleteAlgorithm(db, { id: algorithm.id, successorId: MISSING_ID })).rejects.toMatchObject({
+    await expect(deleteAlgorithm(db, { id: algorithm.id, successorId })).rejects.toMatchObject({
       code: "not-found.algorithms.delete.successor",
     });
 
     expect(await getAlgorithm(db, algorithm.id)).not.toBeNull();
+    expect(await getDeck(db, deck.id)).toMatchObject({ algorithmId: algorithm.id });
   });
 
   it("rejects deleting a referenced algorithm with itself as the successor", async () => {
@@ -184,26 +188,39 @@ describe("algorithms repository integration", () => {
     expect(await getAlgorithm(db, algorithm.id)).not.toBeNull();
   });
 
-  it("updates algorithm title and content", async () => {
+  // Twin of `update_algorithm_round_trips_every_field` in `crates/koloda/tests/integration/algorithms_integration_tests.rs`.
+  it("round-trips every algorithm field through an update, and clears notes", async () => {
     const { db } = testDb;
     const algorithm = await seedAlgorithm(db);
-
-    const updated = await updateAlgorithm(db, {
-      id: algorithm.id,
-      values: {
-        title: "Updated",
-        content: { ...DEFAULT_FSRS_ALGORITHM, retention: 92, isFuzzEnabled: false },
-      },
-    });
-
-    expect(updated).toMatchObject({
-      id: algorithm.id,
+    const values = {
       title: "Updated",
       content: {
+        type: "fsrs" as const,
         retention: 92,
+        weights:
+          "0.3, 1.3, 2.3, 8.3, 6.4, 0.8, 3, 0.001, 1.9, 0.2, 0.8, 1.5, 0.06, 0.3, 1.6, 0.6, 1.9, 0.5, 0.1, 0.07, 0.15",
         isFuzzEnabled: false,
+        learningSteps: [[5, "s"] as [number, string], [2, "h"] as [number, string]],
+        relearningSteps: [[3, "d"] as [number, string]],
+        maximumInterval: 400,
       },
+    };
+
+    await updateAlgorithm(db, { id: algorithm.id, values: { ...values, notes: "Preset notes" } });
+    const stored = await getAlgorithm(db, algorithm.id);
+
+    expect(stored?.updatedAt).toBeInstanceOf(Date);
+    expect(stored).toEqual({
+      id: algorithm.id,
+      ...values,
+      notes: "Preset notes",
+      createdAt: algorithm.createdAt,
+      updatedAt: stored?.updatedAt,
     });
+
+    await updateAlgorithm(db, { id: algorithm.id, values: { ...values, notes: "" } });
+
+    expect((await getAlgorithm(db, algorithm.id))?.notes).toBeUndefined();
   });
 
   describe("revisions", () => {

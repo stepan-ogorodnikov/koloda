@@ -85,6 +85,117 @@ fn test_wrong_typed_fields_fail() {
     }
 }
 
+fn assert_rejected(field: &str, offending: Value, expected_code: &str) {
+    let mut payload = valid_payload();
+    payload
+        .as_object_mut()
+        .expect("algorithm payload should be an object")
+        .insert(field.to_string(), offending.clone());
+
+    let algorithm: AlgorithmFSRS = serde_json::from_value(payload).expect("patched payload should still deserialize");
+    let error = algorithm
+        .validate()
+        .expect_err("patched algorithm should fail validation");
+    assert_eq!(
+        error.code, expected_code,
+        "{field} = {offending} must surface {expected_code}"
+    );
+}
+
+#[test]
+fn test_invalid_content_fails_with_field_codes() {
+    // WHY: retention must be whole, so 69.9 and 99.1 fail even with a bound moved by one; 69 and 100 pin the bounds.
+    // The TS twin asserts the same codes (`algorithms-fsrs.test.ts`).
+    let cases: &[(&str, Value, &str)] = &[
+        ("retention", json!(69.0), "validation.algorithm.fsrs.retention"),
+        ("retention", json!(100.0), "validation.algorithm.fsrs.retention"),
+        ("retention", json!(69.9), "validation.algorithm.fsrs.retention"),
+        ("retention", json!(99.1), "validation.algorithm.fsrs.retention"),
+        ("retention", json!(90.5), "validation.algorithm.fsrs.retention"),
+        ("retention", json!(70.5), "validation.algorithm.fsrs.retention"),
+        (
+            "learningSteps",
+            json!([[0, "m"]]),
+            "validation.algorithm.fsrs.learning-steps.amount",
+        ),
+        (
+            "learningSteps",
+            json!([[-1, "m"]]),
+            "validation.algorithm.fsrs.learning-steps.amount",
+        ),
+        (
+            "learningSteps",
+            json!([[10, "x"]]),
+            "validation.algorithm.fsrs.learning-steps.unit",
+        ),
+        (
+            "relearningSteps",
+            json!([[0, "m"]]),
+            "validation.algorithm.fsrs.relearning-steps.amount",
+        ),
+        (
+            "relearningSteps",
+            json!([[10, "week"]]),
+            "validation.algorithm.fsrs.relearning-steps.unit",
+        ),
+        (
+            "maximumInterval",
+            json!(0),
+            "validation.algorithm.fsrs.maximum-interval",
+        ),
+        (
+            "maximumInterval",
+            json!(-1),
+            "validation.algorithm.fsrs.maximum-interval",
+        ),
+        ("weights", json!("0.5,0.5,0.5"), "validation.algorithm.fsrs.weights"),
+        (
+            "weights",
+            json!(["0.5"; 22].join(",")),
+            "validation.algorithm.fsrs.weights",
+        ),
+        (
+            "weights",
+            json!(weights_with("invalid")),
+            "validation.algorithm.fsrs.weights",
+        ),
+        (
+            "weights",
+            json!(["Infinity"; 21].join(",")),
+            "validation.algorithm.fsrs.weights",
+        ),
+        (
+            "weights",
+            json!(weights_with("-Infinity")),
+            "validation.algorithm.fsrs.weights",
+        ),
+        (
+            "weights",
+            json!(weights_with("NaN")),
+            "validation.algorithm.fsrs.weights",
+        ),
+        // Twin of the TS hexadecimal case: `Number("0x1f")` is finite, but `parse::<f64>()` rejects it.
+        (
+            "weights",
+            json!(weights_with("0x1f")),
+            "validation.algorithm.fsrs.weights",
+        ),
+        ("weights", json!(""), "validation.algorithm.fsrs.weights"),
+    ];
+
+    for (field, offending, code) in cases {
+        assert_rejected(field, offending.clone(), code);
+    }
+}
+
+/// Twenty-one weights of 0.5 with the second one replaced.
+fn weights_with(second: &str) -> String {
+    (0..21)
+        .map(|index| if index == 1 { second } else { "0.5" })
+        .collect::<Vec<_>>()
+        .join(",")
+}
+
 #[test]
 fn test_retention_minimum_boundary() {
     let json = r#"{
@@ -118,76 +229,6 @@ fn test_retention_maximum_boundary() {
 }
 
 #[test]
-fn test_retention_below_minimum_fails() {
-    let json = r#"{
-        "type": "fsrs",
-        "retention": 69.9,
-        "weights": "0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5",
-        "isFuzzEnabled": true,
-        "learningSteps": [],
-        "relearningSteps": [],
-        "maximumInterval": 36500
-    }"#;
-
-    let algorithm: AlgorithmFSRS = serde_json::from_str(json).expect("Should deserialize");
-    assert!(algorithm.validate().is_err(), "Should fail when retention < 70");
-}
-
-#[test]
-fn test_retention_above_maximum_fails() {
-    let json = r#"{
-        "type": "fsrs",
-        "retention": 99.1,
-        "weights": "0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5",
-        "isFuzzEnabled": true,
-        "learningSteps": [],
-        "relearningSteps": [],
-        "maximumInterval": 36500
-    }"#;
-
-    let algorithm: AlgorithmFSRS = serde_json::from_str(json).expect("Should deserialize");
-    assert!(algorithm.validate().is_err(), "Should fail when retention > 99");
-}
-
-#[test]
-fn test_retention_non_integer_fails() {
-    let json = r#"{
-        "type": "fsrs",
-        "retention": 90.5,
-        "weights": "0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5",
-        "isFuzzEnabled": true,
-        "learningSteps": [],
-        "relearningSteps": [],
-        "maximumInterval": 36500
-    }"#;
-
-    let algorithm: AlgorithmFSRS = serde_json::from_str(json).expect("Should deserialize");
-    assert!(
-        algorithm.validate().is_err(),
-        "Should fail when retention is not an integer"
-    );
-}
-
-#[test]
-fn test_retention_in_range_non_integer_fails() {
-    let json = r#"{
-        "type": "fsrs",
-        "retention": 70.5,
-        "weights": "0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5",
-        "isFuzzEnabled": true,
-        "learningSteps": [],
-        "relearningSteps": [],
-        "maximumInterval": 36500
-    }"#;
-
-    let algorithm: AlgorithmFSRS = serde_json::from_str(json).expect("Should deserialize");
-    assert!(
-        algorithm.validate().is_err(),
-        "Should fail when in-range retention is not an integer"
-    );
-}
-
-#[test]
 fn test_weights_exactly_21_values() {
     let json = r#"{
         "type": "fsrs",
@@ -217,154 +258,6 @@ fn test_weights_with_spaces() {
 
     let algorithm: AlgorithmFSRS = serde_json::from_str(json).expect("Should deserialize");
     assert!(algorithm.validate().is_ok(), "Should handle spaces in weights");
-}
-
-#[test]
-fn test_weights_too_few_values_fails() {
-    let json = r#"{
-        "type": "fsrs",
-        "retention": 90.0,
-        "weights": "0.5,0.5,0.5",
-        "isFuzzEnabled": true,
-        "learningSteps": [],
-        "relearningSteps": [],
-        "maximumInterval": 36500
-    }"#;
-
-    let algorithm: AlgorithmFSRS = serde_json::from_str(json).expect("Should deserialize");
-    assert!(
-        algorithm.validate().is_err(),
-        "Should fail when weights has < 21 values"
-    );
-}
-
-#[test]
-fn test_weights_too_many_values_fails() {
-    let json = r#"{
-        "type": "fsrs",
-        "retention": 90.0,
-        "weights": "0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5",
-        "isFuzzEnabled": true,
-        "learningSteps": [],
-        "relearningSteps": [],
-        "maximumInterval": 36500
-    }"#;
-
-    let algorithm: AlgorithmFSRS = serde_json::from_str(json).expect("Should deserialize");
-    assert!(
-        algorithm.validate().is_err(),
-        "Should fail when weights has > 21 values"
-    );
-}
-
-#[test]
-fn test_weights_non_numeric_fails() {
-    let json = r#"{
-        "type": "fsrs",
-        "retention": 90.0,
-        "weights": "0.5,invalid,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5",
-        "isFuzzEnabled": true,
-        "learningSteps": [],
-        "relearningSteps": [],
-        "maximumInterval": 36500
-    }"#;
-
-    let algorithm: AlgorithmFSRS = serde_json::from_str(json).expect("Should deserialize");
-    assert!(
-        algorithm.validate().is_err(),
-        "Should fail when weights contains non-numeric"
-    );
-}
-
-#[test]
-fn test_weights_all_infinity_fails() {
-    let json = r#"{
-        "type": "fsrs",
-        "retention": 90.0,
-        "weights": "Infinity,Infinity,Infinity,Infinity,Infinity,Infinity,Infinity,Infinity,Infinity,Infinity,Infinity,Infinity,Infinity,Infinity,Infinity,Infinity,Infinity,Infinity,Infinity,Infinity,Infinity",
-        "isFuzzEnabled": true,
-        "learningSteps": [],
-        "relearningSteps": [],
-        "maximumInterval": 36500
-    }"#;
-
-    let algorithm: AlgorithmFSRS = serde_json::from_str(json).expect("Should deserialize");
-    assert!(
-        algorithm.validate().is_err(),
-        "Should fail when all weights are Infinity"
-    );
-}
-
-#[test]
-fn test_weights_negative_infinity_fails() {
-    let json = r#"{
-        "type": "fsrs",
-        "retention": 90.0,
-        "weights": "0.5,-Infinity,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5",
-        "isFuzzEnabled": true,
-        "learningSteps": [],
-        "relearningSteps": [],
-        "maximumInterval": 36500
-    }"#;
-
-    let algorithm: AlgorithmFSRS = serde_json::from_str(json).expect("Should deserialize");
-    assert!(
-        algorithm.validate().is_err(),
-        "Should fail when weights contains negative Infinity"
-    );
-}
-
-#[test]
-fn test_weights_nan_fails() {
-    let json = r#"{
-        "type": "fsrs",
-        "retention": 90.0,
-        "weights": "0.5,NaN,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5",
-        "isFuzzEnabled": true,
-        "learningSteps": [],
-        "relearningSteps": [],
-        "maximumInterval": 36500
-    }"#;
-
-    let algorithm: AlgorithmFSRS = serde_json::from_str(json).expect("Should deserialize");
-    assert!(algorithm.validate().is_err(), "Should fail when weights contains NaN");
-}
-
-#[test]
-fn test_weights_hexadecimal_fails() {
-    // Twin of the TS `weights hexadecimal` case — `Number("0x1f")` is finite
-    // but `parse::<f64>()` rejects it, so the TS grammar restricts to decimal.
-    let json = r#"{
-        "type": "fsrs",
-        "retention": 90.0,
-        "weights": "0.5,0x1f,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5",
-        "isFuzzEnabled": true,
-        "learningSteps": [],
-        "relearningSteps": [],
-        "maximumInterval": 36500
-    }"#;
-
-    let algorithm: AlgorithmFSRS = serde_json::from_str(json).expect("Should deserialize");
-    assert!(
-        algorithm.validate().is_err(),
-        "Should fail when weights contains hexadecimal"
-    );
-}
-
-#[test]
-fn test_weights_empty_string_fails() {
-    let json = r#"{
-        "type": "fsrs",
-        "retention": 90.0,
-        "weights": "",
-        "isFuzzEnabled": true,
-        "learningSteps": [],
-        "relearningSteps": [],
-        "maximumInterval": 36500
-    }"#;
-
-    let algorithm: AlgorithmFSRS = serde_json::from_str(json).expect("Should deserialize");
-    assert!(algorithm.validate().is_err(), "Should fail when weights is empty");
 }
 
 #[test]
@@ -406,54 +299,6 @@ fn test_learning_steps_valid_units() {
 }
 
 #[test]
-fn test_learning_steps_invalid_unit_fails() {
-    let json = r#"{
-        "type": "fsrs",
-        "retention": 90.0,
-        "weights": "0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5",
-        "isFuzzEnabled": true,
-        "learningSteps": [[10, "x"]],
-        "relearningSteps": [],
-        "maximumInterval": 36500
-    }"#;
-
-    let algorithm: AlgorithmFSRS = serde_json::from_str(json).expect("Should deserialize");
-    assert!(algorithm.validate().is_err(), "Should fail with invalid unit");
-}
-
-#[test]
-fn test_learning_steps_zero_amount_fails() {
-    let json = r#"{
-        "type": "fsrs",
-        "retention": 90.0,
-        "weights": "0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5",
-        "isFuzzEnabled": true,
-        "learningSteps": [[0, "m"]],
-        "relearningSteps": [],
-        "maximumInterval": 36500
-    }"#;
-
-    let algorithm: AlgorithmFSRS = serde_json::from_str(json).expect("Should deserialize");
-    assert!(algorithm.validate().is_err(), "Should fail with zero amount");
-}
-
-#[test]
-fn test_learning_steps_negative_amount_fails() {
-    let json = r#"{
-        "type": "fsrs",
-        "retention": 90.0,
-        "weights": "0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5",
-        "isFuzzEnabled": true,
-        "learningSteps": [[-1, "m"]],
-        "relearningSteps": [],
-        "maximumInterval": 36500
-    }"#;
-
-    let algorithm: AlgorithmFSRS = serde_json::from_str(json).expect("Should deserialize");
-    assert!(algorithm.validate().is_err(), "Should fail with negative amount");
-}
-
-#[test]
 fn test_relearning_steps_empty_array() {
     let json = r#"{
         "type": "fsrs",
@@ -483,38 +328,6 @@ fn test_relearning_steps_valid() {
 
     let algorithm: AlgorithmFSRS = serde_json::from_str(json).expect("Should deserialize");
     algorithm.validate().unwrap();
-}
-
-#[test]
-fn test_relearning_steps_zero_amount_fails() {
-    let json = r#"{
-        "type": "fsrs",
-        "retention": 90.0,
-        "weights": "0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5",
-        "isFuzzEnabled": true,
-        "learningSteps": [],
-        "relearningSteps": [[0, "m"]],
-        "maximumInterval": 36500
-    }"#;
-
-    let algorithm: AlgorithmFSRS = serde_json::from_str(json).expect("Should deserialize");
-    assert!(algorithm.validate().is_err(), "Should fail with zero amount");
-}
-
-#[test]
-fn test_relearning_steps_invalid_unit_fails() {
-    let json = r#"{
-        "type": "fsrs",
-        "retention": 90.0,
-        "weights": "0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5",
-        "isFuzzEnabled": true,
-        "learningSteps": [],
-        "relearningSteps": [[10, "week"]],
-        "maximumInterval": 36500
-    }"#;
-
-    let algorithm: AlgorithmFSRS = serde_json::from_str(json).expect("Should deserialize");
-    assert!(algorithm.validate().is_err(), "Should fail with invalid unit");
 }
 
 #[test]
@@ -550,22 +363,6 @@ fn test_maximum_interval_large_value() {
 }
 
 #[test]
-fn test_maximum_interval_zero_fails() {
-    let json = r#"{
-        "type": "fsrs",
-        "retention": 90.0,
-        "weights": "0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5",
-        "isFuzzEnabled": true,
-        "learningSteps": [],
-        "relearningSteps": [],
-        "maximumInterval": 0
-    }"#;
-
-    let algorithm: AlgorithmFSRS = serde_json::from_str(json).expect("Should deserialize");
-    assert!(algorithm.validate().is_err(), "Should fail with zero interval");
-}
-
-#[test]
 fn test_fractional_amounts_fail_deserialization() {
     // WHY: step amounts and `maximum_interval` are i64, so serde rejects a fraction before `validate()` runs.
     // The TS twin rejects the same values with each field's code (`algorithms-fsrs.test.ts`).
@@ -582,20 +379,4 @@ fn test_fractional_amounts_fail_deserialization() {
         let result: Result<AlgorithmFSRS, _> = serde_json::from_value(payload);
         assert!(result.is_err(), "Should fail when {field} is {offending}");
     }
-}
-
-#[test]
-fn test_maximum_interval_negative_fails() {
-    let json = r#"{
-        "type": "fsrs",
-        "retention": 90.0,
-        "weights": "0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5",
-        "isFuzzEnabled": true,
-        "learningSteps": [],
-        "relearningSteps": [],
-        "maximumInterval": -1
-    }"#;
-
-    let algorithm: AlgorithmFSRS = serde_json::from_str(json).expect("Should deserialize");
-    assert!(algorithm.validate().is_err(), "Should fail with negative interval");
 }

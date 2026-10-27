@@ -1,3 +1,4 @@
+import { AppError } from "@koloda/app";
 import { optimizerQueriesAtom, queryKeys } from "@koloda/core-react";
 import type { OptimizeAlgorithmOptions, OptimizerQueries } from "@koloda/core-react";
 import type * as CoreReact from "@koloda/core-react";
@@ -125,6 +126,66 @@ describe("OptimizeAlgorithm", () => {
     await openDialog();
 
     expect(await screen.findByRole("button", { name: "optimize-algorithm.close" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "optimize-algorithm.apply" })).toBeNull();
+  });
+
+  it("shows a refused apply with Try again, which starts a new run", async () => {
+    const optimizer = optimizerResolving({
+      status: "improved",
+      reviewCount: 120,
+      basedOn: ALGORITHM.content,
+      weights: FOUND_WEIGHTS,
+      ...SCORES,
+    });
+    optimizer.apply.mockRejectedValueOnce(new AppError("algorithms.optimizer.stale"));
+    const onApplied = vi.fn();
+    renderWith(<OptimizeAlgorithm id={ALGORITHM.id} isDisabled={false} onApplied={onApplied} />, optimizer);
+
+    await openDialog();
+    await act(async () => {
+      fireEvent.click(await screen.findByRole("button", { name: "optimize-algorithm.apply" }));
+    });
+
+    const retry = await screen.findByRole("button", { name: "optimize-algorithm.retry" });
+    expect(screen.getByText("algorithms.optimizer.stale")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "optimize-algorithm.apply" })).toBeNull();
+    expect(onApplied).not.toHaveBeenCalled();
+
+    await act(async () => {
+      fireEvent.click(retry);
+    });
+
+    expect(optimizer.runs).toHaveLength(2);
+  });
+
+  it("ignores the late result of a run closed before it ended", async () => {
+    const resolveRuns: Array<(result: AlgorithmOptimization) => void> = [];
+    const optimizer: OptimizerQueries = {
+      optimizeAlgorithm: () =>
+        new Promise<AlgorithmOptimization>((resolve) => {
+          resolveRuns.push(resolve);
+        }),
+      applyOptimizationMutation: () => ({ mutationFn: async () => ALGORITHM }),
+    };
+    renderWith(<OptimizeAlgorithm id={ALGORITHM.id} isDisabled={false} onApplied={() => {}} />, optimizer);
+
+    await openDialog();
+    await act(async () => {
+      fireEvent.click(await screen.findByRole("button", { name: "optimize-algorithm.cancel" }));
+    });
+    await openDialog();
+    await act(async () => {
+      resolveRuns[0]?.({
+        status: "improved",
+        reviewCount: 120,
+        basedOn: ALGORITHM.content,
+        weights: FOUND_WEIGHTS,
+        ...SCORES,
+      });
+    });
+
+    expect(resolveRuns).toHaveLength(2);
+    expect(screen.getByRole("button", { name: "optimize-algorithm.cancel" })).toBeTruthy();
     expect(screen.queryByRole("button", { name: "optimize-algorithm.apply" })).toBeNull();
   });
 

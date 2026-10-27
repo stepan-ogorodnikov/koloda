@@ -514,7 +514,7 @@ Line numbers are at `9a60b418`; when an earlier item moved them, find the code b
   Commit: Keep one home per algorithm rule in ALGORITHMS.md
   Depends on: 3, 7
 
-- [ ] 9. Test algorithm rows, validation codes, and optimize dialog edges
+- [x] 9. Test algorithm rows, validation codes, and optimize dialog edges
   Goal (A9):
   - `libs/db-sqlite/src/lib/algorithms.integration.test.ts`:
     - replace "updates algorithm title and content" (`:187-207`) with a full-field roundtrip.
@@ -537,6 +537,8 @@ Line numbers are at `9a60b418`; when an earlier item moved them, find the code b
     The file mocks `@koloda/core-react`; `srs-react` keeps isolation for that (`agents/TESTING.md` §Runner
     constraints).
   Constraints: tests only; no product code changes.
+    Implemented: the web successor cases are one two-row table (a missing id, no id).
+    The Rust table replaces all 19 per-cell `is_err()` validation tests; the serde and accepted-value tests stay.
   Done when:
   - `DB algorithms`, `RS algorithm`, `SRS algorithms-fsrs`, and `SR optimize-algorithm` pass;
   - each new case fails on its plausible bug: a dropped column, a swapped code, a bound at 69 or 100, a missing

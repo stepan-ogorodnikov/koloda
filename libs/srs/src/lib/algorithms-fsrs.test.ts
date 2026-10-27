@@ -254,7 +254,18 @@ describe("algorithmFSRSValidation", () => {
     expect(algorithmFSRSValidation.safeParse({ ...validPayload(), isFuzzEnabled: false }).success).toBe(true);
   });
 
+  // WHY: retention must be whole, so 69.9 and 99.1 fail even with a bound moved by one; 69 and 100 pin the bounds.
   it.each([
+    {
+      name: "retention one below minimum",
+      payload: { ...validPayload(), retention: 69 },
+      code: "validation.algorithm.fsrs.retention",
+    },
+    {
+      name: "retention one above maximum",
+      payload: { ...validPayload(), retention: 100 },
+      code: "validation.algorithm.fsrs.retention",
+    },
     {
       name: "retention below minimum",
       payload: { ...validPayload(), retention: 69.9 },
