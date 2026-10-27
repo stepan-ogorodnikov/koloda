@@ -610,7 +610,7 @@ Line numbers are at `9a60b418`; when an earlier item moved them, find the code b
   Commit: Check preset flows by outcome in both e2e suites
   Depends on: none
 
-- [ ] 13. List the step units once and share the progress-bar track
+- [x] 13. List the step units once and share the progress-bar track
   Goal (A11: the unit lists, the progress bar):
   - `algorithms-fsrs.ts:8-22`: derive one unit list from the other, so the four ids are written once.
     Keep the `as const` tuple type that the validator's `includes` narrows with (`:65`, `:83`).

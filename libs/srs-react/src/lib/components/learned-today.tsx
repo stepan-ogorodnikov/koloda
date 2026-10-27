@@ -7,6 +7,7 @@ import { useLingui } from "@lingui/react";
 import { useQuery } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
 import { tv } from "tailwind-variants";
+import { progressBarTrack } from "./progress-bar-track";
 
 const learnedTodayAmount = tv({
   base: "leading-none font-bold tracking-tight",
@@ -87,7 +88,7 @@ export function LearnedToday() {
                       </div>
                     </div>
                     <div className="flex flex-row items-center gap-2">
-                      <div className="w-full h-2.5 rounded-full bg-progress-bar shadow-progress-bar overflow-hidden">
+                      <div className={progressBarTrack}>
                         <div className={learnedTodayProgressBar({ type })} style={{ width: `${progressWidth}%` }} />
                       </div>
                       <span className={learnedTodayProgressPercentage({ isInfinity })}>{progressLabel}</span>

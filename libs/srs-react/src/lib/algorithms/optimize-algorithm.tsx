@@ -8,6 +8,7 @@ import { useLingui } from "@lingui/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
 import { useEffect, useRef, useState } from "react";
+import { progressBarTrack } from "../components/progress-bar-track";
 
 type OptimizeAlgorithmProps = {
   id: Algorithm["id"];
@@ -152,7 +153,7 @@ function OptimizationRunning({ progress }: OptimizationRunningProps) {
       <p>{_(msg`optimize-algorithm.running`)}</p>
       <div className="flex flex-row items-center gap-2">
         <div
-          className="w-full h-2.5 rounded-full bg-progress-bar shadow-progress-bar overflow-hidden"
+          className={progressBarTrack}
           role="progressbar"
           aria-label={_(msg`optimize-algorithm.running`)}
           aria-valuemin={0}

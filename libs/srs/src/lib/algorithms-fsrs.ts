@@ -10,7 +10,7 @@ export const LEARNING_STEPS_UNITS = [
   { id: "m", short: msg`fsrs.learning-steps.units.minutes.short`, long: msg`fsrs.learning-steps.units.minutes.long` },
   { id: "h", short: msg`fsrs.learning-steps.units.hours.short`, long: msg`fsrs.learning-steps.units.hours.long` },
   { id: "d", short: msg`fsrs.learning-steps.units.days.short`, long: msg`fsrs.learning-steps.units.days.long` },
-];
+] as const;
 
 export const FSRS_GRADES = [
   msg`fsrs.grades.again`,
@@ -19,7 +19,7 @@ export const FSRS_GRADES = [
   msg`fsrs.grades.easy`,
 ];
 
-export const LEARNING_STEP_UNITS = ["s", "m", "h", "d"] as const;
+export const LEARNING_STEP_UNITS = LEARNING_STEPS_UNITS.map(({ id }) => id);
 export const FSRS6_WEIGHT_COUNT = 21;
 
 // Decimal float grammar mirroring Rust `str::parse::<f64>()` (finite values):
