@@ -373,7 +373,7 @@ Line numbers are at `9a60b418`; when an earlier item moved them, find the code b
   Commit: Report untrained optimizer results as not enough reviews
   Depends on: 2
 
-- [ ] 4. Cap w17 and w18 as the scheduler does before scoring
+- [x] 4. Cap w17 and w18 as the scheduler does before scoring
   Goal (A5):
   - New `pub fn` in `domain/optimizer.rs`: cap w17 and w18 at ts-fsrs `clipParameters`' ceiling for a relearning-step
     count.
@@ -398,6 +398,10 @@ Line numbers are at `9a60b418`; when an earlier item moved them, find the code b
     §Applies when: a change to how ts-fsrs caps weights, beside the elapsed-day count.
     The module doc (`domain/optimizer.rs:3-4`) names the three points of agreement.
   Constraints: `domain/optimizer.rs`, both tests, and FSRS-OPTIMIZER.md (`agents/DECISIONS.md`: living document).
+    Implemented: the `optimize` case uses ten relearning steps, not two.
+    The forgetful history has no same-day reviews, so training leaves w17 and w18 at their defaults, under the
+    two-step cap; at ten steps the ceiling is near 0.07 and binds.
+    The pin table also checks three steps (0.24036762), the value ts-fsrs gives.
   Done when:
   - `RS --test domain optimiz` and `SRS algorithms-fsrs` pass;
   - the Rust pin fails with the crate's `sqrt` ceiling;

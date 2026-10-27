@@ -1,6 +1,7 @@
 import { createEmptyCard, Rating, State } from "ts-fsrs";
 import { describe, expect, it } from "vitest";
 import { algorithmFSRSValidation, createFSRSAlgorithm, DEFAULT_FSRS_ALGORITHM } from "./algorithms-fsrs";
+import type { AlgorithmFSRS } from "./algorithms-fsrs";
 
 function createReviewedCard(now: Date) {
   const card = createEmptyCard(now);
@@ -136,6 +137,28 @@ describe("createFSRSAlgorithm", () => {
 
     expect(instance.parameters.learning_steps).toEqual(["5s", "2h"]);
     expect(instance.parameters.relearning_steps).toEqual(["1d"]);
+  });
+
+  it("caps w17 and w18 by the relearning step count", () => {
+    // WHY: the optimizer caps found weights the same way before scoring them; its Rust twin is
+    // `w17_and_w18_are_capped_as_ts_fsrs_caps_them` (crates/koloda/tests/domain/optimizer_tests.rs).
+    const cases: Array<[AlgorithmFSRS["relearningSteps"], number]> = [
+      [[[10, "m"]], 0.5425],
+      [
+        [
+          [10, "m"],
+          [1, "h"],
+        ],
+        0.36055143,
+      ],
+    ];
+
+    for (const [relearningSteps, expectedW17] of cases) {
+      const { w } = createFSRSAlgorithm({ ...DEFAULT_FSRS_ALGORITHM, relearningSteps }).parameters;
+
+      expect(w[17]).toBeCloseTo(expectedW17, 8);
+      expect(w[18]).toBe(0.0912);
+    }
   });
 
   it("maps isFuzzEnabled onto generatorParameters.enable_fuzz", () => {

@@ -1,7 +1,7 @@
 //! FSRS weight optimization — Rust-only and desktop-only, with no TS twin.
 //!
-//! Fitting lives here; scheduling stays in `@koloda/srs` (ts-fsrs). What the two must agree on, the weight count and
-//! how days between reviews are counted, is `docs/decisions/FSRS-OPTIMIZER.md`.
+//! Fitting lives here; scheduling stays in `@koloda/srs` (ts-fsrs). What the two must agree on, the weight count, how
+//! days between reviews are counted, and the w17/w18 cap, is `docs/decisions/FSRS-OPTIMIZER.md`.
 
 use std::collections::BTreeMap;
 use std::sync::{Arc, Mutex, PoisonError};
@@ -233,10 +233,17 @@ pub fn optimize(input: &OptimizationInput, progress: &OptimizationProgress) -> R
         return Ok(OptimizationOutcome::NotEnoughData { based_on });
     }
 
+    let relearning_steps = input.content.relearning_steps.len();
+    let mut trained = trained;
+    cap_w17_w18(&mut trained, relearning_steps);
     let weights = format_weights(&trained);
-    let current = parse_weights(&input.content.weights)?;
+    let mut current = parse_weights(&input.content.weights)?;
     // WHY: score the weights as they will be stored, after rounding, not the raw training output.
-    let found = parse_weights(&weights)?;
+    let mut found = parse_weights(&weights)?;
+    // WHY: ts-fsrs caps both on every load, so the scores describe what the scheduler grades with. Rounding can lift a
+    // stored capped value by under 0.00005; capping again here matches the scheduler.
+    cap_w17_w18(&mut current, relearning_steps);
+    cap_w17_w18(&mut found, relearning_steps);
     let (current, optimized) = match (score(&current, &set, progress), score(&found, &set, progress)) {
         (Ok(current), Ok(optimized)) => (current, optimized),
         (Err(FSRSError::Interrupted), _) | (_, Err(FSRSError::Interrupted)) => {
@@ -261,6 +268,25 @@ pub fn optimize(input: &OptimizationInput, progress: &OptimizationProgress) -> R
             current,
             optimized,
         })
+    }
+}
+
+// INVARIANT: twin of ts-fsrs 5.2.3 `clipParameters`, which the scheduler runs each time it loads weights. With two or
+// more relearning steps it caps w17 and w18 at a ceiling from the raw w11, w13, and w14. The crate trains under a looser
+// ceiling (its square root) and scores with a single step, so the optimizer applies this one before scoring and storing.
+pub fn cap_w17_w18(weights: &mut [f32], relearning_steps: usize) {
+    if relearning_steps <= 1 {
+        return;
+    }
+    let (Some(&w11), Some(&w13), Some(&w14)) = (weights.get(11), weights.get(13), weights.get(14)) else {
+        return;
+    };
+    let ceiling = -(f64::from(w11).ln() + (2_f64.powf(f64::from(w13)) - 1.0).ln() + f64::from(w14) * 0.3)
+        / relearning_steps as f64;
+    // WHY: ts-fsrs rounds the ceiling to 8 decimals (`toFixed(8)`) before clamping it.
+    let ceiling = ((ceiling * 1e8).round() / 1e8).clamp(0.01, 2.0) as f32;
+    for weight in weights.iter_mut().skip(17).take(2) {
+        *weight = weight.min(ceiling);
     }
 }
 

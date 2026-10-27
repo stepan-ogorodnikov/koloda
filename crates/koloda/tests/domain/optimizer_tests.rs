@@ -1,7 +1,7 @@
 use koloda::domain::algorithms_fsrs::AlgorithmFSRS;
 use koloda::domain::cards::CardState;
 use koloda::domain::optimizer::{
-    new_progress, optimize, request_abort, FitScores, OptimizationInput, OptimizationOutcome, ReviewRecord,
+    cap_w17_w18, new_progress, optimize, request_abort, FitScores, OptimizationInput, OptimizationOutcome, ReviewRecord,
 };
 use serde_json::json;
 
@@ -169,6 +169,58 @@ fn histories_without_a_later_day_are_not_enough_data() {
             },
             "{case}"
         );
+    }
+}
+
+#[test]
+fn w17_and_w18_are_capped_as_ts_fsrs_caps_them() {
+    // Expected w17 from ts-fsrs 5.2.3 `clipParameters` (node_modules/ts-fsrs/dist/index.mjs:540-552) on its default
+    // weights, by relearning-step count. w18 (0.0912) sits under every cap.
+    let defaults = "0.212, 1.2931, 2.3065, 8.2956, 6.4133, 0.8334, 3.0194, 0.001, 1.8722, 0.1666, 0.796, 1.4835, \
+                    0.0614, 0.2629, 1.6483, 0.6014, 1.8729, 0.5425, 0.0912, 0.0658, 0.1542";
+    let cases = [(0, 0.5425), (1, 0.5425), (2, 0.36055143), (3, 0.24036762)];
+
+    for (relearning_steps, expected_w17) in cases {
+        let mut weights: Vec<f32> = defaults.split(", ").map(|weight| weight.parse().unwrap()).collect();
+        cap_w17_w18(&mut weights, relearning_steps);
+
+        assert!(
+            (weights[17] - expected_w17).abs() < 1e-6,
+            "{relearning_steps} steps: w17 {}",
+            weights[17]
+        );
+        assert!(
+            (weights[18] - 0.0912).abs() < 1e-6,
+            "{relearning_steps} steps: w18 {}",
+            weights[18]
+        );
+    }
+}
+
+#[test]
+fn found_weights_are_stored_under_the_schedulers_w17_w18_cap() {
+    // WHY: ten relearning steps put the ts-fsrs ceiling near 0.07, under the w17 the crate trains (its default here).
+    let relearning_steps = vec![(10, "m".to_string()); 10];
+    let input = OptimizationInput {
+        content: AlgorithmFSRS {
+            relearning_steps,
+            ..overconfident_content()
+        },
+        reviews: forgetful_history(),
+    };
+
+    let outcome = optimize(&input, &new_progress()).expect("optimization should run");
+
+    let OptimizationOutcome::Improved { weights, .. } = outcome else {
+        panic!("expected improved weights, got {outcome:?}");
+    };
+    let stored: Vec<f32> = weights.split(", ").map(|weight| weight.parse().unwrap()).collect();
+    let mut capped = stored.clone();
+    cap_w17_w18(&mut capped, 10);
+    assert!(capped[17] < 0.5, "the cap binds: {}", capped[17]);
+    // Rounding to four decimals can lift a capped value a little.
+    for index in [17, 18] {
+        assert!(stored[index] - capped[index] < 1e-4, "w{index}: {weights}");
     }
 }
 

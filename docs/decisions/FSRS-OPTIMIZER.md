@@ -11,6 +11,9 @@
   A bump must keep training FSRS-6 until the scheduler moves.
 - Days between reviews are counted the way ts-fsrs counts elapsed days: differences of UTC calendar dates.
   They are not counted by the learning day (`dayStartsAt`).
+- With two or more relearning steps, ts-fsrs caps w17 and w18 lower than the crate trains them.
+  The optimizer caps found and current weights the way ts-fsrs does for the algorithm's relearning steps.
+  It does so before it scores them, and it stores the found weights capped.
 - Moving to another FSRS model is one change across the crate pin, ts-fsrs, the weight count on both sides,
   and the stored algorithms.
 - The optimizer has no TypeScript twin.
@@ -22,12 +25,13 @@ The reviews live in the SQLite database Rust owns on the desktop, and the `fsrs`
 Running it there keeps review history off IPC.
 The fitted weights only predict well if training sees days the way the scheduler does,
 so the two must change together.
+The scores the user compares only describe the scheduler if they use the weights it will grade with, after its cap.
 
 ## Applies when
 
 - A change touches `crates/koloda/src/domain/optimizer.rs`, `crates/koloda/src/repo/optimizer.rs`,
   or the desktop commands that run them.
-- A change bumps the `fsrs` crate or ts-fsrs, or changes how ts-fsrs counts elapsed days.
+- A change bumps the `fsrs` crate or ts-fsrs, or changes how ts-fsrs counts elapsed days or caps weights.
 - A change touches the FSRS weight count or format on either side.
 
-Scheduling changes that keep the weight count and the day count do not need this file.
+Scheduling changes that keep the weight count, the day count, and the cap do not need this file.
