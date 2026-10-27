@@ -172,6 +172,65 @@ fn histories_without_a_later_day_are_not_enough_data() {
     }
 }
 
+/// `cards` cards graded on each of `days`, the first from New.
+/// Every grade is Good, except each card's last when `is_last_again`.
+fn short_history(cards: i64, days: &[i64], is_last_again: bool) -> Vec<ReviewRecord> {
+    let mut reviews = Vec::new();
+    for card in 0..cards {
+        for (index, day) in days.iter().enumerate() {
+            let is_last = index + 1 == days.len();
+            reviews.push(ReviewRecord {
+                id: format!("{card:04}-{index}"),
+                card_id: format!("card-{card:04}"),
+                rating: if is_last && is_last_again { 1 } else { 3 },
+                state: if index == 0 {
+                    CardState::New.as_i32()
+                } else {
+                    CardState::Review.as_i32()
+                },
+                created_at: START_MS + day * DAY_MS + card,
+            });
+        }
+    }
+    reviews
+}
+
+#[test]
+fn histories_the_crate_does_not_train_on_are_not_enough_data() {
+    // WHY: below its training floors the crate returns its defaults, whole or with only the initial stabilities fitted.
+    // Each row was offered as improved or scored before; applying it would swap fitted weights for the defaults.
+    let cases = [
+        ("1 card, Good then Again 2 days later", short_history(1, &[0, 2], true)),
+        (
+            "7 cards, 2 reviews each: below 8 items",
+            short_history(7, &[0, 3], false),
+        ),
+        (
+            "20 cards, 3 reviews each: below 64 items",
+            short_history(20, &[0, 2, 6], false),
+        ),
+        (
+            "70 cards, 2 reviews each: every item a card's first",
+            short_history(70, &[0, 3], false),
+        ),
+    ];
+
+    for (case, reviews) in cases {
+        let input = OptimizationInput {
+            content: fsrs_algorithm_content(),
+            reviews,
+        };
+        let outcome = optimize(&input, &new_progress()).expect("optimization should run");
+        assert_eq!(
+            outcome,
+            OptimizationOutcome::NotEnoughData {
+                based_on: fsrs_algorithm_content(),
+            },
+            "{case}"
+        );
+    }
+}
+
 #[test]
 fn abort_requested_before_the_run_cancels_it() {
     // WHY: apps/electron/IPC.md promises `cancelled` for a cancelled run, including one with nothing to learn from.

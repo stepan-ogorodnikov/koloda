@@ -7,7 +7,10 @@ use std::collections::BTreeMap;
 use std::sync::{Arc, Mutex, PoisonError};
 
 use chrono::{DateTime, NaiveDate};
-use fsrs::{compute_parameters, CombinedProgressState, ComputeParametersInput, FSRSError, FSRSItem, FSRSReview, FSRS};
+use fsrs::{
+    compute_parameters, CombinedProgressState, ComputeParametersInput, FSRSError, FSRSItem, FSRSReview,
+    DEFAULT_PARAMETERS, FSRS,
+};
 use serde::{Deserialize, Serialize};
 
 use crate::app::error::{error_codes, AppError};
@@ -218,6 +221,16 @@ pub fn optimize(input: &OptimizationInput, progress: &OptimizationProgress) -> R
             error_codes::ALGORITHMS_OPTIMIZER_INVALID_OUTPUT,
             Some(format!("{} weights: {:?}", trained.len(), trained)),
         ));
+    }
+    // WHY: on a small set the pinned crate does not train (fsrs 6.6.2, `compute_parameters`). Below 8 training items
+    // it returns `DEFAULT_PARAMETERS`; below 64, or when every item is a card's first, it fits only the four initial
+    // stabilities and keeps the other defaults. Those paths copy the constant and training moves the weights off it,
+    // so equal weights mean nothing was learned. A crate bump revisits this (docs/decisions/FSRS-OPTIMIZER.md).
+    if trained.get(4..) == DEFAULT_PARAMETERS.get(4..) {
+        if is_aborted(progress) {
+            return Ok(OptimizationOutcome::Cancelled);
+        }
+        return Ok(OptimizationOutcome::NotEnoughData { based_on });
     }
 
     let weights = format_weights(&trained);

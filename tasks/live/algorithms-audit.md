@@ -337,7 +337,7 @@ Line numbers are at `9a60b418`; when an earlier item moved them, find the code b
   Commit: Drop unused optimizer outcome parts and score each card once
   Depends on: 1
 
-- [ ] 3. Report untrained optimizer results as not enough reviews
+- [x] 3. Report untrained optimizer results as not enough reviews
   Goal (A13; question 2):
   - `optimize`, after `compute_parameters` succeeds: when `trained[4..]` equals `fsrs::DEFAULT_PARAMETERS[4..]`, the
     crate did not train.
@@ -360,6 +360,8 @@ Line numbers are at `9a60b418`; when an earlier item moved them, find the code b
     Line 118's wording is item 8's.
   - The dialog copy stays: "Not enough reviews yet. Weights are learned from cards reviewed again on a later day."
   Constraints: `domain/optimizer.rs`, its test, and ALGORITHMS.md.
+    Implemented: the table has a fourth row, 70 cards with 2 reviews each, where every item is a card's first.
+    It is the floor a count before the crate would miss.
   Done when:
   - `RS --test domain optimiz` passes;
   - each new row fails without the check;

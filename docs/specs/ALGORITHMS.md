@@ -127,9 +127,12 @@ A cancelled optimization changes nothing.
 
 An optimization ends with one of these results:
 
-- **Not enough reviews** — the cards have no reviews it can learn from yet
+- **Not enough reviews** — the cards do not yet have enough reviews to fit weights from
 - **Already the best fit** — the current weights predict the reviews at least as well as the weights it found
 - **New weights** — the weights it found predict the reviews better than the current ones
+
+With only a few reviews of cards seen on more than one day, it reports Not enough reviews.
+It does not offer weights it could not fit.
 
 The last two results show how many reviews were used.
 They also show how well the current and the found weights fit those reviews, as two error scores.
