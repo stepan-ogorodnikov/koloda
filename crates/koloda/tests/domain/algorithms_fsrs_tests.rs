@@ -566,14 +566,22 @@ fn test_maximum_interval_zero_fails() {
 }
 
 #[test]
-fn test_maximum_interval_fractional_fails_deserialization() {
-    // WHY: `maximum_interval: i64` rejects fractions at serde level before
-    // `validate()` runs — mirrors TS `maximumInterval: z.number().int()`.
-    let mut payload = valid_payload();
-    payload["maximumInterval"] = json!(36500.5);
+fn test_fractional_amounts_fail_deserialization() {
+    // WHY: step amounts and `maximum_interval` are i64, so serde rejects a fraction before `validate()` runs.
+    // The TS twin rejects the same values with each field's code (`algorithms-fsrs.test.ts`).
+    let fractional_fields = [
+        ("learningSteps", json!([[1.5, "m"]])),
+        ("relearningSteps", json!([[2.5, "m"]])),
+        ("maximumInterval", json!(10.5)),
+    ];
 
-    let result: Result<AlgorithmFSRS, _> = serde_json::from_value(payload);
-    assert!(result.is_err(), "Should fail when maximumInterval is fractional");
+    for (field, offending) in fractional_fields {
+        let mut payload = valid_payload();
+        payload[field] = offending.clone();
+
+        let result: Result<AlgorithmFSRS, _> = serde_json::from_value(payload);
+        assert!(result.is_err(), "Should fail when {field} is {offending}");
+    }
 }
 
 #[test]

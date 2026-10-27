@@ -459,7 +459,7 @@ msgstr "A profile's provider cannot be changed. Create a new profile instead."
 
 #: ../../libs/app/src/lib/error.ts:77
 msgid "validation.algorithm.fsrs.learning-steps.amount"
-msgstr "Learning step amount must be greater than zero"
+msgstr "Learning step amount must be a whole number greater than zero"
 
 #: ../../libs/app/src/lib/error.ts:78
 msgid "validation.algorithm.fsrs.learning-steps.unit"
@@ -467,11 +467,11 @@ msgstr "Invalid learning step unit"
 
 #: ../../libs/app/src/lib/error.ts:81
 msgid "validation.algorithm.fsrs.maximum-interval"
-msgstr "Maximum interval must be greater than zero"
+msgstr "Maximum interval must be a whole number greater than zero"
 
 #: ../../libs/app/src/lib/error.ts:79
 msgid "validation.algorithm.fsrs.relearning-steps.amount"
-msgstr "Relearning step amount must be greater than zero"
+msgstr "Relearning step amount must be a whole number greater than zero"
 
 #: ../../libs/app/src/lib/error.ts:80
 msgid "validation.algorithm.fsrs.relearning-steps.unit"

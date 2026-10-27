@@ -18,7 +18,7 @@ import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
-import { AlgorithmLearningSteps } from "./algorithm-learning-steps";
+import { AlgorithmLearningSteps, WHOLE_NUMBER_FORMAT } from "./algorithm-learning-steps";
 import { CloneAlgorithm } from "./clone-algorithm";
 import { DeleteAlgorithm } from "./delete-algorithm";
 import { OptimizeAlgorithm } from "./optimize-algorithm";
@@ -145,6 +145,7 @@ export function Algorithm({ id }: AlgorithmProps) {
           <NumberField
             variants={{ layout: "form" }}
             minValue={1}
+            formatOptions={WHOLE_NUMBER_FORMAT}
             value={field.state.value}
             onChange={field.handleChange}
           >

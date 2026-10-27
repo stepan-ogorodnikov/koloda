@@ -455,7 +455,7 @@ Line numbers are at `9a60b418`; when an earlier item moved them, find the code b
   Commit: Name algorithm fields alike in Russian labels and errors
   Depends on: none
 
-- [ ] 7. Take only whole numbers for step amounts and the maximum interval
+- [x] 7. Take only whole numbers for step amounts and the maximum interval
   Goal (A1):
   - Fields: both step-amount fields (`algorithm-learning-steps.tsx:23-33`) and the maximum interval
     (`algorithm.tsx:143-147`) pass `formatOptions={{ useGrouping: false, maximumFractionDigits: 0 }}`.
@@ -479,6 +479,8 @@ Line numbers are at `9a60b418`; when an earlier item moved them, find the code b
     Rust twin: a fractional step amount and maximum interval fail deserialization (`algorithms_serde_tests.rs`); add
     the case if it is missing.
   Constraints: the two field files, `algorithms-fsrs.ts`, the catalogs, ALGORITHMS.md, and the tests.
+    Implemented: `WHOLE_NUMBER_FORMAT` lives in `algorithm-learning-steps.tsx`, which `algorithm.tsx` already imports.
+    The Rust fractional-maximum-interval serde test became a table over both step lists and the maximum interval.
   Done when:
   - `SRS algorithms-fsrs`, `RS --test domain algorithms`, and `bun run typecheck` pass;
   - the three new rows fail with `.int()` back;

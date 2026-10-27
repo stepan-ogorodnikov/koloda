@@ -46,11 +46,11 @@ Every algorithm is FSRS and has:
 - **Weights** — exactly twenty-one comma-separated numbers
 - **Learning steps** — ordered delays used while a card is in learning
 - **Relearning steps** — ordered delays used while a card is in relearning
-- **Maximum interval** — number of days; must be greater than zero
+- **Maximum interval** — a whole number of days, at least one
 
 Each learning or relearning step is an amount and a unit.
 Units are seconds, minutes, hours, or days.
-The amount must be at least one.
+The amount is a whole number, at least one.
 Either step list may be empty.
 
 Adding a step copies the previous step when one exists.

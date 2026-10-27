@@ -28,9 +28,10 @@ export const FSRS6_WEIGHT_COUNT = 21;
 // spellings that `Number()` would otherwise accept or that fail `is_finite`.
 const WEIGHT_DECIMAL_PATTERN = /^[+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?$/;
 
-// WHY: Rust twin stores step amounts as i64; the 2^53 gap is an accepted
-// divergence (docs/decisions/TS-RUST-DOMAIN-MIRRORING.md).
-const learningStepValidation = z.tuple([z.number().int(), z.string()]);
+// WHY: the whole-number check lives in the refinement below, so a fraction reports its list's code.
+// The Rust twin stores step amounts as i64, so on desktop a fraction fails serde before `validate()`;
+// the 2^53 gap is an accepted divergence (docs/decisions/TS-RUST-DOMAIN-MIRRORING.md).
+const learningStepValidation = z.tuple([z.number(), z.string()]);
 
 const algorithmFSRSBaseValidation = z.object({
   type: z.literal("fsrs"),
@@ -39,9 +40,9 @@ const algorithmFSRSBaseValidation = z.object({
   isFuzzEnabled: z.boolean(),
   learningSteps: z.array(learningStepValidation),
   relearningSteps: z.array(learningStepValidation),
-  // WHY: `.int()` mirrors Rust `maximum_interval: i64` — fractional values fail
-  // serde deserialization on desktop before validation ever runs.
-  maximumInterval: z.number().int(),
+  // WHY: whole numbers are checked in the refinement, so a fraction reports the field's code. Rust
+  // `maximum_interval: i64` fails serde on a fraction before validation runs.
+  maximumInterval: z.number(),
 });
 
 export const algorithmFSRSValidation = algorithmFSRSBaseValidation.superRefine((data, ctx) => {
@@ -55,7 +56,7 @@ export const algorithmFSRSValidation = algorithmFSRSBaseValidation.superRefine((
 
   for (let i = 0; i < data.learningSteps.length; i++) {
     const [amount, unit] = data.learningSteps[i];
-    if (amount <= 0) {
+    if (amount <= 0 || !Number.isInteger(amount)) {
       ctx.addIssue({
         code: "custom",
         message: "validation.algorithm.fsrs.learning-steps.amount",
@@ -73,7 +74,7 @@ export const algorithmFSRSValidation = algorithmFSRSBaseValidation.superRefine((
 
   for (let i = 0; i < data.relearningSteps.length; i++) {
     const [amount, unit] = data.relearningSteps[i];
-    if (amount <= 0) {
+    if (amount <= 0 || !Number.isInteger(amount)) {
       ctx.addIssue({
         code: "custom",
         message: "validation.algorithm.fsrs.relearning-steps.amount",
@@ -89,7 +90,7 @@ export const algorithmFSRSValidation = algorithmFSRSBaseValidation.superRefine((
     }
   }
 
-  if (data.maximumInterval <= 0) {
+  if (data.maximumInterval <= 0 || !Number.isInteger(data.maximumInterval)) {
     ctx.addIssue({
       code: "custom",
       message: "validation.algorithm.fsrs.maximum-interval",

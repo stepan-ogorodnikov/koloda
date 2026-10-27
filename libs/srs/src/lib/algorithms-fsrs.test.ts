@@ -286,6 +286,11 @@ describe("algorithmFSRSValidation", () => {
       code: "validation.algorithm.fsrs.learning-steps.amount",
     },
     {
+      name: "learning step fractional amount",
+      payload: { ...validPayload(), learningSteps: [[1.5, "m"]] },
+      code: "validation.algorithm.fsrs.learning-steps.amount",
+    },
+    {
       name: "learning step invalid unit",
       payload: { ...validPayload(), learningSteps: [[10, "x"]] },
       code: "validation.algorithm.fsrs.learning-steps.unit",
@@ -293,6 +298,11 @@ describe("algorithmFSRSValidation", () => {
     {
       name: "relearning step zero amount",
       payload: { ...validPayload(), relearningSteps: [[0, "m"]] },
+      code: "validation.algorithm.fsrs.relearning-steps.amount",
+    },
+    {
+      name: "relearning step fractional amount",
+      payload: { ...validPayload(), relearningSteps: [[2.5, "m"]] },
       code: "validation.algorithm.fsrs.relearning-steps.amount",
     },
     {
@@ -308,6 +318,11 @@ describe("algorithmFSRSValidation", () => {
     {
       name: "maximum interval negative",
       payload: { ...validPayload(), maximumInterval: -1 },
+      code: "validation.algorithm.fsrs.maximum-interval",
+    },
+    {
+      name: "maximum interval fractional",
+      payload: { ...validPayload(), maximumInterval: 10.5 },
       code: "validation.algorithm.fsrs.maximum-interval",
     },
     {
@@ -392,14 +407,6 @@ describe("algorithmFSRSValidation", () => {
     expect(result.success).toBe(false);
   });
 
-  it("rejects non-integer learning step amounts", () => {
-    const result = algorithmFSRSValidation.safeParse({
-      ...DEFAULT_FSRS_ALGORITHM,
-      learningSteps: [[1.5, "m"]],
-    });
-    expect(result.success).toBe(false);
-  });
-
   it("rejects non-array learning steps", () => {
     const result = algorithmFSRSValidation.safeParse({
       ...DEFAULT_FSRS_ALGORITHM,
@@ -420,14 +427,6 @@ describe("algorithmFSRSValidation", () => {
     const result = algorithmFSRSValidation.safeParse({
       ...DEFAULT_FSRS_ALGORITHM,
       maximumInterval: "36500",
-    });
-    expect(result.success).toBe(false);
-  });
-
-  it("rejects fractional maximumInterval (mirrors Rust i64 deserialization)", () => {
-    const result = algorithmFSRSValidation.safeParse({
-      ...DEFAULT_FSRS_ALGORITHM,
-      maximumInterval: 36500.5,
     });
     expect(result.success).toBe(false);
   });

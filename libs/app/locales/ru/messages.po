@@ -459,7 +459,7 @@ msgstr "Провайдера профиля нельзя изменить. Со�
 
 #: ../../libs/app/src/lib/error.ts:77
 msgid "validation.algorithm.fsrs.learning-steps.amount"
-msgstr "Длительность интервала заучивания должна быть больше нуля"
+msgstr "Длительность интервала заучивания должна быть целым числом больше нуля"
 
 #: ../../libs/app/src/lib/error.ts:78
 msgid "validation.algorithm.fsrs.learning-steps.unit"
@@ -467,11 +467,11 @@ msgstr "Недопустимая единица интервала заучив�
 
 #: ../../libs/app/src/lib/error.ts:81
 msgid "validation.algorithm.fsrs.maximum-interval"
-msgstr "Максимальный интервал должен быть больше нуля"
+msgstr "Максимальный интервал должен быть целым числом больше нуля"
 
 #: ../../libs/app/src/lib/error.ts:79
 msgid "validation.algorithm.fsrs.relearning-steps.amount"
-msgstr "Длительность интервала переучивания должна быть больше нуля"
+msgstr "Длительность интервала переучивания должна быть целым числом больше нуля"
 
 #: ../../libs/app/src/lib/error.ts:80
 msgid "validation.algorithm.fsrs.relearning-steps.unit"

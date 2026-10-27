@@ -6,6 +6,10 @@ import { useLingui } from "@lingui/react";
 
 const defaultValues = { title: "", content: DEFAULT_FSRS_ALGORITHM } as UpdateAlgorithmValues;
 
+// WHY: with no fraction digits React Aria rejects a typed decimal separator, so step amounts and the maximum interval
+// stay whole (ALGORITHMS.md, Parameters). These options replace `NumberField`'s own, so `useGrouping` is repeated.
+export const WHOLE_NUMBER_FORMAT: Intl.NumberFormatOptions = { useGrouping: false, maximumFractionDigits: 0 };
+
 export const AlgorithmLearningSteps = withForm({
   defaultValues,
   props: { type: "learningSteps" as "learningSteps" | "relearningSteps" },
@@ -28,6 +32,7 @@ export const AlgorithmLearningSteps = withForm({
                           : msg`algorithm.relearning-steps.amount.${i + 1}`,
                       )}
                       minValue={1}
+                      formatOptions={WHOLE_NUMBER_FORMAT}
                       value={field.state.value}
                       onChange={field.handleChange}
                     >
