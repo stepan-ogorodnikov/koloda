@@ -4,10 +4,9 @@
 
 Covers algorithm presets: parameters, adding, cloning, editing, optimizing weights, deleting with a successor,
 and parameter history.
-Does not cover FSRS scheduling math, how grades update card state, or learning settings UI.
+Does not cover how grades update card state (CARDS.md) or the learning settings UI (LEARNING-SETTINGS.md).
+FSRS scheduling math is out of scope too; it has no product spec.
 How decks pick an algorithm is covered lightly; deck management itself is not.
-Grade-to-card-state updates are covered by CARDS.md and learning settings by LEARNING-SETTINGS.md;
-the FSRS scheduling math has no product spec.
 
 ## What it is
 
@@ -34,13 +33,11 @@ Its weights can be fitted to the user's own reviews; see §Optimization.
 - A deck stores which algorithm to use and uses that algorithm's current parameters when grading.
 - Cards do not store an algorithm of their own; see DECKS.md (§Relationships).
 - See LEARNING-SETTINGS.md (§Defaults) for the default algorithm offered when creating a deck.
-- At least one algorithm must remain; the last algorithm cannot be deleted.
 
 ## Parameters
 
 Every algorithm is FSRS and has:
 
-- **Title** — required, at most 255 characters
 - **Retention** — integer from 70 through 99
 - **Fuzz** — on or off
 - **Weights** — exactly twenty-one comma-separated numbers
@@ -100,8 +97,7 @@ Some characters, such as emoji, count as two toward this limit.
 Changing notes does not change scheduling parameters.
 See ASSISTANT-DATA-ACCESS.md (§Resources) for how the assistant reads notes.
 
-Changing parameters affects future grading for decks that use this algorithm.
-It does not immediately rewrite card due times or review history.
+See §What it is for when changed parameters take effect.
 A save that changes parameters adds a revision; see §History.
 The learning settings default algorithm can be edited while it remains the default.
 See LEARNING-SETTINGS.md (§Defaults).
@@ -115,7 +111,8 @@ Retention, fuzz, learning steps, relearning steps, and maximum interval stay as 
 The desktop app offers optimization from the algorithm editor.
 The web app offers no optimization and shows nothing in its place.
 
-Optimization learns from every review of the cards in decks that use the algorithm when it starts.
+Optimization learns from the reviews of the cards in decks that use the algorithm when it starts.
+It uses only cards whose history the app holds from their first grade.
 That includes reviews made while a card's deck used another algorithm.
 
 It starts from the saved parameters.
@@ -144,7 +141,7 @@ Discarding changes nothing.
 
 Applying replaces the algorithm's weights.
 It leaves the other parameters, the title, and the notes unchanged.
-Applied weights affect later grades like any other parameter change; see §Editing Algorithms.
+Applied weights affect later grades like any other parameter change; see §What it is.
 Applying records a revision; see §History.
 
 If the algorithm's parameters changed after the optimization started, applying is refused.

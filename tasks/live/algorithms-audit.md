@@ -492,7 +492,7 @@ Line numbers are at `9a60b418`; when an earlier item moved them, find the code b
   Commit: Take only whole numbers for step amounts and the maximum interval
   Depends on: 6
 
-- [ ] 8. Keep one home per algorithm rule in ALGORITHMS.md
+- [x] 8. Keep one home per algorithm rule in ALGORITHMS.md
   Goal (A4), in ALGORITHMS.md:
   - §Parameters keeps the six parameters: drop the Title bullet (line 43).
     The title rule lives in §Adding Algorithms (lines 73-76).
