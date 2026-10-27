@@ -142,7 +142,7 @@ msgstr "Интервалы переучивания"
 
 #: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:103
 msgid "algorithm.inputs.retention.label"
-msgstr "Коэфициент"
+msgstr "Удержание"
 
 #: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:80
 msgid "algorithm.inputs.title.label"

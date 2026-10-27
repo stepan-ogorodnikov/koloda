@@ -437,7 +437,7 @@ Line numbers are at `9a60b418`; when an earlier item moved them, find the code b
   Commit: Pin ts-fsrs and test its UTC day count
   Depends on: 4
 
-- [ ] 6. Name algorithm fields alike in Russian labels and errors
+- [x] 6. Name algorithm fields alike in Russian labels and errors
   Goal (A12; question 4):
   - `libs/srs-react/locales/ru/messages.po:145`: the retention label "Коэфициент" becomes "Удержание", like its
     error (`libs/app/locales/ru/messages.po:482`).
