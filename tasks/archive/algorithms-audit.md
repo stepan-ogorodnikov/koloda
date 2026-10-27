@@ -1,6 +1,6 @@
 # Algorithms audit fixes
 
-Status: ready
+Status: done
 Guides: agents/IMPLEMENTATION-PLAN.md, agents/TASKS.md, docs/specs/ALGORITHMS.md, docs/decisions/FSRS-OPTIMIZER.md, agents/RUST.md, docs/decisions/TS-RUST-DOMAIN-MIRRORING.md, agents/CODE-STYLE.md, agents/CODE-DOCUMENTATION.md, agents/TESTING.md, agents/VERIFY.md, agents/CSS.md, agents/I18N.md, agents/BACKWARDS-COMPATIBILITY.md, agents/FUNCTIONAL-SPECIFICATIONS.md, agents/DECISIONS.md, agents/MARKDOWN.md, apps/electron/IPC.md, libs/native-ipc/README.md, apps/electron/README.md, apps/web-e2e/README.md, apps/electron-e2e/README.md, libs/e2e/README.md, agents/REVIEW.md
 Flow: local
 
@@ -626,4 +626,45 @@ Line numbers are at `9a60b418`; when an earlier item moved them, find the code b
 
 ## Outcome
 
-<what shipped>
+Shipped, one commit per Plan item, all 13 done, plus one self-review commit that corrected and wrapped two optimizer
+comments.
+The algorithms audit's finding 2 was fixed earlier by `lessons-audit` (item 1); finding 6 and the clone-algorithm bullet
+of finding 11 by `decks-audit` (items 4 and 2).
+
+- The optimizer reports Not enough reviews when the crate did not train: its weights 5–21 still equal the crate's
+  defaults (A13).
+  A run cancelled before it starts resolves as cancelled, whatever its input (A3).
+- With two or more relearning steps, found and current weights are capped at the ts-fsrs w17/w18 ceiling before
+  scoring, and found weights are stored capped (A5).
+  FSRS-OPTIMIZER.md names the cap as a third point of agreement.
+- Scoring walks each card's history once (`evaluate_with_card_ids`); `notEnoughData.reviewCount` and the unreachable
+  cancelled message are gone (A11).
+- ts-fsrs is pinned at 5.2.3, and `libs/srs` tests pin its UTC day count and its w17/w18 cap, each beside a Rust twin
+  (A7).
+- Step amounts and the maximum interval take only whole numbers; a fraction in a payload reports its field's code, and
+  the copy says "whole number" in English and Russian (A1).
+- The Russian retention label reads "Удержание", and the step errors use the labels' terms (A12).
+- ALGORITHMS.md keeps one home per rule and says which reviews optimization learns from (A4).
+- Tests: a web full-field roundtrip and no-successor cases; a Rust validation table asserting each code; retention at
+  69 and 100 on both hosts; stale-apply and late-result dialog cases; `OptimizerHost` queued-cancel and cleanup tests
+  (A8, A9).
+- e2e: a desktop flow that optimizes a preset with no reviews; the preset add, edit, delete, and reset flows check
+  outcomes on both hosts (A8, A10).
+
+Verified: `bun run check:push` passed on the tip before archiving.
+The web and desktop e2e suites were not run; items 11 and 12 are typechecked only, per `agents/VERIFY.md`.
+The manual checks in the Plan are the human's to run and are not verified here.
+
+Skipped:
+
+- A9's cancel during training or scoring.
+  The crate has no hook to stop between batches, so a test would order the abort by sleeping or polling, which
+  `agents/TESTING.md` bans.
+
+Left out, each with its own home:
+
+- `host-desync.md` finding 2 (the web parses algorithm rows with the write schema on every read): the host-desync
+  triage.
+- `apps/electron/src-rust/src/e2e_secrets.rs` is still read by no audit.
+- The addon reads the database before `optimize` checks the abort flag; the outcome is right, only the read is
+  wasted. Seen, not planned.
