@@ -12,7 +12,7 @@ dev server on port 3000 and launches Electron from `apps/electron` — the full 
 The addon is a debug build, so it can keep secrets in a file instead of the OS keyring (Fixtures below).
 So no run of the suite uses the release addon or the OS keyring; a release build's keyring is checked by hand.
 The web counterpart is `apps/web-e2e`; the spec sets mirror each other flow for flow.
-Sync is the exception: the web demo does not sync, so its spec is desktop only.
+Sync and preset optimization are the exceptions: the web demo offers neither, so their specs are desktop only.
 
 ## How to run
 

@@ -568,7 +568,7 @@ Line numbers are at `9a60b418`; when an earlier item moved them, find the code b
   Commit: Test the optimizer host's queued cancel and cleanup
   Depends on: 1
 
-- [ ] 11. Optimize a preset in a desktop e2e flow
+- [x] 11. Optimize a preset in a desktop e2e flow
   Goal (A8, end to end):
   - New `apps/electron-e2e/src/algorithm-optimize.spec.ts`: Presets → a seeded preset (a fresh database has no
     reviews) → Optimize.
