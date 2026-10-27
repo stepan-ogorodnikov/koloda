@@ -1,6 +1,6 @@
 # Algorithms audit fixes
 
-Status: draft
+Status: ready
 Guides: agents/IMPLEMENTATION-PLAN.md, agents/TASKS.md, docs/specs/ALGORITHMS.md, docs/decisions/FSRS-OPTIMIZER.md, agents/RUST.md, docs/decisions/TS-RUST-DOMAIN-MIRRORING.md, agents/CODE-STYLE.md, agents/CODE-DOCUMENTATION.md, agents/TESTING.md, agents/VERIFY.md, agents/CSS.md, agents/I18N.md, agents/BACKWARDS-COMPATIBILITY.md, agents/FUNCTIONAL-SPECIFICATIONS.md, agents/DECISIONS.md, agents/MARKDOWN.md, apps/electron/IPC.md, libs/native-ipc/README.md, apps/electron/README.md, apps/web-e2e/README.md, apps/electron-e2e/README.md, libs/e2e/README.md, agents/REVIEW.md
 Flow: local
 
@@ -285,7 +285,7 @@ Entries use the report's numbers with the prefix `A`.
   "интервал переучивания" for the steps (human, 2026-10-27).
 - [x] 5. A11: `notEnoughData.reviewCount` after A13? — drop it; the dialog does not show it (human, 2026-10-27).
 - [x] 6. Flow? — `local`, the default.
-- [ ] 7. Plan approval — open.
+- [x] 7. Plan approved as written (human, 2026-10-27).
 
 ## Plan
 
