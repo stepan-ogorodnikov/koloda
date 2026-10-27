@@ -19,9 +19,12 @@ Main-to-renderer pushes arrive on `window.electronAPI.on(channel, callback)` sub
 - Data-command args mirror the `KolodaDb` NAPI method signatures — `{ params }` for reads, `{ data }` for writes,
   or the plain object where the method takes one.
 - Channel names and arg/result shapes are machine-checked against the `DataIpc` contract in `libs/native-ipc`
-  (`@koloda/native-ipc`), which both processes compile against. The contract covers every data, AI, and media
-  command plus the `AI_STREAM_CHANNEL` (`ai:stream`) event payload (`AiStreamEvent`); window-channel args are typed
-  at their `window-ipc.ts` handlers, outside the contract.
+  (`@koloda/native-ipc`), which both processes compile against. The contract covers every data, AI, media, sync,
+  and optimizer command.
+  It also covers the push payloads: `AiStreamEvent` on `AI_STREAM_CHANNEL` (`ai:stream`), `SyncEvent` on
+  `SYNC_EVENT_CHANNEL` (`sync:event`), and `OptimizerProgressEvent` on `OPTIMIZER_PROGRESS_CHANNEL`
+  (`optimizer:progress`).
+  Window-channel args are typed at their `window-ipc.ts` handlers, outside the contract.
 
 ## Data Commands
 

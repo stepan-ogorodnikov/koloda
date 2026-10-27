@@ -190,6 +190,10 @@ pub fn progress_counts(progress: &OptimizationProgress) -> (usize, usize) {
 /// Trains on the input and scores the current and the found weights on the same items.
 /// `request_abort` on `progress` cancels the run.
 pub fn optimize(input: &OptimizationInput, progress: &OptimizationProgress) -> Result<OptimizationOutcome, AppError> {
+    // INVARIANT: a run cancelled before it starts resolves `Cancelled`, whatever its input (apps/electron/IPC.md).
+    if is_aborted(progress) {
+        return Ok(OptimizationOutcome::Cancelled);
+    }
     let set = build_training_set(&input.reviews);
     let based_on = input.content.clone();
     if set.items.is_empty() {
@@ -197,9 +201,6 @@ pub fn optimize(input: &OptimizationInput, progress: &OptimizationProgress) -> R
             review_count: set.review_count,
             based_on,
         });
-    }
-    if is_aborted(progress) {
-        return Ok(OptimizationOutcome::Cancelled);
     }
 
     let trained = compute_parameters(ComputeParametersInput {

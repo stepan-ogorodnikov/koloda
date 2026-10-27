@@ -175,16 +175,21 @@ fn histories_without_a_later_day_are_not_enough_data() {
 
 #[test]
 fn abort_requested_before_the_run_cancels_it() {
-    let input = OptimizationInput {
-        content: overconfident_content(),
-        reviews: forgetful_history(),
-    };
-    let progress = new_progress();
-    request_abort(&progress);
+    // WHY: apps/electron/IPC.md promises `cancelled` for a cancelled run, including one with nothing to learn from.
+    let cases = [("trainable history", forgetful_history()), ("no reviews", vec![])];
 
-    let outcome = optimize(&input, &progress).expect("a cancelled run is not an error");
+    for (case, reviews) in cases {
+        let input = OptimizationInput {
+            content: overconfident_content(),
+            reviews,
+        };
+        let progress = new_progress();
+        request_abort(&progress);
 
-    assert_eq!(outcome, OptimizationOutcome::Cancelled);
+        let outcome = optimize(&input, &progress).expect("a cancelled run is not an error");
+
+        assert_eq!(outcome, OptimizationOutcome::Cancelled, "{case}");
+    }
 }
 
 #[test]

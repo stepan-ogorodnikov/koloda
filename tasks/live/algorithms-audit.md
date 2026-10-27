@@ -294,7 +294,7 @@ Their dirs are `libs/srs`, `libs/srs-react`, and `libs/db-sqlite`.
 `RS` stands for `cargo test -p koloda`; `ADDON` for `nx run @koloda/electron:test-rust`.
 Line numbers are at `9a60b418`; when an earlier item moved them, find the code by its text.
 
-- [ ] 1. Resolve an optimization cancelled before it starts as cancelled
+- [x] 1. Resolve an optimization cancelled before it starts as cancelled
   Goal (A3):
   - `optimize` (`crates/koloda/src/domain/optimizer.rs:192-203`): check `is_aborted(progress)` first, before the
     empty-set return.
