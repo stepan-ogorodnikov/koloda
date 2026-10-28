@@ -1,6 +1,6 @@
 # Templates audit fixes
 
-Status: ready
+Status: done
 Guides: agents/IMPLEMENTATION-PLAN.md, agents/TASKS.md, docs/specs/TEMPLATES.md, agents/RUST.md, docs/decisions/TS-RUST-DOMAIN-MIRRORING.md, agents/CODE-STYLE.md, agents/CODE-DOCUMENTATION.md, agents/TESTING.md, agents/VERIFY.md, agents/I18N.md, agents/BACKWARDS-COMPATIBILITY.md, agents/FUNCTIONAL-SPECIFICATIONS.md, agents/MARKDOWN.md, apps/web-e2e/README.md, apps/electron-e2e/README.md, libs/e2e/README.md, agents/REVIEW.md
 Flow: local
 
@@ -526,4 +526,53 @@ Line numbers are at `248e44b1`; when an earlier item moved them, find the code b
 
 ## Outcome
 
-<what shipped>
+Shipped, one commit per Plan item, all 13 done; self-review needed no further commits.
+The templates audit's finding 1 was fixed earlier by `cards-audit` (item 2).
+
+- A template's lock is read and checked inside the update's transaction on both hosts, like delete (T4).
+- The web template list computes the lock; `templateRowSchema` no longer defaults `isLocked` (T5).
+- A rejected locked save reports `validation.templates.update-locked` with no details on both hosts.
+  The en and ru message says what a locked save rejects (T7).
+- Both validators reject two fields with one id (`validation.templates.fields.duplicate-id`) and a second layout item
+  for one field (`validation.templates.layout.duplicate-field`).
+  TEMPLATES.md says no field has more than one layout item, and an item stays with its field (T2).
+- The add dialog builds the default fields on each submit, with fresh ids and titles in the interface language.
+  The desktop starter template titles its fields the same way; `DEFAULT_TEMPLATE_FIELD` lost its placeholder id
+  (T6, T14).
+- Remove-field is hidden on a template's last field (T12).
+- Field and layout rows name their controls by position, e.g. "Field 2 type" and "Layout item 1 operation" (T11, T15).
+- TEMPLATES.md keeps one home per rule (T3).
+- Residue: `getTemplateDecksQuery` takes a template id, and the deck, preset, and template insert schemas no longer
+  accept notes (T13).
+- Tests: web full-field roundtrip; clone and unlock-after-delete on both hosts; list lock on both hosts; locked-save
+  tables on both hosts with the Rust twin; Rust validator tests as code-asserting tables, without the serde battery;
+  a shape test for `UpdateTemplateData`; an add-dialog test for ids and translated titles (T8, T9).
+- e2e: the lock flow checks the locked editor, notes, and a clone of the locked template; the edit flow checks the
+  new field's layout item and the last-field guard; desktop waits for the deck save (T10).
+
+Beyond the plan text:
+
+- The Rust locked-update tests became one table, matching the TS table (item 3).
+- Item 9 exports `translateDefaultTemplateContent` rather than bare message descriptors.
+- Save rejects only a second layout item for a field; a field without an item is still accepted, and the editor
+  never makes one.
+- e2e collection locators use `/^Field \d+ title$/` and `/^Layout item \d+ field$/`; the lock flow's timeout is 90 s.
+
+Verified: `bun run check:push` passed on the tip before archiving.
+The first run failed once in `koloda-server` (`serve_removes_staged_uploads_before_it_listens`), which this task does
+not touch; it passed alone three times, the server suite five times, and the full rerun.
+The web and desktop e2e suites were not run; the edited specs are typechecked only, per `agents/VERIFY.md`.
+The manual checks in the Plan are the human's to run and are not verified here.
+
+Skipped:
+
+- An interleaving test for T4.
+  Neither repo has a seam between its read and its write, and the delete twin has no such test either.
+
+Left out, each with its own home:
+
+- `host-desync.md` finding 2's Rust twin of the web template-delete case over a corrupt learning row: the host-desync
+  triage.
+- Rust `update_template` keeps a `let Some(stored) = stored else` branch that the in-transaction read now makes
+  unreachable. Seen, not planned.
+- The `koloda-server` flake above exists on `main`. Seen, not fixed.
