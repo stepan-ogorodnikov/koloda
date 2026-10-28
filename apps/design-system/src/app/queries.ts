@@ -4,6 +4,7 @@ import type { Queries } from "@koloda/core-react";
 import { calculateTodaysReviewTotals } from "@koloda/srs";
 import type { LessonFilters, LessonsResult } from "@koloda/srs";
 import { SAMPLE_AI_PROFILE, SAMPLE_CONVERSATIONS } from "./assistant-samples";
+import { SAMPLE_TEMPLATE } from "./template-samples";
 
 // WHY: `total` is a placeholder; `calculateTodaysReviewTotals` recomputes it from the counted buckets.
 const SAMPLE_REVIEW_TOTALS = { untouched: 18, learn: 34, review: 92, total: 0 };
@@ -41,6 +42,10 @@ function sampleLessons(filters?: LessonFilters): LessonsResult {
   return { total, decks };
 }
 
+// WHY: a save replaces the sample in memory, because the editor refetches right after saving.
+// Edits last until a reload.
+let sampleTemplate = SAMPLE_TEMPLATE;
+
 const stubs: Pick<
   Queries,
   | "getSettingsQuery"
@@ -50,6 +55,9 @@ const stubs: Pick<
   | "getConversationQuery"
   | "setConversationMutation"
   | "getAIProfilesQuery"
+  | "getTemplatesQuery"
+  | "getTemplateQuery"
+  | "updateTemplateMutation"
 > = {
   getSettingsQuery: (name) => ({
     queryKey: queryKeys.settings.detail(name),
@@ -86,10 +94,24 @@ const stubs: Pick<
     queryKey: queryKeys.ai.profiles(),
     queryFn: () => [SAMPLE_AI_PROFILE],
   }),
+  getTemplatesQuery: () => ({
+    queryKey: queryKeys.templates.all(),
+    queryFn: () => [sampleTemplate],
+  }),
+  getTemplateQuery: (id) => ({
+    queryKey: queryKeys.templates.detail(id),
+    queryFn: () => (id === sampleTemplate.id ? sampleTemplate : null),
+  }),
+  updateTemplateMutation: () => ({
+    mutationFn: async ({ values }) => {
+      sampleTemplate = { ...sampleTemplate, ...values, updatedAt: new Date() };
+      return sampleTemplate;
+    },
+  }),
 };
 
 // WHY: the app has no database. A null settings row makes `useHotkeysSettings` fall back to the defaults;
-// lessons, today's totals, conversations, and AI profiles are sample data.
+// lessons, today's totals, conversations, AI profiles, and templates are sample data.
 // Every other query or mutation rejects with its name when it runs, not when it is built:
 // `useLessonSession` builds a disabled lesson-data query on every render.
 // Only `*Query` and `*Mutation` keys become methods, because jotai probes a stored value for `then`.

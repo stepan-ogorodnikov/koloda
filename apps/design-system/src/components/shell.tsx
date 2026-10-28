@@ -17,7 +17,7 @@ const appMenu: NavItemProps[] = [
   { to: "/", label: { id: "Home" }, icon: HomeIcon, hasPage: true },
   { to: "/decks", label: { id: "Decks" }, icon: DecksIcon, hasPage: false },
   { to: "/algorithms", label: { id: "Algorithms" }, icon: AlgorithmsIcon, hasPage: false },
-  { to: "/templates", label: { id: "Templates" }, icon: TemplatesIcon, hasPage: false },
+  { to: "/templates", label: { id: "Templates" }, icon: TemplatesIcon, hasPage: true },
   { to: "/ai", label: { id: "AI" }, icon: AiIcon, hasPage: true },
 ];
 

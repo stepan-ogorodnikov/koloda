@@ -1,5 +1,6 @@
 import type { AIModel, AIProfile } from "@koloda/ai";
 import type { Conversation } from "@koloda/app";
+import { SAMPLE_TEMPLATE } from "./template-samples";
 
 export const SAMPLE_AI_PROFILE: AIProfile = {
   id: "0199b2c0-0000-7000-8000-000000000001",
@@ -18,11 +19,11 @@ const NORMAL_ID = "0199b2c0-0000-7000-8000-000000000101";
 const BROKEN_ID = "0199b2c0-0000-7000-8000-000000000102";
 const CARDS_ID = "0199b2c0-0000-7000-8000-000000000103";
 
-// WHY: the Spanish deck is the one in the lessons sample, so the two pages tell one story.
+// WHY: the Spanish deck is the one in the lessons sample and the template the one on the templates page,
+// so the pages tell one story.
 const SPANISH_DECK_ID = "0199a1b0-0000-7000-8000-000000000002";
-const BASIC_TEMPLATE_ID = "0199a1c0-0000-7000-8000-000000000001";
-const FRONT_FIELD_ID = "0199a1c0-0000-7000-8000-000000000011";
-const BACK_FIELD_ID = "0199a1c0-0000-7000-8000-000000000012";
+const TEMPLATE_FIELDS = SAMPLE_TEMPLATE.content.fields;
+const [FRONT_FIELD, BACK_FIELD] = TEMPLATE_FIELDS;
 
 function userMessage(runId: string, text: string, createdAt: string) {
   return { id: `user-${runId}`, role: "user", metadata: { createdAt, runId }, parts: [{ type: "text", text }] };
@@ -113,11 +114,6 @@ const brokenState = {
   lastReadRunId: "run-1",
 };
 
-const TEMPLATE_FIELDS = [
-  { id: FRONT_FIELD_ID, title: "Front", type: "text", isRequired: true },
-  { id: BACK_FIELD_ID, title: "Back", type: "markdown", isRequired: true },
-];
-
 const PROPOSED_CARDS = [
   ["tener (yo)", "tuve"],
   ["poder (él)", "pudo"],
@@ -147,12 +143,12 @@ const cardsState = {
     "run-1": {
       ...successRun("run-1", "2026-10-28T09:10:01.000Z", 38, 9400),
       cards: PROPOSED_CARDS.map(([front, back]) => ({
-        content: { [FRONT_FIELD_ID]: { text: front }, [BACK_FIELD_ID]: { text: back } },
+        content: { [FRONT_FIELD.id]: { text: front }, [BACK_FIELD.id]: { text: back } },
       })),
       cardStatuses: { 0: "success", 1: "success", 2: "error" },
       templateFields: TEMPLATE_FIELDS,
       writeTargetDeckId: SPANISH_DECK_ID,
-      writeTargetTemplateId: BASIC_TEMPLATE_ID,
+      writeTargetTemplateId: SAMPLE_TEMPLATE.id,
       toolCalls: [
         {
           kind: "reasoning",
@@ -233,7 +229,7 @@ const cardsState = {
           output: {
             deckId: SPANISH_DECK_ID,
             deckTitle: "Spanish irregular verbs",
-            templateId: BASIC_TEMPLATE_ID,
+            templateId: SAMPLE_TEMPLATE.id,
             templateFields: TEMPLATE_FIELDS,
             cards: PROPOSED_CARDS.map(([Front, Back]) => ({ fields: { Front, Back } })),
             rejectedCount: 1,

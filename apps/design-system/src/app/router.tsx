@@ -3,6 +3,8 @@ import { createRootRoute, createRoute, createRouter } from "@tanstack/react-rout
 import { Shell } from "../components/shell";
 import { AssistantPage } from "../pages/assistant-page";
 import { DashboardPage } from "../pages/dashboard-page";
+import { TemplatePage } from "../pages/template-page";
+import { TemplatesPage } from "../pages/templates-page";
 
 const rootRoute = createRootRoute({ component: Shell });
 
@@ -17,8 +19,16 @@ const assistantRoute = createRoute({
   }),
 });
 
+const templatesRoute = createRoute({ getParentRoute: () => rootRoute, path: "/templates", component: TemplatesPage });
+
+const templateRoute = createRoute({
+  getParentRoute: () => templatesRoute,
+  path: "$templateId",
+  component: TemplatePage,
+});
+
 export const router = createRouter({
-  routeTree: rootRoute.addChildren([dashboardRoute, assistantRoute]),
+  routeTree: rootRoute.addChildren([dashboardRoute, assistantRoute, templatesRoute.addChildren([templateRoute])]),
   defaultNotFoundComponent: NotFound,
 });
 
