@@ -5,6 +5,7 @@ Assistant chat React layer: conversation store, session/`RunController`, persist
 ## Where it sits
 
 Consumed by `@koloda/app-react` and `apps/electron-react` (graceful shutdown).
+The design system app (`apps/design-system`) mounts its hosts and chat on stub data.
 Depends on `@koloda/app`, `@koloda/srs`, `@koloda/ai`, `@koloda/ai-react`,
 `@koloda/assistant`, `@koloda/core-react`, and `@koloda/ui`.
 Provider HTTP stays in `@koloda/ai`; run execution lifetime and stream transport live in `@koloda/assistant`;

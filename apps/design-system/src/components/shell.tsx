@@ -1,48 +1,65 @@
-import { LearnedToday, Lessons } from "@koloda/srs-react";
+import { useAssistantEngineHost, useConversationSaveHost } from "@koloda/assistant-react";
 import { AiIcon, AlgorithmsIcon, DecksIcon, HomeIcon, Layout, SettingsIcon, TemplatesIcon } from "@koloda/ui";
+import type { IconComponent } from "@koloda/ui";
+import type { MessageDescriptor } from "@lingui/core";
+import { Outlet } from "@tanstack/react-router";
 import type { MouseEvent } from "react";
-import { LessonModal } from "./lesson-modal";
 import { Titlebar } from "./titlebar";
 
-const appMenu = [
-  // WHY: "/" is the app's only route, so Home renders as the current item.
-  { to: "/", label: { id: "Home" }, icon: HomeIcon },
-  { to: "/decks", label: { id: "Decks" }, icon: DecksIcon },
-  { to: "/algorithms", label: { id: "Algorithms" }, icon: AlgorithmsIcon },
-  { to: "/templates", label: { id: "Templates" }, icon: TemplatesIcon },
-  { to: "/ai", label: { id: "AI" }, icon: AiIcon },
+type NavItemProps = {
+  to: string;
+  label: MessageDescriptor;
+  icon: IconComponent;
+  hasPage: boolean;
+};
+
+const appMenu: NavItemProps[] = [
+  { to: "/", label: { id: "Home" }, icon: HomeIcon, hasPage: true },
+  { to: "/decks", label: { id: "Decks" }, icon: DecksIcon, hasPage: false },
+  { to: "/algorithms", label: { id: "Algorithms" }, icon: AlgorithmsIcon, hasPage: false },
+  { to: "/templates", label: { id: "Templates" }, icon: TemplatesIcon, hasPage: false },
+  { to: "/ai", label: { id: "AI" }, icon: AiIcon, hasPage: true },
 ];
 
-const secondaryMenu = [{ to: "/settings", label: { id: "Settings" }, icon: SettingsIcon }];
+const secondaryMenu: NavItemProps[] = [
+  { to: "/settings", label: { id: "Settings" }, icon: SettingsIcon, hasPage: false },
+];
 
-// WHY: nothing sits behind the nav links. Preventing the click in the capture phase stops `Link`
-// before it navigates, so the links look and focus as in the product but go nowhere.
+// WHY: nothing sits behind a link without a page. Preventing the click in the capture phase stops `Link`
+// before it navigates, so those links look and focus as in the product but go nowhere.
 function preventNavigation(event: MouseEvent) {
   event.preventDefault();
 }
 
+function NavItem({ to, label, icon, hasPage }: NavItemProps) {
+  const link = <Layout.NavLink to={to} msg={label} icon={icon} />;
+  if (hasPage) return link;
+
+  return (
+    <div className="contents" onClickCapture={preventNavigation}>
+      {link}
+    </div>
+  );
+}
+
 export function Shell() {
+  // WHY: application-shell hosts, as `App` in `@koloda/app-react` mounts them.
+  // `AssistantChat` throws without the engine, and saves need the save host.
+  useAssistantEngineHost();
+  useConversationSaveHost();
+
   return (
     <Layout titlebar={<Titlebar />}>
       <Layout.Nav>
-        <div className="contents" onClickCapture={preventNavigation}>
-          {appMenu.map(({ to, label, icon }) => (
-            <Layout.NavLink to={to} msg={label} icon={icon} key={to} />
-          ))}
-          <div className="grow" />
-          {secondaryMenu.map(({ to, label, icon }) => (
-            <Layout.NavLink to={to} msg={label} icon={icon} key={to} />
-          ))}
-        </div>
+        {appMenu.map((item) => (
+          <NavItem {...item} key={item.to} />
+        ))}
+        <div className="grow" />
+        {secondaryMenu.map((item) => (
+          <NavItem {...item} key={item.to} />
+        ))}
       </Layout.Nav>
-      <Layout.Sidebar>
-        <LearnedToday />
-      </Layout.Sidebar>
-      <Layout.Content isAlwaysVisible>
-        <Layout.Container>
-          <Lessons lesson={<LessonModal />} />
-        </Layout.Container>
-      </Layout.Content>
+      <Outlet />
     </Layout>
   );
 }
