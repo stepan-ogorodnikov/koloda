@@ -505,7 +505,7 @@ Line numbers are at `248e44b1`; when an earlier item moved them, find the code b
   Commit: Drop template residue and notes from the insert schemas
   Depends on: none
 
-- [ ] 13. Cover the locked editor, notes, and locked clone in the template e2e flows
+- [x] 13. Cover the locked editor, notes, and locked clone in the template e2e flows
   Goal (T10):
   - `template-lock`, both hosts, after the card locks the template:
     the type and required controls are disabled; add-field and remove-field are hidden; an operation can be changed;

@@ -27,9 +27,10 @@ test("edits template title, adds and removes fields, and verifies persistence", 
   await templateTitleField.fill(updatedTitle);
   await templateTitleField.blur();
 
-  // Add a new field
+  // Add a new field; it gets a layout item that displays it
   await page.getByRole("button", { name: "Add field", exact: true }).click();
   await expect(fieldDeleteButtons).toHaveCount(initialFieldCount + 1);
+  await expect(page.getByRole("button", { name: /Layout item 3 operation$/ })).toContainText("Display");
 
   // Fill the new field's title (the last field title is the new field)
   const fieldTitles = page.getByRole("textbox", { name: /^Field \d+ title$/ });
@@ -64,4 +65,9 @@ test("edits template title, adds and removes fields, and verifies persistence", 
   const persistedDeleteButtons = page.getByRole("button", { name: "Delete field" });
   await expect(persistedDeleteButtons).toHaveCount(initialFieldCount);
   await expect(persistedFieldTitles.last()).toHaveValue(newFieldTitle);
+
+  // The last field cannot be removed
+  await persistedDeleteButtons.first().click();
+  await expect(persistedFieldTitles).toHaveCount(1);
+  await expect(persistedDeleteButtons).toHaveCount(0);
 });
