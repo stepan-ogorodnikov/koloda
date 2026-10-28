@@ -7,8 +7,8 @@ import { useLingui } from "@lingui/react";
 
 export const TemplateFieldsItem = withForm({
   defaultValues: DEFAULT_TEMPLATE as UpdateTemplateValues,
-  props: { isLocked: false, index: 0, onDelete: () => {} },
-  render: function Render({ form, isLocked, index, onDelete }) {
+  props: { isLocked: false, isRemovable: true, index: 0, onDelete: () => {} },
+  render: function Render({ form, isLocked, isRemovable, index, onDelete }) {
     const { _ } = useLingui();
 
     return (
@@ -65,7 +65,7 @@ export const TemplateFieldsItem = withForm({
             </Checkbox>
           )}
         </form.Field>
-        {!isLocked && (
+        {isRemovable && (
           <Button
             aria-label={_(msg`template.fields.delete-item.label`)}
             variants={{ style: "ghost", size: "icon" }}

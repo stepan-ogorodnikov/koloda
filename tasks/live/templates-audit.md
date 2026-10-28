@@ -449,7 +449,7 @@ Line numbers are at `248e44b1`; when an earlier item moved them, find the code b
   Commit: Title a new template's default fields in the interface language
   Depends on: 8
 
-- [ ] 10. Hide remove-field on a template's last field
+- [x] 10. Hide remove-field on a template's last field
   Goal (T12):
   - `TemplateFields` (`libs/srs-react/src/lib/templates/template-fields.tsx`) passes whether the row may be removed;
     `TemplateFieldsItem` (`template-fields-item.tsx:68-76`) hides the button when the template is locked or only one

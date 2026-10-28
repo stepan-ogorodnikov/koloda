@@ -46,6 +46,7 @@ export const TemplateFields = withForm({
                     <TemplateFieldsItem
                       index={i}
                       isLocked={isLocked}
+                      isRemovable={!isLocked && field.state.value.length > 1}
                       form={form}
                       onDelete={() => {
                         field.removeValue(i);

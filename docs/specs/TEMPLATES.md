@@ -126,6 +126,7 @@ See ASSISTANT-DATA-ACCESS.md (§Resources) for how the assistant reads notes.
 When the template is locked, the editor disables changing field type and required,
 and hides add-field and remove-field controls.
 Everything else stays editable, as §Locking lists.
+Remove-field is also hidden while only one field is left.
 The learning settings default template can be edited while it remains the default.
 See LEARNING-SETTINGS.md (§Defaults).
 
