@@ -23,15 +23,15 @@ test("discards changes to template and resets form to persisted state", async ({
   await createTemplate(page, templateTitle);
 
   // Capture initial state
-  const titleField = page.locator("form").getByRole("textbox", { name: "Title", exact: true }).first();
+  const titleField = page.locator("form").getByRole("textbox", { name: "Title", exact: true });
   await expect(titleField).toHaveValue(templateTitle);
   const fieldsSection = getFieldsSection(page);
   const layoutSection = getLayoutSection(page);
-  const fieldTitles = fieldsSection.getByRole("textbox", { name: "Title" });
+  const fieldTitles = fieldsSection.getByRole("textbox", { name: /^Field \d+ title$/ });
   await expect(fieldTitles).toHaveCount(2);
   await expect(fieldTitles.nth(0)).toHaveValue("Front");
   await expect(fieldTitles.nth(1)).toHaveValue("Back");
-  const layoutFields = layoutSection.getByRole("textbox", { name: "Field" });
+  const layoutFields = layoutSection.getByRole("textbox", { name: /^Layout item \d+ field$/ });
   await expect(layoutFields).toHaveCount(2);
   await expect(layoutFields.nth(0)).toHaveValue("Front");
   await expect(layoutFields.nth(1)).toHaveValue("Back");
@@ -43,7 +43,7 @@ test("discards changes to template and resets form to persisted state", async ({
 
   // Add a new field
   await page.getByRole("button", { name: "Add field", exact: true }).click();
-  const newField = fieldsSection.getByRole("textbox", { name: "Title" }).last();
+  const newField = fieldsSection.getByRole("textbox", { name: /^Field \d+ title$/ }).last();
   await newField.clear();
   await newField.fill("Extra");
   await newField.blur();
@@ -63,11 +63,11 @@ test("discards changes to template and resets form to persisted state", async ({
 
   // Verify form reset to original persisted values
   await expect(titleField).toHaveValue(templateTitle);
-  const resetFieldTitles = fieldsSection.getByRole("textbox", { name: "Title" });
+  const resetFieldTitles = fieldsSection.getByRole("textbox", { name: /^Field \d+ title$/ });
   await expect(resetFieldTitles).toHaveCount(2);
   await expect(resetFieldTitles.nth(0)).toHaveValue("Front");
   await expect(resetFieldTitles.nth(1)).toHaveValue("Back");
-  const resetLayoutFields = layoutSection.getByRole("textbox", { name: "Field" });
+  const resetLayoutFields = layoutSection.getByRole("textbox", { name: /^Layout item \d+ field$/ });
   await expect(resetLayoutFields).toHaveCount(2);
   await expect(resetLayoutFields.nth(0)).toHaveValue("Front");
   await expect(resetLayoutFields.nth(1)).toHaveValue("Back");

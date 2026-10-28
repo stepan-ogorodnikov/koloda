@@ -42,7 +42,7 @@ export const TemplateLayout = withForm({
                 <Draggable id={item.field} index={i} key={item.field}>
                   <div className="flex flex-row flex-wrap">
                     <TextField
-                      aria-label={_(msg`template.layout.inputs.field.label`)}
+                      aria-label={_(msg`template.layout.inputs.field.label.${i + 1}`)}
                       value={getTemplateFieldTitleById(fieldsValue, field.state.value[i].field)}
                       isReadOnly
                       isDisabled
@@ -55,7 +55,7 @@ export const TemplateLayout = withForm({
                     <form.Field name={`content.layout[${i}].operation`} key={`operation-${i}`}>
                       {(operationField) => (
                         <Select.Root
-                          aria-label={_(msg`template.layout.inputs.operation.label`)}
+                          aria-label={_(msg`template.layout.inputs.operation.label.${i + 1}`)}
                           value={operationField.state.value}
                           onChange={(e) => {
                             if (typeof e === "string") operationField.handleChange(e as TemplateOperation);

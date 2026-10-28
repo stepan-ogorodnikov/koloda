@@ -20,7 +20,7 @@ test("clones an existing template and verifies the copied fields", async ({ page
   const fieldDeleteButtons = page.getByRole("button", { name: "Delete field" });
   await expect(fieldDeleteButtons).toHaveCount(3);
 
-  const fieldTitles = page.getByRole("textbox", { name: "Title" });
+  const fieldTitles = page.getByRole("textbox", { name: /^Field \d+ title$/ });
   await fieldTitles.last().clear();
   await fieldTitles.last().fill(clonedFieldTitle);
   await fieldTitles.last().blur();
@@ -54,7 +54,7 @@ test("clones an existing template and verifies the copied fields", async ({ page
   );
   await expect(page.getByRole("heading", { name: clonedTitle, exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Delete field" })).toHaveCount(3);
-  await expect(page.getByRole("textbox", { name: "Title" }).last()).toHaveValue(clonedFieldTitle);
+  await expect(page.getByRole("textbox", { name: /^Field \d+ title$/ }).last()).toHaveValue(clonedFieldTitle);
 
   // Verify presence in the list of templates
   await openSection(page, "Templates");

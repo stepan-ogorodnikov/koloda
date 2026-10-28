@@ -21,7 +21,7 @@ test("edits template title, adds and removes fields, and verifies persistence", 
   const initialFieldCount = 2;
 
   // Change the template title
-  const templateTitleField = page.getByRole("textbox", { name: "Title", exact: true }).first();
+  const templateTitleField = page.getByRole("textbox", { name: "Title", exact: true });
   await expect(templateTitleField).toBeVisible();
   await templateTitleField.clear();
   await templateTitleField.fill(updatedTitle);
@@ -31,8 +31,8 @@ test("edits template title, adds and removes fields, and verifies persistence", 
   await page.getByRole("button", { name: "Add field", exact: true }).click();
   await expect(fieldDeleteButtons).toHaveCount(initialFieldCount + 1);
 
-  // Fill the new field's title (the last "Title" textbox is the new field)
-  const fieldTitles = page.getByRole("textbox", { name: "Title" });
+  // Fill the new field's title (the last field title is the new field)
+  const fieldTitles = page.getByRole("textbox", { name: /^Field \d+ title$/ });
   const newFieldInput = fieldTitles.last();
   await newFieldInput.clear();
   await newFieldInput.fill(newFieldTitle);
@@ -57,10 +57,10 @@ test("edits template title, adds and removes fields, and verifies persistence", 
   );
 
   // Verify title persisted
-  await expect(page.getByRole("textbox", { name: "Title", exact: true }).first()).toHaveValue(updatedTitle);
+  await expect(page.getByRole("textbox", { name: "Title", exact: true })).toHaveValue(updatedTitle);
 
   // Verify field count and new field title persisted
-  const persistedFieldTitles = page.getByRole("textbox", { name: "Title" });
+  const persistedFieldTitles = page.getByRole("textbox", { name: /^Field \d+ title$/ });
   const persistedDeleteButtons = page.getByRole("button", { name: "Delete field" });
   await expect(persistedDeleteButtons).toHaveCount(initialFieldCount);
   await expect(persistedFieldTitles.last()).toHaveValue(newFieldTitle);

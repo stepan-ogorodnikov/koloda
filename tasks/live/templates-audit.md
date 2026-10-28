@@ -465,7 +465,7 @@ Line numbers are at `248e44b1`; when an earlier item moved them, find the code b
   Commit: Hide remove-field on a template's last field
   Depends on: 6
 
-- [ ] 11. Name each template row's controls by their position
+- [x] 11. Name each template row's controls by their position
   Goal (T11, T15):
   - Field rows (`template-fields-item.tsx:19`, `:33`, `:62-64`): "Field {0} title", "Field {0} type",
     "Field {0} required"; ru "Название поля {0}", "Тип поля {0}", "Обязательное поле {0}".

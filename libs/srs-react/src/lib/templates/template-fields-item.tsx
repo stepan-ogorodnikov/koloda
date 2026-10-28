@@ -16,7 +16,7 @@ export const TemplateFieldsItem = withForm({
         <form.Field name={`content.fields[${index}].title`} key={`title-${index}`}>
           {(field) => (
             <TextField
-              aria-label={_(msg`template.fields.inputs.title.label`)}
+              aria-label={_(msg`template.fields.inputs.title.label.${index + 1}`)}
               value={field.state.value as string}
               onChange={field.handleChange}
             >
@@ -30,7 +30,7 @@ export const TemplateFieldsItem = withForm({
         <form.Field name={`content.fields[${index}].type`} key={`type-${index}`}>
           {(field) => (
             <Select.Root
-              aria-label={_(msg`template.fields.inputs.type.label`)}
+              aria-label={_(msg`template.fields.inputs.type.label.${index + 1}`)}
               value={field.state.value as string}
               isDisabled={isLocked ?? undefined}
               onChange={(e) => {
@@ -53,6 +53,7 @@ export const TemplateFieldsItem = withForm({
         <form.Field name={`content.fields[${index}].isRequired`} key={`isRequired-${index}`}>
           {(field) => (
             <Checkbox
+              aria-label={_(msg`template.fields.inputs.is-required.label.${index + 1}`)}
               variants={{ class: "mx-2 overflow-hidden" }}
               isDisabled={isLocked}
               isSelected={field.state.value}

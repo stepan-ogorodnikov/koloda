@@ -19,7 +19,7 @@ msgid "{0, plural, other {delete-algorithm.used-by-#-decks}}"
 msgstr "{0, plural, one {# колода использует} few {# колоды используют} many {# колод используют} other {# колоды используют} } этот алгоритм"
 
 #. placeholder {0}: result.reviewCount
-#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:194
+#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:195
 msgid "{0, plural, other {optimize-algorithm.review-count.#}}"
 msgstr "На основе {0, plural, one {# повторения} few {# повторений} many {# повторений} other {# повторения}}."
 
@@ -91,24 +91,24 @@ msgstr "Новая колода"
 msgid "add-deck.trigger"
 msgstr "Новая колода"
 
-#: ../../libs/srs-react/src/lib/templates/add-template.tsx:92
+#: ../../libs/srs-react/src/lib/templates/add-template.tsx:101
 msgid "add-template.inputs.title.label"
 msgstr "Название"
 
-#: ../../libs/srs-react/src/lib/templates/add-template.tsx:111
+#: ../../libs/srs-react/src/lib/templates/add-template.tsx:120
 msgid "add-template.redirect.link"
 msgstr "Перейти"
 
-#: ../../libs/srs-react/src/lib/templates/add-template.tsx:118
+#: ../../libs/srs-react/src/lib/templates/add-template.tsx:127
 msgid "add-template.submit"
 msgstr "Создать"
 
-#: ../../libs/srs-react/src/lib/templates/add-template.tsx:81
+#: ../../libs/srs-react/src/lib/templates/add-template.tsx:90
 msgid "add-template.title"
 msgstr "Новый шаблон"
 
-#: ../../libs/srs-react/src/lib/templates/add-template.tsx:66
-#: ../../libs/srs-react/src/lib/templates/add-template.tsx:67
+#: ../../libs/srs-react/src/lib/templates/add-template.tsx:75
+#: ../../libs/srs-react/src/lib/templates/add-template.tsx:76
 msgid "add-template.trigger"
 msgstr "Новый шаблон"
 
@@ -116,7 +116,7 @@ msgstr "Новый шаблон"
 msgid "algorithm-picker.label"
 msgstr "Алгоритм"
 
-#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:156
+#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:157
 msgid "algorithm.actions.label"
 msgstr "Действия"
 
@@ -128,7 +128,7 @@ msgstr "Добавить случайный разброс"
 msgid "algorithm.inputs.learning-steps.label"
 msgstr "Интервалы заучивания"
 
-#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:151
+#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:152
 msgid "algorithm.inputs.maximum-interval.label"
 msgstr "Максимальный интервал"
 
@@ -152,41 +152,41 @@ msgstr "Название"
 msgid "algorithm.inputs.weights.label"
 msgstr "Веса"
 
-#: ../../libs/srs-react/src/lib/algorithms/algorithm-learning-steps.tsx:82
+#: ../../libs/srs-react/src/lib/algorithms/algorithm-learning-steps.tsx:87
 msgid "algorithm.learning-steps.add"
 msgstr "Добавить интервал заучивания"
 
 #. placeholder {0}: i + 1
-#: ../../libs/srs-react/src/lib/algorithms/algorithm-learning-steps.tsx:27
+#: ../../libs/srs-react/src/lib/algorithms/algorithm-learning-steps.tsx:31
 msgid "algorithm.learning-steps.amount.{0}"
 msgstr "Количество для интервала заучивания номер {0}"
 
 #. placeholder {0}: i + 1
-#: ../../libs/srs-react/src/lib/algorithms/algorithm-learning-steps.tsx:68
+#: ../../libs/srs-react/src/lib/algorithms/algorithm-learning-steps.tsx:73
 msgid "algorithm.learning-steps.delete.{0}"
 msgstr "Удалить интервал заучивания номер {0}"
 
 #. placeholder {0}: i + 1
-#: ../../libs/srs-react/src/lib/algorithms/algorithm-learning-steps.tsx:43
+#: ../../libs/srs-react/src/lib/algorithms/algorithm-learning-steps.tsx:48
 msgid "algorithm.learning-steps.unit.{0}"
 msgstr "Тип временного отрезка для интервала заучивания номер {0}"
 
-#: ../../libs/srs-react/src/lib/algorithms/algorithm-learning-steps.tsx:82
+#: ../../libs/srs-react/src/lib/algorithms/algorithm-learning-steps.tsx:87
 msgid "algorithm.relearning-steps.add"
 msgstr "Добавить интервал переучивания"
 
 #. placeholder {0}: i + 1
-#: ../../libs/srs-react/src/lib/algorithms/algorithm-learning-steps.tsx:28
+#: ../../libs/srs-react/src/lib/algorithms/algorithm-learning-steps.tsx:32
 msgid "algorithm.relearning-steps.amount.{0}"
 msgstr "Количество для интервала переучивания номер {0}"
 
 #. placeholder {0}: i + 1
-#: ../../libs/srs-react/src/lib/algorithms/algorithm-learning-steps.tsx:69
+#: ../../libs/srs-react/src/lib/algorithms/algorithm-learning-steps.tsx:74
 msgid "algorithm.relearning-steps.delete.{0}"
 msgstr "Удалить интервал переучивания номер {0}"
 
 #. placeholder {0}: i + 1
-#: ../../libs/srs-react/src/lib/algorithms/algorithm-learning-steps.tsx:44
+#: ../../libs/srs-react/src/lib/algorithms/algorithm-learning-steps.tsx:49
 msgid "algorithm.relearning-steps.unit.{0}"
 msgstr "Тип временного отрезка для интервала переучивания номер {0}"
 
@@ -482,7 +482,7 @@ msgstr "Удалить шаблон"
 msgid "edit-card.trigger"
 msgstr "Редактировать карточку"
 
-#: ../../libs/srs-react/src/lib/components/learned-today.tsx:54
+#: ../../libs/srs-react/src/lib/components/learned-today.tsx:55
 msgid "learned-today.title"
 msgstr "Изучено сегодня"
 
@@ -557,68 +557,68 @@ msgstr "Название"
 msgid "lessons.table.columns.title.all"
 msgstr "Все"
 
-#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:129
+#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:130
 msgid "optimize-algorithm.apply"
 msgstr "Применить"
 
-#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:134
+#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:135
 msgid "optimize-algorithm.cancel"
 msgstr "Отмена"
 
-#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:134
+#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:135
 msgid "optimize-algorithm.close"
 msgstr "Закрыть"
 
-#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:120
+#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:121
 msgid "optimize-algorithm.discard"
 msgstr "Отказаться"
 
-#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:190
+#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:191
 msgid "optimize-algorithm.improved"
 msgstr "Найдены веса, которые лучше подходят к вашим повторениям."
 
-#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:191
+#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:192
 msgid "optimize-algorithm.no-improvement"
 msgstr "Текущие веса уже лучше всего подходят к вашим повторениям."
 
-#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:183
+#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:184
 msgid "optimize-algorithm.not-enough-data"
 msgstr "Пока недостаточно повторений. Веса подбираются по карточкам, которые повторяли снова в другой день."
 
-#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:114
+#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:115
 msgid "optimize-algorithm.retry"
 msgstr "Попробовать снова"
 
-#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:152
-#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:157
+#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:153
+#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:158
 msgid "optimize-algorithm.running"
 msgstr "Подбираем веса по вашим повторениям…"
 
-#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:213
+#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:214
 msgid "optimize-algorithm.scores.caption"
 msgstr "Ошибка предсказания, чем меньше, тем лучше"
 
-#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:207
+#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:208
 msgid "optimize-algorithm.scores.current"
 msgstr "Текущие"
 
-#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:208
+#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:209
 msgid "optimize-algorithm.scores.found"
 msgstr "Новые"
 
-#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:217
+#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:218
 msgid "optimize-algorithm.scores.log-loss"
 msgstr "Log loss"
 
-#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:218
+#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:219
 msgid "optimize-algorithm.scores.rmse"
 msgstr "RMSE"
 
-#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:102
+#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:103
 msgid "optimize-algorithm.title"
 msgstr "Оптимизация весов"
 
-#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:99
+#: ../../libs/srs-react/src/lib/algorithms/optimize-algorithm.tsx:100
 msgid "optimize-algorithm.trigger"
 msgstr "Оптимизировать"
 
@@ -635,30 +635,37 @@ msgstr "Шаблон"
 msgid "template.actions.label"
 msgstr "Действия"
 
-#: ../../libs/srs-react/src/lib/templates/template-fields.tsx:72
+#: ../../libs/srs-react/src/lib/templates/template-fields.tsx:73
 msgid "template.fields.add-item"
 msgstr "Добавить поле"
 
-#: ../../libs/srs-react/src/lib/templates/template-fields-item.tsx:70
+#: ../../libs/srs-react/src/lib/templates/template-fields-item.tsx:71
 msgid "template.fields.delete-item.label"
 msgstr "Удалить поле"
 
-#: ../../libs/srs-react/src/lib/templates/template-fields-item.tsx:63
+#: ../../libs/srs-react/src/lib/templates/template-fields-item.tsx:64
 msgid "template.fields.inputs.is-required.label"
 msgstr "Обязательное"
 
+#. placeholder {0}: index + 1
+#: ../../libs/srs-react/src/lib/templates/template-fields-item.tsx:56
+msgid "template.fields.inputs.is-required.label.{0}"
+msgstr "Обязательное поле {0}"
+
+#. placeholder {0}: index + 1
 #: ../../libs/srs-react/src/lib/templates/template-fields-item.tsx:19
-msgid "template.fields.inputs.title.label"
-msgstr "Название"
+msgid "template.fields.inputs.title.label.{0}"
+msgstr "Название поля {0}"
 
 #: ../../libs/srs-react/src/lib/templates/template-fields-item.tsx:25
 #: ../../libs/srs-react/src/lib/templates/template-layout.tsx:52
 msgid "template.fields.inputs.title.placeholder"
 msgstr "Без названия"
 
+#. placeholder {0}: index + 1
 #: ../../libs/srs-react/src/lib/templates/template-fields-item.tsx:33
-msgid "template.fields.inputs.type.label"
-msgstr "Тип"
+msgid "template.fields.inputs.type.label.{0}"
+msgstr "Тип поля {0}"
 
 #: ../../libs/srs-react/src/lib/templates/template.tsx:107
 msgid "template.fields.label"
@@ -672,13 +679,15 @@ msgstr "Заметки"
 msgid "template.inputs.title.label"
 msgstr "Название"
 
+#. placeholder {0}: i + 1
 #: ../../libs/srs-react/src/lib/templates/template-layout.tsx:45
-msgid "template.layout.inputs.field.label"
-msgstr "Поле"
+msgid "template.layout.inputs.field.label.{0}"
+msgstr "Поле элемента раскладки {0}"
 
+#. placeholder {0}: i + 1
 #: ../../libs/srs-react/src/lib/templates/template-layout.tsx:58
-msgid "template.layout.inputs.operation.label"
-msgstr "Действие"
+msgid "template.layout.inputs.operation.label.{0}"
+msgstr "Действие элемента раскладки {0}"
 
 #: ../../libs/srs-react/src/lib/templates/template.tsx:113
 msgid "template.layout.label"

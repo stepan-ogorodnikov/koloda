@@ -23,7 +23,7 @@ test("reorders fields via drag-and-drop and verifies persistence", async ({ page
 
   // Default: Front (0), Back (1)
   const fieldsSection = getFieldsSection(page);
-  const fieldTitles = fieldsSection.getByRole("textbox", { name: "Title" });
+  const fieldTitles = fieldsSection.getByRole("textbox", { name: /^Field \d+ title$/ });
   const deleteButtons = fieldsSection.getByRole("button", { name: "Delete field" });
   await expect(deleteButtons).toHaveCount(2);
   await expect(fieldTitles.nth(0)).toHaveValue("Front");
@@ -52,7 +52,7 @@ test("reorders fields via drag-and-drop and verifies persistence", async ({ page
   );
 
   // Verify persistence
-  const persistedTitles = getFieldsSection(page).getByRole("textbox", { name: "Title" });
+  const persistedTitles = getFieldsSection(page).getByRole("textbox", { name: /^Field \d+ title$/ });
   await expect(persistedTitles.nth(0)).toHaveValue("Back");
   await expect(persistedTitles.nth(1)).toHaveValue("Front");
 });
@@ -65,7 +65,7 @@ test("reorders layout items via drag-and-drop and verifies persistence", async (
 
   // Default layout: Front (0), Back (1)
   const layoutSection = getLayoutSection(page);
-  const layoutFields = layoutSection.getByRole("textbox", { name: "Field" });
+  const layoutFields = layoutSection.getByRole("textbox", { name: /^Layout item \d+ field$/ });
   await expect(layoutFields).toHaveCount(2);
   await expect(layoutFields.nth(0)).toHaveValue("Front");
   await expect(layoutFields.nth(1)).toHaveValue("Back");
@@ -79,7 +79,7 @@ test("reorders layout items via drag-and-drop and verifies persistence", async (
   await expect(layoutFields.nth(1)).toHaveValue("Front");
 
   // Verify fields section is unchanged: Front (0), Back (1)
-  const fieldTitles = getFieldsSection(page).getByRole("textbox", { name: "Title" });
+  const fieldTitles = getFieldsSection(page).getByRole("textbox", { name: /^Field \d+ title$/ });
   await expect(fieldTitles.nth(0)).toHaveValue("Front");
   await expect(fieldTitles.nth(1)).toHaveValue("Back");
 
@@ -98,7 +98,7 @@ test("reorders layout items via drag-and-drop and verifies persistence", async (
   );
 
   // Verify layout persistence
-  const persistedLayoutFields = getLayoutSection(page).getByRole("textbox", { name: "Field" });
+  const persistedLayoutFields = getLayoutSection(page).getByRole("textbox", { name: /^Layout item \d+ field$/ });
   await expect(persistedLayoutFields.nth(0)).toHaveValue("Back");
   await expect(persistedLayoutFields.nth(1)).toHaveValue("Front");
 });
@@ -112,7 +112,9 @@ test("reorders fields after adding multiple custom fields", async ({ page }) => 
   // Add fields A, B, C
   for (const name of ["A", "B", "C"]) {
     await page.getByRole("button", { name: "Add field", exact: true }).click();
-    const lastField = getFieldsSection(page).getByRole("textbox", { name: "Title" }).last();
+    const lastField = getFieldsSection(page)
+      .getByRole("textbox", { name: /^Field \d+ title$/ })
+      .last();
     await lastField.clear();
     await lastField.fill(name);
     await lastField.blur();
@@ -120,7 +122,7 @@ test("reorders fields after adding multiple custom fields", async ({ page }) => 
 
   // Now: Front (0), Back (1), A (2), B (3), C (4)
   const fieldsSection = getFieldsSection(page);
-  const fieldTitles = fieldsSection.getByRole("textbox", { name: "Title" });
+  const fieldTitles = fieldsSection.getByRole("textbox", { name: /^Field \d+ title$/ });
   await expect(fieldTitles).toHaveCount(5);
   await expect(fieldTitles.nth(0)).toHaveValue("Front");
   await expect(fieldTitles.nth(4)).toHaveValue("C");
@@ -151,7 +153,7 @@ test("reorders fields after adding multiple custom fields", async ({ page }) => 
   );
 
   // Verify persistence
-  const persistedTitles = getFieldsSection(page).getByRole("textbox", { name: "Title" });
+  const persistedTitles = getFieldsSection(page).getByRole("textbox", { name: /^Field \d+ title$/ });
   await expect(persistedTitles.nth(0)).toHaveValue("Front");
   await expect(persistedTitles.nth(1)).toHaveValue("C");
   await expect(persistedTitles.nth(2)).toHaveValue("Back");
@@ -167,7 +169,7 @@ test("reorders fields via keyboard and verifies persistence", async ({ page }) =
 
   // Default: Front (0), Back (1)
   const fieldsSection = getFieldsSection(page);
-  const fieldTitles = fieldsSection.getByRole("textbox", { name: "Title" });
+  const fieldTitles = fieldsSection.getByRole("textbox", { name: /^Field \d+ title$/ });
   const deleteButtons = fieldsSection.getByRole("button", { name: "Delete field" });
   await expect(deleteButtons).toHaveCount(2);
   await expect(fieldTitles.nth(0)).toHaveValue("Front");
@@ -196,7 +198,7 @@ test("reorders fields via keyboard and verifies persistence", async ({ page }) =
   );
 
   // Verify persistence
-  const persistedTitles = getFieldsSection(page).getByRole("textbox", { name: "Title" });
+  const persistedTitles = getFieldsSection(page).getByRole("textbox", { name: /^Field \d+ title$/ });
   await expect(persistedTitles.nth(0)).toHaveValue("Back");
   await expect(persistedTitles.nth(1)).toHaveValue("Front");
 });
@@ -209,7 +211,7 @@ test("reorders layout items via keyboard and verifies persistence", async ({ pag
 
   // Default layout: Front (0), Back (1)
   const layoutSection = getLayoutSection(page);
-  const layoutFields = layoutSection.getByRole("textbox", { name: "Field" });
+  const layoutFields = layoutSection.getByRole("textbox", { name: /^Layout item \d+ field$/ });
   await expect(layoutFields).toHaveCount(2);
   await expect(layoutFields.nth(0)).toHaveValue("Front");
   await expect(layoutFields.nth(1)).toHaveValue("Back");
@@ -223,7 +225,7 @@ test("reorders layout items via keyboard and verifies persistence", async ({ pag
   await expect(layoutFields.nth(1)).toHaveValue("Front");
 
   // Verify fields section is unchanged: Front (0), Back (1)
-  const fieldTitles = getFieldsSection(page).getByRole("textbox", { name: "Title" });
+  const fieldTitles = getFieldsSection(page).getByRole("textbox", { name: /^Field \d+ title$/ });
   await expect(fieldTitles.nth(0)).toHaveValue("Front");
   await expect(fieldTitles.nth(1)).toHaveValue("Back");
 
@@ -242,7 +244,7 @@ test("reorders layout items via keyboard and verifies persistence", async ({ pag
   );
 
   // Verify layout persistence
-  const persistedLayoutFields = getLayoutSection(page).getByRole("textbox", { name: "Field" });
+  const persistedLayoutFields = getLayoutSection(page).getByRole("textbox", { name: /^Layout item \d+ field$/ });
   await expect(persistedLayoutFields.nth(0)).toHaveValue("Back");
   await expect(persistedLayoutFields.nth(1)).toHaveValue("Front");
 });
@@ -256,7 +258,9 @@ test("reorders fields via keyboard after adding multiple custom fields", async (
   // Add fields A, B, C
   for (const name of ["A", "B", "C"]) {
     await page.getByRole("button", { name: "Add field", exact: true }).click();
-    const lastField = getFieldsSection(page).getByRole("textbox", { name: "Title" }).last();
+    const lastField = getFieldsSection(page)
+      .getByRole("textbox", { name: /^Field \d+ title$/ })
+      .last();
     await lastField.clear();
     await lastField.fill(name);
     await lastField.blur();
@@ -264,7 +268,7 @@ test("reorders fields via keyboard after adding multiple custom fields", async (
 
   // Now: Front (0), Back (1), A (2), B (3), C (4)
   const fieldsSection = getFieldsSection(page);
-  const fieldTitles = fieldsSection.getByRole("textbox", { name: "Title" });
+  const fieldTitles = fieldsSection.getByRole("textbox", { name: /^Field \d+ title$/ });
   await expect(fieldTitles).toHaveCount(5);
   await expect(fieldTitles.nth(0)).toHaveValue("Front");
   await expect(fieldTitles.nth(4)).toHaveValue("C");
@@ -295,7 +299,7 @@ test("reorders fields via keyboard after adding multiple custom fields", async (
   );
 
   // Verify persistence
-  const persistedTitles = getFieldsSection(page).getByRole("textbox", { name: "Title" });
+  const persistedTitles = getFieldsSection(page).getByRole("textbox", { name: /^Field \d+ title$/ });
   await expect(persistedTitles.nth(0)).toHaveValue("Front");
   await expect(persistedTitles.nth(1)).toHaveValue("C");
   await expect(persistedTitles.nth(2)).toHaveValue("Back");
