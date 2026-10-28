@@ -118,8 +118,7 @@ export const DEFAULT_TEMPLATE: InsertTemplateData = {
   },
 };
 
-export const DEFAULT_TEMPLATE_FIELD: TemplateField = {
-  id: SEED_TEMPLATE_TYPE_FRONT_FIELD_ID,
+export const DEFAULT_TEMPLATE_FIELD: Omit<TemplateField, "id"> = {
   title: "",
   type: "text",
   isRequired: true,

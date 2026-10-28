@@ -409,7 +409,7 @@ Line numbers are at `248e44b1`; when an earlier item moved them, find the code b
   Commit: Keep one layout item per template field
   Depends on: 5, 6
 
-- [ ] 8. Give each new template its own field ids
+- [x] 8. Give each new template its own field ids
   Goal (T6):
   - `AddTemplate` (`libs/srs-react/src/lib/templates/add-template.tsx:41-54`): mint a fresh id per field at submit,
     and remap the layout to them.
