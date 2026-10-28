@@ -280,7 +280,7 @@ Their dirs are `libs/srs`, `libs/srs-react`, `libs/app`, and `libs/db-sqlite`.
 its extract (`agents/I18N.md`).
 Line numbers are at `248e44b1`; when an earlier item moved them, find the code by its text.
 
-- [ ] 1. Check a template's lock inside the update transaction
+- [x] 1. Check a template's lock inside the update transaction
   Goal (T4):
   - Web `updateTemplate` (`libs/db-sqlite/src/lib/templates.ts:75-99`): run the read, the lock check, the `UPDATE`,
     and the returning read inside one `db.transaction`, as `deleteTemplate` does (`:110-131`).

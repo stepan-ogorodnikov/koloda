@@ -76,25 +76,29 @@ export async function updateTemplate(db: DB, { id, values }: UpdateTemplateData)
   return throwKnownError("db.update", async () => {
     const payload = updateTemplateSchema.parse(values);
 
-    const template = await getTemplate(db, id);
-    if (!template) throw new AppError("not-found.templates.update.template", `Template id: ${id}`);
+    // WHY: the lock check runs inside the transaction (twin of Rust `update_template`, like `deleteTemplate` below)
+    // so a card another writer adds cannot land between the check and the update.
+    return db.transaction(async (tx) => {
+      const template = await getTemplate(tx, id);
+      if (!template) throw new AppError("not-found.templates.update.template", `Template id: ${id}`);
 
-    if (template.isLocked) {
-      const { isValid, errors } = validateLockedTemplateFields(template.content.fields, values.content.fields);
-      if (!isValid) throw new AppError("validation.templates.update-locked", errors.join(", "));
-    }
+      if (template.isLocked) {
+        const { isValid, errors } = validateLockedTemplateFields(template.content.fields, values.content.fields);
+        if (!isValid) throw new AppError("validation.templates.update-locked", errors.join(", "));
+      }
 
-    await db.run(`UPDATE templates SET title = ?, content = ?, notes = ?, updated_at = ? WHERE id = ?`, [
-      payload.title,
-      JSON.stringify(payload.content),
-      payload.notes ?? null,
-      nowMs(),
-      id,
-    ]);
+      await tx.run(`UPDATE templates SET title = ?, content = ?, notes = ?, updated_at = ? WHERE id = ?`, [
+        payload.title,
+        JSON.stringify(payload.content),
+        payload.notes ?? null,
+        nowMs(),
+        id,
+      ]);
 
-    const returning = await getTemplate(db, id);
-    if (!returning) throw new AppError("not-found.templates.update.template", `Template id: ${id}`);
-    return returning;
+      const returning = await getTemplate(tx, id);
+      if (!returning) throw new AppError("not-found.templates.update.template", `Template id: ${id}`);
+      return returning;
+    });
   });
 }
 

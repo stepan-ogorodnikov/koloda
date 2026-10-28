@@ -69,33 +69,33 @@ pub fn get_templates(db: &Database) -> Result<Vec<Template>, AppError> {
 }
 
 pub fn get_template(db: &Database, id: &str) -> Result<Option<Template>, AppError> {
-    throw_known_error(error_codes::DB_GET, || {
-        db.with_conn(|conn| {
-            conn.query_row(
-                r#"
-                SELECT
-                    t.id,
-                    t.title,
-                    t.content,
-                    t.created_at,
-                    t.updated_at,
-                    EXISTS(
-                        SELECT 1 FROM cards c
-                        WHERE c.template_id = ?1
-                        LIMIT 1
-                    ) as is_locked,
-                    t.notes
-                FROM templates t
-                WHERE t.id = ?1
+    throw_known_error(error_codes::DB_GET, || db.with_conn(|conn| select_template(conn, id)))
+}
+
+fn select_template(conn: &Connection, id: &str) -> Result<Option<Template>, AppError> {
+    conn.query_row(
+        r#"
+        SELECT
+            t.id,
+            t.title,
+            t.content,
+            t.created_at,
+            t.updated_at,
+            EXISTS(
+                SELECT 1 FROM cards c
+                WHERE c.template_id = ?1
                 LIMIT 1
-                "#,
-                params![id],
-                get_template_row,
-            )
-            .optional()
-            .map_err(AppError::from)
-        })
-    })
+            ) as is_locked,
+            t.notes
+        FROM templates t
+        WHERE t.id = ?1
+        LIMIT 1
+        "#,
+        params![id],
+        get_template_row,
+    )
+    .optional()
+    .map_err(AppError::from)
 }
 
 pub fn get_templates_by_ids(
@@ -225,24 +225,27 @@ fn select_stored_template(conn: &Connection, id: &str) -> Result<Option<StoredTe
 
 pub fn update_template(db: &Database, data: UpdateTemplateData) -> Result<Template, AppError> {
     throw_known_error(error_codes::DB_UPDATE, || {
-        let original = get_template(db, &data.id)?.ok_or_else(|| {
-            AppError::new(
-                error_codes::NOT_FOUND_TEMPLATES_UPDATE_TEMPLATE,
-                Some(format!("Template id: {}", data.id)),
-            )
-        })?;
-        if original.is_locked {
-            data.values.validate(Some(&original.content))?;
-        } else {
-            data.values.validate(None)?;
-        }
         let now = get_current_timestamp()?;
         let title = normalize_required_title(&data.values.title);
         let notes = normalize_optional_notes(data.values.notes.clone());
 
         let content = serde_json::to_string(&data.values.content)?;
 
+        // WHY: the lock check runs inside the transaction (twin of web `updateTemplate`, like `delete_template` below)
+        // so a card the sync worker applies on its own connection cannot land between the check and the update.
         db.with_transaction(|tx| {
+            let original = select_template(tx, &data.id)?.ok_or_else(|| {
+                AppError::new(
+                    error_codes::NOT_FOUND_TEMPLATES_UPDATE_TEMPLATE,
+                    Some(format!("Template id: {}", data.id)),
+                )
+            })?;
+            if original.is_locked {
+                data.values.validate(Some(&original.content))?;
+            } else {
+                data.values.validate(None)?;
+            }
+
             let stored = select_stored_template(tx, &data.id)?;
             tx.execute(
                 r#"
