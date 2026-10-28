@@ -32,7 +32,7 @@ export const TemplateFieldsItem = withForm({
             <Select.Root
               aria-label={_(msg`template.fields.inputs.type.label.${index + 1}`)}
               value={field.state.value as string}
-              isDisabled={isLocked ?? undefined}
+              isDisabled={isLocked}
               onChange={(e) => {
                 if (typeof e === "string") field.handleChange(e as TemplateFieldType);
               }}

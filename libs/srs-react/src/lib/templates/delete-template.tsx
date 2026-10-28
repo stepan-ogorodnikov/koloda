@@ -42,7 +42,7 @@ export function DeleteTemplate({ id, isLocked }: DeleteTemplateProps) {
   };
 
   const isDefault = defaultTemplate === id;
-  const isDisabled = !!(data?.length && data.length > 0) || isDefault || isLocked;
+  const isDisabled = (data?.length ?? 0) > 0 || isDefault || isLocked;
   const reason = isLocked
     ? msg`delete-template.cant-delete-locked`
     : isDefault

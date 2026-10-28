@@ -139,7 +139,7 @@ export const queriesFn = (): Queries => ({
   deleteTemplateMutation: () => ({
     mutationFn: (data: DeleteTemplateData) => invoke("cmd_delete_template", { data }),
   }),
-  getTemplateDecksQuery: (data: DeleteDeckData) => ({
+  getTemplateDecksQuery: (data: DeleteTemplateData) => ({
     queryKey: queryKeys.templates.decks(data.id),
     queryFn: () => invoke("cmd_get_template_decks", data),
   }),

@@ -490,7 +490,7 @@ Line numbers are at `248e44b1`; when an earlier item moved them, find the code b
   Commit: Name each template row's controls by their position
   Depends on: none
 
-- [ ] 12. Drop template residue and notes from the insert schemas
+- [x] 12. Drop template residue and notes from the insert schemas
   Goal (T13):
   - `template-fields-item.tsx:35`: `isDisabled={isLocked}`.
   - `delete-template.tsx:45`: `(data?.length ?? 0) > 0` or equivalent, without the double check.

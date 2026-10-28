@@ -19,7 +19,7 @@ export const deckWithOnlyTitleSchema = deckValidation.pick({ id: true, title: tr
 
 export type DeckWithOnlyTitle = z.infer<typeof deckWithOnlyTitleSchema>;
 
-export const insertDeckSchema = deckValidation.omit({ id: true });
+export const insertDeckSchema = deckValidation.omit({ id: true, notes: true });
 
 export type InsertDeckData = z.infer<typeof insertDeckSchema>;
 

@@ -21,7 +21,7 @@ export type Algorithm = z.infer<typeof algorithmRowSchema>;
 
 export type LessonAlgorithm = z.infer<typeof lessonAlgorithmRowSchema>;
 
-export const insertAlgorithmSchema = algorithmValidation.omit({ id: true });
+export const insertAlgorithmSchema = algorithmValidation.omit({ id: true, notes: true });
 
 export type InsertAlgorithmData = z.infer<typeof insertAlgorithmSchema>;
 

@@ -156,7 +156,7 @@ export const queriesFn = (db: DB): Queries => ({
   cloneTemplateMutation: () => ({ mutationFn: (data: CloneTemplateData) => cloneTemplate(db, data) }),
   updateTemplateMutation: () => ({ mutationFn: (data: UpdateTemplateData) => updateTemplate(db, data) }),
   deleteTemplateMutation: () => ({ mutationFn: (data: DeleteTemplateData) => deleteTemplate(db, data) }),
-  getTemplateDecksQuery: (data: DeleteDeckData) => ({
+  getTemplateDecksQuery: (data: DeleteTemplateData) => ({
     queryKey: queryKeys.templates.decks(data.id),
     queryFn: () => getTemplateDecks(db, data),
   }),

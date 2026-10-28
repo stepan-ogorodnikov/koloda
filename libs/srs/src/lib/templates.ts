@@ -157,7 +157,7 @@ export function getTemplateFieldTitleById(
   return fields.find((x) => x.id === id)?.title;
 }
 
-export const insertTemplateSchema = templateValidation.omit({ id: true });
+export const insertTemplateSchema = templateValidation.omit({ id: true, notes: true });
 
 export type InsertTemplateData = z.input<typeof insertTemplateSchema>;
 
