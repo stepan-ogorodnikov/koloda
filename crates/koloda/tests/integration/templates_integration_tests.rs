@@ -1,16 +1,19 @@
 use std::collections::HashMap;
 
+use koloda::app::db::Database;
 use koloda::app::error::error_codes;
+use koloda::domain::cards::DeleteCardData;
 use koloda::domain::settings::SettingsName;
 use koloda::domain::templates::{
-    DeleteTemplateData, Template, TemplateContent, TemplateField, TemplateLayoutItem, UpdateTemplateData,
-    UpdateTemplateValues,
+    CloneTemplateData, DeleteTemplateData, Template, TemplateContent, TemplateField, TemplateLayoutItem,
+    UpdateTemplateData, UpdateTemplateValues,
 };
-use koloda::repo::templates;
+use koloda::repo::{cards, templates};
 
 use crate::common::fixtures::{add_algorithm, add_card, add_deck, add_template};
 use crate::common::{learning_settings, simple_template_content, test_db};
 
+// Twin of the web `round-trips every template field through an update` case.
 #[test]
 fn update_template_round_trips_every_field() {
     let db = test_db();
@@ -50,6 +53,78 @@ fn update_template_round_trips_every_field() {
             updated_at: stored.updated_at,
         }
     );
+}
+
+fn is_locked(db: &Database, template_id: &str) -> bool {
+    templates::get_template(db, template_id)
+        .expect("template query should succeed")
+        .expect("template should exist")
+        .is_locked
+}
+
+// Twin of the web `unlocks a template when its last card is deleted` case.
+#[test]
+fn deleting_the_last_card_unlocks_the_template() {
+    let db = test_db();
+    let algorithm_id = add_algorithm(&db, "FSRS");
+    let template_id = add_template(&db, "Basic");
+    let deck_id = add_deck(&db, &algorithm_id, &template_id, "Deck");
+    let first = add_card(&db, &deck_id, &template_id, "first");
+    let second = add_card(&db, &deck_id, &template_id, "second");
+
+    cards::delete_card(&db, DeleteCardData { id: first }).expect("card should be deleted");
+    assert!(is_locked(&db, &template_id), "a remaining card keeps the lock");
+
+    cards::delete_card(&db, DeleteCardData { id: second }).expect("card should be deleted");
+    assert!(
+        !is_locked(&db, &template_id),
+        "deleting the last card unlocks the template"
+    );
+}
+
+// Twin of the web `clones fields and layout without notes or lock` case.
+#[test]
+fn clone_template_copies_fields_and_layout_without_notes_or_lock() {
+    let db = test_db();
+    let algorithm_id = add_algorithm(&db, "FSRS");
+    let source_id = add_template(&db, "Source");
+    // Differs from `simple_template_content` in every part, so a dropped or defaulted column shows.
+    let mut content = simple_template_content();
+    content.fields[0].title = "Prompt".to_string();
+    content.fields[0].field_type = "markdown".to_string();
+    content.fields[0].is_required = false;
+    content.layout.reverse();
+    content.layout[0].operation = "reveal".to_string();
+    templates::update_template(
+        &db,
+        UpdateTemplateData {
+            id: source_id.clone(),
+            values: UpdateTemplateValues {
+                title: "Source".to_string(),
+                content: content.clone(),
+                notes: Some("Source notes".to_string()),
+            },
+        },
+    )
+    .expect("template should be updated");
+    let deck_id = add_deck(&db, &algorithm_id, &source_id, "Deck");
+    let _ = add_card(&db, &deck_id, &source_id, "question");
+
+    let clone = templates::clone_template(
+        &db,
+        CloneTemplateData {
+            title: "Clone".to_string(),
+            source_id: source_id.clone(),
+        },
+    )
+    .expect("template should be cloned");
+
+    assert_ne!(clone.id, source_id);
+    assert_eq!(clone.title, "Clone");
+    assert_eq!(clone.content, content);
+    assert_eq!(clone.notes, None, "notes stay with the source");
+    assert!(!clone.is_locked, "the source's cards do not lock the clone");
+    assert!(is_locked(&db, &source_id));
 }
 
 // Twin of the web `lists each template with its own lock` case.

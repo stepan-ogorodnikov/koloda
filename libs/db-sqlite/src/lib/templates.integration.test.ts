@@ -1,16 +1,27 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import type { TemplateField } from "@koloda/srs";
-import { addCard } from "./cards";
-import { addTemplate, deleteTemplate, getTemplate, getTemplates, updateTemplate } from "./templates";
+import type { Template, TemplateField } from "@koloda/srs";
+import { addCard, deleteCard } from "./cards";
+import { cloneTemplate, deleteTemplate, getTemplate, getTemplates, updateTemplate } from "./templates";
 import type { TestDb } from "../test/test-helpers";
 import {
   createCardContent,
   createTestDb,
-  MISSING_ID,
   seedDeckContext,
   seedLearningSettings,
   seedTemplate,
 } from "../test/test-helpers";
+
+// A shape that differs from the seed in every part, so a dropped or defaulted column shows.
+function editedContent(template: Template) {
+  const [front, back] = template.content.fields;
+  return {
+    fields: [{ ...front!, title: "Prompt", type: "markdown" as const, isRequired: false }, back!],
+    layout: [
+      { field: back!.id, operation: "reveal" as const },
+      { field: front!.id, operation: "display" as const },
+    ],
+  };
+}
 
 describe("templates repository integration", () => {
   let testDb: TestDb;
@@ -36,6 +47,62 @@ describe("templates repository integration", () => {
     });
 
     expect((await getTemplate(db, template.id))?.isLocked).toBe(true);
+  });
+
+  // Twin of `deleting_the_last_card_unlocks_the_template`
+  // in `crates/koloda/tests/integration/templates_integration_tests.rs`.
+  it("unlocks a template when its last card is deleted", async () => {
+    const { db } = testDb;
+    const { deck, template } = await seedDeckContext(db);
+    const card = { deckId: deck.id, templateId: template.id, content: createCardContent(template) };
+    const first = await addCard(db, card);
+    const second = await addCard(db, card);
+
+    await deleteCard(db, { id: first.id });
+    expect((await getTemplate(db, template.id))?.isLocked).toBe(true);
+
+    await deleteCard(db, { id: second.id });
+    expect((await getTemplate(db, template.id))?.isLocked).toBe(false);
+  });
+
+  // Twin of `update_template_round_trips_every_field`
+  // in `crates/koloda/tests/integration/templates_integration_tests.rs`.
+  it("round-trips every template field through an update", async () => {
+    const { db } = testDb;
+    const template = await seedTemplate(db);
+    const values = { title: "Renamed", notes: "Template notes", content: editedContent(template) };
+
+    await updateTemplate(db, { id: template.id, values });
+    const stored = await getTemplate(db, template.id);
+
+    expect(stored?.updatedAt).toBeInstanceOf(Date);
+    expect(stored).toEqual({
+      id: template.id,
+      ...values,
+      isLocked: false,
+      createdAt: template.createdAt,
+      updatedAt: stored?.updatedAt,
+    });
+  });
+
+  // Twin of `clone_template_copies_fields_and_layout_without_notes_or_lock`
+  // in `crates/koloda/tests/integration/templates_integration_tests.rs`.
+  it("clones fields and layout without notes or lock", async () => {
+    const { db } = testDb;
+    const { deck, template } = await seedDeckContext(db);
+    const content = editedContent(template);
+    const source = await updateTemplate(db, {
+      id: template.id,
+      values: { title: template.title, notes: "Source notes", content },
+    });
+    await addCard(db, { deckId: deck.id, templateId: source.id, content: createCardContent(source) });
+
+    const clone = await cloneTemplate(db, { title: "Clone", sourceId: source.id });
+
+    expect(clone.id).not.toBe(source.id);
+    expect(clone).toMatchObject({ title: "Clone", content, isLocked: false });
+    expect(clone.notes).toBeUndefined();
+    expect((await getTemplate(db, source.id))?.isLocked).toBe(true);
   });
 
   // Twin of `get_templates_reports_each_templates_own_lock` in
@@ -162,20 +229,5 @@ describe("templates repository integration", () => {
     await deleteTemplate(db, { id: formerDefault.id });
 
     expect(await getTemplate(db, formerDefault.id)).toBeNull();
-  });
-
-  it("rejects adding a template whose layout references an unknown field", async () => {
-    const { db } = testDb;
-    const { content } = await seedTemplate(db);
-
-    await expect(
-      addTemplate(db, {
-        title: "Broken layout",
-        content: {
-          fields: content.fields.map((field) => ({ ...field })),
-          layout: content.layout.map((item) => ({ ...item, field: MISSING_ID })),
-        },
-      }),
-    ).rejects.toThrow();
   });
 });

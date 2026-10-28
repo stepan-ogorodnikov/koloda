@@ -339,7 +339,7 @@ Line numbers are at `248e44b1`; when an earlier item moved them, find the code b
   Commit: Reject a locked-template save the same way on both hosts
   Depends on: 1
 
-- [ ] 4. Cover template roundtrip, clone, and unlock on both hosts
+- [x] 4. Cover template roundtrip, clone, and unlock on both hosts
   Goal (T8):
   - Web full-field roundtrip in `templates.integration.test.ts`: update title, notes, fields, and layout, read back,
     and compare field by field, as the Rust twin does (`templates_integration_tests.rs:13-51`).
