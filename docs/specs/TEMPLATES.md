@@ -25,9 +25,8 @@ See CARDS.md (§Relationships) for how a card keeps its template.
 
 - Every template has at least one field and at least one layout item.
 - Each layout item points at a field that exists on the same template.
-- A deck has a current template used when adding cards manually.
 - See CARDS.md (§Relationships) for a card's own template.
-- Lock is derived from cards: any card on the template locks it; deleting the last such card unlocks it.
+- Lock is derived from the cards that use the template; see §Locking.
 
 ## Fields
 
@@ -40,8 +39,6 @@ Each field has:
 Fields can be reordered.
 Adding a field also adds a matching layout item with the **display** operation.
 Removing a field also removes every layout item that pointed at it.
-
-A template must keep at least one field.
 
 ## Layout
 
@@ -59,8 +56,6 @@ Layout items can be reordered.
 Their operations can be changed at any time, including when the template is locked.
 
 How operations behave during study is covered by LESSONS.md.
-A template must keep at least one layout item.
-Every layout item must reference an existing field.
 
 ## Locking
 
@@ -79,7 +74,7 @@ While locked:
 - Layout operations may still be changed.
 - The template cannot be deleted.
 
-While unlocked, fields and layout can be edited freely, subject to the minimum counts above.
+While unlocked, fields and layout can be edited freely, subject to §Relationships.
 
 Saving a locked template rejects removing existing fields or changing their type or required flag.
 
@@ -126,7 +121,7 @@ See ASSISTANT-DATA-ACCESS.md (§Resources) for how the assistant reads notes.
 
 When the template is locked, the editor disables changing field type and required,
 and hides add-field and remove-field controls.
-Title edits, notes edits, field-title edits, reorder, and layout edits remain available.
+Everything else stays editable, as §Locking lists.
 The learning settings default template can be edited while it remains the default.
 See LEARNING-SETTINGS.md (§Defaults).
 

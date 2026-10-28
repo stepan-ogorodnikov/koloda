@@ -373,7 +373,7 @@ Line numbers are at `248e44b1`; when an earlier item moved them, find the code b
   Commit: Assert codes in the Rust template validator tests and table them
   Depends on: 3
 
-- [ ] 6. Give each template rule one home in TEMPLATES.md
+- [x] 6. Give each template rule one home in TEMPLATES.md
   Goal (T3):
   - Minimum counts and layout membership live in §Relationships; drop them from §Fields (line 44) and §Layout
     (lines 62-63).
