@@ -5,6 +5,9 @@ SRS feature React UI: decks, cards, lessons, templates, and algorithms.
 ## Where it sits
 
 Consumed by `@koloda/app-react` route files.
+The design system app (`apps/design-system`) shows `LearnedToday` and `Lessons` on stub data.
+It swaps the lesson modal through the `lesson` prop of `Lessons`, opens its own modal from `lessonAtom`,
+and renders the progress header from `LessonHeaderLayout` and the `LessonProgress*View` components.
 Depends on `@koloda/app`, `@koloda/srs`, `@koloda/core-react`, and `@koloda/ui`.
 
 ## Architectural Map

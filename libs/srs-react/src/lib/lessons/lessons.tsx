@@ -4,11 +4,17 @@ import { getCSSVar } from "@koloda/ui";
 import { useMediaQuery } from "@react-hook/media-query";
 import { useQuery } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
+import type { ReactNode } from "react";
 import { Lesson as CurrentLesson } from "./lesson";
 import { LessonsList } from "./lessons-list";
 import { LessonsTable } from "./lessons-table";
 
-export function Lessons() {
+type LessonsProps = {
+  // WHY: the design system app swaps in its own lesson modal; the product passes nothing.
+  lesson?: ReactNode;
+};
+
+export function Lessons({ lesson = <CurrentLesson /> }: LessonsProps) {
   const isMobile = useMediaQuery(`(width < ${getCSSVar("--breakpoint-wd")})`);
   const { getLessonsQuery } = useAtomValue(queriesAtom);
   const query = useQuery({
@@ -19,7 +25,7 @@ export function Lessons() {
 
   return (
     <div className="w-full wd:max-w-180 mx-auto p-4">
-      <CurrentLesson />
+      {lesson}
       <QueryState query={query}>
         {(data) => (isMobile ? <LessonsList data={data} /> : <LessonsTable data={data} />)}
       </QueryState>

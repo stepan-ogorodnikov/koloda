@@ -1,16 +1,22 @@
 import { useMotionSetting } from "@koloda/ui";
 import { useAtomValue } from "jotai";
 import { motion } from "motion/react";
+import type { LessonProgress } from "./lesson-reducer";
 import { lessonProgressAtom } from "./lesson-selectors";
 
 const lessonProgressAmountSign = "pb-0.5 fg-level-3 text-sm";
 
 export function LessonProgressAmounts() {
-  const isMotionOn = useMotionSetting();
   const progress = useAtomValue(lessonProgressAtom);
   if (!progress) return null;
 
-  const { done, pending } = progress;
+  return <LessonProgressAmountsView done={progress.done} pending={progress.pending} />;
+}
+
+export type LessonProgressAmountsViewProps = LessonProgress;
+
+export function LessonProgressAmountsView({ done, pending }: LessonProgressAmountsViewProps) {
+  const isMotionOn = useMotionSetting();
 
   return (
     <motion.div className="h-8 numbers-text leading-8" transition={{ duration: 0 }} key="progress-amounts">

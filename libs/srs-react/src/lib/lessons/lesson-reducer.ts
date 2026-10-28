@@ -43,7 +43,7 @@ export const LESSON_PROGRESS_STATES = {
 
 const MAX_REVIEW_TIME_MS = 60 * 60 * 1000;
 
-type LessonResultUploadStatus = "success" | "error";
+export type LessonResultUploadStatus = "success" | "error";
 
 export type LessonPhase = "closed" | "preparing" | "configuring" | "loading-cards" | "studying" | "finished";
 

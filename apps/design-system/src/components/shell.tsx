@@ -1,9 +1,12 @@
+import { LearnedToday, Lessons } from "@koloda/srs-react";
 import { AiIcon, AlgorithmsIcon, DecksIcon, HomeIcon, Layout, SettingsIcon, TemplatesIcon } from "@koloda/ui";
 import type { MouseEvent } from "react";
+import { LessonModal } from "./lesson-modal";
 import { Titlebar } from "./titlebar";
 
 const appMenu = [
-  { to: "/dashboard", label: { id: "Home" }, icon: HomeIcon },
+  // WHY: "/" is the app's only route, so Home renders as the current item.
+  { to: "/", label: { id: "Home" }, icon: HomeIcon },
   { to: "/decks", label: { id: "Decks" }, icon: DecksIcon },
   { to: "/algorithms", label: { id: "Algorithms" }, icon: AlgorithmsIcon },
   { to: "/templates", label: { id: "Templates" }, icon: TemplatesIcon },
@@ -33,16 +36,12 @@ export function Shell() {
         </div>
       </Layout.Nav>
       <Layout.Sidebar>
-        <Layout.Header variants={{ type: "sidebar" }}>
-          <Layout.H1>Sidebar</Layout.H1>
-        </Layout.Header>
-        <Layout.Container />
+        <LearnedToday />
       </Layout.Sidebar>
       <Layout.Content isAlwaysVisible>
-        <Layout.Header>
-          <Layout.H1>Content</Layout.H1>
-        </Layout.Header>
-        <Layout.Container />
+        <Layout.Container>
+          <Lessons lesson={<LessonModal />} />
+        </Layout.Container>
       </Layout.Content>
     </Layout>
   );

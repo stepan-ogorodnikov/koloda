@@ -6,7 +6,7 @@ Role: dev tool, never shipped or deployed (see `docs/decisions/APP-ROLES.md`).
 ## Where it sits
 
 A composition root like the other apps, with no database and no product screens.
-It renders `@koloda/ui` standalone, with stub data from `@koloda/core-react` and theme registries from `@koloda/app`.
+It renders `@koloda/ui` and some feature components on stub `Queries`, with theme registries from `@koloda/app`.
 Nothing in `apps/web`, `apps/electron`, or `apps/electron-react` imports it.
 
 ## How to run
@@ -22,11 +22,16 @@ Nothing in `apps/web`, `apps/electron`, or `apps/electron-react` imports it.
   and a one-route TanStack router over hash history.
 - Data: `src/app/queries.ts` — a stub `Queries`.
   Settings resolve to `null`, so hotkeys use their defaults.
-  Every other method throws with its name.
+  Lessons and today's review totals are sample data; lessons are shaped like `getLessons` in `@koloda/db-sqlite`.
+  Every other query or mutation fails with its name when it runs.
 - Theme: `src/app/theme.ts` — reads `?theme=`, writes it back on change,
   and sets `<html>` the way `libs/app-react/public/theme-boot.js` does.
-- Strings: `src/app/i18n.ts` — imports the `@koloda/app` and `@koloda/ui` English catalogs as `.po` files.
-- Shell: `src/components/shell.tsx` — the product layout (nav, sidebar, content) with placeholder zones.
+- Strings: `src/app/i18n.ts` — imports the English catalogs of the libs on screen as `.po` files.
+- Shell: `src/components/shell.tsx` — the product layout, laid out like the dashboard:
+  `LearnedToday` in the sidebar and `Lessons` in the content.
+- Lesson modal: `src/components/lesson-modal.tsx` — replaces the real lesson modal in `Lessons`.
+  A table count opens it; it shows the progress header with every dot type and icon.
+  Its grades footer copies the srs-react markup, which is not exported, with sample intervals.
   Nav links render as in the product but do not navigate.
 - Titlebar: `src/components/titlebar.tsx` — the `@koloda/ui` titlebar plus the theme select.
 
@@ -34,7 +39,8 @@ Nothing in `apps/web`, `apps/electron`, or `apps/electron-react` imports it.
 
 - Components, tokens, and theme CSS — `@koloda/ui`; fix what the app reveals there
 - Theme registries — `@koloda/app`
-- Feature components and product screens — they need data and routes
+- Feature components — their feature libs; the app only shows them on stub data
+- Product screens and routes — `@koloda/app-react`
 - Translations — its own labels are plain English strings
 
 ## Read next
