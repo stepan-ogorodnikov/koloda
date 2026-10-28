@@ -1,6 +1,6 @@
 # Templates audit fixes
 
-Status: draft
+Status: ready
 Guides: agents/IMPLEMENTATION-PLAN.md, agents/TASKS.md, docs/specs/TEMPLATES.md, agents/RUST.md, docs/decisions/TS-RUST-DOMAIN-MIRRORING.md, agents/CODE-STYLE.md, agents/CODE-DOCUMENTATION.md, agents/TESTING.md, agents/VERIFY.md, agents/I18N.md, agents/BACKWARDS-COMPATIBILITY.md, agents/FUNCTIONAL-SPECIFICATIONS.md, agents/MARKDOWN.md, apps/web-e2e/README.md, apps/electron-e2e/README.md, libs/e2e/README.md, agents/REVIEW.md
 Flow: local
 
@@ -267,7 +267,9 @@ T15 was added at triage.
 - [x] 4. T7: how do the hosts converge on the locked-save error? — no details on either host.
   The en and ru message says what a locked save rejects (human, 2026-10-28).
 - [x] 5. T11: what names a row? — its position, e.g. "Field 2 title" (human, 2026-10-28).
-- [ ] 6. New user-visible copy (items 3, 7, 9, 11) is drafted in each item; edit it at approval if needed — open
+- [x] 6. New user-visible copy (items 3, 7, 9, 11) is drafted in each item; edit it at approval if needed — as
+  drafted, except item 3's ru message, which the human shortened (2026-10-28).
+- [x] 7. Plan approved with that edit (human, 2026-10-28).
 
 ## Plan
 
@@ -322,7 +324,7 @@ Line numbers are at `248e44b1`; when an earlier item moved them, find the code b
     with no details.
   - Message (`libs/app/locales/{en,ru}/messages.po`, `validation.templates.update-locked`):
     en "Cards use this template, so its fields can't be removed or change type or required";
-    ru "Шаблон используется карточками: поля нельзя удалять, менять их тип или обязательность".
+    ru "Шаблон используется карточками: поля нельзя удалять, менять тип или обязательность".
   - TS tests (`libs/srs/src/lib/templates.test.ts:24-43`): one table over title change (allowed), removed field,
     type change, required change (rejected), and an added field (allowed).
     Each row names its Rust twin in `templates_update_tests.rs`.
