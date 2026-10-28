@@ -3,6 +3,7 @@ import { queryKeys } from "@koloda/core-react";
 import type { Queries } from "@koloda/core-react";
 import { calculateTodaysReviewTotals } from "@koloda/srs";
 import type { LessonFilters, LessonsResult } from "@koloda/srs";
+import { SAMPLE_ALGORITHM } from "./algorithm-samples";
 import { SAMPLE_AI_PROFILE, SAMPLE_CONVERSATIONS } from "./assistant-samples";
 import { SAMPLE_TEMPLATE } from "./template-samples";
 
@@ -42,8 +43,9 @@ function sampleLessons(filters?: LessonFilters): LessonsResult {
   return { total, decks };
 }
 
-// WHY: a save replaces the sample in memory, because the editor refetches right after saving.
+// WHY: a save replaces the sample in memory, because the editors refetch right after saving.
 // Edits last until a reload.
+let sampleAlgorithm = SAMPLE_ALGORITHM;
 let sampleTemplate = SAMPLE_TEMPLATE;
 
 const stubs: Pick<
@@ -55,6 +57,9 @@ const stubs: Pick<
   | "getConversationQuery"
   | "setConversationMutation"
   | "getAIProfilesQuery"
+  | "getAlgorithmsQuery"
+  | "getAlgorithmQuery"
+  | "updateAlgorithmMutation"
   | "getTemplatesQuery"
   | "getTemplateQuery"
   | "updateTemplateMutation"
@@ -94,6 +99,20 @@ const stubs: Pick<
     queryKey: queryKeys.ai.profiles(),
     queryFn: () => [SAMPLE_AI_PROFILE],
   }),
+  getAlgorithmsQuery: () => ({
+    queryKey: queryKeys.algorithms.all(),
+    queryFn: () => [sampleAlgorithm],
+  }),
+  getAlgorithmQuery: (id) => ({
+    queryKey: queryKeys.algorithms.detail(id),
+    queryFn: () => (id === sampleAlgorithm.id ? sampleAlgorithm : null),
+  }),
+  updateAlgorithmMutation: () => ({
+    mutationFn: async ({ values }) => {
+      sampleAlgorithm = { ...sampleAlgorithm, ...values, updatedAt: new Date() };
+      return sampleAlgorithm;
+    },
+  }),
   getTemplatesQuery: () => ({
     queryKey: queryKeys.templates.all(),
     queryFn: () => [sampleTemplate],
@@ -111,7 +130,7 @@ const stubs: Pick<
 };
 
 // WHY: the app has no database. A null settings row makes `useHotkeysSettings` fall back to the defaults;
-// lessons, today's totals, conversations, AI profiles, and templates are sample data.
+// lessons, today's totals, conversations, AI profiles, algorithms, and templates are sample data.
 // Every other query or mutation rejects with its name when it runs, not when it is built:
 // `useLessonSession` builds a disabled lesson-data query on every render.
 // Only `*Query` and `*Mutation` keys become methods, because jotai probes a stored value for `then`.

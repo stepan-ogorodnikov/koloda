@@ -1,6 +1,8 @@
 import { NotFound } from "@koloda/ui";
 import { createRootRoute, createRoute, createRouter } from "@tanstack/react-router";
 import { Shell } from "../components/shell";
+import { AlgorithmPage } from "../pages/algorithm-page";
+import { AlgorithmsPage } from "../pages/algorithms-page";
 import { AssistantPage } from "../pages/assistant-page";
 import { DashboardPage } from "../pages/dashboard-page";
 import { TemplatePage } from "../pages/template-page";
@@ -19,6 +21,18 @@ const assistantRoute = createRoute({
   }),
 });
 
+const algorithmsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/algorithms",
+  component: AlgorithmsPage,
+});
+
+const algorithmRoute = createRoute({
+  getParentRoute: () => algorithmsRoute,
+  path: "$algorithmId",
+  component: AlgorithmPage,
+});
+
 const templatesRoute = createRoute({ getParentRoute: () => rootRoute, path: "/templates", component: TemplatesPage });
 
 const templateRoute = createRoute({
@@ -28,7 +42,12 @@ const templateRoute = createRoute({
 });
 
 export const router = createRouter({
-  routeTree: rootRoute.addChildren([dashboardRoute, assistantRoute, templatesRoute.addChildren([templateRoute])]),
+  routeTree: rootRoute.addChildren([
+    dashboardRoute,
+    algorithmsRoute.addChildren([algorithmRoute]),
+    templatesRoute.addChildren([templateRoute]),
+    assistantRoute,
+  ]),
   defaultNotFoundComponent: NotFound,
 });
 

@@ -12,7 +12,7 @@ Nothing in `apps/web`, `apps/electron`, or `apps/electron-react` imports it.
 ## How to run
 
 - `nx run @koloda/design-system:serve` — dev server at `localhost:3100`
-- Pages: `/` is the dashboard, `/ai` the assistant, and `/templates` the templates.
+- Pages: `/` is the dashboard, `/algorithms` and `/templates` the editors, and `/ai` the assistant.
   The other nav links have no page yet.
 - The titlebar select picks the theme from `LIGHT_THEMES` and `DARK_THEMES` in `@koloda/app`.
   The choice is kept in local storage; a missing or unknown id falls back to the default light theme.
@@ -27,7 +27,8 @@ Nothing in `apps/web`, `apps/electron`, or `apps/electron-react` imports it.
   Lessons and today's review totals are sample data; lessons are shaped like `getLessons` in `@koloda/db-sqlite`.
   Conversations and the AI profile come from `src/app/assistant-samples.ts`.
   Conversation saves succeed without storing anything.
-  The template comes from `src/app/template-samples.ts`; a template save replaces it in memory until a reload.
+  The algorithm and the template come from `src/app/algorithm-samples.ts` and `src/app/template-samples.ts`.
+  Saving either replaces it in memory until a reload.
   Every other query or mutation fails with its name when it runs.
 - Assistant samples: `src/app/assistant-samples.ts` — a plain chat, a card proposal with tool calls,
   and one corrupt row, in the stored shape that assistant restore validates.
@@ -39,6 +40,7 @@ Nothing in `apps/web`, `apps/electron`, or `apps/electron-react` imports it.
   Nav links without a page render as in the product but do not navigate.
 - Dashboard: `src/pages/dashboard-page.tsx` — `LearnedToday` in the sidebar and `Lessons` in the content.
 - Assistant: `src/pages/assistant-page.tsx` — the AI route's conversation list and the real `AssistantChat`.
+- Algorithms: `src/pages/algorithms-page.tsx` and `algorithm-page.tsx` — the algorithm list and the real editor.
 - Templates: `src/pages/templates-page.tsx` and `template-page.tsx` — the template list and the real editor.
 - Lesson modal: `src/components/lesson-modal.tsx` — replaces the real lesson modal in `Lessons`.
   A table count opens it; it shows the progress header with every dot type and icon.
