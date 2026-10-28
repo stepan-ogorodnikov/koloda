@@ -88,6 +88,10 @@
         "vitest": "4.1.9",
       },
     },
+    "apps/design-system": {
+      "name": "@koloda/design-system",
+      "version": "0.0.1",
+    },
     "apps/electron": {
       "name": "@koloda/electron",
       "version": "0.0.1",
@@ -694,6 +698,8 @@
     "@koloda/core-react": ["@koloda/core-react@workspace:libs/core-react"],
 
     "@koloda/db-sqlite": ["@koloda/db-sqlite@workspace:libs/db-sqlite"],
+
+    "@koloda/design-system": ["@koloda/design-system@workspace:apps/design-system"],
 
     "@koloda/e2e": ["@koloda/e2e@workspace:libs/e2e"],
 

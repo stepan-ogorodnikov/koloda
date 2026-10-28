@@ -1,0 +1,21 @@
+import { Titlebar as TitlebarContent } from "@koloda/ui";
+import { ThemeSelect } from "./theme-select";
+
+const titlebar = [
+  "relative flex flex-col shrink-0",
+  "h-(--titlebar-height) w-full border-b-2 border-main bg-level-1",
+  "box-content select-none",
+].join(" ");
+
+export function Titlebar() {
+  return (
+    <div className={titlebar} data-react-aria-top-layer>
+      <div className="flex items-center h-full w-full">
+        <TitlebarContent />
+        <div className="px-3">
+          <ThemeSelect />
+        </div>
+      </div>
+    </div>
+  );
+}

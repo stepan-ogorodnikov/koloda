@@ -7,6 +7,9 @@
       "path": "./apps/web"
     },
     {
+      "path": "./apps/design-system"
+    },
+    {
       "path": "./libs/ui"
     },
     {

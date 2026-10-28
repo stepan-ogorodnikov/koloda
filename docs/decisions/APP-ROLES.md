@@ -8,11 +8,14 @@ Each app has one role:
 | --- | --- | --- |
 | Desktop | `apps/electron`, `apps/electron-react` | Product |
 | Web | `apps/web` | Demo |
+| Design system | `apps/design-system` | Dev tool |
 
 - A product app is what users are meant to use.
   Product apps set the feature set.
 - A demo app lets people try the product without installing it.
   The web app is published as the live demo.
+- A dev tool serves the people building the product.
+  It is not shipped or deployed, and it makes no durability or e2e promise.
 - A feature is not rejected, cut down, or delayed because a demo app cannot support it.
   It ships in the product apps, and the demo leaves it out.
 - When apps differ, the owning spec states what each app without the feature does instead:

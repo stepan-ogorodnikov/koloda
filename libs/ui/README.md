@@ -9,6 +9,7 @@ or data fetching — form/overlay chrome and query-error UI may still call app h
 
 Consumed by `@koloda/app-react`, `@koloda/srs-react`, `@koloda/assistant-react`,
 `@koloda/settings-react`, and app entry components.
+The design system app (`apps/design-system`) renders it standalone as a dev catalog.
 Depends on `@koloda/app` (`ERROR_MESSAGES`, form error types) and
 `@koloda/core-react` (settings-backed hotkeys for Dialog, Form controls, Select, titlebar).
 That edge is intentional.

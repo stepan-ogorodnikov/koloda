@@ -67,6 +67,7 @@ When a row names the file without a section, find the headings that match the ch
 | Docker image or compose example (`crates/koloda-server/Dockerfile`, `deploy/`, `.dockerignore`) | `crates/koloda-server/README.md` (§Docker) |
 | Sync screens, sync status, joining and leaving a space (desktop only) | `docs/specs/SYNC.md`, `agents/I18N.md` |
 | Add a color theme | `agents/ADD-COLOR-THEME.md`, `docs/specs/INTERFACE-SETTINGS.md` |
+| Design system app (`apps/design-system`: theme switcher, layout shell, catalog pages) | `apps/design-system/README.md`, `agents/CSS.md` |
 | Interface settings change (language, scheme, themes, motion) | `docs/specs/INTERFACE-SETTINGS.md`, `agents/I18N.md` |
 | App shell layout (narrow/wide, drawer, nav) | `agents/LAYOUT.md`, `agents/CSS.md`; add `docs/specs/INTERFACE-SETTINGS.md` when the change is an interface setting |
 | User-visible behavior (UI copy, flows, settings the user touches) | area primary spec (or `agents/ASSISTANT-MAP.md` for assistant), `agents/VERIFY.md`, plus the usual CODE-STYLE / CODE-DOCUMENTATION as for any TS/React edit |

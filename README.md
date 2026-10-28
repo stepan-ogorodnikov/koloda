@@ -82,6 +82,7 @@ apps/
   electron/               # Desktop main process (Electron / Rust NAPI)
   electron-react/         # Desktop renderer (React / Electron)
   electron-e2e/           # E2E tests for desktop app (Playwright)
+  design-system/          # Dev-only catalog of the UI library in every color theme
 libs/
   ai/                     # Domain lib for AI features
   ai-react/               # AI features React UI
