@@ -77,22 +77,30 @@ msgstr "Total"
 msgid "lesson.init.labels.untouched"
 msgstr "New"
 
-#: ../../libs/srs/src/lib/templates.ts:15
+#: ../../libs/srs/src/lib/templates.ts:142
+msgid "templates.default-fields.back"
+msgstr "Back"
+
+#: ../../libs/srs/src/lib/templates.ts:141
+msgid "templates.default-fields.front"
+msgstr "Front"
+
+#: ../../libs/srs/src/lib/templates.ts:16
 msgid "templates.field-types.markdown"
 msgstr "Markdown"
 
-#: ../../libs/srs/src/lib/templates.ts:14
+#: ../../libs/srs/src/lib/templates.ts:15
 msgid "templates.field-types.text"
 msgstr "Text"
 
-#: ../../libs/srs/src/lib/templates.ts:19
+#: ../../libs/srs/src/lib/templates.ts:20
 msgid "templates.operations.display"
 msgstr "Display"
 
-#: ../../libs/srs/src/lib/templates.ts:20
+#: ../../libs/srs/src/lib/templates.ts:21
 msgid "templates.operations.reveal"
 msgstr "Reveal"
 
-#: ../../libs/srs/src/lib/templates.ts:21
+#: ../../libs/srs/src/lib/templates.ts:22
 msgid "templates.operations.type"
 msgstr "Type"

@@ -1,6 +1,6 @@
 import { generateUuidv7, toFormErrors } from "@koloda/app";
 import { queriesAtom, queryKeys } from "@koloda/core-react";
-import { DEFAULT_TEMPLATE, insertTemplateSchema as schema } from "@koloda/srs";
+import { DEFAULT_TEMPLATE, insertTemplateSchema as schema, translateDefaultTemplateContent } from "@koloda/srs";
 import type { InsertTemplateData, Template } from "@koloda/srs";
 import {
   AddIcon,
@@ -39,12 +39,14 @@ export function AddTemplate() {
       },
     },
     onSubmit: async ({ value, formApi }) => {
-      // WHY: each add mints its own field ids. `defaultValues` holds the seed ids, and the reset after a
-      // success restores them, so ids minted there would repeat on the next add.
-      const fieldIds = new Map(value.content.fields.map((field) => [field.id, generateUuidv7()]));
+      // WHY: the default fields are built per add, in the current language and with their own ids.
+      // `defaultValues` holds the seed ids, and the reset after a success restores them, so ids minted
+      // there would repeat on the next add.
+      const defaults = translateDefaultTemplateContent(_);
+      const fieldIds = new Map(defaults.fields.map((field) => [field.id, generateUuidv7()]));
       const content = {
-        fields: value.content.fields.map((field) => ({ ...field, id: fieldIds.get(field.id) ?? field.id })),
-        layout: value.content.layout.map((item) => ({ ...item, field: fieldIds.get(item.field) ?? item.field })),
+        fields: defaults.fields.map((field) => ({ ...field, id: fieldIds.get(field.id) ?? field.id })),
+        layout: defaults.layout.map((item) => ({ ...item, field: fieldIds.get(item.field) ?? item.field })),
       };
       // WHY: await the add so the form stays submitting until it settles; canSubmit stays
       // false meanwhile, so a second press cannot add twice.

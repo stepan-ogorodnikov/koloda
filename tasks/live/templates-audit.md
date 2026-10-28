@@ -427,7 +427,7 @@ Line numbers are at `248e44b1`; when an earlier item moved them, find the code b
   Commit: Give each new template its own field ids
   Depends on: none
 
-- [ ] 9. Title a new template's default fields in the interface language
+- [x] 9. Title a new template's default fields in the interface language
   Goal (T14):
   - `libs/srs`: export the two default field titles as `msg` descriptors next to `DEFAULT_TEMPLATE`, like
     `TEMPLATE_FIELD_TYPES_MESSAGES` (`libs/srs/src/lib/templates.ts:13-16`).

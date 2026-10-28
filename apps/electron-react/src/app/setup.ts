@@ -3,7 +3,7 @@ import { DEFAULT_INTERFACE_SETTINGS } from "@koloda/app";
 import { DEFAULT_HOTKEYS_SETTINGS } from "@koloda/app";
 import { DEFAULT_LEARNING_SETTINGS } from "@koloda/app";
 import type { DbStatus, SeedDbData, SyncStarter } from "@koloda/native-ipc";
-import { DEFAULT_FSRS_ALGORITHM, DEFAULT_TEMPLATE } from "@koloda/srs";
+import { DEFAULT_FSRS_ALGORITHM, translateDefaultTemplateContent } from "@koloda/srs";
 import { msg } from "@lingui/core/macro";
 import type { I18nContext } from "@lingui/react";
 import { invoke } from "./electron";
@@ -19,7 +19,7 @@ export function starterContent(t: I18nContext["_"]): SyncStarter {
   const title = t(msg`app.setup.default-title`);
   return {
     algorithm: { title, content: DEFAULT_FSRS_ALGORITHM },
-    template: { ...DEFAULT_TEMPLATE, title },
+    template: { title, content: translateDefaultTemplateContent(t) },
   };
 }
 

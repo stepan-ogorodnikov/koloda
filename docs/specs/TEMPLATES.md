@@ -86,6 +86,8 @@ The user adds a template by giving it a title.
 Two templates may have the same title; they remain distinct.
 The new template starts from the built-in default shape: two required text fields ("Front" and "Back"),
 with Front displayed and Back typed.
+The two field titles are in the interface language when the template is added.
+Changing the language later does not rename them.
 A new template has no notes.
 
 After a successful add, the dialog offers a link to open the new template.

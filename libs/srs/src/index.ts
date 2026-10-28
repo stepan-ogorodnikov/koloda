@@ -110,6 +110,7 @@ export {
   insertTemplateSchema,
   lessonTemplateRowSchema,
   templateRowSchema,
+  translateDefaultTemplateContent,
   updateTemplateSchema,
   validateLockedTemplateFields,
 } from "./lib/templates";

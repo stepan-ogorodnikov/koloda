@@ -1,5 +1,6 @@
 import type { UpdateData } from "@koloda/app";
 import { SEED_TEMPLATE_TYPE_BACK_FIELD_ID, SEED_TEMPLATE_TYPE_FRONT_FIELD_ID, timestampsValidation } from "@koloda/app";
+import type { MessageDescriptor } from "@lingui/core";
 import { msg } from "@lingui/core/macro";
 import { z } from "zod";
 import { optionalEntityNotesSchema, requiredEntityTitleSchema } from "@koloda/app";
@@ -104,19 +105,44 @@ export type TemplateLayout = Template["content"]["layout"];
 
 export type TemplateLayoutItem = TemplateLayout[number];
 
+const DEFAULT_FRONT_FIELD: TemplateField = {
+  id: SEED_TEMPLATE_TYPE_FRONT_FIELD_ID,
+  title: "Front",
+  type: "text",
+  isRequired: true,
+};
+
+const DEFAULT_BACK_FIELD: TemplateField = {
+  id: SEED_TEMPLATE_TYPE_BACK_FIELD_ID,
+  title: "Back",
+  type: "text",
+  isRequired: true,
+};
+
 export const DEFAULT_TEMPLATE: InsertTemplateData = {
   title: "Default",
   content: {
-    fields: [
-      { id: SEED_TEMPLATE_TYPE_FRONT_FIELD_ID, title: "Front", type: "text", isRequired: true },
-      { id: SEED_TEMPLATE_TYPE_BACK_FIELD_ID, title: "Back", type: "text", isRequired: true },
-    ],
+    fields: [DEFAULT_FRONT_FIELD, DEFAULT_BACK_FIELD],
     layout: [
       { field: SEED_TEMPLATE_TYPE_FRONT_FIELD_ID, operation: "display" },
       { field: SEED_TEMPLATE_TYPE_BACK_FIELD_ID, operation: "type" },
     ],
   },
 };
+
+// INVARIANT: a new template's default fields take their titles in the interface language when it is created
+// (TEMPLATES.md §Adding Templates); a later language change does not rename them.
+export function translateDefaultTemplateContent(
+  translate: (message: MessageDescriptor) => string,
+): InsertTemplateData["content"] {
+  return {
+    ...DEFAULT_TEMPLATE.content,
+    fields: [
+      { ...DEFAULT_FRONT_FIELD, title: translate(msg`templates.default-fields.front`) },
+      { ...DEFAULT_BACK_FIELD, title: translate(msg`templates.default-fields.back`) },
+    ],
+  };
+}
 
 export const DEFAULT_TEMPLATE_FIELD: Omit<TemplateField, "id"> = {
   title: "",

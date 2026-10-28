@@ -7,7 +7,7 @@ import { I18nProvider } from "@lingui/react";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { createStore, Provider as JotaiProvider } from "jotai";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it, onTestFinished, vi } from "vitest";
 import { createQueryClient, testId } from "../../test/test-helpers";
 import { AddTemplate } from "./add-template";
 
@@ -60,5 +60,19 @@ describe("AddTemplate", () => {
     for (const content of contents) {
       expect(content.layout.map((item) => item.field)).toEqual(content.fields.map((field) => field.id));
     }
+  });
+
+  it("titles the default fields in the active language", async () => {
+    i18n.loadAndActivate({
+      locale: "ru",
+      messages: { "templates.default-fields.front": "Лицо", "templates.default-fields.back": "Оборот" },
+    });
+    onTestFinished(() => i18n.loadAndActivate({ locale: "en", messages: {} }));
+    const write = renderAddTemplate();
+
+    await submitTitle("Слова");
+    await waitFor(() => expect(write).toHaveBeenCalledTimes(1));
+
+    expect(write.mock.calls[0]?.[0].content.fields.map((field) => field.title)).toEqual(["Лицо", "Оборот"]);
   });
 });
