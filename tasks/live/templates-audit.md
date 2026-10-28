@@ -300,7 +300,7 @@ Line numbers are at `248e44b1`; when an earlier item moved them, find the code b
   Commit: Check a template's lock inside the update transaction
   Depends on: none
 
-- [ ] 2. Report the real lock in the web template list
+- [x] 2. Report the real lock in the web template list
   Goal (T5):
   - Web `getTemplates` (`libs/db-sqlite/src/lib/templates.ts:22-27`): select `TEMPLATE_LOCKED_SELECT` too.
   - `templateRowSchema` (`libs/srs/src/lib/templates.ts:69-72`): drop `.default(false)` and its WHY, so a row

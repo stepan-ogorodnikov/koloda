@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { addCard } from "./cards";
-import { addTemplate, deleteTemplate, getTemplate, updateTemplate } from "./templates";
+import { addTemplate, deleteTemplate, getTemplate, getTemplates, updateTemplate } from "./templates";
 import type { TestDb } from "../test/test-helpers";
 import {
   createCardContent,
@@ -35,6 +35,19 @@ describe("templates repository integration", () => {
     });
 
     expect((await getTemplate(db, template.id))?.isLocked).toBe(true);
+  });
+
+  // Twin of `get_templates_reports_each_templates_own_lock` in
+  // `crates/koloda/tests/integration/templates_integration_tests.rs`.
+  it("lists each template with its own lock", async () => {
+    const { db } = testDb;
+    const { deck, template: used } = await seedDeckContext(db);
+    const unused = await seedTemplate(db, { title: "Unused" });
+    await addCard(db, { deckId: deck.id, templateId: used.id, content: createCardContent(used) });
+
+    const locks = Object.fromEntries((await getTemplates(db)).map((template) => [template.id, template.isLocked]));
+
+    expect(locks).toEqual({ [used.id]: true, [unused.id]: false });
   });
 
   it("allows safe updates like title changes on locked templates", async () => {

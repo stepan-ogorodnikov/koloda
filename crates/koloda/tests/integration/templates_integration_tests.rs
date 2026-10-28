@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use koloda::app::error::error_codes;
 use koloda::domain::settings::SettingsName;
 use koloda::domain::templates::{
@@ -48,6 +50,25 @@ fn update_template_round_trips_every_field() {
             updated_at: stored.updated_at,
         }
     );
+}
+
+// Twin of the web `lists each template with its own lock` case.
+#[test]
+fn get_templates_reports_each_templates_own_lock() {
+    let db = test_db();
+    let algorithm_id = add_algorithm(&db, "FSRS");
+    let used_id = add_template(&db, "Used");
+    let unused_id = add_template(&db, "Unused");
+    let deck_id = add_deck(&db, &algorithm_id, &used_id, "Deck");
+    let _ = add_card(&db, &deck_id, &used_id, "question");
+
+    let locks: HashMap<String, bool> = templates::get_templates(&db)
+        .expect("templates query should succeed")
+        .into_iter()
+        .map(|template| (template.id, template.is_locked))
+        .collect();
+
+    assert_eq!(locks, HashMap::from([(used_id, true), (unused_id, false)]));
 }
 
 #[test]

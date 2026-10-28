@@ -67,8 +67,7 @@ export const templateValidation = z.object({
 });
 
 export const templateRowSchema = templateValidation.extend(timestampsValidation.shape).extend({
-  // WHY: List/insert returning rows omit isLocked; only lock-aware queries compute it.
-  isLocked: z.boolean().default(false),
+  isLocked: z.boolean(),
 });
 
 /** Partial template row from lesson SQL (`id` + `content` only). */

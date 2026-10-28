@@ -21,7 +21,9 @@ import { nowMs, placeholders } from "./sql";
 
 export async function getTemplates(db: DB) {
   return throwKnownError("db.get", async () => {
-    const result = await db.all(`SELECT ${TEMPLATE_SELECT} FROM templates t ORDER BY t.created_at`);
+    const result = await db.all(
+      `SELECT ${TEMPLATE_SELECT}, ${TEMPLATE_LOCKED_SELECT} FROM templates t ORDER BY t.created_at`,
+    );
     return parseRows(templateRowSchema, result);
   });
 }
