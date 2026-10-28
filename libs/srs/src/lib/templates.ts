@@ -124,33 +124,10 @@ export type UpdateTemplateValues = z.input<typeof updateTemplateSchema>;
 export type UpdateTemplateData = UpdateData<Template, "id", UpdateTemplateValues>;
 
 export function validateLockedTemplateFields(original: TemplateField[], updated: TemplateField[]) {
-  const errors: string[] = [];
-
-  const updatedIds = new Set(updated.map((field) => field.id));
-  const missingIds = original.map((field) => field.id).filter((id) => !updatedIds.has(id));
-
-  if (missingIds.length > 0) {
-    errors.push(`Missing fields: ${missingIds.join(", ")}`);
-  }
-
-  for (const originalField of original) {
-    const updatedField = updated.find((f) => f.id === originalField.id);
-    if (!updatedField) continue;
-
-    const originalKeys = Object.keys(originalField) as (keyof TemplateField)[];
-    for (const key of originalKeys) {
-      if (key === "title") continue;
-
-      if (updatedField[key] !== originalField[key]) {
-        errors.push(`Field (id: ${originalField.id}): property '${key}' changed`);
-      }
-    }
-  }
-
-  return {
-    isValid: errors.length === 0,
-    errors,
-  };
+  return original.every((originalField) => {
+    const updatedField = updated.find((field) => field.id === originalField.id);
+    return updatedField?.type === originalField.type && updatedField.isRequired === originalField.isRequired;
+  });
 }
 
 export const cloneTemplateSchema = insertTemplateSchema.pick({ title: true }).extend({

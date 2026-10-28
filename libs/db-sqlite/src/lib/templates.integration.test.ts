@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import type { TemplateField } from "@koloda/srs";
 import { addCard } from "./cards";
 import { addTemplate, deleteTemplate, getTemplate, getTemplates, updateTemplate } from "./templates";
 import type { TestDb } from "../test/test-helpers";
@@ -75,37 +76,25 @@ describe("templates repository integration", () => {
     });
   });
 
-  it("rejects protected field changes on locked templates", async () => {
+  it.each<{ change: string; edit: (fields: TemplateField[]) => TemplateField[] }>([
+    {
+      change: "a field type",
+      edit: (fields) => fields.map((field, i) => (i === 0 ? { ...field, type: "markdown" as const } : field)),
+    },
+    { change: "a removed field", edit: (fields) => fields.slice(1) },
+  ])("rejects $change on a locked template and keeps the stored fields", async ({ edit }) => {
     const { db } = testDb;
     const { deck, template } = await seedDeckContext(db);
+    await addCard(db, { deckId: deck.id, templateId: template.id, content: createCardContent(template) });
 
-    await addCard(db, {
-      deckId: deck.id,
-      templateId: template.id,
-      content: createCardContent(template),
-    });
-
-    const frontId = template.content.fields[0]!.id;
+    const fields = edit(template.content.fields);
+    const layout = template.content.layout.filter((item) => fields.some((field) => field.id === item.field));
 
     await expect(
-      updateTemplate(db, {
-        id: template.id,
-        values: {
-          title: template.title,
-          content: {
-            ...template.content,
-            fields: template.content.fields.map((field) =>
-              field.id === frontId ? { ...field, type: "markdown" as const } : field,
-            ),
-          },
-        },
-      }),
-    ).rejects.toMatchObject({
-      code: "validation.templates.update-locked",
-    });
+      updateTemplate(db, { id: template.id, values: { title: template.title, content: { fields, layout } } }),
+    ).rejects.toMatchObject({ code: "validation.templates.update-locked", details: undefined });
 
-    const storedTemplate = await getTemplate(db, template.id);
-    expect(storedTemplate?.content.fields.find((field) => field.id === frontId)?.type).toBe("text");
+    expect((await getTemplate(db, template.id))?.content.fields).toEqual(template.content.fields);
   });
 
   it("rejects deleting a template referenced by a deck with no cards", async () => {

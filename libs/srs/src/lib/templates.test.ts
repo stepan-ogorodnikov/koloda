@@ -10,10 +10,15 @@ import {
 const FRONT_ID = "01900000-0000-7000-8000-000000000001";
 const BACK_ID = "01900000-0000-7000-8000-000000000002";
 
-const ORIGINAL_FIELDS: TemplateField[] = [
-  { id: FRONT_ID, title: "Front", type: "text", isRequired: true },
-  { id: BACK_ID, title: "Back", type: "markdown", isRequired: false },
-];
+const FRONT: TemplateField = { id: FRONT_ID, title: "Front", type: "text", isRequired: true };
+const BACK: TemplateField = { id: BACK_ID, title: "Back", type: "markdown", isRequired: false };
+const EXTRA: TemplateField = {
+  id: "01900000-0000-7000-8000-000000000003",
+  title: "Extra",
+  type: "text",
+  isRequired: false,
+};
+const ORIGINAL_FIELDS = [FRONT, BACK];
 
 describe("templates", () => {
   it("returns the matching field title by id", () => {
@@ -21,25 +26,16 @@ describe("templates", () => {
     expect(getTemplateFieldTitleById(ORIGINAL_FIELDS, "01900000-0000-7000-8000-0000000003e7")).toBeUndefined();
   });
 
-  it("allows locked template updates when only titles change", () => {
-    const result = validateLockedTemplateFields(ORIGINAL_FIELDS, [
-      { id: FRONT_ID, title: "Prompt", type: "text", isRequired: true },
-      { id: BACK_ID, title: "Response", type: "markdown", isRequired: false },
-    ]);
-
-    expect(result).toEqual({
-      isValid: true,
-      errors: [],
-    });
-  });
-
-  it("reports missing locked fields and protected property changes", () => {
-    const result = validateLockedTemplateFields(ORIGINAL_FIELDS, [
-      { id: FRONT_ID, title: "Front", type: "markdown", isRequired: true },
-    ]);
-
-    expect(result.isValid).toBe(false);
-    expect(result.errors).toEqual([`Missing fields: ${BACK_ID}`, `Field (id: ${FRONT_ID}): property 'type' changed`]);
+  // Twin: `locked_template_keeps_every_field_with_its_type_and_required_flag`
+  // (crates/koloda/tests/domain/templates_update_tests.rs); the rows match.
+  it.each<{ change: string; fields: TemplateField[]; isAllowed: boolean }>([
+    { change: "a field title", fields: [{ ...FRONT, title: "Prompt" }, BACK], isAllowed: true },
+    { change: "an added field", fields: [FRONT, BACK, EXTRA], isAllowed: true },
+    { change: "a removed field", fields: [FRONT], isAllowed: false },
+    { change: "a field type", fields: [{ ...FRONT, type: "markdown" }, BACK], isAllowed: false },
+    { change: "a required flag", fields: [{ ...FRONT, isRequired: false }, BACK], isAllowed: false },
+  ])("locked template update with $change is allowed: $isAllowed", ({ fields, isAllowed }) => {
+    expect(validateLockedTemplateFields(ORIGINAL_FIELDS, fields)).toBe(isAllowed);
   });
 
   it("accepts an insert template whose layout items reference existing fields", () => {

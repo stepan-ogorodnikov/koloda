@@ -727,7 +727,7 @@ msgstr "Раскладка не может быть пустой"
 
 #: ../../libs/app/src/lib/error.ts:98
 msgid "validation.templates.update-locked"
-msgstr "Нельзя обновить заблокированный шаблон"
+msgstr "Шаблон используется карточками: поля нельзя удалять, менять тип или обязательность"
 
 #: ../../libs/app/src/lib/error.ts:131
 msgid "windows-credentials"

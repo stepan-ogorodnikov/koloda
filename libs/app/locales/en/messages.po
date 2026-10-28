@@ -727,7 +727,7 @@ msgstr "There has to be at least one layout item"
 
 #: ../../libs/app/src/lib/error.ts:98
 msgid "validation.templates.update-locked"
-msgstr "Cannot update locked template"
+msgstr "Cards use this template, so its fields can't be removed or change type or required"
 
 #: ../../libs/app/src/lib/error.ts:131
 msgid "windows-credentials"

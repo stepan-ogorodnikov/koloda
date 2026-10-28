@@ -315,7 +315,7 @@ Line numbers are at `248e44b1`; when an earlier item moved them, find the code b
   Commit: Report the real lock in the web template list
   Depends on: none
 
-- [ ] 3. Reject a locked-template save the same way on both hosts
+- [x] 3. Reject a locked-template save the same way on both hosts
   Goal (T7, T8's TS twins, T9's locked-update codes):
   - TS `validateLockedTemplateFields` (`libs/srs/src/lib/templates.ts:127-155`): return whether the update keeps every
     original field with its type and required flag; drop the English error list.

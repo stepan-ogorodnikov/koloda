@@ -1,3 +1,4 @@
+use koloda::app::error::error_codes;
 use koloda::domain::templates::{
     TemplateContent, TemplateField, TemplateLayoutItem, UpdateTemplateData, UpdateTemplateValues,
 };
@@ -31,125 +32,63 @@ fn create_original_template_content() -> TemplateContent {
     }
 }
 
+// Twin: "locked template update with $change is allowed: $isAllowed" in libs/srs/src/lib/templates.test.ts;
+// the rows match.
 #[test]
-fn test_locked_template_cannot_remove_fields() {
-    let original = create_original_template_content();
+fn locked_template_keeps_every_field_with_its_type_and_required_flag() {
+    type Edit = fn(&mut Vec<TemplateField>);
+    let cases: [(&str, Edit, bool); 5] = [
+        ("a field title", |fields| fields[0].title = "Prompt".to_string(), true),
+        (
+            "an added field",
+            |fields| {
+                fields.push(TemplateField {
+                    id: "01900000-0000-7000-8000-000000000003".to_string(),
+                    title: "Extra".to_string(),
+                    field_type: "text".to_string(),
+                    is_required: false,
+                })
+            },
+            true,
+        ),
+        (
+            "a removed field",
+            |fields| {
+                fields.remove(1);
+            },
+            false,
+        ),
+        (
+            "a field type",
+            |fields| fields[0].field_type = "text".to_string(),
+            false,
+        ),
+        ("a required flag", |fields| fields[0].is_required = false, false),
+    ];
 
-    let json = r#"{
-        "title": "Updated Template",
-        "content": {
-            "fields": [
-                {"id": "01900000-0000-7000-8000-000000000001", "title": "Front", "type": "text", "isRequired": true}
-            ],
-            "layout": [
-                {"field": "01900000-0000-7000-8000-000000000001", "operation": "display"}
-            ]
+    for (change, edit, is_allowed) in cases {
+        let original = create_original_template_content();
+        let mut content = original.clone();
+        edit(&mut content.fields);
+        content
+            .layout
+            .retain(|item| content.fields.iter().any(|field| field.id == item.field));
+        let values = UpdateTemplateValues {
+            title: "Updated Template".to_string(),
+            content,
+            notes: None,
+        };
+
+        let result = values.validate(Some(&original));
+
+        if is_allowed {
+            assert!(result.is_ok(), "{change} is allowed on a locked template");
+        } else {
+            let err = result.expect_err(change);
+            assert_eq!(err.code, error_codes::VALIDATION_TEMPLATES_UPDATE_LOCKED, "{change}");
+            assert_eq!(err.details, None, "{change}: the message alone explains the rejection");
         }
-    }"#;
-
-    let values: UpdateTemplateValues = serde_json::from_str(json).expect("Should deserialize");
-    let result = values.validate(Some(&original));
-    assert!(result.is_err(), "Should fail when removing fields from locked template");
-}
-
-#[test]
-fn test_locked_template_cannot_change_field_type() {
-    let original = create_original_template_content();
-
-    let json = r#"{
-        "title": "Updated Template",
-        "content": {
-            "fields": [
-                {"id": "01900000-0000-7000-8000-000000000001", "title": "Front", "type": "text", "isRequired": true},
-                {"id": "01900000-0000-7000-8000-000000000002", "title": "Back", "type": "text", "isRequired": false}
-            ],
-            "layout": [
-                {"field": "01900000-0000-7000-8000-000000000001", "operation": "display"},
-                {"field": "01900000-0000-7000-8000-000000000002", "operation": "reveal"}
-            ]
-        }
-    }"#;
-
-    let values: UpdateTemplateValues = serde_json::from_str(json).expect("Should deserialize");
-    let result = values.validate(Some(&original));
-    assert!(
-        result.is_err(),
-        "Should fail when changing field type in locked template"
-    );
-}
-
-#[test]
-fn test_locked_template_cannot_change_is_required() {
-    let original = create_original_template_content();
-
-    let json = r#"{
-        "title": "Updated Template",
-        "content": {
-            "fields": [
-                {"id": "01900000-0000-7000-8000-000000000001", "title": "Front", "type": "markdown", "isRequired": false},
-                {"id": "01900000-0000-7000-8000-000000000002", "title": "Back", "type": "text", "isRequired": false}
-            ],
-            "layout": [
-                {"field": "01900000-0000-7000-8000-000000000001", "operation": "display"},
-                {"field": "01900000-0000-7000-8000-000000000002", "operation": "reveal"}
-            ]
-        }
-    }"#;
-
-    let values: UpdateTemplateValues = serde_json::from_str(json).expect("Should deserialize");
-    let result = values.validate(Some(&original));
-    assert!(
-        result.is_err(),
-        "Should fail when changing isRequired in locked template"
-    );
-}
-
-#[test]
-fn test_locked_template_can_change_field_title() {
-    let original = create_original_template_content();
-
-    let json = r#"{
-        "title": "Updated Template",
-        "content": {
-            "fields": [
-                {"id": "01900000-0000-7000-8000-000000000001", "title": "New Front Title", "type": "markdown", "isRequired": true},
-                {"id": "01900000-0000-7000-8000-000000000002", "title": "Back", "type": "text", "isRequired": false}
-            ],
-            "layout": [
-                {"field": "01900000-0000-7000-8000-000000000001", "operation": "display"},
-                {"field": "01900000-0000-7000-8000-000000000002", "operation": "reveal"}
-            ]
-        }
-    }"#;
-
-    let values: UpdateTemplateValues = serde_json::from_str(json).expect("Should deserialize");
-    let result = values.validate(Some(&original));
-    assert!(result.is_ok(), "Should allow changing field title in locked template");
-}
-
-#[test]
-fn test_locked_template_can_add_new_fields() {
-    let original = create_original_template_content();
-
-    let json = r#"{
-        "title": "Updated Template",
-        "content": {
-            "fields": [
-                {"id": "01900000-0000-7000-8000-000000000001", "title": "Front", "type": "markdown", "isRequired": true},
-                {"id": "01900000-0000-7000-8000-000000000002", "title": "Back", "type": "text", "isRequired": false},
-                {"id": "01900000-0000-7000-8000-000000000003", "title": "New Field", "type": "text", "isRequired": false}
-            ],
-            "layout": [
-                {"field": "01900000-0000-7000-8000-000000000001", "operation": "display"},
-                {"field": "01900000-0000-7000-8000-000000000002", "operation": "reveal"},
-                {"field": "01900000-0000-7000-8000-000000000003", "operation": "display"}
-            ]
-        }
-    }"#;
-
-    let values: UpdateTemplateValues = serde_json::from_str(json).expect("Should deserialize");
-    let result = values.validate(Some(&original));
-    assert!(result.is_ok(), "Should allow adding new fields to locked template");
+    }
 }
 
 #[test]

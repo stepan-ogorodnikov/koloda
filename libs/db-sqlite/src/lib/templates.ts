@@ -84,9 +84,9 @@ export async function updateTemplate(db: DB, { id, values }: UpdateTemplateData)
       const template = await getTemplate(tx, id);
       if (!template) throw new AppError("not-found.templates.update.template", `Template id: ${id}`);
 
-      if (template.isLocked) {
-        const { isValid, errors } = validateLockedTemplateFields(template.content.fields, values.content.fields);
-        if (!isValid) throw new AppError("validation.templates.update-locked", errors.join(", "));
+      // WHY: no details; the translated message says what a locked save rejects, the same on both hosts.
+      if (template.isLocked && !validateLockedTemplateFields(template.content.fields, values.content.fields)) {
+        throw new AppError("validation.templates.update-locked");
       }
 
       await tx.run(`UPDATE templates SET title = ?, content = ?, notes = ?, updated_at = ? WHERE id = ?`, [

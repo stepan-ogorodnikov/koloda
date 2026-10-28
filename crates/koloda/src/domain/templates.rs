@@ -173,33 +173,18 @@ fn validate_template_content(
 }
 
 fn validate_locked_template_fields(original: &[TemplateField], updated: &[TemplateField]) -> Result<(), AppError> {
-    let updated_ids: std::collections::HashSet<&str> = updated.iter().map(|f| f.id.as_str()).collect();
+    let keeps_every_field = original.iter().all(|orig_field| {
+        updated.iter().any(|field| {
+            field.id == orig_field.id
+                && field.field_type == orig_field.field_type
+                && field.is_required == orig_field.is_required
+        })
+    });
 
-    for orig_field in original {
-        if !updated_ids.contains(orig_field.id.as_str()) {
-            return Err(AppError::new(
-                error_codes::VALIDATION_TEMPLATES_UPDATE_LOCKED,
-                Some(format!("Missing field with id: {}", orig_field.id)),
-            ));
-        }
+    if keeps_every_field {
+        Ok(())
+    } else {
+        // WHY: no details; the translated message says what a locked save rejects, the same on both hosts.
+        Err(AppError::new(error_codes::VALIDATION_TEMPLATES_UPDATE_LOCKED, None))
     }
-
-    for orig_field in original {
-        if let Some(updated_field) = updated.iter().find(|f| f.id == orig_field.id) {
-            if updated_field.field_type != orig_field.field_type {
-                return Err(AppError::new(
-                    error_codes::VALIDATION_TEMPLATES_UPDATE_LOCKED,
-                    Some(format!("Cannot change field type for field id: {}", orig_field.id)),
-                ));
-            }
-            if updated_field.is_required != orig_field.is_required {
-                return Err(AppError::new(
-                    error_codes::VALIDATION_TEMPLATES_UPDATE_LOCKED,
-                    Some(format!("Cannot change 'isRequired' for field id: {}", orig_field.id)),
-                ));
-            }
-        }
-    }
-
-    Ok(())
 }
