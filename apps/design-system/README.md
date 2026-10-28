@@ -12,8 +12,8 @@ Nothing in `apps/web`, `apps/electron`, or `apps/electron-react` imports it.
 ## How to run
 
 - `nx run @koloda/design-system:serve` — dev server at `localhost:3100`
-- `?theme=<id>` picks the theme; the id is a key of `LIGHT_THEMES` or `DARK_THEMES` in `@koloda/app`.
-  A missing or unknown id falls back to the default light theme.
+- The titlebar select picks the theme from `LIGHT_THEMES` and `DARK_THEMES` in `@koloda/app`.
+  The choice is kept in local storage; a missing or unknown id falls back to the default light theme.
 
 ## Architectural Map
 
@@ -24,7 +24,7 @@ Nothing in `apps/web`, `apps/electron`, or `apps/electron-react` imports it.
   Settings resolve to `null`, so hotkeys use their defaults.
   Lessons and today's review totals are sample data; lessons are shaped like `getLessons` in `@koloda/db-sqlite`.
   Every other query or mutation fails with its name when it runs.
-- Theme: `src/app/theme.ts` — reads `?theme=`, writes it back on change,
+- Theme: `src/app/theme.ts` — reads the stored theme at startup, stores it on change,
   and sets `<html>` the way `libs/app-react/public/theme-boot.js` does.
 - Strings: `src/app/i18n.ts` — imports the English catalogs of the libs on screen as `.po` files.
 - Shell: `src/components/shell.tsx` — the product layout, laid out like the dashboard:

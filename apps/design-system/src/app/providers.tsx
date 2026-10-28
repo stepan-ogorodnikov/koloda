@@ -12,7 +12,6 @@ import { store } from "./store";
 const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
 
 // WHY: `Link`, `NotFound`, and the layout read router context, so pages render inside a router.
-// Hash history keeps routes out of `location.search`, where `?theme=` lives.
 const router = createRouter({
   routeTree: createRootRoute({ component: Shell }),
   history: createHashHistory(),

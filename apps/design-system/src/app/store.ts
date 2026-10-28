@@ -3,14 +3,14 @@ import type { Queries } from "@koloda/core-react";
 import { createStore } from "jotai";
 import type { WritableAtom } from "jotai";
 import { queries } from "./queries";
-import { applyTheme, themeAtom, writeThemeParam } from "./theme";
+import { applyTheme, storeTheme, themeAtom } from "./theme";
 
 export const store = createStore();
 
 store.sub(themeAtom, () => {
   const id = store.get(themeAtom);
   applyTheme(id);
-  writeThemeParam(id);
+  storeTheme(id);
 });
 
 store.set(langAtom, "en");
