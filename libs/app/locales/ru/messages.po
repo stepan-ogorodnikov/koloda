@@ -697,6 +697,10 @@ msgstr "Нельзя удалить заблокированный шаблон"
 msgid "validation.templates.delete-used"
 msgstr "Этот шаблон используется и не может быть удалён"
 
+#: ../../libs/app/src/lib/error.ts:95
+msgid "validation.templates.fields.duplicate-id"
+msgstr "У каждого поля должен быть свой id"
+
 #: ../../libs/app/src/lib/error.ts:92
 msgid "validation.templates.fields.id"
 msgstr "Недопустимый id поля"
@@ -708,6 +712,10 @@ msgstr "Необходимо хотя бы одно поле"
 #: ../../libs/app/src/lib/error.ts:93
 msgid "validation.templates.fields.type"
 msgstr "Недопустимый тип поля"
+
+#: ../../libs/app/src/lib/error.ts:100
+msgid "validation.templates.layout.duplicate-field"
+msgstr "У каждого поля может быть только один элемент раскладки"
 
 #: ../../libs/app/src/lib/error.ts:95
 msgid "validation.templates.layout.field"

@@ -387,7 +387,7 @@ Line numbers are at `248e44b1`; when an earlier item moved them, find the code b
   Commit: Give each template rule one home in TEMPLATES.md
   Depends on: none
 
-- [ ] 7. Keep one layout item per template field
+- [x] 7. Keep one layout item per template field
   Goal (T2):
   - TEMPLATES.md: each field has exactly one layout item.
     Adding a field adds its item with **display**; removing a field removes its item.

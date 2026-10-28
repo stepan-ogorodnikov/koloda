@@ -697,6 +697,10 @@ msgstr "Cannot delete locked template"
 msgid "validation.templates.delete-used"
 msgstr "This template is used by deck(s) and can't be deleted"
 
+#: ../../libs/app/src/lib/error.ts:95
+msgid "validation.templates.fields.duplicate-id"
+msgstr "Every field needs its own id"
+
 #: ../../libs/app/src/lib/error.ts:92
 msgid "validation.templates.fields.id"
 msgstr "Invalid field id"
@@ -708,6 +712,10 @@ msgstr "There has to be at least one field"
 #: ../../libs/app/src/lib/error.ts:93
 msgid "validation.templates.fields.type"
 msgstr "Invalid field type"
+
+#: ../../libs/app/src/lib/error.ts:100
+msgid "validation.templates.layout.duplicate-field"
+msgstr "Each field can have only one layout item"
 
 #: ../../libs/app/src/lib/error.ts:95
 msgid "validation.templates.layout.field"

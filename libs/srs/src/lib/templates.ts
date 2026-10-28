@@ -42,12 +42,24 @@ const templateContentFields = z.object({
     .min(1, "validation.templates.layout.too-few"),
 });
 
-// WHY: mirrors the Rust twin `validate_template_content` layout membership check
+// WHY: mirrors the Rust twin `validate_template_content` duplicate and layout membership checks, in its order
 // (`docs/decisions/TS-RUST-DOMAIN-MIRRORING.md`);
-// TS must reject what Rust rejects, so keep this refine while the Rust check exists.
+// TS must reject what Rust rejects, so keep this refine while the Rust checks exist.
 const templateContent = templateContentFields.superRefine((content, ctx) => {
-  const fieldIds = new Set(content.fields.map((field) => field.id));
+  const fieldIds = new Set<string>();
+  for (const [index, field] of content.fields.entries()) {
+    if (fieldIds.has(field.id)) {
+      ctx.addIssue({
+        code: "custom",
+        message: "validation.templates.fields.duplicate-id",
+        path: ["fields", index, "id"],
+      });
+    }
+    fieldIds.add(field.id);
+  }
 
+  // INVARIANT: one layout item per field (TEMPLATES.md §Relationships); the editor keys layout rows by field.
+  const layoutFieldIds = new Set<string>();
   for (const [index, item] of content.layout.entries()) {
     if (!fieldIds.has(item.field)) {
       ctx.addIssue({
@@ -55,7 +67,14 @@ const templateContent = templateContentFields.superRefine((content, ctx) => {
         message: "validation.templates.layout.missing-field",
         path: ["layout", index, "field"],
       });
+    } else if (layoutFieldIds.has(item.field)) {
+      ctx.addIssue({
+        code: "custom",
+        message: "validation.templates.layout.duplicate-field",
+        path: ["layout", index, "field"],
+      });
     }
+    layoutFieldIds.add(item.field);
   }
 });
 

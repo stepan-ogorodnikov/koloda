@@ -25,6 +25,7 @@ See CARDS.md (§Relationships) for how a card keeps its template.
 
 - Every template has at least one field and at least one layout item.
 - Each layout item points at a field that exists on the same template.
+- No field has more than one layout item.
 - See CARDS.md (§Relationships) for a card's own template.
 - Lock is derived from the cards that use the template; see §Locking.
 
@@ -37,13 +38,13 @@ Each field has:
 - a required flag
 
 Fields can be reordered.
-Adding a field also adds a matching layout item with the **display** operation.
-Removing a field also removes every layout item that pointed at it.
+Adding a field also adds its layout item with the **display** operation.
+Removing a field also removes its layout item.
 
 ## Layout
 
 The layout is an ordered list of items.
-Each item chooses a field and an operation:
+Each item shows its field with an operation:
 
 - **display** — visible immediately during study
 - **reveal** — hidden until the card is submitted
@@ -54,6 +55,7 @@ Reordering fields does not reorder layout items, and the reverse is also true.
 
 Layout items can be reordered.
 Their operations can be changed at any time, including when the template is locked.
+An item cannot move to another field; it comes and goes with its own field.
 
 How operations behave during study is covered by LESSONS.md.
 

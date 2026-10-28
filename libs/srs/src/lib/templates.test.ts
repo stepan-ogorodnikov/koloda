@@ -72,6 +72,38 @@ describe("templates", () => {
     expect(issue?.path).toEqual(["content", "layout", 1, "field"]);
   });
 
+  // Twins: the "duplicate field id" and "two layout items for one field" rows of
+  // `test_invalid_template_fails_with_its_code` (crates/koloda/tests/domain/templates_insert_tests.rs).
+  it.each([
+    {
+      shape: "two fields share an id",
+      content: {
+        fields: [FRONT, { ...BACK, id: FRONT_ID }],
+        layout: [{ field: FRONT_ID, operation: "display" }],
+      },
+      code: "validation.templates.fields.duplicate-id",
+      path: ["content", "fields", 1, "id"],
+    },
+    {
+      shape: "a field has two layout items",
+      content: {
+        fields: ORIGINAL_FIELDS,
+        layout: [
+          { field: FRONT_ID, operation: "display" },
+          { field: FRONT_ID, operation: "reveal" },
+        ],
+      },
+      code: "validation.templates.layout.duplicate-field",
+      path: ["content", "layout", 1, "field"],
+    },
+  ])("rejects an insert template where $shape", ({ content, code, path }) => {
+    const result = insertTemplateSchema.safeParse({ title: "Basic", content });
+
+    expect(result.success ? [] : result.error.issues.map(({ message, path }) => ({ message, path }))).toEqual([
+      { message: code, path },
+    ]);
+  });
+
   it("rejects an insert template whose content has no fields", () => {
     const result = insertTemplateSchema.safeParse({
       title: "Basic",

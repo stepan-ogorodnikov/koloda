@@ -155,12 +155,29 @@ fn validate_template_content(
         }
     }
 
-    let field_ids: std::collections::HashSet<&str> = content.fields.iter().map(|f| f.id.as_str()).collect();
+    let mut field_ids = std::collections::HashSet::new();
+    for field in &content.fields {
+        if !field_ids.insert(field.id.as_str()) {
+            return Err(AppError::new(
+                error_codes::VALIDATION_TEMPLATES_FIELDS_DUPLICATE_ID,
+                None,
+            ));
+        }
+    }
+
+    // INVARIANT: one layout item per field (TEMPLATES.md §Relationships); the editor keys layout rows by field.
+    let mut layout_field_ids = std::collections::HashSet::new();
     for item in &content.layout {
         if !field_ids.contains(item.field.as_str()) {
             return Err(AppError::new(
                 error_codes::VALIDATION_TEMPLATES_LAYOUT_MISSING_FIELD,
                 Some(format!("Non-existent field id in layout: {}", item.field)),
+            ));
+        }
+        if !layout_field_ids.insert(item.field.as_str()) {
+            return Err(AppError::new(
+                error_codes::VALIDATION_TEMPLATES_LAYOUT_DUPLICATE_FIELD,
+                None,
             ));
         }
     }

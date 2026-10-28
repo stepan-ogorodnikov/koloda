@@ -63,7 +63,7 @@ fn test_invalid_template_fails_with_its_code() {
     // removed fields, so it reports its own code only while the too-few check runs before layout membership.
     // The id rows pin the shape-before-value order that matches zod's issue order.
     type Patch = fn(&mut Value);
-    let cases: [(&str, Patch, &str); 9] = [
+    let cases: [(&str, Patch, &str); 11] = [
         (
             "empty title",
             |payload| payload["title"] = json!(""),
@@ -106,6 +106,16 @@ fn test_invalid_template_fails_with_its_code() {
             "unsupported operation",
             |payload| payload["content"]["layout"][0]["operation"] = json!("hide"),
             error_codes::VALIDATION_TEMPLATES_LAYOUT_OPERATION,
+        ),
+        (
+            "duplicate field id",
+            |payload| payload["content"]["fields"][1]["id"] = json!(FRONT_ID),
+            error_codes::VALIDATION_TEMPLATES_FIELDS_DUPLICATE_ID,
+        ),
+        (
+            "two layout items for one field",
+            |payload| payload["content"]["layout"][1]["field"] = json!(FRONT_ID),
+            error_codes::VALIDATION_TEMPLATES_LAYOUT_DUPLICATE_FIELD,
         ),
         (
             "layout item for a missing field",
