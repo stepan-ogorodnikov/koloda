@@ -354,7 +354,7 @@ Line numbers are at `248e44b1`; when an earlier item moved them, find the code b
   Commit: Cover template roundtrip, clone, and unlock on both hosts
   Depends on: none
 
-- [ ] 5. Assert codes in the Rust template validator tests and table them
+- [x] 5. Assert codes in the Rust template validator tests and table them
   Goal (T9):
   - `templates_insert_tests.rs`: one table of accepted field types and operations; one reject table over a shared
     valid baseline, each row with its error code (shape: `crates/koloda/tests/domain/reviews_validation_tests.rs`).

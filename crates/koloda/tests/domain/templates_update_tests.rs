@@ -1,7 +1,5 @@
 use koloda::app::error::error_codes;
-use koloda::domain::templates::{
-    TemplateContent, TemplateField, TemplateLayoutItem, UpdateTemplateData, UpdateTemplateValues,
-};
+use koloda::domain::templates::{TemplateContent, TemplateField, TemplateLayoutItem, UpdateTemplateValues};
 
 fn create_original_template_content() -> TemplateContent {
     TemplateContent {
@@ -89,88 +87,4 @@ fn locked_template_keeps_every_field_with_its_type_and_required_flag() {
             assert_eq!(err.details, None, "{change}: the message alone explains the rejection");
         }
     }
-}
-
-#[test]
-fn test_update_template_data_missing_id() {
-    let json = r#"{
-        "values": {
-            "title": "Updated Template",
-            "content": {
-                "fields": [
-                    {"id": "01900000-0000-7000-8000-000000000001", "title": "Front", "type": "text", "isRequired": true}
-                ],
-                "layout": [
-                    {"field": "01900000-0000-7000-8000-000000000001", "operation": "display"}
-                ]
-            }
-        }
-    }"#;
-
-    let result: Result<UpdateTemplateData, _> = serde_json::from_str(json);
-    assert!(result.is_err(), "Should fail when id is missing");
-}
-
-#[test]
-fn test_update_template_data_missing_values() {
-    let json = r#"{
-        "id": "01900000-0000-7000-8000-000000000001"
-    }"#;
-
-    let result: Result<UpdateTemplateData, _> = serde_json::from_str(json);
-    assert!(result.is_err(), "Should fail when values is missing");
-}
-
-#[test]
-fn test_update_template_data_extra_fields_ok() {
-    let json = r#"{
-        "id": "01900000-0000-7000-8000-000000000001",
-        "values": {
-            "title": "Updated Template",
-            "content": {
-                "fields": [
-                    {"id": "01900000-0000-7000-8000-000000000001", "title": "Front", "type": "text", "isRequired": true}
-                ],
-                "layout": [
-                    {"field": "01900000-0000-7000-8000-000000000001", "operation": "display"}
-                ]
-            }
-        },
-        "unknownField": "ignored"
-    }"#;
-
-    let result: Result<UpdateTemplateData, _> = serde_json::from_str(json);
-    assert!(result.is_ok(), "Should succeed with extra fields");
-}
-
-#[test]
-fn test_update_template_data_id_invalid_type() {
-    let json = r#"{
-        "id": 1,
-        "values": {
-            "title": "Updated Template",
-            "content": {
-                "fields": [
-                    {"id": "01900000-0000-7000-8000-000000000001", "title": "Front", "type": "text", "isRequired": true}
-                ],
-                "layout": [
-                    {"field": "01900000-0000-7000-8000-000000000001", "operation": "display"}
-                ]
-            }
-        }
-    }"#;
-
-    let result: Result<UpdateTemplateData, _> = serde_json::from_str(json);
-    assert!(result.is_err(), "Should fail when id is a number");
-}
-
-#[test]
-fn test_update_template_data_values_invalid_type() {
-    let json = r#"{
-        "id": "01900000-0000-7000-8000-000000000001",
-        "values": "not-an-object"
-    }"#;
-
-    let result: Result<UpdateTemplateData, _> = serde_json::from_str(json);
-    assert!(result.is_err(), "Should fail when values is a string");
 }

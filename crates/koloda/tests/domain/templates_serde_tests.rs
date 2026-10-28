@@ -1,4 +1,6 @@
-use koloda::domain::templates::{InsertTemplateData, Template, TemplateContent, TemplateField, TemplateLayoutItem};
+use koloda::domain::templates::{
+    InsertTemplateData, Template, TemplateContent, TemplateField, TemplateLayoutItem, UpdateTemplateData,
+};
 use serde_json::json;
 
 fn template_fixture() -> Template {
@@ -100,6 +102,33 @@ fn test_insert_template_data_input_shapes() {
         assert!(
             serde_json::from_value::<InsertTemplateData>(missing).is_err(),
             "{field} is required"
+        );
+    }
+}
+
+#[test]
+fn test_update_template_data_input_shapes() {
+    let payload = json!({
+        "id": "01900000-0000-7000-8000-00000000000b",
+        "values": {
+            "title": "Basic",
+            "content": {
+                "fields": [{ "id": "01900000-0000-7000-8000-000000000001", "title": "Front", "type": "text", "isRequired": true }],
+                "layout": [{ "field": "01900000-0000-7000-8000-000000000001", "operation": "display" }],
+            },
+        },
+    });
+    serde_json::from_value::<UpdateTemplateData>(payload.clone()).expect("the canonical payload deserializes");
+
+    for path in [&["id"][..], &["values"], &["values", "title"], &["values", "content"]] {
+        let mut missing = payload.clone();
+        let (key, parents) = path.split_last().unwrap();
+        let parent = parents.iter().fold(&mut missing, |value, segment| &mut value[*segment]);
+        parent.as_object_mut().unwrap().remove(*key);
+        assert!(
+            serde_json::from_value::<UpdateTemplateData>(missing).is_err(),
+            "{} is required",
+            path.join(".")
         );
     }
 }
