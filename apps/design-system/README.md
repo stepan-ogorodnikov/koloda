@@ -12,8 +12,9 @@ Nothing in `apps/web`, `apps/electron`, or `apps/electron-react` imports it.
 ## How to run
 
 - `nx run @koloda/design-system:serve` — dev server at `localhost:3100`
-- Pages: `/` is the dashboard, `/algorithms` and `/templates` the editors, and `/ai` the assistant.
-  The other nav links have no page yet.
+- Pages: `/` is the dashboard, `/decks` a deck with its cards, `/algorithms` and `/templates` the editors,
+  and `/ai` the assistant.
+  The Settings link has no page yet.
 - The titlebar select picks the theme from `LIGHT_THEMES` and `DARK_THEMES` in `@koloda/app`.
   The choice is kept in local storage; a missing or unknown id falls back to the default light theme.
 
@@ -28,7 +29,8 @@ Nothing in `apps/web`, `apps/electron`, or `apps/electron-react` imports it.
   Conversations and the AI profile come from `src/app/assistant-samples.ts`.
   Conversation saves succeed without storing anything.
   The algorithm and the template come from `src/app/algorithm-samples.ts` and `src/app/template-samples.ts`.
-  Saving either replaces it in memory until a reload.
+  The deck, its cards, and their reviews come from `src/app/deck-samples.ts`, with one card in each state.
+  Saving the algorithm, the template, the deck, or a card replaces it in memory until a reload.
   Every other query or mutation fails with its name when it runs.
 - Assistant samples: `src/app/assistant-samples.ts` — a plain chat, a card proposal with tool calls,
   and one corrupt row, in the stored shape that assistant restore validates.
@@ -40,6 +42,7 @@ Nothing in `apps/web`, `apps/electron`, or `apps/electron-react` imports it.
   Nav links without a page render as in the product but do not navigate.
 - Dashboard: `src/pages/dashboard-page.tsx` — `LearnedToday` in the sidebar and `Lessons` in the content.
 - Assistant: `src/pages/assistant-page.tsx` — the AI route's conversation list and the real `AssistantChat`.
+- Decks: `src/pages/decks-page.tsx` and `deck-page.tsx` — the deck list and the real cards and details tabs.
 - Algorithms: `src/pages/algorithms-page.tsx` and `algorithm-page.tsx` — the algorithm list and the real editor.
 - Templates: `src/pages/templates-page.tsx` and `template-page.tsx` — the template list and the real editor.
 - Lesson modal: `src/components/lesson-modal.tsx` — replaces the real lesson modal in `Lessons`.

@@ -5,6 +5,7 @@ import { calculateTodaysReviewTotals } from "@koloda/srs";
 import type { LessonFilters, LessonsResult } from "@koloda/srs";
 import { SAMPLE_ALGORITHM } from "./algorithm-samples";
 import { SAMPLE_AI_PROFILE, SAMPLE_CONVERSATIONS } from "./assistant-samples";
+import { SAMPLE_CARDS, SAMPLE_DECK, SAMPLE_REVIEWS } from "./deck-samples";
 import { SAMPLE_TEMPLATE } from "./template-samples";
 
 // WHY: `total` is a placeholder; `calculateTodaysReviewTotals` recomputes it from the counted buckets.
@@ -12,7 +13,7 @@ const SAMPLE_REVIEW_TOTALS = { untouched: 18, learn: 34, review: 92, total: 0 };
 
 const SAMPLE_LESSON_DECKS = [
   { id: "0199a1b0-0000-7000-8000-000000000001", title: "Japanese vocabulary N5", untouched: 20, learn: 4, review: 37 },
-  { id: "0199a1b0-0000-7000-8000-000000000002", title: "Spanish irregular verbs", untouched: 0, learn: 2, review: 15 },
+  { id: SAMPLE_DECK.id, title: SAMPLE_DECK.title, untouched: 0, learn: 2, review: 15 },
   { id: "0199a1b0-0000-7000-8000-000000000003", title: "World capitals", untouched: 12, learn: 0, review: 0 },
   {
     id: "0199a1b0-0000-7000-8000-000000000004",
@@ -47,6 +48,8 @@ function sampleLessons(filters?: LessonFilters): LessonsResult {
 // Edits last until a reload.
 let sampleAlgorithm = SAMPLE_ALGORITHM;
 let sampleTemplate = SAMPLE_TEMPLATE;
+let sampleDeck = SAMPLE_DECK;
+let sampleCards = SAMPLE_CARDS;
 
 const stubs: Pick<
   Queries,
@@ -63,6 +66,12 @@ const stubs: Pick<
   | "getTemplatesQuery"
   | "getTemplateQuery"
   | "updateTemplateMutation"
+  | "getDecksQuery"
+  | "getDeckQuery"
+  | "updateDeckMutation"
+  | "getCardsQuery"
+  | "updateCardMutation"
+  | "getReviewsQuery"
 > = {
   getSettingsQuery: (name) => ({
     queryKey: queryKeys.settings.detail(name),
@@ -127,10 +136,39 @@ const stubs: Pick<
       return sampleTemplate;
     },
   }),
+  getDecksQuery: () => ({
+    queryKey: queryKeys.decks.all(),
+    queryFn: () => [sampleDeck],
+  }),
+  getDeckQuery: (id) => ({
+    queryKey: queryKeys.decks.detail(id),
+    queryFn: () => (id === sampleDeck.id ? sampleDeck : null),
+  }),
+  updateDeckMutation: () => ({
+    mutationFn: async ({ values }) => {
+      sampleDeck = { ...sampleDeck, ...values, updatedAt: new Date() };
+      return sampleDeck;
+    },
+  }),
+  getCardsQuery: (params) => ({
+    queryKey: queryKeys.cards.deck(params),
+    queryFn: () => sampleCards.filter((card) => card.deckId === params.deckId),
+  }),
+  updateCardMutation: () => ({
+    mutationFn: async ({ id, values }) => {
+      sampleCards = sampleCards.map((card) => (card.id === id ? { ...card, ...values, updatedAt: new Date() } : card));
+      return sampleCards.find((card) => card.id === id);
+    },
+  }),
+  getReviewsQuery: (data) => ({
+    queryKey: queryKeys.reviews.card(data),
+    queryFn: () => SAMPLE_REVIEWS.filter((review) => review.cardId === data.cardId),
+  }),
 };
 
 // WHY: the app has no database. A null settings row makes `useHotkeysSettings` fall back to the defaults;
-// lessons, today's totals, conversations, AI profiles, algorithms, and templates are sample data.
+// lessons, today's totals, conversations, AI profiles, algorithms, templates, decks, cards, and reviews
+// are sample data.
 // Every other query or mutation rejects with its name when it runs, not when it is built:
 // `useLessonSession` builds a disabled lesson-data query on every render.
 // Only `*Query` and `*Mutation` keys become methods, because jotai probes a stored value for `then`.

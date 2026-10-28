@@ -1,5 +1,6 @@
 import type { AIModel, AIProfile } from "@koloda/ai";
 import type { Conversation } from "@koloda/app";
+import { SAMPLE_DECK } from "./deck-samples";
 import { SAMPLE_TEMPLATE } from "./template-samples";
 
 export const SAMPLE_AI_PROFILE: AIProfile = {
@@ -19,9 +20,9 @@ const NORMAL_ID = "0199b2c0-0000-7000-8000-000000000101";
 const BROKEN_ID = "0199b2c0-0000-7000-8000-000000000102";
 const CARDS_ID = "0199b2c0-0000-7000-8000-000000000103";
 
-// WHY: the Spanish deck is the one in the lessons sample and the template the one on the templates page,
+// WHY: the Spanish deck is the one on the decks page and the template the one on the templates page,
 // so the pages tell one story.
-const SPANISH_DECK_ID = "0199a1b0-0000-7000-8000-000000000002";
+const SPANISH_DECK_ID = SAMPLE_DECK.id;
 const TEMPLATE_FIELDS = SAMPLE_TEMPLATE.content.fields;
 const [FRONT_FIELD, BACK_FIELD] = TEMPLATE_FIELDS;
 
