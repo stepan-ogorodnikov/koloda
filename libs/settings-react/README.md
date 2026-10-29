@@ -12,6 +12,8 @@ The Zod registry stays in `@koloda/settings`; this package owns the forms that e
 ## Architectural Map
 
 - Interface: `settings-interface.tsx`, `interface-controls/` — language, scheme, theme, and motion controls.
+- UI preferences: `wire-ui-preferences.ts` — `wireUiPreferences` puts scheme, both themes, and motion into atoms and
+  `<html>`; `ui-preferences-cache.ts` keeps them in `localStorage`. Each app calls it once from its store.
 - Learning: `settings-learning.tsx` — defaults, limits, and day-boundary form.
 - Hotkeys: `settings-hotkeys.tsx`, `settings-hotkeys-hotkey.tsx` — scoped hotkey editor.
 - AI profiles: `settings-ai.tsx` plus add/edit/delete/models dialogs;
@@ -25,7 +27,7 @@ The Zod registry stays in `@koloda/settings`; this package owns the forms that e
 - Zod registry / DTOs — `@koloda/settings`
 - Domain schemas — `@koloda/app`, `@koloda/ai`
 - Persistence — `@koloda/db-sqlite`, `koloda`
-- Routes, `useGlobalSync`, `wireUiPreferences`, global hotkey wiring — `@koloda/app-react`
+- Routes, `useGlobalSync`, global hotkey wiring — `@koloda/app-react`
 - Conversation-level assistant settings (prompt/temperature) — `@koloda/assistant-react`
 - Layout primitives — `@koloda/ui`
 

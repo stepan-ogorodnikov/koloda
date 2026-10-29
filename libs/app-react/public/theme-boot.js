@@ -1,4 +1,5 @@
-/* Applies last-used scheme/theme before CSS paint. Keep in sync with ui-preferences-cache.ts.
+/* Applies last-used scheme/theme before CSS paint. Keep in sync with
+   libs/settings-react/src/lib/ui-preferences-cache.ts.
    Fallback defaults (system / github-light / github-dark / system) mirror
    DEFAULT_INTERFACE_SETTINGS in libs/app/src/lib/settings-interface.ts — plain
    script, cannot import; update here if the registry defaults ever change. */

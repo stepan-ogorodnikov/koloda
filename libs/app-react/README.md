@@ -20,8 +20,6 @@ Each app must set `appEntryAtom` before routes render and inject its `Queries` i
   `routeTree.gen.ts` is generated.
   Settings → Sync and its link exist only when the host sets `syncQueriesAtom`.
 - Global sync: `hooks/use-global-sync.ts` — settings → Jotai atoms (theme, motion, defaults, lang).
-- UI preferences: `wire-ui-preferences.ts` — wires scheme/theme/motion into atoms and the document;
-  `ui-preferences-cache.ts` — persists them to `localStorage`.
 - Global hotkeys: `hooks/use-app-hotkeys.ts` — navigation/ui scopes only; feature scopes live in feature components.
 - Locales: `locales/` — Lingui `.po` catalogs for the shell.
 
@@ -30,6 +28,7 @@ Each app must set `appEntryAtom` before routes render and inject its `Queries` i
 - SRS domain logic — `@koloda/srs`
 - Assistant conversation store / run orchestration — `@koloda/assistant-react`
 - Global settings screens / setup pickers — `@koloda/settings-react`
+- UI preference wiring (scheme, themes, motion) and its `localStorage` cache — `@koloda/settings-react`
 - DB repos or schema — `@koloda/db-sqlite`, `koloda`
 - Provider HTTP — `@koloda/ai`
 - Layout primitives — `@koloda/ui`
