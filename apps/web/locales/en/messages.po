@@ -13,26 +13,114 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
-#: src/components/web-setup.tsx:65
-msgid "web.setup.browser"
-msgstr "For the best experience, use a recent Chromium-based browser (Chrome, Edge, Brave, Arc, or Opera)."
+#: src/components/web-setup.tsx:171
+msgid "color-scheme-picker.label"
+msgstr "Color scheme"
 
 #: src/components/web-setup.tsx:52
-msgid "web.setup.header"
-msgstr "Setting up a demo"
+msgid "scheme.dark"
+msgstr "Dark"
 
-#: src/components/web-setup.tsx:56
-msgid "web.setup.loading"
-msgstr "Initializing the database"
+#: src/components/web-setup.tsx:51
+msgid "scheme.light"
+msgstr "Light"
+
+#: src/components/web-setup.tsx:50
+msgid "scheme.system"
+msgstr "System"
+
+#: src/components/web-setup.tsx:164
+msgid "web.setup.browser"
+msgstr "Works best in Chrome, Edge, or another Chromium-based browser."
+
+#: src/components/web-setup.tsx:95
+msgid "web.setup.demo"
+msgstr "DEMO"
+
+#: src/components/web-setup.tsx:58
+msgid "web.setup.diff.ai.detail"
+msgstr "OpenRouter, Ollama, and LM Studio work here. OpenAI, DeepSeek, and the rest are desktop only."
+
+#: src/components/web-setup.tsx:58
+msgid "web.setup.diff.ai.term"
+msgstr "AI providers"
+
+#: src/components/web-setup.tsx:127
+msgid "web.setup.diff.close"
+msgstr "Close"
 
 #: src/components/web-setup.tsx:61
-msgid "web.setup.storage"
-msgstr "All data stays on this device, in IndexedDB browser storage."
+msgid "web.setup.diff.hotkeys.detail"
+msgstr "The browser keeps some shortcuts for itself, such as Ctrl W."
 
-#: src/components/web-setup.tsx:80
+#: src/components/web-setup.tsx:61
+msgid "web.setup.diff.hotkeys.term"
+msgstr "Hotkeys"
+
+#: src/components/web-setup.tsx:60
+msgid "web.setup.diff.images.detail"
+msgstr "Saving an image from a pasted link is desktop only."
+
+#: src/components/web-setup.tsx:60
+msgid "web.setup.diff.images.term"
+msgstr "Images"
+
+#: src/components/web-setup.tsx:118
+msgid "web.setup.diff.link"
+msgstr "See what’s different"
+
+#: src/components/web-setup.tsx:59
+msgid "web.setup.diff.optimization.detail"
+msgstr "Fitting an algorithm to your reviews is desktop only."
+
+#: src/components/web-setup.tsx:59
+msgid "web.setup.diff.optimization.term"
+msgstr "Optimization"
+
+#: src/components/web-setup.tsx:56
+msgid "web.setup.diff.storage.detail"
+msgstr "All the data stays only in this browser. Clearing site data deletes it."
+
+#: src/components/web-setup.tsx:56
+msgid "web.setup.diff.storage.term"
+msgstr "Storage"
+
+#: src/components/web-setup.tsx:57
+msgid "web.setup.diff.sync.detail"
+msgstr "Syncing between devices is desktop only."
+
+#: src/components/web-setup.tsx:57
+msgid "web.setup.diff.sync.term"
+msgstr "Sync"
+
+#: src/components/web-setup.tsx:126
+msgid "web.setup.diff.title"
+msgstr "What’s different from the desktop app"
+
+#: src/components/web-setup.tsx:117
+msgid "web.setup.diff.trigger"
+msgstr "Web version has some limitations compared to the desktop app."
+
+#: src/components/web-setup.tsx:161
+msgid "web.setup.loading"
+msgstr "Creating sample decks…"
+
+#: src/components/web-setup.tsx:104
+msgid "web.setup.storage"
+msgstr "All the data stays only in this browser, and clearing site data deletes it."
+
+#: src/components/web-setup.tsx:161
 msgid "web.setup.submit"
 msgstr "Get started"
 
-#: src/components/web-setup.tsx:71
+#: src/components/web-setup.tsx:98
+msgid "web.setup.title"
+msgstr "This is the web demo"
+
+#: src/components/web-setup.tsx:145
 msgid "web.setup.unsupported"
-msgstr "This demo needs IndexedDB and WebAssembly. Please switch to a recent Chromium-based browser."
+msgstr "It needs IndexedDB and WebAssembly. Open this page in a recent Chromium-based browser, such as Chrome or Edge."
+
+#: src/components/web-setup.tsx:98
+msgid "web.setup.unsupported.title"
+msgstr "This browser can’t run the demo"
