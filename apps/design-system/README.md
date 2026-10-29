@@ -40,7 +40,9 @@ Nothing in `apps/web`, `apps/electron`, or `apps/electron-react` imports it.
   Saving the algorithm, the template, the deck, or a card replaces it in memory until a reload.
   Every other query or mutation fails with its name when it runs.
 - Assistant samples: `src/app/assistant-samples.ts` — a plain chat, a card proposal with tool calls,
-  and one corrupt row, in the stored shape that assistant restore validates.
+  an in-progress run with a running tool call and a Thinking row, and one corrupt row, in the stored shape that
+  assistant restore validates.
+  `store.ts` seeds the in-progress run into the live store, since restore would close its running rows.
 - AI runtime: `src/app/ai-runtime.ts` — lists sample models; sending a prompt fails the run.
 - Theme: `src/app/theme.ts` — `activeThemeAtom`, the theme in effect: the scheme picks the side, and System follows
   the device live.

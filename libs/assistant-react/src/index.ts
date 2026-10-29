@@ -1,6 +1,8 @@
+export { coerceConversationState } from "./lib/persistence/conversation-persistence-schema";
 export { useConversationSaveHost } from "./lib/persistence/use-conversation-save-host";
 export { shutdownAssistantGracefully, useAssistantEngineHost } from "./lib/runs/use-assistant-engine-host";
 export { startParamlessConversationAtom } from "./lib/state/conversation-actions";
+export { upsertConversationAtom } from "./lib/state/conversation-store";
 export { AssistantChat } from "./lib/ui/assistant-chat";
 export { AssistantConversationsList, CONVERSATION_TITLE_FALLBACK } from "./lib/ui/assistant-conversations-list";
 export { AssistantNewConversationButton } from "./lib/ui/assistant-new-conversation-button";

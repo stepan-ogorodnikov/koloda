@@ -244,7 +244,105 @@ const cardsState = {
   lastReadRunId: "run-1",
 };
 
+const IN_PROGRESS_ID = "0199b2c0-0000-7000-8000-000000000104";
+const JAPANESE_DECK_ID = "0199a1b0-0000-7000-8000-000000000001";
+const IN_PROGRESS_PROMPT = "Make me cards for the N5 particles I haven't added yet.";
+
+// WHY: the running rows keep ticking from `startedAt`, so the sample is dated from when the app loads.
+const loadedAt = Date.now();
+const secondsBeforeLoad = (seconds: number) => new Date(loadedAt - seconds * 1000).toISOString();
+
+// WHY: the design system seeds this state into the live store (`store.ts`). Restore would close the running
+// call and thinking row and interrupt the run, so the in-progress state would never show.
+const inProgressState = {
+  schemaVersion: 1,
+  id: IN_PROGRESS_ID,
+  createdAt: secondsBeforeLoad(8),
+  updatedAt: secondsBeforeLoad(5),
+  messages: [userMessage("run-1", IN_PROGRESS_PROMPT, secondsBeforeLoad(8)), assistantMessage("run-1", "")],
+  runs: {
+    "run-1": {
+      id: "run-1",
+      status: "streaming",
+      cards: [],
+      cardStatuses: {},
+      templateFields: null,
+      startedAt: secondsBeforeLoad(8),
+      elapsedSeconds: null,
+      modelName: SAMPLE_AI_MODELS[0].name,
+      toolCalls: [
+        {
+          kind: "reasoning",
+          id: "run-1-reasoning-0",
+          text: "The user wants cards for N5 particles. Find the Japanese deck, then read its cards so I skip the particles it already has.",
+          status: "done",
+          startedAt: secondsBeforeLoad(8),
+          elapsedSeconds: 2,
+        },
+        {
+          id: "call-1",
+          name: "list_decks",
+          input: {},
+          status: "success",
+          output: {
+            decks: [
+              {
+                deckId: JAPANESE_DECK_ID,
+                title: "Japanese vocabulary N5",
+                cardCount: 61,
+                templateTitle: "Basic",
+                fieldTitles: ["Front", "Back"],
+              },
+              {
+                deckId: SPANISH_DECK_ID,
+                title: "Spanish irregular verbs",
+                cardCount: 17,
+                templateTitle: "Basic",
+                fieldTitles: ["Front", "Back"],
+              },
+            ],
+          },
+          startedAt: secondsBeforeLoad(6),
+          elapsedSeconds: 1,
+        },
+        {
+          id: "call-2",
+          name: "get_deck_cards",
+          input: { deckId: JAPANESE_DECK_ID },
+          status: "running",
+          startedAt: secondsBeforeLoad(5),
+          elapsedSeconds: null,
+        },
+        {
+          kind: "reasoning",
+          id: "run-1-reasoning-1",
+          text: "While the cards load, I'll plan the particles to cover: へ, と, で, から and まで.",
+          status: "running",
+          startedAt: secondsBeforeLoad(2),
+          elapsedSeconds: null,
+        },
+      ],
+    },
+  },
+  activeRunId: "run-1",
+  dismissedRunErrorId: null,
+  profileId: SAMPLE_AI_PROFILE.id,
+  modelId: SAMPLE_AI_MODELS[0].id,
+  modelParameters: {},
+  lastReadRunId: null,
+  promptInput: "",
+};
+
+export const IN_PROGRESS_CONVERSATION: Conversation = {
+  id: IN_PROGRESS_ID,
+  title: IN_PROGRESS_PROMPT,
+  state: inProgressState,
+  createdAt: new Date(inProgressState.createdAt),
+  updatedAt: new Date(inProgressState.updatedAt),
+};
+
 export const SAMPLE_CONVERSATIONS: Conversation[] = [
+  IN_PROGRESS_CONVERSATION,
   {
     id: CARDS_ID,
     title: PROPOSE_PROMPT,
@@ -262,7 +360,7 @@ export const SAMPLE_CONVERSATIONS: Conversation[] = [
   },
   {
     id: BROKEN_ID,
-    title: "When do I use wa and when ga?",
+    title: "Broken conversation",
     state: brokenState,
     createdAt: new Date("2026-10-26T12:00:00.000Z"),
     updatedAt: new Date("2026-10-26T12:05:00.000Z"),
