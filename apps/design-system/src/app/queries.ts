@@ -1,6 +1,7 @@
 import { DEFAULT_LEARNING_SETTINGS, toConversationListItem } from "@koloda/app";
 import { queryKeys } from "@koloda/core-react";
 import type { Queries } from "@koloda/core-react";
+import type { AllowedSettings, PatchSettingsData, SetSettingsData, SettingsName } from "@koloda/settings";
 import { calculateTodaysReviewTotals } from "@koloda/srs";
 import type { LessonFilters, LessonsResult } from "@koloda/srs";
 import { SAMPLE_ALGORITHM } from "./algorithm-samples";
@@ -51,9 +52,32 @@ let sampleTemplate = SAMPLE_TEMPLATE;
 let sampleDeck = SAMPLE_DECK;
 let sampleCards = SAMPLE_CARDS;
 
+// WHY: settings start unset, so the forms and `useHotkeysSettings` use the defaults. Learning starts with the sample
+// algorithm and template as its defaults, so their pickers show them. A save keeps its row in memory.
+const sampleSettings: Partial<Record<SettingsName, AllowedSettings<SettingsName>>> = {
+  learning: {
+    id: 1,
+    name: "learning",
+    content: {
+      ...DEFAULT_LEARNING_SETTINGS,
+      defaults: { algorithm: SAMPLE_ALGORITHM.id, template: SAMPLE_TEMPLATE.id },
+    },
+    createdAt: new Date(),
+    updatedAt: null,
+  },
+};
+
+function saveSettings(name: SettingsName, content: AllowedSettings<SettingsName>["content"]) {
+  const row = { id: 1, name, content, createdAt: new Date(), updatedAt: new Date() };
+  sampleSettings[name] = row;
+  return row;
+}
+
 const stubs: Pick<
   Queries,
   | "getSettingsQuery"
+  | "setSettingsMutation"
+  | "patchSettingsMutation"
   | "getTodayReviewTotalsQuery"
   | "getLessonsQuery"
   | "getConversationsQuery"
@@ -73,9 +97,20 @@ const stubs: Pick<
   | "updateCardMutation"
   | "getReviewsQuery"
 > = {
-  getSettingsQuery: (name) => ({
+  // WHY: rows are kept per name, so each stub asserts the requested `T`, as the desktop adapter does.
+  getSettingsQuery: <T extends SettingsName>(name: T) => ({
     queryKey: queryKeys.settings.detail(name),
-    queryFn: () => null,
+    queryFn: () => (sampleSettings[name] ?? null) as AllowedSettings<T> | null,
+  }),
+  setSettingsMutation: <T extends SettingsName>() => ({
+    mutationFn: async ({ name, content }: SetSettingsData<T>) => saveSettings(name, content) as AllowedSettings<T>,
+  }),
+  patchSettingsMutation: <T extends SettingsName>() => ({
+    mutationFn: async ({ name, content }: PatchSettingsData<T>) => {
+      // WHY: the stub does not parse settings, so the merged partial is asserted to the row's content type.
+      const merged = { ...sampleSettings[name]?.content, ...content } as AllowedSettings<SettingsName>["content"];
+      return saveSettings(name, merged) as AllowedSettings<T>;
+    },
   }),
   getTodayReviewTotalsQuery: () => ({
     queryKey: queryKeys.lessons.todayReviewTotals(),
@@ -166,9 +201,9 @@ const stubs: Pick<
   }),
 };
 
-// WHY: the app has no database. A null settings row makes `useHotkeysSettings` fall back to the defaults;
-// lessons, today's totals, conversations, AI profiles, algorithms, templates, decks, cards, and reviews
-// are sample data.
+// WHY: the app has no database. Settings start null, except learning; `useHotkeysSettings` falls back to the defaults,
+// and saves keep them in memory. Lessons, today's totals, conversations, AI profiles, algorithms, templates, decks,
+// cards, and reviews are sample data.
 // Every other query or mutation rejects with its name when it runs, not when it is built:
 // `useLessonSession` builds a disabled lesson-data query on every render.
 // Only `*Query` and `*Mutation` keys become methods, because jotai probes a stored value for `then`.

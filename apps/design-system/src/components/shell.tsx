@@ -22,7 +22,7 @@ const appMenu: NavItemProps[] = [
 ];
 
 const secondaryMenu: NavItemProps[] = [
-  { to: "/settings", label: { id: "Settings" }, icon: SettingsIcon, hasPage: false },
+  { to: "/settings", label: { id: "Settings" }, icon: SettingsIcon, hasPage: true },
 ];
 
 // WHY: nothing sits behind a link without a page. Preventing the click in the capture phase stops `Link`

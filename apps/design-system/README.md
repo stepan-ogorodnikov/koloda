@@ -13,8 +13,8 @@ Nothing in `apps/web`, `apps/electron`, or `apps/electron-react` imports it.
 
 - `nx run @koloda/design-system:serve` — dev server at `localhost:3100`
 - Pages: `/` is the dashboard, `/decks` a deck with its cards, `/algorithms` and `/templates` the editors,
-  and `/ai` the assistant.
-  The Settings link has no page yet.
+  `/ai` the assistant, and `/settings` with its `/settings/interface`, `/settings/learning`, and
+  `/settings/hotkeys` pages.
 - The titlebar select picks the theme from `LIGHT_THEMES` and `DARK_THEMES` in `@koloda/app`.
   The choice is kept in local storage; a missing or unknown id falls back to the default light theme.
 
@@ -24,7 +24,8 @@ Nothing in `apps/web`, `apps/electron`, or `apps/electron-react` imports it.
 - Providers: `src/app/providers.tsx` — jotai, TanStack Query, Lingui and React Aria i18n, and the router.
 - Router: `src/app/router.tsx` — code-based TanStack routes over browser history, one per page.
 - Data: `src/app/queries.ts` — a stub `Queries`.
-  Settings resolve to `null`, so hotkeys use their defaults.
+  Settings start `null`, so hotkeys use their defaults, except learning, whose defaults are the sample algorithm and
+  template; saving a settings row keeps it in memory.
   Lessons and today's review totals are sample data; lessons are shaped like `getLessons` in `@koloda/db-sqlite`.
   Conversations and the AI profile come from `src/app/assistant-samples.ts`.
   Conversation saves succeed without storing anything.
@@ -45,6 +46,11 @@ Nothing in `apps/web`, `apps/electron`, or `apps/electron-react` imports it.
 - Decks: `src/pages/decks-page.tsx` and `deck-page.tsx` — the deck list and the real cards and details tabs.
 - Algorithms: `src/pages/algorithms-page.tsx` and `algorithm-page.tsx` — the algorithm list and the real editor.
 - Templates: `src/pages/templates-page.tsx` and `template-page.tsx` — the template list and the real editor.
+- Settings: `src/pages/settings-page.tsx` — the settings sidebar and outlet;
+  `settings-interface-page.tsx`, `settings-learning-page.tsx`, and `settings-hotkeys-page.tsx` — the real
+  `SettingsInterface`, `SettingsLearning`, and `SettingsHotkeys`.
+  The scheme, light and dark theme, and language rows save to product atoms that nothing here applies;
+  the titlebar select stays the only theme control.
 - Lesson modal: `src/components/lesson-modal.tsx` — replaces the real lesson modal in `Lessons`.
   A table count opens it; it shows the progress header with every dot type and icon.
   Its grades footer copies the srs-react markup, which is not exported, with sample intervals.

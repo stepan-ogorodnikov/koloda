@@ -3,11 +3,12 @@ import { messages as aiReactMessages } from "../../../../libs/ai-react/locales/e
 import { messages as aiMessages } from "../../../../libs/ai/locales/en/messages.po";
 import { messages as appMessages } from "../../../../libs/app/locales/en/messages.po";
 import { messages as assistantReactMessages } from "../../../../libs/assistant-react/locales/en/messages.po";
+import { messages as settingsReactMessages } from "../../../../libs/settings-react/locales/en/messages.po";
 import { messages as srsReactMessages } from "../../../../libs/srs-react/locales/en/messages.po";
 import { messages as srsMessages } from "../../../../libs/srs/locales/en/messages.po";
 import { messages as uiMessages } from "../../../../libs/ui/locales/en/messages.po";
 
-// WHY: the components on screen render strings from these catalogs: `@koloda/ui`, the srs and assistant
+// WHY: the components on screen render strings from these catalogs: `@koloda/ui`, the srs, assistant, and settings
 // feature libs, and the domain labels and errors they use. A missing one renders message ids.
 export function activateEnglish() {
   i18n.load("en", {
@@ -17,6 +18,7 @@ export function activateEnglish() {
     ...aiMessages,
     ...aiReactMessages,
     ...assistantReactMessages,
+    ...settingsReactMessages,
     ...uiMessages,
   });
   i18n.activate("en");
