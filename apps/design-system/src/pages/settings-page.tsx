@@ -1,13 +1,16 @@
 import { Layout, layoutSidebarItemLink, Link, useMotionSetting, useRouteFocus } from "@koloda/ui";
+import { msg } from "@lingui/core/macro";
+import { useLingui } from "@lingui/react";
 import { Outlet } from "@tanstack/react-router";
 
 const settingsLinks = [
-  { to: "/settings/interface", label: "Interface" },
-  { to: "/settings/learning", label: "Learning" },
-  { to: "/settings/hotkeys", label: "Hotkeys" },
+  { to: "/settings/interface", label: msg`settings.interface` },
+  { to: "/settings/learning", label: msg`settings.learning` },
+  { to: "/settings/hotkeys", label: msg`settings.hotkeys` },
 ] as const;
 
 export function SettingsPage() {
+  const { _ } = useLingui();
   const ref = useRouteFocus();
   const isMotionOn = useMotionSetting();
 
@@ -15,14 +18,14 @@ export function SettingsPage() {
     <>
       <Layout.Sidebar>
         <Layout.Header variants={{ type: "sidebar" }}>
-          <Layout.H1>Settings</Layout.H1>
+          <Layout.H1>{_(msg`settings.title`)}</Layout.H1>
         </Layout.Header>
         <Layout.Container ref={ref} tabIndex={-1}>
           <div className="flex flex-col">
             {settingsLinks.map(({ to, label }) => (
               <Layout.SidebarItem key={to}>
                 <Link className={layoutSidebarItemLink} to={to} viewTransition={isMotionOn}>
-                  <Layout.SidebarItemLinkContent>{label}</Layout.SidebarItemLinkContent>
+                  <Layout.SidebarItemLinkContent>{_(label)}</Layout.SidebarItemLinkContent>
                 </Link>
               </Layout.SidebarItem>
             ))}

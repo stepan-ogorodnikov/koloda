@@ -1,11 +1,14 @@
 import { queriesAtom } from "@koloda/core-react";
 import { AddTemplate } from "@koloda/srs-react";
 import { Layout, layoutSidebarItemLink, Link, QueryState, useMotionSetting, useRouteFocus } from "@koloda/ui";
+import { msg } from "@lingui/core/macro";
+import { useLingui } from "@lingui/react";
 import { useQuery } from "@tanstack/react-query";
 import { Outlet } from "@tanstack/react-router";
 import { useAtomValue } from "jotai";
 
 export function TemplatesPage() {
+  const { _ } = useLingui();
   const ref = useRouteFocus();
   const { getTemplatesQuery } = useAtomValue(queriesAtom);
   const isMotionOn = useMotionSetting();
@@ -15,7 +18,7 @@ export function TemplatesPage() {
     <>
       <Layout.Sidebar>
         <Layout.Header variants={{ type: "sidebar" }}>
-          <Layout.H1>Templates</Layout.H1>
+          <Layout.H1>{_(msg`templates.title`)}</Layout.H1>
           <AddTemplate />
         </Layout.Header>
         <Layout.Container ref={ref} tabIndex={-1}>

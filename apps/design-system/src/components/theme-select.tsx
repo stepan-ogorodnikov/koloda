@@ -1,7 +1,9 @@
 import { DARK_THEMES, LIGHT_THEMES } from "@koloda/app";
+import { darkThemeAtom, lightThemeAtom, queriesAtom, schemeAtom } from "@koloda/core-react";
 import { Select } from "@koloda/ui";
-import { useAtom } from "jotai";
-import { themeAtom } from "../app/theme";
+import { useMutation } from "@tanstack/react-query";
+import { useAtomValue, useSetAtom } from "jotai";
+import { activeThemeAtom } from "../app/theme";
 
 const sections = [
   { id: "light", title: "Light", themes: LIGHT_THEMES },
@@ -9,7 +11,12 @@ const sections = [
 ];
 
 export function ThemeSelect() {
-  const [theme, setTheme] = useAtom(themeAtom);
+  const theme = useAtomValue(activeThemeAtom);
+  const setScheme = useSetAtom(schemeAtom);
+  const setLightTheme = useSetAtom(lightThemeAtom);
+  const setDarkTheme = useSetAtom(darkThemeAtom);
+  const { patchSettingsMutation } = useAtomValue(queriesAtom);
+  const { mutate } = useMutation(patchSettingsMutation());
 
   return (
     <Select
@@ -18,7 +25,15 @@ export function ThemeSelect() {
       popoverVariants={{ class: "min-w-48 w-[var(--trigger-width)]" }}
       value={theme}
       onChange={(key) => {
-        if (key) setTheme(key.toString());
+        if (!key) return;
+        const id = key.toString();
+        const isDark = id in DARK_THEMES;
+        // WHY: picking a theme also picks its side, so the app shows the theme that was picked.
+        const scheme = isDark ? "dark" : "light";
+        setScheme(scheme);
+        if (isDark) setDarkTheme(id);
+        else setLightTheme(id);
+        mutate({ name: "interface", content: isDark ? { scheme, darkTheme: id } : { scheme, lightTheme: id } });
       }}
     >
       {sections.map(({ id, title, themes }) => (

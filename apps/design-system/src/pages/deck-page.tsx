@@ -1,6 +1,8 @@
 import { queriesAtom } from "@koloda/core-react";
 import { DeckCards, DeckDetails } from "@koloda/srs-react";
 import { Layout, NotFound, QueryState, Tabs, useLayoutHeaderScrollShadow, useRouteFocus } from "@koloda/ui";
+import { msg } from "@lingui/core/macro";
+import { useLingui } from "@lingui/react";
 import { useQuery } from "@tanstack/react-query";
 import { getRouteApi } from "@tanstack/react-router";
 import { useAtomValue } from "jotai";
@@ -8,11 +10,12 @@ import { useAtomValue } from "jotai";
 const deckRoute = getRouteApi("/decks/$deckId");
 
 const DECK_TABS = [
-  { id: "cards", label: "Cards" },
-  { id: "details", label: "Details" },
+  { id: "cards", label: msg`deck.tabs.cards` },
+  { id: "details", label: msg`deck.tabs.details` },
 ];
 
 export function DeckPage() {
+  const { _ } = useLingui();
   const { deckId } = deckRoute.useParams();
   const ref = useRouteFocus(deckId);
   useLayoutHeaderScrollShadow(ref);
@@ -26,10 +29,10 @@ export function DeckPage() {
       <Layout.Header>
         <Layout.H1 variants={{ isGrow: false }}>{query.data?.title}</Layout.H1>
         {query.data && (
-          <Tabs.List aria-label="Deck tabs">
+          <Tabs.List aria-label={_(msg`deck.tabs.label`)}>
             {DECK_TABS.map(({ id, label }) => (
               <Tabs.Tab id={id} key={id}>
-                {label}
+                {_(label)}
               </Tabs.Tab>
             ))}
           </Tabs.List>

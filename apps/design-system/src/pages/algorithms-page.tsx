@@ -1,11 +1,14 @@
 import { queriesAtom } from "@koloda/core-react";
 import { AddAlgorithm } from "@koloda/srs-react";
 import { Layout, layoutSidebarItemLink, Link, QueryState, useMotionSetting, useRouteFocus } from "@koloda/ui";
+import { msg } from "@lingui/core/macro";
+import { useLingui } from "@lingui/react";
 import { useQuery } from "@tanstack/react-query";
 import { Outlet } from "@tanstack/react-router";
 import { useAtomValue } from "jotai";
 
 export function AlgorithmsPage() {
+  const { _ } = useLingui();
   const ref = useRouteFocus();
   const { getAlgorithmsQuery } = useAtomValue(queriesAtom);
   const isMotionOn = useMotionSetting();
@@ -15,7 +18,7 @@ export function AlgorithmsPage() {
     <>
       <Layout.Sidebar>
         <Layout.Header variants={{ type: "sidebar" }}>
-          <Layout.H1>Algorithms</Layout.H1>
+          <Layout.H1>{_(msg`algorithms.title`)}</Layout.H1>
           <AddAlgorithm />
         </Layout.Header>
         <Layout.Container ref={ref} tabIndex={-1}>

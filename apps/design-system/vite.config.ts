@@ -5,6 +5,7 @@ import react from "@vitejs/plugin-react-swc";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vite";
+import { themeBootPlugin } from "../../tools/vite-plugin-theme-boot.ts";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -31,6 +32,7 @@ export default defineConfig(() => ({
     }),
     tailwindcss(),
     lingui(),
+    themeBootPlugin(),
   ],
   build: {
     outDir: "../../dist/apps/design-system",

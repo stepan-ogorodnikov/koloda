@@ -40,34 +40,37 @@
   ],
   "references": [
     {
-      "path": "../../libs/assistant-react/tsconfig.lib.json"
+      "path": "../../libs/settings/tsconfig.lib.json"
     },
     {
-      "path": "../../libs/ai-react/tsconfig.lib.json"
+      "path": "../../libs/core-react/tsconfig.lib.json"
+    },
+    {
+      "path": "../../libs/ui/tsconfig.lib.json"
     },
     {
       "path": "../../libs/srs-react/tsconfig.lib.json"
     },
     {
-      "path": "../../libs/ui/tsconfig.lib.json"
+      "path": "../../libs/settings-react/tsconfig.lib.json"
+    },
+    {
+      "path": "../../libs/assistant-react/tsconfig.lib.json"
+    },
+    {
+      "path": "../../libs/app-react/tsconfig.lib.json"
+    },
+    {
+      "path": "../../libs/ai-react/tsconfig.lib.json"
+    },
+    {
+      "path": "../../libs/app/tsconfig.lib.json"
     },
     {
       "path": "../../libs/srs/tsconfig.lib.json"
     },
     {
       "path": "../../libs/ai/tsconfig.lib.json"
-    },
-    {
-      "path": "../../libs/core-react/tsconfig.lib.json"
-    },
-    {
-      "path": "../../libs/app/tsconfig.lib.json"
-    },
-    {
-      "path": "../../libs/settings/tsconfig.lib.json"
-    },
-    {
-      "path": "../../libs/settings-react/tsconfig.lib.json"
     }
   ]
 }

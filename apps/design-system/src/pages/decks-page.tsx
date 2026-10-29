@@ -1,11 +1,14 @@
 import { queriesAtom } from "@koloda/core-react";
 import { AddDeck } from "@koloda/srs-react";
 import { Layout, layoutSidebarItemLink, Link, QueryState, useMotionSetting, useRouteFocus } from "@koloda/ui";
+import { msg } from "@lingui/core/macro";
+import { useLingui } from "@lingui/react";
 import { useQuery } from "@tanstack/react-query";
 import { Outlet } from "@tanstack/react-router";
 import { useAtomValue } from "jotai";
 
 export function DecksPage() {
+  const { _ } = useLingui();
   const ref = useRouteFocus();
   const { getDecksQuery } = useAtomValue(queriesAtom);
   const isMotionOn = useMotionSetting();
@@ -15,7 +18,7 @@ export function DecksPage() {
     <>
       <Layout.Sidebar>
         <Layout.Header variants={{ type: "sidebar" }}>
-          <Layout.H1>Decks</Layout.H1>
+          <Layout.H1>{_(msg`decks.title`)}</Layout.H1>
           <AddDeck />
         </Layout.Header>
         <Layout.Container ref={ref} tabIndex={-1}>

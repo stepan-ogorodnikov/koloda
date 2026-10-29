@@ -2,6 +2,7 @@ import { useAssistantEngineHost, useConversationSaveHost } from "@koloda/assista
 import { AiIcon, AlgorithmsIcon, DecksIcon, HomeIcon, Layout, SettingsIcon, TemplatesIcon } from "@koloda/ui";
 import type { IconComponent } from "@koloda/ui";
 import type { MessageDescriptor } from "@lingui/core";
+import { msg } from "@lingui/core/macro";
 import { Outlet } from "@tanstack/react-router";
 import type { MouseEvent } from "react";
 import { Titlebar } from "./titlebar";
@@ -14,15 +15,15 @@ type NavItemProps = {
 };
 
 const appMenu: NavItemProps[] = [
-  { to: "/", label: { id: "Home" }, icon: HomeIcon, hasPage: true },
-  { to: "/decks", label: { id: "Decks" }, icon: DecksIcon, hasPage: true },
-  { to: "/algorithms", label: { id: "Algorithms" }, icon: AlgorithmsIcon, hasPage: true },
-  { to: "/templates", label: { id: "Templates" }, icon: TemplatesIcon, hasPage: true },
-  { to: "/ai", label: { id: "AI" }, icon: AiIcon, hasPage: true },
+  { to: "/", label: msg`nav.home`, icon: HomeIcon, hasPage: true },
+  { to: "/decks", label: msg`nav.decks`, icon: DecksIcon, hasPage: true },
+  { to: "/algorithms", label: msg`nav.algorithms`, icon: AlgorithmsIcon, hasPage: true },
+  { to: "/templates", label: msg`nav.templates`, icon: TemplatesIcon, hasPage: true },
+  { to: "/ai", label: msg`nav.ai`, icon: AiIcon, hasPage: true },
 ];
 
 const secondaryMenu: NavItemProps[] = [
-  { to: "/settings", label: { id: "Settings" }, icon: SettingsIcon, hasPage: true },
+  { to: "/settings", label: msg`nav.settings`, icon: SettingsIcon, hasPage: true },
 ];
 
 // WHY: nothing sits behind a link without a page. Preventing the click in the capture phase stops `Link`
