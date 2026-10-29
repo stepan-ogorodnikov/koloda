@@ -78,10 +78,10 @@ Prefer these over hand-rolled equivalents. Defined in `libs/ui/src/lib/styles/ut
   `drag-focus-ring` (ring while dragging), `error-ring` (error-colored ring), `no-focus-ring` (suppress).
 - `animate-colors` — the shared color transition (`transition-colors duration-250 ease-in-out`).
   Put it in a recipe's `base` so hover/press shifts stay consistent; don't write ad-hoc transitions.
-- `animate-shimmer` — mask sweep for mixed icon+text rows.
-  Use `animate-shimmer-text--fg-level-4/fg-level-1` for text-only (pending labels).
-  Use `animate-shimmer-icon` on a second copy of an icon stacked on a solid base when the label is `TextSwap`;
-  do not put `animate-shimmer` on that label's ancestor.
+- `animate-shimmer` — no-repeat mask sweep. It slides off the content it covers for most of each cycle,
+  so do not put it on a row, an icon, or a label's ancestor.
+  Use `animate-shimmer-text--fg-level-4/fg-level-1` on a running label (pending labels, and the name of a running row).
+  Use `animate-shimmer-icon` on a second copy of an icon stacked on a solid base for a running icon.
 - `numbers-text` — shared "large number" label style.
 
 Reference: `libs/ui/src/lib/primitives/form/button.tsx` (tokens + `focus-ring` + `animate-colors`),

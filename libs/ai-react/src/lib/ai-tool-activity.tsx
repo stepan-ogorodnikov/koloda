@@ -26,12 +26,11 @@ const toolActivityHeadline = tv({
   base: "flex flex-row items-center gap-2",
   variants: {
     isError: { true: "fg-error" },
-    isRunning: { true: "animate-shimmer" },
   },
-  defaultVariants: { isError: false, isRunning: false },
+  defaultVariants: { isError: false },
 });
 
-const thinkingLabel = tv({
+const activityLabel = tv({
   base: "font-medium",
   variants: {
     isRunning: { true: "animate-shimmer-text--fg-level-4/fg-level-1" },
@@ -39,7 +38,7 @@ const thinkingLabel = tv({
   defaultVariants: { isRunning: false },
 });
 
-const reasoningIcon = tv({
+const activityIcon = tv({
   base: "col-start-1 row-start-1 size-6 min-w-6",
   variants: {
     isRunning: { true: "fg-level-4" },
@@ -47,7 +46,7 @@ const reasoningIcon = tv({
   defaultVariants: { isRunning: false },
 });
 
-const reasoningIconHighlightClass = "col-start-1 row-start-1 size-6 min-w-6 fg-level-1 animate-shimmer-icon";
+const activityIconHighlightClass = "col-start-1 row-start-1 size-6 min-w-6 fg-level-1 animate-shimmer-icon";
 
 const toolActivityTriggerClass = [
   "group/tool justify-start px-1 -mx-1 whitespace-normal font-normal animate-colors",
@@ -118,22 +117,22 @@ export function AIToolActivity({ calls, renderText }: AIToolActivityProps) {
 
 type ReasoningActivityRowProps = { item: AIReasoningRecord; renderText?: (text: string) => ReactNode };
 
-type ReasoningStatusIconProps = { isRunning: boolean; runningLabel: string };
+type ActivityStatusIconProps = { icon: IconComponent; isRunning: boolean; runningLabel: string };
 
 // WHY: the label sweep is background-clip text, which never paints the SVG.
-// `animate-shimmer` on the headline (or on this 24px box) is a no-repeat mask,
-// so it clips TextSwap's blur cross-fade and also slides fully off the glyph.
-// The highlight is a second icon; the base stroke stays put under the band.
-function ReasoningStatusIcon({ isRunning, runningLabel }: ReasoningStatusIconProps) {
+// `animate-shimmer` on the headline is a no-repeat mask that slides off the icon
+// and the label for most of each cycle, so running rows shimmer the icon and label
+// instead. The highlight is a second icon; the base stroke stays put under the band.
+function ActivityStatusIcon({ icon: Icon, isRunning, runningLabel }: ActivityStatusIconProps) {
   return (
     <span className="inline-grid size-6 min-w-6">
-      <BrainIcon
-        className={reasoningIcon({ isRunning })}
+      <Icon
+        className={activityIcon({ isRunning })}
         strokeWidth={1.75}
         aria-hidden={isRunning ? undefined : true}
         aria-label={isRunning ? runningLabel : undefined}
       />
-      {isRunning ? <BrainIcon className={reasoningIconHighlightClass} strokeWidth={1.75} aria-hidden="true" /> : null}
+      {isRunning ? <Icon className={activityIconHighlightClass} strokeWidth={1.75} aria-hidden="true" /> : null}
     </span>
   );
 }
@@ -154,9 +153,13 @@ function ReasoningActivityRow({ item, renderText }: ReasoningActivityRowProps) {
         onPress={() => setIsOpen(!isOpen)}
       >
         <span className={toolActivityHeadline()}>
-          <ReasoningStatusIcon isRunning={isRunning} runningLabel={_(msg`ai.chat.tool-activity.running`)} />
+          <ActivityStatusIcon
+            icon={BrainIcon}
+            isRunning={isRunning}
+            runningLabel={_(msg`ai.chat.tool-activity.running`)}
+          />
           <span className="flex flex-row items-center gap-1">
-            <TextSwap value={displayName} className={thinkingLabel({ isRunning })} />
+            <TextSwap value={displayName} className={activityLabel({ isRunning })} />
             <ActivityElapsed isRunning={isRunning} startedAt={item.startedAt} elapsedSeconds={item.elapsedSeconds} />
           </span>
           <FoldChevron />
@@ -196,10 +199,10 @@ function ToolActivityRow({ call }: ToolActivityRowProps) {
         aria-expanded={isOpen}
         onPress={() => setIsOpen(!isOpen)}
       >
-        <span className={toolActivityHeadline({ isRunning: call.status === "running" })}>
+        <span className={toolActivityHeadline()}>
           <ToolCallStatusIcon name={call.name} status={call.status} />
           <span className="flex flex-row items-center gap-1">
-            <span className="font-medium">{displayName}</span>
+            <span className={activityLabel({ isRunning: call.status === "running" })}>{displayName}</span>
             {summaries.map((summary) => (
               <Fragment key={summary}>
                 <ActivityDot />
@@ -294,14 +297,11 @@ function ToolCallStatusIcon({ name, status }: ToolCallStatusIconProps) {
     );
   }
 
-  const Icon = toolCallIcon(name);
-
   return (
-    <Icon
-      className="size-6 min-w-6"
-      strokeWidth={1.75}
-      aria-hidden={status === "running" ? undefined : true}
-      aria-label={status === "running" ? _(msg`ai.chat.tool-activity.running`) : undefined}
+    <ActivityStatusIcon
+      icon={toolCallIcon(name)}
+      isRunning={status === "running"}
+      runningLabel={_(msg`ai.chat.tool-activity.running`)}
     />
   );
 }
