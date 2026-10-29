@@ -25,7 +25,7 @@ Do not "fix" it by splitting widgets or injecting binders unless a new decision 
 - Core helpers: `core/focus.ts`, `core/hotkeys.ts` — focus and keyboard matching.
 - Icons: `icons/` — `cards-icon`, `check-icon`, `circular-progress`.
 - Types: `types.ts` — Tailwind Variants prop helpers (`TWVProp`, `TWVProps`).
-- App chrome widgets: `ui/` — titlebar, hotkey recorder, query loading/error, delete dialog, not-found.
+- App chrome widgets and brand art: `ui/` — titlebar, hotkey recorder, query loading/error, delete dialog, not-found, Koloda logo, setup background.
 - Hooks: `hooks/use-motion-settings`, `use-route-focus`, `use-scrolled-past`.
 
 ### Does NOT own (prevent scope creep)

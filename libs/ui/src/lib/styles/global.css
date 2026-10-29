@@ -116,6 +116,10 @@
   /* chat */
   --color-bg-chat-message: var(--bg-level-2);
   --color-border-chat-message: var(--border-chat-message);
+  /* logo and setup background */
+  --color-logo-accent: var(--logo-accent);
+  --color-pile-shadow: var(--pile-shadow);
+  --shadow-setup-card: var(--shadow-setup-card);
 }
 
 @custom-variant dark (&:where(.dark, .dark *));

@@ -89,4 +89,11 @@
   --fg-nav-active: var(--fg-level-1);
   /* chat */
   --border-chat-message: color-mix(in oklab, var(--fg-level-1) 5%, var(--bg-level-2));
+  /* logo and setup background */
+  --logo-accent: var(--color-red);
+  --pile-shadow: color-mix(in oklab, var(--fg-level-1) 1%, transparent);
+  --shadow-setup-card:
+    0 1px 2px color-mix(in oklab, var(--fg-level-1) 8%, transparent),
+    0 6px 12px -4px color-mix(in oklab, var(--fg-level-1) 8%, transparent),
+    0 28px 56px -12px color-mix(in oklab, var(--fg-level-1) 22%, transparent);
 }
