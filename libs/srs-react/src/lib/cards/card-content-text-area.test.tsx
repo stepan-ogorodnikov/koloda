@@ -21,7 +21,9 @@ function useTextForm() {
 
 type FormApi = ReturnType<typeof useTextForm>;
 
-function MarkdownField({ onForm }: { onForm?: (form: FormApi, hide: () => void) => void }) {
+type MarkdownFieldProps = { onForm?: (form: FormApi, hide: () => void) => void };
+
+function MarkdownField({ onForm }: MarkdownFieldProps) {
   const form = useTextForm();
   const [isShown, setIsShown] = useState(true);
   onForm?.(form, () => setIsShown(false));

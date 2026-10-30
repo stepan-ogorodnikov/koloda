@@ -89,6 +89,7 @@ export function createHopFetch(request: (options: ClientRequestConstructorOption
           headers.set(name, Array.isArray(value) ? value.join(", ") : value);
         }
         // WHY: piping through the signal errors a pending body read on timeout, whatever the aborted message does.
+        // WORKAROUND: Electron types `IncomingMessage` as a bare stream interface; it is a Node `Readable`.
         const body = NULL_BODY_STATUSES.includes(message.statusCode)
           ? null
           : (Readable.toWeb(message as unknown as Readable) as ReadableStream<Uint8Array>).pipeThrough(

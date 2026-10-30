@@ -13,8 +13,10 @@ const ONE_PIXEL_PNG = Buffer.from(
 const FORMAT_ERROR = "Only PNG, JPEG, GIF, WebP, and AVIF images are supported";
 const IMAGE_REF = /^!\[cat\]\(attachment:[0-9a-f]{64}\)$/;
 
+type ImageServerFixtures = { imageServerUrl: string };
+
 // Serves the PNG at `/cat.png`, a redirect to it at `/moved`, and 404 for anything else.
-const test = base.extend<{ imageServerUrl: string }>({
+const test = base.extend<ImageServerFixtures>({
   // WHY: Playwright's fixture signature is `(parentFixtures, provide) => …`, so root fixtures must destructure an empty object.
   // oxlint-disable-next-line no-empty-pattern
   imageServerUrl: async ({}, provide) => {
