@@ -13,7 +13,8 @@ Each app must set `appEntryAtom` before routes render and inject its `Queries` i
 
 ## Architectural Map
 
-- Shell: `components/app.tsx` — primary/secondary nav; mounts `useGlobalSync` and `useAppHotkeys`.
+- Shell: `components/app.tsx` — primary/secondary nav; mounts `useGlobalSync`, `useAppHotkeys`,
+  `useAttachmentSweep` (the only trigger of image cleanup), `useConversationSaveHost`, and `useAssistantEngineHost`.
 - Providers: `app-providers.tsx` — root provider composition (Jotai, TanStack Query, Lingui, router)
   and i18n activation.
 - Routes: `routes/` — file-based TanStack routes (dashboard, decks, algorithms, templates, AI, settings);

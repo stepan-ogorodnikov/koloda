@@ -472,7 +472,7 @@ Line numbers are at `2e2b2b27`; when an earlier item moved them, find the code b
   Commit: Drop two unused srs exports
   Depends on: none
 
-- [ ] 11. List every hook App mounts in the app-react README
+- [x] 11. List every hook App mounts in the app-react README
   Goal (M11, the README part; item 4 fixes the test WHY): `libs/app-react/README.md:16` also names
   `useAttachmentSweep` (image cleanup), `useConversationSaveHost`, and `useAssistantEngineHost`.
   Constraints: the README line.
