@@ -123,10 +123,11 @@ test("drives a lesson by keyboard: Space submits, a grade key grades, and Close 
   const continueButton = page.getByRole("button", { name: "Continue", exact: true });
   const goodButton = page.getByRole("button", { name: "Good" });
 
-  // Leave the type field, so single-key hotkeys reach the lesson
+  // WHY: the lesson is a modal, which refocuses a blurred field on the next frame. Focusing the dialog keeps
+  // focus off the field, so single-key hotkeys reach the lesson.
   await expect(backTextbox).toBeVisible({ timeout: 10_000 });
   await expect(lessonDialog.getByText("Keyboard Q1")).toBeVisible();
-  await backTextbox.blur();
+  await lessonDialog.focus();
 
   // A grade key before submit leaves the card unanswered
   await page.keyboard.press("3");
@@ -141,7 +142,7 @@ test("drives a lesson by keyboard: Space submits, a grade key grades, and Close 
 
   // A grade key behind the close confirmation leaves the card as it was
   await expect(backTextbox).toBeVisible();
-  await backTextbox.blur();
+  await lessonDialog.focus();
   await page.keyboard.press("Space");
   await expect(goodButton).toBeVisible();
   await page.keyboard.press("Escape");
