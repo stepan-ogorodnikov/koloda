@@ -481,7 +481,7 @@ Line numbers are at `2e2b2b27`; when an earlier item moved them, find the code b
   Commit: List every hook App mounts in the app-react README
   Depends on: none
 
-- [ ] 12. Tidy MEDIA.md and say stored images keep their metadata
+- [x] 12. Tidy MEDIA.md and say stored images keep their metadata
   Goal (M12, question 4):
   - Drop §Relationships' "Text fields do not offer image insertion" (line 29); §Inserting Images line 33 is its home.
   - Scope: how images reach the user's other devices, and a missing image coming back, are in SYNC.md.

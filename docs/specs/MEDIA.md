@@ -5,6 +5,7 @@
 Covers images in card content: inserting files, embedding links, accepted files, where images show, and cleanup.
 What rendered markdown may contain in general is in CARDS.md (§Rendered Markdown).
 Card content, adding, and editing cards are in CARDS.md.
+How images reach the user's other devices, including when a missing image shows up, is in SYNC.md.
 Audio and video are not supported.
 
 ## What it is
@@ -26,7 +27,6 @@ The field's text holds a short reference to that copy, written as a markdown ima
 - Identical files are stored once; inserting the same file again reuses the stored image.
 - A stored image never changes after it is stored.
 - An image reference works in any card's markdown field, including one it was copied into.
-- Text fields do not offer image insertion.
 
 ## Inserting Images
 
@@ -88,6 +88,7 @@ The error says whether the format is not accepted or the file is too large.
 When several files are inserted together, the accepted ones are inserted and an error shows for the rest.
 
 The app stores the original file unchanged; it does not resize or recompress it.
+The stored copy keeps the file's metadata, such as where and when a photo was taken.
 
 ## Where Images Show
 
