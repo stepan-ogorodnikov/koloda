@@ -27,7 +27,7 @@ export class WireError extends Error {
 /**
  * Coerces a domain value into a JSON-safe shape suitable for IPC.
  *
- * - `Date` -> epoch ms (number)
+ * - `Date` -> epoch ms (number), or an ISO string inside conversation `state`
  * - `BigInt` -> number (throws if outside the safe integer range)
  * - `undefined` -> dropped from objects; `null` stays `null`
  * - cycles, functions, symbols -> throws {@link WireError}
@@ -36,13 +36,20 @@ export function toWire(value: unknown): JsonValue {
   return walkWire(value, new WeakSet(), "");
 }
 
+// WHY: Conversation `state` is an opaque TS blob coerced by assistant-react
+// (`coerceConversationState`), and web stores it as JSON, so its dates are ISO
+// strings on both hosts. Restore rejects anything else as corrupt.
+function isOpaqueState(path: string): boolean {
+  return path === "state" || path.startsWith("state.");
+}
+
 function walkWire(value: unknown, seen: WeakSet<object>, path: string): JsonValue {
   if (value === null) return null;
   if (value === undefined) return null;
   if (value instanceof Date) {
     const ms = value.getTime();
     if (Number.isNaN(ms)) throw new WireError("Invalid Date", path);
-    return ms;
+    return isOpaqueState(path) ? value.toISOString() : ms;
   }
   const t = typeof value;
   if (t === "string" || t === "number" || t === "boolean") return value as JsonValue;
@@ -92,7 +99,7 @@ const defaultWireReviver: WireReviver = (path, value) => {
   // (`coerceConversationState`). Reviving ISO strings inside it turns
   // message metadata `createdAt` (intentionally a string) into a Date;
   // restore backfill then treats it as missing and writes epoch (1970).
-  if (path === "state" || path.startsWith("state.")) return value;
+  if (isOpaqueState(path)) return value;
   // INVARIANT: revive by field name, matching web's DATE_KEYS conversion
   // (libs/db-sqlite parse-rows) — both hosts must convert the same fields.
   // Do not shape-sniff strings here: date-looking titles and card content

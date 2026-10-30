@@ -61,6 +61,18 @@ describe("ipc wire", () => {
     expect(result.dueAt).toBe("not-a-date");
   });
 
+  it("writes dates inside opaque conversation state as ISO strings", () => {
+    const iso = "2026-10-30T09:00:00.000Z";
+    const wire = toWire({
+      state: { createdAt: new Date(iso), runs: { r1: { startedAt: new Date(iso) } } },
+      updatedAt: new Date(iso),
+    });
+    expect(wire).toEqual({
+      state: { createdAt: iso, runs: { r1: { startedAt: iso } } },
+      updatedAt: new Date(iso).getTime(),
+    });
+  });
+
   it("round-trips conversation timestamps through the wire layer", () => {
     const ms = 1_700_000_001_000;
     const wire = toWire({
