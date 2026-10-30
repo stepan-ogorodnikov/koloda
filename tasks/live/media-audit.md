@@ -441,7 +441,7 @@ Line numbers are at `2e2b2b27`; when an earlier item moved them, find the code b
   Commit: Pin the image size cap to its literal on both hosts
   Depends on: none
 
-- [ ] 8. Test redirect following and unreadable stored images
+- [x] 8. Test redirect following and unreadable stored images
   Goal (M9):
   - `apps/electron/src/media-ipc.test.ts`: a two-hop chain with a relative `Location` that ends in a 2xx returns
     the last body and requested the resolved URLs in order; a chain of six redirects fails with `attachments.fetch`.

@@ -75,6 +75,39 @@ describe("fetchImageBytes", () => {
     expect(fetch).toHaveBeenCalledTimes(1);
   });
 
+  it("follows relative redirects to a 2xx, resolving each against the hop before it", async () => {
+    const fetch = vi.fn(async (url: string) => {
+      if (url === "https://example.test/a") return new Response(null, { status: 301, headers: { location: "/b/" } });
+      if (url === "https://example.test/b/") return new Response(null, { status: 302, headers: { location: "c.png" } });
+      return new Response(streamOf([new Uint8Array([7])], vi.fn()));
+    });
+
+    await expect(fetchImageBytes("https://example.test/a", fetch, signal)).resolves.toEqual(new Uint8Array([7]));
+    expect(fetch.mock.calls.map(([url]) => url)).toEqual([
+      "https://example.test/a",
+      "https://example.test/b/",
+      "https://example.test/b/c.png",
+    ]);
+  });
+
+  it("follows five redirects and fails on the sixth with the fetch code", async () => {
+    const redirectingFetch = (redirects: number) =>
+      vi.fn(async (url: string) => {
+        const hop = Number(new URL(url).searchParams.get("hop") ?? 0);
+        if (hop < redirects) return new Response(null, { status: 302, headers: { location: `?hop=${hop + 1}` } });
+        return new Response(streamOf([new Uint8Array([7])], vi.fn()));
+      });
+
+    await expect(fetchImageBytes("https://example.test/a", redirectingFetch(5), signal)).resolves.toEqual(
+      new Uint8Array([7]),
+    );
+    const tooMany = redirectingFetch(6);
+    await expect(fetchImageBytes("https://example.test/a", tooMany, signal)).rejects.toThrow(
+      '"code":"attachments.fetch"',
+    );
+    expect(tooMany).toHaveBeenCalledTimes(6);
+  });
+
   it("maps a network failure to the fetch code", async () => {
     const fetch = vi.fn(async () => {
       throw new TypeError("fetch failed");

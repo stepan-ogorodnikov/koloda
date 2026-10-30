@@ -82,6 +82,22 @@ describe("useAttachmentImages", () => {
     expect(container.textContent).toBe("\n");
   });
 
+  it("shows a stored attachment whose bytes cannot be read as its alt text", async () => {
+    const { container } = renderField(new Map([[MISSING_ID, content(MISSING_ID)]]));
+    const img = await waitFor(() => {
+      const loaded = container.querySelector("img");
+      expect(loaded?.getAttribute("src")).toBe("blob:test");
+      return loaded as HTMLImageElement;
+    });
+
+    act(() => {
+      img.dispatchEvent(new Event("error"));
+    });
+
+    expect(container.querySelector("img")).toBeNull();
+    expect(container.textContent).toBe("missing\n");
+  });
+
   it("keeps the alt text when sync downloads other images", async () => {
     const stored = new Map<string, AttachmentContent>();
     const { container, store } = renderField(stored);
