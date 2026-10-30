@@ -1,6 +1,6 @@
 # Media audit fixes
 
-Status: ready
+Status: done
 Guides: agents/IMPLEMENTATION-PLAN.md, agents/TASKS.md, docs/specs/MEDIA.md, docs/decisions/MEDIA-STORAGE.md, docs/decisions/TS-RUST-DOMAIN-MIRRORING.md, agents/RUST.md, agents/CODE-STYLE.md, agents/CODE-DOCUMENTATION.md, agents/TESTING.md, agents/VERIFY.md, agents/BACKWARDS-COMPATIBILITY.md, agents/FUNCTIONAL-SPECIFICATIONS.md, agents/DECISIONS.md, agents/MARKDOWN.md, apps/web-e2e/README.md, apps/electron-e2e/README.md, libs/e2e/README.md, apps/electron/IPC.md, agents/REVIEW.md
 Flow: local
 
@@ -495,4 +495,46 @@ Line numbers are at `2e2b2b27`; when an earlier item moved them, find the code b
 
 ## Outcome
 
-<what shipped>
+Every finding of the media audit is fixed (M1–M12). None was skipped or left for a decision.
+
+- An image stored while the user submits, types, or pastes lands in its field or nowhere (M4, item 1).
+  The markdown field is held while an insertion runs: it is read-only, paste and drop do nothing, and the form cannot
+  submit.
+  A finished insertion lands only if the editor is still mounted and the field's text is unchanged; otherwise it is
+  dropped, and the stored image waits for cleanup.
+- After a card is added, the next card's empty field shows no "Embed image" and no old error (M1, item 2).
+  The embed action and insertion errors show only while the field's text is the text they were shown for.
+- A file without an image extension inserts when dropped, and a picked non-image shows the format error (M2, item 3).
+  A dropped file with an empty or `application/octet-stream` type inserts when its contents are an image.
+- An image inserted again moves its storage time forward on both hosts, so the one-day grace counts from the last
+  insert (M3, item 5).
+  Id, mime, size, width, and height stay the first add's, and the bytes are written only for a new row.
+- Link embeds fetch through an in-memory Electron session, so they use the system proxy and OS certificates and send
+  no cookies or app data (M6, item 4).
+  Redirects go through a one-hop adapter over `net.request`, so each hop is still checked.
+  `session.fetch` was not used, because Electron 44.5.1 cancels manual redirects there.
+  The IPC channel and its error codes did not change.
+- The image size cap is pinned to the literal `5_242_880` in both domain tests, so all four copies answer to one value
+  (M5, item 7).
+- Tests: a unit test for each insertion flow (M7, items 1–3), redirect following and the unreadable-image alt text
+  (M9, item 8), and TS and Rust twins for the re-add rule (item 5).
+  A `card-images` e2e spec on each host (item 6).
+- Docs: MEDIA.md §Cleanup counts from the last insert, and MEDIA-STORAGE.md says width and height are optional and that
+  decoding is editor-only (M8, item 9).
+  MEDIA.md drops its duplicate §Relationships line, points missing-image sync at SYNC.md, and says stored images keep
+  their metadata (M12, items 5 and 12).
+- The app-react README lists every hook `App` mounts (M11, item 11), the media-ipc test WHY is rewritten (M11, item 4),
+  and two unused srs exports are gone (M10, item 10).
+
+Beyond the plan text:
+
+- Two commits after item 12 are self-review fixes: `88a2ecb5` names the media test props and explains the stream cast,
+  and `220c8111` makes the e2e helper find a template's first field type by its row name.
+
+Left out, as the Scope's Out list says: image sync, which other images rendered markdown may show, audio and video,
+metadata stripping, a device download policy, and header parsing for dimensions (M8).
+
+Verified: `bun run check:push` passed on the tip (`220c8111`) before archiving.
+All 16 commits on the branch carry `Task: media-audit`.
+The web and desktop e2e suites were not run, per `agents/VERIFY.md`.
+The `card-images` specs and the manual checks in the Plan are the human's to run.
