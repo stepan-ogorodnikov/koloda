@@ -259,7 +259,7 @@ Their dirs are `libs/srs-react`, `libs/srs`, `libs/db-sqlite`, and `apps/electro
 `RS` stands for `cargo test -p koloda`.
 Line numbers are at `2e2b2b27`; when an earlier item moved them, find the code by its text.
 
-- [ ] 1. Hold the markdown field while an image insertion runs
+- [x] 1. Hold the markdown field while an image insertion runs
   Goal (M4, M7 unit part):
   - In `CardMarkdownTextArea` (`libs/srs-react/src/lib/cards/card-content-text-area.tsx`), an insertion is a file
     insertion (`insertFiles`, `:76-106`) or an embed (`handleEmbed`, `:130-150`).

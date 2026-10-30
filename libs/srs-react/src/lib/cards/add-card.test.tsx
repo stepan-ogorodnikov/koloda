@@ -6,14 +6,25 @@ import { I18nProvider } from "@lingui/react";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { createStore, Provider as JotaiProvider } from "jotai";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createDeck, createQueryClient, createTemplate } from "../../test/test-helpers";
 import { AddCard } from "./add-card";
 
 i18n.loadAndActivate({ locale: "en", messages: {} });
 
+const ATTACHMENT_ID = "a".repeat(64);
+const PNG = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 0]);
+
+beforeEach(() => {
+  vi.stubGlobal("createImageBitmap", async () => ({ width: 1, height: 1, close() {} }));
+});
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
+
 function setup() {
-  const template = createTemplate();
+  const template = createTemplate({ content: { fields: [{}, { type: "markdown" }] } });
   const deck = createDeck({ templateId: template.id });
   let resolveAdd: () => void = () => {};
   const addCard = vi.fn(
@@ -22,11 +33,18 @@ function setup() {
         resolveAdd = resolve;
       }),
   );
+  let resolveAttachment: () => void = () => {};
+  const addAttachment = vi.fn(
+    () =>
+      new Promise((resolve) => {
+        resolveAttachment = () => resolve({ id: ATTACHMENT_ID });
+      }),
+  );
   const queries = {
     getTemplateQuery: (id: string) => ({ queryKey: queryKeys.templates.detail(id), queryFn: async () => template }),
     getSettingsQuery: (name: "hotkeys") => ({ queryKey: queryKeys.settings.detail(name), queryFn: async () => null }),
     addCardMutation: () => ({ mutationFn: addCard }),
-    addAttachmentMutation: () => ({ mutationFn: async () => null }),
+    addAttachmentMutation: () => ({ mutationFn: addAttachment }),
   } as unknown as Queries;
   const store = createStore();
   store.set(queriesAtom, queries);
@@ -43,7 +61,14 @@ function setup() {
     </I18nProvider>,
   );
 
-  return { deck, addCard, resolveAdd: () => act(async () => resolveAdd()), invalidateQueries };
+  return {
+    deck,
+    addCard,
+    resolveAdd: () => act(async () => resolveAdd()),
+    addAttachment,
+    resolveAttachment: () => act(async () => resolveAttachment()),
+    invalidateQueries,
+  };
 }
 
 async function openAndFill() {
@@ -86,5 +111,29 @@ describe("AddCard", () => {
     await resolveAdd();
 
     expect(addCard).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not add the card while an image is still being stored", async () => {
+    const { addCard, addAttachment, resolveAttachment } = setup();
+    await openAndFill();
+    const back = screen.getByRole("textbox", { name: "Back" });
+    const file = new File([PNG], "cat.png", { type: "image/png" });
+    fireEvent.drop(back, { dataTransfer: { files: [file], items: [{ kind: "file", type: file.type }] } });
+    await waitFor(() => expect(addAttachment).toHaveBeenCalledTimes(1));
+
+    // Both submit doors: the Add button, and the form submit the submit hotkey also runs.
+    submit();
+    fireEvent.submit(back.closest("form") as HTMLFormElement);
+    await act(() => Promise.resolve());
+    expect(addCard).not.toHaveBeenCalled();
+
+    await resolveAttachment();
+    await waitFor(() => expect(back).toHaveProperty("value", `Back text![cat](attachment:${ATTACHMENT_ID})`));
+    submit();
+
+    await waitFor(() => expect(addCard).toHaveBeenCalledTimes(1));
+    expect(Object.values(addCard.mock.calls[0][0].content).map((field) => field.text)).toContain(
+      `Back text![cat](attachment:${ATTACHMENT_ID})`,
+    );
   });
 });

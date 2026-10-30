@@ -9,7 +9,7 @@ import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useMutation } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { ClipboardEvent, DragEvent, FormEvent } from "react";
 import { FileTrigger, InputContext } from "react-aria-components";
 import {
@@ -60,6 +60,15 @@ function CardMarkdownTextArea({ ref, ...props }: TextFieldTextAreaProps) {
   const [pastedUrl, setPastedUrl] = useState<PastedUrl | null>(null);
   const [errors, setErrors] = useState<FormError[]>([]);
   const [isInserting, setIsInserting] = useState(false);
+  const isInsertingRef = useRef(false);
+  const isMountedRef = useRef(false);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   const setRef = useCallback(
     (node: HTMLTextAreaElement | null) => {
@@ -73,35 +82,57 @@ function CardMarkdownTextArea({ ref, ...props }: TextFieldTextAreaProps) {
     [ref],
   );
 
+  const holdField = async (insert: () => Promise<void>) => {
+    // WHY: a ref, not `isInserting`, so a second paste or drop in the same tick starts nothing either.
+    if (isInsertingRef.current) return;
+    isInsertingRef.current = true;
+    setIsInserting(true);
+    // WHY: these fields have no async validators. A validating field turns the form's `canSubmit` off, which shuts
+    // every submit door, so a card cannot be saved while its image is still being stored. The touch matters: an
+    // untouched form that was never submitted reports `canSubmit` even while a field validates.
+    field.setMeta((meta) => ({ ...meta, isTouched: true, isValidating: true }));
+    try {
+      await insert();
+    } finally {
+      isInsertingRef.current = false;
+      setIsInserting(false);
+      field.setMeta((meta) => ({ ...meta, isValidating: false }));
+    }
+  };
+
+  // INVARIANT: an insertion lands only in the text it started from. A form reset (the next card) or a card change
+  // replaces the text; the insertion is then dropped, and its stored image goes at the next cleanup.
+  const isFieldUnchanged = (value: string) => isMountedRef.current && field.state.value === value;
+
   const insertFiles = async (files: File[], getAlt: (file: File) => string) => {
     if (files.length === 0) return;
     const textArea = textAreaRef.current;
-    const end = field.state.value.length;
-    const selectionStart = textArea?.selectionStart ?? end;
-    const selectionEnd = textArea?.selectionEnd ?? end;
-    setErrors([]);
-    setPastedUrl(null);
-    setIsInserting(true);
+    const value = field.state.value;
+    const selectionStart = textArea?.selectionStart ?? value.length;
+    const selectionEnd = textArea?.selectionEnd ?? value.length;
 
-    const images: string[] = [];
-    const failures: FormError[] = [];
-    for (const file of files) {
-      try {
-        const attachment = await mutateAsync(await readImageFile(file));
-        images.push(toAttachmentImageMarkdown(getAlt(file), attachment.id));
-      } catch (error) {
-        failures.push(...Object.values(toFormErrors(error)).flat());
+    await holdField(async () => {
+      setErrors([]);
+      setPastedUrl(null);
+      const images: string[] = [];
+      const failures: FormError[] = [];
+      for (const file of files) {
+        try {
+          const attachment = await mutateAsync(await readImageFile(file));
+          images.push(toAttachmentImageMarkdown(getAlt(file), attachment.id));
+        } catch (error) {
+          failures.push(...Object.values(toFormErrors(error)).flat());
+        }
       }
-    }
 
-    setIsInserting(false);
-    setErrors(failures);
-    if (images.length === 0) return;
-    const { value, cursor } = insertAtSelection(field.state.value, selectionStart, selectionEnd, images.join("\n"));
-    field.handleChange(value);
-    requestAnimationFrame(() => {
-      textArea?.focus();
-      textArea?.setSelectionRange(cursor, cursor);
+      setErrors(failures);
+      if (images.length === 0 || !isFieldUnchanged(value)) return;
+      const insertion = insertAtSelection(value, selectionStart, selectionEnd, images.join("\n"));
+      field.handleChange(insertion.value);
+      requestAnimationFrame(() => {
+        textArea?.focus();
+        textArea?.setSelectionRange(insertion.cursor, insertion.cursor);
+      });
     });
   };
 
@@ -129,24 +160,26 @@ function CardMarkdownTextArea({ ref, ...props }: TextFieldTextAreaProps) {
 
   const handleEmbed = async () => {
     if (!pastedUrl || !addAttachmentFromUrl) return;
-    setErrors([]);
-    setIsInserting(true);
-    try {
-      const attachment = await addAttachmentFromUrl(pastedUrl.url);
-      const image = toAttachmentImageMarkdown(altFromUrl(pastedUrl.url), attachment.id);
-      const swapped = swapPastedUrl(field.state.value, pastedUrl, image);
-      setPastedUrl(null);
-      if (!swapped) return;
-      field.handleChange(swapped.value);
-      requestAnimationFrame(() => {
-        textAreaRef.current?.focus();
-        textAreaRef.current?.setSelectionRange(swapped.cursor, swapped.cursor);
-      });
-    } catch (error) {
-      setErrors(Object.values(toFormErrors(error)).flat());
-    } finally {
-      setIsInserting(false);
-    }
+    const value = field.state.value;
+
+    await holdField(async () => {
+      setErrors([]);
+      try {
+        const attachment = await addAttachmentFromUrl(pastedUrl.url);
+        const image = toAttachmentImageMarkdown(altFromUrl(pastedUrl.url), attachment.id);
+        setPastedUrl(null);
+        // WHY: an embed lands only in the text it started from, like a file insertion (`isFieldUnchanged`).
+        const swapped = isFieldUnchanged(value) && swapPastedUrl(value, pastedUrl, image);
+        if (!swapped) return;
+        field.handleChange(swapped.value);
+        requestAnimationFrame(() => {
+          textAreaRef.current?.focus();
+          textAreaRef.current?.setSelectionRange(swapped.cursor, swapped.cursor);
+        });
+      } catch (error) {
+        setErrors(Object.values(toFormErrors(error)).flat());
+      }
+    });
   };
 
   const handleDragOver = (event: DragEvent<HTMLTextAreaElement>) => {
@@ -166,6 +199,7 @@ function CardMarkdownTextArea({ ref, ...props }: TextFieldTextAreaProps) {
       <TextField.TextArea
         {...props}
         ref={setRef}
+        readOnly={isInserting}
         onPaste={handlePaste}
         onInput={handleInput}
         onDragOver={handleDragOver}
