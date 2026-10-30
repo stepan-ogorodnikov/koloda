@@ -1,7 +1,7 @@
 use std::num::NonZeroU32;
 
 use koloda::app::db::Database;
-use koloda::domain::attachments::{AddAttachmentData, SweepAttachmentsData, ATTACHMENT_MAX_BYTES};
+use koloda::domain::attachments::{AddAttachmentData, Attachment, SweepAttachmentsData, ATTACHMENT_MAX_BYTES};
 use koloda::domain::cards::InsertCardData;
 use koloda::repo::attachments as repo;
 use koloda::repo::cards;
@@ -54,16 +54,48 @@ fn add_attachment_round_trips_every_field() {
     );
 }
 
+// Twin: "keeps the first row and moves its storage time forward, never back, on a re-add" in
+// `libs/db-sqlite/src/lib/attachments.integration.test.ts`.
 #[test]
-fn re_adding_the_same_bytes_returns_the_existing_row_unchanged() {
+fn re_adding_the_same_bytes_keeps_the_row_and_moves_its_storage_time_forward() {
     let db = test_db();
-
     let first = repo::add_attachment(&db, add_data(png_of_len(16), Some(640), Some(480))).expect("first add");
+    set_created_at(&db, &first.id, 1_000);
+
     let second = repo::add_attachment(&db, add_data(png_of_len(16), None, None)).expect("re-add");
 
-    assert_eq!(second, first);
+    assert_eq!(
+        second,
+        Attachment {
+            created_at: second.created_at,
+            ..first.clone()
+        }
+    );
+    assert!(second.created_at > 1_000, "a re-add moves the storage time forward");
     assert_eq!(count_rows(&db, "attachments"), 1);
     assert_eq!(count_rows(&db, "attachment_bytes"), 1);
+
+    let later = second.created_at + 86_400_000;
+    set_created_at(&db, &first.id, later);
+    let third = repo::add_attachment(&db, add_data(png_of_len(16), None, None)).expect("re-add");
+    assert_eq!(third.created_at, later, "a re-add never moves the storage time back");
+}
+
+// Twin: "keeps an unreferenced attachment added again after its first storage time passed the cutoff" in
+// `libs/db-sqlite/src/lib/attachments.integration.test.ts`.
+#[test]
+fn an_attachment_added_again_survives_a_sweep_past_its_first_storage_time() {
+    let db = test_db();
+    let cutoff = 1_000_000;
+    let attachment = repo::add_attachment(&db, add_data(png_of_len(16), None, None)).expect("add");
+    set_created_at(&db, &attachment.id, cutoff - 1);
+
+    repo::add_attachment(&db, add_data(png_of_len(16), None, None)).expect("re-add");
+    repo::sweep_attachments(&db, SweepAttachmentsData { created_before: cutoff }).expect("sweep should succeed");
+
+    assert!(repo::get_attachment(&db, &attachment.id)
+        .expect("query should succeed")
+        .is_some());
 }
 
 // WHY: second door over the domain cap test — pins that the repo validates before it writes.

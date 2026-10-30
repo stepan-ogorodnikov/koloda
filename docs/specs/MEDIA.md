@@ -108,7 +108,7 @@ Other images follow CARDS.md (§Rendered Markdown).
 Only card text keeps a stored image.
 Once per app session, shortly after the app opens, the app removes stored images that no card references.
 
-- Only images stored more than 24 hours earlier are removed.
+- Only images inserted more than 24 hours earlier are removed; inserting a stored image again restarts its day.
   An image inserted into a card not saved yet, in this window or another tab, is kept for at least a day.
 - Removing a reference, or deleting its card, does not remove the image right away.
 - Assistant conversations do not keep an image.

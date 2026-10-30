@@ -49,15 +49,35 @@ describe("attachments repository integration", () => {
     expect(await getAttachmentBytes(db, PNG_16_ID)).toEqual(pngOfLength(16));
   });
 
-  it("returns the existing row unchanged when the same bytes are added again", async () => {
+  // Twin: `re_adding_the_same_bytes_keeps_the_row_and_moves_its_storage_time_forward` in Rust.
+  it("keeps the first row and moves its storage time forward, never back, on a re-add", async () => {
     const { db } = testDb;
-
     const first = await addAttachment(db, { bytes: pngOfLength(16), width: 640, height: 480 });
+    await db.run(`UPDATE attachments SET created_at = ? WHERE id = ?`, [1_000, first.id]);
+
     const second = await addAttachment(db, { bytes: pngOfLength(16) });
 
-    expect(second).toEqual(first);
+    expect({ ...second, createdAt: null }).toEqual({ ...first, createdAt: null });
+    expect(second.createdAt.getTime()).toBeGreaterThan(1_000);
     expect(await countRows(db, "attachments")).toBe(1);
     expect(await countRows(db, "attachment_bytes")).toBe(1);
+
+    const later = Date.now() + 86_400_000;
+    await db.run(`UPDATE attachments SET created_at = ? WHERE id = ?`, [later, first.id]);
+    expect((await addAttachment(db, { bytes: pngOfLength(16) })).createdAt.getTime()).toBe(later);
+  });
+
+  // Twin: `an_attachment_added_again_survives_a_sweep_past_its_first_storage_time` in Rust.
+  it("keeps an unreferenced attachment added again after its first storage time passed the cutoff", async () => {
+    const { db } = testDb;
+    const cutoff = new Date(1_000_000);
+    const attachment = await addAttachment(db, { bytes: pngOfLength(16) });
+    await db.run(`UPDATE attachments SET created_at = ? WHERE id = ?`, [cutoff.getTime() - 1, attachment.id]);
+
+    await addAttachment(db, { bytes: pngOfLength(16) });
+    await sweepAttachments(db, { createdBefore: cutoff });
+
+    expect(await getAttachment(db, attachment.id)).not.toBeNull();
   });
 
   // WHY: second door over the domain cap test — pins that the repo validates before it writes.

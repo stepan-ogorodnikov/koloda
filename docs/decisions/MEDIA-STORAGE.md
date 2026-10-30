@@ -5,7 +5,8 @@
 - Card media is stored as attachment rows in the app's SQLite database on both hosts.
 - An attachment's id is the lowercase hex SHA-256 of its bytes.
   The repo computes it; callers never supply an id.
-  Adding the same bytes again returns the existing row unchanged.
+  Adding the same bytes again keeps the existing row's metadata and bytes.
+  Only its creation time moves forward, never back, so cleanup's grace counts from the latest add.
 - Card content refers to an attachment as markdown: `![alt](attachment:<id>)`.
   Card content stays a plain markdown string per field.
   Nothing outside the text marks a card as having media.

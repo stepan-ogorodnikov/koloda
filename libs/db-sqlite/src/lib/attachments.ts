@@ -27,14 +27,18 @@ export async function addAttachment(db: DB, data: AddAttachmentData): Promise<At
     const id = await sha256Hex(bytes);
 
     return db.transaction(async (tx) => {
+      const now = nowMs();
       const { changes } = await tx.run(
         `INSERT INTO attachments (id, mime, size, width, height, created_at)
          VALUES (?, ?, ?, ?, ?, ?)
          ON CONFLICT (id) DO NOTHING`,
-        [id, mime, bytes.byteLength, width ?? null, height ?? null, nowMs()],
+        [id, mime, bytes.byteLength, width ?? null, height ?? null, now],
       );
-      // WHY: a re-add of the same bytes keeps the first row and its bytes unchanged.
+      // WHY: a re-add of the same bytes keeps the first row's metadata and bytes. Its storage time moves forward,
+      // never back, so the sweep's grace counts from this insertion. Twin: `insert_attachment` in
+      // `crates/koloda/src/repo/attachments.rs`.
       if (changes > 0) await writeAttachmentBytes(tx, id, bytes);
+      else await tx.run(`UPDATE attachments SET created_at = MAX(created_at, ?) WHERE id = ?`, [now, id]);
       return parseRow(attachmentRowSchema, await selectAttachment(tx, id));
     });
   });

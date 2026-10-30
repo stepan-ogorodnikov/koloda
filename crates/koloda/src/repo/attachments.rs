@@ -59,6 +59,7 @@ pub(crate) fn insert_attachment(
     mime: &str,
     data: &AddAttachmentData,
 ) -> Result<(), AppError> {
+    let now = get_current_timestamp()?;
     let inserted = conn.execute(
         r#"
         INSERT INTO attachments (id, mime, size, width, height, created_at)
@@ -71,12 +72,19 @@ pub(crate) fn insert_attachment(
             data.bytes.len() as i64,
             data.width.map(|width| width.get()),
             data.height.map(|height| height.get()),
-            get_current_timestamp()?
+            now
         ],
     )?;
-    // WHY: a re-add of the same bytes keeps the first row and its bytes unchanged.
+    // WHY: a re-add of the same bytes keeps the first row's metadata and bytes. Its storage time moves forward,
+    // never back, so the sweep's grace counts from this insertion. Twin: `addAttachment` in
+    // `libs/db-sqlite/src/lib/attachments.ts`.
     if inserted > 0 {
         attachment_bytes::put(conn, id, &data.bytes)?;
+    } else {
+        conn.execute(
+            "UPDATE attachments SET created_at = MAX(created_at, ?1) WHERE id = ?2",
+            params![now, id],
+        )?;
     }
     Ok(())
 }

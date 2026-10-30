@@ -389,7 +389,7 @@ Line numbers are at `2e2b2b27`; when an earlier item moved them, find the code b
   Commit: Fetch link embeds through an in-memory Electron session
   Depends on: none
 
-- [ ] 5. Move an image's storage time forward when it is added again
+- [x] 5. Move an image's storage time forward when it is added again
   Goal (M3):
   - Web `addAttachment` (`libs/db-sqlite/src/lib/attachments.ts:21-39`) and Rust `insert_attachment`
     (`crates/koloda/src/repo/attachments.rs:56-81`): when the id already exists, set its `created_at` to the add's
