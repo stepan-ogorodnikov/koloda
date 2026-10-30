@@ -207,7 +207,7 @@ export async function createTemplate(page: Page, title: string) {
 // WHY: images go in markdown fields only, and a new template's fields are text (`docs/specs/MEDIA.md`).
 export async function createMarkdownFrontTemplate(page: Page, title: string) {
   await createTemplate(page, title);
-  await page.getByRole("button", { name: /Type$/ }).first().click();
+  await page.getByRole("button", { name: /Field 1 type$/ }).click();
   await page.getByRole("option", { name: "Markdown", exact: true }).click();
   const saveButton = page.locator("form").getByRole("button", { name: "Save", exact: true });
   await saveButton.scrollIntoViewIfNeeded();
