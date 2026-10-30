@@ -43,9 +43,8 @@ export async function applyPageDefaults(page: Page, when: "before-load" | "after
 
 /**
  * Drive the first-setup screen: confirm the bootstrap copy, click the start button,
- * and wait for the dashboard. `bootstrapText` and `startLabel` differ per suite
- * ("Setting up a demo" and "Get started" on web; "How do you want to start?" and
- * "Start fresh" on desktop).
+ * and wait for the dashboard. `bootstrapText` and `startLabel` are the desktop copy
+ * ("How do you want to start?" and "Start fresh").
  */
 export async function bootstrapApp(page: Page, bootstrapText: string, startLabel: string) {
   await expect(page.getByText(bootstrapText, { exact: true })).toBeVisible();

@@ -21,8 +21,8 @@ Unit tests live in the app projects (`@koloda/web:test-unit`), not here.
 
 - Config: `playwright.config.ts` — single worker, serial specs, `en-US` / light scheme, failure-only artifacts.
 - Helpers: `src/helpers.ts` — re-exports the shared UI flows from `libs/e2e` (`@koloda/e2e`) and wraps this
-  suite's platform points: defaults seeded via an init script before first load and the web bootstrap copy
-  ("Setting up a demo"); slider helpers are web-only.
+  suite's platform points: defaults seeded via an init script before first load and the web first-setup flow,
+  found by its `data-setup-*` hooks rather than copy; slider helpers are web-only.
 - AI mock: `src/mock-openai-compatible.ts` — `page.route` transport around the shared protocol in `libs/e2e`,
   intercepting `/v1/models` and `/v1/chat/completions`.
   Same-origin base URL (`http://127.0.0.1:4300/v1`) so browser fetch never hits CORS.

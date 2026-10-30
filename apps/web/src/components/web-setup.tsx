@@ -96,7 +96,8 @@ export function WebSetup() {
   return (
     <div className="relative grow flex flex-col items-center justify-center gap-6 px-4 py-6 bg-body">
       <SetupBackground />
-      <section className={setupCard} aria-labelledby="setup-title">
+      {/* WHY: the e2e suite finds the setup screen and its start button by these data hooks, not by copy, so wording changes do not break it. */}
+      <section className={setupCard} aria-labelledby="setup-title" data-setup-screen>
         <div className="flex flex-row items-center justify-between mb-10">
           <KolodaLogo className="h-6 w-auto" />
           <span className="fg-level-2 text-sm font-bold tracking-widest">{_(msg`web.setup.demo`)}</span>
@@ -149,7 +150,12 @@ export function WebSetup() {
         {support.canRun && (
           <div className="mt-8">
             {/* INVARIANT: the button keeps its size while setup runs; only its label and spinner change, so it never moves under the pointer. */}
-            <Button variants={{ style: "primary", class: "w-full" }} onClick={handleClick} isDisabled={!canSubmit}>
+            <Button
+              variants={{ style: "primary", class: "w-full" }}
+              onClick={handleClick}
+              isDisabled={!canSubmit}
+              data-setup-submit
+            >
               {isPending && (
                 <RefreshIcon className="size-5 min-w-5 animate-spin" strokeWidth={1.75} aria-hidden="true" />
               )}

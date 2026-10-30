@@ -13,7 +13,7 @@ and it must never gain runtime dependencies.
 - UI flows: `src/ui-flows.ts` — the shared CRUD, lesson, hotkey, AI profile, and
   assistant flows every spec composes. The two deliberate parameter points:
   `applyPageDefaults(page, when)` (`before-load` init script vs `after-load`
-  evaluate + reload) and `bootstrapApp(page, bootstrapText)` (the per-suite
+  evaluate + reload) and `bootstrapApp(page, bootstrapText)` (the desktop
   first-setup copy).
 - AI mock protocol: `src/ai-mock.ts` — the `Mock*Options`/`Handle` contracts and
   the OpenAI-compatible SSE/JSON builders, transport-independent.
