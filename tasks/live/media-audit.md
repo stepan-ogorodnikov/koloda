@@ -327,7 +327,7 @@ Line numbers are at `2e2b2b27`; when an earlier item moved them, find the code b
   Commit: Tie the embed action and insertion errors to the field's text
   Depends on: 1
 
-- [ ] 3. Recognize picked and untyped dropped images by their contents
+- [x] 3. Recognize picked and untyped dropped images by their contents
   Goal (M2, M7 unit part):
   - The picker passes every chosen file to `insertFiles` (`card-content-text-area.tsx:181`); the sniff in
     `readImageFile` decides, so a picked non-image shows the format error.

@@ -209,3 +209,48 @@ describe("CardContentTextArea embed action and errors", () => {
     expect(screen.queryByRole("alert")).toBeNull();
   });
 });
+
+describe("CardContentTextArea file types", () => {
+  function pick(container: HTMLElement, files: File[]) {
+    fireEvent.change(container.querySelector('input[type="file"]') as HTMLInputElement, { target: { files } });
+  }
+
+  it("inserts an image dropped without an image type", async () => {
+    const add = vi.fn(async () => ({ id: ID }));
+    const { textarea } = setup(add);
+
+    drop(textarea, new File([PNG], "scan", { type: "" }));
+
+    await waitFor(() => expect(textarea.value).toBe(`![scan](attachment:${ID})`));
+  });
+
+  it("skips a non-image dropped without a type, with no error", async () => {
+    const add = vi.fn(async () => ({ id: ID }));
+    const { textarea } = setup(add);
+
+    fireEvent.drop(textarea, {
+      dataTransfer: {
+        files: [cat(), new File(["plain text"], "notes", { type: "" })],
+        items: [
+          { kind: "file", type: "image/png" },
+          { kind: "file", type: "" },
+        ],
+      },
+    });
+
+    await waitFor(() => expect(textarea.value).toBe(`![cat](attachment:${ID})`));
+    expect(add).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole("alert")).toBeNull();
+  });
+
+  it("shows the format error for a picked file that is not an image", async () => {
+    const add = vi.fn(async () => ({ id: ID }));
+    const { container, textarea } = setup(add);
+
+    pick(container, [new File(["%PDF-1.7"], "doc.pdf", { type: "application/pdf" })]);
+
+    expect((await screen.findByRole("alert")).textContent).toContain("validation.attachments.format");
+    expect(add).not.toHaveBeenCalled();
+    expect(textarea.value).toBe("");
+  });
+});

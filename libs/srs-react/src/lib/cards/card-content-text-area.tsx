@@ -2,7 +2,7 @@ import { AppError, toFormErrors } from "@koloda/app";
 import type { FormError } from "@koloda/app";
 import { addAttachmentFromUrlAtom, queriesAtom } from "@koloda/core-react";
 import type { AddAttachmentData, TemplateFieldType } from "@koloda/srs";
-import { ATTACHMENT_MAX_BYTES, ATTACHMENT_MIMES, getAttachmentBytesError } from "@koloda/srs";
+import { ATTACHMENT_MAX_BYTES, ATTACHMENT_MIMES, getAttachmentBytesError, sniffImageMime } from "@koloda/srs";
 import { Button, ImageIcon, TextField, useFieldContext } from "@koloda/ui";
 import type { TextFieldTextAreaProps } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
@@ -48,6 +48,22 @@ async function readImageFile(file: File): Promise<AddAttachmentData> {
 
 function getImageFiles(files: FileList | null) {
   return Array.from(files ?? []).filter((file) => file.type.startsWith("image/"));
+}
+
+// WHY: browsers type a dropped or picked file by its name, so an image without an image extension arrives with an
+// empty or generic type. Its contents decide whether it is an image (MEDIA.md §Formats and Size).
+const UNTYPED_FILE_TYPES = ["", "application/octet-stream"];
+
+// WHY: the format sits in the first bytes; a large untyped file that is not an image is never read whole.
+const SNIFF_SLICE_BYTES = 4096;
+
+function isDroppableFileType(type: string) {
+  return type.startsWith("image/") || UNTYPED_FILE_TYPES.includes(type);
+}
+
+async function shouldInsertDroppedFile(file: File) {
+  if (!UNTYPED_FILE_TYPES.includes(file.type)) return true;
+  return !!sniffImageMime(new Uint8Array(await file.slice(0, SNIFF_SLICE_BYTES).arrayBuffer()));
 }
 
 function CardMarkdownTextArea({ ref, ...props }: TextFieldTextAreaProps) {
@@ -196,14 +212,24 @@ function CardMarkdownTextArea({ ref, ...props }: TextFieldTextAreaProps) {
 
   const handleDragOver = (event: DragEvent<HTMLTextAreaElement>) => {
     const items = Array.from(event.dataTransfer.items);
-    if (items.some((item) => item.kind === "file" && item.type.startsWith("image/"))) event.preventDefault();
+    if (items.some((item) => item.kind === "file" && isDroppableFileType(item.type))) event.preventDefault();
+  };
+
+  const insertDroppedFiles = async (files: File[]) => {
+    // WHY: an untyped file that is not an image is skipped without an error, as a text field ignores a dropped file.
+    // An `image/*` file still reaches the checks, so a broken one shows its error.
+    const isKept = await Promise.all(files.map(shouldInsertDroppedFile));
+    await insertFiles(
+      files.filter((_, index) => isKept[index]),
+      (file) => altFromFileName(file.name),
+    );
   };
 
   const handleDrop = (event: DragEvent<HTMLTextAreaElement>) => {
-    const files = getImageFiles(event.dataTransfer.files);
+    const files = Array.from(event.dataTransfer.files).filter((file) => isDroppableFileType(file.type));
     if (files.length === 0) return;
     event.preventDefault();
-    void insertFiles(files, (file) => altFromFileName(file.name));
+    void insertDroppedFiles(files);
   };
 
   return (
@@ -224,7 +250,7 @@ function CardMarkdownTextArea({ ref, ...props }: TextFieldTextAreaProps) {
           <FileTrigger
             acceptedFileTypes={[...ATTACHMENT_MIMES]}
             allowsMultiple
-            onSelect={(files) => void insertFiles(getImageFiles(files), (file) => altFromFileName(file.name))}
+            onSelect={(files) => void insertFiles(Array.from(files ?? []), (file) => altFromFileName(file.name))}
           >
             <Button variants={{ style: "ghost", size: "small" }} isDisabled={isInserting}>
               <ImageIcon className="size-4 min-w-4" aria-hidden="true" />
