@@ -305,7 +305,7 @@ Line numbers are at `2e2b2b27`; when an earlier item moved them, find the code b
   Commit: Hold the markdown field while an image insertion runs
   Depends on: none
 
-- [ ] 2. Tie the embed action and insertion errors to the field's text
+- [x] 2. Tie the embed action and insertion errors to the field's text
   Goal (M1, M7 unit part):
   - The embed action shows only while the field's current text still holds the pasted link at its offset.
     Derive it at render from `field.state.value` with the check `swapPastedUrl` makes (`image-insertion.ts:48-51`);

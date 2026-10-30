@@ -16,6 +16,7 @@ import {
   altFromFileName,
   altFromUrl,
   getPastedHttpUrl,
+  hasPastedUrl,
   insertAtSelection,
   swapPastedUrl,
   toAttachmentImageMarkdown,
@@ -58,7 +59,7 @@ function CardMarkdownTextArea({ ref, ...props }: TextFieldTextAreaProps) {
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
   const pendingUrlRef = useRef<PastedUrl | null>(null);
   const [pastedUrl, setPastedUrl] = useState<PastedUrl | null>(null);
-  const [errors, setErrors] = useState<FormError[]>([]);
+  const [shownErrors, setShownErrors] = useState<{ errors: FormError[]; text: string } | null>(null);
   const [isInserting, setIsInserting] = useState(false);
   const isInsertingRef = useRef(false);
   const isMountedRef = useRef(false);
@@ -104,6 +105,14 @@ function CardMarkdownTextArea({ ref, ...props }: TextFieldTextAreaProps) {
   // replaces the text; the insertion is then dropped, and its stored image goes at the next cleanup.
   const isFieldUnchanged = (value: string) => isMountedRef.current && field.state.value === value;
 
+  // INVARIANT: the embed action and insertion errors belong to the text they were shown for. An edit, a form reset
+  // (the next card), or a card change hides them; there is no input event to clear them on a reset.
+  // WHY: errors also need the field touched, as `holdField` leaves it. A reset clears the touch, which catches a
+  // reset that leaves the text unchanged, such as an empty field whose file was rejected.
+  const embeddableUrl = pastedUrl && hasPastedUrl(field.state.value, pastedUrl) ? pastedUrl : null;
+  const isShowingErrors = shownErrors?.text === field.state.value && field.state.meta.isTouched;
+  const errors = isShowingErrors ? shownErrors.errors : [];
+
   const insertFiles = async (files: File[], getAlt: (file: File) => string) => {
     if (files.length === 0) return;
     const textArea = textAreaRef.current;
@@ -112,7 +121,7 @@ function CardMarkdownTextArea({ ref, ...props }: TextFieldTextAreaProps) {
     const selectionEnd = textArea?.selectionEnd ?? value.length;
 
     await holdField(async () => {
-      setErrors([]);
+      setShownErrors(null);
       setPastedUrl(null);
       const images: string[] = [];
       const failures: FormError[] = [];
@@ -125,14 +134,17 @@ function CardMarkdownTextArea({ ref, ...props }: TextFieldTextAreaProps) {
         }
       }
 
-      setErrors(failures);
-      if (images.length === 0 || !isFieldUnchanged(value)) return;
-      const insertion = insertAtSelection(value, selectionStart, selectionEnd, images.join("\n"));
-      field.handleChange(insertion.value);
-      requestAnimationFrame(() => {
-        textArea?.focus();
-        textArea?.setSelectionRange(insertion.cursor, insertion.cursor);
-      });
+      let text = value;
+      if (images.length > 0 && isFieldUnchanged(value)) {
+        const insertion = insertAtSelection(value, selectionStart, selectionEnd, images.join("\n"));
+        text = insertion.value;
+        field.handleChange(insertion.value);
+        requestAnimationFrame(() => {
+          textArea?.focus();
+          textArea?.setSelectionRange(insertion.cursor, insertion.cursor);
+        });
+      }
+      setShownErrors({ errors: failures, text });
     });
   };
 
@@ -159,17 +171,17 @@ function CardMarkdownTextArea({ ref, ...props }: TextFieldTextAreaProps) {
   };
 
   const handleEmbed = async () => {
-    if (!pastedUrl || !addAttachmentFromUrl) return;
+    if (!embeddableUrl || !addAttachmentFromUrl) return;
     const value = field.state.value;
 
     await holdField(async () => {
-      setErrors([]);
+      setShownErrors(null);
       try {
-        const attachment = await addAttachmentFromUrl(pastedUrl.url);
-        const image = toAttachmentImageMarkdown(altFromUrl(pastedUrl.url), attachment.id);
+        const attachment = await addAttachmentFromUrl(embeddableUrl.url);
+        const image = toAttachmentImageMarkdown(altFromUrl(embeddableUrl.url), attachment.id);
         setPastedUrl(null);
         // WHY: an embed lands only in the text it started from, like a file insertion (`isFieldUnchanged`).
-        const swapped = isFieldUnchanged(value) && swapPastedUrl(value, pastedUrl, image);
+        const swapped = isFieldUnchanged(value) && swapPastedUrl(value, embeddableUrl, image);
         if (!swapped) return;
         field.handleChange(swapped.value);
         requestAnimationFrame(() => {
@@ -177,7 +189,7 @@ function CardMarkdownTextArea({ ref, ...props }: TextFieldTextAreaProps) {
           textAreaRef.current?.setSelectionRange(swapped.cursor, swapped.cursor);
         });
       } catch (error) {
-        setErrors(Object.values(toFormErrors(error)).flat());
+        setShownErrors({ errors: Object.values(toFormErrors(error)).flat(), text: value });
       }
     });
   };
@@ -220,7 +232,7 @@ function CardMarkdownTextArea({ ref, ...props }: TextFieldTextAreaProps) {
             </Button>
           </FileTrigger>
         </InputContext.Provider>
-        {pastedUrl && (
+        {embeddableUrl && (
           <Button variants={{ style: "ghost", size: "small" }} isDisabled={isInserting} onPress={handleEmbed}>
             <ImageIcon className="size-4 min-w-4" aria-hidden="true" />
             {_(msg`card.content.embed-image`)}

@@ -1,4 +1,4 @@
-import { queriesAtom } from "@koloda/core-react";
+import { addAttachmentFromUrlAtom, queriesAtom } from "@koloda/core-react";
 import type { Queries } from "@koloda/core-react";
 import { useAppForm } from "@koloda/ui";
 import { i18n } from "@lingui/core";
@@ -37,9 +37,10 @@ function MarkdownField({ onForm }: { onForm?: (form: FormApi, hide: () => void) 
   );
 }
 
-function setup(addAttachment: () => Promise<unknown> = async () => null) {
+function setup(addAttachment: () => Promise<unknown> = async () => null, fromUrl?: (url: string) => Promise<unknown>) {
   const store = createStore();
   store.set(queriesAtom, { addAttachmentMutation: () => ({ mutationFn: addAttachment }) } as unknown as Queries);
+  if (fromUrl) store.set(addAttachmentFromUrlAtom, () => fromUrl as never);
   const api = { form: null as unknown as FormApi, hide: () => {} };
 
   const { container } = render(
@@ -76,6 +77,15 @@ function drop(textarea: HTMLTextAreaElement, file: File) {
 }
 
 const cat = () => new File([PNG], "cat.png", { type: "image/png" });
+const fakePng = () => new File([new TextEncoder().encode("not an image")], "notes.png", { type: "image/png" });
+
+function pasteLink(textarea: HTMLTextAreaElement, url: string) {
+  fireEvent.paste(textarea, { clipboardData: { files: [], getData: () => url } });
+  fireEvent.change(textarea, { target: { value: url } });
+  fireEvent.input(textarea, { inputType: "insertFromPaste" });
+}
+
+const embedButton = () => screen.queryByRole("button", { name: "card.content.embed-image" });
 
 beforeEach(() => {
   vi.stubGlobal("createImageBitmap", async () => ({ width: 1, height: 1, close() {} }));
@@ -164,5 +174,38 @@ describe("CardContentTextArea image insertion", () => {
     await release();
 
     expect(form.state.values.text).toBe("");
+  });
+});
+
+describe("CardContentTextArea embed action and errors", () => {
+  it("hides the embed action once a form reset replaces the pasted link", async () => {
+    const { form, textarea } = setup(undefined, async () => ({ id: ID }));
+
+    pasteLink(textarea, "https://example.test/cat.png");
+    await waitFor(() => expect(embedButton()).not.toBeNull());
+    act(() => form.reset());
+
+    expect(embedButton()).toBeNull();
+  });
+
+  it("hides a rejected file's error once the field is edited", async () => {
+    const { textarea } = setup();
+
+    drop(textarea, fakePng());
+    await screen.findByRole("alert");
+    fireEvent.change(textarea, { target: { value: "edited" } });
+
+    expect(screen.queryByRole("alert")).toBeNull();
+  });
+
+  it("hides a rejected file's error after a form reset, even when the field stays empty", async () => {
+    const { form, textarea } = setup();
+
+    drop(textarea, fakePng());
+    await screen.findByRole("alert");
+    act(() => form.reset());
+
+    expect(textarea.value).toBe("");
+    expect(screen.queryByRole("alert")).toBeNull();
   });
 });

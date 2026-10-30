@@ -45,7 +45,11 @@ export function altFromUrl(url: string) {
   }
 }
 
-export function swapPastedUrl(value: string, { url, start }: PastedUrl, replacement: string): TextInsertion | null {
-  if (value.slice(start, start + url.length) !== url) return null;
-  return insertAtSelection(value, start, start + url.length, replacement);
+export function hasPastedUrl(value: string, { url, start }: PastedUrl) {
+  return value.slice(start, start + url.length) === url;
+}
+
+export function swapPastedUrl(value: string, pastedUrl: PastedUrl, replacement: string): TextInsertion | null {
+  if (!hasPastedUrl(value, pastedUrl)) return null;
+  return insertAtSelection(value, pastedUrl.start, pastedUrl.start + pastedUrl.url.length, replacement);
 }
