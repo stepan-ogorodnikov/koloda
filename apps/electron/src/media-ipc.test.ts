@@ -1,8 +1,12 @@
+import type { ClientRequest, ClientRequestConstructorOptions } from "electron";
+import { EventEmitter } from "node:events";
+import { PassThrough, Readable } from "node:stream";
 import { describe, expect, it, vi } from "vitest";
-import { fetchImageBytes } from "./media-ipc";
+import { createHopFetch, fetchImageBytes } from "./media-ipc";
 
-// WHY: media-ipc registers an IPC handler and reads `app.isPackaged` on import; only the fetch helper is under test.
-vi.mock("electron", () => ({ app: { isPackaged: false }, ipcMain: { handle: vi.fn() } }));
+// WHY: media-ipc imports `ipcMain` and `net`, and `app-sender` reads `app.isPackaged` through `env.ts` on import.
+// Nothing registers on import; only the fetch helpers are under test.
+vi.mock("electron", () => ({ app: { isPackaged: false }, ipcMain: { handle: vi.fn() }, net: { request: vi.fn() } }));
 
 const CAP = 5_242_880;
 
@@ -79,5 +83,67 @@ describe("fetchImageBytes", () => {
     await expect(fetchImageBytes("https://example.test/a.png", fetch, signal)).rejects.toThrow(
       '"code":"attachments.fetch"',
     );
+  });
+});
+
+class FakeHop extends EventEmitter {
+  end = vi.fn();
+  abort = vi.fn();
+  followRedirect = vi.fn();
+}
+
+// Each script answers one request, in order, once the request is ended.
+function fakeRequests(...scripts: ((hop: FakeHop) => void)[]) {
+  const hops: { options: ClientRequestConstructorOptions; hop: FakeHop }[] = [];
+  const request = (options: ClientRequestConstructorOptions) => {
+    const hop = new FakeHop();
+    const script = scripts[hops.length];
+    hop.end.mockImplementation(() => queueMicrotask(() => script(hop)));
+    hops.push({ options, hop });
+    return hop as unknown as ClientRequest;
+  };
+  return { request, hops };
+}
+
+function message(statusCode: number, body: Readable) {
+  return Object.assign(body, { statusCode, headers: { "content-type": "image/png" } });
+}
+
+describe("createHopFetch", () => {
+  it("resolves a redirect as a 3xx carrying its URL, without following it", async () => {
+    const { request, hops } = fakeRequests((hop) => hop.emit("redirect", 302, "GET", "https://cdn.test/a.png", {}));
+
+    const response = await createHopFetch(request)("https://example.test/a", { signal });
+
+    expect(response.status).toBe(302);
+    expect(response.headers.get("location")).toBe("https://cdn.test/a.png");
+    expect(hops[0].hop.followRedirect).not.toHaveBeenCalled();
+    expect(hops[0].hop.abort).toHaveBeenCalled();
+    expect(hops[0].options).toMatchObject({ credentials: "omit", redirect: "manual" });
+    expect(hops[0].options.partition).not.toMatch(/^persist:/);
+  });
+
+  it("lets fetchImageBytes follow a redirect with one request per hop", async () => {
+    const { request, hops } = fakeRequests(
+      (hop) => hop.emit("redirect", 301, "GET", "https://cdn.test/a.png", {}),
+      (hop) => hop.emit("response", message(200, Readable.from([Buffer.from([1, 2, 3])]))),
+    );
+
+    await expect(fetchImageBytes("https://example.test/a", createHopFetch(request), signal)).resolves.toEqual(
+      new Uint8Array([1, 2, 3]),
+    );
+    expect(hops.map(({ options }) => options.url)).toEqual(["https://example.test/a", "https://cdn.test/a.png"]);
+  });
+
+  it("fails a pending body read once the signal aborts", async () => {
+    const controller = new AbortController();
+    const { request, hops } = fakeRequests((hop) => hop.emit("response", message(200, new PassThrough())));
+
+    const response = await createHopFetch(request)("https://example.test/a.png", { signal: controller.signal });
+    const read = response.arrayBuffer();
+    controller.abort();
+
+    await expect(read).rejects.toThrow();
+    expect(hops[0].hop.abort).toHaveBeenCalled();
   });
 });

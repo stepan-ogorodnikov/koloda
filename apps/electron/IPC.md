@@ -74,6 +74,7 @@ over `KolodaDb`, streaming tool events back on the same channel.
 
 - `cmd_add_attachment_from_url` `{ url }` — fetches an image URL in main and stores it as an attachment.
   - Only `http:` and `https:` URLs, checked on every redirect hop; no app cookies or credentials.
+  - Fetched through Chromium's network stack on an in-memory session, so the system proxy and certificates apply.
   - Times out; aborts a body past the attachment size cap with `validation.attachments.too-large`.
   - Network failure, timeout, and a non-2xx status are `attachments.fetch`.
   - The bytes go through `KolodaDb.addAttachment`, so the repo sniffs, hashes, and dedupes them.

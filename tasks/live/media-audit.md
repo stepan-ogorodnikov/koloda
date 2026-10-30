@@ -350,7 +350,7 @@ Line numbers are at `2e2b2b27`; when an earlier item moved them, find the code b
   Commit: Recognize picked and untyped dropped images by their contents
   Depends on: 2
 
-- [ ] 4. Fetch link embeds through an in-memory Electron session
+- [x] 4. Fetch link embeds through an in-memory Electron session
   Goal (M6; M11's test WHY):
   - The embed fetch in `apps/electron/src/media-ipc.ts` goes through Chromium's network stack.
     Use a session from `session.fromPartition` whose name has no `persist:` prefix, so it lives in memory and holds

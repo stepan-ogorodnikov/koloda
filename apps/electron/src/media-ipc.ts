@@ -1,5 +1,7 @@
 import type { IpcArgs, IpcResult } from "@koloda/native-ipc";
-import { ipcMain } from "electron";
+import { ipcMain, net } from "electron";
+import type { ClientRequest, ClientRequestConstructorOptions } from "electron";
+import { Readable } from "node:stream";
 import { assertAppSender } from "./app-sender";
 import type { KolodaDb } from "./koloda-db";
 
@@ -8,6 +10,10 @@ import type { KolodaDb } from "./koloda-db";
 const ATTACHMENT_MAX_BYTES = 5_242_880;
 const FETCH_TIMEOUT_MS = 15_000;
 const MAX_REDIRECTS = 5;
+// INVARIANT: no `persist:` prefix, so the session lives in memory and holds none of the app's data.
+const EMBED_PARTITION = "media-embed";
+// WHY: a `Response` with one of these statuses cannot have a body.
+const NULL_BODY_STATUSES = [204, 205, 304];
 
 type Fetch = (url: string, init: RequestInit) => Promise<Response>;
 
@@ -55,6 +61,47 @@ async function readCappedBody(response: Response) {
   return bytes;
 }
 
+// WHY: `fetchImageBytes` follows redirects itself to check every hop, so this resolves a redirect as a 3xx carrying
+// its URL and stops there.
+// WORKAROUND: `session.fetch` cannot do that. Electron's `fetchWithSession` passes `redirect: "manual"` to
+// `ClientRequest` and never handles its `redirect` event, so the request dies with "Redirect was cancelled".
+export function createHopFetch(request: (options: ClientRequestConstructorOptions) => ClientRequest): Fetch {
+  return (url, { signal }) =>
+    new Promise((resolve, reject) => {
+      signal?.throwIfAborted();
+      const hop = request({ url, partition: EMBED_PARTITION, credentials: "omit", redirect: "manual" });
+      signal?.addEventListener(
+        "abort",
+        () => {
+          hop.abort();
+          reject(signal.reason);
+        },
+        { once: true },
+      );
+      hop.on("redirect", (status, _method, location) => {
+        resolve(new Response(null, { status, headers: { location } }));
+        // WHY: an aborted request does not die when the listener returns without `followRedirect`.
+        hop.abort();
+      });
+      hop.on("response", (message) => {
+        const headers = new Headers();
+        for (const [name, value] of Object.entries(message.headers)) {
+          headers.set(name, Array.isArray(value) ? value.join(", ") : value);
+        }
+        // WHY: piping through the signal errors a pending body read on timeout, whatever the aborted message does.
+        const body = NULL_BODY_STATUSES.includes(message.statusCode)
+          ? null
+          : (Readable.toWeb(message as unknown as Readable) as ReadableStream<Uint8Array>).pipeThrough(
+              new TransformStream(),
+              { signal: signal ?? undefined },
+            );
+        resolve(new Response(body, { status: message.statusCode, headers }));
+      });
+      hop.on("error", reject);
+      hop.end();
+    });
+}
+
 // WHY: redirects are followed by hand so every hop is checked for http(s).
 export async function fetchImageBytes(value: string, fetch: Fetch, signal: AbortSignal) {
   let url = toHttpUrl(value);
@@ -81,6 +128,7 @@ export async function fetchImageBytes(value: string, fetch: Fetch, signal: Abort
 }
 
 export function registerMediaIpc(db: KolodaDb) {
+  const fetchHop = createHopFetch((options) => net.request(options));
   ipcMain.handle(
     "cmd_add_attachment_from_url",
     async (
@@ -88,8 +136,9 @@ export function registerMediaIpc(db: KolodaDb) {
       { url }: IpcArgs<"cmd_add_attachment_from_url">,
     ): Promise<IpcResult<"cmd_add_attachment_from_url">> => {
       assertAppSender(event);
-      // WHY: Node's fetch, not `net.fetch`: the Electron session would send the app's cookies.
-      const bytes = await fetchImageBytes(url, globalThis.fetch, AbortSignal.timeout(FETCH_TIMEOUT_MS));
+      // WHY: Chromium's network stack, not Node's fetch, so the system proxy and certificate store apply. The
+      // in-memory session and `credentials: "omit"` keep the app's cookies and data out of the request.
+      const bytes = await fetchImageBytes(url, fetchHop, AbortSignal.timeout(FETCH_TIMEOUT_MS));
       return db.addAttachment({ bytes: Buffer.from(bytes).toString("base64") });
     },
   );
