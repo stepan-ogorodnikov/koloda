@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ATTACHMENT_MAX_BYTES, addAttachmentSchema, sniffImageMime } from "./attachments";
+import { addAttachmentSchema, sniffImageMime } from "./attachments";
 
 const PNG_SIGNATURE = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
 
@@ -41,10 +41,12 @@ describe("sniffImageMime", () => {
 });
 
 describe("addAttachmentSchema", () => {
+  // WHY: literals, not the constant, so changing the cap on one host fails here instead of moving the boundary along.
+  // The cap is a wire contract between the hosts and the sync protocol. Twin: `test_add_attachment_size_cap` in Rust.
   it("accepts an image at the size cap and rejects one byte past it", () => {
-    expect(addAttachmentSchema.safeParse({ bytes: pngOfLength(ATTACHMENT_MAX_BYTES) }).success).toBe(true);
+    expect(addAttachmentSchema.safeParse({ bytes: pngOfLength(5_242_880) }).success).toBe(true);
 
-    const result = addAttachmentSchema.safeParse({ bytes: pngOfLength(ATTACHMENT_MAX_BYTES + 1) });
+    const result = addAttachmentSchema.safeParse({ bytes: pngOfLength(5_242_881) });
     expect(result.error?.issues.map((issue) => issue.message)).toEqual(["validation.attachments.too-large"]);
   });
 

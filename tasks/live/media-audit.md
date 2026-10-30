@@ -429,7 +429,7 @@ Line numbers are at `2e2b2b27`; when an earlier item moved them, find the code b
   Commit: Add a card-images e2e spec on both hosts
   Depends on: 3, 4
 
-- [ ] 7. Pin the image size cap to its literal on both hosts
+- [x] 7. Pin the image size cap to its literal on both hosts
   Goal (M5): the TS cap test (`libs/srs/src/lib/attachments.test.ts:44-49`) and the Rust cap test
   (`crates/koloda/tests/domain/attachments_tests.rs:71-81`) build their at-cap and over-cap images from literals
   written in the test, `5_242_880` and `5_242_881`, instead of the constant.

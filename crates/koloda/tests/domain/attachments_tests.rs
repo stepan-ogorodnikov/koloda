@@ -68,12 +68,15 @@ fn test_sniff_image_mime_by_magic_bytes() {
     }
 }
 
+// WHY: literals, not the constant, so changing the cap on one host fails here instead of moving the boundary along.
+// The cap is a wire contract between the hosts and the sync protocol. Twin: "accepts an image at the size cap and
+// rejects one byte past it" in `libs/srs/src/lib/attachments.test.ts`.
 #[test]
 fn test_add_attachment_size_cap() {
-    let at_cap = add_data(png_of_len(ATTACHMENT_MAX_BYTES)).validate();
+    let at_cap = add_data(png_of_len(5_242_880)).validate();
     assert_eq!(at_cap.expect("a cap-sized image must pass"), "image/png");
 
-    let past_cap = add_data(png_of_len(ATTACHMENT_MAX_BYTES + 1)).validate();
+    let past_cap = add_data(png_of_len(5_242_881)).validate();
     assert_eq!(
         past_cap.expect_err("one byte past the cap must fail").code,
         "validation.attachments.too-large"
