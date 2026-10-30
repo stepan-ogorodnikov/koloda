@@ -453,7 +453,7 @@ Line numbers are at `2e2b2b27`; when an earlier item moved them, find the code b
   Commit: Test redirect following and unreadable stored images
   Depends on: 4
 
-- [ ] 9. Record that image dimensions are optional and decoding is editor-only
+- [x] 9. Record that image dimensions are optional and decoding is editor-only
   Goal (M8): MEDIA-STORAGE.md Ruling lines 12 and 18-19.
   Width and height are stored when the editor decoded the image and may be null otherwise, as for an embedded image.
   Both repos sniff the format and check the size; the editor also decodes the image, as fast feedback only.

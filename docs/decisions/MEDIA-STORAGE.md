@@ -11,6 +11,8 @@
   Card content stays a plain markdown string per field.
   Nothing outside the text marks a card as having media.
 - Metadata (mime, size, width, height, creation time) lives in `attachments`.
+  Width and height are optional: they are set when the editor decoded the image, and null otherwise.
+  An image embedded from a link has none.
   Bytes live in `attachment_bytes`, keyed by the same id.
 - One byte-store module per host is the only code that reads or writes `attachment_bytes`:
   `libs/db-sqlite/src/lib/attachment-bytes.ts` and `crates/koloda/src/repo/attachment_bytes.rs`.
@@ -18,6 +20,8 @@
   A file-backed store replaces that module and takes over deletion; metadata and refs never move.
 - Both repos validate every add: the format comes from magic bytes, and the size cap applies.
   The editor runs the same checks first, only for fast feedback.
+  The editor also decodes the image and refuses one that does not decode.
+  That check is the editor's alone, so an image stored another way, such as from a link, may not decode.
 - Card content is the only thing that keeps an attachment alive.
   Nothing else, such as conversation state, holds an attachment.
 
