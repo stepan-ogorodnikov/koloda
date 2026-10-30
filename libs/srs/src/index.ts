@@ -22,7 +22,6 @@ export type { AlgorithmFSRS } from "./lib/algorithms-fsrs";
 export {
   ATTACHMENT_MAX_BYTES,
   ATTACHMENT_MIMES,
-  ATTACHMENT_REF_PATTERN,
   addAttachmentSchema,
   attachmentRowSchema,
   getAttachmentBytesError,
@@ -90,7 +89,6 @@ export type {
   LessonsResult,
 } from "./lib/lessons";
 export { markdownToHtml } from "./lib/markdown";
-export type { MarkdownToHtmlOptions } from "./lib/markdown";
 export {
   calculateTodaysReviewTotals,
   createReviewFromReviewFSRS,

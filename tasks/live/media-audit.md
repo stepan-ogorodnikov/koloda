@@ -463,7 +463,7 @@ Line numbers are at `2e2b2b27`; when an earlier item moved them, find the code b
   Commit: Record that image dimensions are optional and decoding is editor-only
   Depends on: 5
 
-- [ ] 10. Drop two unused srs exports
+- [x] 10. Drop two unused srs exports
   Goal (M10): remove `ATTACHMENT_REF_PATTERN` and `MarkdownToHtmlOptions` from `libs/srs/src/index.ts` (`:25`, `:93`).
   Keep them in their files.
   Constraints: the package entry.
