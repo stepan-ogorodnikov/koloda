@@ -13,6 +13,7 @@ export {
   createDeckWithCard,
   createDeckWithCards,
   createDeckWithTemplate,
+  createMarkdownFrontTemplate,
   createTemplate,
   deleteAIProfile,
   dispatchGracefulShutdown,

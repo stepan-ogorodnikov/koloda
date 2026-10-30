@@ -8,7 +8,7 @@ import {
   cardRows,
   createDeckWithCard,
   createDeckWithTemplate,
-  createTemplate,
+  createMarkdownFrontTemplate,
   openSection,
   startDeckLesson,
 } from "@koloda/e2e";
@@ -75,17 +75,6 @@ async function openDeckCards(page: Page, deckTitle: string) {
   await openSection(page, "Decks");
   await page.getByRole("link", { name: deckTitle, exact: true }).click();
   await page.getByRole("tab", { name: "Cards" }).click();
-}
-
-// WHY: images go in markdown fields only, and a new template's fields are text (`docs/specs/MEDIA.md`).
-async function createMarkdownFrontTemplate(page: Page, title: string) {
-  await createTemplate(page, title);
-  await page.getByRole("button", { name: /Type$/ }).first().click();
-  await page.getByRole("option", { name: "Markdown", exact: true }).click();
-  const saveButton = page.locator("form").getByRole("button", { name: "Save", exact: true });
-  await saveButton.scrollIntoViewIfNeeded();
-  await saveButton.click();
-  await expect(saveButton).not.toBeVisible();
 }
 
 async function addImageCard(page: Page, imageName: string, back: string) {

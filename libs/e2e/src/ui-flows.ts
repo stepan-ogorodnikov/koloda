@@ -204,6 +204,17 @@ export async function createTemplate(page: Page, title: string) {
   await expect(page.getByRole("heading", { name: title, exact: true })).toBeVisible();
 }
 
+// WHY: images go in markdown fields only, and a new template's fields are text (`docs/specs/MEDIA.md`).
+export async function createMarkdownFrontTemplate(page: Page, title: string) {
+  await createTemplate(page, title);
+  await page.getByRole("button", { name: /Type$/ }).first().click();
+  await page.getByRole("option", { name: "Markdown", exact: true }).click();
+  const saveButton = page.locator("form").getByRole("button", { name: "Save", exact: true });
+  await saveButton.scrollIntoViewIfNeeded();
+  await saveButton.click();
+  await expect(saveButton).not.toBeVisible();
+}
+
 export async function createDeckWithAlgorithm(page: Page, deckTitle: string, algorithmTitle: string) {
   await openSection(page, "Decks");
   await page.getByRole("button", { name: "New deck", exact: true }).click();

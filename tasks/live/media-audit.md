@@ -410,7 +410,7 @@ Line numbers are at `2e2b2b27`; when an earlier item moved them, find the code b
   Commit: Move an image's storage time forward when it is added again
   Depends on: none
 
-- [ ] 6. Add a card-images e2e spec on both hosts
+- [x] 6. Add a card-images e2e spec on both hosts
   Goal (M7 e2e part):
   - New `card-images.spec.ts` in `apps/web-e2e/src` and `apps/electron-e2e/src`, flow for flow, each on a deck whose
     template has a markdown field (`sync.spec.ts:80-100` shows how a desktop spec sets one up and picks a file).
