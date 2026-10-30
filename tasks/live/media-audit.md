@@ -1,6 +1,6 @@
 # Media audit fixes
 
-Status: draft
+Status: ready
 Guides: agents/IMPLEMENTATION-PLAN.md, agents/TASKS.md, docs/specs/MEDIA.md, docs/decisions/MEDIA-STORAGE.md, docs/decisions/TS-RUST-DOMAIN-MIRRORING.md, agents/RUST.md, agents/CODE-STYLE.md, agents/CODE-DOCUMENTATION.md, agents/TESTING.md, agents/VERIFY.md, agents/BACKWARDS-COMPATIBILITY.md, agents/FUNCTIONAL-SPECIFICATIONS.md, agents/DECISIONS.md, agents/MARKDOWN.md, apps/web-e2e/README.md, apps/electron-e2e/README.md, libs/e2e/README.md, apps/electron/IPC.md, agents/REVIEW.md
 Flow: local
 
@@ -250,7 +250,7 @@ runs").
   Electron's `session.fetch` cannot do manual redirects (item 4 says why), so item 4 adds a one-hop adapter over
   `net.request`.
   The adapter is unit-tested with a fake request; only the item 6 e2e spec and item 4's manual paths run it for real.
-- [ ] 7. Plan approval.
+- [x] 7. Plan approved (human, 2026-10-30).
 
 ## Plan
 
