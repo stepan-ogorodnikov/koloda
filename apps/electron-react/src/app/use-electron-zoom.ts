@@ -36,6 +36,8 @@ export function useElectronZoom() {
     const onWheel = (e: WheelEvent) => {
       if (!e.ctrlKey && !e.metaKey) return;
       e.preventDefault();
+      // WHY: a sideways scroll (trackpad swipe, Shift with the wheel) has no vertical part; it must not zoom out.
+      if (e.deltaY === 0) return;
       if (e.deltaY < 0) {
         api.zoomIn();
       } else {

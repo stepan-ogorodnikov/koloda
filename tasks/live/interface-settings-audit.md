@@ -485,7 +485,7 @@ Line numbers are at `013fadf8`; when an earlier item moved them, find the code b
   Commit: Check the interface registries and theme surfaces against their twins
   Depends on: 9
 
-- [ ] 11. Ignore sideways Ctrl+wheel scrolls in desktop zoom
+- [x] 11. Ignore sideways Ctrl+wheel scrolls in desktop zoom
   Goal (IS4):
   - In `onWheel` (`use-electron-zoom.ts:36-44`), return after `preventDefault` when `deltaY` is 0, so the zoom stays.
   - Test `use-electron-zoom.test.ts` (per-file jsdom environment): Ctrl with `deltaY` -1 zooms in, 1 zooms out, and
