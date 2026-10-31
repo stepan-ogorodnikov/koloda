@@ -121,6 +121,7 @@ The default date format is Default.
 The default time format is Default.
 
 A custom pattern is built from the tokens y, M, d, H, h, m, s, a and from text wrapped in single quotes.
+An unclosed quote turns the rest of the pattern into text.
 A custom pattern must not be empty, must contain at least one token, and must not exceed 64 characters.
 A pattern the app cannot render is invalid.
 Choosing Custom in the date select shows a custom pattern field.

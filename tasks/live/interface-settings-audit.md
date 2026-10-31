@@ -434,7 +434,7 @@ Line numbers are at `013fadf8`; when an earlier item moved them, find the code b
   Commit: Paint the GitHub pair on the first desktop launch
   Depends on: none
 
-- [ ] 8. Pin the timestamp pattern rule with accept rows on both hosts
+- [x] 8. Pin the timestamp pattern rule with accept rows on both hosts
   Goal (IS10, IS11):
   - One accept table on each host: `"d 'of' MMMM"`, `"HH'h'mm"`, `"h:mm a ''"`, `"dd'MM"` (an unclosed quote runs to
     the end), and 64 `y`.

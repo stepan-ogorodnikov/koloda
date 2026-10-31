@@ -53,11 +53,12 @@ const TIMESTAMP_PATTERN_TOKENS = new Set(["y", "M", "d", "H", "h", "m", "s", "a"
 
 // WHY: this scan must stay in step with the Rust mirror (`is_valid_timestamp_pattern` in
 // `settings_interface.rs`) — both hosts enforce the same letter whitelist, quote rules,
-// and length cap without a pattern engine, while the final date-fns probe here is
-// TS-only (it catches what structure cannot, e.g. protected tokens). "locale" is the
+// and length cap without a pattern engine. The final date-fns probe is TS-only and rejects
+// nothing the scan accepts today (every whitelisted letter run renders); it guards against
+// a date-fns version that would, so a saved pattern always renders. "locale" is the
 // sentinel, not a pattern, so it bypasses both checks. date-fns escapes literals with
 // single quotes (`'at'`, `''` for a real quote), so letters inside quotes never count
-// as tokens.
+// as tokens; an unclosed quote runs to the end, as date-fns reads it.
 function isValidTimestampPattern(value: string): boolean {
   if (value === "locale") return true;
   const characters = [...value];

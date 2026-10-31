@@ -59,6 +59,19 @@ describe("interfaceSettingsValidation", () => {
     expect(result.success, `${field} must reject ${value}`).toBe(false);
     expect(result.error?.issues[0]?.message).toBe(code);
   });
+
+  // WHY: the accept twin of the reject rows (Rust: `test_timestamp_patterns_accepted`) — quoted text, an escaped
+  // quote, an unclosed quote that runs to the end (INTERFACE-SETTINGS.md §Date and Time Format), and the length cap.
+  const PATTERN_AT_LIMIT = "y".repeat(64);
+  it.each(
+    ["d 'of' MMMM", "HH'h'mm", "h:mm a ''", "dd'MM", PATTERN_AT_LIMIT].flatMap((pattern) => [
+      ["dateFormat", pattern],
+      ["timeFormat", pattern],
+    ]),
+  )("accepts %s %s", (field, value) => {
+    const result = interfaceSettingsValidation.safeParse({ [field]: value });
+    expect(result.success, `${field} must accept ${value}`).toBe(true);
+  });
 });
 
 describe("getLanguageCode", () => {

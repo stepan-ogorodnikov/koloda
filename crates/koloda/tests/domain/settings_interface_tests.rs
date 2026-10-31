@@ -207,6 +207,22 @@ fn test_invalid_time_format_fails() {
 }
 
 #[test]
+fn test_timestamp_patterns_accepted() {
+    // WHY: the accept twin of the reject rows (TS: "accepts %s %s" in `settings-interface.test.ts`) — quoted
+    // text, an escaped quote, an unclosed quote that runs to the end (INTERFACE-SETTINGS.md §Date and Time
+    // Format), and the length cap.
+    let at_limit = "y".repeat(64);
+    for pattern in ["d 'of' MMMM", "HH'h'mm", "h:mm a ''", "dd'MM", at_limit.as_str()] {
+        for field in ["dateFormat", "timeFormat"] {
+            let content = serde_json::json!({ field: pattern });
+
+            let settings: InterfaceSettings = serde_json::from_value(content).expect("Should deserialize");
+            assert!(settings.validate().is_ok(), "{field} {pattern:?} must be accepted");
+        }
+    }
+}
+
+#[test]
 fn test_settings_name_interface_validation_with_non_object_content() {
     let content = serde_json::json!("not an object");
 
