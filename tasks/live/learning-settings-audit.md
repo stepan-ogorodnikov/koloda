@@ -258,7 +258,7 @@ Line numbers are at `36f894a4`; when an earlier item moved them, find the code b
   Commit: Report learn-ahead bounds and default ids with the Rust codes in TS
   Depends on: 2
 
-- [ ] 4. Cover ignored and relearning reviews in today's totals on both hosts
+- [x] 4. Cover ignored and relearning reviews in today's totals on both hosts
   Goal (LS5, unit part):
   - Web, `libs/db-sqlite/src/lib/settings-reviews.integration.test.ts` "calculates today's review totals using the
     learning day boundary and counts flags" (`:238`): add an ignored review inside the window and a relearning

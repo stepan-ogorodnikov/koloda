@@ -272,8 +272,6 @@ describe("settings and review totals integration", () => {
       templateId: template.id,
       content: createCardContent(template, { [frontId]: "Card C" }),
     });
-    const boundary = new Date(2026, 0, 10, 5, 0, 0);
-
     await insertReview(db, {
       cardId: cardA.id,
       rating: 1,
@@ -313,6 +311,34 @@ describe("settings and review totals integration", () => {
       isIgnored: false,
       createdAt: new Date(2026, 0, 10, 4, 15, 0),
     });
+    // Ignored inside the window: not counted.
+    await insertReview(db, {
+      cardId: cardC.id,
+      rating: 3,
+      state: 2,
+      dueAt: new Date(2026, 0, 10, 12, 0, 0),
+      stability: 3,
+      difficulty: 2.5,
+      scheduledDays: 2,
+      learningSteps: 0,
+      time: 400,
+      isIgnored: true,
+      createdAt: new Date(2026, 0, 10, 4, 20, 0),
+    });
+    // Relearning counts as Learn.
+    await insertReview(db, {
+      cardId: cardA.id,
+      rating: 1,
+      state: 3,
+      dueAt: new Date(2026, 0, 10, 4, 35, 0),
+      stability: 1,
+      difficulty: 3,
+      scheduledDays: 0,
+      learningSteps: 0,
+      time: 250,
+      isIgnored: false,
+      createdAt: new Date(2026, 0, 10, 4, 25, 0),
+    });
     await insertReview(db, {
       cardId: cardC.id,
       rating: 4,
@@ -329,10 +355,9 @@ describe("settings and review totals integration", () => {
 
     const result = await getTodaysReviewTotals(db);
 
-    expect(boundary.getHours()).toBe(5);
     expect(result.reviewTotals).toEqual({
       untouched: 1,
-      learn: 1,
+      learn: 2,
       review: 1,
       total: 2,
     });

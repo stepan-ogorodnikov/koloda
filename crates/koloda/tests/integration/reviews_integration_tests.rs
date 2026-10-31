@@ -94,14 +94,15 @@ fn get_review_totals_counts_states_and_ignores_ignored_rows() {
     insert_review_row(&db, &card_id, 1, 0, 2000);
     insert_review_row(&db, &card_id, 2, 0, 3000);
     insert_review_row(&db, &card_id, 2, 1, 3500);
+    insert_review_row(&db, &card_id, 3, 0, 3800);
 
     let totals = reviews::get_review_totals(&db, GetReviewTotalsParams { from: 1000, to: 4000 })
         .expect("review totals query should succeed");
 
     assert_eq!(totals.untouched, 1);
-    assert_eq!(totals.learn, 1);
+    assert_eq!(totals.learn, 2, "relearning counts as learn");
     assert_eq!(totals.review, 1);
-    assert_eq!(totals.total, 3);
+    assert_eq!(totals.total, 4);
 }
 
 #[test]

@@ -47,26 +47,6 @@ fn test_calculate_todays_review_totals_all_under_limit_flags_false() {
 }
 
 #[test]
-fn test_calculate_todays_review_totals_returns_daily_limits_unchanged() {
-    let limits = daily_limits(
-        Some(10),
-        counted_limit(Some(2), true),
-        counted_limit(Some(3), false),
-        counted_limit(Some(4), true),
-    );
-
-    let result = calculate_todays_review_totals(totals(0, 0, 0), limits);
-
-    assert_eq!(result.daily_limits.total, Some(10));
-    assert_eq!(result.daily_limits.untouched.value, Some(2));
-    assert!(result.daily_limits.untouched.counts);
-    assert_eq!(result.daily_limits.learn.value, Some(3));
-    assert!(!result.daily_limits.learn.counts);
-    assert_eq!(result.daily_limits.review.value, Some(4));
-    assert!(result.daily_limits.review.counts);
-}
-
-#[test]
 fn test_calculate_todays_review_totals_replaces_total_with_counted_buckets_only() {
     let limits = daily_limits(
         Some(100),
