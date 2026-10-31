@@ -332,7 +332,7 @@ Line numbers are at `013fadf8`; when an earlier item moved them, find the code b
   Commit: Keep a Scheme or Motion option selected when pressed again
   Depends on: none
 
-- [ ] 3. Keep the device's language when the saved settings load
+- [x] 3. Keep the device's language when the saved settings load
   Goal (IS1):
   - Delete the language line and its WHY from `useGlobalSync` (`use-global-sync.ts:47-49`), and the setter it alone
     used.

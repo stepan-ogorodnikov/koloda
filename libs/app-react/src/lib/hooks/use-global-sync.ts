@@ -26,7 +26,6 @@ export function useGlobalSync() {
   const setDateFormat = useSetAtom(dateFormatAtom);
   const setTimeFormat = useSetAtom(timeFormatAtom);
   const setMotion = useSetAtom(motionSettingAtom);
-  const setLang = useSetAtom(langAtom);
   const language = useAtomValue(langAtom);
 
   useEffect(() => {
@@ -44,11 +43,8 @@ export function useGlobalSync() {
       if (data?.content?.motion) setMotion(data.content.motion);
       if (data?.content?.dateFormat) setDateFormat(data.content.dateFormat);
       if (data?.content?.timeFormat) setTimeFormat(data.content.timeFormat);
-      // WHY: interface.language is the authoritative persisted locale — the store
-      // boot value is only a pre-setup guess (localStorage / navigator).
-      if (data?.content?.language) setLang(data.content.language);
     }
-  }, [data, setScheme, setLightTheme, setDarkTheme, setMotion, setDateFormat, setTimeFormat, setLang]);
+  }, [data, setScheme, setLightTheme, setDarkTheme, setMotion, setDateFormat, setTimeFormat]);
 
   useEffect(() => {
     document.documentElement.lang = language;
