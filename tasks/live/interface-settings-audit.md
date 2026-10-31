@@ -511,7 +511,7 @@ Line numbers are at `013fadf8`; when an earlier item moved them, find the code b
   Commit: List every timestamp under the interface formats and give each format rule one home
   Depends on: 5, 8
 
-- [ ] 13. Unit-test the scheme and motion wiring
+- [x] 13. Unit-test the scheme and motion wiring
   Goal (IS13, unit part):
   - `wire-ui-preferences.test.ts` in `libs/settings-react`, with a stubbed `matchMedia`: System follows a device
     switch live, Light and Dark ignore it; Motion On, Off, and System against reduced motion set the `motion` class;
