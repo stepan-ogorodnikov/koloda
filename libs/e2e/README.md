@@ -10,7 +10,7 @@ and it must never gain runtime dependencies.
 
 ## Architectural Map
 
-- UI flows: `src/ui-flows.ts` — the shared CRUD, lesson, hotkey, AI profile, and
+- UI flows: `src/ui-flows.ts` — the shared CRUD, lesson, settings, hotkey, AI profile, and
   assistant flows every spec composes. The two deliberate parameter points:
   `applyPageDefaults(page, when)` (`before-load` init script vs `after-load`
   evaluate + reload) and `bootstrapApp(page, bootstrapText)` (the desktop

@@ -1,6 +1,12 @@
 import { expect } from "@playwright/test";
 import { test } from "./fixtures";
-import { openLearningSettings, openSection } from "@koloda/e2e";
+import {
+  changeInterfaceThemeMotionAndDateFormat,
+  expectInterfaceChangesKept,
+  openInterfaceSettings,
+  openLearningSettings,
+  openSection,
+} from "@koloda/e2e";
 import { setupApp, setupPageDefaults } from "./helpers";
 
 test.beforeEach(async ({ page }) => {
@@ -8,6 +14,8 @@ test.beforeEach(async ({ page }) => {
 });
 
 test("changes language and scheme via Settings > Interface", async ({ page }) => {
+  const pageErrors: Error[] = [];
+  page.on("pageerror", (error) => pageErrors.push(error));
   await setupApp(page);
 
   await openSection(page, "Settings");
@@ -36,8 +44,26 @@ test("changes language and scheme via Settings > Interface", async ({ page }) =>
   const russianOption = page.getByRole("option", { name: "Русский" });
   await expect(russianOption).toBeVisible();
   await russianOption.click();
-  // Electron persists language in settings DB, not localStorage.
   await expect(page.getByRole("heading", { name: "Интерфейс", exact: true })).toBeVisible();
+  await expect.poll(() => page.evaluate(() => window.localStorage.getItem("lang"))).toBe("ru");
+
+  // Pressing the already selected Light first must not throw either
+  expect(pageErrors).toEqual([]);
+});
+
+test("changes theme, animations, and date format and keeps them after a reload", async ({ page }) => {
+  const pageErrors: Error[] = [];
+  page.on("pageerror", (error) => pageErrors.push(error));
+  await setupApp(page);
+
+  await openInterfaceSettings(page);
+  await changeInterfaceThemeMotionAndDateFormat(page);
+
+  await page.reload({ waitUntil: "domcontentloaded" });
+  await openInterfaceSettings(page);
+  await expectInterfaceChangesKept(page);
+
+  expect(pageErrors).toEqual([]);
 });
 
 test("changes learning limits and learn-ahead and keeps them after a reload", async ({ page }) => {

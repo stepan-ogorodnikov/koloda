@@ -1,5 +1,11 @@
 import { expect, test } from "@playwright/test";
-import { openLearningSettings, openSection } from "@koloda/e2e";
+import {
+  changeInterfaceThemeMotionAndDateFormat,
+  expectInterfaceChangesKept,
+  openInterfaceSettings,
+  openLearningSettings,
+  openSection,
+} from "@koloda/e2e";
 import { setupWeb, setupPageDefaults } from "./helpers";
 
 test.beforeEach(async ({ page }) => {
@@ -7,6 +13,8 @@ test.beforeEach(async ({ page }) => {
 });
 
 test("changes language and scheme via Settings > Interface", async ({ page }) => {
+  const pageErrors: Error[] = [];
+  page.on("pageerror", (error) => pageErrors.push(error));
   await setupWeb(page);
 
   // Navigate to Settings > Interface
@@ -40,6 +48,25 @@ test("changes language and scheme via Settings > Interface", async ({ page }) =>
   await expect(russianOption).toBeVisible();
   await russianOption.click();
   await expect.poll(() => page.evaluate(() => window.localStorage.getItem("lang"))).toBe("ru");
+
+  // Pressing the already selected Light first must not throw either
+  expect(pageErrors).toEqual([]);
+});
+
+test("changes theme, animations, and date format and keeps them after a reload", async ({ page }) => {
+  const pageErrors: Error[] = [];
+  page.on("pageerror", (error) => pageErrors.push(error));
+  await setupWeb(page);
+
+  await openInterfaceSettings(page);
+  await changeInterfaceThemeMotionAndDateFormat(page);
+
+  // Reload, so the screen reads the stored settings: the init script reseeds the device cache with the defaults
+  await page.reload({ waitUntil: "domcontentloaded" });
+  await openInterfaceSettings(page);
+  await expectInterfaceChangesKept(page);
+
+  expect(pageErrors).toEqual([]);
 });
 
 test("changes learning limits and learn-ahead and keeps them after a reload", async ({ page }) => {

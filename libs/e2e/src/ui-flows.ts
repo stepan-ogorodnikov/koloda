@@ -264,6 +264,52 @@ export async function createDeckWithTemplate(page: Page, deckTitle: string, temp
   await expect(page.getByRole("heading", { name: deckTitle, exact: true })).toBeVisible();
 }
 
+export async function openInterfaceSettings(page: Page) {
+  await openSection(page, "Settings");
+  await page.getByRole("link", { name: "Interface", exact: true }).click();
+  await expect(page).toHaveURL(/\/settings\/interface$/);
+}
+
+const CUSTOM_DATE_PATTERN = "d 'of' MMMM";
+
+/**
+ * Picks Atom One Dark, turns animations on, saves a custom date pattern, then tries an invalid one.
+ * `expectInterfaceChangesKept` checks the same values after a reload.
+ */
+export async function changeInterfaceThemeMotionAndDateFormat(page: Page) {
+  const root = page.locator("html");
+
+  await page.getByRole("button", { name: /Dark theme$/ }).click();
+  await page.getByRole("option", { name: "Atom One Dark", exact: true }).click();
+  await expect(root).toHaveAttribute("data-dark-theme", "atom-one-dark");
+
+  await page.getByRole("radio", { name: "Enabled", exact: true }).click();
+  await expect(root).toHaveClass(/(^|\s)motion(\s|$)/);
+
+  await page.getByRole("button", { name: /Date format$/ }).click();
+  await page.getByRole("option", { name: "Custom pattern", exact: true }).click();
+  const patternField = page.getByRole("textbox", { name: "Custom pattern" });
+  await patternField.fill(CUSTOM_DATE_PATTERN);
+  await patternField.press("Enter");
+  await expect(page.getByText(/^Preview: \d{1,2} of \S+$/)).toBeVisible();
+
+  // An invalid pattern shows the error and leaves the saved one in effect
+  await patternField.fill("hello");
+  await patternField.press("Enter");
+  await expect(page.getByText("Invalid date format", { exact: true })).toBeVisible();
+  await expect(page.getByText(/^Preview: \d{1,2} of \S+$/)).toBeVisible();
+}
+
+export async function expectInterfaceChangesKept(page: Page) {
+  const root = page.locator("html");
+  await expect(root).toHaveAttribute("data-dark-theme", "atom-one-dark");
+  await expect(root).toHaveClass(/(^|\s)motion(\s|$)/);
+  await expect(page.getByRole("radio", { name: "Enabled", exact: true })).toBeChecked();
+  await expect(page.getByRole("button", { name: /Dark theme$/ })).toContainText("Atom One Dark");
+  await expect(page.getByRole("textbox", { name: "Custom pattern" })).toHaveValue(CUSTOM_DATE_PATTERN);
+  await expect(page.getByText("Invalid date format", { exact: true })).toBeHidden();
+}
+
 export async function openLearningSettings(page: Page) {
   await openSection(page, "Settings");
   await page.getByRole("link", { name: "Learning", exact: true }).click();

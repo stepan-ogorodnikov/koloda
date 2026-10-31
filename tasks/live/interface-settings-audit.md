@@ -523,7 +523,7 @@ Line numbers are at `013fadf8`; when an earlier item moved them, find the code b
   Commit: Unit-test the scheme and motion wiring
   Depends on: 9
 
-- [ ] 14. Check interface settings by outcome in both e2e suites
+- [x] 14. Check interface settings by outcome in both e2e suites
   Goal (IS13, e2e part; IS6's mask):
   - Extend the interface case of `settings.spec.ts` on both hosts, with one shared flow in `libs/e2e` where the steps
     match.
