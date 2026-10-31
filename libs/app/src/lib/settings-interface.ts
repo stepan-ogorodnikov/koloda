@@ -18,8 +18,6 @@ export const SCHEMES: Record<string, MessageDescriptor> = {
   system: msg`scheme.system`,
 };
 
-export type Scheme = keyof typeof SCHEMES;
-
 export const LIGHT_THEMES: Record<string, string> = {
   "atom-one-light": "Atom One Light",
   "github-light": "GitHub Light",
@@ -30,22 +28,16 @@ export const DARK_THEMES: Record<string, string> = {
   "github-dark": "GitHub Dark",
 };
 
-export type LightTheme = keyof typeof LIGHT_THEMES;
-export type DarkTheme = keyof typeof DARK_THEMES;
-
 export const MOTION_SETTINGS: Record<string, MessageDescriptor> = {
   on: msg`motion.on`,
   off: msg`motion.off`,
   system: msg`motion.system`,
 };
 
-const SCHEME_KEYS = Object.keys(SCHEMES) as [Scheme, ...Scheme[]];
-const LIGHT_THEME_KEYS = Object.keys(LIGHT_THEMES) as [LightTheme, ...LightTheme[]];
-const DARK_THEME_KEYS = Object.keys(DARK_THEMES) as [DarkTheme, ...DarkTheme[]];
-const MOTION_KEYS = Object.keys(MOTION_SETTINGS) as [
-  keyof typeof MOTION_SETTINGS,
-  ...Array<keyof typeof MOTION_SETTINGS>,
-];
+const SCHEME_KEYS = Object.keys(SCHEMES) as [string, ...string[]];
+const LIGHT_THEME_KEYS = Object.keys(LIGHT_THEMES) as [string, ...string[]];
+const DARK_THEME_KEYS = Object.keys(DARK_THEMES) as [string, ...string[]];
+const MOTION_KEYS = Object.keys(MOTION_SETTINGS) as [string, ...string[]];
 
 const LATIN_LETTER = /[a-z]/i;
 const TIMESTAMP_PATTERN_MAX_LENGTH = 64;

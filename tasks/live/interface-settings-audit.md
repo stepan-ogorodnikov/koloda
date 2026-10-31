@@ -452,7 +452,7 @@ Line numbers are at `013fadf8`; when an earlier item moved them, find the code b
   Commit: Pin the timestamp pattern rule with accept rows on both hosts
   Depends on: none
 
-- [ ] 9. Drop interface settings residue
+- [x] 9. Drop interface settings residue
   Goal (IS15, except `ColorSchemePicker`):
   - Drop `WireUiPreferencesOptions` and the `options` parameter (`wire-ui-preferences.ts:15-29`); read the cache or
     the defaults directly.

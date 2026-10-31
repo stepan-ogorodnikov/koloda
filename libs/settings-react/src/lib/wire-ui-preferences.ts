@@ -12,21 +12,12 @@ import { readUiPreferencesCache, writeUiPreferencesCache } from "./ui-preference
 
 type Store = ReturnType<typeof createStore>;
 
-export type WireUiPreferencesOptions = {
-  scheme?: string;
-  lightTheme?: string;
-  darkTheme?: string;
-  motion?: string;
-};
-
-export function wireUiPreferences(store: Store, options: WireUiPreferencesOptions = {}) {
+export function wireUiPreferences(store: Store) {
   const cached = readUiPreferencesCache();
-  const {
-    scheme = cached?.scheme ?? DEFAULT_INTERFACE_SETTINGS.scheme,
-    lightTheme = cached?.lightTheme ?? DEFAULT_INTERFACE_SETTINGS.lightTheme,
-    darkTheme = cached?.darkTheme ?? DEFAULT_INTERFACE_SETTINGS.darkTheme,
-    motion = cached?.motion ?? DEFAULT_INTERFACE_SETTINGS.motion,
-  } = options;
+  const scheme = cached?.scheme ?? DEFAULT_INTERFACE_SETTINGS.scheme;
+  const lightTheme = cached?.lightTheme ?? DEFAULT_INTERFACE_SETTINGS.lightTheme;
+  const darkTheme = cached?.darkTheme ?? DEFAULT_INTERFACE_SETTINGS.darkTheme;
+  const motion = cached?.motion ?? DEFAULT_INTERFACE_SETTINGS.motion;
 
   const prefersColorScheme = window.matchMedia("(prefers-color-scheme: dark)");
 

@@ -19,7 +19,8 @@ Desktop mirrors live in `crates/koloda/src/domain/` (settings, hotkeys, conversa
   `settings-hotkeys.ts` — defaults, labels, zod validation.
 - Conversations: `conversations.ts` — `Conversation` / `ConversationListItem` types
   and active-conversation `localStorage` helpers.
-- Environment: `environment.ts` — `getAppPlatform()`, `LOCALES`, `getLanguageCode()`.
+- Environment: `environment.ts` — `getAppPlatform()`.
+  `LOCALES` and `getLanguageCode()` live with the interface slice in `settings-interface.ts`.
 - Shared shapes: `db.ts` (`Timestamps`), `utility.ts` (`DeepPartial`, `deepMerge`, form helpers, id helpers).
 - Sync: `sync.ts` — `SyncStatus` as the desktop sync engine reports it; only the desktop syncs.
 

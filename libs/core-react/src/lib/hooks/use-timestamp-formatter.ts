@@ -1,6 +1,6 @@
 import { formatTimestamp } from "@koloda/app";
 import type { TimestampFormatter } from "@koloda/app";
-import { dateFormatAtom, langAtom, timeFormatAtom } from "@koloda/core-react";
+import { dateFormatAtom, langAtom, timeFormatAtom } from "../atoms";
 import { useAtomValue } from "jotai";
 import { useMemo } from "react";
 

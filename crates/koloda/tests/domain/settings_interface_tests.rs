@@ -18,20 +18,6 @@ fn test_valid_interface_settings_full() {
 }
 
 #[test]
-fn test_missing_themes_default_to_github() {
-    let json = r#"{
-        "language": "en",
-        "scheme": "system",
-        "motion": "system"
-    }"#;
-
-    let settings: InterfaceSettings = serde_json::from_str(json).expect("Should deserialize");
-    assert_eq!(settings.light_theme, "github-light");
-    assert_eq!(settings.dark_theme, "github-dark");
-    settings.validate().unwrap();
-}
-
-#[test]
 fn test_missing_fields_default_to_ts_twin() {
     // WHY: every field carries a serde default mirroring the TS `.default()`s, so a
     // partial document parses identically on both hosts; validate() still rejects
@@ -227,7 +213,7 @@ fn test_settings_name_interface_validation_with_non_object_content() {
     let content = serde_json::json!("not an object");
 
     let result = SettingsName::Interface.normalize(content);
-    result.unwrap_err();
+    assert_eq!(result.expect_err("Should fail on non-object content").code, "unknown");
 }
 
 #[test]
