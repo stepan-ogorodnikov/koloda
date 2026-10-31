@@ -1,6 +1,6 @@
 # Learning settings audit fixes
 
-Status: ready
+Status: done
 Guides: agents/IMPLEMENTATION-PLAN.md, agents/TASKS.md, docs/specs/LEARNING-SETTINGS.md, agents/CODE-STYLE.md, agents/CODE-DOCUMENTATION.md, agents/TESTING.md, agents/CSS.md, agents/I18N.md, agents/RUST.md, docs/decisions/TS-RUST-DOMAIN-MIRRORING.md, agents/FUNCTIONAL-SPECIFICATIONS.md, agents/MARKDOWN.md, agents/VERIFY.md, apps/web-e2e/README.md, apps/electron-e2e/README.md, libs/e2e/README.md, agents/REVIEW.md
 Flow: local
 
@@ -366,4 +366,35 @@ Line numbers are at `36f894a4`; when an earlier item moved them, find the code b
 
 ## Outcome
 
-<what shipped>
+Shipped, one commit per Plan item, all 9 done; self-review needed no further commits.
+The learning settings audit's finding 2 was fixed earlier by `decks-audit` (`8ea0c2df`).
+
+- A learning settings save refreshes today's totals, so the Dashboard and the next lesson use the new limits and
+  day start at once (LS1).
+- Both TS learning schemas report the Rust codes for learn-ahead bounds and default ids (LS3).
+- The TS exceeds-total cases are one table with every other cap at Total, asserting the one expected code (LS4).
+- Both totals tests cover an ignored review and a relearning review; the fixture assertion and the Rust passthrough
+  test are gone (LS5).
+- Turning Unlimited off on a cap with no number fills in Total 200, New 50, Review 200, or Learn 200; the spec says
+  so (LS6).
+- Each Unlimited and counts-towards-total switch is named by its cap, e.g. "Review unlimited"; the type rows render
+  from one table, and both e2e suites select the switches by name (LS7).
+- Residue: `LearningSettingsInput` and `LearningDailyLimitType` dropped, one parse in the route, an unconditional
+  reset, and a synchronous `getCurrentLearningDayRange` (LS8).
+- LEARNING-SETTINGS.md keeps one home per rule, and §Editing and Saving points at SYNC.md for the open-form rule (LS9).
+- e2e, both hosts: "Validation 4" saves successfully, the persistence case reloads, and a new flow checks a saved
+  limit on the Dashboard and the day start after a reload (LS5).
+
+Skipped: LS5's desktop repo clock.
+`get_todays_review_totals` reads `Local::now()`, so its repo test reads the real clock; the window is pinned by the
+domain DST suites on both hosts.
+
+Beyond the plan text:
+
+- Item 5's fallback numbers are literals in the form; the first-setup numbers sit inside the defaulting schema,
+  typed nullable.
+- Item 6 maps a table of the three type rows in the form rather than a separate component.
+- Item 7 resets the form to the submitted values; the mutation's result is typed optional.
+- Item 3 also gives negative learn-ahead values the range codes; Rust rejects those at deserialize.
+- Only the `settings-react` catalogs and both compiled app catalogs were re-extracted.
+- The e2e changes were typechecked only; the day-start step finds the hour segment as a `spinbutton` named /hour/.
