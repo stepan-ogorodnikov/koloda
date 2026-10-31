@@ -1,6 +1,7 @@
 import { expect } from "@playwright/test";
+import type { Page } from "@playwright/test";
 import { test } from "./fixtures";
-import { clickSwitch, createAlgorithm, createTemplate, openLearningSettings } from "@koloda/e2e";
+import { clickSwitch, createAlgorithm, createTemplate, openLearningSettings, openSection } from "@koloda/e2e";
 import { setupApp, setupPageDefaults } from "./helpers";
 
 test.beforeEach(async ({ page }) => {
@@ -26,10 +27,7 @@ test("validates and resets the learning settings form", async ({ page }) => {
 
   const initialAlgorithm = await page.getByRole("button", { name: "Default algorithm" }).innerText();
   const initialTemplate = await page.getByRole("button", { name: "Default template" }).innerText();
-  const initialTotal = await totalField.inputValue();
-  const initialNew = await newField.inputValue();
   await expect(learnUnlimited).toBeChecked();
-  const initialReview = await reviewField.inputValue();
   const initialHours = await hoursField.inputValue();
   const initialMinutes = await minutesField.inputValue();
 
@@ -63,14 +61,17 @@ test("validates and resets the learning settings form", async ({ page }) => {
   await reviewField.click();
   await reviewField.fill("0");
   await reviewField.blur();
+  await newField.click();
+  await newField.fill("5");
+  await newField.blur();
 
   await clickSwitch(learnSwitch);
   await expect(learnSwitch).not.toBeChecked();
 
   await saveButton.scrollIntoViewIfNeeded();
   await saveButton.click();
-  await expect(saveButton).toBeDisabled();
-  await expect(page.getByText("Learn can't be more than total")).not.toBeVisible();
+  await expect(saveButton).toBeHidden();
+  await expect(page.getByText("can't be more than total")).not.toBeVisible();
 
   await page.getByRole("button", { name: "Default algorithm" }).click();
   await page.getByRole("option", { name: "Test Algorithm", exact: true }).click();
@@ -102,10 +103,11 @@ test("validates and resets the learning settings form", async ({ page }) => {
 
   await expect(page.getByRole("button", { name: "Default algorithm" })).toContainText(initialAlgorithm);
   await expect(page.getByRole("button", { name: "Default template" })).toContainText(initialTemplate);
-  await expect(totalField).toHaveValue(initialTotal);
-  await expect(newField).toHaveValue(initialNew);
-  await expect(learnUnlimited).toBeChecked();
-  await expect(reviewField).toHaveValue(initialReview);
+  await expect(totalField).toHaveValue("5");
+  await expect(newField).toHaveValue("5");
+  await expect(learnUnlimited).not.toBeChecked();
+  await expect(learnField).toHaveValue("10");
+  await expect(reviewField).toHaveValue("0");
   await expect(hoursField).toHaveValue(initialHours);
   await expect(minutesField).toHaveValue(initialMinutes);
 });
@@ -161,3 +163,42 @@ test("hard-zero total rejects a counted cap above zero", async ({ page }) => {
   await saveButton.click();
   await expect(page.getByText("New can't be more than total")).toBeVisible();
 });
+
+test("shows a saved limit on the Dashboard and keeps the day start after a reload", async ({ page }) => {
+  await setupApp(page);
+
+  // Load today's progress first, so the Dashboard holds it in the query cache
+  await expectDashboardLimit(page, "New", "50");
+
+  await openLearningSettings(page);
+  const newField = page.getByRole("textbox", { name: "New" });
+  await newField.click();
+  await newField.fill("10");
+  await newField.blur();
+
+  const dayStartHour = page.getByRole("spinbutton", { name: /hour/i });
+  await expect(dayStartHour).toHaveAttribute("aria-valuenow", "5");
+  await dayStartHour.focus();
+  await dayStartHour.press("ArrowUp");
+  await expect(dayStartHour).toHaveAttribute("aria-valuenow", "6");
+
+  const saveButton = page.locator("form").getByRole("button", { name: "Save", exact: true });
+  await saveButton.scrollIntoViewIfNeeded();
+  await saveButton.click();
+  await expect(saveButton).toBeHidden();
+
+  // No reload: the save itself refreshes today's progress
+  await expectDashboardLimit(page, "New", "10");
+
+  // Reload, so the form reads the stored day start rather than the query cache
+  await page.reload({ waitUntil: "domcontentloaded" });
+  await openLearningSettings(page);
+  await expect(page.getByRole("spinbutton", { name: /hour/i })).toHaveAttribute("aria-valuenow", "6");
+});
+
+// Today's progress on the Dashboard: a type row's daily limit.
+async function expectDashboardLimit(page: Page, type: string, limit: string) {
+  await openSection(page, "Dashboard");
+  const row = page.getByText(type, { exact: true }).first().locator("..");
+  await expect(row.getByText(limit, { exact: true })).toBeVisible();
+}

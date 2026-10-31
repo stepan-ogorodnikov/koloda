@@ -1,6 +1,6 @@
 import { expect } from "@playwright/test";
 import { test } from "./fixtures";
-import { openSection } from "@koloda/e2e";
+import { openLearningSettings, openSection } from "@koloda/e2e";
 import { setupApp, setupPageDefaults } from "./helpers";
 
 test.beforeEach(async ({ page }) => {
@@ -40,7 +40,7 @@ test("changes language and scheme via Settings > Interface", async ({ page }) =>
   await expect(page.getByRole("heading", { name: "Интерфейс", exact: true })).toBeVisible();
 });
 
-test("changes learning defaults and verifies persistence after navigation", async ({ page }) => {
+test("changes learning limits and learn-ahead and keeps them after a reload", async ({ page }) => {
   await setupApp(page);
 
   await openSection(page, "Settings");
@@ -61,19 +61,19 @@ test("changes learning defaults and verifies persistence after navigation", asyn
   const minutesField = page.getByRole("textbox", { name: "Minutes" });
   await minutesField.click();
   await minutesField.clear();
-  await minutesField.fill("30");
+  await minutesField.fill("45");
   await minutesField.blur();
 
   const saveButton = page.locator("form").getByRole("button", { name: "Save", exact: true });
   await saveButton.scrollIntoViewIfNeeded();
   await saveButton.click();
-  await expect(page.getByText("Learn ahead limit")).toBeVisible();
+  await expect(saveButton).toBeHidden();
 
-  await openSection(page, "Dashboard");
-  await openSection(page, "Settings");
-  await page.getByRole("link", { name: "Learning", exact: true }).click();
+  // Reload, so the form reads the stored settings rather than the query cache
+  await page.reload({ waitUntil: "domcontentloaded" });
+  await openLearningSettings(page);
 
   await expect(page.getByRole("textbox", { name: "New" })).toHaveValue("5");
   await expect(page.getByRole("textbox", { name: "Hours" })).toHaveValue("1");
-  await expect(page.getByRole("textbox", { name: "Minutes" })).toHaveValue("30");
+  await expect(page.getByRole("textbox", { name: "Minutes" })).toHaveValue("45");
 });

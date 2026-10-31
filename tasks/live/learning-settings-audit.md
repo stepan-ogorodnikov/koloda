@@ -346,7 +346,7 @@ Line numbers are at `36f894a4`; when an earlier item moved them, find the code b
   Commit: Give each learning rule one home in LEARNING-SETTINGS.md
   Depends on: 5
 
-- [ ] 9. Check learning settings saves by outcome in both e2e suites
+- [x] 9. Check learning settings saves by outcome in both e2e suites
   Goal (LS5, e2e part; LS1's regression):
   - `settings-learning-form.spec.ts`, both hosts, "Validation 4": also bring New to 5 or below, then assert the save
     succeeds (Save hides) and no exceeds-total message shows.
