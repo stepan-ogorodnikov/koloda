@@ -498,7 +498,7 @@ Line numbers are at `013fadf8`; when an earlier item moved them, find the code b
   Commit: Ignore sideways Ctrl+wheel scrolls in desktop zoom
   Depends on: none
 
-- [ ] 12. List every timestamp under the interface formats and give each format rule one home
+- [x] 12. List every timestamp under the interface formats and give each format rule one home
   Goal (IS3, IS16):
   - §Date and Time Format line 126: the formats apply to every timestamp, with the sync screens among the examples;
     relative labels stay excluded (line 131).

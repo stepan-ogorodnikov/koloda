@@ -101,7 +101,7 @@ Brief fades and color changes still play.
 
 ## Date and Time Format
 
-Each format is picked from a select; only the date select also offers a custom pattern.
+Each format is picked from a select.
 The default for both formats is Default, which renders each timestamp the way the active language would.
 
 Date presets:
@@ -117,9 +117,6 @@ Time presets:
 - 12-hour — `hh:mm a`
 - 24-hour — `HH:mm`
 
-The default date format is Default.
-The default time format is Default.
-
 A custom pattern is built from the tokens y, M, d, H, h, m, s, a and from text wrapped in single quotes.
 An unclosed quote turns the rest of the pattern into text.
 A custom pattern must not be empty, must contain at least one token, and must not exceed 64 characters.
@@ -128,8 +125,11 @@ Choosing Custom in the date select shows a custom pattern field.
 Choosing any other date option hides it again.
 The time select has no Custom option, so time offers no pattern field.
 
-Picking a preset or saving a custom pattern changes every timestamp immediately: the cards table, card details,
-review history, created and updated labels on forms, and chat message times.
+Picking a preset or saving a custom pattern changes every timestamp immediately.
+That includes the cards table, card details, review history, created and updated labels on forms, chat message times,
+and the times on the sync screens and the title-bar sync indicator.
+The time format also sets the clock of the learning screen's "Start of the day" field.
+A 12-hour time format gives it a 12-hour clock and a 24-hour one a 24-hour clock; Default follows the active language.
 A preview under each select always shows the current date and time in the chosen format.
 An invalid custom pattern is rejected on save: nothing is written, the previous format stays in effect, and the
 field shows an error.
