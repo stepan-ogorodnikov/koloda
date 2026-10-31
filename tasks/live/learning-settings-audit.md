@@ -207,7 +207,7 @@ Their dirs are `libs/app`, `libs/srs`, `libs/settings-react`, and `libs/db-sqlit
 its extract (`agents/I18N.md`).
 Line numbers are at `36f894a4`; when an earlier item moved them, find the code by its text.
 
-- [ ] 1. Refresh today's totals when learning settings save
+- [x] 1. Refresh today's totals when learning settings save
   Goal (LS1):
   - In the save's `onSuccess` (`libs/settings-react/src/lib/settings-learning.tsx:82-86`), also invalidate
     `queryKeys.lessons.todayReviewTotals()`.

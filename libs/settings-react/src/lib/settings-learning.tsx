@@ -81,6 +81,9 @@ export function SettingsLearning({ data }: SettingsLearningProps) {
         {
           onSuccess: (returning) => {
             queryClient.invalidateQueries({ queryKey: queryKeys.settings.detail("learning") });
+            // WHY: today's totals carry the daily limits and the learning-day window; the desktop sync
+            // `settings.learning` entry refreshes them too (apps/electron-react/src/app/sync-events.ts).
+            queryClient.invalidateQueries({ queryKey: queryKeys.lessons.todayReviewTotals() });
             queryClient.setQueryData(queryKeys.settings.detail("learning"), returning);
             formApi.reset(returning?.content ? learningSettingsValidation.parse(returning.content) : undefined);
           },
