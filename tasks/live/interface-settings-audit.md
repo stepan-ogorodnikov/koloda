@@ -304,7 +304,7 @@ Their dirs are `libs/app`, `libs/ui`, `libs/app-react`, `libs/settings-react`, `
 `RS` stands for `cargo test -p koloda`.
 Line numbers are at `013fadf8`; when an earlier item moved them, find the code by its text.
 
-- [ ] 1. Run web settings patches in one transaction
+- [x] 1. Run web settings patches in one transaction
   Goal (IS5):
   - In `patchSettings` (`libs/db-sqlite/src/lib/settings.ts:46-66`), run the read, merge, write, and read-back inside
     `db.transaction(async (tx) => …)`, using `tx` for every call, as web setup does (`apps/web/src/app/setup.ts`).

@@ -45,23 +45,31 @@ export async function setSettings<T extends SettingsName>(db: DB, { name, conten
 
 export async function patchSettings<T extends SettingsName>(db: DB, { name, content }: PatchSettingsData<T>) {
   return throwKnownError("db.update", async () => {
-    const original = await db.get(`SELECT ${SETTINGS_SELECT} FROM settings WHERE name = ? LIMIT 1`, [name]);
-    if (!original) throw new AppError("db.update");
+    // WHY: the lock is per statement, so a read and a write outside one transaction let an
+    // overlapping patch read the old row and drop this one's field. Desktop serializes on its worker.
+    return db.transaction(async (tx) => {
+      const original = await tx.get(`SELECT ${SETTINGS_SELECT} FROM settings WHERE name = ? LIMIT 1`, [name]);
+      if (!original) throw new AppError("db.update");
 
-    const envelope = parseRow(settingsRowEnvelopeSchema, original);
-    const base = z.record(z.string(), z.unknown()).parse(envelope.content);
-    // INVARIANT: patches merge per RFC 7386, matching desktop `json_patch::merge`
-    // (crates/koloda/src/repo/settings.rs): `null` deletes a key so the schema
-    // default refills it, arrays replace wholesale. Do not swap in deepMerge —
-    // it assigns null and element-merges arrays, which diverges from desktop.
-    const merged = mergePatch(base, content);
-    const parsed = allowedSettings[name].parse(merged);
-    const now = nowMs();
+      const envelope = parseRow(settingsRowEnvelopeSchema, original);
+      const base = z.record(z.string(), z.unknown()).parse(envelope.content);
+      // INVARIANT: patches merge per RFC 7386, matching desktop `json_patch::merge`
+      // (crates/koloda/src/repo/settings.rs): `null` deletes a key so the schema
+      // default refills it, arrays replace wholesale. Do not swap in deepMerge —
+      // it assigns null and element-merges arrays, which diverges from desktop.
+      const merged = mergePatch(base, content);
+      const parsed = allowedSettings[name].parse(merged);
+      const now = nowMs();
 
-    await db.run(`UPDATE settings SET content = ?, updated_at = ? WHERE name = ?`, [JSON.stringify(parsed), now, name]);
+      await tx.run(`UPDATE settings SET content = ?, updated_at = ? WHERE name = ?`, [
+        JSON.stringify(parsed),
+        now,
+        name,
+      ]);
 
-    const result = await db.get(`SELECT ${SETTINGS_SELECT} FROM settings WHERE name = ? LIMIT 1`, [name]);
-    return parseRow(settingsRowSchema(name), result) as AllowedSettings<T>;
+      const result = await tx.get(`SELECT ${SETTINGS_SELECT} FROM settings WHERE name = ? LIMIT 1`, [name]);
+      return parseRow(settingsRowSchema(name), result) as AllowedSettings<T>;
+    });
   });
 }
 

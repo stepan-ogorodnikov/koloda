@@ -64,6 +64,20 @@ describe("settings and review totals integration", () => {
     });
   });
 
+  it("keeps both fields when two patches overlap", async () => {
+    const { db } = testDb;
+    await setSettings(db, { name: "interface", content: { scheme: "system", motion: "system" } });
+
+    // Both start before either is awaited, so their reads and writes queue on the lock together
+    await Promise.all([
+      patchSettings(db, { name: "interface", content: { scheme: "dark" } }),
+      patchSettings(db, { name: "interface", content: { motion: "off" } }),
+    ]);
+
+    const stored = await getSettings(db, "interface");
+    expect(stored?.content).toMatchObject({ scheme: "dark", motion: "off" });
+  });
+
   it("deletes a patched null key so the schema default refills, like desktop RFC 7386", async () => {
     const { db } = testDb;
     const { algorithm, template } = await seedDeckContext(db);
