@@ -225,7 +225,7 @@ Line numbers are at `36f894a4`; when an earlier item moved them, find the code b
   Commit: Refresh today's totals when learning settings save
   Depends on: none
 
-- [ ] 2. Pin each TS exceeds-total rule with its own code
+- [x] 2. Pin each TS exceeds-total rule with its own code
   Goal (LS4):
   - Replace the six "rejects/allows … total" cases (`libs/app/src/lib/settings-learning.test.ts:212-282`) with one
     `it.each` table over New, Learn, and Review.

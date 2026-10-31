@@ -209,76 +209,27 @@ describe("daily limits refine rules", () => {
     expect(result.success).toBe(true);
   });
 
-  it("rejects untouched.value > total when counts is true", () => {
-    const result = learningSettingsValidation.safeParse({
-      defaults,
-      dailyLimits: {
-        total: 10,
-        untouched: { value: 20, counts: true },
-      },
-    });
-    expect(result.success).toBe(false);
-  });
-
-  it("allows untouched.value > total when counts is false", () => {
-    const result = learningSettingsValidation.safeParse({
-      defaults,
-      dailyLimits: {
-        total: 10,
-        untouched: { value: 20, counts: false },
-        review: { value: 10, counts: true },
-      },
-    });
-    expect(result.success).toBe(true);
-  });
-
-  it("rejects learn.value > total when counts is true", () => {
-    const result = learningSettingsValidation.safeParse({
-      defaults,
-      dailyLimits: {
-        total: 10,
-        learn: { value: 15, counts: true },
-        review: { value: 10, counts: true },
-      },
-    });
-    expect(result.success).toBe(false);
-  });
-
-  it("allows learn.value > total when counts is false", () => {
+  // Twin of koloda `test_daily_limits_*_exceeds_total_fails`: every other cap sits at Total with counts on,
+  // so only the row's cap can break a rule.
+  it.each([
+    { type: "untouched", counts: true, code: "validation.settings-learning.daily-limits.untouched-exceeds-total" },
+    { type: "untouched", counts: false, code: undefined },
+    { type: "learn", counts: true, code: "validation.settings-learning.daily-limits.learn-exceeds-total" },
+    { type: "learn", counts: false, code: undefined },
+    { type: "review", counts: true, code: "validation.settings-learning.daily-limits.review-exceeds-total" },
+    { type: "review", counts: false, code: undefined },
+  ] as const)("checks $type one past total with counts $counts", ({ type, counts, code }) => {
     const result = learningSettingsValidation.safeParse({
       defaults,
       dailyLimits: {
         total: 10,
         untouched: { value: 10, counts: true },
-        learn: { value: 15, counts: false },
+        learn: { value: 10, counts: true },
         review: { value: 10, counts: true },
+        [type]: { value: 11, counts },
       },
     });
-    expect(result.success).toBe(true);
-  });
-
-  it("rejects review.value > total when counts is true", () => {
-    const result = learningSettingsValidation.safeParse({
-      defaults,
-      dailyLimits: {
-        total: 10,
-        review: { value: 15, counts: true },
-        untouched: { value: 10, counts: true },
-      },
-    });
-    expect(result.success).toBe(false);
-  });
-
-  it("allows review.value > total when counts is false", () => {
-    const result = learningSettingsValidation.safeParse({
-      defaults,
-      dailyLimits: {
-        total: 10,
-        review: { value: 15, counts: false },
-        untouched: { value: 10, counts: true },
-      },
-    });
-    expect(result.success).toBe(true);
+    expect(result.error?.issues.map((issue) => issue.message)).toEqual(code ? [code] : undefined);
   });
 
   it("allows value equal to total when counts is true", () => {
