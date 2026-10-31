@@ -1,6 +1,6 @@
 # Learning settings audit fixes
 
-Status: draft
+Status: ready
 Guides: agents/IMPLEMENTATION-PLAN.md, agents/TASKS.md, docs/specs/LEARNING-SETTINGS.md, agents/CODE-STYLE.md, agents/CODE-DOCUMENTATION.md, agents/TESTING.md, agents/CSS.md, agents/I18N.md, agents/RUST.md, docs/decisions/TS-RUST-DOMAIN-MIRRORING.md, agents/FUNCTIONAL-SPECIFICATIONS.md, agents/MARKDOWN.md, agents/VERIFY.md, apps/web-e2e/README.md, apps/electron-e2e/README.md, libs/e2e/README.md, agents/REVIEW.md
 Flow: local
 
@@ -195,8 +195,8 @@ The default Learn cap was `lessons.md` finding 17, settled by lessons-audit.
   Which reviews fall in the window depends on the wall clock, so such a flow would be flaky near the boundary;
   the window is pinned by the domain DST suites.
   The new flow checks that the day start is saved and survives a reload, and that a saved limit reaches the Dashboard.
-- [ ] 4. New user-visible copy in item 6 is drafted there; edit it at approval if needed — open
-- [ ] 5. Plan approval — open
+- [x] 4. New user-visible copy in item 6 is drafted there; edit it at approval if needed — as drafted.
+- [x] 5. Plan approved (human, 2026-10-31).
 
 ## Plan
 
