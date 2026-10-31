@@ -1,8 +1,10 @@
+import { AppError } from "@koloda/app";
 import { motionSettingAtom } from "@koloda/ui";
 import { langAtom, queriesAtom, schemeAtom } from "@koloda/core-react";
+import type * as CoreReact from "@koloda/core-react";
 import type { Queries } from "@koloda/core-react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { createStore, Provider as JotaiProvider } from "jotai";
 import type { PropsWithChildren } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -15,11 +17,32 @@ vi.mock("@lingui/react", () => ({
   }),
 }));
 
-function renderSettingsInterface() {
-  const patchSettings = vi.fn(async ({ content }: { content: Record<string, unknown> }) => ({
+// WHY: siblings here mock `@koloda/core-react` the same way; under `isolate: false` the first file to load `@koloda/ui`
+// decides which module it binds to, so this file must not load the real one first.
+vi.mock("@koloda/core-react", async (importOriginal) => {
+  const actual = await importOriginal<typeof CoreReact>();
+  return {
+    ...actual,
+    useAppHotkey: () => {},
+    useHotkeysSettings: () => ({
+      ui: { close: ["Escape"] },
+      form: { submit: ["Control+Enter"], reset: ["Escape"] },
+    }),
+  };
+});
+
+// WORKAROUND: jsdom lacks getAnimations; react-aria's SharedElementTransition under the toggle group
+// throws without it once the selection moves.
+if (!Element.prototype.getAnimations) {
+  Element.prototype.getAnimations = () => [];
+}
+
+function renderSettingsInterface(
+  patchSettings = vi.fn(async ({ content }: { content: Record<string, unknown> }) => ({
     name: "interface",
     content,
-  }));
+  })),
+) {
   const queries = {
     getSettingsQuery: (name: string) => ({ queryKey: ["settings", name], queryFn: async () => null }),
     patchSettingsMutation: () => ({ mutationFn: patchSettings }),
@@ -72,5 +95,23 @@ describe("SettingsInterface", () => {
     expect(option.getAttribute("aria-checked")).toBe("true");
     expect(store.get(atom)).toBe(value);
     expect(patchSettings).not.toHaveBeenCalled();
+  });
+
+  it("shows a failed write and puts the option back, then clears the alert after a good write", async () => {
+    const patchSettings = vi
+      .fn()
+      .mockRejectedValueOnce(new AppError("db.update"))
+      .mockResolvedValueOnce({ name: "interface", content: { scheme: "dark" } });
+    const { store } = renderSettingsInterface(patchSettings);
+
+    fireEvent.click(screen.getByRole("radio", { name: "scheme.dark" }));
+
+    expect((await screen.findByRole("alert")).textContent).toContain("db.update");
+    expect(store.get(schemeAtom)).toBe("light");
+
+    fireEvent.click(screen.getByRole("radio", { name: "scheme.dark" }));
+
+    await waitFor(() => expect(screen.queryByRole("alert")).toBeNull());
+    expect(store.get(schemeAtom)).toBe("dark");
   });
 });

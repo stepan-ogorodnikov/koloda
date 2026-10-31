@@ -1,11 +1,10 @@
 import { SCHEMES } from "@koloda/app";
-import { queriesAtom, schemeAtom } from "@koloda/core-react";
+import { schemeAtom } from "@koloda/core-react";
 import { MoonIcon, Select, SunIcon, SystemThemeIcon } from "@koloda/ui";
 import type { SelectProps } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react";
-import { useMutation } from "@tanstack/react-query";
-import { useAtom, useAtomValue } from "jotai";
+import { useAtom } from "jotai";
 
 const ITEMS = [
   { id: "light", Icon: SunIcon },
@@ -13,15 +12,11 @@ const ITEMS = [
   { id: "system", Icon: SystemThemeIcon },
 ] as const;
 
-type ColorSchemePickerProps = Partial<SelectProps<(typeof ITEMS)[number]>> & {
-  isPersisted?: boolean;
-};
+type ColorSchemePickerProps = Partial<SelectProps<(typeof ITEMS)[number]>>;
 
-export function ColorSchemePicker({ isPersisted = true, ...props }: ColorSchemePickerProps) {
+export function ColorSchemePicker(props: ColorSchemePickerProps) {
   const { _ } = useLingui();
   const [scheme, setScheme] = useAtom(schemeAtom);
-  const { patchSettingsMutation } = useAtomValue(queriesAtom);
-  const { mutate } = useMutation(patchSettingsMutation());
 
   return (
     <Select
@@ -30,10 +25,7 @@ export function ColorSchemePicker({ isPersisted = true, ...props }: ColorSchemeP
       items={ITEMS}
       value={scheme}
       onChange={(key) => {
-        if (key) {
-          setScheme(key.toString());
-          if (isPersisted) mutate({ name: "interface", content: { scheme: key.toString() } });
-        }
+        if (key) setScheme(key.toString());
       }}
       {...props}
     >

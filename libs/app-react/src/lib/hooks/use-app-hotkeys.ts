@@ -1,11 +1,10 @@
 import { LOCALES } from "@koloda/app";
-import type { AllowedSettings } from "@koloda/settings";
-import { langAtom, queriesAtom, queryKeys, schemeAtom, useAppHotkey, useHotkeysSettings } from "@koloda/core-react";
+import { langAtom, schemeAtom, useAppHotkey, useHotkeysSettings } from "@koloda/core-react";
+import { useInterfaceSettingWrite } from "@koloda/settings-react";
 import { focusNext, focusPrev, goToNextTab, goToPrevTab, useMotionSetting } from "@koloda/ui";
 import type { HotkeyOptions } from "@tanstack/react-hotkeys";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { useAtomValue, useSetAtom } from "jotai";
+import { useStore } from "jotai";
 import { useCallback } from "react";
 
 const SCHEME_CYCLE = ["light", "dark", "system"] as const;
@@ -17,34 +16,18 @@ export function useAppHotkeys() {
   const { navigation, ui } = useHotkeysSettings();
   const navigate = useNavigate();
   const isMotionOn = useMotionSetting();
-  const setScheme = useSetAtom(schemeAtom);
-  const setLang = useSetAtom(langAtom);
-  const { patchSettingsMutation } = useAtomValue(queriesAtom);
-  const queryClient = useQueryClient();
-  const { mutate: persistInterface } = useMutation({
-    onSuccess: (settings: AllowedSettings<"interface"> | undefined) => {
-      queryClient.setQueryData(queryKeys.settings.detail("interface"), settings);
-    },
-    ...patchSettingsMutation(),
-  });
+  const store = useStore();
+  const write = useInterfaceSettingWrite();
 
   const toggleColorScheme = useCallback(() => {
-    setScheme((current) => {
-      const index = SCHEME_CYCLE.indexOf(current as (typeof SCHEME_CYCLE)[number]);
-      const next = SCHEME_CYCLE[(index + 1) % SCHEME_CYCLE.length];
-      persistInterface({ name: "interface", content: { scheme: next } });
-      return next;
-    });
-  }, [persistInterface, setScheme]);
+    const index = SCHEME_CYCLE.indexOf(store.get(schemeAtom) as (typeof SCHEME_CYCLE)[number]);
+    write("scheme", SCHEME_CYCLE[(index + 1) % SCHEME_CYCLE.length]);
+  }, [store, write]);
 
   const toggleLanguage = useCallback(() => {
-    setLang((current) => {
-      const index = LOCALES.indexOf(current);
-      const next = LOCALES[(index + 1) % LOCALES.length];
-      persistInterface({ name: "interface", content: { language: next } });
-      return next;
-    });
-  }, [persistInterface, setLang]);
+    const index = LOCALES.indexOf(store.get(langAtom));
+    write("language", LOCALES[(index + 1) % LOCALES.length]);
+  }, [store, write]);
 
   useAppHotkey(navigation.dashboard, () => navigate({ to: "/dashboard", viewTransition: isMotionOn }), "navigation");
   useAppHotkey(navigation.decks, () => navigate({ to: "/decks", viewTransition: isMotionOn }), "navigation");

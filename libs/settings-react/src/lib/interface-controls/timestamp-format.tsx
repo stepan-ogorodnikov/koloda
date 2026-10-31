@@ -1,13 +1,12 @@
 import { formatTimestamp, interfaceSettingsValidation } from "@koloda/app";
 import type { ErrorCode, TimestampKind } from "@koloda/app";
-import { dateFormatAtom, langAtom, queriesAtom, queryKeys, timeFormatAtom } from "@koloda/core-react";
-import type { AllowedSettings } from "@koloda/settings";
+import { dateFormatAtom, langAtom, timeFormatAtom } from "@koloda/core-react";
 import { FormLayout, Select, TextField } from "@koloda/ui";
 import type { MessageDescriptor } from "@lingui/core";
 import { useLingui } from "@lingui/react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useAtomValue, useSetAtom } from "jotai";
+import { useAtomValue } from "jotai";
 import { useEffect, useState } from "react";
+import { useInterfaceSettingWrite } from "./use-interface-setting-write";
 
 const LOCALE_OPTION = "locale";
 // WHY: underscore fails the token whitelist, so this id can never collide with a storable pattern.
@@ -46,19 +45,10 @@ export function TimestampFormatSection({
   presets,
 }: TimestampFormatSectionProps) {
   const { _ } = useLingui();
-  const queryClient = useQueryClient();
   const locale = useAtomValue(langAtom);
   const savedDate = useAtomValue(dateFormatAtom);
   const savedTime = useAtomValue(timeFormatAtom);
-  const setDateFormat = useSetAtom(dateFormatAtom);
-  const setTimeFormat = useSetAtom(timeFormatAtom);
-  const { patchSettingsMutation } = useAtomValue(queriesAtom);
-  const { mutate } = useMutation({
-    onSuccess: (settings: AllowedSettings<"interface"> | undefined) => {
-      queryClient.setQueryData(queryKeys.settings.detail("interface"), settings);
-    },
-    ...patchSettingsMutation(),
-  });
+  const write = useInterfaceSettingWrite();
 
   const allowsCustom = customLabel != null;
   const saved = kind === "date" ? savedDate : savedTime;
@@ -86,11 +76,7 @@ export function TimestampFormatSection({
     return () => clearInterval(id);
   }, []);
 
-  const save = (value: string) => {
-    const content = kind === "date" ? { dateFormat: value } : { timeFormat: value };
-    (kind === "date" ? setDateFormat : setTimeFormat)(value);
-    mutate({ name: "interface", content });
-  };
+  const save = (value: string) => write(kind === "date" ? "dateFormat" : "timeFormat", value);
 
   const onChange = (key: string | number | null) => {
     if (key == null) {

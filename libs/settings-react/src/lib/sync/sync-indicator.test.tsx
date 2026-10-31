@@ -14,6 +14,20 @@ vi.mock("@lingui/react", () => ({
   }),
 }));
 
+// WHY: siblings mock `@koloda/core-react` the same way; under `isolate: false` the first file to load `@koloda/ui`
+// decides which module it binds to, so this file must not load the real one first.
+vi.mock("@koloda/core-react", async (importOriginal) => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
+    useAppHotkey: () => {},
+    useHotkeysSettings: () => ({
+      ui: { close: ["Escape"] },
+      form: { submit: ["Control+Enter"], reset: ["Escape"] },
+    }),
+  };
+});
+
 function status(state: SyncStatus["state"], overrides: Partial<SyncStatus> = {}): SyncStatus {
   return {
     state,

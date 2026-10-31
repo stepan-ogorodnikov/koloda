@@ -1,12 +1,11 @@
 import { LANGUAGES } from "@koloda/app";
 import { langAtom } from "@koloda/core-react";
-import { queriesAtom } from "@koloda/core-react";
 import { LanguageIcon, Select } from "@koloda/ui";
 import type { SelectProps } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
-import { useMutation } from "@tanstack/react-query";
-import { useAtomValue, useSetAtom } from "jotai";
+import { useSetAtom } from "jotai";
+import { useInterfaceSettingWrite } from "./use-interface-setting-write";
 
 type LanguagePickerProps = Partial<SelectProps<(typeof LANGUAGES)[number]>> & {
   showIcon?: boolean;
@@ -16,8 +15,7 @@ type LanguagePickerProps = Partial<SelectProps<(typeof LANGUAGES)[number]>> & {
 export function LanguagePicker({ label, showIcon = true, isPersisted = true, ...props }: LanguagePickerProps) {
   const { _, i18n } = useLingui();
   const setLang = useSetAtom(langAtom);
-  const { patchSettingsMutation } = useAtomValue(queriesAtom);
-  const { mutate } = useMutation({ ...patchSettingsMutation() });
+  const write = useInterfaceSettingWrite();
 
   return (
     <Select
@@ -28,10 +26,9 @@ export function LanguagePicker({ label, showIcon = true, isPersisted = true, ...
       items={LANGUAGES}
       value={i18n.locale}
       onChange={(key) => {
-        if (key) {
-          setLang(key.toString());
-          if (isPersisted) mutate({ name: "interface", content: { language: key.toString() } });
-        }
+        if (!key) return;
+        if (isPersisted) write("language", key.toString());
+        else setLang(key.toString());
       }}
       {...props}
     >

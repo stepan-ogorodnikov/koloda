@@ -349,7 +349,7 @@ Line numbers are at `013fadf8`; when an earlier item moved them, find the code b
   Commit: Keep the device's language when the saved settings load
   Depends on: none
 
-- [ ] 4. Write interface fields through one hook that undoes a failed write
+- [x] 4. Write interface fields through one hook that undoes a failed write
   Goal (IS7, IS12, IS15's `ColorSchemePicker` bullet):
   - Add one hook in `libs/settings-react` (for example `useInterfaceSettingWrite`).
     Given a field and a value, it sets that field's atom, patches only that field, and puts the returned row in the

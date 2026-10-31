@@ -1,14 +1,14 @@
 import { DARK_THEMES, LIGHT_THEMES } from "@koloda/app";
-import { darkThemeAtom, lightThemeAtom, queriesAtom } from "@koloda/core-react";
+import { darkThemeAtom, lightThemeAtom } from "@koloda/core-react";
 import { Select } from "@koloda/ui";
 import type { SelectProps } from "@koloda/ui";
 import type { MessageDescriptor } from "@lingui/core";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
-import { useMutation } from "@tanstack/react-query";
-import { useAtom, useAtomValue } from "jotai";
+import { useAtomValue } from "jotai";
 import type { PrimitiveAtom } from "jotai";
 import type { ReactNode } from "react";
+import { useInterfaceSettingWrite } from "./use-interface-setting-write";
 
 type ThemeMap = Record<string, string>;
 
@@ -22,9 +22,8 @@ type ColorThemePickerProps = Partial<SelectProps<{ id: string }>> & {
 
 function ColorThemePicker({ themes, atom, field, label, ariaLabel, ...props }: ColorThemePickerProps) {
   const { _ } = useLingui();
-  const [value, setValue] = useAtom(atom);
-  const { patchSettingsMutation } = useAtomValue(queriesAtom);
-  const { mutate } = useMutation(patchSettingsMutation());
+  const value = useAtomValue(atom);
+  const write = useInterfaceSettingWrite();
   const items = Object.entries(themes).map(([id, name]) => ({ id, name }));
 
   return (
@@ -35,11 +34,7 @@ function ColorThemePicker({ themes, atom, field, label, ariaLabel, ...props }: C
       items={items}
       value={value}
       onChange={(key) => {
-        if (key) {
-          const next = key.toString();
-          setValue(next);
-          mutate({ name: "interface", content: { [field]: next } });
-        }
+        if (key) write(field, key.toString());
       }}
       {...props}
     >

@@ -82,7 +82,7 @@ export function Setup() {
       {/* WHY: the join seeds the interface settings from these once; after it, a change here would not be kept. */}
       {!hasJoined && (
         <div className="flex flex-row gap-2">
-          <ColorSchemePicker buttonVariants={{ style: "ghost" }} showChevron={false} isPersisted={false} />
+          <ColorSchemePicker buttonVariants={{ style: "ghost" }} showChevron={false} />
           <LanguagePicker buttonVariants={{ style: "ghost" }} showChevron={false} isPersisted={false} />
         </div>
       )}
