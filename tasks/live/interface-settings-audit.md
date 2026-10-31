@@ -403,7 +403,7 @@ Line numbers are at `013fadf8`; when an earlier item moved them, find the code b
   Commit: Stop every movement and looping indicator when Motion is off
   Depends on: none
 
-- [ ] 6. Keep GitHub Dark's tokens out of the other dark themes
+- [x] 6. Keep GitHub Dark's tokens out of the other dark themes
   Goal (IS8):
   - Make both default fallback selectors weaker than the schemes, without dropping the fallback for an unknown theme
     id: `:where(:root.dark)` in `github-dark.css:1` and `:where(:root)` in `github-light.css`.

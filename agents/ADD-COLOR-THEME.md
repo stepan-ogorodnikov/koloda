@@ -48,7 +48,10 @@ Copy an existing theme close to the new look.
 ```
 
 Do not attach a new theme to bare `:root` or `:root.dark`.
-Those selectors are the default theme fallbacks only.
+The default themes (GitHub Light and GitHub Dark) also match `:where(:root)` and `:where(:root.dark)`.
+Those are the fallbacks for an unknown theme id.
+`:where` keeps them weaker than the scheme files, so a token the default theme sets never overrides the scheme for
+another theme.
 
 ### 2. Fill the required palette
 
@@ -113,6 +116,7 @@ so the pre-paint boot script can tint the blank page before CSS loads.
 
 Override a scheme token only when the shared formula is wrong for this palette.
 Keep overrides minimal.
+An override applies only through the theme's own `[data-*-theme="<id>"]` selector.
 
 ### 6. Import the stylesheet
 

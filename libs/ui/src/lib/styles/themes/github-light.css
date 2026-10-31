@@ -1,4 +1,6 @@
-:root,
+/* WHY: the default fallback sits in `:where` so it is weaker than the scheme files; a token set here
+   must not override the scheme for the other light themes. See ADD-COLOR-THEME.md step 1. */
+:where(:root),
 :root.light[data-light-theme="github-light"],
 :root:not(.dark)[data-light-theme="github-light"] {
   --color-bg: #ffffff;

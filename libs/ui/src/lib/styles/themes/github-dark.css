@@ -1,4 +1,7 @@
-:root.dark,
+/* WHY: the default fallback sits in `:where` so it is weaker than `scheme-dark.css`; as bare `:root.dark`
+   it tied the scheme and, loading later, pushed GitHub Dark's focus ring onto every dark theme.
+   See ADD-COLOR-THEME.md step 1. */
+:where(:root.dark),
 :root.dark[data-dark-theme="github-dark"] {
   --color-bg: #0d1117;
   --color-mono-1: #f0f6fc;
