@@ -178,6 +178,7 @@ Changing one field never rewrites the others.
 The pickers only offer valid values.
 A value outside the known sets is rejected on write.
 A rejected or failed write leaves the previous settings unchanged.
+The control then shows the previous value again, and the screen shows the error until a later change saves.
 
 ## Startup
 
