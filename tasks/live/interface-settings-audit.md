@@ -538,6 +538,15 @@ Line numbers are at `013fadf8`; when an earlier item moved them, find the code b
   Commit: Check interface settings by outcome in both e2e suites
   Depends on: 2, 4
 
+- [x] 15. State what a failed interface write shows
+  Goal (self-review of item 4): §Editing and Saving says that after a failed write the control shows the previous
+  value again and the screen shows the error until a later change saves.
+  Constraints: INTERFACE-SETTINGS.md only.
+  Done when: `bun run check:markdown` passes.
+  Manual verify: none — spec only; item 4's tests pin the behavior.
+  Commit: State what a failed interface write shows
+  Depends on: 4
+
 ## Outcome
 
 Pending.
