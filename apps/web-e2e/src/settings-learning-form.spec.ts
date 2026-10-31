@@ -20,8 +20,8 @@ test("validates and resets the learning settings form", async ({ page }) => {
   const minutesField = page.getByRole("textbox", { name: "Minutes" });
   const newField = page.getByRole("textbox", { name: "New" });
   const saveButton = page.locator("form").getByRole("button", { name: "Save", exact: true });
-  const learnSwitch = page.getByRole("switch", { name: "Counts towards total" }).nth(1);
-  const learnUnlimited = page.getByRole("switch", { name: "Unlimited" }).nth(2);
+  const learnSwitch = page.getByRole("switch", { name: "Learn counts towards total" });
+  const learnUnlimited = page.getByRole("switch", { name: "Learn unlimited" });
 
   // Capture initial defaults from a clean form
   const initialAlgorithm = await page.getByRole("button", { name: "Default algorithm" }).innerText();
@@ -125,7 +125,7 @@ test("unlimited total allows a counted cap above any previous total", async ({ p
 
   const newField = page.getByRole("textbox", { name: "New" });
   const saveButton = page.locator("form").getByRole("button", { name: "Save", exact: true });
-  const totalUnlimited = page.getByRole("switch", { name: "Unlimited" }).first();
+  const totalUnlimited = page.getByRole("switch", { name: "Total unlimited" });
 
   await clickSwitch(totalUnlimited);
   await expect(totalUnlimited).toBeChecked();

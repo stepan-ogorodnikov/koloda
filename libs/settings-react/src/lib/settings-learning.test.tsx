@@ -77,19 +77,21 @@ describe("DailyLimitCapField", () => {
       <DailyLimitCapField
         label="Total"
         unlimitedLabel="Unlimited"
+        unlimitedName="Total unlimited"
         unlimitedOffValue={200}
         value={8}
         onChange={onChange}
       />,
     );
 
-    fireEvent.click(screen.getByRole("switch", { name: "Unlimited" }));
+    fireEvent.click(screen.getByRole("switch", { name: "Total unlimited" }));
     expect(onChange).toHaveBeenLastCalledWith(null);
 
     rerender(
       <DailyLimitCapField
         label="Total"
         unlimitedLabel="Unlimited"
+        unlimitedName="Total unlimited"
         unlimitedOffValue={200}
         value={null}
         onChange={onChange}
@@ -97,7 +99,7 @@ describe("DailyLimitCapField", () => {
     );
     expect((screen.getByRole("textbox", { name: "Total" }) as HTMLInputElement).disabled).toBe(true);
 
-    fireEvent.click(screen.getByRole("switch", { name: "Unlimited" }));
+    fireEvent.click(screen.getByRole("switch", { name: "Total unlimited" }));
     expect(onChange).toHaveBeenLastCalledWith(8);
   });
 
@@ -107,13 +109,14 @@ describe("DailyLimitCapField", () => {
       <DailyLimitCapField
         label="Learn"
         unlimitedLabel="Unlimited"
+        unlimitedName="Learn unlimited"
         unlimitedOffValue={200}
         value={null}
         onChange={onChange}
       />,
     );
 
-    fireEvent.click(screen.getByRole("switch", { name: "Unlimited" }));
+    fireEvent.click(screen.getByRole("switch", { name: "Learn unlimited" }));
     expect(onChange).toHaveBeenLastCalledWith(200);
   });
 });

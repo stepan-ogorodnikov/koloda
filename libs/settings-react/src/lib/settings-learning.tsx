@@ -36,6 +36,7 @@ const LEARNING_SYNC_GROUPS = [
 export type DailyLimitCapFieldProps = {
   label: string;
   unlimitedLabel: string;
+  unlimitedName: string;
   unlimitedOffValue: number;
   value: number | null;
   onChange: (value: number | null) => void;
@@ -44,6 +45,7 @@ export type DailyLimitCapFieldProps = {
 export function DailyLimitCapField({
   label,
   unlimitedLabel,
+  unlimitedName,
   unlimitedOffValue,
   value,
   onChange,
@@ -67,7 +69,11 @@ export function DailyLimitCapField({
         <Label>{label}</Label>
         <NumberField.Group />
       </NumberField>
-      <Switch isSelected={isUnlimited} onChange={(isSelected) => onChange(isSelected ? null : lastNumber.current)}>
+      <Switch
+        aria-label={unlimitedName}
+        isSelected={isUnlimited}
+        onChange={(isSelected) => onChange(isSelected ? null : lastNumber.current)}
+      >
         <Switch.Indicator />
         <Switch.Label>{unlimitedLabel}</Switch.Label>
       </Switch>
@@ -109,6 +115,26 @@ export function SettingsLearning({ data }: SettingsLearningProps) {
   useRefreshPristineFields(form, initialValues, LEARNING_SYNC_GROUPS);
 
   const unlimitedLabel = _(msg`settings.learning.limits.unlimited`);
+  const dailyLimitTypeRows = [
+    {
+      type: "untouched",
+      label: _(msg`settings.learning.limits.untouched`),
+      unlimitedName: _(msg`settings.learning.limits.untouched.unlimited`),
+      countsName: _(msg`settings.learning.limits.untouched.counts-towards-total`),
+    },
+    {
+      type: "learn",
+      label: _(msg`settings.learning.limits.learn`),
+      unlimitedName: _(msg`settings.learning.limits.learn.unlimited`),
+      countsName: _(msg`settings.learning.limits.learn.counts-towards-total`),
+    },
+    {
+      type: "review",
+      label: _(msg`settings.learning.limits.review`),
+      unlimitedName: _(msg`settings.learning.limits.review.unlimited`),
+      countsName: _(msg`settings.learning.limits.review.counts-towards-total`),
+    },
+  ] as const;
 
   return (
     <form
@@ -145,75 +171,37 @@ export function SettingsLearning({ data }: SettingsLearningProps) {
             <DailyLimitCapField
               label={_(msg`settings.learning.limits.total`)}
               unlimitedLabel={unlimitedLabel}
+              unlimitedName={_(msg`settings.learning.limits.total.unlimited`)}
               unlimitedOffValue={UNLIMITED_OFF_VALUES.total}
               value={field.state.value}
               onChange={field.handleChange}
             />
           )}
         </form.Field>
-        <div className="flex flex-row flex-wrap items-end gap-4">
-          <form.Field name="dailyLimits.untouched.value">
-            {(field) => (
-              <DailyLimitCapField
-                label={_(msg`settings.learning.limits.untouched`)}
-                unlimitedLabel={unlimitedLabel}
-                unlimitedOffValue={UNLIMITED_OFF_VALUES.untouched}
-                value={field.state.value}
-                onChange={field.handleChange}
-              />
-            )}
-          </form.Field>
-          <form.Field name="dailyLimits.untouched.counts">
-            {(field) => (
-              <Switch isSelected={field.state.value} onChange={field.handleChange}>
-                <Switch.Indicator />
-                <Switch.Label>{_(msg`settings.learning.limits.counts-towards-total`)}</Switch.Label>
-              </Switch>
-            )}
-          </form.Field>
-        </div>
-        <div className="flex flex-row flex-wrap items-end gap-4">
-          <form.Field name="dailyLimits.learn.value">
-            {(field) => (
-              <DailyLimitCapField
-                label={_(msg`settings.learning.limits.learn`)}
-                unlimitedLabel={unlimitedLabel}
-                unlimitedOffValue={UNLIMITED_OFF_VALUES.learn}
-                value={field.state.value}
-                onChange={field.handleChange}
-              />
-            )}
-          </form.Field>
-          <form.Field name="dailyLimits.learn.counts">
-            {(field) => (
-              <Switch isSelected={field.state.value} onChange={field.handleChange}>
-                <Switch.Indicator />
-                <Switch.Label>{_(msg`settings.learning.limits.counts-towards-total`)}</Switch.Label>
-              </Switch>
-            )}
-          </form.Field>
-        </div>
-        <div className="flex flex-row flex-wrap items-end gap-4">
-          <form.Field name="dailyLimits.review.value">
-            {(field) => (
-              <DailyLimitCapField
-                label={_(msg`settings.learning.limits.review`)}
-                unlimitedLabel={unlimitedLabel}
-                unlimitedOffValue={UNLIMITED_OFF_VALUES.review}
-                value={field.state.value}
-                onChange={field.handleChange}
-              />
-            )}
-          </form.Field>
-          <form.Field name="dailyLimits.review.counts">
-            {(field) => (
-              <Switch isSelected={field.state.value} onChange={field.handleChange}>
-                <Switch.Indicator />
-                <Switch.Label>{_(msg`settings.learning.limits.counts-towards-total`)}</Switch.Label>
-              </Switch>
-            )}
-          </form.Field>
-        </div>
+        {dailyLimitTypeRows.map(({ type, label, unlimitedName, countsName }) => (
+          <div className="flex flex-row flex-wrap items-end gap-4" key={type}>
+            <form.Field name={`dailyLimits.${type}.value`}>
+              {(field) => (
+                <DailyLimitCapField
+                  label={label}
+                  unlimitedLabel={unlimitedLabel}
+                  unlimitedName={unlimitedName}
+                  unlimitedOffValue={UNLIMITED_OFF_VALUES[type]}
+                  value={field.state.value}
+                  onChange={field.handleChange}
+                />
+              )}
+            </form.Field>
+            <form.Field name={`dailyLimits.${type}.counts`}>
+              {(field) => (
+                <Switch aria-label={countsName} isSelected={field.state.value} onChange={field.handleChange}>
+                  <Switch.Indicator />
+                  <Switch.Label>{_(msg`settings.learning.limits.counts-towards-total`)}</Switch.Label>
+                </Switch>
+              )}
+            </form.Field>
+          </div>
+        ))}
       </FormLayout.Section>
       <FormLayout.Section term={_(msg`settings.learning.learn-ahead-limit`)}>
         <div className="flex flex-row flex-wrap gap-4">

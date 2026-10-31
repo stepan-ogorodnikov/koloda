@@ -294,7 +294,7 @@ Line numbers are at `36f894a4`; when an earlier item moved them, find the code b
   Commit: Start a daily cap from its first-setup number when Unlimited turns off
   Depends on: 1
 
-- [ ] 6. Name each daily-limit switch by its cap
+- [x] 6. Name each daily-limit switch by its cap
   Goal (LS7):
   - Render the New, Learn, and Review rows (`settings-learning.tsx:138-197`) from one component that takes the type,
     so their fields, labels, and names stay in step.

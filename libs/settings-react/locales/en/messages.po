@@ -102,28 +102,28 @@ msgstr "Some providers are disabled due to platform limitations."
 msgid "settings.ai.browser-cors.profile"
 msgstr "This provider cannot be used in the browser."
 
-#: ../../libs/settings-react/src/lib/settings-ai-delete-profile.tsx:50
+#: ../../libs/settings-react/src/lib/settings-ai-delete-profile.tsx:57
 msgid "settings.ai.delete.cancel"
 msgstr "Cancel"
 
-#: ../../libs/settings-react/src/lib/settings-ai-delete-profile.tsx:47
+#: ../../libs/settings-react/src/lib/settings-ai-delete-profile.tsx:54
 msgid "settings.ai.delete.confirm"
 msgstr "Delete"
 
-#: ../../libs/settings-react/src/lib/settings-ai-delete-profile.tsx:45
+#: ../../libs/settings-react/src/lib/settings-ai-delete-profile.tsx:52
 msgid "settings.ai.delete.message"
 msgstr "Are you sure you want to delete this profile?"
 
-#: ../../libs/settings-react/src/lib/ai-providers/edit-ai-profile-form.tsx:65
+#: ../../libs/settings-react/src/lib/ai-providers/edit-ai-profile-form.tsx:67
 #: ../../libs/settings-react/src/lib/settings-ai-profile-models.tsx:147
 msgid "settings.ai.edit.submit"
 msgstr "Save"
 
-#: ../../libs/settings-react/src/lib/settings-ai-edit-profile.tsx:54
+#: ../../libs/settings-react/src/lib/settings-ai-edit-profile.tsx:55
 msgid "settings.ai.edit.title"
 msgstr "Edit AI profile"
 
-#: ../../libs/settings-react/src/lib/settings-ai-edit-profile.tsx:45
+#: ../../libs/settings-react/src/lib/settings-ai-edit-profile.tsx:46
 msgid "settings.ai.edit.trigger"
 msgstr "Edit profile"
 
@@ -180,7 +180,7 @@ msgstr "API key"
 msgid "settings.ai.profiles.base-url.label"
 msgstr "Base URL"
 
-#: ../../libs/settings-react/src/lib/settings-ai-delete-profile.tsx:36
+#: ../../libs/settings-react/src/lib/settings-ai-delete-profile.tsx:43
 msgid "settings.ai.profiles.delete.trigger"
 msgstr "Delete profile"
 
@@ -265,67 +265,93 @@ msgstr "Default"
 msgid "settings.interface.time-format.preview {value}"
 msgstr "Preview: {value}"
 
-#: ../../libs/settings-react/src/lib/settings-learning.tsx:222
+#: ../../libs/settings-react/src/lib/settings-learning.tsx:246
 msgid "settings.learning.day-starts-at"
 msgstr "Start of the day"
 
-#: ../../libs/settings-react/src/lib/settings-learning.tsx:96
+#: ../../libs/settings-react/src/lib/settings-learning.tsx:152
 msgid "settings.learning.defaults.algorithm"
 msgstr "Default algorithm"
 
-#: ../../libs/settings-react/src/lib/settings-learning.tsx:106
+#: ../../libs/settings-react/src/lib/settings-learning.tsx:162
 msgid "settings.learning.defaults.template"
 msgstr "Default template"
 
-#: ../../libs/settings-react/src/lib/settings-learning.tsx:184
+#: ../../libs/settings-react/src/lib/settings-learning.tsx:206
 msgid "settings.learning.learn-ahead-limit"
 msgstr "Learn ahead limit"
 
-#: ../../libs/settings-react/src/lib/settings-learning.tsx:190
+#: ../../libs/settings-react/src/lib/settings-learning.tsx:212
 msgid "settings.learning.learn-ahead-limit.hours.label"
 msgstr "Hours"
 
-#: ../../libs/settings-react/src/lib/settings-learning.tsx:197
+#: ../../libs/settings-react/src/lib/settings-learning.tsx:220
 msgid "settings.learning.learn-ahead-limit.hours.suffix"
 msgstr "h"
 
-#: ../../libs/settings-react/src/lib/settings-learning.tsx:205
+#: ../../libs/settings-react/src/lib/settings-learning.tsx:228
 msgid "settings.learning.learn-ahead-limit.minutes.label"
 msgstr "Minutes"
 
-#: ../../libs/settings-react/src/lib/settings-learning.tsx:212
+#: ../../libs/settings-react/src/lib/settings-learning.tsx:236
 msgid "settings.learning.learn-ahead-limit.minutes.suffix"
 msgstr "m"
 
-#: ../../libs/settings-react/src/lib/settings-learning.tsx:112
+#: ../../libs/settings-react/src/lib/settings-learning.tsx:168
 msgid "settings.learning.limits"
 msgstr "Daily limits"
 
-#: ../../libs/settings-react/src/lib/settings-learning.tsx:138
-#: ../../libs/settings-react/src/lib/settings-learning.tsx:158
-#: ../../libs/settings-react/src/lib/settings-learning.tsx:178
+#: ../../libs/settings-react/src/lib/settings-learning.tsx:199
 msgid "settings.learning.limits.counts-towards-total"
 msgstr "Counts towards total"
 
-#: ../../libs/settings-react/src/lib/settings-learning.tsx:147
+#: ../../libs/settings-react/src/lib/settings-learning.tsx:127
 msgid "settings.learning.limits.learn"
 msgstr "Learn"
 
-#: ../../libs/settings-react/src/lib/settings-learning.tsx:167
+#: ../../libs/settings-react/src/lib/settings-learning.tsx:129
+msgid "settings.learning.limits.learn.counts-towards-total"
+msgstr "Learn counts towards total"
+
+#: ../../libs/settings-react/src/lib/settings-learning.tsx:128
+msgid "settings.learning.limits.learn.unlimited"
+msgstr "Learn unlimited"
+
+#: ../../libs/settings-react/src/lib/settings-learning.tsx:133
 msgid "settings.learning.limits.review"
 msgstr "Review"
 
-#: ../../libs/settings-react/src/lib/settings-learning.tsx:116
+#: ../../libs/settings-react/src/lib/settings-learning.tsx:135
+msgid "settings.learning.limits.review.counts-towards-total"
+msgstr "Review counts towards total"
+
+#: ../../libs/settings-react/src/lib/settings-learning.tsx:134
+msgid "settings.learning.limits.review.unlimited"
+msgstr "Review unlimited"
+
+#: ../../libs/settings-react/src/lib/settings-learning.tsx:172
 msgid "settings.learning.limits.total"
 msgstr "Total"
 
-#: ../../libs/settings-react/src/lib/settings-learning.tsx:81
+#: ../../libs/settings-react/src/lib/settings-learning.tsx:174
+msgid "settings.learning.limits.total.unlimited"
+msgstr "Total unlimited"
+
+#: ../../libs/settings-react/src/lib/settings-learning.tsx:117
 msgid "settings.learning.limits.unlimited"
 msgstr "Unlimited"
 
-#: ../../libs/settings-react/src/lib/settings-learning.tsx:127
+#: ../../libs/settings-react/src/lib/settings-learning.tsx:121
 msgid "settings.learning.limits.untouched"
 msgstr "New"
+
+#: ../../libs/settings-react/src/lib/settings-learning.tsx:123
+msgid "settings.learning.limits.untouched.counts-towards-total"
+msgstr "New counts towards total"
+
+#: ../../libs/settings-react/src/lib/settings-learning.tsx:122
+msgid "settings.learning.limits.untouched.unlimited"
+msgstr "New unlimited"
 
 #: ../../libs/settings-react/src/lib/sync/settings-sync-join.tsx:155
 #: ../../libs/settings-react/src/lib/sync/settings-sync-join.tsx:196
