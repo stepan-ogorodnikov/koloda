@@ -241,7 +241,7 @@ Line numbers are at `36f894a4`; when an earlier item moved them, find the code b
   Commit: Pin each TS exceeds-total rule with its own code
   Depends on: none
 
-- [ ] 3. Report learn-ahead bounds and default ids with the Rust codes in TS
+- [x] 3. Report learn-ahead bounds and default ids with the Rust codes in TS
   Goal (LS3):
   - In both `learningSettingsValidation` and `resolvedLearningSettingsValidation`
     (`libs/app/src/lib/settings-learning.ts:131-149`), give the hours bound the message

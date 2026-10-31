@@ -128,24 +128,33 @@ const dailyLimitsValidation = withCountedLimitRefines(
   }),
 );
 
+// INVARIANT: these codes are the ones Rust returns for the same rules (`validate_default_algorithm`,
+// `validate_default_template`, `LearnAheadLimit::validate` in crates/koloda/src/domain/settings_learning.rs).
+const learningDefaultsValidation = z.object({
+  algorithm: z.uuid({ message: "validation.settings-learning.defaults.algorithm" }),
+  template: z.uuid({ message: "validation.settings-learning.defaults.template" }),
+});
+
+const LEARN_AHEAD_HOURS_RANGE = { message: "validation.settings-learning.learn-ahead-limit.hours-range" };
+const LEARN_AHEAD_MINUTES_RANGE = { message: "validation.settings-learning.learn-ahead-limit.minutes-range" };
+
+const learnAheadLimitValidation = z.tuple([
+  z.int().min(0, LEARN_AHEAD_HOURS_RANGE).max(48, LEARN_AHEAD_HOURS_RANGE),
+  z.int().min(0, LEARN_AHEAD_MINUTES_RANGE).max(59, LEARN_AHEAD_MINUTES_RANGE),
+]);
+
 export const learningSettingsValidation = z.object({
-  defaults: z.object({
-    algorithm: z.uuid(),
-    template: z.uuid(),
-  }),
+  defaults: learningDefaultsValidation,
   dailyLimits: dailyLimitsValidation,
   dayStartsAt: dayStartsAtValidation.default("05:00"),
-  learnAheadLimit: z.tuple([z.int().min(0).max(48), z.int().min(0).max(59)]).default([0, 30]),
+  learnAheadLimit: learnAheadLimitValidation.default([0, 30]),
 });
 
 export const resolvedLearningSettingsValidation = z.object({
-  defaults: z.object({
-    algorithm: z.uuid(),
-    template: z.uuid(),
-  }),
+  defaults: learningDefaultsValidation,
   dailyLimits: resolvedDailyLimitsValidation,
   dayStartsAt: dayStartsAtValidation,
-  learnAheadLimit: z.tuple([z.int().min(0).max(48), z.int().min(0).max(59)]),
+  learnAheadLimit: learnAheadLimitValidation,
 });
 
 export type LearningSettingsInput = z.input<typeof learningSettingsValidation>;

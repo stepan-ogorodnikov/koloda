@@ -265,42 +265,6 @@ describe("learn ahead limit validation", () => {
     expect(result.success).toBe(true);
   });
 
-  it("rejects hours above 48", () => {
-    const result = learningSettingsValidation.safeParse({
-      defaults,
-      dailyLimits: {},
-      learnAheadLimit: [49, 0],
-    });
-    expect(result.success).toBe(false);
-  });
-
-  it("rejects negative hours", () => {
-    const result = learningSettingsValidation.safeParse({
-      defaults,
-      dailyLimits: {},
-      learnAheadLimit: [-1, 0],
-    });
-    expect(result.success).toBe(false);
-  });
-
-  it("rejects minutes above 59", () => {
-    const result = learningSettingsValidation.safeParse({
-      defaults,
-      dailyLimits: {},
-      learnAheadLimit: [0, 60],
-    });
-    expect(result.success).toBe(false);
-  });
-
-  it("rejects negative minutes", () => {
-    const result = learningSettingsValidation.safeParse({
-      defaults,
-      dailyLimits: {},
-      learnAheadLimit: [0, -1],
-    });
-    expect(result.success).toBe(false);
-  });
-
   it("rejects invalid dayStartsAt format", () => {
     const result = learningSettingsValidation.safeParse({
       defaults,
@@ -318,6 +282,54 @@ describe("learn ahead limit validation", () => {
     });
     expect(result.success).toBe(false);
   });
+});
+
+// Twin of koloda `test_learn_ahead_limit_*_too_high_fails` and `test_defaults_non_uuid_*_fails`.
+describe("learn-ahead and default id codes", () => {
+  const schemas = [
+    { schemaName: "defaulting", schema: learningSettingsValidation },
+    { schemaName: "resolved", schema: resolvedLearningSettingsValidation },
+  ];
+  const cases = [
+    {
+      name: "hours 49",
+      patch: { learnAheadLimit: [49, 0] },
+      code: "validation.settings-learning.learn-ahead-limit.hours-range",
+    },
+    {
+      name: "hours -1",
+      patch: { learnAheadLimit: [-1, 0] },
+      code: "validation.settings-learning.learn-ahead-limit.hours-range",
+    },
+    {
+      name: "minutes 60",
+      patch: { learnAheadLimit: [0, 60] },
+      code: "validation.settings-learning.learn-ahead-limit.minutes-range",
+    },
+    {
+      name: "minutes -1",
+      patch: { learnAheadLimit: [0, -1] },
+      code: "validation.settings-learning.learn-ahead-limit.minutes-range",
+    },
+    {
+      name: "a non-uuid algorithm",
+      patch: { defaults: { ...defaults, algorithm: "simple" } },
+      code: "validation.settings-learning.defaults.algorithm",
+    },
+    {
+      name: "a non-uuid template",
+      patch: { defaults: { ...defaults, template: "basic" } },
+      code: "validation.settings-learning.defaults.template",
+    },
+  ];
+
+  it.each(schemas.flatMap((schema) => cases.map((testCase) => ({ ...schema, ...testCase }))))(
+    "$schemaName schema rejects $name with its code",
+    ({ schema, patch, code }) => {
+      const result = schema.safeParse({ ...DEFAULT_LEARNING_SETTINGS, defaults, ...patch });
+      expect(result.error?.issues.map((issue) => issue.message)).toEqual([code]);
+    },
+  );
 });
 
 describe("resolvedLearningSettingsValidation", () => {
