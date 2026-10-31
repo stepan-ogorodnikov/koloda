@@ -469,7 +469,7 @@ Line numbers are at `013fadf8`; when an earlier item moved them, find the code b
   Commit: Drop interface settings residue
   Depends on: 4
 
-- [ ] 10. Check the interface registries and theme surfaces against their twins
+- [x] 10. Check the interface registries and theme surfaces against their twins
   Goal (IS14):
   - New `libs/app/src/lib/settings-interface-parity.test.ts` in the style of `error-parity.test.ts`: parse the
     languages, schemes, light and dark themes, and motion values, and the defaults, from

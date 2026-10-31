@@ -154,6 +154,8 @@ pub const DARK_THEMES: &[&str] = &[/* … */, "my-dark"];
 
 TS and Rust registries must stay in sync.
 Zod and Rust validation both reject unknown theme ids.
+`libs/app/src/lib/settings-interface-parity.test.ts` fails when the registries, the defaults, the theme files'
+`--color-bg` and `--titlebar-overlay-color`, or `theme-boot.js` `SURFACE` disagree.
 
 ### 8. Hand off a Manual verify block
 
