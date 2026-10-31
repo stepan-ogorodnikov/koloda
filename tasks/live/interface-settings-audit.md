@@ -1,6 +1,6 @@
 # Interface settings audit fixes
 
-Status: draft
+Status: ready
 Guides: agents/IMPLEMENTATION-PLAN.md, agents/TASKS.md, docs/specs/INTERFACE-SETTINGS.md, agents/CODE-STYLE.md, agents/CODE-DOCUMENTATION.md, agents/TESTING.md, agents/CSS.md, agents/I18N.md, agents/RUST.md, docs/decisions/TS-RUST-DOMAIN-MIRRORING.md, agents/ADD-COLOR-THEME.md, agents/FUNCTIONAL-SPECIFICATIONS.md, agents/MARKDOWN.md, agents/VERIFY.md, apps/web-e2e/README.md, apps/electron-e2e/README.md, libs/e2e/README.md, agents/REVIEW.md
 Flow: local
 
@@ -293,7 +293,7 @@ The report raised three, for IS1, IS2, and IS10; they are questions 2-4.
 - [x] 6. IS7: where does a failed write show? — on the interface screen, one alert above the sections, cleared by the
   next successful write.
   The toggle hotkeys have no screen; they put the atom back, which is visible, and show nothing else.
-- [ ] 7. Plan approval — open.
+- [x] 7. Plan approval — approved as drafted (human, 2026-10-31).
 
 ## Plan
 
