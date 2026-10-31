@@ -319,7 +319,7 @@ Line numbers are at `013fadf8`; when an earlier item moved them, find the code b
   Commit: Run web settings patches in one transaction
   Depends on: none
 
-- [ ] 2. Keep a Scheme or Motion option selected when pressed again
+- [x] 2. Keep a Scheme or Motion option selected when pressed again
   Goal (IS6):
   - Set `disallowEmptySelection` on the Scheme and Motion `ToggleGroup`s (`settings-interface.tsx:40-47`, `:56-63`).
   - Component test (new `settings-interface.test.tsx`, real `SettingsInterface`, stub `patchSettingsMutation`):

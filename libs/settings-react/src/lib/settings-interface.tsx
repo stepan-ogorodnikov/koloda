@@ -38,6 +38,7 @@ export function SettingsInterface() {
       <LanguagePicker variants={{ layout: "form" }} label={_(msg`settings.interface.language`)} showIcon={false} />
       <FormLayout.Section term={_(msg`settings.interface.scheme`)}>
         <ToggleGroup
+          disallowEmptySelection
           selectedKeys={[scheme]}
           onSelectionChange={([value]) => {
             const next = value.toString();
@@ -54,6 +55,7 @@ export function SettingsInterface() {
       <DarkThemePicker variants={{ layout: "form" }} />
       <FormLayout.Section term={_(msg`settings.interface.motion`)}>
         <ToggleGroup
+          disallowEmptySelection
           selectedKeys={[motion]}
           onSelectionChange={([value]) => {
             const next = value.toString();
