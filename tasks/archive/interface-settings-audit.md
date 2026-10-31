@@ -1,6 +1,6 @@
 # Interface settings audit fixes
 
-Status: ready
+Status: done
 Guides: agents/IMPLEMENTATION-PLAN.md, agents/TASKS.md, docs/specs/INTERFACE-SETTINGS.md, agents/CODE-STYLE.md, agents/CODE-DOCUMENTATION.md, agents/TESTING.md, agents/CSS.md, agents/I18N.md, agents/RUST.md, docs/decisions/TS-RUST-DOMAIN-MIRRORING.md, agents/ADD-COLOR-THEME.md, agents/FUNCTIONAL-SPECIFICATIONS.md, agents/MARKDOWN.md, agents/VERIFY.md, apps/web-e2e/README.md, apps/electron-e2e/README.md, libs/e2e/README.md, agents/REVIEW.md
 Flow: local
 
@@ -558,4 +558,35 @@ Line numbers are at `013fadf8`; when an earlier item moved them, find the code b
 
 ## Outcome
 
-Pending.
+Shipped, one commit per Plan item, all 16 done. Items 15 and 16 are self-review follow-ups: the spec sentence for a
+failed write, and an unused dependency. Every finding, IS1 to IS16, is fixed; none was skipped or left for a decision.
+The answers to questions 2 to 6 are in Open questions above.
+
+- The web saves a settings change in one transaction, so quick successive changes keep every field (IS5).
+- Pressing the selected Scheme or Motion option does nothing and throws nothing (IS6).
+- A saved language no longer overrides the language chosen on this device when the saved settings load (IS1).
+- Interface fields write through one hook. A failed write puts the control back and shows one alert above the
+  sections, cleared by the next save (IS7, IS12). INTERFACE-SETTINGS.md says so (item 15).
+- Motion Off, or System with the device asking to reduce motion, stops every movement and looping indicator. Brief
+  fades and color changes stay (IS2).
+- GitHub Dark's tokens apply only to GitHub Dark; Atom One Dark takes the scheme's orange focus ring (IS8).
+- The first desktop launch paints the GitHub pair (IS9).
+- The timestamp pattern rule has accept rows on both hosts. An unclosed quote runs to the end of the pattern. The TS
+  date-fns check stays as a guard (IS10, IS11).
+- Sideways Ctrl+wheel scrolls no longer zoom on the desktop (IS4).
+- The interface formats are listed everywhere they apply, and each format rule has one home (IS3, IS16).
+- The TS and Rust registries and the theme surfaces are checked against their twins (IS14).
+- The scheme and motion wiring has unit tests. The interface e2e flows check by outcome in both suites (IS13).
+- Residue is dropped, including app-react's unused settings dependency (IS15).
+
+Not run by the agent: the Playwright e2e suites. Item 14's Done-when is typecheck only, and the plan says the human
+runs both suites.
+
+Left for other triage, as the Overlaps section records:
+
+- The `hotkeys.md` finding 12 twin in `use-hotkeys-settings.ts` stays with the hotkeys triage. Its timestamp formatter
+  twin is fixed here (item 9).
+- The `libs/ui` package audit should not re-raise the drawer, switch, and slider motion gating, which IS2 fixes here.
+- The `apps/electron` package audit should not re-raise `ui-prefs.ts`, which IS9 fixes here.
+- The host-desync triage should record that its IS5 host difference, which that report does not list, is closed here
+  (item 1).
