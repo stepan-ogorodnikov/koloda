@@ -21,8 +21,7 @@ They are edited on the learning settings screen and take effect for later study.
 ## Core model
 
 - **Defaults** — the algorithm and template offered when creating a deck
-- **Daily limits** — caps for New, Learn, Review, and Total for the current learning day.
-  Each cap is unlimited or a non-negative number.
+- **Daily limits** — caps for New, Learn, Review, and Total for the current learning day
 - **Counts toward total** — whether a per-type limit contributes to Total
 - **Day starts at** — local wall-clock time that begins a new learning day
 - **Learn-ahead limit** — how far into the future a graded card may still re-enter the same lesson
@@ -33,7 +32,6 @@ They are edited on the learning settings screen and take effect for later study.
 - Those same figures are shown on the Dashboard; see LESSONS.md (§Today's Progress).
 - Day starts at defines the time window used for today's review totals.
 - Learn-ahead is applied while studying; see LESSONS.md (§Learn Ahead).
-- Defaults do not rewrite existing decks or cards.
 
 ## Defaults
 
@@ -85,7 +83,7 @@ Total still clamps counted remaining room when init defaults are computed; see L
 Limits do not hard-block studying.
 They shape lesson init defaults.
 In a lesson, the user can still raise amounts up to what is available; see LESSONS.md (§Init).
-Types that do not count toward Total leave Total room unused when those defaults are computed.
+How uncounted types use Total room in those defaults is in LESSONS.md (§Default Amounts).
 
 ## Learning Day
 
@@ -124,8 +122,9 @@ That effectively turns learn-ahead off for cards scheduled into the future.
 
 The learning settings form lets the user change defaults, limits, learn-ahead, and Day starts at.
 
-Save persists the whole settings payload.
-On success, the form resets to the saved values and the default algorithm and template used elsewhere update.
+While the form is open, fields the user has not changed take values synced from other devices; see SYNC.md (§Status).
+After a successful save, the form resets to the saved values.
+The default algorithm and template used elsewhere update at the same time.
 
 Discard restores the last saved values without writing.
 

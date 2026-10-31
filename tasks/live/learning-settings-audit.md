@@ -333,7 +333,7 @@ Line numbers are at `36f894a4`; when an earlier item moved them, find the code b
   Commit: Drop learning settings residue
   Depends on: 6
 
-- [ ] 8. Give each learning rule one home in LEARNING-SETTINGS.md
+- [x] 8. Give each learning rule one home in LEARNING-SETTINGS.md
   Goal (LS9):
   - Drop the glossary's "Each cap is unlimited or a non-negative number" (line 25); §Daily Limits line 55 keeps it.
   - Drop §Relationships line 36; §Defaults line 43 keeps the rule.
