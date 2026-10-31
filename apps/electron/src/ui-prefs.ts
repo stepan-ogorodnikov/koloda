@@ -28,6 +28,13 @@ export function saveUiPrefs(prefs: UiPrefsState) {
   // WHY: prefs persistence is best-effort; overlay theming must not fail the caller.
 }
 
+// WHY: with no saved prefs the window shows the default themes, GitHub Dark and GitHub Light. Twins: the defaults in
+// libs/app/src/lib/settings-interface.ts, `SURFACE` in libs/app-react/public/theme-boot.js, and the titlebar colors in
+// libs/ui/src/lib/styles/themes/github-*.css.
 export function getDefaultSurfaceColor() {
-  return nativeTheme.shouldUseDarkColors ? "#282c34" : "#fafafa";
+  return nativeTheme.shouldUseDarkColors ? "#0d1117" : "#ffffff";
+}
+
+export function getDefaultSymbolColor() {
+  return nativeTheme.shouldUseDarkColors ? "#f0f6fc" : "#1f2328";
 }

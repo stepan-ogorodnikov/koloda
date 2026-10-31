@@ -420,7 +420,7 @@ Line numbers are at `013fadf8`; when an earlier item moved them, find the code b
   Commit: Keep GitHub Dark's tokens out of the other dark themes
   Depends on: none
 
-- [ ] 7. Paint the GitHub pair on the first desktop launch
+- [x] 7. Paint the GitHub pair on the first desktop launch
   Goal (IS9):
   - `getDefaultSurfaceColor` (`apps/electron/src/ui-prefs.ts:31-33`) returns `#0d1117` or `#ffffff`, and the
     titlebar symbol fallback (`window.ts:31`) `#f0f6fc` or `#1f2328`.

@@ -1,10 +1,10 @@
-import { BrowserWindow, nativeTheme, shell } from "electron";
+import { BrowserWindow, shell } from "electron";
 import type { WebContents } from "electron";
 import { join } from "node:path";
 import { appDir, isDev } from "./env";
 import { appNavigationTarget, decideNavigation } from "./navigation-policy";
 import type { AppNavigationTarget } from "./navigation-policy";
-import { getDefaultSurfaceColor, loadUiPrefs } from "./ui-prefs";
+import { getDefaultSurfaceColor, getDefaultSymbolColor, loadUiPrefs } from "./ui-prefs";
 import { loadWindowState, saveWindowState } from "./window-state";
 import { APP_SHUTDOWN_REQUEST_CHANNEL } from "@koloda/native-ipc";
 import { createWindowCloseCoordinator } from "./window-close-coordinator";
@@ -24,11 +24,10 @@ function getInitialBackgroundColor() {
 function getInitialTitleBarOverlay(): { height: number; color: string; symbolColor: string } | undefined {
   if (process.platform === "darwin") return undefined;
   const prefs = loadUiPrefs();
-  const isDark = nativeTheme.shouldUseDarkColors;
   return {
     height: TITLEBAR_HEIGHT,
     color: prefs.overlayColor ?? getDefaultSurfaceColor(),
-    symbolColor: prefs.overlaySymbolColor ?? (isDark ? "#abb2bf" : "#383a42"),
+    symbolColor: prefs.overlaySymbolColor ?? getDefaultSymbolColor(),
   };
 }
 
