@@ -54,6 +54,8 @@ There is a Total cap and a cap for each of New, Learn, and Review.
 
 Each cap is either unlimited or a non-negative number.
 The user sets unlimited with an Unlimited control next to that cap.
+Turning Unlimited off on a cap that had no number fills in its first-setup number.
+Learn starts unlimited, so it takes 200.
 
 Each of New, Learn, and Review also has a **counts toward total** switch.
 That switch still applies when the type is unlimited.

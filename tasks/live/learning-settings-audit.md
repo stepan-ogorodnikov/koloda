@@ -275,7 +275,7 @@ Line numbers are at `36f894a4`; when an earlier item moved them, find the code b
   Commit: Cover ignored and relearning reviews in today's totals on both hosts
   Depends on: none
 
-- [ ] 5. Start a cap from its first-setup number when Unlimited turns off
+- [x] 5. Start a cap from its first-setup number when Unlimited turns off
   Goal (LS6):
   - `DailyLimitCapField` (`settings-learning.tsx:31-64`) takes the number to use when a cap loaded as unlimited is
     turned on again: Total 200, New 50, Review 200, Learn 200.

@@ -19,6 +19,11 @@ const wholeNumberFormatOptions: Intl.NumberFormatOptions = { useGrouping: false,
 
 export type SettingsLearningProps = { data: ResolvedLearningSettings };
 
+// WHY: a cap that loaded as unlimited has no last number, and 0 is a hard cap (LEARNING-SETTINGS.md, Daily Limits).
+// So turning Unlimited off fills in the first-setup number. Learn starts unlimited and has none; 200 matches Review
+// and, since Learn does not count toward Total on first setup, does not block a save.
+const UNLIMITED_OFF_VALUES = { total: 200, untouched: 50, learn: 200, review: 200 } as const;
+
 // INVARIANT: one path per learning sync key (crates/koloda-sync-proto/PROTOCOL.md, Field groups and merge).
 const LEARNING_SYNC_GROUPS = [
   "defaults.algorithm",
@@ -31,12 +36,19 @@ const LEARNING_SYNC_GROUPS = [
 export type DailyLimitCapFieldProps = {
   label: string;
   unlimitedLabel: string;
+  unlimitedOffValue: number;
   value: number | null;
   onChange: (value: number | null) => void;
 };
 
-export function DailyLimitCapField({ label, unlimitedLabel, value, onChange }: DailyLimitCapFieldProps) {
-  const lastNumber = useRef(value ?? 0);
+export function DailyLimitCapField({
+  label,
+  unlimitedLabel,
+  unlimitedOffValue,
+  value,
+  onChange,
+}: DailyLimitCapFieldProps) {
+  const lastNumber = useRef(value ?? unlimitedOffValue);
   if (typeof value === "number") lastNumber.current = value;
   const isUnlimited = value == null;
 
@@ -133,6 +145,7 @@ export function SettingsLearning({ data }: SettingsLearningProps) {
             <DailyLimitCapField
               label={_(msg`settings.learning.limits.total`)}
               unlimitedLabel={unlimitedLabel}
+              unlimitedOffValue={UNLIMITED_OFF_VALUES.total}
               value={field.state.value}
               onChange={field.handleChange}
             />
@@ -144,6 +157,7 @@ export function SettingsLearning({ data }: SettingsLearningProps) {
               <DailyLimitCapField
                 label={_(msg`settings.learning.limits.untouched`)}
                 unlimitedLabel={unlimitedLabel}
+                unlimitedOffValue={UNLIMITED_OFF_VALUES.untouched}
                 value={field.state.value}
                 onChange={field.handleChange}
               />
@@ -164,6 +178,7 @@ export function SettingsLearning({ data }: SettingsLearningProps) {
               <DailyLimitCapField
                 label={_(msg`settings.learning.limits.learn`)}
                 unlimitedLabel={unlimitedLabel}
+                unlimitedOffValue={UNLIMITED_OFF_VALUES.learn}
                 value={field.state.value}
                 onChange={field.handleChange}
               />
@@ -184,6 +199,7 @@ export function SettingsLearning({ data }: SettingsLearningProps) {
               <DailyLimitCapField
                 label={_(msg`settings.learning.limits.review`)}
                 unlimitedLabel={unlimitedLabel}
+                unlimitedOffValue={UNLIMITED_OFF_VALUES.review}
                 value={field.state.value}
                 onChange={field.handleChange}
               />
