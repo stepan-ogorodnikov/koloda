@@ -67,7 +67,7 @@ export function LessonProgressDotsView({ dots, index }: LessonProgressDotsViewPr
         className="absolute left-1/2 flex flex-row justify-center gap-2"
         initial={{ x: -0.5 * rem() }}
         animate={{ x: -0.5 * rem() - index * 1.5 * rem() }}
-        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+        transition={isMotionOn ? { type: "spring", stiffness: 300, damping: 30 } : { duration: 0 }}
       >
         {dots.map(({ type, status, isCurrent }, i) => (
           <div className={lessonProgressCardDot({ isCurrent, type })} key={i} aria-hidden="true">

@@ -31,7 +31,7 @@ Language and color scheme are also chosen during first setup, before any data ex
 
 - Color scheme decides which of the light and dark themes is active.
 - The light and dark themes are separate choices, remembered separately.
-- Motion applies to all interface animations at once.
+- One motion setting covers the whole interface; §Motion says what it stops.
 - Interface settings never change learning, hotkeys, or assistant settings.
 
 ## Language
@@ -94,6 +94,10 @@ The motion setting is one of:
 
 The default is System.
 When the device asks to reduce motion, animations are suppressed; otherwise they play.
+
+Suppressed animations stop all movement: nothing slides, scales, rotates, or springs.
+Looping indicators, such as spinners, pulses, and shimmers, stand still.
+Brief fades and color changes still play.
 
 ## Date and Time Format
 

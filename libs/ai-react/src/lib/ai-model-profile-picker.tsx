@@ -40,7 +40,7 @@ type ProfileSection = {
 const modelPickerStatusIcon = tv({
   base: "size-4 min-w-4",
   variants: {
-    isLoading: { true: "animate-spin" },
+    isLoading: { true: "motion:animate-spin" },
   },
   defaultVariants: { isLoading: false },
 });

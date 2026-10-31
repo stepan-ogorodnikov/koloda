@@ -249,7 +249,7 @@ function ToolActivityRow({ call }: ToolActivityRowProps) {
 function FoldChevron() {
   return (
     <ChevronRightIcon
-      className="size-5 min-w-5 group-aria-expanded/tool:rotate-90 transition-transform duration-250 ease-in-out"
+      className="size-5 min-w-5 group-aria-expanded/tool:rotate-90 motion:transition-transform duration-250 ease-in-out"
       strokeWidth={2}
       aria-hidden="true"
     />

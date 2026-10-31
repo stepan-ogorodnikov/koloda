@@ -11,7 +11,7 @@ import { useSyncStopMessage } from "./sync-messages";
 const indicatorIcon = tv({
   base: "size-5 min-w-5",
   variants: {
-    isSpinning: { true: "animate-spin" },
+    isSpinning: { true: "motion:animate-spin" },
   },
   defaultVariants: {
     isSpinning: false,

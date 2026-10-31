@@ -82,6 +82,8 @@ Prefer these over hand-rolled equivalents. Defined in `libs/ui/src/lib/styles/ut
   so do not put it on a row, an icon, or a label's ancestor.
   Use `animate-shimmer-text--fg-level-4/fg-level-1` on a running label (pending labels, and the name of a running row).
   Use `animate-shimmer-icon` on a second copy of an icon stacked on a solid base for a running icon.
+  The shimmers run only under `motion`; elsewhere gate movement and loops with the `motion:` variant
+  (`motion:transition-transform`, `motion:animate-spin`), as INTERFACE-SETTINGS.md (§Motion) requires.
 - `numbers-text` — shared "large number" label style.
 
 Reference: `libs/ui/src/lib/primitives/form/button.tsx` (tokens + `focus-ring` + `animate-colors`),

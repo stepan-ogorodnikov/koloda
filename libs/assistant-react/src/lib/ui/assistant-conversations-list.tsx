@@ -141,7 +141,11 @@ function ConversationItem({
     >
       <span className="flex shrink-0 items-center justify-center w-4">
         {showActive ? (
-          <div className="size-2 rounded-full bg-fg-level-4 animate-pulse" role="img" aria-label={runningLabel} />
+          <div
+            className="size-2 rounded-full bg-fg-level-4 motion:animate-pulse"
+            role="img"
+            aria-label={runningLabel}
+          />
         ) : showUnread ? (
           <div className="size-2 rounded-full bg-fg-link" role="img" aria-label={unreadLabel} />
         ) : null}

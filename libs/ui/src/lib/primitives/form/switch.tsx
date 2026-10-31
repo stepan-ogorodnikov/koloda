@@ -19,7 +19,7 @@ const switchIndicator = [
 
 const switchIndicatorBullet = [
   "size-5 rounded-full bg-switch-bullet",
-  "transition duration-200 ease-in-out translate-x-0 group-selected:translate-x-full",
+  "motion:transition duration-200 ease-in-out translate-x-0 group-selected:translate-x-full",
 ].join(" ");
 
 function SwitchIndicator() {

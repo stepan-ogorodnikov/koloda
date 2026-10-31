@@ -83,7 +83,7 @@ export function SliderTrack({ children, ...props }: SliderTrackProps) {
 
 const sliderThumbVisual = [
   "absolute inset-0 rounded-full bg-slider-thumb border-2 border-slider-thumb shadow-slider-thumb",
-  "group-data-[dragging]:scale-110 transition-transform duration-150 ease-in-out",
+  "group-data-[dragging]:scale-110 motion:transition-transform duration-150 ease-in-out",
 ].join(" ");
 
 export type SliderThumbProps = ReactAriaSliderThumbProps;

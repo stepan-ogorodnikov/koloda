@@ -378,7 +378,7 @@ Line numbers are at `013fadf8`; when an earlier item moved them, find the code b
   Commit: Write interface fields through one hook that undoes a failed write
   Depends on: 2
 
-- [ ] 5. Stop every movement and looping indicator when Motion is off
+- [x] 5. Stop every movement and looping indicator when Motion is off
   Goal (IS2):
   - Gate with the `motion:` variant: the drawer panel slide (`drawer.tsx:39`), the switch thumb (`switch.tsx:22`), the
     slider thumb scale (`slider.tsx:86`), and the tool-activity chevron (`ai-tool-activity.tsx:252`).

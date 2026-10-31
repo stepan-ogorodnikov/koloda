@@ -22,7 +22,7 @@ const queryErrorRetryButton = tv({
 const queryErrorRetryIcon = tv({
   base: "size-5 min-w-5",
   variants: {
-    isPending: { true: "animate-spin" },
+    isPending: { true: "motion:animate-spin" },
   },
 });
 

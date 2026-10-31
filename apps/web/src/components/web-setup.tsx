@@ -157,7 +157,7 @@ export function WebSetup() {
               data-setup-submit
             >
               {isPending && (
-                <RefreshIcon className="size-5 min-w-5 animate-spin" strokeWidth={1.75} aria-hidden="true" />
+                <RefreshIcon className="size-5 min-w-5 motion:animate-spin" strokeWidth={1.75} aria-hidden="true" />
               )}
               {isPending ? _(msg`web.setup.loading`) : _(msg`web.setup.submit`)}
             </Button>

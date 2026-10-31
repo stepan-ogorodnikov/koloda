@@ -1,4 +1,4 @@
-import { Fade, TextField } from "@koloda/ui";
+import { Fade, TextField, useMotionSetting } from "@koloda/ui";
 import { AnimatePresence, motion } from "motion/react";
 import { LessonCardFieldTextDiff } from "./lesson-card-field-text-diff";
 import type { FieldComponentProps } from "./lesson-card-field-types";
@@ -15,6 +15,8 @@ export function LessonCardFieldText({
   onFormChange,
   onSubmit,
 }: FieldComponentProps) {
+  const isMotionOn = useMotionSetting();
+
   if (operation === "type") {
     return (
       <AnimatePresence mode="wait">
@@ -46,7 +48,7 @@ export function LessonCardFieldText({
   }
 
   return (
-    <motion.div className={lessonCardFieldValue} layout>
+    <motion.div className={lessonCardFieldValue} layout={isMotionOn}>
       {value}
     </motion.div>
   );

@@ -36,7 +36,7 @@ const layoutDrawerPanel = tv({
   base: "flex flex-row shrink-0 bg-transparent",
   variants: {
     hasContent: {
-      true: "max-wd:bg-level-1 max-wd:transition-transform max-wd:duration-250 max-wd:-translate-x-full",
+      true: "max-wd:bg-level-1 max-wd:motion:transition-transform max-wd:duration-250 max-wd:-translate-x-full",
       false: "max-wd:grow",
     },
     isOpen: { true: "", false: "" },

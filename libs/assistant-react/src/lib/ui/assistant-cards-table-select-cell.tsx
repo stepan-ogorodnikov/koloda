@@ -34,7 +34,7 @@ export function AssistantCardsTableSelectCell({ row }: AssistantCardsTableSelect
       {status === "pending" && (
         <Fade className={tableCellContent()} key="pending">
           <PendingIcon
-            className="size-4 min-w-4 fg-level-4 animate-spin"
+            className="size-4 min-w-4 fg-level-4 motion:animate-spin"
             aria-label={_(msg`assistant.table.columns.status.pending`)}
             strokeWidth={1.75}
           />

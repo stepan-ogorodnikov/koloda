@@ -44,7 +44,7 @@ export function HotkeyRecorder({ onAccept, children }: HotkeyRecorderProps) {
               {value ? (
                 <HotKey value={value} />
               ) : (
-                <span className="fg-disabled animate-pulse">{_(msg`hotkey-recorder.input.placeholder`)}</span>
+                <span className="fg-disabled motion:animate-pulse">{_(msg`hotkey-recorder.input.placeholder`)}</span>
               )}
             </div>
             <Button

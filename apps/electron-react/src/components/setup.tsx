@@ -125,7 +125,7 @@ function SetupOption({ title, description, onPress, isDisabled, isPending }: Set
         </span>
       </span>
       {isPending ? (
-        <RefreshIcon className="size-5 min-w-5 animate-spin" strokeWidth={1.75} aria-hidden="true" />
+        <RefreshIcon className="size-5 min-w-5 motion:animate-spin" strokeWidth={1.75} aria-hidden="true" />
       ) : (
         <ChevronRightIcon className="size-5 min-w-5" strokeWidth={2} aria-hidden="true" />
       )}
