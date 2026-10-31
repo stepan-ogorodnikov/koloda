@@ -136,7 +136,6 @@
         "@koloda/app": "workspace:*",
         "@koloda/assistant-react": "workspace:*",
         "@koloda/core-react": "workspace:*",
-        "@koloda/settings": "workspace:*",
         "@koloda/settings-react": "workspace:*",
         "@koloda/srs-react": "workspace:*",
         "@koloda/ui": "workspace:*",

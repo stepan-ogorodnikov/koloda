@@ -547,6 +547,15 @@ Line numbers are at `013fadf8`; when an earlier item moved them, find the code b
   Commit: State what a failed interface write shows
   Depends on: 4
 
+- [x] 16. Drop app-react's unused settings dependency
+  Goal (self-review of item 4): `use-app-hotkeys.ts` no longer imports `@koloda/settings`, so `check:workspace-deps`
+  flags it as phantom; drop it from `libs/app-react/package.json`, its `tsconfig.lib.json` reference, and `bun.lock`.
+  Constraints: no source change.
+  Done when: `bun run check:workspace-deps` and `bun run typecheck` pass.
+  Manual verify: none — dependency bookkeeping.
+  Commit: Drop app-react's unused settings dependency
+  Depends on: 4
+
 ## Outcome
 
 Pending.
