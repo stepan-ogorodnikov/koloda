@@ -1,6 +1,6 @@
 import { parseTime } from "@internationalized/date";
 import { timeFieldFormatOptions, toFormErrors } from "@koloda/app";
-import { learningSettingsValidation, resolvedLearningSettingsValidation } from "@koloda/app";
+import { resolvedLearningSettingsValidation } from "@koloda/app";
 import type { ResolvedLearningSettings } from "@koloda/app";
 import { queriesAtom, queryKeys, timeFormatAtom } from "@koloda/core-react";
 import { AlgorithmPicker } from "@koloda/srs-react";
@@ -88,10 +88,9 @@ export function SettingsLearning({ data }: SettingsLearningProps) {
   const timeFormat = useAtomValue(timeFormatAtom);
   const timeFieldOptions = timeFieldFormatOptions(timeFormat);
   const { mutate } = useMutation(setSettingsMutation<"learning">());
-  const initialValues = learningSettingsValidation.parse(data);
 
   const form = useAppForm({
-    defaultValues: initialValues,
+    defaultValues: data,
     validators: { onSubmit: resolvedLearningSettingsValidation },
     onSubmit: async ({ formApi, value }) => {
       mutate(
@@ -103,7 +102,8 @@ export function SettingsLearning({ data }: SettingsLearningProps) {
             // `settings.learning` entry refreshes them too (apps/electron-react/src/app/sync-events.ts).
             queryClient.invalidateQueries({ queryKey: queryKeys.lessons.todayReviewTotals() });
             queryClient.setQueryData(queryKeys.settings.detail("learning"), returning);
-            formApi.reset(returning?.content ? learningSettingsValidation.parse(returning.content) : undefined);
+            // WHY: reset must receive the saved values; a bare reset() restores the values from before the save.
+            formApi.reset(value);
           },
           onError: (error) => {
             formApi.setErrorMap({ onSubmit: toFormErrors(error) });
@@ -112,7 +112,7 @@ export function SettingsLearning({ data }: SettingsLearningProps) {
       );
     },
   });
-  useRefreshPristineFields(form, initialValues, LEARNING_SYNC_GROUPS);
+  useRefreshPristineFields(form, data, LEARNING_SYNC_GROUPS);
 
   const unlimitedLabel = _(msg`settings.learning.limits.unlimited`);
   const dailyLimitTypeRows = [

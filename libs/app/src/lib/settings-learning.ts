@@ -36,8 +36,6 @@ export const dayStartsAtValidation = z.string().refine(
 
 export const LEARNING_DAILY_LIMIT_TYPES = ["untouched", "learn", "review"] as const;
 
-export type LearningDailyLimitType = (typeof LEARNING_DAILY_LIMIT_TYPES)[number];
-
 export const dailyLimitCapValidation = z.int().min(0).nullable();
 
 export const learningDailyLimitValidation = z.object({
@@ -157,8 +155,7 @@ export const resolvedLearningSettingsValidation = z.object({
   learnAheadLimit: learnAheadLimitValidation,
 });
 
-export type LearningSettingsInput = z.input<typeof learningSettingsValidation>;
-export type LearningSettings = LearningSettingsInput;
+export type LearningSettings = z.input<typeof learningSettingsValidation>;
 export type ResolvedLearningSettings = z.output<typeof resolvedLearningSettingsValidation>;
 
 export const DEFAULT_LEARNING_SETTINGS: ResolvedLearningSettings = learningSettingsValidation.parse({

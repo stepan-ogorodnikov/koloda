@@ -317,7 +317,7 @@ Line numbers are at `36f894a4`; when an earlier item moved them, find the code b
   Commit: Name each daily-limit switch by its cap
   Depends on: 5
 
-- [ ] 7. Drop learning settings residue
+- [x] 7. Drop learning settings residue
   Goal (LS8):
   - `libs/app/src/lib/settings-learning.ts`: define `LearningSettings` as `z.input<typeof learningSettingsValidation>`
     and drop `LearningSettingsInput`; drop `LearningDailyLimitType`.

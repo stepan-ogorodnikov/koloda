@@ -88,7 +88,7 @@ export function getLearningDayRangeAt(now: Date, dayStartsAt: string) {
   };
 }
 
-export async function getCurrentLearningDayRange(dayStartsAt: string) {
+export function getCurrentLearningDayRange(dayStartsAt: string) {
   return getLearningDayRangeAt(new Date(), dayStartsAt);
 }
 

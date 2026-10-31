@@ -49,7 +49,7 @@ export async function getTodaysReviewTotals(db: DB) {
     // parsing `undefined` would leak a ZodError instead of an AppError.
     if (!learningSettings) throw new AppError("db.get");
     const content = learningSettingsValidation.parse(learningSettings.content);
-    const { from, to } = await getCurrentLearningDayRange(content.dayStartsAt);
+    const { from, to } = getCurrentLearningDayRange(content.dayStartsAt);
     const reviewTotals = await getReviewTotals(db, { from, to });
 
     return calculateTodaysReviewTotals(content, reviewTotals);

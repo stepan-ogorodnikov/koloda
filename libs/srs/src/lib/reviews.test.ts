@@ -9,11 +9,11 @@ import {
 } from "./reviews";
 
 describe("reviews", () => {
-  it("returns the previous learning day range when current time is before the boundary", async () => {
+  it("returns the previous learning day range when current time is before the boundary", () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date(2024, 0, 2, 4, 30, 0, 0));
 
-    await expect(getCurrentLearningDayRange("05:00")).resolves.toEqual({
+    expect(getCurrentLearningDayRange("05:00")).toEqual({
       from: new Date(2024, 0, 1, 5, 0, 0, 0).toISOString(),
       to: new Date(2024, 0, 2, 5, 0, 0, 0).toISOString(),
     });
@@ -26,16 +26,16 @@ describe("reviews", () => {
     });
   });
 
-  it("rejects invalid learning day boundaries", async () => {
-    await expect(getCurrentLearningDayRange("25:00")).rejects.toMatchObject({
-      code: "validation.settings-learning.day-starts-at",
-    } satisfies Partial<AppError>);
+  it("rejects invalid learning day boundaries", () => {
+    expect(() => getCurrentLearningDayRange("25:00")).toThrow(
+      expect.objectContaining({ code: "validation.settings-learning.day-starts-at" } satisfies Partial<AppError>),
+    );
   });
 
-  it("rejects unpadded learning day boundaries", async () => {
-    await expect(getCurrentLearningDayRange("5:00")).rejects.toMatchObject({
-      code: "validation.settings-learning.day-starts-at",
-    } satisfies Partial<AppError>);
+  it("rejects unpadded learning day boundaries", () => {
+    expect(() => getCurrentLearningDayRange("5:00")).toThrow(
+      expect.objectContaining({ code: "validation.settings-learning.day-starts-at" } satisfies Partial<AppError>),
+    );
   });
 
   it("treats the boundary instant as the start of the current learning day", () => {
